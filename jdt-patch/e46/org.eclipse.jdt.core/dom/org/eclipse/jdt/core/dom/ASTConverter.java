@@ -3787,7 +3787,21 @@ class ASTConverter {
 								type2 = convertType(arguments[i]);
 								parameterizedType.typeArguments().add(type2);
 							}
-							end = type2 != null ? type2.getStartPosition() + type2.getLength() - 1 : end;
+							// GROOVY edit -- avoid IllegalArgumentException in setSourceRange below
+							//end = type2 != null ? type2.getStartPosition() + type2.getLength() - 1 : end;
+							if (type2 != null) {
+								if (type2.getLength() > 0) {
+									end = type2.getStartPosition() + type2.getLength() - 1;
+								} else if (type2.isSimpleType()) {
+									Name name = ((SimpleType) type2).getName();
+									// TODO: If there are previous type args, use their positional info or lengths...
+									end += name.toString().length() + 1; // ballpark it
+									System.err.println("SimpleType with no position info"); //$NON-NLS-1$
+								} else {
+									System.err.println("Type with no position info"); //$NON-NLS-1$
+								}
+							}
+							// GROOVY end
 							end = retrieveClosingAngleBracketPosition(end + 1);
 							int baseStart = currentType.getStartPosition();
 							start = start <= baseStart ? start : baseStart;

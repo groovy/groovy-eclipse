@@ -127,7 +127,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
             return;
         }
         for (AnnotationNode unvisited : node.getAnnotations()) {
-            AnnotationNode visited = visitAnnotation(unvisited);
+            AnnotationNode visited = visitAnnotation0(unvisited);
             boolean isTargetAnnotation = visited.getClassNode().isResolved() &&
             visited.getClassNode().getName().equals("java.lang.annotation.Target");
 
@@ -139,8 +139,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
                         visited);
             }
             visitDeprecation(node, visited);
-            // TODO GROOVY-5011
-//            visitOverride(node, visited);
+            visitOverride(node, visited);
         }
     }
 
@@ -159,8 +158,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
         }
     }
 
-    /*
-    // TODO GROOVY-5011 handle case of @Override on a property
+   // TODO GROOVY-5011 handle case of @Override on a property
     private void visitOverride(AnnotatedNode node, AnnotationNode visited) {
         ClassNode annotationClassNode = visited.getClassNode();
         if (annotationClassNode.isResolved() && annotationClassNode.getName().equals("java.lang.Override")) {
@@ -187,7 +185,6 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
             }
         }
     }
-    */
 
     /**
      * Resolve metadata and details of the annotation.
@@ -195,7 +192,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
      * @param unvisited the node to visit
      * @return the visited node
      */
-    private AnnotationNode visitAnnotation(AnnotationNode unvisited) {
+    private AnnotationNode visitAnnotation0(AnnotationNode unvisited) {
         ErrorCollector errorCollector = new ErrorCollector(this.source.getConfiguration());
         AnnotationVisitor visitor = new AnnotationVisitor(this.source, errorCollector);
         AnnotationNode visited = visitor.visit(unvisited);

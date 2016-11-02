@@ -67,9 +67,7 @@ public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
     public static void removeJDIAdapter() {
         // a little dicey, so wrap in try/catch
         try {
-            @SuppressWarnings("unchecked")
-            List<IAdapterFactory> factories = (List<IAdapterFactory>) ((AdapterManager) Platform.getAdapterManager())
-                .getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
+            List<IAdapterFactory> factories = ((AdapterManager) Platform.getAdapterManager()).getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
 
             for (Iterator<IAdapterFactory> iterator = factories.iterator(); iterator.hasNext();) {
                 IAdapterFactory factory = iterator.next();

@@ -16,7 +16,6 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +33,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
-import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -187,7 +184,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "com/foo/Bar/config.groovy",
             "package com.foo.Bar\n"+
             "print 'abc'\n",
-            
+
             "com/foo/Bar.java",
             "package com.foo;\n"+
             "class Bar {}\n"
@@ -204,7 +201,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "    System.out.println(\"def\");\n"+
             "  }\n"+
             "}\n",
-            
+
             "com/foo/Bar/config.groovy",
             "package com.foo.Bar\n"+
             "print 'abc'\n"
@@ -218,13 +215,13 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "class MyException extends Exception {\n"+
             "  private static final long serialVersionUID = 1L;\n"+
             "}",
-            
+
             "CanThrowException.groovy",
             "\n"+
             "public interface CanThrowException {\n"+
             "  void thisCanThrowException() throws MyException\n"+
             "}\n",
-            
+
             "ShouldCatchException.java",
             "\n"+
             "class ShouldCatchException {\n"+
@@ -239,38 +236,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "  }\n"+
             "}\n"
         });
-    }
-
-    public void testAnnotationGrouping_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
-        runConformTest(new String[] {
-            "Book.groovy",
-            "import java.lang.reflect.*;\n"+
-            "class Book {\n"+
-            "  @ISBN String isbn;\n"+
-            "  public static void main(String []argv) {\n"+
-            "    Field f = Book.class.getDeclaredField('isbn');\n"+
-            "    Object[] os = f.getDeclaredAnnotations();\n"+
-            "    for (Object o: os) {\n"+
-            "      System.out.print(o);\n"+
-            "    }\n"+
-            "  }\n"+
-            "}",
-
-            "NotNull.java",
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME) public @interface NotNull {}",
-
-            "Length.java",
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME) public @interface Length { int value() default 0;}",
-
-            "ISBN.groovy",
-            "@NotNull @Length @groovy.transform.AnnotationCollector public @interface ISBN {}"
-        },
-        "@NotNull()@Length(value=0)");
     }
 
     public void testUnreachable_1047_2() {
@@ -345,30 +310,16 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "class Foo {}",
         },
         "----------\n" +
-        "1. ERROR in a"+File.separator+"Foo.groovy (at line 3)\n" +
+        "1. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
         "\t^^^^^^^^^^^^\n" +
         "Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" +
         "----------\n" +
-        "2. ERROR in a"+File.separator+"Foo.groovy (at line 3)\n" +
+        "2. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
         "\t      ^^^\n" +
         "The type Foo is already defined\n" +
         "----------\n");
-    }
-
-    public void testAnnos_GRE697() {
-        runConformTest(new String[] {
-            "A.groovy",
-            "@B\n"+
-            "class A { \n"+
-            "  public static void main(String[]argv) {print 'abc';}\n"+
-            "}\n"+
-            "@interface B {\n"+
-            "   String value() default \"\"\n"+
-            "}",
-        },
-        "abc");
     }
 
     public void testGroovyColon_GRE801() {
@@ -697,80 +648,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
-    public void testGRE830() {
-        runNegativeTest(new String[] {
-            "AnnotationDouble.groovy",
-            "import static java.lang.annotation.ElementType.FIELD;\n"+
-            "import static java.lang.annotation.RetentionPolicy.RUNTIME;\n"+
-            "import java.lang.annotation.Retention;\n"+
-            "import java.lang.annotation.Target;\n"+
-            "\n"+
-            "@Target(FIELD)\n"+
-            "@Retention(RUNTIME)\n"+
-            "public @interface AnnotationDouble { String value(); double width() default 5.0d; }\n",
-
-            "AnnotationDoubleTest.groovy",
-            "class AnnotationDoubleTest {\n"+
-            "\n"+
-            "class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n"+
-            "\n"+
-            "def test = new AnnotationDoubleTest()\n"+
-            "}\n"
-        },"----------\n" +
-        "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
-        "\tclass FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" +
-        "\t                                                                ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^":"")+"\n" +
-        "Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" +
-        "----------\n");
-    }
-
-    public void testGRE830_2() {
-        runNegativeTest(new String[] {
-            "AnnotationDouble.groovy",
-            "import static java.lang.annotation.ElementType.FIELD;\n"+
-            "import static java.lang.annotation.RetentionPolicy.RUNTIME;\n"+
-            "import java.lang.annotation.Retention;\n"+
-            "import java.lang.annotation.Target;\n"+
-            "\n"+
-            "@Target(FIELD)\n"+
-            "@Retention(RUNTIME)\n"+
-            "public @interface AnnotationDouble { String value(); double width() default 5.0d; }\n",
-
-            "AnnotationDoubleTest.groovy",
-            "class AnnotationDoubleTest {\n"+
-            "\n"+
-            "class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n"+
-            "\n"+
-            "def test = new AnnotationDoubleTest()\n"+
-            "}\n"
-        },"----------\n" +
-        "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
-        "\tclass FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" +
-        "\t                                                                ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^" : "") + "\n" +
-        "Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" +
-        "----------\n");
-    }
-
-    public void testConstAnnotationValue_GRE629() {
-        runConformTest(new String[] {
-            "Const.java",
-            "public class Const {\n"+
-            "private final static String instance= \"abc\";\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(XXX.class.getAnnotation(Anno.class));\n"+
-            "  }\n"+
-            "}",
-
-            "B.groovy",
-            "import java.lang.annotation.*\n"+
-            "@Anno(Const.instance)\n"+
-            "class XXX {}\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { String value(); }\n"
-        },
-        "@Anno(value=abc)");
-    }
-
     public void testVarargs_GRE925() {
         runConformTest(new String[] {
             "Test.java",
@@ -786,118 +663,118 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testPrimitiveLikeTypeNames_GRE891() {
-	    	this.runConformTest(new String[]{
-	    			"Foo.java",
-	    			"public class Foo {\n"+
-	    			"public static void main(String[] args) {\n"+
-	    			"  Z[][] zs = new Z().zzz();\n"+
-	    			"  System.out.println(\"works\");\n"+
-	    			"  }\n"+
-	    			"}",
-	    			"Z.groovy",
-	    			"class Z {\n"+
-	    			"   Z[][] zzz() { null }\n"+
-	    			"}\n"},"works");
-    	// return type is a single char type (not in package and not primitive)
-    	assertEquals("[[LZ;",getReturnTypeOfMethod("Z.groovy","zzz"));
+            this.runConformTest(new String[]{
+                    "Foo.java",
+                    "public class Foo {\n"+
+                    "public static void main(String[] args) {\n"+
+                    "  Z[][] zs = new Z().zzz();\n"+
+                    "  System.out.println(\"works\");\n"+
+                    "  }\n"+
+                    "}",
+                    "Z.groovy",
+                    "class Z {\n"+
+                    "   Z[][] zzz() { null }\n"+
+                    "}\n"},"works");
+        // return type is a single char type (not in package and not primitive)
+        assertEquals("[[LZ;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_2() {
-    	this.runConformTest(new String[]{
-    			"Foo.java",
-    			"public class Foo {\n"+
-    			"public static void main(String[] args) {\n"+
-    			"  int[][] zs = new Z().zzz();\n"+
-    			"  System.out.println(\"works\");\n"+
-    			"  }\n"+
-    			"}",
-    			"Z.groovy",
-    			"class Z {\n"+
-    			"   int[][] zzz() { null }\n"+
-    			"}\n"},"works");
-    	// return type is a primitive
-    	assertEquals("[[I",getReturnTypeOfMethod("Z.groovy","zzz"));
+        this.runConformTest(new String[]{
+                "Foo.java",
+                "public class Foo {\n"+
+                "public static void main(String[] args) {\n"+
+                "  int[][] zs = new Z().zzz();\n"+
+                "  System.out.println(\"works\");\n"+
+                "  }\n"+
+                "}",
+                "Z.groovy",
+                "class Z {\n"+
+                "   int[][] zzz() { null }\n"+
+                "}\n"},"works");
+        // return type is a primitive
+        assertEquals("[[I",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_3() {
-    	runConformTest(new String[]{
-    			"Foo.java",
-    			"public class Foo {\n"+
-    			"public static void main(String[] args) {\n"+
-    			"  java.lang.String[][] zs = new Z().zzz();\n"+
-    			"  System.out.println(\"works\");\n"+
-    			"  }\n"+
-    			"}",
-    			"Z.groovy",
-    			"class Z {\n"+
-    			"   java.lang.String[][] zzz() { null }\n"+
-    			"}\n"},"works");
-    	// return type is a qualified java built in type
-    	assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));
+        runConformTest(new String[]{
+                "Foo.java",
+                "public class Foo {\n"+
+                "public static void main(String[] args) {\n"+
+                "  java.lang.String[][] zs = new Z().zzz();\n"+
+                "  System.out.println(\"works\");\n"+
+                "  }\n"+
+                "}",
+                "Z.groovy",
+                "class Z {\n"+
+                "   java.lang.String[][] zzz() { null }\n"+
+                "}\n"},"works");
+        // return type is a qualified java built in type
+        assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testAnonymousClasses_GE1531() {
-    	runNegativeTest(new String[]{
-    			"Foo.groovy",
-    			"class Foo {\n"+
-    			"  def foo () {\n"+
-    			"    new java.lang.Runnable () {}//<--quick fix here\n"+
-    			"  }\n"+
-    			"}"},
-    			"----------\n" +
-				"1. ERROR in Foo.groovy (at line 3)\n" +
-				"\tnew java.lang.Runnable () {}//<--quick fix here\n" +
-				"\t    ^^^^^^^^^^^^^^^^^^^\n" +
-				"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" +
-				"----------\n");
-    	// return type is a qualified java built in type
-    	ModuleNode mn = getModuleNode("Foo$1.class");
-    	System.out.println(mn);
+        runNegativeTest(new String[]{
+                "Foo.groovy",
+                "class Foo {\n"+
+                "  def foo () {\n"+
+                "    new java.lang.Runnable () {}//<--quick fix here\n"+
+                "  }\n"+
+                "}"},
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 3)\n" +
+                "\tnew java.lang.Runnable () {}//<--quick fix here\n" +
+                "\t    ^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" +
+                "----------\n");
+        // return type is a qualified java built in type
+        ModuleNode mn = getModuleNode("Foo$1.class");
+        System.out.println(mn);
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_4() {
-    	runConformTest(new String[]{
-    			"pkg/Foo.java",
-    			"package pkg;\n"+
-    			"public class Foo {\n"+
-    			"public static void main(String[] args) {\n"+
-    			"  pkg.H[][] zs = new Z().zzz();\n"+
-    			"  System.out.println(\"works\");\n"+
-    			"  }\n"+
-    			"}",
-    			"Y.groovy",
-    			"package pkg\n"+
-    			"class H {}\n",
-    			"Z.groovy",
-    			"package pkg\n"+
-    			"class Z {\n"+
-    			"   H[][] zzz() { null }\n"+
-    			"}\n"},"works");
+        runConformTest(new String[]{
+                "pkg/Foo.java",
+                "package pkg;\n"+
+                "public class Foo {\n"+
+                "public static void main(String[] args) {\n"+
+                "  pkg.H[][] zs = new Z().zzz();\n"+
+                "  System.out.println(\"works\");\n"+
+                "  }\n"+
+                "}",
+                "Y.groovy",
+                "package pkg\n"+
+                "class H {}\n",
+                "Z.groovy",
+                "package pkg\n"+
+                "class Z {\n"+
+                "   H[][] zzz() { null }\n"+
+                "}\n"},"works");
 
-    	// return type is a single char groovy type from a package
-    	assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
+        // return type is a single char groovy type from a package
+        assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_5() {
-    	runConformTest(new String[]{
-    			"pkg/Foo.java",
-    			"package pkg;\n"+
-    			"public class Foo {\n"+
-    			"public static void main(String[] args) {\n"+
-    			"  H[][] zs = new Z().zzz();\n"+
-    			"  System.out.println(\"works\");\n"+
-    			"  }\n"+
-    			"}",
-    			"Y.java",
-    			"package pkg;\n"+
-    			"class H {}\n",
-    			"Z.groovy",
-    			"package pkg;\n"+
-    			"class Z {\n"+
-    			"   H[][] zzz() { null }\n"+
-    			"}\n"},"works");
-       	// return type is a single char java type from a package
-     	assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
+        runConformTest(new String[]{
+                "pkg/Foo.java",
+                "package pkg;\n"+
+                "public class Foo {\n"+
+                "public static void main(String[] args) {\n"+
+                "  H[][] zs = new Z().zzz();\n"+
+                "  System.out.println(\"works\");\n"+
+                "  }\n"+
+                "}",
+                "Y.java",
+                "package pkg;\n"+
+                "class H {}\n",
+                "Z.groovy",
+                "package pkg;\n"+
+                "class Z {\n"+
+                "   H[][] zzz() { null }\n"+
+                "}\n"},"works");
+           // return type is a single char java type from a package
+         assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     /**
@@ -905,944 +782,921 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
      * the ClassNode for the return type and return the name of the classnode.
      */
     public String getReturnTypeOfMethod(String filename,String methodname) {
-		ModuleNode mn = getModuleNode(filename);
-	    ClassNode cn = mn.getClasses().get(0);
-	    assertNotNull(cn);
-	    MethodNode methodNode = cn.getMethod(methodname,new Parameter[]{});
-	    assertNotNull(methodNode);
-	    ClassNode returnType = methodNode.getReturnType();
-	    return returnType.getName();
+        ModuleNode mn = getModuleNode(filename);
+        ClassNode cn = mn.getClasses().get(0);
+        assertNotNull(cn);
+        MethodNode methodNode = cn.getMethod(methodname,new Parameter[]{});
+        assertNotNull(methodNode);
+        ClassNode returnType = methodNode.getReturnType();
+        return returnType.getName();
     }
 
     public void _testOverridingFinalMethod() {
-    	this.runConformTest(new String[]{
-    			"Base.groovy",
-    			"class Base {\n"+
-    			"  final getFinalProperty() { 1 }\n"+
-    			" }\n"+
-    			"class Child extends Base {\n"+
-    			"  def finalProperty = 32 \n"+
-    			"  public static void main(String []argv) {\n"+
-    			"    print new Child().getFinalProperty();\n"+
-    			" }\n"+
-    			"}\n"},"");
+        this.runConformTest(new String[]{
+                "Base.groovy",
+                "class Base {\n"+
+                "  final getFinalProperty() { 1 }\n"+
+                " }\n"+
+                "class Child extends Base {\n"+
+                "  def finalProperty = 32 \n"+
+                "  public static void main(String []argv) {\n"+
+                "    print new Child().getFinalProperty();\n"+
+                " }\n"+
+                "}\n"},"");
     }
 
     public void testMixedModeInnerProperties_GRE597() {
-    	this.runConformTest(new String[]{
-    			"groovy/JoinGroovy.groovy",
-    			"package groovy\n"+
-    			"\n"+
-    			"class JointGroovy {\n"+
-    			"StaticInner property\n"+
-    			"\n"+
-    			" static class StaticInner {\n"+
-    			"  NonStaticInner property2\n"+
-    			"\n"+
-    			"  class NonStaticInner {\n"+
-    			"    Closure property3 = {}\n"+
-    			"  }\n"+
-    			" }\n"+
+        this.runConformTest(new String[]{
+                "groovy/JoinGroovy.groovy",
+                "package groovy\n"+
+                "\n"+
+                "class JointGroovy {\n"+
+                "StaticInner property\n"+
+                "\n"+
+                " static class StaticInner {\n"+
+                "  NonStaticInner property2\n"+
+                "\n"+
+                "  class NonStaticInner {\n"+
+                "    Closure property3 = {}\n"+
+                "  }\n"+
+                " }\n"+
                 "}",
                 "groovy/JointJava.java",
                 "package groovy;\n"+
                 "\n"+
-    			"import groovy.lang.Closure;\n"+
-    			"\n"+
-    			"public class JointJava {\n"+
-    			"    public void method() {\n"+
-    			"        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
-    			"    }\n"+
-    			"}\n"},"");
-    }
-
-    public void testGrabScriptAndImports_GRE680() {
-	    this.runConformTest(new String[]{"Script.groovy",
-			    "import org.mortbay.jetty.Server\n"+
-			    "import org.mortbay.jetty.servlet.*\n"+
-			    "import groovy.servlet.*\n"+
-			    "\n"+
-			    "@Grab(group = 'org.mortbay.jetty', module = 'jetty-embedded', version = '6.1.0')\n"+
-			    "def runServer(duration) {  }\n"+
-			    "runServer(10000)\n"},""
-	    );
+                "import groovy.lang.Closure;\n"+
+                "\n"+
+                "public class JointJava {\n"+
+                "    public void method() {\n"+
+                "        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
+                "    }\n"+
+                "}\n"},"");
     }
 
     public void testMixedModeInnerProperties2_GRE597() {
-    	this.runConformTest(new String[]{
-    			"groovy/JoinGroovy.groovy",
-    			"package groovy\n"+
-    			"\n"+
-    			"class JointGroovy {\n"+
-    			"StaticInner property\n"+
-    			"\n"+
-    			" }\n"+
-    			// now the inner is not an inner (like the previous test) but the property3 still is
-    			" class StaticInner {\n"+
-    			"  NonStaticInner property2\n"+
-    			"\n"+
-    			"  class NonStaticInner {\n"+
-    			"    Closure property3 = {}\n"+
-    			"  }\n"+
+        this.runConformTest(new String[]{
+                "groovy/JoinGroovy.groovy",
+                "package groovy\n"+
+                "\n"+
+                "class JointGroovy {\n"+
+                "StaticInner property\n"+
+                "\n"+
+                " }\n"+
+                // now the inner is not an inner (like the previous test) but the property3 still is
+                " class StaticInner {\n"+
+                "  NonStaticInner property2\n"+
+                "\n"+
+                "  class NonStaticInner {\n"+
+                "    Closure property3 = {}\n"+
+                "  }\n"+
                 "}",
                 "groovy/JointJava.java",
                 "package groovy;\n"+
                 "\n"+
-    			"import groovy.lang.Closure;\n"+
-    			"\n"+
-    			"public class JointJava {\n"+
-    			"    public void method() {\n"+
-    			"        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
-    			"    }\n"+
-    			"}\n"},"");
+                "import groovy.lang.Closure;\n"+
+                "\n"+
+                "public class JointJava {\n"+
+                "    public void method() {\n"+
+                "        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
+                "    }\n"+
+                "}\n"},"");
     }
 
     public void testNewRuleInLatestGroovy() {
 //    	if (isGroovy16()) { // FIXASC should also break in 17b2
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-    		// Why no duplicate type exception here on < 1.8? (Move enum and Move for script name)
-	    	this.runNegativeTest(new String[]{
-	    			"Move.groovy",
-	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
-					"\n"+
-					"final static BEATS = [\n"+
-					"   [Move.ROCK,     Move.SCISSORS],\n"+
-					"   [Move.PAPER,    Move.ROCK],\n"+
-					"   [Move.SCISSORS, Move.PAPER]\n"+
-					"].asImmutable()"
-	    	},
-	    	"----------\n" +
-			"1. ERROR in Move.groovy (at line 3)\n" +
-			"\tfinal static BEATS = [\n" +
-			"\t             ^^^^^\n" +
-			"Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" +
-			"----------\n");
-    	} else {
-	    	this.runNegativeTest(new String[]{
-	    			"Move2.groovy",
-	    			"enum Move { ROCK, PAPER, SCISSORS }\n"+
-					"\n"+
-					"final static BEATS = [\n"+
-					"   [Move.ROCK,     Move.SCISSORS],\n"+
-					"   [Move.PAPER,    Move.ROCK],\n"+
-					"   [Move.SCISSORS, Move.PAPER]\n"+
-					"].asImmutable()"
-	    	},
-	    	"----------\n" +
-			"1. ERROR in Move2.groovy (at line 3)\n" +
-			"\tfinal static BEATS = [\n" +
-			"\t             ^^^^^\n" +
-			"Groovy:Modifier 'static' not allowed here.\n" +
-			"----------\n");
-    	}
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            // Why no duplicate type exception here on < 1.8? (Move enum and Move for script name)
+            this.runNegativeTest(new String[]{
+                    "Move.groovy",
+                    "enum Move { ROCK, PAPER, SCISSORS }\n"+
+                    "\n"+
+                    "final static BEATS = [\n"+
+                    "   [Move.ROCK,     Move.SCISSORS],\n"+
+                    "   [Move.PAPER,    Move.ROCK],\n"+
+                    "   [Move.SCISSORS, Move.PAPER]\n"+
+                    "].asImmutable()"
+            },
+            "----------\n" +
+            "1. ERROR in Move.groovy (at line 3)\n" +
+            "\tfinal static BEATS = [\n" +
+            "\t             ^^^^^\n" +
+            "Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" +
+            "----------\n");
+        } else {
+            this.runNegativeTest(new String[]{
+                    "Move2.groovy",
+                    "enum Move { ROCK, PAPER, SCISSORS }\n"+
+                    "\n"+
+                    "final static BEATS = [\n"+
+                    "   [Move.ROCK,     Move.SCISSORS],\n"+
+                    "   [Move.PAPER,    Move.ROCK],\n"+
+                    "   [Move.SCISSORS, Move.PAPER]\n"+
+                    "].asImmutable()"
+            },
+            "----------\n" +
+            "1. ERROR in Move2.groovy (at line 3)\n" +
+            "\tfinal static BEATS = [\n" +
+            "\t             ^^^^^\n" +
+            "Groovy:Modifier 'static' not allowed here.\n" +
+            "----------\n");
+        }
     }
 
-	// WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
-	public void testStandaloneGroovyFile() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-		},"success");
-	}
+    // WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
+    public void testStandaloneGroovyFile() {
+        this.runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },"success");
+    }
 
-	public void testRecursion_GR531() {
-		this.runNegativeTest(new String[] {
-			"XXX.groovy",
-			"class XXX extends XXX {\n" +
-			"}\n",
-		},"----------\n" +
-		"1. ERROR in XXX.groovy (at line 1)\n" +
-		"\tclass XXX extends XXX {\n" +
-		"\t      ^^^\n" +
-		"Groovy:Cyclic inheritance involving XXX in class XXX\n" +
-		"----------\n" +
-		"2. ERROR in XXX.groovy (at line 1)\n" +
-		"\tclass XXX extends XXX {\n" +
-		"\t                  ^^^\n" +
-		"Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
-		"----------\n");
-	}
+    public void testRecursion_GR531() {
+        this.runNegativeTest(new String[] {
+            "XXX.groovy",
+            "class XXX extends XXX {\n" +
+            "}\n",
+        },"----------\n" +
+        "1. ERROR in XXX.groovy (at line 1)\n" +
+        "\tclass XXX extends XXX {\n" +
+        "\t      ^^^\n" +
+        "Groovy:Cyclic inheritance involving XXX in class XXX\n" +
+        "----------\n" +
+        "2. ERROR in XXX.groovy (at line 1)\n" +
+        "\tclass XXX extends XXX {\n" +
+        "\t                  ^^^\n" +
+        "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
+        "----------\n");
+    }
 
-	public void testRecursion_GR531_2() {
-		this.runNegativeTest(new String[] {
-			"XXX.groovy",
-			"class XXX extends XXX {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-		},"----------\n" +
-		"1. ERROR in XXX.groovy (at line 1)\n" +
-		"\tclass XXX extends XXX {\n" +
-		"\t      ^^^\n" +
-		"Groovy:Cyclic inheritance involving XXX in class XXX\n" +
-		"----------\n" +
-		"2. ERROR in XXX.groovy (at line 1)\n" +
-		"\tclass XXX extends XXX {\n" +
-		"\t                  ^^^\n" +
-		"Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
-		"----------\n");
-	}
+    public void testRecursion_GR531_2() {
+        this.runNegativeTest(new String[] {
+            "XXX.groovy",
+            "class XXX extends XXX {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },"----------\n" +
+        "1. ERROR in XXX.groovy (at line 1)\n" +
+        "\tclass XXX extends XXX {\n" +
+        "\t      ^^^\n" +
+        "Groovy:Cyclic inheritance involving XXX in class XXX\n" +
+        "----------\n" +
+        "2. ERROR in XXX.groovy (at line 1)\n" +
+        "\tclass XXX extends XXX {\n" +
+        "\t                  ^^^\n" +
+        "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
+        "----------\n");
+    }
 
-	public void testRecursion_GR531_3() {
-		this.runNegativeTest(new String[] {
-			"XXX.groovy",
-			"class XXX extends YYY {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-			"YYY.groovy",
-			"class YYY extends XXX {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n"
-		},"----------\n" +
-		"1. ERROR in XXX.groovy (at line 1)\n" +
-		"\tclass XXX extends YYY {\n" +
-		"\t      ^^^\n" +
-		"The hierarchy of the type XXX is inconsistent\n" +
-		"----------\n" +
-		"----------\n" +
-		"1. ERROR in YYY.groovy (at line 1)\n" +
-		"\tclass YYY extends XXX {\n" +
-		"\t      ^^^\n" +
-		"Groovy:Cyclic inheritance involving YYY in class YYY\n" +
-		"----------\n" +
-		"2. ERROR in YYY.groovy (at line 1)\n" +
-		"\tclass YYY extends XXX {\n" +
-		"\t                  ^^^\n" +
-		"Cycle detected: a cycle exists in the type hierarchy between YYY and XXX\n" +
-		"----------\n");
-	}
+    public void testRecursion_GR531_3() {
+        this.runNegativeTest(new String[] {
+            "XXX.groovy",
+            "class XXX extends YYY {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+            "YYY.groovy",
+            "class YYY extends XXX {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n"
+        },"----------\n" +
+        "1. ERROR in XXX.groovy (at line 1)\n" +
+        "\tclass XXX extends YYY {\n" +
+        "\t      ^^^\n" +
+        "The hierarchy of the type XXX is inconsistent\n" +
+        "----------\n" +
+        "----------\n" +
+        "1. ERROR in YYY.groovy (at line 1)\n" +
+        "\tclass YYY extends XXX {\n" +
+        "\t      ^^^\n" +
+        "Groovy:Cyclic inheritance involving YYY in class YYY\n" +
+        "----------\n" +
+        "2. ERROR in YYY.groovy (at line 1)\n" +
+        "\tclass YYY extends XXX {\n" +
+        "\t                  ^^^\n" +
+        "Cycle detected: a cycle exists in the type hierarchy between YYY and XXX\n" +
+        "----------\n");
+    }
 
-	public void testRecursion_GR531_4() {
-		this.runNegativeTest(new String[] {
-			"XXX.groovy",
-			"interface XXX extends XXX {\n" +
-			"}\n",
-		},"----------\n" +
-		"1. ERROR in XXX.groovy (at line 1)\n" +
-		"\tinterface XXX extends XXX {\n" +
-		"\t          ^^^\n" +
-		"Groovy:Cyclic inheritance involving XXX in interface XXX\n" +
-		"----------\n" +
-		"2. ERROR in XXX.groovy (at line 1)\n" +
-		"\tinterface XXX extends XXX {\n" +
-		"\t                      ^^^^\n" +
-		"Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
-		"----------\n");
-	}
+    public void testRecursion_GR531_4() {
+        this.runNegativeTest(new String[] {
+            "XXX.groovy",
+            "interface XXX extends XXX {\n" +
+            "}\n",
+        },"----------\n" +
+        "1. ERROR in XXX.groovy (at line 1)\n" +
+        "\tinterface XXX extends XXX {\n" +
+        "\t          ^^^\n" +
+        "Groovy:Cyclic inheritance involving XXX in interface XXX\n" +
+        "----------\n" +
+        "2. ERROR in XXX.groovy (at line 1)\n" +
+        "\tinterface XXX extends XXX {\n" +
+        "\t                      ^^^^\n" +
+        "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
+        "----------\n");
+    }
 
-	public void _testTargetMetaAnnotation() {
-		this.runNegativeTest(new String[] {
-			"Anno.java",
-			"import java.lang.annotation.*;\n" +
-			"@Target(ElementType.METHOD) @interface Anno {}\n",
-			"Bar.groovy",
-			"@Anno\n"+
-			"class Bar {}\n"
-		},"xx");
-	}
+    /**
+     * The groovy object method augmentation (in GroovyClassScope) should only apply to types directly implementing GroovyObject, rather than
+     * adding them all the way down the hierarchy.  This mirrors what happens in the compiler.
+     */
+    /**
+     * First a class extending another.  The superclass gets augmented but not the subclass.
+     */
+    public void testClassHierarchiesAndGroovyObjectMethods() {
+        try {
+            GroovyClassScope.debugListener = new EventListener("augment");
+            this.runConformTest(new String[] {
+                "Foo.groovy",
+                "class Foo {\n"+
+                "  static main(args) { print 'abc'} \n"+
+                "}\n" +
+                "class Two extends Foo {\n" +
+                "  public void m() {\n"+
+                "    Object o = getMetaClass();\n"+
+                "  }\n"+
+                "}\n",
+            },"abc");
+            assertEventCount(1,GroovyClassScope.debugListener);
+            assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
+            System.err.println(GroovyClassScope.debugListener.toString());
+        } finally {
+            GroovyClassScope.debugListener=null;
+        }
+    }
 
-	/**
-	 * The groovy object method augmentation (in GroovyClassScope) should only apply to types directly implementing GroovyObject, rather than
-	 * adding them all the way down the hierarchy.  This mirrors what happens in the compiler.
-	 */
-	/**
-	 * First a class extending another.  The superclass gets augmented but not the subclass.
-	 */
-	public void testClassHierarchiesAndGroovyObjectMethods() {
-		try {
-			GroovyClassScope.debugListener = new EventListener("augment");
-			this.runConformTest(new String[] {
-				"Foo.groovy",
-				"class Foo {\n"+
-				"  static main(args) { print 'abc'} \n"+
-				"}\n" +
-				"class Two extends Foo {\n" +
-				"  public void m() {\n"+
-				"    Object o = getMetaClass();\n"+
-				"  }\n"+
-				"}\n",
-			},"abc");
-			assertEventCount(1,GroovyClassScope.debugListener);
-			assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
-			System.err.println(GroovyClassScope.debugListener.toString());
-		} finally {
-			GroovyClassScope.debugListener=null;
-		}
-	}
+    /**
+     * Now a class implementing an interface.  The subclass gets augmented because the superclass did not.
+     */
+    public void testClassHierarchiesAndGroovyObjectMethods2() {
+        try {
+            GroovyClassScope.debugListener = new EventListener("augment");
+            this.runConformTest(new String[] {
+                "Foo.groovy",
+                "class Foo implements One {\n" +
+                "  public void m() {\n"+
+                "    Object o = getMetaClass();\n"+
+                "  }\n"+
+                "  static main(args) { print 'abc'} \n"+
+                "}\n"+
+                "interface One {\n"+
+                "}\n",
+            },"abc");
+            assertEventCount(1,GroovyClassScope.debugListener);
+            assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
+            System.err.println(GroovyClassScope.debugListener.toString());
+        } finally {
+            GroovyClassScope.debugListener=null;
+        }
+    }
 
-	/**
-	 * Now a class implementing an interface.  The subclass gets augmented because the superclass did not.
-	 */
-	public void testClassHierarchiesAndGroovyObjectMethods2() {
-		try {
-			GroovyClassScope.debugListener = new EventListener("augment");
-			this.runConformTest(new String[] {
-				"Foo.groovy",
-				"class Foo implements One {\n" +
-				"  public void m() {\n"+
-				"    Object o = getMetaClass();\n"+
-				"  }\n"+
-				"  static main(args) { print 'abc'} \n"+
-				"}\n"+
-				"interface One {\n"+
-				"}\n",
-			},"abc");
-			assertEventCount(1,GroovyClassScope.debugListener);
-			assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
-			System.err.println(GroovyClassScope.debugListener.toString());
-		} finally {
-			GroovyClassScope.debugListener=null;
-		}
-	}
+    /**
+     * Now a class extending a java type which extends a base groovy class.  Super groovy type should get them.
+     *
+     * This looks odd to me, not sure why Foo and One both get the methods when One inherits them through Foo -
+     * perhaps the java type in the middle makes a difference.  Anyway by augmenting both of these we
+     * are actually doing the same as groovyc, and that is the main thing.
+     */
+    public void testClassHierarchiesAndGroovyObjectMethods3() {
+        try {
+            GroovyClassScope.debugListener = new EventListener();
+            this.runConformTest(new String[] {
+                "Foo.groovy",
+                "class Foo extends Two {\n" +
+                "  public void m() {\n"+
+                "    Object o = getMetaClass();\n"+
+                "  }\n"+
+                "  static main(args) { print 'abc'} \n"+
+                "}\n"+
+                "class One {\n"+
+                "}\n",
+                "Two.java",
+                "class Two extends One {}\n",
+            },"abc");
+            assertEventCount(2,GroovyClassScope.debugListener);
+            assertEvent("augment: type One having GroovyObject methods added",GroovyClassScope.debugListener);
+            assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
+        } finally {
+            GroovyClassScope.debugListener=null;
+        }
+    }
 
-	/**
-	 * Now a class extending a java type which extends a base groovy class.  Super groovy type should get them.
-	 *
-	 * This looks odd to me, not sure why Foo and One both get the methods when One inherits them through Foo -
-	 * perhaps the java type in the middle makes a difference.  Anyway by augmenting both of these we
-	 * are actually doing the same as groovyc, and that is the main thing.
-	 */
-	public void testClassHierarchiesAndGroovyObjectMethods3() {
-		try {
-			GroovyClassScope.debugListener = new EventListener();
-			this.runConformTest(new String[] {
-				"Foo.groovy",
-				"class Foo extends Two {\n" +
-				"  public void m() {\n"+
-				"    Object o = getMetaClass();\n"+
-				"  }\n"+
-				"  static main(args) { print 'abc'} \n"+
-				"}\n"+
-				"class One {\n"+
-				"}\n",
-				"Two.java",
-				"class Two extends One {}\n",
-			},"abc");
-			assertEventCount(2,GroovyClassScope.debugListener);
-			assertEvent("augment: type One having GroovyObject methods added",GroovyClassScope.debugListener);
-			assertEvent("augment: type Foo having GroovyObject methods added",GroovyClassScope.debugListener);
-		} finally {
-			GroovyClassScope.debugListener=null;
-		}
-	}
-
-	public void testStandaloneGroovyFile2() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
+    public void testStandaloneGroovyFile2() {
+        this.runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
 //			"  public static void main(String[] args) {\n"+
-			"  static main(args) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-		},"success");
-		checkGCUDeclaration("X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  public X() {\n" +
-				"  }\n" +
-				// for: public static void main(String[] args) {
+            "  static main(args) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },"success");
+        checkGCUDeclaration("X.groovy",
+                "package p;\n" +
+                "public class X {\n" +
+                "  public X() {\n" +
+                "  }\n" +
+                // for: public static void main(String[] args) {
 //				"  public static void main(public String... args) {\n" +
-				// for: static main(args) {
-				"  public static void main(public java.lang.String... args) {\n" +
-				"  }\n" +
-				"}\n"
-		);
-	}
+                // for: static main(args) {
+                "  public static void main(public java.lang.String... args) {\n" +
+                "  }\n" +
+                "}\n"
+        );
+    }
 
-	public void testParentIsObject_GRE528() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  static main(args) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-		},"success");
-		checkGCUDeclaration("X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  public X() {\n" +
-				"  }\n" +
-				"  public static void main(public java.lang.String... args) {\n" +
-				"  }\n" +
-				"}\n"
-		);
-	}
+    public void testParentIsObject_GRE528() {
+        this.runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  static main(args) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },"success");
+        checkGCUDeclaration("X.groovy",
+                "package p;\n" +
+                "public class X {\n" +
+                "  public X() {\n" +
+                "  }\n" +
+                "  public static void main(public java.lang.String... args) {\n" +
+                "  }\n" +
+                "}\n"
+        );
+    }
 
-	public void testInnerTypes_1() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				" class Inner {}\n"+
-				"  static main(args) {\n"+
-				"    print \"success\"\n" +
-				"  }\n"+
-				"}\n",
-			},"success");
+    public void testInnerTypes_1() {
+        this.runConformTest(new String[] {
+                "p/X.groovy",
+                "package p;\n" +
+                "public class X {\n" +
+                " class Inner {}\n"+
+                "  static main(args) {\n"+
+                "    print \"success\"\n" +
+                "  }\n"+
+                "}\n",
+            },"success");
 
-			checkGCUDeclaration("X.groovy",
-					"package p;\n" +
-					"public class X {\n" +
-					"  public class Inner {\n" +
-					"    public Inner() {\n"+
-					"    }\n"+
-					"  }\n"+
-					"  public X() {\n" +
-					"  }\n" +
-					"  public static void main(public java.lang.String... args) {\n" +
-					"  }\n" +
-					"}\n"
-			);
-	}
+            checkGCUDeclaration("X.groovy",
+                    "package p;\n" +
+                    "public class X {\n" +
+                    "  public class Inner {\n" +
+                    "    public Inner() {\n"+
+                    "    }\n"+
+                    "  }\n"+
+                    "  public X() {\n" +
+                    "  }\n" +
+                    "  public static void main(public java.lang.String... args) {\n" +
+                    "  }\n" +
+                    "}\n"
+            );
+    }
 
-	public void testBrokenPackage() {
-		this.runNegativeTest(new String[] {
-				"Foo.groovy",
-				"package \n"+
-				"class Name { }\n"},
-				"----------\n" +
-				"1. ERROR in Foo.groovy (at line 1)\n" +
-				"\tpackage \n" +
-				"\t ^\n" +
-				"Groovy:Invalid package specification @ line 1, column 1.\n" +
-				"----------\n");
-	}
+    public void testBrokenPackage() {
+        this.runNegativeTest(new String[] {
+                "Foo.groovy",
+                "package \n"+
+                "class Name { }\n"},
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 1)\n" +
+                "\tpackage \n" +
+                "\t ^\n" +
+                "Groovy:Invalid package specification @ line 1, column 1.\n" +
+                "----------\n");
+    }
 
-	// can be uncommented when we have picked up the fix for GROOVY-4219
-	public void _testGRE637() {
-		this.runConformTest(new String[]{
-				"de/brazzy/nikki/Texts.java",
-				"package de.brazzy.nikki;\n"+
-				"\n"+
-				"public final class Texts { \n"+
-				"	public static class Image {\n"+
-				"		public static final String ORDERED_BY_FILENAME = \"image.sortedby.filename\";\n"+
-				"		public static final String ORDERED_BY_TIME = \"image.sortedby.time\";\n"+
-				"}}\n",
-				"de/brazzy/nikki/model/Image.groovy",
-				"package de.brazzy.nikki.model;\n"+
-				"\n"+
-				"class Image implements Serializable{\n"+
-				"    def fileName\n"+
-				"    def time\n"+
-				"}\n",
-				"de/brazzy/nikki/model/ImageSortField.groovy",
-				"package de.brazzy.nikki.model\n"+
-				"\n"+
-				"import de.brazzy.nikki.Texts\n"+
-				"import de.brazzy.nikki.model.Image\n"+
-				"\n"+
-				"enum ImageSortField {\n"+
-				"    FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n"+
-				"    TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n"+
-				"\n"+
-				"    def field\n"+
-				"    def name\n"+
-				"\n"+
-				"    public String toString(){\n"+
-				"        name\n"+
-				"    }\n"+
-				"}\n"
-		});
-	}
+    // can be uncommented when we have picked up the fix for GROOVY-4219
+    public void _testGRE637() {
+        this.runConformTest(new String[]{
+                "de/brazzy/nikki/Texts.java",
+                "package de.brazzy.nikki;\n"+
+                "\n"+
+                "public final class Texts { \n"+
+                "	public static class Image {\n"+
+                "		public static final String ORDERED_BY_FILENAME = \"image.sortedby.filename\";\n"+
+                "		public static final String ORDERED_BY_TIME = \"image.sortedby.time\";\n"+
+                "}}\n",
+                "de/brazzy/nikki/model/Image.groovy",
+                "package de.brazzy.nikki.model;\n"+
+                "\n"+
+                "class Image implements Serializable{\n"+
+                "    def fileName\n"+
+                "    def time\n"+
+                "}\n",
+                "de/brazzy/nikki/model/ImageSortField.groovy",
+                "package de.brazzy.nikki.model\n"+
+                "\n"+
+                "import de.brazzy.nikki.Texts\n"+
+                "import de.brazzy.nikki.model.Image\n"+
+                "\n"+
+                "enum ImageSortField {\n"+
+                "    FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n"+
+                "    TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n"+
+                "\n"+
+                "    def field\n"+
+                "    def name\n"+
+                "\n"+
+                "    public String toString(){\n"+
+                "        name\n"+
+                "    }\n"+
+                "}\n"
+        });
+    }
 
-	public void _testOverriding_GRE440() {
-		if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+    public void _testOverriding_GRE440() {
+        if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
 
-		this.runNegativeTest(new String[] {
-				"Foo.groovy",
-				"class Foo { \n"+
-				" static void main(args) {}\n"+
-				"}\n",
-				"Goo.java",
-				"class Goo extends Foo { \n"+
-				"  public static void main(String[] argv) {}\n"+
-				"}\n",
-				},
-				"xxxx");
-		checkGCUDeclaration("Foo.groovy",
-				"yyy");
-	}
+        this.runNegativeTest(new String[] {
+                "Foo.groovy",
+                "class Foo { \n"+
+                " static void main(args) {}\n"+
+                "}\n",
+                "Goo.java",
+                "class Goo extends Foo { \n"+
+                "  public static void main(String[] argv) {}\n"+
+                "}\n",
+                },
+                "xxxx");
+        checkGCUDeclaration("Foo.groovy",
+                "yyy");
+    }
 
-	public void _testOverriding_GRE440_2() {
-		if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
-		this.runNegativeTest(new String[] {
-				"Foo.java",
-				"class Foo { \n"+
-				" void main(String... ss) {}\n"+
-				"}\n",
-				"Goo.java",
-				"class Goo extends Foo { \n"+
-				"  void main(String[] ss) {}\n"+
-				"}\n",
-				},
-				"xxxx");
-		checkGCUDeclaration("Foo.groovy",
-				"yyy");
-	}
+    public void _testOverriding_GRE440_2() {
+        if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+        this.runNegativeTest(new String[] {
+                "Foo.java",
+                "class Foo { \n"+
+                " void main(String... ss) {}\n"+
+                "}\n",
+                "Goo.java",
+                "class Goo extends Foo { \n"+
+                "  void main(String[] ss) {}\n"+
+                "}\n",
+                },
+                "xxxx");
+        checkGCUDeclaration("Foo.groovy",
+                "yyy");
+    }
 
-	public void testAliasing_GRE473() {
-		this.runConformTest(new String[] {
-				"Foo.groovy",
-				"import java.util.regex.Pattern as JavaPattern\n"+
-				"class Pattern {JavaPattern javaPattern}\n"+
-				"def p = new Pattern(javaPattern:~/\\d+/)\n"+
-				"assert \"123\" ==~ p.javaPattern\n"+
-				"print 'success '\n"+
-				"print '['+p.class.package+']['+JavaPattern.class.package.name+']'\n"},
-				"success [null][java.util.regex]");
-	}
+    public void testAliasing_GRE473() {
+        this.runConformTest(new String[] {
+                "Foo.groovy",
+                "import java.util.regex.Pattern as JavaPattern\n"+
+                "class Pattern {JavaPattern javaPattern}\n"+
+                "def p = new Pattern(javaPattern:~/\\d+/)\n"+
+                "assert \"123\" ==~ p.javaPattern\n"+
+                "print 'success '\n"+
+                "print '['+p.class.package+']['+JavaPattern.class.package.name+']'\n"},
+                "success [null][java.util.regex]");
+    }
 
-	public void testAliasing_GRE473_2() {
-		this.runNegativeTest(new String[] {
-				"Foo.groovy",
-				"import java.util.regex.Pattern\n"+
-				"class Pattern {Pattern javaPattern}\n"+
-				"def p = new Pattern(javaPattern:~/\\d+/)\n"+
-				"assert \"123\" ==~ p.javaPattern\n"+
-				"print 'success'\n"},
-				"----------\n" +
-				"1. ERROR in Foo.groovy (at line 1)\n" +
-				"\timport java.util.regex.Pattern\n" +
-				"\t                       ^^^^^^^\n" +
-				"The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
-				"----------\n");
-	}
+    public void testAliasing_GRE473_2() {
+        this.runNegativeTest(new String[] {
+                "Foo.groovy",
+                "import java.util.regex.Pattern\n"+
+                "class Pattern {Pattern javaPattern}\n"+
+                "def p = new Pattern(javaPattern:~/\\d+/)\n"+
+                "assert \"123\" ==~ p.javaPattern\n"+
+                "print 'success'\n"},
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 1)\n" +
+                "\timport java.util.regex.Pattern\n" +
+                "\t                       ^^^^^^^\n" +
+                "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
+                "----------\n");
+    }
 
-	public void testBrokenPackage2() {
-		this.runNegativeTest(new String[] {
-				"Foo.groovy",
-				"package ;\n"+
-				"class Name { }\n"},
-				"----------\n" +
-				"1. ERROR in Foo.groovy (at line 1)\n" +
-				"\tpackage ;\n" +
-				"\t ^\n" +
-				"Groovy:Invalid package specification @ line 1, column 1.\n" +
-				"----------\n");
-	}
+    public void testBrokenPackage2() {
+        this.runNegativeTest(new String[] {
+                "Foo.groovy",
+                "package ;\n"+
+                "class Name { }\n"},
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 1)\n" +
+                "\tpackage ;\n" +
+                "\t ^\n" +
+                "Groovy:Invalid package specification @ line 1, column 1.\n" +
+                "----------\n");
+    }
 
-	// does the second error now get reported after the package problem
-	public void testBrokenPackage3() {
-		this.runNegativeTest(new String[] {
-				"Foo.groovy",
-				"package ;\n"+
-				"class Name { \n" +
-				"  asdf\n"+
-				"}\n"},
-				"----------\n" +
-				"1. ERROR in Foo.groovy (at line 1)\n" +
-				"\tpackage ;\n" +
-				"\t ^\n" +
-				"Groovy:Invalid package specification @ line 1, column 1.\n" +
-				"----------\n" +
-				"2. ERROR in Foo.groovy (at line 3)\n" +
-				"\tasdf\n" +
-				"\t^\n" +
-				"Groovy:unexpected token: asdf @ line 3, column 3.\n" +
-				"----------\n");
-	}
+    // does the second error now get reported after the package problem
+    public void testBrokenPackage3() {
+        this.runNegativeTest(new String[] {
+                "Foo.groovy",
+                "package ;\n"+
+                "class Name { \n" +
+                "  asdf\n"+
+                "}\n"},
+                "----------\n" +
+                "1. ERROR in Foo.groovy (at line 1)\n" +
+                "\tpackage ;\n" +
+                "\t ^\n" +
+                "Groovy:Invalid package specification @ line 1, column 1.\n" +
+                "----------\n" +
+                "2. ERROR in Foo.groovy (at line 3)\n" +
+                "\tasdf\n" +
+                "\t^\n" +
+                "Groovy:unexpected token: asdf @ line 3, column 3.\n" +
+                "----------\n");
+    }
 
-	public void testEnumPositions_GRE1072() {
-		this.runConformTest(new String[] {
-			"X.groovy",
-			"enum Color {\n" +
-			"  /** hello */\n"+
-			"  RED,\n"+
-			"  GREEN,\n"+
-			"  BLUE\n"+
-			"}\n",
-		},"");
+    public void testEnumPositions_GRE1072() {
+        this.runConformTest(new String[] {
+            "X.groovy",
+            "enum Color {\n" +
+            "  /** hello */\n"+
+            "  RED,\n"+
+            "  GREEN,\n"+
+            "  BLUE\n"+
+            "}\n",
+        },"");
 
-		GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 
-		FieldDeclaration fDecl = null;
+        FieldDeclaration fDecl = null;
 
-		fDecl = grabField(decl,"RED");
-		if (GroovyUtils.GROOVY_LEVEL<18) {
-			assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:30>31 modifiersSourceStart=0 endPart1Position:30",stringifyFieldDecl(fDecl));
-		} else {
-			assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>31 modifiersSourceStart=30 endPart1Position:30",stringifyFieldDecl(fDecl));
+        fDecl = grabField(decl,"RED");
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:30>31 modifiersSourceStart=0 endPart1Position:30",stringifyFieldDecl(fDecl));
+        } else {
+            assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>31 modifiersSourceStart=30 endPart1Position:30",stringifyFieldDecl(fDecl));
 
-		}
+        }
 
-		fDecl = grabField(decl,"GREEN");
-		if (GroovyUtils.GROOVY_LEVEL<18) {
-			assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=0 endPart1Position:37",stringifyFieldDecl(fDecl));
-		} else {
-			assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
-		}
-		fDecl = grabField(decl,"BLUE");
-		if (GroovyUtils.GROOVY_LEVEL<18) {
-			assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=0 endPart1Position:46",stringifyFieldDecl(fDecl));
-		} else {
-			assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
-		}
-	}
+        fDecl = grabField(decl,"GREEN");
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=0 endPart1Position:37",stringifyFieldDecl(fDecl));
+        } else {
+            assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
+        }
+        fDecl = grabField(decl,"BLUE");
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=0 endPart1Position:46",stringifyFieldDecl(fDecl));
+        } else {
+            assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
+        }
+    }
 
-	public void testEnumValues_GRE1071() {
-		runConformTest(new String[]{
-				"X.groovy",
-				"enum H {\n"+
-				"  RED,\n"+
-				"  BLUE\n"+
-				"}"},"");
+    public void testEnumValues_GRE1071() {
+        runConformTest(new String[]{
+                "X.groovy",
+                "enum H {\n"+
+                "  RED,\n"+
+                "  BLUE\n"+
+                "}"},"");
 
-		assertEquals("[LH;",getReturnTypeOfMethod("X.groovy", "values"));
-	}
+        assertEquals("[LH;",getReturnTypeOfMethod("X.groovy", "values"));
+    }
 
-	private String stringifyFieldDecl(FieldDeclaration fDecl) {
-		StringBuffer sb = new StringBuffer();
-		sb.append(fDecl.name);
-		sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);
-		sb.append(" declSourceStart>declSourceEnd:"+fDecl.declarationSourceStart+">"+fDecl.declarationSourceEnd);
-		sb.append(" modifiersSourceStart="+fDecl.modifiersSourceStart); // first char of decls modifiers
-		sb.append(" endPart1Position:"+fDecl.endPart1Position); // char after type decl ('int x,y' is space)
-		return sb.toString();
-	}
+    private String stringifyFieldDecl(FieldDeclaration fDecl) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(fDecl.name);
+        sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);
+        sb.append(" declSourceStart>declSourceEnd:"+fDecl.declarationSourceStart+">"+fDecl.declarationSourceEnd);
+        sb.append(" modifiersSourceStart="+fDecl.modifiersSourceStart); // first char of decls modifiers
+        sb.append(" endPart1Position:"+fDecl.endPart1Position); // char after type decl ('int x,y' is space)
+        return sb.toString();
+    }
 
-	public void testAbstractCovariance_GRE272() {
-		this.runNegativeTest(new String[] {
-				"A.java",
-				"public class A {}",
+    public void testAbstractCovariance_GRE272() {
+        this.runNegativeTest(new String[] {
+                "A.java",
+                "public class A {}",
 
-				"AA.java",
-				"public class AA extends A{}",
+                "AA.java",
+                "public class AA extends A{}",
 
-				"I.java",
-				"public interface I { A getA();}",
+                "I.java",
+                "public interface I { A getA();}",
 
-				"Impl.java",
-				"public class Impl implements I { public AA getA() {return null;}}",
+                "Impl.java",
+                "public class Impl implements I { public AA getA() {return null;}}",
 
-				"GImpl.groovy",
-				"class GImpl extends Impl {}"
-		},"");
-	}
+                "GImpl.groovy",
+                "class GImpl extends Impl {}"
+        },"");
+    }
 
-	// If GroovyFoo is processed *before* FooBase then the MethodVerifier15
-	// hasn't had a chance to run on FooBase and create the synthetic bridge method
-	public void testAbstractCovariance_GRE272_2() {
-		this.runNegativeTest(new String[] {
-				"test/Bar.java",
-				"package test;\n"+
-				"public class Bar extends BarBase {}",
+    // If GroovyFoo is processed *before* FooBase then the MethodVerifier15
+    // hasn't had a chance to run on FooBase and create the synthetic bridge method
+    public void testAbstractCovariance_GRE272_2() {
+        this.runNegativeTest(new String[] {
+                "test/Bar.java",
+                "package test;\n"+
+                "public class Bar extends BarBase {}",
 
-				"test/BarBase.java",
-				"package test;\n"+
-				"abstract public class BarBase {}",
+                "test/BarBase.java",
+                "package test;\n"+
+                "abstract public class BarBase {}",
 
-				"test/GroovyFoo.groovy",
-				"package test;\n"+
-				"class GroovyFoo extends FooBase {}",
+                "test/GroovyFoo.groovy",
+                "package test;\n"+
+                "class GroovyFoo extends FooBase {}",
 
-				"test/FooBase.java",
-				"package test;\n"+
-				"public class FooBase implements IFoo { public Bar foo() {return null;}}",
-
-
-				"test/IFoo.java",
-				"package test;\n"+
-				"public interface IFoo { BarBase foo();}",
-		},"");
-	}
-
-	public void testAbstractCovariance_GRE272_3() {
-		this.runNegativeTest(new String[] {
-				"test/IFoo.java",
-				"package test;\n"+
-				"public interface IFoo { BarBase foo();}",
-
-				"test/GroovyFoo.groovy",
-				"package test;\n"+
-				"class GroovyFoo extends FooBase {}",
-
-				"test/FooBase.java",
-				"package test;\n"+
-				"public class FooBase implements IFoo { public Bar foo() {return null;}}",
+                "test/FooBase.java",
+                "package test;\n"+
+                "public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
 
-				"test/BarBase.java",
-				"package test;\n"+
-				"abstract public class BarBase {}",
+                "test/IFoo.java",
+                "package test;\n"+
+                "public interface IFoo { BarBase foo();}",
+        },"");
+    }
 
-				"test/Bar.java",
-				"package test;\n"+
-				"public class Bar extends BarBase {}",
+    public void testAbstractCovariance_GRE272_3() {
+        this.runNegativeTest(new String[] {
+                "test/IFoo.java",
+                "package test;\n"+
+                "public interface IFoo { BarBase foo();}",
 
-		},"");
-	}
+                "test/GroovyFoo.groovy",
+                "package test;\n"+
+                "class GroovyFoo extends FooBase {}",
 
-	public void testAbstractCovariance_GRE272_4() {
-		this.runNegativeTest(new String[] {
-				"test/IFoo.java",
-				"package test;\n"+
-				"public interface IFoo { BarBase foo();}",
+                "test/FooBase.java",
+                "package test;\n"+
+                "public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
-				"test/FooBase.java",
-				"package test;\n"+
-				"public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
-				"test/BarBase.java",
-				"package test;\n"+
-				"abstract public class BarBase {}",
+                "test/BarBase.java",
+                "package test;\n"+
+                "abstract public class BarBase {}",
 
-				"test/Bar.java",
-				"package test;\n"+
-				"public class Bar extends BarBase {}",
+                "test/Bar.java",
+                "package test;\n"+
+                "public class Bar extends BarBase {}",
 
-				"test/GroovyFoo.groovy",
-				"package test;\n"+
-				"class GroovyFoo extends FooBase {}",
-		},"");
-	}
+        },"");
+    }
 
-	public void testIncorrectReturnType_GRE292() {
-		this.runNegativeTest(new String[] {
-				"Voidy.groovy",
-				"public class VoidReturnTestCase {\n"+
-				"\n"+
-				"  void returnSomething() { \n"+
-				"    return true && false   \n" +
-				"  }\n"+
-				"\n"+
-				"}\n"},
-				"----------\n" +
-				"1. ERROR in Voidy.groovy (at line 4)\n" +
-				"\treturn true && false   \n" +
-				"\t^^^^^^^^^^^^^^^^^^^^\n" +
-				"Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-				"----------\n");
-	}
+    public void testAbstractCovariance_GRE272_4() {
+        this.runNegativeTest(new String[] {
+                "test/IFoo.java",
+                "package test;\n"+
+                "public interface IFoo { BarBase foo();}",
 
-	public void testIncorrectReturnType_GRE292_3() {
-		this.runNegativeTest(new String[] {
-				"Voidy.groovy",
-				"public class VoidReturnTestCase {\n"+
-				"\n"+
-				"  void returnSomething() { \n"+
-				"    return true\n" +
-				"  }\n"+
-				"\n"+
-				"}\n"},
-				"----------\n" +
-				"1. ERROR in Voidy.groovy (at line 4)\n" +
-				"\treturn true\n" +
-				"\t^^^^^^^^^^^\n" +
-				"Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-				"----------\n");
-	}
+                "test/FooBase.java",
+                "package test;\n"+
+                "public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
-	public void testIncorrectReturnType_GRE292_2() {
-		this.runNegativeTest(new String[] {
-				"Voidy.groovy",
-				"public class VoidReturnTestCase {\n"+
-				"\n"+
-				"  void returnSomething() { return true }\n"+
-				"\n"+
-				"}\n"},
-				"----------\n"+
-				"1. ERROR in Voidy.groovy (at line 3)\n" +
-				"\tvoid returnSomething() { return true }\n" +
-				"\t                         ^^^^^^^^^^^\n" +
-				"Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-				"----------\n");
-	}
+                "test/BarBase.java",
+                "package test;\n"+
+                "abstract public class BarBase {}",
 
-	public void testIncorrectReturnType_GRE292_4() {
-		this.runNegativeTest(new String[] {
-				"Voidy.groovy",
-				"public class VoidReturnTestCase {\n"+
-				"\n"+
-				" void returnSomething() { return 375+26 }\n"+
-				"\n"+
-				"}\n"},
-				"----------\n" +
-				"1. ERROR in Voidy.groovy (at line 3)\n" +
-				"\tvoid returnSomething() { return 375+26 }\n" +
-				"\t                         ^^^^^^^^^^^^^\n" +
-				"Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-				"----------\n");
-	}
+                "test/Bar.java",
+                "package test;\n"+
+                "public class Bar extends BarBase {}",
 
-	public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273() {
-		this.runNegativeTest(new String[] {
-			"X.groovy",
-			"import java.util.Map\n"+
-			"import org.andrill.coretools.data.edit.Command\n"+
-			"import org.andrill.coretools.data.edit.EditableProperty\n"+
-			"import org.andrill.coretools.data.Model\n"+
-			"import org.andrill.coretools.data.ModelCollection\n"+
-			"import org.andrill.coretools.data.edit.commands.CompositeCommand\n"+
-			"\n"+
-			"class GProperty implements EditableProperty {\n"+
-			"def source\n"+
-			"String name\n"+
-			"String widgetType\n"+
-			"Map widgetProperties = [:]\n"+
-			"Map constraints = [:]\n"+
-			"def validators = []\n"+
-			"Command command\n"+
-			"\n"+
-			"String getValue() {\n"+
-			"if (source instanceof Model) { return source.modelData[name] } else { return (source.\"$name\" as String) }\n"+
-			"}\n"+
-			"\n"+
-			"boolean isValid(String newValue) {\n"+
-			"try {\n"+
-			"return validators.inject(true) { prev, cur -> prev && cur.call([newValue, source]) }\n"+
-			"} catch (e) { return false }\n"+
-			"}\n"+
-			"\n"+
-			"Command getCommand(String newValue) {\n"+
-			"if (constraints?.linkTo && source instanceof Model) {\n"+
-			"def value = source.\"$name\"\n"+
-			"def links = source.collection.models.findAll { it.class == source.class && it?.\"${constraints.linkTo}\" == value }\n"+
-			"if (links) {\n"+
-			"def commands = []\n"+
-			"commands << new GCommand(source: source, prop: name, value: newValue)\n"+
-			"links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n"+
-			"return new CompositeCommand(\"Change $name\", (commands as Command[]))\n"+
-			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
-			"} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
-			"}\n"+
-			"}\n"
-			},
-			"----------\n" +
-			"1. ERROR in X.groovy (at line 2)\n" +
-			"\timport org.andrill.coretools.data.edit.Command\n" +
-			"\t                                       ^^^^^^^\n" +
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" +
-			"----------\n" +
-			"2. ERROR in X.groovy (at line 3)\n" +
-			"\timport org.andrill.coretools.data.edit.EditableProperty\n" +
-			"\t                                       ^^^^^^^^^^^^^^^^\n" +
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" +
-			"----------\n" +
-			"3. ERROR in X.groovy (at line 4)\n" +
-			"\timport org.andrill.coretools.data.Model\n" +
-			"\t                                  ^^^^^\n" +
-			"Groovy:unable to resolve class org.andrill.coretools.data.Model\n" +
-			"----------\n" +
-			"4. ERROR in X.groovy (at line 5)\n" +
-			"\timport org.andrill.coretools.data.ModelCollection\n" +
-			"\t                                  ^^^^^^^^^^^^^^^\n" +
-			"Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" +
-			"----------\n" +
-			"5. ERROR in X.groovy (at line 6)\n" +
-			"\timport org.andrill.coretools.data.edit.commands.CompositeCommand\n" +
-			"\t                                                ^^^^^^^^^^^^^^^^\n" +
-			"Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" +
-			"----------\n" +
-			"6. ERROR in X.groovy (at line 8)\n" +
-			"\tclass GProperty implements EditableProperty {\n" +
-			"\t      ^^^^^^^^^\n" +
-			"Groovy:You are not allowed to implement the class \'org.andrill.coretools.data.edit.EditableProperty\', use extends instead.\n" +
-			"----------\n" +
-			"7. WARNING in X.groovy (at line 12)\n" +
-			"\tMap widgetProperties = [:]\n" +
-			"\t^^^\n" +
-			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" +
-			"----------\n" +
-			"8. WARNING in X.groovy (at line 13)\n" +
-			"\tMap constraints = [:]\n" +
-			"\t^^^\n" +
-			"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" +
-			"----------\n" +
+                "test/GroovyFoo.groovy",
+                "package test;\n"+
+                "class GroovyFoo extends FooBase {}",
+        },"");
+    }
+
+    public void testIncorrectReturnType_GRE292() {
+        this.runNegativeTest(new String[] {
+                "Voidy.groovy",
+                "public class VoidReturnTestCase {\n"+
+                "\n"+
+                "  void returnSomething() { \n"+
+                "    return true && false   \n" +
+                "  }\n"+
+                "\n"+
+                "}\n"},
+                "----------\n" +
+                "1. ERROR in Voidy.groovy (at line 4)\n" +
+                "\treturn true && false   \n" +
+                "\t^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+                "----------\n");
+    }
+
+    public void testIncorrectReturnType_GRE292_3() {
+        this.runNegativeTest(new String[] {
+                "Voidy.groovy",
+                "public class VoidReturnTestCase {\n"+
+                "\n"+
+                "  void returnSomething() { \n"+
+                "    return true\n" +
+                "  }\n"+
+                "\n"+
+                "}\n"},
+                "----------\n" +
+                "1. ERROR in Voidy.groovy (at line 4)\n" +
+                "\treturn true\n" +
+                "\t^^^^^^^^^^^\n" +
+                "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+                "----------\n");
+    }
+
+    public void testIncorrectReturnType_GRE292_2() {
+        this.runNegativeTest(new String[] {
+                "Voidy.groovy",
+                "public class VoidReturnTestCase {\n"+
+                "\n"+
+                "  void returnSomething() { return true }\n"+
+                "\n"+
+                "}\n"},
+                "----------\n"+
+                "1. ERROR in Voidy.groovy (at line 3)\n" +
+                "\tvoid returnSomething() { return true }\n" +
+                "\t                         ^^^^^^^^^^^\n" +
+                "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+                "----------\n");
+    }
+
+    public void testIncorrectReturnType_GRE292_4() {
+        this.runNegativeTest(new String[] {
+                "Voidy.groovy",
+                "public class VoidReturnTestCase {\n"+
+                "\n"+
+                " void returnSomething() { return 375+26 }\n"+
+                "\n"+
+                "}\n"},
+                "----------\n" +
+                "1. ERROR in Voidy.groovy (at line 3)\n" +
+                "\tvoid returnSomething() { return 375+26 }\n" +
+                "\t                         ^^^^^^^^^^^^^\n" +
+                "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+                "----------\n");
+    }
+
+    public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273() {
+        this.runNegativeTest(new String[] {
+            "X.groovy",
+            "import java.util.Map\n"+
+            "import org.andrill.coretools.data.edit.Command\n"+
+            "import org.andrill.coretools.data.edit.EditableProperty\n"+
+            "import org.andrill.coretools.data.Model\n"+
+            "import org.andrill.coretools.data.ModelCollection\n"+
+            "import org.andrill.coretools.data.edit.commands.CompositeCommand\n"+
+            "\n"+
+            "class GProperty implements EditableProperty {\n"+
+            "def source\n"+
+            "String name\n"+
+            "String widgetType\n"+
+            "Map widgetProperties = [:]\n"+
+            "Map constraints = [:]\n"+
+            "def validators = []\n"+
+            "Command command\n"+
+            "\n"+
+            "String getValue() {\n"+
+            "if (source instanceof Model) { return source.modelData[name] } else { return (source.\"$name\" as String) }\n"+
+            "}\n"+
+            "\n"+
+            "boolean isValid(String newValue) {\n"+
+            "try {\n"+
+            "return validators.inject(true) { prev, cur -> prev && cur.call([newValue, source]) }\n"+
+            "} catch (e) { return false }\n"+
+            "}\n"+
+            "\n"+
+            "Command getCommand(String newValue) {\n"+
+            "if (constraints?.linkTo && source instanceof Model) {\n"+
+            "def value = source.\"$name\"\n"+
+            "def links = source.collection.models.findAll { it.class == source.class && it?.\"${constraints.linkTo}\" == value }\n"+
+            "if (links) {\n"+
+            "def commands = []\n"+
+            "commands << new GCommand(source: source, prop: name, value: newValue)\n"+
+            "links.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n"+
+            "return new CompositeCommand(\"Change $name\", (commands as Command[]))\n"+
+            "} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
+            "} else { return new GCommand(source: source, prop: name, value: newValue) }\n"+
+            "}\n"+
+            "}\n"
+            },
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 2)\n" +
+            "\timport org.andrill.coretools.data.edit.Command\n" +
+            "\t                                       ^^^^^^^\n" +
+            "Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" +
+            "----------\n" +
+            "2. ERROR in X.groovy (at line 3)\n" +
+            "\timport org.andrill.coretools.data.edit.EditableProperty\n" +
+            "\t                                       ^^^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" +
+            "----------\n" +
+            "3. ERROR in X.groovy (at line 4)\n" +
+            "\timport org.andrill.coretools.data.Model\n" +
+            "\t                                  ^^^^^\n" +
+            "Groovy:unable to resolve class org.andrill.coretools.data.Model\n" +
+            "----------\n" +
+            "4. ERROR in X.groovy (at line 5)\n" +
+            "\timport org.andrill.coretools.data.ModelCollection\n" +
+            "\t                                  ^^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" +
+            "----------\n" +
+            "5. ERROR in X.groovy (at line 6)\n" +
+            "\timport org.andrill.coretools.data.edit.commands.CompositeCommand\n" +
+            "\t                                                ^^^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" +
+            "----------\n" +
+            "6. ERROR in X.groovy (at line 8)\n" +
+            "\tclass GProperty implements EditableProperty {\n" +
+            "\t      ^^^^^^^^^\n" +
+            "Groovy:You are not allowed to implement the class \'org.andrill.coretools.data.edit.EditableProperty\', use extends instead.\n" +
+            "----------\n" +
+            "7. WARNING in X.groovy (at line 12)\n" +
+            "\tMap widgetProperties = [:]\n" +
+            "\t^^^\n" +
+            "Map is a raw type. References to generic type Map<K,V> should be parameterized\n" +
+            "----------\n" +
+            "8. WARNING in X.groovy (at line 13)\n" +
+            "\tMap constraints = [:]\n" +
+            "\t^^^\n" +
+            "Map is a raw type. References to generic type Map<K,V> should be parameterized\n" +
+            "----------\n" +
 //			"9. ERROR in X.groovy (at line 15)\n" +
 //			"\tCommand command\n" +
 //			"\t^^^^^^^\n" +
 //			"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" +
 //			"----------\n" +
-			"9. ERROR in X.groovy (at line 33)\n" +
-			"\tcommands << new GCommand(source: source, prop: name, value: newValue)\n" +
-			"\t                ^^^^^^^^\n" +
-			"Groovy:unable to resolve class GCommand \n" +
-			"----------\n" +
-			"10. ERROR in X.groovy (at line 34)\n" +
-			"\tlinks.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" +
-			"\t                             ^^^^^^^^\n" +
-			"Groovy:unable to resolve class GCommand \n" +
-			"----------\n" +
-			"11. ERROR in X.groovy (at line 36)\n" +
-			"\t} else { return new GCommand(source: source, prop: name, value: newValue) }\n" +
-			"\t                    ^^^^^^^^\n" +
-			"Groovy:unable to resolve class GCommand \n" +
-			"----------\n" +
-			"12. ERROR in X.groovy (at line 37)\n" +
-			"\t} else { return new GCommand(source: source, prop: name, value: newValue) }\n" +
-			"\t                    ^^^^^^^^\n" +
-			"Groovy:unable to resolve class GCommand \n" +
-			"----------\n");
-	}
+            "9. ERROR in X.groovy (at line 33)\n" +
+            "\tcommands << new GCommand(source: source, prop: name, value: newValue)\n" +
+            "\t                ^^^^^^^^\n" +
+            "Groovy:unable to resolve class GCommand \n" +
+            "----------\n" +
+            "10. ERROR in X.groovy (at line 34)\n" +
+            "\tlinks.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" +
+            "\t                             ^^^^^^^^\n" +
+            "Groovy:unable to resolve class GCommand \n" +
+            "----------\n" +
+            "11. ERROR in X.groovy (at line 36)\n" +
+            "\t} else { return new GCommand(source: source, prop: name, value: newValue) }\n" +
+            "\t                    ^^^^^^^^\n" +
+            "Groovy:unable to resolve class GCommand \n" +
+            "----------\n" +
+            "12. ERROR in X.groovy (at line 37)\n" +
+            "\t} else { return new GCommand(source: source, prop: name, value: newValue) }\n" +
+            "\t                    ^^^^^^^^\n" +
+            "Groovy:unable to resolve class GCommand \n" +
+            "----------\n");
+    }
 
-	public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273_2() {
-		this.runNegativeTest(new String[] {
-				"A.groovy",
-				"class A {\n"+
-				"  String s;"+
-				"  String getS(String foo) { return null;}\n"+
-				"}"
-		},"");
-	}
+    public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273_2() {
+        this.runNegativeTest(new String[] {
+                "A.groovy",
+                "class A {\n"+
+                "  String s;"+
+                "  String getS(String foo) { return null;}\n"+
+                "}"
+        },"");
+    }
 
-	public void testAbstractClass_GRE274() {
-		this.runNegativeTest(new String[] {
-			"p/Foo.groovy",
-			"class Foo {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    new C();\n"+
-			"  }\n"+
-			"}\n",
+    public void testAbstractClass_GRE274() {
+        this.runNegativeTest(new String[] {
+            "p/Foo.groovy",
+            "class Foo {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    new C();\n"+
+            "  }\n"+
+            "}\n",
 
-			"p/C.java",
-			"package p;\n" +
-			"public abstract class C {\n" +
-			"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in p\\Foo.groovy (at line 3)\n" +
-		"\tnew C();\n" +
-		"\t    ^\n" +
-		"Groovy:unable to resolve class C \n" +
-		"----------\n");
-	}
+            "p/C.java",
+            "package p;\n" +
+            "public abstract class C {\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in p\\Foo.groovy (at line 3)\n" +
+        "\tnew C();\n" +
+        "\t    ^\n" +
+        "Groovy:unable to resolve class C \n" +
+        "----------\n");
+    }
 
-	public void testAbstractClass_GRE274_2() {
-		this.runNegativeTest(new String[] {
-			"p/Foo.groovy",
-			"class Foo {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    new Wibble();\n"+
-			"  }\n"+
-			"}\n",
+    public void testAbstractClass_GRE274_2() {
+        this.runNegativeTest(new String[] {
+            "p/Foo.groovy",
+            "class Foo {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    new Wibble();\n"+
+            "  }\n"+
+            "}\n",
 
-			"Wibble.groovy",
-			"@SuppressWarnings(\"cast\")\n"+
-			"public class Wibble implements Comparable<String> {\n" +
-			"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in Wibble.groovy (at line 2)\n" +
-		"\tpublic class Wibble implements Comparable<String> {\n" +
-		"\t             ^^^^^^\n" +
-		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Wibble\' must be declared abstract or the method \'int compareTo(java.lang.Object)\' must be implemented.\n" +
-		"----------\n");
-	}
+            "Wibble.groovy",
+            "//@SuppressWarnings(\"cast\")\n"+
+            "public class Wibble implements Comparable<String> {\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Wibble.groovy (at line 2)\n" +
+        "\tpublic class Wibble implements Comparable<String> {\n" +
+        "\t             ^^^^^^\n" +
+        "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Wibble\' must be declared abstract or the method \'int compareTo(java.lang.Object)\' must be implemented.\n" +
+        "----------\n");
+    }
 
     public void testConstructorsForEnumWrong_GRE285() {
         this.runNegativeTest(new String[] {
@@ -1944,213 +1798,213 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     public void testNPE_GRE291() {
         this.runNegativeTest(new String[] {
             "ContinueTestCase.groovy",
-    		"public class ContinueTestCase {\n" +
-			"\n" +
-			"	public ContinueTestCase() {\n" +
-			"		continue;\n" +
-			"	}\n" +
-			"}\n" },
-			"----------\n" +
-			"1. ERROR in ContinueTestCase.groovy (at line 4)\n" +
-			"\tcontinue;\n" +
-			"\t^^^^^^^^\n" +
-			"Groovy:the continue statement is only allowed inside loops\n" +
-			"----------\n");
-	}
+            "public class ContinueTestCase {\n" +
+            "\n" +
+            "	public ContinueTestCase() {\n" +
+            "		continue;\n" +
+            "	}\n" +
+            "}\n" },
+            "----------\n" +
+            "1. ERROR in ContinueTestCase.groovy (at line 4)\n" +
+            "\tcontinue;\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:the continue statement is only allowed inside loops\n" +
+            "----------\n");
+    }
 
-	public void testMissingContext_GRE308() {
-		this.runNegativeTest(new String[] {
-			"DibDabs.groovy",
-			"	def run(n) {\n"+
-			"\n"+
-			"		  OtherGroovy.iterate (3) {\n"+
-			"		  print it*2\n"+
-			"	  }  \n"+
-			"//		  		NOT RECORDED AGAINST THIS FILE??\n"+
-			"		  int i        "},
-			"----------\n" +
-			"1. ERROR in DibDabs.groovy (at line 7)\n" +
-			"\tint i        \n" +
-			"\t            ^\n" +
-			"Groovy:expecting \'}\', found \'\' @ line 7, column 17.\n" +
-			"----------\n");
-		}
+    public void testMissingContext_GRE308() {
+        this.runNegativeTest(new String[] {
+            "DibDabs.groovy",
+            "	def run(n) {\n"+
+            "\n"+
+            "		  OtherGroovy.iterate (3) {\n"+
+            "		  print it*2\n"+
+            "	  }  \n"+
+            "//		  		NOT RECORDED AGAINST THIS FILE??\n"+
+            "		  int i        "},
+            "----------\n" +
+            "1. ERROR in DibDabs.groovy (at line 7)\n" +
+            "\tint i        \n" +
+            "\t            ^\n" +
+            "Groovy:expecting \'}\', found \'\' @ line 7, column 17.\n" +
+            "----------\n");
+        }
 
     // FIXASC less than ideal underlining for error location
-	public void testMissingContext_GRE308_2() {
-		this.runNegativeTest(new String[] {
-			"DibDabs.groovy",
-			"	def run(n) {\n"+
-			"\n"+
-			"		  OtherGroovy.iterate (3) {\n"+
-			"		  print it*2\n"+
-			"	  }  \n"+
-			"//		  		NOT RECORDED AGAINST THIS FILE??\n"+
-			"		  int i        \n"},
-			"----------\n" +
-			"1. ERROR in DibDabs.groovy (at line 7)\n" +
-			"\tint i        \n" +
-			"\n" +
-			"\t             ^\n" +
-			"Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" +
-			"----------\n");
-		}
+    public void testMissingContext_GRE308_2() {
+        this.runNegativeTest(new String[] {
+            "DibDabs.groovy",
+            "	def run(n) {\n"+
+            "\n"+
+            "		  OtherGroovy.iterate (3) {\n"+
+            "		  print it*2\n"+
+            "	  }  \n"+
+            "//		  		NOT RECORDED AGAINST THIS FILE??\n"+
+            "		  int i        \n"},
+            "----------\n" +
+            "1. ERROR in DibDabs.groovy (at line 7)\n" +
+            "\tint i        \n" +
+            "\n" +
+            "\t             ^\n" +
+            "Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" +
+            "----------\n");
+        }
 
-	// a valid script, no '.' after session2
-	public void testInvalidScripts_GRE323_1() {
-		this.runNegativeTest(new String[] {
-			"Two.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"moo {\n" +
-			"  final session2 = null\n" +
-		    "  \n" +
-			"  // Define scenarios\n" +
-			"  def secBoardRep = session2\n" +
-			"  def x\n" +
-			"}\n"
-		},"");
-	}
+    // a valid script, no '.' after session2
+    public void testInvalidScripts_GRE323_1() {
+        this.runNegativeTest(new String[] {
+            "Two.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "moo {\n" +
+            "  final session2 = null\n" +
+            "  \n" +
+            "  // Define scenarios\n" +
+            "  def secBoardRep = session2\n" +
+            "  def x\n" +
+            "}\n"
+        },"");
+    }
 
-	public void testInvalidScripts_GRE323_1b() {
-		this.runConformTest(new String[] {
-			"Two.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"moo {\n" +
-			"  final session2 = null\n" +
-		    "  \n" +
-			"  // Define scenarios\n" +
-			"  def secBoardRep = session2\n" +
-			"  def x\n" +
-			"}\n"
-		},"");
-	}
+    public void testInvalidScripts_GRE323_1b() {
+        this.runConformTest(new String[] {
+            "Two.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "moo {\n" +
+            "  final session2 = null\n" +
+            "  \n" +
+            "  // Define scenarios\n" +
+            "  def secBoardRep = session2\n" +
+            "  def x\n" +
+            "}\n"
+        },"");
+    }
 
-	// '.' added, command line gives:
-	//	One.groovy: 10: expecting '}', found 'x' @ line 10, column 7.
-	//    def x
-	//        ^
-	public void testInvalidScripts_GRE323_2() {
-		if (GroovyUtils.GROOVY_LEVEL<18) {
-			this.runNegativeTest(new String[] {
-				"One.groovy",
-				"def moo(closure) {\n" +
-				"  closure();\n" +
-				"}\n" +
-				"\n" +
-				"moo {\n" +
-				"  final session2 = null\n" +
-			    "  \n" +
-				"  // Define scenarios\n" +
-				"  def secBoardRep = session2.\n" +
-				"  def x\n" +
-				"}\n"
-			},
-			"----------\n" +
-			"1. ERROR in One.groovy (at line 10)\n" +
-			"\tdef x\n" +
-			"\t    ^\n" +
-			"Groovy:expecting \'}\', found \'x\' @ line 10, column 7.\n" +
-			"----------\n");
-		} else {
-			// command expression syntax now allows this but it looks weird as
-			this.runConformTest(new String[] {
-					"One.groovy",
-					"def moo(closure) {\n" +
-					"  closure();\n" +
-					"}\n" +
-					"\n" +
-					"moo {\n" +
-					"  final session2 = null\n" +
-				    "  \n" +
-					"  // Define scenarios\n" +
-					"  def secBoardRep = session2.\n" +
-					"  def x\n" +
-					"}\n"
-				},
-				"");
-		}
-	}
+    // '.' added, command line gives:
+    //	One.groovy: 10: expecting '}', found 'x' @ line 10, column 7.
+    //    def x
+    //        ^
+    public void testInvalidScripts_GRE323_2() {
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            this.runNegativeTest(new String[] {
+                "One.groovy",
+                "def moo(closure) {\n" +
+                "  closure();\n" +
+                "}\n" +
+                "\n" +
+                "moo {\n" +
+                "  final session2 = null\n" +
+                "  \n" +
+                "  // Define scenarios\n" +
+                "  def secBoardRep = session2.\n" +
+                "  def x\n" +
+                "}\n"
+            },
+            "----------\n" +
+            "1. ERROR in One.groovy (at line 10)\n" +
+            "\tdef x\n" +
+            "\t    ^\n" +
+            "Groovy:expecting \'}\', found \'x\' @ line 10, column 7.\n" +
+            "----------\n");
+        } else {
+            // command expression syntax now allows this but it looks weird as
+            this.runConformTest(new String[] {
+                    "One.groovy",
+                    "def moo(closure) {\n" +
+                    "  closure();\n" +
+                    "}\n" +
+                    "\n" +
+                    "moo {\n" +
+                    "  final session2 = null\n" +
+                    "  \n" +
+                    "  // Define scenarios\n" +
+                    "  def secBoardRep = session2.\n" +
+                    "  def x\n" +
+                    "}\n"
+                },
+                "");
+        }
+    }
 
-	// removed surrounding method
-	public void testInvalidScripts_GRE323_3() {
-		this.runNegativeTest(new String[] {
-			"Three.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"  final session2 = null\n" +
-		    "  \n" +
-			"  // Define scenarios\n" +
-			"  def secBoardRep = session2\n" +
-			"  def x\n"
-		},"");
-	}
+    // removed surrounding method
+    public void testInvalidScripts_GRE323_3() {
+        this.runNegativeTest(new String[] {
+            "Three.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "  final session2 = null\n" +
+            "  \n" +
+            "  // Define scenarios\n" +
+            "  def secBoardRep = session2\n" +
+            "  def x\n"
+        },"");
+    }
 
-	public void testInvalidScripts_GRE323_3b() {
-		this.runConformTest(new String[] {
-			"Three.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"  final session2 = null\n" +
-		    "  \n" +
-			"  // Define scenarios\n" +
-			"  def secBoardRep = session2\n" +
-			"  def x\n"
-		},"");
-	}
+    public void testInvalidScripts_GRE323_3b() {
+        this.runConformTest(new String[] {
+            "Three.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "  final session2 = null\n" +
+            "  \n" +
+            "  // Define scenarios\n" +
+            "  def secBoardRep = session2\n" +
+            "  def x\n"
+        },"");
+    }
 
-	// no assignment for session2
-	public void testInvalidScripts_GRE323_4() {
-		this.runNegativeTest(new String[] {
-			"Four.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"moo {\n" +
-			"  final session2 = null\n" +
-		    "  \n" +
-			"  // Define scenarios\n" +
-			"  session2.\n" +
-			"  def x\n"+
-			"}\n"
-		},"");
-	}
+    // no assignment for session2
+    public void testInvalidScripts_GRE323_4() {
+        this.runNegativeTest(new String[] {
+            "Four.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "moo {\n" +
+            "  final session2 = null\n" +
+            "  \n" +
+            "  // Define scenarios\n" +
+            "  session2.\n" +
+            "  def x\n"+
+            "}\n"
+        },"");
+    }
 
-	public void testInvalidScripts_GRE323_4b() {
-		this.runConformTest(new String[] {
-			"Run.java",
-			"public class Run {\n"+
-			"  public static void main(String[]argv) {\n"+
-			"   try {\n"+
-			"    Four.main(null);\n"+
-			"   } catch (Throwable t) {\n"+
-			"    System.out.println(t.getMessage());\n"+
-			"   }\n"+
-			"}\n"+
-			"}",
-			"Four.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"moo {\n" +
-			"  final session2 = null\n" +
-		    "  \n" +
-			"  // Define scenarios\n" +
-			"  session2.\n" +
-			"  def x\n"+
-			"}\n"
-		},"No such property: x for class: Four");
+    public void testInvalidScripts_GRE323_4b() {
+        this.runConformTest(new String[] {
+            "Run.java",
+            "public class Run {\n"+
+            "  public static void main(String[]argv) {\n"+
+            "   try {\n"+
+            "    Four.main(null);\n"+
+            "   } catch (Throwable t) {\n"+
+            "    System.out.println(t.getMessage());\n"+
+            "   }\n"+
+            "}\n"+
+            "}",
+            "Four.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "moo {\n" +
+            "  final session2 = null\n" +
+            "  \n" +
+            "  // Define scenarios\n" +
+            "  session2.\n" +
+            "  def x\n"+
+            "}\n"
+        },"No such property: x for class: Four");
 // actual exception:
 //		"[ERR]:groovy.lang.MissingPropertyException: No such property: x for class: Four\n"+
 //		"\tat org.codehaus.groovy.runtime.ScriptBytecodeAdapter.unwrap(ScriptBytecodeAdapter.java:49)\n"+
@@ -2209,4443 +2063,3096 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 //		"\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)\n"+
 //		"\tat java.lang.reflect.Method.invoke(Method.java:585)\n"+
 //		"\tat \n"
-	}
+    }
 
-	public void testInvalidScripts_GRE323_5() {
-		this.runNegativeTest(new String[] {
-			"Five.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"moo {\n" +
-			"  final session2 = [\"def\": { println \"DEF\" }]\n" +
-		    "  \n" +
-		    "  final x = 1\n"+
-			"  // Define scenarios\n" +
-			"  session2.\n" +
-			"  def x\n"+
-			"}\n"
-		},"");
-	}
+    public void testInvalidScripts_GRE323_5() {
+        this.runNegativeTest(new String[] {
+            "Five.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "moo {\n" +
+            "  final session2 = [\"def\": { println \"DEF\" }]\n" +
+            "  \n" +
+            "  final x = 1\n"+
+            "  // Define scenarios\n" +
+            "  session2.\n" +
+            "  def x\n"+
+            "}\n"
+        },"");
+    }
 
-	public void testInvalidScripts_GRE323_5b() {
-		this.runConformTest(new String[] {
-			"Five.groovy",
-			"def moo(closure) {\n" +
-			"  closure();\n" +
-			"}\n" +
-			"\n" +
-			"moo {\n" +
-			"  final session2 = [\"def\": { println \"DEF\" }]\n" +
-		    "  \n" +
-		    "  final x = 1\n"+
-			"  // Define scenarios\n" +
-			"  session2.\n" +
-			"  def x\n"+
-			"}\n"
-		},"DEF");
-	}
+    public void testInvalidScripts_GRE323_5b() {
+        this.runConformTest(new String[] {
+            "Five.groovy",
+            "def moo(closure) {\n" +
+            "  closure();\n" +
+            "}\n" +
+            "\n" +
+            "moo {\n" +
+            "  final session2 = [\"def\": { println \"DEF\" }]\n" +
+            "  \n" +
+            "  final x = 1\n"+
+            "  // Define scenarios\n" +
+            "  session2.\n" +
+            "  def x\n"+
+            "}\n"
+        },"DEF");
+    }
 
-	public void testInvalidScripts_GRE323_6() {
-		if (GroovyUtils.GROOVY_LEVEL<18) {
-			this.runNegativeTest(new String[] {
-				"Six.groovy",
-				"def moo(closure) {\n" +
-				"  closure();\n" +
-				"}\n" +
-				"\n" +
-				"moo {\n" +
-				"  final session2 = [\"def\": { println \"DEF\" }]\n" +
-			    "  \n" +
-			    "  final x = 1\n"+
-				"  // Define scenarios\n" +
-				"  final y = session2.def x\n" +
-				"}\n"
-			},
-			"----------\n" +
-			"1. ERROR in Six.groovy (at line 10)\n" +
-			"\tfinal y = session2.def x\n" +
-			"\t                       ^\n" +
-			"Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" +
-			"----------\n");
-		} else {
-			this.runConformTest(new String[] {
-					"Six.groovy",
-					"def moo(closure) {\n" +
-					"  closure();\n" +
-					"}\n" +
-					"\n" +
-					"moo {\n" +
-					"  final session2 = [\"def\": { println \"DEF\" }]\n" +
-				    "  \n" +
-				    "  final x = 1\n"+
-					"  // Define scenarios\n" +
-					"  final y = session2.def x\n" +
-					"}\n"
-				},"DEF");
-		}
-	}
+    public void testInvalidScripts_GRE323_6() {
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            this.runNegativeTest(new String[] {
+                "Six.groovy",
+                "def moo(closure) {\n" +
+                "  closure();\n" +
+                "}\n" +
+                "\n" +
+                "moo {\n" +
+                "  final session2 = [\"def\": { println \"DEF\" }]\n" +
+                "  \n" +
+                "  final x = 1\n"+
+                "  // Define scenarios\n" +
+                "  final y = session2.def x\n" +
+                "}\n"
+            },
+            "----------\n" +
+            "1. ERROR in Six.groovy (at line 10)\n" +
+            "\tfinal y = session2.def x\n" +
+            "\t                       ^\n" +
+            "Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" +
+            "----------\n");
+        } else {
+            this.runConformTest(new String[] {
+                    "Six.groovy",
+                    "def moo(closure) {\n" +
+                    "  closure();\n" +
+                    "}\n" +
+                    "\n" +
+                    "moo {\n" +
+                    "  final session2 = [\"def\": { println \"DEF\" }]\n" +
+                    "  \n" +
+                    "  final x = 1\n"+
+                    "  // Define scenarios\n" +
+                    "  final y = session2.def x\n" +
+                    "}\n"
+                },"DEF");
+        }
+    }
 
-	public void testBridgeMethods_GRE336() {
-		this.runNegativeTest(new String[] {
-			"my/example/EnumBooleanMap.java",
-			"package my.example;\n"+
-			"\n"+
-			"import java.util.EnumMap;\n"+
-			"\n"+
-			"@SuppressWarnings(\"serial\")\n"+
-			"public class EnumBooleanMap<E extends Enum<E>> extends EnumMap<E, Boolean> {\n"+
-			"	\n"+
-			"	public EnumBooleanMap(Class<E> keyType) {\n"+
-			"		super(keyType);\n"+
-			"	}\n"+
-			"\n"+
-			"	public EnumBooleanMap(EnumBooleanMap<E> m) {\n"+
-			"		super(m);\n"+
-			"	}\n"+
-			"\n"+
-			"	@Override\n"+
-			"	public Boolean get(Object key) {\n"+
-			"		Boolean value = super.get(key);\n"+
-			"		return value != null ? value : false;\n"+
-			"	}\n"+
-			"}\n"
-		},"");
-	}
+    public void testBridgeMethods_GRE336() {
+        this.runNegativeTest(new String[] {
+            "my/example/EnumBooleanMap.java",
+            "package my.example;\n"+
+            "\n"+
+            "import java.util.EnumMap;\n"+
+            "\n"+
+            "@SuppressWarnings(\"serial\")\n"+
+            "public class EnumBooleanMap<E extends Enum<E>> extends EnumMap<E, Boolean> {\n"+
+            "	\n"+
+            "	public EnumBooleanMap(Class<E> keyType) {\n"+
+            "		super(keyType);\n"+
+            "	}\n"+
+            "\n"+
+            "	public EnumBooleanMap(EnumBooleanMap<E> m) {\n"+
+            "		super(m);\n"+
+            "	}\n"+
+            "\n"+
+            "	@Override\n"+
+            "	public Boolean get(Object key) {\n"+
+            "		Boolean value = super.get(key);\n"+
+            "		return value != null ? value : false;\n"+
+            "	}\n"+
+            "}\n"
+        },"");
+    }
 
-	public void testInnerTypeReferencing_GRE339() {
-		this.runConformTest(new String[] {
-				"Script.groovy",
-				"class Script {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print Outer.Inner.VAR\n"+
-				"  }\n"+
-				"}",
-				"Outer.java",
-				"public class Outer {\n"+
-				"	  static class Inner {\n"+
-				"	    static String VAR = \"value\";\n"+
-				"	  }\n"+
-				"	}\n"},
-			"value");
-	}
+    public void testInnerTypeReferencing_GRE339() {
+        this.runConformTest(new String[] {
+                "Script.groovy",
+                "class Script {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print Outer.Inner.VAR\n"+
+                "  }\n"+
+                "}",
+                "Outer.java",
+                "public class Outer {\n"+
+                "	  static class Inner {\n"+
+                "	    static String VAR = \"value\";\n"+
+                "	  }\n"+
+                "	}\n"},
+            "value");
+    }
 
-	// interface
-	public void testInnerTypeReferencing_GRE339_2() {
-		this.runConformTest(new String[] {
-				"Script.groovy",
-				"class Script {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print Outer.Inner.VAR\n"+
-				"  }\n"+
-				"}",
-				"Outer.java",
-				"public interface Outer {\n"+
-				"	  interface Inner {\n"+
-				"	    static String VAR = \"value\";\n"+
-				"	  }\n"+
-				"	}\n"},
-			"value");
-	}
+    // interface
+    public void testInnerTypeReferencing_GRE339_2() {
+        this.runConformTest(new String[] {
+                "Script.groovy",
+                "class Script {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print Outer.Inner.VAR\n"+
+                "  }\n"+
+                "}",
+                "Outer.java",
+                "public interface Outer {\n"+
+                "	  interface Inner {\n"+
+                "	    static String VAR = \"value\";\n"+
+                "	  }\n"+
+                "	}\n"},
+            "value");
+    }
 
-	// pure script
-	public void testInnerTypeReferencing_GRE339_3() {
-		this.runConformTest(new String[] {
-				"script.groovy",
-				"print Outer.Inner.VAR\n",
-				"Outer.java",
-				"public interface Outer {\n"+
-				"	  interface Inner {\n"+
-				"	    static String VAR = \"value\";\n"+
-				"	  }\n"+
-				"	}\n"},
-			"value");
-	}
+    // pure script
+    public void testInnerTypeReferencing_GRE339_3() {
+        this.runConformTest(new String[] {
+                "script.groovy",
+                "print Outer.Inner.VAR\n",
+                "Outer.java",
+                "public interface Outer {\n"+
+                "	  interface Inner {\n"+
+                "	    static String VAR = \"value\";\n"+
+                "	  }\n"+
+                "	}\n"},
+            "value");
+    }
 
-	public void testStaticProperties_GRE364() {
-		this.runConformTest(new String[] {
-				"Foo.groovy",
-				"public class Foo { static String fubar }\n",
-				"Bar.java",
-				"public class Bar {\n"+
-				"	  String fubar = Foo.getFubar();\n"+
-				"	}\n"},
-			"");
-	}
+    public void testStaticProperties_GRE364() {
+        this.runConformTest(new String[] {
+                "Foo.groovy",
+                "public class Foo { static String fubar }\n",
+                "Bar.java",
+                "public class Bar {\n"+
+                "	  String fubar = Foo.getFubar();\n"+
+                "	}\n"},
+            "");
+    }
 
-	public void testStaticProperties_GRE364_2() {
-		this.runConformTest(new String[] {
-				"Bar.java",
-				"public class Bar {\n"+
-				"	  String fubar = Foo.getFubar();\n"+
-				"	}\n",
-				"Foo.groovy",
-				"public class Foo { static String fubar }\n"},
-			"");
-	}
+    public void testStaticProperties_GRE364_2() {
+        this.runConformTest(new String[] {
+                "Bar.java",
+                "public class Bar {\n"+
+                "	  String fubar = Foo.getFubar();\n"+
+                "	}\n",
+                "Foo.groovy",
+                "public class Foo { static String fubar }\n"},
+            "");
+    }
 
-	public void testTransientMethod_GRE370() {
-		this.runConformTest(new String[] {
-				"Foo.groovy",
-				"public class Foo {\n"+
-				"  public transient void foo() {}\n"+
-				"}\n"},
-			"");
-	}
+    public void testTransientMethod_GRE370() {
+        this.runConformTest(new String[] {
+                "Foo.groovy",
+                "public class Foo {\n"+
+                "  public transient void foo() {}\n"+
+                "}\n"},
+            "");
+    }
 
-	public void testNotSeriousEnough_GRE396() {
-		this.runNegativeTest(new String[]{
+    public void testNotSeriousEnough_GRE396() {
+        this.runNegativeTest(new String[]{
 
-			"TrivialBugTest.groovy",
-			"package org.sjb.sjblib.cmdline;\n"+
-			"public class TrivialBugTest {\n"+
-			"	void func2() {\n"+
-			"		tb = new TrivialBug()\n"+
-			"	}\n"+
-			"}\n",
-			"TrivialBug.groovy",
-			"package org.sjb.sjblib.cmdline;\n"+
-			"public class TrivialBug {\n"+
-			"	void func() {\n"+
-			"		return 5\n"+
-			"	}\n"+
-			"}\n",},
-			"----------\n" +
-			"1. ERROR in TrivialBug.groovy (at line 4)\n" +
-			"\treturn 5\n" +
-			"\t^^^^^^^^\n" +
-			"Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-			"----------\n"
-		);
-	}
+            "TrivialBugTest.groovy",
+            "package org.sjb.sjblib.cmdline;\n"+
+            "public class TrivialBugTest {\n"+
+            "	void func2() {\n"+
+            "		tb = new TrivialBug()\n"+
+            "	}\n"+
+            "}\n",
+            "TrivialBug.groovy",
+            "package org.sjb.sjblib.cmdline;\n"+
+            "public class TrivialBug {\n"+
+            "	void func() {\n"+
+            "		return 5\n"+
+            "	}\n"+
+            "}\n",},
+            "----------\n" +
+            "1. ERROR in TrivialBug.groovy (at line 4)\n" +
+            "\treturn 5\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+            "----------\n"
+        );
+    }
 
-	public void testNotSeriousEnough_GRE396_2() {
-		this.runNegativeTest(new String[]{
-			"TrivialBug.groovy",
-			"package org.sjb.sjblib.cmdline;\n"+
-			"public class TrivialBug {\n"+
-			"	void func() {\n"+
-			"		return 5\n"+
-			"	}\n"+
-			"}\n",
-			"TrivialBugTest.groovy",
-			"package org.sjb.sjblib.cmdline;\n"+
-			"public class TrivialBugTest {\n"+
-			"	void func2() {\n"+
-			"		tb = new TrivialBug()\n"+
-			"	}\n"+
-			"}\n",},
-			"----------\n" +
-			"1. ERROR in TrivialBug.groovy (at line 4)\n" +
-			"\treturn 5\n" +
-			"\t^^^^^^^^\n" +
-			"Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-			"----------\n"
-		);
-	}
+    public void testNotSeriousEnough_GRE396_2() {
+        this.runNegativeTest(new String[]{
+            "TrivialBug.groovy",
+            "package org.sjb.sjblib.cmdline;\n"+
+            "public class TrivialBug {\n"+
+            "	void func() {\n"+
+            "		return 5\n"+
+            "	}\n"+
+            "}\n",
+            "TrivialBugTest.groovy",
+            "package org.sjb.sjblib.cmdline;\n"+
+            "public class TrivialBugTest {\n"+
+            "	void func2() {\n"+
+            "		tb = new TrivialBug()\n"+
+            "	}\n"+
+            "}\n",},
+            "----------\n" +
+            "1. ERROR in TrivialBug.groovy (at line 4)\n" +
+            "\treturn 5\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+            "----------\n"
+        );
+    }
 
-	public void testStarImports_GRE421() {
-		this.runConformTest(new String[]{
-				"Wibble.groovy",
-				"import a.b.c.*;\n"+
-				"class Wibble {\n"+
-				"	 Process process = new Process()\n"+
-				"  public static void main(String[] argv) { print new Wibble().process.class}\n"+
-				"}\n",
-				"a/b/c/Process.java",
-				"package a.b.c;\n"+
-				"public class Process {}\n"},
-				"class a.b.c.Process");
-	}
+    public void testStarImports_GRE421() {
+        this.runConformTest(new String[]{
+                "Wibble.groovy",
+                "import a.b.c.*;\n"+
+                "class Wibble {\n"+
+                "	 Process process = new Process()\n"+
+                "  public static void main(String[] argv) { print new Wibble().process.class}\n"+
+                "}\n",
+                "a/b/c/Process.java",
+                "package a.b.c;\n"+
+                "public class Process {}\n"},
+                "class a.b.c.Process");
+    }
 
-	// The getter for 'description' implements the interface
-	public void testImplementingAnInterfaceViaProperty() {
-		this.runConformTest(new String[] {
-			"a/b/c/C.groovy",
-			"package a.b.c;\n" +
-			"import p.q.r.I;\n"+
-			"public class C implements I {\n" +
-			"  String description;\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
+    // The getter for 'description' implements the interface
+    public void testImplementingAnInterfaceViaProperty() {
+        this.runConformTest(new String[] {
+            "a/b/c/C.groovy",
+            "package a.b.c;\n" +
+            "import p.q.r.I;\n"+
+            "public class C implements I {\n" +
+            "  String description;\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
 
-			"p/q/r/I.groovy",
-			"package p.q.r;\n" +
-			"public interface I {\n" +
-			"  String getDescription();\n"+
-			"}\n",
-		},"success");
-	}
+            "p/q/r/I.groovy",
+            "package p.q.r;\n" +
+            "public interface I {\n" +
+            "  String getDescription();\n"+
+            "}\n",
+        },"success");
+    }
 
-	// Referencing from a groovy to a java type where the reference is through a member, not the hierarchy
-	public void testReferencingOtherTypesInSamePackage() {
-		this.runConformTest(new String[] {
-			"a/b/c/C.groovy",
-			"package a.b.c;\n" +
-			"public class C {\n" +
-			"  D description;\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
+    // Referencing from a groovy to a java type where the reference is through a member, not the hierarchy
+    public void testReferencingOtherTypesInSamePackage() {
+        this.runConformTest(new String[] {
+            "a/b/c/C.groovy",
+            "package a.b.c;\n" +
+            "public class C {\n" +
+            "  D description;\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
 
-			"a/b/c/D.java",
-			"package a.b.c;\n" +
-			"public class D {\n" +
-			"  String getDescription() { return null;}\n"+
-			"}\n",
-		},"success");
-	}
+            "a/b/c/D.java",
+            "package a.b.c;\n" +
+            "public class D {\n" +
+            "  String getDescription() { return null;}\n"+
+            "}\n",
+        },"success");
+    }
 
-	// Ensures that the Point2D.Double reference is resolved in the context of X and not Y (if Y is used then the import isn't found)
-	public void testMemberTypeResolution() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"import java.awt.geom.Point2D;\n"+
-			"public class X {\n" +
-			"  public void foo() {\n"+
+    // Ensures that the Point2D.Double reference is resolved in the context of X and not Y (if Y is used then the import isn't found)
+    public void testMemberTypeResolution() {
+        this.runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "import java.awt.geom.Point2D;\n"+
+            "public class X {\n" +
+            "  public void foo() {\n"+
             "    Object o = new Point2D.Double(p.x(),p.y());\n"+
-			"  }\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-			"p/Y.groovy",
-			"package p;\n" +
-			"public class Y {\n" +
-			"  public void foo() {\n"+
-			"  }\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-		},"success");
-	}
+            "  }\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+            "p/Y.groovy",
+            "package p;\n" +
+            "public class Y {\n" +
+            "  public void foo() {\n"+
+            "  }\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },"success");
+    }
 
-	public void testFailureWhilstAttemptingToReportError() {
-	    // error message change in Groovy 2.1
-	    String msgPart;
+    public void testFailureWhilstAttemptingToReportError() {
+        // error message change in Groovy 2.1
+        String msgPart;
 //		if (GroovyUtils.GROOVY_LEVEL > 20) {
-	   msgPart = "\t     ^^\n";
+       msgPart = "\t     ^^\n";
 //		} else {
 //		    msgPart = "\t     ^\n";
 //		}
         this.runNegativeTest(new String[] {
-			"T.groovy",
-			"public class T{\n"+
-			"	def x () {\n"+
-			"		this \"\"\n"+
-			"	}\n"+
-			"}\n"
-		},"----------\n" +
-		"1. ERROR in T.groovy (at line 3)\n" +
-		"\tthis \"\"\n" +
-		msgPart +
-		"Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" +
-		"----------\n");
-	}
-
-	public void testExtendingInterface1() {
-		this.runNegativeTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X extends I {\n" +
-			"}\n",
-			"p/I.groovy",
-			"package p\n"+
-			"interface I {}",
-		},
-		"----------\n" +
-		"1. ERROR in p\\X.groovy (at line 2)\n" +
-		"\tpublic class X extends I {\n" +
-		"\t             ^\n" +
-		"Groovy:You are not allowed to extend the interface \'p.I\', use implements instead.\n" +
-		"----------\n");
-	}
-
-	public void testProtectedType() {
-		this.runConformTest(new String[] {
-			"p/Y.groovy",
-			"package p;\n" +
-			"class Y {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    new X().main(argv);\n"+
-			"  }\n"+
-			"}\n",
-			"p/X.groovy",
-			"package p;\n" +
-			"protected class X {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-		},
-		"success");
-	}
-
-	public void testEnums() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public enum X {\n" +
-			"}\n",
-		},
-		"");
-	}
-
-    public void testEnums2() {
-		try {
-    		JDTResolver.recordInstances = true;
-    		this.runConformTest(new String[] {
-        			"EE.groovy",
-        			"enum EE {A,B,C;}\n",
-        			"Foo.java",
-        			"public class Foo<E extends Foo<E>> implements Comparable<E> {" +
-        			"  public int compareTo(E b) { return 0;}\n"+
-        			"}\n" +
-        			"\n",
-        			"Goo.java",
-        			"public class Goo<X extends Goo<X>> extends Foo<X> {}\n",
-        			"Bar.groovy",
-        			"abstract class Bar extends Goo<Bar> {" +
-        			"  int compareTo(Bar b) { return 0;}\n"+
-        			"  EE getEnum() { return null; }\n"+
-        			"}\n"});
-
-    		// Check on the state of Comparable
-    		JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
-    		assertNotNull(classnode);
-    		// Should have one method
-    		List methods = classnode.getMethods();
-    		assertEquals(1,methods.size());
-    		assertEquals("int compareTo(java.lang.Object)",((MethodNode)methods.get(0)).getTypeDescriptor());
-    
-    		classnode.lazyClassInit();
-    	} finally {
-    		JDTResolver.instances.clear();
-    		JDTResolver.recordInstances=false;
-    	}
-
-    	this.runConformTest(new String[]{
-			"Foo.groovy",
-			"class Foo<E extends Foo<E>> implements Comparable<E> {" +
-			"  int compareTo(Object b) { return 0;}\n"+
-			"}\n" +
-			"\n",
-			"Bar.groovy",
-			"abstract class Bar extends Foo<Bar> {" +
-			"  int compareTo(Bar b) { return 0;}\n"+
-			"}\n"
-		});
+            "T.groovy",
+            "public class T{\n"+
+            "	def x () {\n"+
+            "		this \"\"\n"+
+            "	}\n"+
+            "}\n"
+        },"----------\n" +
+        "1. ERROR in T.groovy (at line 3)\n" +
+        "\tthis \"\"\n" +
+        msgPart +
+        "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" +
+        "----------\n");
     }
 
-	public void testNonTerminalMissingImport() {
-		this.runNegativeTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"import a.b.c.D;\n"+
-			"public class X {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in p\\X.groovy (at line 2)\n" +
-		"\timport a.b.c.D;\n" +
-		"\t             ^\n" +
-		"Groovy:unable to resolve class a.b.c.D\n" +
-		"----------\n");
-	}
-
-	public void testTypeLevelAnnotations01() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"@Anno\n"+
-			"public class X {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-		},
-		"success");
-
-		String expectedOutput = "public @Anno class X {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-
-		expectedOutput =
-			"@p.Anno\n" +
-			"public class p.X implements groovy.lang.GroovyObject {\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	public void testMethodLevelAnnotations() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-		},
-		"success");
-
-		String expectedOutput = "public static @Anno void main(public String... argv) {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-
-		expectedOutput =
-			//"  // Method descriptor #46 ([Ljava/lang/String;)V\n" +
-			"  // Stack: 3, Locals: 2\n" +
-			"  @p.Anno\n" +
-			"  public static void main(java.lang.String... argv);\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	public void testFieldLevelAnnotations01() throws Exception {
-		runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  String s\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-
-		},
-		"success");
-
-		String expectedOutput = "private @Anno String s;";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-
-		expectedOutput =
-			//"  // Field descriptor #11 Ljava/lang/String;\n" +
-			"  @p.Anno\n" +
-			"  private java.lang.String s;\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	public void testFieldLevelAnnotations_classretention() throws Exception {
-		runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  String s\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-
-		},
-		"success");
-
-		String expectedOutput =
-			//"  // Field descriptor #11 Ljava/lang/String;\n" +
-			"  @p.Anno\n" +
-			"  private java.lang.String s;\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	public void testFieldLevelAnnotations_sourceretention() throws Exception {
-		runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  String s\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.SOURCE)\n"+
-			"@interface Anno {}\n",
-
-		},
-		"success");
-
-		String expectedOutput =
-			//"  // Field descriptor #9"+  descriptor number varies across compilers (1.6/1.7)
-			"Ljava/lang/String;\n" +
-			"  private java.lang.String s;\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	// Default retention is class
-	public void testFieldLevelAnnotations_defaultretention() throws Exception {
-		runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  String s\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"@interface Anno {}\n",
-
-		},
-		"success");
-
-		String expectedOutput =
-//			"  // Field descriptor #9 "+ // descriptor number varies across compiler versions
-			"Ljava/lang/String;\n" +
-			"  private java.lang.String s;\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	public void testFieldLevelAnnotations_delegate() throws Exception {
-		runConformTest(new String[] {
-			"Bar.groovy",
-			"class Bar {\n"+
-			" public void m() {\n"+
-			"Object o = new Other().me;\n"+
-			"}}",
-
-			"Other.groovy",
-			"public class Other {\n" +
-			"  public @Anno Date me\n"+
-			"}\n",
-
-			"Anno.java",
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-
-		},
-		"");
-
-		checkGCUDeclaration("Other.groovy",
-				"public class Other {\n" +
-				"  public @Anno Date me;\n" +
-				"  public Other() {\n" +
-				"  }\n" +
-				"}\n");
-	}
-
-	public void testTypeClash() {
-		this.runNegativeTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.java",
-			"package p;\n"+
-			"public class X {}\n"
-		},
-		"----------\n" +
-		"1. ERROR in p\\X.groovy (at line 2)\n" +
-		"\tpublic class X {\n" +
-		"\t             ^\n" +
-		"The type X is already defined\n" +
-		"----------\n");
-	}
-
-	public void testCallStaticMethodFromGtoJ() {
-		this.runConformTest(new String[] {
-			"p/Foo.groovy",
-			"package p;\n" +
-			"public class Foo {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    X.run()\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.java",
-			"package p;\n"+
-			"public class X {\n"+
-			"  public static void run() {\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n"
-		},
-		"success");
-	}
-
-	public void testCallStaticMethodFromJtoG() {
-		this.runConformTest(new String[] {
-			"p/Foo.java",
-			"package p;\n" +
-			"public class Foo {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    X.run();\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.groovy",
-			"package p;\n"+
-			"public class X {\n"+
-			"  public static void run() {\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n"
-		},
-		"success");
-	}
-
-	public void testNotMakingInterfacesImplementGroovyObject() {
-		this.runConformTest(new String[] {
-			"p/X.java",
-			"package p;\n"+
-			"public class X implements I {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n",
-			"p/I.groovy",
-			"package p;\n" +
-			"public interface I {\n" +
-			"}\n",
-		},
-		"success");
-	}
-
-	public void testConstructorLevelAnnotations01() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  X(String s) {}\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-		},
-		"success");
-
-		String expectedOutput = "public @Anno X(public String s) {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-
-		expectedOutput =
-			//"  // Method descriptor #18 (Ljava/lang/String;)V\n" +
-			(GroovyUtils.GROOVY_LEVEL<18?
-			"  // Stack: 3, Locals: 3\n":
-			"  // Stack: 2, Locals: 4\n")+
-			"  @p.Anno\n" +
-			"  public X(java.lang.String s);\n";
-		checkDisassemblyFor("p/X.class", expectedOutput);
-	}
-
-	public void testAnnotations04_defaultParamMethods() {
-		this.runConformTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  @Anno\n"+
-			"  public void foo(String s = \"abc\") {}\n"+
-			"  public static void main(String[]argv) {\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.java",
-			"package p;\n"+
-			"import java.lang.annotation.*;\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@interface Anno {}\n",
-		},
-		"success");
-		String expectedOutput = "public @Anno void foo() {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-
-		expectedOutput = "public @Anno void foo(public String s) {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	public void testTypeLevelAnnotations_SingleMember() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(Target.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Target.java",
-				"package p;\n"+
-				"class Target { }",
-			},
-			"success");
-		String expectedOutput = "public @Anno(Target.class) class X";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	// All types in groovy with TYPE specified for Target and obeyed
-	public void testAnnotationsTargetType() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.TYPE])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"success"
-			);
-	}
-
-	// All groovy but annotation can only be put on METHOD - that is violated by class X
-	public void testAnnotationsTargetType02() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.METHOD])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// All groovy but annotation can only be put on FIELD - that is violated by class X
-	public void testAnnotationsTargetType03() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.FIELD])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// All groovy but annotation can only be put on FIELD or METHOD - that is violated by class X
-	public void testAnnotationsTargetType04() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.FIELD,ElementType.METHOD])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// Two types in groovy, one in java with TYPE specified for Target and obeyed
-	public void testAnnotationsTargetType05() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.TYPE])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"success"
-			);
-	}
-
-	// 2 groovy, 1 java but annotation can only be put on METHOD - that is violated by class X
-	public void testAnnotationsTargetType06() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.METHOD])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// 2 groovy, 1 java but annotation can only be put on FIELD - that is violated by class X
-	public void testAnnotationsTargetType07() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.FIELD])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// 2 groovy, 1 java but annotation can only be put on FIELD or METHOD - that is violated by class X
-	public void testAnnotationsTargetType08() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target([ElementType.FIELD,ElementType.METHOD])\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// 1 groovy, 2 java with TYPE specified for Target and obeyed
-	public void testAnnotationsTargetType09() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target({ElementType.TYPE})\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"success"
-			);
-	}
-
-	// 1 groovy, 2 java but annotation can only be put on METHOD - that is violated by class X
-	public void testAnnotationsTargetType10() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target({ElementType.METHOD})\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// 1 groovy, 2 java but annotation can only be put on FIELD - that is violated by class X
-	public void testAnnotationsTargetType11() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target({ElementType.FIELD})\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// 1 groovy, 2 java but annotation can only be put on FIELD or METHOD - that is violated by class X
-	public void testAnnotationsTargetType12() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Foo.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@Target({ElementType.FIELD,ElementType.METHOD})\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo { }",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(p.Foo.class)\n" +
-			"\t ^^^^\n" +
-			"Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-			"----------\n"
-			);
-	}
-
-	// FIXASC groovy bug?  Why didn't it complain that String doesn't meet the bound - at the moment letting JDT complain...
-	public void testWildcards01() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(String.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? extends Number> value(); }\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(String.class)\n" +
-			"\t      ^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-			"----------\n");
-	}
-
-	public void testWildcards02() {
-		this.runNegativeTest(new String[] {
-				"p/X.java",
-				"package p;\n" +
-				"@Anno(String.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s) {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? extends Number> value(); }\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.java (at line 2)\n" +
-			"\t@Anno(String.class)\n" +
-			"\t      ^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-			"----------\n");
-	}
-
-	public void testWildcards03() {
-		this.runNegativeTest(new String[] {
-				"p/X.java",
-				"package p;\n" +
-				"@Anno(String.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s) {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? extends Number> value(); }\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.java (at line 2)\n" +
-			"\t@Anno(String.class)\n" +
-			"\t      ^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-			"----------\n");
-	}
-
-	public void testWildcards04() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(String.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s) {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? extends Number> value(); }\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(String.class)\n" +
-			"\t      ^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-			"----------\n");
-	}
-
-	public void testWildcards05() {
-		this.runConformTest(new String[] {
-				"p/X.java",
-				"package p;\n" +
-				"@Anno(Integer.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s) {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? extends Number> value(); }\n",
-			},
-			"success");
-	}
-
-	public void testWildcards06() {
-		this.runConformTest(new String[] {
-				"p/X.java",
-				"package p;\n" +
-				"@Anno(Number.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s) {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? super Integer> value(); }\n",
-			},"success");
-	}
-
-	// bounds violation: String does not meet '? super Integer'
-	public void testWildcards07() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(String.class)\n"+
-				"public class X {\n" +
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<? super Integer> value(); }\n",
-			},"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\t@Anno(String.class)\n" +
-			"\t      ^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from Class<String> to Class<? super Integer>\n" +
-			"----------\n");
-	}
-
-	// double upper bounds
-	public void testWildcards08() {
-		this.runNegativeTest(new String[] {
-				"p/X.java",
-				"package p;\n" +
-				"public class X {\n" +
-				"  public static void main(String[]argv) {\n"+
-				"    Object o = new Wibble<Integer>().run();\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
-				"p/I.java",
-				"package p;\n"+
-				"interface I {}\n",
-			},"----------\n" +
-			"1. ERROR in p\\X.java (at line 4)\n" +
-			"\tObject o = new Wibble<Integer>().run();\n" +
-			"\t                      ^^^^^^^\n" +
-			"Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
-			"----------\n");
-	}
-
-	// double upper bounds
-	public void testWildcards09() {
-		this.runNegativeTest(new String[] {
-				"p/X.java",
-				"package p;\n" +
-				"public class X {\n" +
-				"  public static void main(String[]argv) {\n"+
-				"    Object o = new Wibble<Integer>().run();\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
-				"p/I.java",
-				"package p;\n"+
-				"interface I {}\n",
-			},"----------\n" +
-			"1. ERROR in p\\X.java (at line 4)\n" +
-			"\tObject o = new Wibble<Integer>().run();\n" +
-			"\t                      ^^^^^^^\n" +
-			"Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
-			"----------\n");
-	}
-
-	// FIXASC groovy bug? Why does groovy not care about bounds violation?
-	public void _testWildcards10() {
-		this.runNegativeTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    Object o = new Wibble<Integer>().run();\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.groovy",
-			"package p;\n"+
-			"class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
-			"p/I.java",
-			"package p;\n"+
-			"interface I {}\n",
-		},"----------\n" +
-		"1. ERROR in p\\X.java (at line 4)\n" +
-		"\tObject o = new Wibble<Integer>().run();\n" +
-		"\t                      ^^^^^^^\n" +
-		"Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
-		"----------\n");
-	}
-
-	public void testWildcards11() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X extends Wibble<Foo> {\n" +
-				"  public static void main(String[]argv) {\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.groovy",
-				"package p;\n"+
-				"class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
-				"p/I.java",
-				"package p;\n"+
-				"interface I {}\n",
-
-				"p/Foo.java",
-				"package p;\n"+
-				"class Foo implements I {}\n",
-			},"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 2)\n" +
-			"\tpublic class X extends Wibble<Foo> {\n" +
-			"\t                       ^^^^^^\n" +
-			"Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
-			"----------\n");
-	}
-
-	// FIXASC groovy bug? why doesn't it complain - the type parameter doesn't meet the secondary upper bound
-	public void _testWildcards12() {
-		runNegativeTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X extends Wibble<Integer> {\n" +
-			"  public static void main(String[]argv) {\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/Anno.groovy",
-			"package p;\n"+
-			"class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
-			"p/I.java",
-			"package p;\n"+
-			"interface I {}\n",
-
-			"p/Foo.java",
-			"package p;\n"+
-			"class Foo implements I {}\n",
-		},"----------\n" +
-		"1. ERROR in p\\X.groovy (at line 2)\n" +
-		"\tpublic class X extends Wibble<Foo> {\n" +
-		"\t               ^^\n" +
-		"Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
-		"----------\n");
-	}
-
-	public void testTypeLevelAnnotations_SingleMember02() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"@Anno(p.Target.class)\n"+
-				"public class X {\n" +
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Target.java",
-				"package p;\n"+
-				"class Target { }",
-			},
-			"success");
-		String expectedOutput = "public @Anno(p.Target.class) class X";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	public void testMethodLevelAnnotations_SingleMember() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  @Anno(Target.class)\n"+
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Target.java",
-				"package p;\n"+
-				"class Target { }",
-			},
-			"success");
-		String expectedOutput = "public @Anno(Target.class) void foo(public String s) {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	// FIXASC flesh out annotation value types for transformation in JDTAnnotationNode - might as well complete it
-	public void testMethodLevelAnnotations_SingleMember02() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  @Anno(p.Target.class)\n"+
-				"  public void foo(String s = \"abc\") {}\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Target.java",
-				"package p;\n"+
-				"class Target { }",
-			},
-			"success");
-		String expectedOutput = "public @Anno(p.Target.class) void foo(public String s) {";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	public void testFieldLevelAnnotations_SingleMember() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  @Anno(Target.class)\n"+
-				"  public int foo = 5\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Target.java",
-				"package p;\n"+
-				"class Target { }",
-			},
-			"success");
-		String expectedOutput = "public @Anno(Target.class) int foo";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	public void testAnnotations10_singleMemberAnnotationField() {
-		this.runConformTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  @Anno(p.Target.class)\n"+
-				"  public int foo = 5\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-
-				"p/Target.java",
-				"package p;\n"+
-				"class Target { }",
-			},
-			"success");
-		String expectedOutput = "public @Anno(p.Target.class) int foo";
-		checkGCUDeclaration("X.groovy",expectedOutput);
-	}
-
-	public void testAnnotations11_singleMemberAnnotationFailure() {
-		this.runNegativeTest(new String[] {
-				"p/X.groovy",
-				"package p;\n" +
-				"public class X {\n" +
-				"  @Anno(IDontExist.class)\n"+
-				"  public int foo = 5\n"+
-				"  public static void main(String[]argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Anno.java",
-				"package p;\n"+
-				"import java.lang.annotation.*;\n"+
-				"@Retention(RetentionPolicy.RUNTIME)\n"+
-				"@interface Anno { Class<?> value(); }\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\X.groovy (at line 3)\n" +
-			"\t@Anno(IDontExist.class)\n" +
-			"\t      ^^^^^^^^^^\n" +
-			(GroovyUtils.isGroovy16()?
-			"Groovy:unable to find class for enum\n":
-			"Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n") +
-			"----------\n" +
-			"2. ERROR in p\\X.groovy (at line 3)\n" +
-			"\t@Anno(IDontExist.class)\n" +
-			"\t      ^^^^^^^^^^^^^^^^\n" +
-			(GroovyUtils.GROOVY_LEVEL<18?
-			"Groovy:Only classes can be used for attribute 'value' in @p.Anno\n":
-			"Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n"
-		    )+
-			"----------\n");
-	}
-
-	public void testExtendingInterface2() {
-		this.runNegativeTest(new String[] {
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X extends List<String> {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    print \"success\"\n" +
-			"  }\n"+
-			"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in p\\X.groovy (at line 2)\n" +
-		"\tpublic class X extends List<String> {\n" +
-		"\t             ^\n" +
-		"Groovy:You are not allowed to extend the interface \'java.util.List\', use implements instead.\n" +
-		"----------\n");
-	}
-
-	// WMTW: the type declaration building code creates the correct representation of A and adds the default constructor
-	public void testExtendingGroovyWithJava1() {
-		this.runConformTest(new String[] {
-			// p.B
-			"p/B.java",
-			"package p;\n"+
-			"public class B extends A {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    new B();\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n",
-			// p.A
-			"p/A.groovy",
-			"package p;\n" +
-			"public class A {\n" +
-			"}\n",
-		},"success");
-	}
-
-	// WMTW: a JDT resolver is plugged into groovy so it can see Java types
-	// details:
-	// 1. needed the lookupenvironment to flow down to the groovyparser (through initializeParser) as groovy will need it
-	// for resolution of JDT types
-	// 2. needed to subclass ResolveVisitor - trying just to override resolve(ClassNode) right now
-	// 3. needed to build JDTClassNode and needed it to initialize the superclass field
-	public void testExtendingJavaWithGroovy1() {
-		this.runConformTest(new String[] {
-			// p.B
-			"p/B.groovy",
-			"package p;\n" +
-			"public class B extends A {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    new B();\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n",
-			// p.A
-			"p/A.java",
-			"package p;\n"+
-			"public class A {\n"+
-			"}\n",
-		},"success");
-	}
-
-	public void testExtendingJavaWithGroovyAndThenJava() {
-		this.runConformTest(new String[] {
-			// p.C
-			"p/C.java",
-			"package p;\n" +
-			"public class C extends B {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    new C();\n"+
-			"    System.out.println(\"success\");\n"+
-			"  }\n"+
-			"}\n",
-			// p.B
-			"p/B.groovy",
-			"package p;\n" +
-			"public class B extends A {\n" +
-			"}\n",
-			// p.A
-			"p/A.java",
-			"package p;\n"+
-			"public class A {\n"+
-			"}\n",
-		},"success");
-	}
-
-	// Groovy is allowed to have a public class like this in a file with a different name
-	public void testPublicClassInWrongFile() {
-		this.runConformTest(new String[] {
-			"pkg/One.groovy",
-			"package pkg;\n" +
-			"public class One {" +
-			"  public static void main(String[]argv) { print \"success\";}\n" +
-			"}\n"+
-			"public class Two {" +
-			"  public static void main(String[]argv) { print \"success\";}\n" +
-			"}\n",
-		},"success");
-	}
-
-	/**
-	 * WMTW: having a callback registered with groovy class generation that tracks which class file is created for which module node
-	 * details:
-	 * the groovy compilationunit provides a way to ask for the generated classes but it doesnt give a way to tell why they arose
-	 * (which sourceunit caused them to come into existence).  I am using the callback mechanism to track this information, but I worry
-	 * that we are causing groovy to perhaps do things too many times.  It also feels a little wierd that driving any single file through
-	 * to CLASSGEN drives them all through.  It isn't necessarily a problem, but it conflicts with the model of dealing with one file at
-	 * a time...
-	 */
-	public void testBuildingTwoGroovyFiles() {
-		this.runConformTest(new String[] {
-			// pkg.One
-			"pkg/One.groovy",
-			"package pkg;\n" +
-			"class One {" +
-			"  public static void main(String[]argv) { print \"success\";}\n" +
-			"}\n",
-			// pkg.Two
-			"pkg/Two.groovy",
-			"package pkg;\n" +
-			"class Two {}\n"
-		},"success");
-	}
-
-	public void testExtendingGroovyInterfaceWithJava() {
-		this.runConformTest(new String[] {
-				// pkg.C
-				"pkg/C.java",
-				"package pkg;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {" +
-				"  public static void main(String[]argv) {\n"+
-				"    I i = new C();\n"+
-				"    System.out.println( \"success\");" +
-				"  }\n" +
-				"}\n",
-				// pkg.I
-				"pkg/I.groovy",
-				"package pkg;\n" +
-				"interface I {}\n"
-			},"success");
-	}
-
-	public void testExtendingJavaInterfaceWithGroovy() {
-		this.runConformTest(new String[] {
-				// pkg.C
-				"pkg/C.groovy",
-				"package pkg;\n" +
-				"public class C implements I {" +
-				"  public static void main(String[]argv) {\n"+
-				"    I i = new C();\n"+
-				"    System.out.println( \"success\");" +
-				"  }\n" +
-				"}\n",
-				// pkg.I
-				"pkg/I.java",
-				"package pkg;\n" +
-				"interface I {}\n"
-			},"success");
-	}
-
-	// WMTM: the fix for the previous code that tracks why classes are generated
-	public void testExtendingJavaWithGroovyAndThenJavaAndThenGroovy() {
-		this.runConformTest(new String[] {
-			// p.D
-			"p/D.groovy",
-			"package p;\n" +
-			"class D extends C {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    new C();\n"+
-			"    print \"success\"\n"+
-			"  }\n"+
-			"}\n",
-			// p.C
-			"p/C.java",
-			"package p;\n" +
-			"public class C extends B {}\n",
-			// p.B
-			"p/B.groovy",
-			"package p;\n" +
-			"public class B extends A {}\n",
-			// p.A
-			"p/A.java",
-			"package p;\n"+
-			"public class A {}\n"
-		},"success");
-	}
-
-	public void testImplementingInterface1() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  void m();\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 2)\n" +
-			"\tpublic class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
-			"\t             ^\n" +
-			"The type C must implement the inherited abstract method I.m()\n" +
-			"----------\n");
-	}
-
-	public void testImplementingInterface2() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public void m() {}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  void m();\n"+
-				"}\n",
-			},"success");
-	}
-
-	public void testImplementingInterface3() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  void m() {}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  void m();\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 3)\n" +
-			"\tvoid m() {}\n" +
-			"\t     ^^^\n" +
-			"Cannot reduce the visibility of the inherited method from I\n" +
-			"----------\n");
-	}
-
-	public void testImplementingInterface4() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public String m() { return \"\";}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  String m();\n"+
-				"}\n",
-			},"success");
-	}
-
-	// WMTW: Groovy compilation unit scope adds the extra default import for java.util so List can be seen
-	public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"import java.util.List;\n"+
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public String m() { return \"\";}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  List m();\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 4)\n" +
-			"\tpublic String m() { return \"\";}\n" +
-			"\t       ^^^^^^\n" +
-			"The return type is incompatible with I.m()\n" +
-			"----------\n"+
-			// this verifies the position report for the error against the return value of the method
-			"----------\n" +
-			"1. WARNING in p\\I.groovy (at line 3)\n" +
-			"\tList m();\n" +
-			"\t^^^^\n" +
-			"List is a raw type. References to generic type List<E> should be parameterized\n" +
-			"----------\n");
-	}
-
-	public void testFieldPositioning01() {
-		this.runNegativeTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C {\n"+
-				"  List aList;\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. WARNING in p\\C.groovy (at line 3)\n" +
-			"\tList aList;\n" +
-			"\t^^^^\n" +
-			"List is a raw type. References to generic type List<E> should be parameterized\n" +
-			"----------\n");
-	}
-
-	// FIXASC poor positional error for invalid field name - this test needs sorting out
-	public void _testFieldPositioning02() {
-		runNegativeTest(new String[] {
-			"p/C.groovy",
-			"package p;\n" +
-			"public class C {\n"+
-			"  List<String> class;\n"+
-			"}\n",
-		},
-		"----------\n");
-	}
-
-	public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ArrayReferenceReturnType() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"import java.util.List;\n"+
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public String m() { return \"\";}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  List[] m();\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 4)\n" +
-			"\tpublic String m() { return \"\";}\n" +
-			"\t       ^^^^^^\n" +
-			"The return type is incompatible with I.m()\n" +
-			"----------\n"+
-			// this verifies the position report for the error against the return value of the method
-			"----------\n" +
-			"1. WARNING in p\\I.groovy (at line 3)\n" +
-			"\tList[] m();\n" +
-			"\t^^^^\n" +
-			"List is a raw type. References to generic type List<E> should be parameterized\n" +
-			"----------\n");
-	}
-
-	public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_QualifiedArrayReferenceReturnType() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"import java.util.List;\n"+
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public String m() { return \"\";}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  java.util.List[] m();\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 4)\n" +
-			"\tpublic String m() { return \"\";}\n" +
-			"\t       ^^^^^^\n" +
-			"The return type is incompatible with I.m()\n" +
-			"----------\n"+
-			// this verifies the position report for the error against the return value of the method
-			"----------\n" +
-			"1. WARNING in p\\I.groovy (at line 3)\n" +
-			"\tjava.util.List[] m();\n" +
-			"\t^^^^^^^^^^^^^^\n" +
-			"List is a raw type. References to generic type List<E> should be parameterized\n" +
-			"----------\n");
-	}
-
-	public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ParamPosition() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"import java.util.List;\n"+
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public void m(String s) { }\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  void m(List l);\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 3)\n" +
-			"\tpublic class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
-			"\t             ^\n" +
-			"The type C must implement the inherited abstract method I.m(List)\n" +
-			"----------\n" +
-			// this verifies the position report for the error against the method parameter
-			"----------\n" +
-			"1. WARNING in p\\I.groovy (at line 3)\n" +
-			"\tvoid m(List l);\n" +
-			"\t       ^^^^\n" +
-			"List is a raw type. References to generic type List<E> should be parameterized\n" +
-			"----------\n");
-	}
-
-	public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_QualifiedParamPosition() {
-		this.runNegativeTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"import java.util.List;\n"+
-				"public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-				"  public void m(String s) { }\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I {\n" +
-				"  void m(java.util.List l);\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.java (at line 3)\n" +
-			"\tpublic class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
-			"\t             ^\n" +
-			"The type C must implement the inherited abstract method I.m(List)\n" +
-			"----------\n" +
-			// this verifies the position report for the error against the method parameter+
-			"----------\n" +
-			"1. WARNING in p\\I.groovy (at line 3)\n" +
-			"\tvoid m(java.util.List l);\n" +
-			"\t       ^^^^^^^^^^^^^^\n" +
-			"List is a raw type. References to generic type List<E> should be parameterized\n" +
-			"----------\n");
-	}
-
-	public void testImplementingInterface_MethodWithParameters_GextendsJ() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C implements I<Integer> {\n"+
-				"  public void m(String s) { }\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.java",
-				"package p;\n"+
-				"public interface I<T extends Number> {\n" +
-				"  void m(String s);\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	// Test that the alias is recognized when referenced as superclass
-	// WMTW: the code Scope.getShortNameFor()
-	public void testImportAliasingGoober() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"import java.util.HashMap as Goober;\n"+
-				"public class C extends Goober {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print 'q.A.run'\n"+
-				"  }\n"+
-				"}\n",
-		},
-		"q.A.run");
-	}
-
-	public void testImportAliasing() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"import q.A as AA;\n"+
-				"import r.A as AB;\n"+
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    callitOne(new AA());\n"+
-				"    callitTwo(new AB());\n"+
-				"  }\n"+
-				"  public static void callitOne(AA a) { a.run();}\n"+
-				"  public static void callitTwo(AB a) { a.run();}\n"+
-				"}\n",
-
-				"q/A.java",
-				"package q;\n"+
-				"public class A {\n" +
-				"  public static void run() { System.out.print(\"q.A.run \");}\n"+
-				"}\n",
-
-				"r/A.java",
-				"package r;\n"+
-				"public class A {\n" +
-				"  public static void run() { System.out.print(\"r.A.run\");}\n"+
-				"}\n",
-			},
-			"q.A.run r.A.run");
-	}
-
-	public void testImportAliasingAndOldReference() {
-		this.runNegativeTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"import q.A as AA;\n"+
-				"import r.A as AB;\n"+
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    callitOne(new AA());\n"+
-				"  }\n"+
-				"  public static void callitOne(A a) { }\n"+ // no A imported!
-				"}\n",
-
-				"q/A.java",
-				"package q;\n"+
-				"public class A {\n" +
-				"  public static void run() { System.out.print(\"q.A.run \");}\n"+
-				"}\n",
-
-				"r/A.java",
-				"package r;\n"+
-				"public class A {\n" +
-				"  public static void run() { System.out.print(\"r.A.run\");}\n"+
-				"}\n",
-			},
-			"----------\n" +
-			"1. ERROR in p\\C.groovy (at line 8)\n" +
-			"\tpublic static void callitOne(A a) { }\n" +
-			"\t                             ^\n" +
-			"Groovy:unable to resolve class A \n" +
-			"----------\n");
-	}
-
-	public void testImportInnerInner01() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C {\n"+
-				"  private static Wibble.Inner.Inner2 wibbleInner = new G();\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    wibbleInner.run();\n"+
-				"  }\n"+
-				"}\n"+
-				"class G extends Wibble.Inner.Inner2  {}",
-
-				"p/Wibble.java",
-				"package p;\n"+
-				"public class Wibble {\n" +
-				"  public static class Inner {\n"+
-				"    public static class Inner2 {\n"+
-				"      public static void run() { System.out.print(\"p.Wibble.Inner.Inner2.run \");}\n"+
-				"    }\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"p.Wibble.Inner.Inner2.run");
-	}
-
-	public void testImportInnerClass01_JavaCase() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"import x.y.z.Wibble.Inner;\n"+
-				"\n"+
-				"public class C {\n"+
-				"  private static Inner wibbleInner = new Inner();\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    wibbleInner.run();\n"+
-				"  }\n"+
-				"}\n",
-
-				"x/y/z/Wibble.java",
-				"package x.y.z;\n"+
-				"public class Wibble {\n" +
-				"  public static class Inner {\n"+
-				"    public static void run() { System.out.print(\"q.A.run \");}\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"q.A.run");
-	}
-
-	// FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
-	public void testImportInnerClass01_GroovyCase() {
-		this.runConformTest(new String[] {
-			"p/C.groovy",
-			"package p;\n" +
-			"import x.y.z.Wibble.Inner\n"+
-			"\n"+
-			"public class C {\n"+
-			"  private static Inner wibbleInner = new Inner();\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    wibbleInner.run();\n"+
-			"  }\n"+
-			"}\n",
-
-			"x/y/z/Wibble.java",
-			"package x.y.z;\n"+
-			"public class Wibble {\n" +
-			"  public static class Inner {\n"+
-			"    public static void run() { System.out.print(\"q.A.run \");}\n"+
-			"  }\n"+
-			"}\n",
-		},
-		"q.A.run");
-	}
-
-	public void testImportInnerClass() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"import x.y.z.Wibble.Inner /*as WibbleInner*/;\n"+
-				"public class C {\n"+
-				"  private static Inner wibbleInner = new Inner();\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    wibbleInner.run();\n"+
-				"  }\n"+
-				//"  public static void callitOne(WibbleInner a) { a.run();}\n"+
-				"}\n",
-
-				"x/y/z/Wibble.java",
-				"package x.y.z;\n"+
-				"public class Wibble {\n" +
-				"  public static class Inner {\n"+
-				"    public void run() { System.out.print(\"run\");}\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"run");
-	}
-
-	public void testImportAliasingInnerClass() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"import x.y.z.Wibble.Inner as WibbleInner;\n"+
-				"public class C {\n"+
-				"  private static WibbleInner wibbleInner = new WibbleInner();\n"+
-				"  public static void main(String[] argv) {\n"+
-				"   wibbleInner.run();\n"+
-				"  }\n"+
-				"}\n",
-
-				"x/y/z/Wibble.java",
-				"package x.y.z;\n"+
-				"public class Wibble {\n" +
-				"  public static class Inner {\n"+
-				"    public void run() { System.out.print(\"run \");}\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"run");
-	}
-
-	public void testImplementingInterface_MethodWithParameters_JextendsG() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I<Integer> {\n"+
-				"  public void m(String s) { }\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I<T extends Number> {\n" +
-				"  void m(String s);\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testImplementingInterface_MethodWithParameters2_JextendsG() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I<Integer> {\n"+
-				"  public void m(String s, Integer i) { }\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I<T extends Number> {\n" +
-				"  void m(String s, Integer i);\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testImplementingInterface_MethodWithParameters2_GextendsJ() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C implements I<Integer> {\n"+
-				"  public void m(String s, Integer i) { return null;}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.java",
-				"package p;\n"+
-				"public interface I<T extends Number> {\n" +
-				"  void m(String s, Integer i);\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testImplementingInterface_MethodWithParameters3_GextendsJ() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C implements I<Integer> {\n"+
-				"  public void m(String s, Integer i) { return null;}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.java",
-				"package p;\n"+
-				"public interface I<T extends Number> {\n" +
-				"  void m(String s, T t);\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testImplementingInterface_MethodWithParameters3_JextendsG() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C extends groovy.lang.GroovyObjectSupport implements I<Integer> {\n"+
-				"  public void m(String s, Integer i) { }\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.println( \"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/I.groovy",
-				"package p;\n"+
-				"public interface I<T extends Number> {\n" +
-				"  void m(String s, T t);\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testCallingMethods_JcallingG() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new GClass().run();\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/GClass.groovy",
-				"package p;\n"+
-				"public class GClass {\n" +
-				"  void run() {\n" +
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testCallingMethods_GcallingJ() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new OtherClass().run();\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.java",
-				"package p;\n"+
-				"public class OtherClass {\n" +
-				"  void run() {\n" +
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testReferencingFields_JreferingToG() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    OtherClass oClass = new OtherClass();\n"+
-				"    System.out.println(oClass.message);\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.groovy",
-				"package p;\n"+
-				"public class OtherClass {\n" +
-				"  public String message =\"success\";\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testReferencingFields_GreferingToJ() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    OtherClass oClass = new OtherClass();\n"+
-				"    System.out.println(oClass.message);\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.java",
-				"package p;\n"+
-				"public class OtherClass {\n" +
-				"  public String message =\"success\";\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testCallingConstructors_JcallingG() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    OtherClass oClass = new OtherClass();\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.groovy",
-				"package p;\n"+
-				"public class OtherClass {\n" +
-				"  public OtherClass() {\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testCallingConstructors_GcallingJ() {
-		this.runConformTest(new String[] {
-				"p/C.groovy",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    OtherClass oClass = new OtherClass();\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.java",
-				"package p;\n"+
-				"public class OtherClass {\n" +
-				"  public OtherClass() {\n"+
-				"  }\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testGroovyObjectsAreGroovyAtCompileTime() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    groovy.lang.GroovyObject oClass = new OtherClass();\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.groovy",
-				"package p;\n"+
-				"import java.util.*;\n"+
-				"public class OtherClass {\n" +
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testCallGroovyObjectMethods_invokeMethod() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    groovy.lang.GroovyObject oClass = new OtherClass();\n"+
-				"    String s = (String)oClass.invokeMethod(\"toString\",null);\n"+
-				"    System.out.println(s);\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.groovy",
-				"package p;\n"+
-				"import java.util.*;\n"+
-				"public class OtherClass {\n" +
-				"  String toString() { return \"success\";}\n"+
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testGroovyObjectsAreGroovyAtRunTime() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    OtherClass oClass = new OtherClass();\n"+
-				"    System.out.println(oClass instanceof groovy.lang.GroovyObject);\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.groovy",
-				"package p;\n"+
-				"import java.util.*;\n"+
-				"public class OtherClass {\n" +
-				"}\n",
-			},
-			"true");
-	}
-
-	public void testGroovyBug() {
-		this.runConformTest(new String[] {
-				"p/A.groovy",
-				"package p;\n" +
-				"public class A<T> { public static void main(String[]argv) { print \"a\";}}\n",
-
-				"p/B.groovy",
-				"package p;\n" +
-				"public class B extends A<String> {}",
-
-			},
-			"a");
-	}
-
-	public void testGroovyBug2() {
-		this.runConformTest(new String[] {
-
-				"p/B.groovy",
-				"package p;\n" +
-				"public class B extends A<String> {public static void main(String[]argv) { print \"a\";}}",
-
-				"p/A.groovy",
-				"package p;\n" +
-				"public class A<T> { }\n",
-			},
-			"a");
-	}
-
-	// was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
-	public void testExtendingGroovyObjects_clinit() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    OtherClass oClass = new OtherClass();\n"+
-				"    System.out.println(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/OtherClass.groovy",
-				"package p;\n"+
-				"public class OtherClass {\n" +
-				"  { int i = 5; }\n" +
-				"}\n",
-			},
-			"success");
-	}
-
-	public void testGroovyPropertyAccessors_ErrorCases1() {
-		// check no duplicate created for 'String getProp'
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    System.out.print(o.getProp());\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  String prop = 'foo'\n"+
-				"  String getProp() { return prop; }\n"+
-				"}\n",
-			},
-			"foo");
-	}
-
-	public void testGroovyPropertyAccessors_ErrorCases2() {
-		// check no duplicate created for 'boolean isProp'
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    System.out.print(o.isProp());\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  boolean prop = false\n"+
-				"  boolean isProp() { return prop; }\n"+
-				"}\n",
-			},
-			"false");
-	}
-
-	public void testGroovyPropertyAccessors_ErrorCases3() {
-		// although there is a getProp already defined, it takes a parameter
-		// so a new one should still be generated
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    System.out.print(o.getProp());\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  String prop = 'foo'\n"+
-				"  String getProp(String s) { return prop; }\n"+
-				"}\n",
-			},
-			"foo");
-	}
-
-	public void testGroovyPropertyAccessors_ErrorCases4() {
-		// although there is a setProp already defined, it takes no parameters
-		// so a new one should still be generated
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    o.setProp(\"abc\");\n"+
-				"    System.out.print(\"abc\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  String prop = 'foo'\n"+
-				"  void setProp() { }\n"+
-				"}\n",
-			},
-			"abc");
-	}
-
-	// It seems groovyc doesn't allow this - fails to generate the setProp(H)...
-	public void _testGroovyPropertyAccessors_ErrorCases5() {
-		// although there is a setProp already defined, it takes a parameter
-		// of a different type to the property type
-		this.runConformTest(new String[] {
-			"p/C.java",
-			"package p;\n" +
-			"public class C {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    G o = new G();\n"+
-			"    o.setProp(new H());\n"+
-			"    System.out.print(\"abc\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/H.java",
-			"package p;\n"+
-			"class H{}\n",
-
-			"p/J.java",
-			"package p;\n"+
-			"class J{}\n",
-
-			"p/G.groovy",
-			"package p;\n"+
-			"public class G {\n" +
-			"  H prop\n"+
-			"  void setProp(J b) { }\n"+
-			"}\n",
-		},
-		"abc");
-	}
-
-	public void _testGroovyPropertyAccessors_ErrorCases6() {
-		// although there is a setProp already defined, it takes a parameter of a different type to the property type
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    o.setProp(\"abc\");\n"+
-				"    System.out.print(\"abc\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  String prop = 'foo'\n"+
-				"  void setProp(boolean b) { }\n"+
-				"}\n",
-			},
-			"abc");
-	}
-
-	public void testGroovyPropertyAccessors() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    System.out.print(o.isB());\n"+
-				"    System.out.print(o.getB());\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  boolean b\n"+
-				"}\n",
-			},
-			"falsefalse");
-	}
-
-	public void testGroovyPropertyAccessors_Set() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    System.out.print(o.getB());\n"+
-				"    o.setB(true);\n"+
-				"    System.out.print(o.getB());\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  boolean b\n"+
-				"}\n",
-			},
-			"falsetrue");
-	}
-
-	public void testDefaultValueMethods() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    o.m(\"abc\",3);\n"+
-				"    o.m(\"abc\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  public void m(String s,Integer i=3) { print s }\n"+
-				"}\n",
-			},
-			"abcabc");
-		String expectedOutput =
-			"package p;\n" +
-			"public class G {\n" +
-			"  public G() {\n" +
-			"  }\n" +
-			"  public void m(public String s, public Integer i) {\n" +
-			"  }\n" +
-			"  public void m(public String s) {\n" +
-			"  }\n" +
-			"}\n";
-		checkGCUDeclaration("G.groovy",expectedOutput);
-		expectedOutput =
-			"  \n" +
-			"  public void m(String s, Integer i);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-		expectedOutput =
-			"  \n" +
-			"  public void m(String s);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-	}
-
-	public void testDefaultValueMethods02() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G();\n"+
-				"    String str=\"xyz\";\n"+
-				"    o.m(str,1,str,str,4.0f,str);\n"+
-				"    o.m(str,1,str,str,str);\n"+
-				"    o.m(str,1,str,str);\n"+
-				"    o.m(str,str,str);\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  public void m(String s, Integer i=3, String j=\"abc\", String k, float f = 3.0f, String l) { print s+f }\n"+
-				"}\n",
-			},
-			"xyz4.0xyz3.0xyz3.0xyz3.0");
-
-		String expectedOutput =
-			"package p;\n" +
-			"public class G {\n" +
-			"  public G() {\n" +
-			"  }\n" +
-			"  public void m(public String s, public Integer i, public String j, public String k, public float f, public String l) {\n" +
-			"  }\n" +
-			"  public void m(public String s, public Integer i, public String j, public String k, public String l) {\n" +
-			"  }\n" +
-			"  public void m(public String s, public Integer i, public String k, public String l) {\n" +
-			"  }\n" +
-			"  public void m(public String s, public String k, public String l) {\n" +
-			"  }\n" +
-			"}\n";
-		checkGCUDeclaration("G.groovy", expectedOutput);
-
-		expectedOutput =
-			"  \n" +
-			"  public void m(String s, Integer i, String j, String k, float f, String l);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-		expectedOutput =
-			"  \n" +
-			"  public void m(String s, Integer i, String j, String k, String l);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-		expectedOutput =
-			"  \n" +
-			"  public void m(String s, Integer i, String k, String l);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-		expectedOutput =
-			"  \n" +
-			"  public void m(String s, String k, String l);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-	}
-
-	public void testDefaultValueConstructors() {
-		this.runConformTest(new String[] {
-				"p/C.java",
-				"package p;\n" +
-				"public class C {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    G o = new G(2,\"abc\");\n"+
-				"    o.print();\n"+
-				"    o = new G(3);\n"+
-				"    o.print();\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/G.groovy",
-				"package p;\n"+
-				"public class G {\n" +
-				"  def msg\n"+
-				"  public G(Integer i, String m=\"abc\") {this.msg = m;}\n"+
-				"  public void print(int i=3) { print msg }\n"+
-				"}\n",
-			},
-			"abcabc");
-		String expectedOutput=
-			"package p;\n" +
-			"public class G {\n" +
-			"  private java.lang.Object msg;\n" +
-			"  public G(public Integer i, public String m) {\n" +
-			"  }\n" +
-			"  public G(public Integer i) {\n" +
-			"  }\n" +
-			"  public void print(public int i) {\n" +
-			"  }\n" +
-			"  public void print() {\n" +
-			"  }\n" +
-			"}\n";
-		checkGCUDeclaration("G.groovy", expectedOutput );
-		expectedOutput =
-			"  \n" +
-			"  public G(Integer i, String m);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-		expectedOutput =
-			"  \n" +
-			"  public G(Integer i);\n" +
-			"  \n";
-		checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-	}
-
-	// FIXASC groovy bug? Crashes groovy, it doesn't seem to correctly handle clashing constructor variants
-	public void _testDefaultValueConstructors02() {
-		runConformTest(new String[] {
-			"p/C.java",
-			"package p;\n" +
-			"public class C {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    G o = new G(2,\"abc\");\n"+
-			"    o.print();\n"+
-			"    o = new G(3);\n"+
-			"    o.print();\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/G.groovy",
-			"package p;\n"+
-			"public class G {\n" +
-			"  def msg\n"+
-			"  public G(Integer i) {}\n"+
-			"  public G(Integer i, String m=\"abc\") {this.msg = m;}\n"+
-			"  public void print(int i=3) { print msg }\n"+
-			"}\n",
-		},
-		"abc");
-	}
-
-	public void testAnnotationsAndMetaMethods() {
-		runConformTest(new String[] {
-			"p/A.java",
-			"package p; public class A{ public static void main(String[]argv){}}",
-
-			"p/Validateable.groovy",
-			"import java.lang.annotation.Retention\n"+
-			"import java.lang.annotation.RetentionPolicy\n"+
-			"import java.lang.annotation.Target\n"+
-			"import java.lang.annotation.ElementType\n"+
-			"@Retention(RetentionPolicy.RUNTIME)\n"+
-			"@Target([ElementType.TYPE])\n"+
-			"public @interface Validateable { }\n",
-		});
-	}
-
-	public void testClashingMethodsWithDefaultParams() {
-		this.runNegativeTest(new String[] {
-				"p/Code.groovy",
-				"package p;\n"+
-				"\n"+
-				"class Code {\n"+
-				"  public void m(String s) {}\n"+
-				"  public void m(String s, Integer i =3) {}\n"+
-				"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in p\\Code.groovy (at line 5)\n" +
-		"\tpublic void m(String s, Integer i =3) {}\n" +
-		"\t^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
-		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+
-		"----------\n"
-		);
-	}
-
-	public void testCallingJavaFromGroovy1() throws Exception {
-		this.runConformTest(new String[] {
-				"p/Code.groovy",
-				"package p;\n"+
-				"class Code {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new J().run();\n"+
-				"    print new J().name;\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/J.java",
-				"package p;\n"+
-				"public class J {\n"+
-				"  public String name = \"name\";\n"+
-				"  public void run() { System.out.print(\"success\"); }\n"+
-				"}\n",
-		},"successname");
-		//checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/Code.class", "Code", "");
-	}
-
-	public void testCallingJavaFromGroovy2() throws Exception {
-		this.runConformTest(new String[] {
-				"p/Code.groovy",
-				"package p;\n"+
-				"@Wibble(value=4)\n"+
-				"class Code {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new J().run();\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/J.java",
-				"package p;\n"+
-				"public class J {\n"+
-				"  public String name = \"name\";\n"+
-				"  public void run() { System.out.print(\"success\"); }\n"+
-				"}\n",
-
-				"p/Wibble.java",
-				"package p;\n"+
-				"public @interface Wibble {\n"+
-				"  int value() default 3;\n"+
-				"}\n",
-		},"success");
-	}
-
-	public void testExtendingRawJavaType() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"public class Foo extends Supertype {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.print(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Supertype.java",
-				"package p;\n"+
-				"class Supertype<T> extends Supertype2 { }",
-
-				"p/Supertype2.java",
-				"package p;\n"+
-				"class Supertype2<T> { }"
-		},"success");
-	}
-
-	public void testTypeVariableBoundIsRawType() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"public class Foo extends Supertype {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.print(\"success\");\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Supertype.java",
-				"package p;\n"+
-				"class Supertype<T extends Supertype2> { }",
-
-				"p/Supertype2.java",
-				"package p;\n"+
-				"class Supertype2<T> { }"
-		},"success");
-	}
-
-	public void testEnum() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"public class Foo /*extends Supertype<Goo>*/ {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print Goo.R\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/Goo.java",
-				"package p;\n"+
-				"enum Goo { R,G,B; }",
-			},"R");
-	}
-
-	// Type already implements invokeMethod(String,Object) - should not be an error, just don't add the method
-	public void testDuplicateGroovyObjectMethods() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"public class Foo /*extends Supertype<Goo>*/ {\n"+
-				" public Object invokeMethod(String s, Object o) {\n" +
-				" return o;}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-			},"success");
-	}
-
-	public void testDuplicateGroovyObjectMethods2() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"public class Foo /*extends Supertype<Goo>*/ {\n"+
-				"  public MetaClass getMetaClass() {return null;}\n"+
-				"  public void setMetaClass(MetaClass mc) {}\n"+
-				"  public Object getProperty(String propertyName) {return null;}\n"+
-				"  public void setProperty(String propertyName,Object newValue) {}\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n",
-			},"success");
-	}
-
-	public void testTwoTopLevelTypesInAFile() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n"+
-				"class Second {\n"+
-				"}\n",
-			},"success");
-	}
-
-	public void testImports1() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"import java.util.regex.Pattern\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    Pattern p = Pattern.compile(\".\")\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public Pattern getPattern() { return null;}\n"+
-				"}\n",
-			},"success");
-	}
-
-	public void testImports2() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"import java.util.regex.Pattern\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public File getFile() { return null;}\n"+ // java.io.File should be picked up magically
-				"}\n",
-			},"success");
-	}
-
-	public void testImportsBigDecimal1() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"import java.util.regex.Pattern\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
-				"}\n",
-			},"success");
-	}
-
-	// this version has no imports of its own, that can make a difference
-	public void testImportsBigDecimal2() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
-				"}\n",
-			},"success");
-	}
-
-	public void testImportsBigInteger1() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"import java.util.regex.Pattern\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public BigInteger getFile() { return null;}\n"+ // java.io.File should be picked up magically
-				"}\n",
-			},"success");
-	}
-
-	// Check we can refer to BigInteger from a static constant
-	public void testImportsBigInteger3() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"import java.util.regex.Pattern\n"+
-				"public class First {\n"+
-				"  private final static BigInteger bd = new BigInteger(\"3\");\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print bd+\"success\"\n"+
-				"  }\n"+
-				"  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
-				"}\n",
-			},"3success");
-	}
-
-	public void testMultipleTypesInOneFile01() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n"+
-				"class Goo {}\n"
-			},"success");
-	}
-
-	// Refering to the secondary type from the primary (but internally to a method)
-	public void testMultipleTypesInOneFile02() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new Goo();\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n"+
-				"class Goo {}\n"
-			},"success");
-	}
-
-	// Refering to the secondary type from the primary - from a method param
-	public void testMultipleTypesInOneFile03() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new Foo().runnit(new Goo());\n"+
-				"  }\n"+
-				"  public void runnit(Goo g) {"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n"+
-				"class Goo {}\n"
-			},"success");
-	}
-
-	// Refering to the secondary type from the primary - from a method
-	public void testJDKClasses() {
-		this.runConformTest(new String[] {
-				"p/Foo.groovy",
-				"package p;\n"+
-				"class Foo {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new Foo().runnit(new Goo());\n"+
-				"  }\n"+
-				"  public void runnit(Goo g) {"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"}\n"+
-				"class Goo {}\n"
-			},"success");
-	}
-
-	public void testImportsBigInteger2() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public BigInteger getFile() { return null;}\n"+
-				"}\n",
-			},"success");
-	}
-
-	// Test that the (package visible) source type in another package is visible to a groovy type
-	public void testVisibility() {
-		this.runConformTest(new String[] {
-				"p/First.groovy",
-				"package p;\n"+
-				"import q.Second;\n"+
-				"public class First {\n"+
-				"  public static void main(String[] argv) {\n"+
-				"    new First().getIt();\n"+
-				"    print \"success\"\n"+
-				"  }\n"+
-				"  public Second getIt() { return null;}\n"+
-				"}\n",
-				"q/Second.java",
-				"package q;\n"+
-				"class Second {}\n",
-			},"success");
-	}
-
-	public void testClosuresBasic() {
-		this.runConformTest(new String[] {
-			"Coroutine.groovy",
-			"def iterate(n, closure) {\n"+
-			"  1.upto(n) {\n" +
-			"    closure(it);\n" +
-			"  }\n"+
-			"}\n"+
-			"iterate (3) {\n"+
-			"  print it\n"+
-			"}\n"
-		},
-		"123");
-	}
-
-	public void testGrab() {
-		this.runConformTest(new String[]{
-				"Printer.groovy",
-				"import groovy.lang.Grab;\n"+
-				"\n"+
-				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
-				"def printDate() {\n"+
-				"      def dt = new org.joda.time.DateTime()\n"+
-				"}\n"+
-				"printDate()"},"");
-	}
-
-	/**
-	 * Improving grab, this program has a broken grab. Without changes we get a 'general error' recorded on the first line of the source file (big juicy exception)
-	 * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] java.lang.RuntimeException: Error grabbing
-	 * Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] at sun.reflect.GeneratedConstructorAccessor48.newInstance(Unknown Source) at
-	 * sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27) at java.lang.reflect.Constructor.newInstance(Constructor.java:513) at
-	 * org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
-	 * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
-	 */
-	public void testGrabWithErrors() {
-    	if (GroovyUtils.isGroovy21() || GroovyUtils.isGroovy22()) {
-    		this.runNegativeTest(new String[]{
-				"Grab1.groovy",
-				"\n"+
-				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
-				"\n"+
-				"@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n"+
-				"class C {\n"+
-				"	def printDate() {\n"+
-				"	      def dt = new org.joda.time.DateTime()\n"+
-				"		  def world = new org.aspectj.weaver.bcel.BcelWorld();\n"+
-				"		  print dt;\n"+
-				"	}\n"+
-				"	public static void main(String[] argv) {\n"+
-				"		new C().printDate()\n"+
-				"	}\n"+
-				"}\n"},
-				"----------\n" +
-				"1. ERROR in Grab1.groovy (at line 4)\n" +
-				"\t@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n" +
-				"\t ^^^\n" +
-				"Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" +
-				"----------\n" +
-				"2. ERROR in Grab1.groovy (at line 8)\n" +
-				"\tdef world = new org.aspectj.weaver.bcel.BcelWorld();\n" +
-				"\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-				"Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
-				"----------\n");
-    	}
-	}
-
-	public void testGrabError() {
-		this.runConformTest(new String[]{
-				"Printer.groovy",
-				"import groovy.lang.Grab;\n"+
-				"\n"+
-				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
-				"def printDate() {\n"+
-				"      def dt = new org.joda.time.DateTime()\n"+
-				"}\n"+
-				"printDate()"},"");
-	}
-
-	public void testScriptWithError() {
-		this.runNegativeTest(new String[] {
-			"Foo.groovy",
-			"print Coolio!",
-		},
-		"----------\n" +
-		"1. ERROR in Foo.groovy (at line 1)\n" +
-		"\tprint Coolio!\n" +
-		"\t            ^\n" +
-		"Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" +
-		"----------\n"
-		);
-	}
-
-	public void testScript() {
-		this.runConformTest(new String[] {
-			"Foo.groovy",
-			"print 'Coolio'\n",
-		},"Coolio");
-	}
-
-	public void testScriptCallJava() {
-		this.runConformTest(new String[] {
-			"Foo.groovy",
-			"print SomeJava.constant\n",
-			"SomeJava.java",
-			"class SomeJava { static String constant = \"abc\";}"
-		},"abc");
-	}
-
-	public void testGroovyAnnotation() {
-		runConformTest(new String[] {
-				"Foo.groovy",
-				"@interface A {}\n",
-
-				"Goo.groovy",
-				"@A class Goo {}\n"
-		},"");
-		String expectedContents =
-			"// Compiled from Foo.groovy (version 1.5 : 49.0, no super bit)\n" +
-			"public abstract @interface A extends java.lang.annotation.Annotation {\n"
-//			(GroovyUtils.GROOVY_LEVEL<18?"":
-//				"\n"+
-//				"  Inner classes:\n" +
-//				"    [inner class info: #9 A$1, outer class info: #2 A\n" +
-//				"     inner name: #10 1, accessflags: 4128 default]\n" +"}"
-;
-		checkDisassemblyFor("A.class",expectedContents);
-	}
-
-	// FIXASC1) test mechanism for running JUnit based tests not yet in place for these Spock tests
-//	public void testTransforms_Spock() {
-//		Map options = getCompilerOptions();
-//		options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, new File("astTransformations/spock-core-0.1.jar").getAbsolutePath());
-//
-//		runConformTest(new String[] {
-//				"Assertions.groovy",
-//				"import spock.lang.*\n"+
-//				"@Speck\n"+
-//				"class Assertions {\n"+
-////				"  public static void main(String[] argv) { new Assertions().comparingXandY();}\n"+
-//				"  def comparingXandY() {\n"+
-//				"    def x = 1\n"+
-//				"    def y = 2\n"+
-//				"    \n"+
-////				" print 'a'\n"+
-//				"    expect:\n"+
-//				"    x < y    // OK\n"+
-//				"    x == y   // BOOM!\n"+
-//				" }\n"+
-//				"}"},
-//				"----------\n" +
-//				"1. ERROR in Assertions.groovy (at line 4)\n" +
-//				"\tpublic static void main(String[] argv) {\n" +
-//				"\t^^\n" +
-//				"Groovy:Feature methods must not be static @ line 4, column 2.\n" +
-//				"----------\n",
-//				null,
-//				true,
-//				null,
-//				options,
-//				null);
-//
-//		// FIXASC1) make negative test for this:
-////
-////		runConformTest(new String[] {
-////				"Assertions.groovy",
-////				"import spock.lang.*\n"+
-////				"@Speck\n"+
-////				"class Assertions {\n"+
-////				" public static void main(String[] argv) {\n"+
-////				//				"  def \"comparing x and y\"() {\n"+
-////				"    def x = 1\n"+
-////				"    def y = 2\n"+
-////				"    \n"+
-//////				" print 'a'\n"+
-////				"    expect:\n"+
-////				"    x < y    // OK\n"+
-////				"    x == y   // BOOM!\n"+
-////				" }\n"+
-////				"}"},
-////				"----------\n" +
-////				"1. ERROR in Assertions.groovy (at line 4)\n" +
-////				"\tpublic static void main(String[] argv) {\n" +
-////				"\t^^\n" +
-////				"Groovy:Feature methods must not be static @ line 4, column 2.\n" +
-////				"----------\n",
-////				null,
-////				true,
-////				null,
-////				options,
-////				null);
-//	}
-
-//	public void testTransforms_Spock2() {
-//		Map options = getCompilerOptions();
-//		options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, new File("astTransformations/spock-core-0.1.jar").getAbsolutePath());
-//
-//		runConformTest(new String[] {
-//			"HelloSpock.groovy",
-//			"import org.junit.runner.RunWith\n"+
-//			"import spock.lang.*\n"+
-//			"@Speck\n"+
-//			"@RunWith(Sputnik)\n"+
-//			"class HelloSpock {\n"+
-//			"  def \"can you figure out what I'm up to?\"() {\n"+
-//			"  print 'xxx'\n"+
-//			"    expect:\n"+
-//			"    name.size() == size\n"+
-//			"\n"+
-//			"    where:\n"+
-//			"    name << ['Kirk', 'Spock', 'Scotty']\n"+
-//			"    size << [4, 5, 6, 7]\n"+
-//			"  }\n"+
-//			"}"
-//		},"",
-//		null,
-//		true,
-//		null,
-//		options,
-//		null);
-//
-//		String expectedOutput = "public @Anno(p.Target.class) int foo";
-//		checkGCUDeclaration("HelloSpock.groovy",expectedOutput);
-//	}
-
-	public void testExtraImports() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.*");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(
-				new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"+
-						"  public static void main(String[]argv) {\n"+
-						"		Type.m();\n"+
-						"       print 'done'\n"+
-						"	}\n"+
-						"}\n",
-
-						"com/foo/Type.groovy",
-				"package com.foo\n" +
-				"class Type {\n"+
-				"  public static void m() {}\n"+
-				"}\n",
-				// @formatter:on
-				}, "done", null, true,
-				null, options, null);
-	}
-
-	public void testExtraImports_exactType() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.Type");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	public void testExtraImports_withSuffixDotStar() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".groovy=com.foo.*");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	public void testExtraImports_withSuffixExactType() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".groovy=com.foo.Type");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	public void testExtraImports_withSuffixExactType2() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".groovy=com.foo.Type;.groovy=com.foo.TypeB");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "		TypeB.m();\n"
-						+ "       print 'done'\n" + "	}\n" + "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-
-				"com/foo/TypeB.groovy",
-				"package com.foo\n" + "class TypeB {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	public void testExtraImports_noneMatchingSuffix() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".gradle=com.foo.Type");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	public void testExtraImports_typeDoesNotExist() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".groovy=com.foo.Type2");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runNegativeTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				},
-				"----------\n"
-						+ "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n"
-						+ "\tType.m();\n"
-						+ "\t^^^^\n"
-						+ "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
-						+ "----------\n", null, true, options);
-	}
-
-	public void testExtraImports_packageDoesNotExist() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".groovy=com.madeup.*");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runNegativeTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				},
-				"----------\n"
-				        + "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n"
-						+ "\tType.m();\n"
-						+ "\t^^^^\n"
-						+ "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
-						+ "----------\n", null, true, options);
-	}
-
-	public void testExtraImports_multiple() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				".groovy=com.foo.Type,com.foo.Type2");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n" + "		Type2.m();\n"
-						+ "       print 'done'\n" + "	}\n"
-						+ "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-				"com/foo/Type2.groovy",
-				"package com.foo\n" + "class Type2 {\n"
-						+ "  public static void m() {}\n" + "}\n",
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	public void testExtraImports_multipleSuffixes() throws IOException {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-				"com.madeup.*;.groovy=com.foo.Type");
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-		// From:
-		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-		runConformTest(new String[] {
-				// @formatter:off
-				"com/bar/Runner.groovy",
-				"package com.bar\n"
-						+
-						// "import com.foo.*\n" + // this is what needs
-						// 'simulating'
-						"class Runner {\n"
-						+ "  public static void main(String[]argv) {\n"
-						+ "		Type.m();\n"
-						+ "       print 'done'\n" + "	}\n" + "}\n",
-
-				"com/foo/Type.groovy",
-				"package com.foo\n" + "class Type {\n"
-						+ "  public static void m() {}\n" + "}\n",
-
-		// @formatter:on
-				}, "done", null, true, null, options, null);
-	}
-
-	// Variable arguments
-	public void testInvokingVarargs01_JtoG() {
-		this.runConformTest(new String[] {
-			"p/Run.java",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = new X();\n"+
-			"    x.callit();\n"+
-			"    x.callit(1);\n"+
-			"    x.callit(1,2);\n"+
-			"    x.callit2();\n"+
-			"    x.callit2(1);\n"+
-			"    x.callit2(1,2);\n"+
-			"    x.callit3();\n"+
-			"    x.callit3(\"abc\");\n"+
-			"    x.callit3(\"abc\",\"abc\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public void callit(int... is) { print is.length; }\n"+
-			"  public void callit2(Integer... is) { print is.length; }\n"+
-			"  public void callit3(String... ss) { print ss.length; }\n"+
-			"}\n",
-		},"012012012");
-	}
-
-	public void testInvokingVarargs01_GtoJ() {
-		this.runConformTest(new String[] {
-			"p/Run.groovy",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = new X();\n"+
-			"    x.callit('abc');\n"+
-			"    x.callit('abc',1);\n"+
-			"    x.callit('abc',1,2);\n"+
-			"    x.callit2(3);\n"+
-			"    x.callit2(4,1);\n"+
-			"    x.callit2(1,1,2);\n"+
-			"    x.callit3('abc');\n"+
-			"    x.callit3('abc',\"abc\");\n"+
-			"    x.callit3('abc',\"abc\",\"abc\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.java",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public void callit(String a, int... is) { System.out.print(is.length); }\n"+
-			"  public void callit2(int a, Integer... is) { System.out.print(is.length); }\n"+
-			"  public void callit3(String s, String... ss) { System.out.print(ss.length); }\n"+
-			"}\n",
-		},"012012012");
-	}
-
-	// In these two cases the methods also take other values
-	public void testInvokingVarargs02_JtoG() {
-		this.runConformTest(new String[] {
-			"p/Run.java",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = new X();\n"+
-			"    x.callit(\"abc\");\n"+
-			"    x.callit(\"abc\",1);\n"+
-			"    x.callit(\"abc\",1,2);\n"+
-			"    x.callit2(3);\n"+
-			"    x.callit2(4,1);\n"+
-			"    x.callit2(1,1,2);\n"+
-			"    x.callit3(\"abc\");\n"+
-			"    x.callit3(\"abc\",\"abc\");\n"+
-			"    x.callit3(\"abc\",\"abc\",\"abc\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public void callit(String a, int... is) { print is.length; }\n"+
-			"  public void callit2(int a, Integer... is) { print is.length; }\n"+
-			"  public void callit3(String s, String... ss) { print ss.length; }\n"+
-			"}\n",
-		},"012012012");
-	}
-
-	// Groovy doesn't care about '...' and will consider [] as varargs
-	public void testInvokingVarargs03_JtoG() {
-		this.runConformTest(new String[] {
-			"p/Run.java",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = new X();\n"+
-			"    x.callit(\"abc\");\n"+
-			"    x.callit(\"abc\",1);\n"+
-			"    x.callit(\"abc\",1,2);\n"+
-			"    x.callit2(3);\n"+
-			"    x.callit2(4,1);\n"+
-			"    x.callit2(1,1,2);\n"+
-			"    x.callit3(\"abc\");\n"+
-			"    x.callit3(\"abc\",\"abc\");\n"+
-			"    x.callit3(\"abc\",\"abc\",\"abc\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public void callit(String a, int[] is) { print is.length; }\n"+
-			"  public void callit2(int a, Integer[] is) { print is.length; }\n"+
-			"  public void callit3(String s, String[] ss) { print ss.length; }\n"+
-			"}\n",
-		},"012012012");
-	}
-
-	public void testInners_1185() {
-		runConformTest(new String[] {
-    		"WithInnerClass.groovy",
-    		"class WithInnerClass {\n"+
-    		"\n"+
-    		"  interface InnerInterface {\n"+
-    		"	 void foo()\n"+
-    		"  }\n"+
-    		"\n"+
-    		"  private final InnerInterface foo = new InnerInterface() {\n"+
-    		"	  void foo() {\n" +
-    		"\n" +
-    		"	  }\n" +
-    		"  }\n"+
-    		"}"
-		});
-	}
-
-	public void testInvokingVarargs02_GtoJ() {
-		this.runConformTest(new String[] {
-			"p/Run.groovy",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = new X();\n"+
-			"    x.callit();\n"+
-			"    x.callit(1);\n"+
-			"    x.callit(1,2);\n"+
-			"    x.callit2();\n"+
-			"    x.callit2(1);\n"+
-			"    x.callit2(1,2);\n"+
-			"    x.callit3();\n"+
-			"    x.callit3(\"abc\");\n"+
-			"    x.callit3(\"abc\",\"abc\");\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.java",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public void callit(int... is) { System.out.print(is.length); }\n"+
-			"  public void callit2(Integer... is) { System.out.print(is.length); }\n"+
-			"  public void callit3(String... ss) { System.out.print(ss.length); }\n"+
-			"}\n",
-		},"012012012");
-	}
-
-	public void testInvokingVarargsCtors01_JtoG() {
-		this.runConformTest(new String[] {
-			"p/Run.java",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = null;\n"+
-			"    x = new X();\n"+
-			"    x = new X(1);\n"+
-			"    x = new X(1,2);\n"+
-			"    x = new X(\"abc\");\n"+
-			"    x = new X(\"abc\",1);\n"+
-			"    x = new X(\"abc\",1,2);\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.groovy",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public X(int... is) { print is.length; }\n"+
-			"  public X(String s, int... is) { print is.length; }\n"+
-			"}\n",
-		},"012012");
-	}
-
-	public void testInvokingVarargsCtors01_GtoJ() {
-		this.runConformTest(new String[] {
-			"p/Run.groovy",
-			"package p;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    X x = null;\n"+
-			"    x = new X();\n"+
-			"    x = new X(1);\n"+
-			"    x = new X(1,2);\n"+
-			"    x = new X(\"abc\");\n"+
-			"    x = new X(\"abc\",1);\n"+
-			"    x = new X(\"abc\",1,2);\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/X.java",
-			"package p;\n" +
-			"public class X {\n" +
-			"  public X(int... is) { System.out.print(is.length); }\n"+
-			"  public X(String s, int... is) { System.out.print(is.length); }\n"+
-			"}\n",
-		},"012012");
-	}
-
-	public void testPositions() {
-		this.runNegativeTest(new String[] {
-			"One.groovy",
-			"class One {\n" +
-			"		/*a*/			Stack plates;\n"+
-			"  /*b*/ Stack plates2;\n"+
-			"}\n",
-		},"----------\n" +
-		"1. WARNING in One.groovy (at line 2)\n" +
-		"\t/*a*/			Stack plates;\n" +
-		"\t     			^^^^^\n" +
-		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
-		"----------\n" +
-		"2. WARNING in One.groovy (at line 3)\n" +
-		"\t/*b*/ Stack plates2;\n" +
-		"\t      ^^^^^\n" +
-		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
-		"----------\n");
-
-	}
-
-	public void testPositions_2() {
-		this.runNegativeTest(new String[] {
-			"One.groovy",
-			"class One {\n" +
-			"		/*a*/			Stack plates;\n"+
-			"  /*b*/ Stack plates2;\n"+
-			"}\n",
-		},"----------\n" +
-		"1. WARNING in One.groovy (at line 2)\n" +
-		"\t/*a*/			Stack plates;\n" +
-		"\t     			^^^^^\n" +
-		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
-		"----------\n" +
-		"2. WARNING in One.groovy (at line 3)\n" +
-		"\t/*b*/ Stack plates2;\n" +
-		"\t      ^^^^^\n" +
-		"Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
-		"----------\n");
-	}
-
-	// FIXASC test varargs with default parameter values (methods/ctors)
-
-	// static imports
-	public void testStaticImports_JtoG() {
-		this.runConformTest(new String[] {
-			"p/Run.java",
-			"package p;\n"+
-			"import static p.q.r.Colour.*;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    System.out.print(Red);\n"+
-			"    System.out.print(Green);\n"+
-			"    System.out.print(Blue);\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/q/r/Colour.groovy",
-			"package p.q.r;\n" +
-			"enum Colour { Red,Green,Blue; }\n",
-		},"RedGreenBlue");
-	}
-
-	public void testStaticImports_GtoJ() {
-		this.runConformTest(new String[] {
-			"p/Run.groovy",
-			"package p;\n"+
-			"import static p.q.r.Colour.*;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    System.out.print(Red);\n"+
-			"    System.out.print(Green);\n"+
-			"    System.out.print(Blue);\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/q/r/Colour.java",
-			"package p.q.r;\n" +
-			"enum Colour { Red,Green,Blue; }\n",
-		},"RedGreenBlue");
-	}
-
-	public void testJDTClassNode_633() {
-		try {
-			JDTResolver.recordInstances = true;
-			this.runConformTest(new String[] {
-				"p/Run.groovy",
-				"package p;\n"+
-				"import static p.q.r.Colour.*;\n"+
-				"import p.q.r.Colour2;\n"+
-				"public class Run {\n" +
-				"  public static void main(String[] argv) {\n"+
-				"    System.out.print(Red);\n"+
-				"    System.out.print(Green);\n"+
-				"    System.out.print(Blue);\n"+
-				"   Colour2 c2 = new Colour2();\n"+
-				"   int i = c2.compareTo('abc');\n"+
-				"  }\n"+
-				"}\n",
-
-				"p/q/r/Colour.java",
-				"package p.q.r;\n" +
-				"enum Colour { Red,Green,Blue; }\n",
-
-				"p/q/r/Colour3.java",
-				"package p.q.r;\n"+
-				"@SuppressWarnings(\"rawtypes\")\n"+
-				"class Colour3 implements Comparable { public int compareTo(Object o) { return 0;}}\n",
-
-				"p/q/r/Colour2.java",
-				"package p.q.r;\n" +
-				"public class Colour2 implements Comparable<String> { \n"+
-				"  public int compareTo(String s) { return 0; } \n"+
-					"}\n",
-				},"RedGreenBlue");
-
-			// Check on the state of Comparable
-			JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
-			assertNotNull(classnode);
-			// Should have one method
-			List methods = classnode.getMethods();
-			assertEquals(1,methods.size());
-			assertEquals("int compareTo(java.lang.Object)",((MethodNode)methods.get(0)).getTypeDescriptor());
-		} finally {
-			JDTResolver.instances.clear();
-			JDTResolver.recordInstances=false;
-		}
-	}
-
-	public void testStaticImports2_GtoJ() {
-		this.runConformTest(new String[] {
-			"p/Run.java",
-			"package p;\n"+
-			"import static p.q.r.Colour.*;\n"+
-			"public class Run {\n" +
-			"  public static void main(String[] argv) {\n"+
-			"    Red.printme();\n"+
-			"  }\n"+
-			"}\n",
-
-			"p/q/r/Colour.groovy",
-			"package p.q.r;\n" +
-			"enum Colour { Red,Green,Blue; \n" +
-			"  void printme() {\n"+
-			"    println \"${name()}\";\n" +
-         	"  }\n"+
-         	"}\n",
-		},"Red");
-	}
-
-	public void testStaticImportsAliasing_G() {
-		this.runConformTest(new String[] {
-			"p/Run.groovy",
-			"package p;\n"+
-			"import static java.lang.Math.PI\n"+
-			"import static java.lang.Math.sin as sine\n"+
-			"import static java.lang.Math.cos as cosine\n"+
-			"\n"+
-			" print sine(PI / 6) + cosine(PI / 3)"
-		},"1.0");
-	}
-
-	public void testSecondaryTypeTagging() {
-		this.runConformTest(new String[] {
-			"Run.groovy",
-			"class Run { public static void main(String[]argv) {print '1.0';} }\n"+
-			"class B {}\n"+
-			"class C {}\n"+
-			"class D {}\n"
-		},"1.0");
-		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-		TypeDeclaration[] tds = gcud.types;
-		assertFalse((tds[0].bits&ASTNode.IsSecondaryType)!=0);
-		assertTrue((tds[1].bits&ASTNode.IsSecondaryType)!=0);
-		assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
-		assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
-
-		this.runConformTest(new String[] {
-				"Run2.groovy",
-				"class B {}\n"+
-				"class Run2 { public static void main(String[]argv) {print '1.0';} }\n"+
-				"class C {}\n"+
-				"class D {}\n"
-			},"1.0");
-			gcud = getCUDeclFor("Run2.groovy");
-			tds = gcud.types;
-			assertTrue((tds[0].bits&ASTNode.IsSecondaryType)!=0);
-			assertFalse((tds[1].bits&ASTNode.IsSecondaryType)!=0);
-			assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
-			assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
-	}
-
-	// Test 'import static a.B.FOO'
-	public void testImportStatic1() {
-		this.runConformTest(new String[] {
-			"b/Run.groovy",
-			"package b\n"+
-			"import static a.B.FOO\n"+
-			"class Run { public static void main(String[]argv) { print FOO;} }\n",
-			"a/B.groovy",
-			"package a\n"+
-			"class B { public static String FOO='abc';}\n",
-		},"abc");
-		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-		ImportReference[] irs = gcud.imports;
-		assertEquals("a.B.FOO",irs[0].toString().trim());
-		assertTrue(irs[0].isStatic());
-	}
-
-	// Test 'import static a.B.*'
-	public void testImportStatic2() {
-		this.runConformTest(new String[] {
-			"b/Run.groovy",
-			"package b\n"+
-			"import static a.B.*\n"+
-			"class Run { public static void main(String[]argv) { print FOO;} }\n",
-			"a/B.groovy",
-			"package a\n"+
-			"class B { public static String FOO='abc';}\n",
-		},"abc");
-		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-		ImportReference[] irs = gcud.imports;
-		assertEquals("a.B.*",irs[0].toString().trim());
-		assertTrue(irs[0].isStatic());
-	}
-
-	// Test 'import static a.B.FOO as Wibble'
-	public void testImportStatic3() {
-		this.runConformTest(new String[] {
-			"b/Run.groovy",
-			"package b\n"+
-			"import static a.B.FOO as Wibble\n"+
-			"class Run { public static void main(String[]argv) { print Wibble;} }\n",
-			"a/B.groovy",
-			"package a\n"+
-			"class B { public static String FOO='abc';}\n",
-		},"abc");
-		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-		ImportReference[] irs = gcud.imports;
-		assertTrue(irs[0] instanceof AliasImportReference);
-		assertEquals("a.B.Wibble",irs[0].toString().trim()); // FIXASC hmmm, why isn't that a.B.FOO (ie. declared long name)
-		assertTrue(irs[0].isStatic());
-		assertEquals("Wibble",new String(((AliasImportReference)irs[0]).getSimpleName()));
-	}
+    public void testExtendingInterface1() {
+        this.runNegativeTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X extends I {\n" +
+            "}\n",
+            "p/I.groovy",
+            "package p\n"+
+            "interface I {}",
+        },
+        "----------\n" +
+        "1. ERROR in p\\X.groovy (at line 2)\n" +
+        "\tpublic class X extends I {\n" +
+        "\t             ^\n" +
+        "Groovy:You are not allowed to extend the interface \'p.I\', use implements instead.\n" +
+        "----------\n");
+    }
+
+    public void testProtectedType() {
+        this.runConformTest(new String[] {
+            "p/Y.groovy",
+            "package p;\n" +
+            "class Y {\n" +
+            "  public static void main(String[]argv) {\n"+
+            "    new X().main(argv);\n"+
+            "  }\n"+
+            "}\n",
+            "p/X.groovy",
+            "package p;\n" +
+            "protected class X {\n" +
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "success");
+    }
+
+    public void testEnums() {
+        this.runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public enum X {\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    public void testEnums2() {
+        try {
+            JDTResolver.recordInstances = true;
+            this.runConformTest(new String[] {
+                    "EE.groovy",
+                    "enum EE {A,B,C;}\n",
+                    "Foo.java",
+                    "public class Foo<E extends Foo<E>> implements Comparable<E> {" +
+                    "  public int compareTo(E b) { return 0;}\n"+
+                    "}\n" +
+                    "\n",
+                    "Goo.java",
+                    "public class Goo<X extends Goo<X>> extends Foo<X> {}\n",
+                    "Bar.groovy",
+                    "abstract class Bar extends Goo<Bar> {" +
+                    "  int compareTo(Bar b) { return 0;}\n"+
+                    "  EE getEnum() { return null; }\n"+
+                    "}\n"});
+
+            // Check on the state of Comparable
+            JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
+            assertNotNull(classnode);
+            // Should have one method
+            List<MethodNode> methods = classnode.getMethods();
+            assertEquals(1,methods.size());
+            assertEquals("int compareTo(java.lang.Object)",methods.get(0).getTypeDescriptor());
+
+            classnode.lazyClassInit();
+        } finally {
+            JDTResolver.instances.clear();
+            JDTResolver.recordInstances=false;
+        }
+
+        this.runConformTest(new String[]{
+            "Foo.groovy",
+            "class Foo<E extends Foo<E>> implements Comparable<E> {" +
+            "  int compareTo(Object b) { return 0;}\n"+
+            "}\n" +
+            "\n",
+            "Bar.groovy",
+            "abstract class Bar extends Foo<Bar> {" +
+            "  int compareTo(Bar b) { return 0;}\n"+
+            "}\n"
+        });
+    }
+
+    public void testNonTerminalMissingImport() {
+        this.runNegativeTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "import a.b.c.D;\n"+
+            "public class X {\n" +
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in p\\X.groovy (at line 2)\n" +
+        "\timport a.b.c.D;\n" +
+        "\t             ^\n" +
+        "Groovy:unable to resolve class a.b.c.D\n" +
+        "----------\n");
+    }
+
+    public void testTypeClash() {
+        this.runNegativeTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.java",
+            "package p;\n"+
+            "public class X {}\n"
+        },
+        "----------\n" +
+        "1. ERROR in p\\X.groovy (at line 2)\n" +
+        "\tpublic class X {\n" +
+        "\t             ^\n" +
+        "The type X is already defined\n" +
+        "----------\n");
+    }
+
+    public void testCallStaticMethodFromGtoJ() {
+        this.runConformTest(new String[] {
+            "p/Foo.groovy",
+            "package p;\n" +
+            "public class Foo {\n" +
+            "  public static void main(String[]argv) {\n"+
+            "    X.run()\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.java",
+            "package p;\n"+
+            "public class X {\n"+
+            "  public static void run() {\n"+
+            "    System.out.println(\"success\");\n"+
+            "  }\n"+
+            "}\n"
+        },
+        "success");
+    }
+
+    public void testCallStaticMethodFromJtoG() {
+        this.runConformTest(new String[] {
+            "p/Foo.java",
+            "package p;\n" +
+            "public class Foo {\n" +
+            "  public static void main(String[]argv) {\n"+
+            "    X.run();\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.groovy",
+            "package p;\n"+
+            "public class X {\n"+
+            "  public static void run() {\n"+
+            "    System.out.println(\"success\");\n"+
+            "  }\n"+
+            "}\n"
+        },
+        "success");
+    }
+
+    public void testNotMakingInterfacesImplementGroovyObject() {
+        this.runConformTest(new String[] {
+            "p/X.java",
+            "package p;\n"+
+            "public class X implements I {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    System.out.println(\"success\");\n"+
+            "  }\n"+
+            "}\n",
+            "p/I.groovy",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+        },
+        "success");
+    }
+
+    public void testExtendingInterface2() {
+        this.runNegativeTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X extends List<String> {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in p\\X.groovy (at line 2)\n" +
+        "\tpublic class X extends List<String> {\n" +
+        "\t             ^\n" +
+        "Groovy:You are not allowed to extend the interface \'java.util.List\', use implements instead.\n" +
+        "----------\n");
+    }
+
+    // WMTW: the type declaration building code creates the correct representation of A and adds the default constructor
+    public void testExtendingGroovyWithJava1() {
+        this.runConformTest(new String[] {
+            // p.B
+            "p/B.java",
+            "package p;\n"+
+            "public class B extends A {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    new B();\n"+
+            "    System.out.println(\"success\");\n"+
+            "  }\n"+
+            "}\n",
+            // p.A
+            "p/A.groovy",
+            "package p;\n" +
+            "public class A {\n" +
+            "}\n",
+        },"success");
+    }
+
+    // WMTW: a JDT resolver is plugged into groovy so it can see Java types
+    // details:
+    // 1. needed the lookupenvironment to flow down to the groovyparser (through initializeParser) as groovy will need it
+    // for resolution of JDT types
+    // 2. needed to subclass ResolveVisitor - trying just to override resolve(ClassNode) right now
+    // 3. needed to build JDTClassNode and needed it to initialize the superclass field
+    public void testExtendingJavaWithGroovy1() {
+        this.runConformTest(new String[] {
+            // p.B
+            "p/B.groovy",
+            "package p;\n" +
+            "public class B extends A {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    new B();\n"+
+            "    System.out.println(\"success\");\n"+
+            "  }\n"+
+            "}\n",
+            // p.A
+            "p/A.java",
+            "package p;\n"+
+            "public class A {\n"+
+            "}\n",
+        },"success");
+    }
+
+    public void testExtendingJavaWithGroovyAndThenJava() {
+        this.runConformTest(new String[] {
+            // p.C
+            "p/C.java",
+            "package p;\n" +
+            "public class C extends B {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    new C();\n"+
+            "    System.out.println(\"success\");\n"+
+            "  }\n"+
+            "}\n",
+            // p.B
+            "p/B.groovy",
+            "package p;\n" +
+            "public class B extends A {\n" +
+            "}\n",
+            // p.A
+            "p/A.java",
+            "package p;\n"+
+            "public class A {\n"+
+            "}\n",
+        },"success");
+    }
+
+    // Groovy is allowed to have a public class like this in a file with a different name
+    public void testPublicClassInWrongFile() {
+        this.runConformTest(new String[] {
+            "pkg/One.groovy",
+            "package pkg;\n" +
+            "public class One {" +
+            "  public static void main(String[]argv) { print \"success\";}\n" +
+            "}\n"+
+            "public class Two {" +
+            "  public static void main(String[]argv) { print \"success\";}\n" +
+            "}\n",
+        },"success");
+    }
+
+    /**
+     * WMTW: having a callback registered with groovy class generation that tracks which class file is created for which module node
+     * details:
+     * the groovy compilationunit provides a way to ask for the generated classes but it doesnt give a way to tell why they arose
+     * (which sourceunit caused them to come into existence).  I am using the callback mechanism to track this information, but I worry
+     * that we are causing groovy to perhaps do things too many times.  It also feels a little wierd that driving any single file through
+     * to CLASSGEN drives them all through.  It isn't necessarily a problem, but it conflicts with the model of dealing with one file at
+     * a time...
+     */
+    public void testBuildingTwoGroovyFiles() {
+        this.runConformTest(new String[] {
+            // pkg.One
+            "pkg/One.groovy",
+            "package pkg;\n" +
+            "class One {" +
+            "  public static void main(String[]argv) { print \"success\";}\n" +
+            "}\n",
+            // pkg.Two
+            "pkg/Two.groovy",
+            "package pkg;\n" +
+            "class Two {}\n"
+        },"success");
+    }
+
+    public void testExtendingGroovyInterfaceWithJava() {
+        this.runConformTest(new String[] {
+                // pkg.C
+                "pkg/C.java",
+                "package pkg;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {" +
+                "  public static void main(String[]argv) {\n"+
+                "    I i = new C();\n"+
+                "    System.out.println( \"success\");" +
+                "  }\n" +
+                "}\n",
+                // pkg.I
+                "pkg/I.groovy",
+                "package pkg;\n" +
+                "interface I {}\n"
+            },"success");
+    }
+
+    public void testExtendingJavaInterfaceWithGroovy() {
+        this.runConformTest(new String[] {
+                // pkg.C
+                "pkg/C.groovy",
+                "package pkg;\n" +
+                "public class C implements I {" +
+                "  public static void main(String[]argv) {\n"+
+                "    I i = new C();\n"+
+                "    System.out.println( \"success\");" +
+                "  }\n" +
+                "}\n",
+                // pkg.I
+                "pkg/I.java",
+                "package pkg;\n" +
+                "interface I {}\n"
+            },"success");
+    }
+
+    // WMTM: the fix for the previous code that tracks why classes are generated
+    public void testExtendingJavaWithGroovyAndThenJavaAndThenGroovy() {
+        this.runConformTest(new String[] {
+            // p.D
+            "p/D.groovy",
+            "package p;\n" +
+            "class D extends C {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    new C();\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+            // p.C
+            "p/C.java",
+            "package p;\n" +
+            "public class C extends B {}\n",
+            // p.B
+            "p/B.groovy",
+            "package p;\n" +
+            "public class B extends A {}\n",
+            // p.A
+            "p/A.java",
+            "package p;\n"+
+            "public class A {}\n"
+        },"success");
+    }
+
+    public void testImplementingInterface1() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  void m();\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 2)\n" +
+            "\tpublic class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
+            "\t             ^\n" +
+            "The type C must implement the inherited abstract method I.m()\n" +
+            "----------\n");
+    }
+
+    public void testImplementingInterface2() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public void m() {}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  void m();\n"+
+                "}\n",
+            },"success");
+    }
+
+    public void testImplementingInterface3() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  void m() {}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  void m();\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 3)\n" +
+            "\tvoid m() {}\n" +
+            "\t     ^^^\n" +
+            "Cannot reduce the visibility of the inherited method from I\n" +
+            "----------\n");
+    }
+
+    public void testImplementingInterface4() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public String m() { return \"\";}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  String m();\n"+
+                "}\n",
+            },"success");
+    }
+
+    // WMTW: Groovy compilation unit scope adds the extra default import for java.util so List can be seen
+    public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "import java.util.List;\n"+
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public String m() { return \"\";}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  List m();\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 4)\n" +
+            "\tpublic String m() { return \"\";}\n" +
+            "\t       ^^^^^^\n" +
+            "The return type is incompatible with I.m()\n" +
+            "----------\n"+
+            // this verifies the position report for the error against the return value of the method
+            "----------\n" +
+            "1. WARNING in p\\I.groovy (at line 3)\n" +
+            "\tList m();\n" +
+            "\t^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    public void testFieldPositioning01() {
+        this.runNegativeTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C {\n"+
+                "  List aList;\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. WARNING in p\\C.groovy (at line 3)\n" +
+            "\tList aList;\n" +
+            "\t^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    // FIXASC poor positional error for invalid field name - this test needs sorting out
+    public void _testFieldPositioning02() {
+        runNegativeTest(new String[] {
+            "p/C.groovy",
+            "package p;\n" +
+            "public class C {\n"+
+            "  List<String> class;\n"+
+            "}\n",
+        },
+        "----------\n");
+    }
+
+    public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ArrayReferenceReturnType() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "import java.util.List;\n"+
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public String m() { return \"\";}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  List[] m();\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 4)\n" +
+            "\tpublic String m() { return \"\";}\n" +
+            "\t       ^^^^^^\n" +
+            "The return type is incompatible with I.m()\n" +
+            "----------\n"+
+            // this verifies the position report for the error against the return value of the method
+            "----------\n" +
+            "1. WARNING in p\\I.groovy (at line 3)\n" +
+            "\tList[] m();\n" +
+            "\t^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_QualifiedArrayReferenceReturnType() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "import java.util.List;\n"+
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public String m() { return \"\";}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  java.util.List[] m();\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 4)\n" +
+            "\tpublic String m() { return \"\";}\n" +
+            "\t       ^^^^^^\n" +
+            "The return type is incompatible with I.m()\n" +
+            "----------\n"+
+            // this verifies the position report for the error against the return value of the method
+            "----------\n" +
+            "1. WARNING in p\\I.groovy (at line 3)\n" +
+            "\tjava.util.List[] m();\n" +
+            "\t^^^^^^^^^^^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ParamPosition() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "import java.util.List;\n"+
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public void m(String s) { }\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  void m(List l);\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 3)\n" +
+            "\tpublic class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
+            "\t             ^\n" +
+            "The type C must implement the inherited abstract method I.m(List)\n" +
+            "----------\n" +
+            // this verifies the position report for the error against the method parameter
+            "----------\n" +
+            "1. WARNING in p\\I.groovy (at line 3)\n" +
+            "\tvoid m(List l);\n" +
+            "\t       ^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_QualifiedParamPosition() {
+        this.runNegativeTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "import java.util.List;\n"+
+                "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
+                "  public void m(String s) { }\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I {\n" +
+                "  void m(java.util.List l);\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.java (at line 3)\n" +
+            "\tpublic class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
+            "\t             ^\n" +
+            "The type C must implement the inherited abstract method I.m(List)\n" +
+            "----------\n" +
+            // this verifies the position report for the error against the method parameter+
+            "----------\n" +
+            "1. WARNING in p\\I.groovy (at line 3)\n" +
+            "\tvoid m(java.util.List l);\n" +
+            "\t       ^^^^^^^^^^^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    public void testImplementingInterface_MethodWithParameters_GextendsJ() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C implements I<Integer> {\n"+
+                "  public void m(String s) { }\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.java",
+                "package p;\n"+
+                "public interface I<T extends Number> {\n" +
+                "  void m(String s);\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    // Test that the alias is recognized when referenced as superclass
+    // WMTW: the code Scope.getShortNameFor()
+    public void testImportAliasingGoober() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "import java.util.HashMap as Goober;\n"+
+                "public class C extends Goober {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print 'q.A.run'\n"+
+                "  }\n"+
+                "}\n",
+        },
+        "q.A.run");
+    }
+
+    public void testImportAliasing() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "import q.A as AA;\n"+
+                "import r.A as AB;\n"+
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    callitOne(new AA());\n"+
+                "    callitTwo(new AB());\n"+
+                "  }\n"+
+                "  public static void callitOne(AA a) { a.run();}\n"+
+                "  public static void callitTwo(AB a) { a.run();}\n"+
+                "}\n",
+
+                "q/A.java",
+                "package q;\n"+
+                "public class A {\n" +
+                "  public static void run() { System.out.print(\"q.A.run \");}\n"+
+                "}\n",
+
+                "r/A.java",
+                "package r;\n"+
+                "public class A {\n" +
+                "  public static void run() { System.out.print(\"r.A.run\");}\n"+
+                "}\n",
+            },
+            "q.A.run r.A.run");
+    }
+
+    public void testImportAliasingAndOldReference() {
+        this.runNegativeTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "import q.A as AA;\n"+
+                "import r.A as AB;\n"+
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    callitOne(new AA());\n"+
+                "  }\n"+
+                "  public static void callitOne(A a) { }\n"+ // no A imported!
+                "}\n",
+
+                "q/A.java",
+                "package q;\n"+
+                "public class A {\n" +
+                "  public static void run() { System.out.print(\"q.A.run \");}\n"+
+                "}\n",
+
+                "r/A.java",
+                "package r;\n"+
+                "public class A {\n" +
+                "  public static void run() { System.out.print(\"r.A.run\");}\n"+
+                "}\n",
+            },
+            "----------\n" +
+            "1. ERROR in p\\C.groovy (at line 8)\n" +
+            "\tpublic static void callitOne(A a) { }\n" +
+            "\t                             ^\n" +
+            "Groovy:unable to resolve class A \n" +
+            "----------\n");
+    }
+
+    public void testImportInnerInner01() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C {\n"+
+                "  private static Wibble.Inner.Inner2 wibbleInner = new G();\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    wibbleInner.run();\n"+
+                "  }\n"+
+                "}\n"+
+                "class G extends Wibble.Inner.Inner2  {}",
+
+                "p/Wibble.java",
+                "package p;\n"+
+                "public class Wibble {\n" +
+                "  public static class Inner {\n"+
+                "    public static class Inner2 {\n"+
+                "      public static void run() { System.out.print(\"p.Wibble.Inner.Inner2.run \");}\n"+
+                "    }\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "p.Wibble.Inner.Inner2.run");
+    }
+
+    public void testImportInnerClass01_JavaCase() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "import x.y.z.Wibble.Inner;\n"+
+                "\n"+
+                "public class C {\n"+
+                "  private static Inner wibbleInner = new Inner();\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    wibbleInner.run();\n"+
+                "  }\n"+
+                "}\n",
+
+                "x/y/z/Wibble.java",
+                "package x.y.z;\n"+
+                "public class Wibble {\n" +
+                "  public static class Inner {\n"+
+                "    public static void run() { System.out.print(\"q.A.run \");}\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "q.A.run");
+    }
+
+    // FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
+    public void testImportInnerClass01_GroovyCase() {
+        this.runConformTest(new String[] {
+            "p/C.groovy",
+            "package p;\n" +
+            "import x.y.z.Wibble.Inner\n"+
+            "\n"+
+            "public class C {\n"+
+            "  private static Inner wibbleInner = new Inner();\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    wibbleInner.run();\n"+
+            "  }\n"+
+            "}\n",
+
+            "x/y/z/Wibble.java",
+            "package x.y.z;\n"+
+            "public class Wibble {\n" +
+            "  public static class Inner {\n"+
+            "    public static void run() { System.out.print(\"q.A.run \");}\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "q.A.run");
+    }
+
+    public void testImportInnerClass() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "import x.y.z.Wibble.Inner /*as WibbleInner*/;\n"+
+                "public class C {\n"+
+                "  private static Inner wibbleInner = new Inner();\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    wibbleInner.run();\n"+
+                "  }\n"+
+                //"  public static void callitOne(WibbleInner a) { a.run();}\n"+
+                "}\n",
+
+                "x/y/z/Wibble.java",
+                "package x.y.z;\n"+
+                "public class Wibble {\n" +
+                "  public static class Inner {\n"+
+                "    public void run() { System.out.print(\"run\");}\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "run");
+    }
+
+    public void testImportAliasingInnerClass() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "import x.y.z.Wibble.Inner as WibbleInner;\n"+
+                "public class C {\n"+
+                "  private static WibbleInner wibbleInner = new WibbleInner();\n"+
+                "  public static void main(String[] argv) {\n"+
+                "   wibbleInner.run();\n"+
+                "  }\n"+
+                "}\n",
+
+                "x/y/z/Wibble.java",
+                "package x.y.z;\n"+
+                "public class Wibble {\n" +
+                "  public static class Inner {\n"+
+                "    public void run() { System.out.print(\"run \");}\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "run");
+    }
+
+    public void testImplementingInterface_MethodWithParameters_JextendsG() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I<Integer> {\n"+
+                "  public void m(String s) { }\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I<T extends Number> {\n" +
+                "  void m(String s);\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testImplementingInterface_MethodWithParameters2_JextendsG() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I<Integer> {\n"+
+                "  public void m(String s, Integer i) { }\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I<T extends Number> {\n" +
+                "  void m(String s, Integer i);\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testImplementingInterface_MethodWithParameters2_GextendsJ() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C implements I<Integer> {\n"+
+                "  public void m(String s, Integer i) { return null;}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.java",
+                "package p;\n"+
+                "public interface I<T extends Number> {\n" +
+                "  void m(String s, Integer i);\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testImplementingInterface_MethodWithParameters3_GextendsJ() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C implements I<Integer> {\n"+
+                "  public void m(String s, Integer i) { return null;}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.java",
+                "package p;\n"+
+                "public interface I<T extends Number> {\n" +
+                "  void m(String s, T t);\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testImplementingInterface_MethodWithParameters3_JextendsG() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C extends groovy.lang.GroovyObjectSupport implements I<Integer> {\n"+
+                "  public void m(String s, Integer i) { }\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.println( \"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/I.groovy",
+                "package p;\n"+
+                "public interface I<T extends Number> {\n" +
+                "  void m(String s, T t);\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testCallingMethods_JcallingG() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new GClass().run();\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/GClass.groovy",
+                "package p;\n"+
+                "public class GClass {\n" +
+                "  void run() {\n" +
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testCallingMethods_GcallingJ() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new OtherClass().run();\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.java",
+                "package p;\n"+
+                "public class OtherClass {\n" +
+                "  void run() {\n" +
+                "    System.out.println(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testReferencingFields_JreferingToG() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    OtherClass oClass = new OtherClass();\n"+
+                "    System.out.println(oClass.message);\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.groovy",
+                "package p;\n"+
+                "public class OtherClass {\n" +
+                "  public String message =\"success\";\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testReferencingFields_GreferingToJ() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    OtherClass oClass = new OtherClass();\n"+
+                "    System.out.println(oClass.message);\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.java",
+                "package p;\n"+
+                "public class OtherClass {\n" +
+                "  public String message =\"success\";\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testCallingConstructors_JcallingG() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    OtherClass oClass = new OtherClass();\n"+
+                "    System.out.println(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.groovy",
+                "package p;\n"+
+                "public class OtherClass {\n" +
+                "  public OtherClass() {\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testCallingConstructors_GcallingJ() {
+        this.runConformTest(new String[] {
+                "p/C.groovy",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    OtherClass oClass = new OtherClass();\n"+
+                "    System.out.println(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.java",
+                "package p;\n"+
+                "public class OtherClass {\n" +
+                "  public OtherClass() {\n"+
+                "  }\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testGroovyObjectsAreGroovyAtCompileTime() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    groovy.lang.GroovyObject oClass = new OtherClass();\n"+
+                "    System.out.println(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.groovy",
+                "package p;\n"+
+                "import java.util.*;\n"+
+                "public class OtherClass {\n" +
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testCallGroovyObjectMethods_invokeMethod() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    groovy.lang.GroovyObject oClass = new OtherClass();\n"+
+                "    String s = (String)oClass.invokeMethod(\"toString\",null);\n"+
+                "    System.out.println(s);\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.groovy",
+                "package p;\n"+
+                "import java.util.*;\n"+
+                "public class OtherClass {\n" +
+                "  String toString() { return \"success\";}\n"+
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testGroovyObjectsAreGroovyAtRunTime() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    OtherClass oClass = new OtherClass();\n"+
+                "    System.out.println(oClass instanceof groovy.lang.GroovyObject);\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.groovy",
+                "package p;\n"+
+                "import java.util.*;\n"+
+                "public class OtherClass {\n" +
+                "}\n",
+            },
+            "true");
+    }
+
+    public void testGroovyBug() {
+        this.runConformTest(new String[] {
+                "p/A.groovy",
+                "package p;\n" +
+                "public class A<T> { public static void main(String[]argv) { print \"a\";}}\n",
+
+                "p/B.groovy",
+                "package p;\n" +
+                "public class B extends A<String> {}",
+
+            },
+            "a");
+    }
+
+    public void testGroovyBug2() {
+        this.runConformTest(new String[] {
+
+                "p/B.groovy",
+                "package p;\n" +
+                "public class B extends A<String> {public static void main(String[]argv) { print \"a\";}}",
+
+                "p/A.groovy",
+                "package p;\n" +
+                "public class A<T> { }\n",
+            },
+            "a");
+    }
+
+    // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
+    public void testExtendingGroovyObjects_clinit() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    OtherClass oClass = new OtherClass();\n"+
+                "    System.out.println(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/OtherClass.groovy",
+                "package p;\n"+
+                "public class OtherClass {\n" +
+                "  { int i = 5; }\n" +
+                "}\n",
+            },
+            "success");
+    }
+
+    public void testGroovyPropertyAccessors_ErrorCases1() {
+        // check no duplicate created for 'String getProp'
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    System.out.print(o.getProp());\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  String prop = 'foo'\n"+
+                "  String getProp() { return prop; }\n"+
+                "}\n",
+            },
+            "foo");
+    }
+
+    public void testGroovyPropertyAccessors_ErrorCases2() {
+        // check no duplicate created for 'boolean isProp'
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    System.out.print(o.isProp());\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  boolean prop = false\n"+
+                "  boolean isProp() { return prop; }\n"+
+                "}\n",
+            },
+            "false");
+    }
+
+    public void testGroovyPropertyAccessors_ErrorCases3() {
+        // although there is a getProp already defined, it takes a parameter
+        // so a new one should still be generated
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    System.out.print(o.getProp());\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  String prop = 'foo'\n"+
+                "  String getProp(String s) { return prop; }\n"+
+                "}\n",
+            },
+            "foo");
+    }
+
+    public void testGroovyPropertyAccessors_ErrorCases4() {
+        // although there is a setProp already defined, it takes no parameters
+        // so a new one should still be generated
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    o.setProp(\"abc\");\n"+
+                "    System.out.print(\"abc\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  String prop = 'foo'\n"+
+                "  void setProp() { }\n"+
+                "}\n",
+            },
+            "abc");
+    }
+
+    // It seems groovyc doesn't allow this - fails to generate the setProp(H)...
+    public void _testGroovyPropertyAccessors_ErrorCases5() {
+        // although there is a setProp already defined, it takes a parameter
+        // of a different type to the property type
+        this.runConformTest(new String[] {
+            "p/C.java",
+            "package p;\n" +
+            "public class C {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    G o = new G();\n"+
+            "    o.setProp(new H());\n"+
+            "    System.out.print(\"abc\");\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/H.java",
+            "package p;\n"+
+            "class H{}\n",
+
+            "p/J.java",
+            "package p;\n"+
+            "class J{}\n",
+
+            "p/G.groovy",
+            "package p;\n"+
+            "public class G {\n" +
+            "  H prop\n"+
+            "  void setProp(J b) { }\n"+
+            "}\n",
+        },
+        "abc");
+    }
+
+    public void _testGroovyPropertyAccessors_ErrorCases6() {
+        // although there is a setProp already defined, it takes a parameter of a different type to the property type
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    o.setProp(\"abc\");\n"+
+                "    System.out.print(\"abc\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  String prop = 'foo'\n"+
+                "  void setProp(boolean b) { }\n"+
+                "}\n",
+            },
+            "abc");
+    }
+
+    public void testGroovyPropertyAccessors() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    System.out.print(o.isB());\n"+
+                "    System.out.print(o.getB());\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  boolean b\n"+
+                "}\n",
+            },
+            "falsefalse");
+    }
+
+    public void testGroovyPropertyAccessors_Set() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    System.out.print(o.getB());\n"+
+                "    o.setB(true);\n"+
+                "    System.out.print(o.getB());\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  boolean b\n"+
+                "}\n",
+            },
+            "falsetrue");
+    }
+
+    public void testDefaultValueMethods() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    o.m(\"abc\",3);\n"+
+                "    o.m(\"abc\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  public void m(String s,Integer i=3) { print s }\n"+
+                "}\n",
+            },
+            "abcabc");
+        String expectedOutput =
+            "package p;\n" +
+            "public class G {\n" +
+            "  public G() {\n" +
+            "  }\n" +
+            "  public void m(public String s, public Integer i) {\n" +
+            "  }\n" +
+            "  public void m(public String s) {\n" +
+            "  }\n" +
+            "}\n";
+        checkGCUDeclaration("G.groovy",expectedOutput);
+        expectedOutput =
+            "  \n" +
+            "  public void m(String s, Integer i);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+        expectedOutput =
+            "  \n" +
+            "  public void m(String s);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+    }
+
+    public void testDefaultValueMethods02() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G();\n"+
+                "    String str=\"xyz\";\n"+
+                "    o.m(str,1,str,str,4.0f,str);\n"+
+                "    o.m(str,1,str,str,str);\n"+
+                "    o.m(str,1,str,str);\n"+
+                "    o.m(str,str,str);\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  public void m(String s, Integer i=3, String j=\"abc\", String k, float f = 3.0f, String l) { print s+f }\n"+
+                "}\n",
+            },
+            "xyz4.0xyz3.0xyz3.0xyz3.0");
+
+        String expectedOutput =
+            "package p;\n" +
+            "public class G {\n" +
+            "  public G() {\n" +
+            "  }\n" +
+            "  public void m(public String s, public Integer i, public String j, public String k, public float f, public String l) {\n" +
+            "  }\n" +
+            "  public void m(public String s, public Integer i, public String j, public String k, public String l) {\n" +
+            "  }\n" +
+            "  public void m(public String s, public Integer i, public String k, public String l) {\n" +
+            "  }\n" +
+            "  public void m(public String s, public String k, public String l) {\n" +
+            "  }\n" +
+            "}\n";
+        checkGCUDeclaration("G.groovy", expectedOutput);
+
+        expectedOutput =
+            "  \n" +
+            "  public void m(String s, Integer i, String j, String k, float f, String l);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+        expectedOutput =
+            "  \n" +
+            "  public void m(String s, Integer i, String j, String k, String l);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+        expectedOutput =
+            "  \n" +
+            "  public void m(String s, Integer i, String k, String l);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+        expectedOutput =
+            "  \n" +
+            "  public void m(String s, String k, String l);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+    }
+
+    public void testDefaultValueConstructors() {
+        this.runConformTest(new String[] {
+                "p/C.java",
+                "package p;\n" +
+                "public class C {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    G o = new G(2,\"abc\");\n"+
+                "    o.print();\n"+
+                "    o = new G(3);\n"+
+                "    o.print();\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/G.groovy",
+                "package p;\n"+
+                "public class G {\n" +
+                "  def msg\n"+
+                "  public G(Integer i, String m=\"abc\") {this.msg = m;}\n"+
+                "  public void print(int i=3) { print msg }\n"+
+                "}\n",
+            },
+            "abcabc");
+        String expectedOutput=
+            "package p;\n" +
+            "public class G {\n" +
+            "  private java.lang.Object msg;\n" +
+            "  public G(public Integer i, public String m) {\n" +
+            "  }\n" +
+            "  public G(public Integer i) {\n" +
+            "  }\n" +
+            "  public void print(public int i) {\n" +
+            "  }\n" +
+            "  public void print() {\n" +
+            "  }\n" +
+            "}\n";
+        checkGCUDeclaration("G.groovy", expectedOutput );
+        expectedOutput =
+            "  \n" +
+            "  public G(Integer i, String m);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+        expectedOutput =
+            "  \n" +
+            "  public G(Integer i);\n" +
+            "  \n";
+        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+    }
+
+    // FIXASC groovy bug? Crashes groovy, it doesn't seem to correctly handle clashing constructor variants
+    public void _testDefaultValueConstructors02() {
+        runConformTest(new String[] {
+            "p/C.java",
+            "package p;\n" +
+            "public class C {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    G o = new G(2,\"abc\");\n"+
+            "    o.print();\n"+
+            "    o = new G(3);\n"+
+            "    o.print();\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/G.groovy",
+            "package p;\n"+
+            "public class G {\n" +
+            "  def msg\n"+
+            "  public G(Integer i) {}\n"+
+            "  public G(Integer i, String m=\"abc\") {this.msg = m;}\n"+
+            "  public void print(int i=3) { print msg }\n"+
+            "}\n",
+        },
+        "abc");
+    }
+
+    public void testClashingMethodsWithDefaultParams() {
+        this.runNegativeTest(new String[] {
+                "p/Code.groovy",
+                "package p;\n"+
+                "\n"+
+                "class Code {\n"+
+                "  public void m(String s) {}\n"+
+                "  public void m(String s, Integer i =3) {}\n"+
+                "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in p\\Code.groovy (at line 5)\n" +
+        "\tpublic void m(String s, Integer i =3) {}\n" +
+        "\t^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
+        "Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+
+        "----------\n"
+        );
+    }
+
+    public void testCallingJavaFromGroovy1() throws Exception {
+        this.runConformTest(new String[] {
+                "p/Code.groovy",
+                "package p;\n"+
+                "class Code {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new J().run();\n"+
+                "    print new J().name;\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/J.java",
+                "package p;\n"+
+                "public class J {\n"+
+                "  public String name = \"name\";\n"+
+                "  public void run() { System.out.print(\"success\"); }\n"+
+                "}\n",
+        },"successname");
+        //checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/Code.class", "Code", "");
+    }
+
+    public void testCallingJavaFromGroovy2() throws Exception {
+        this.runConformTest(new String[] {
+                "p/Code.groovy",
+                "package p;\n"+
+                "@Wibble(value=4)\n"+
+                "class Code {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new J().run();\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/J.java",
+                "package p;\n"+
+                "public class J {\n"+
+                "  public String name = \"name\";\n"+
+                "  public void run() { System.out.print(\"success\"); }\n"+
+                "}\n",
+
+                "p/Wibble.java",
+                "package p;\n"+
+                "public @interface Wibble {\n"+
+                "  int value() default 3;\n"+
+                "}\n",
+        },"success");
+    }
+
+    public void testExtendingRawJavaType() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "public class Foo extends Supertype {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.print(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/Supertype.java",
+                "package p;\n"+
+                "class Supertype<T> extends Supertype2 { }",
+
+                "p/Supertype2.java",
+                "package p;\n"+
+                "class Supertype2<T> { }"
+        },"success");
+    }
+
+    public void testTypeVariableBoundIsRawType() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "public class Foo extends Supertype {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.print(\"success\");\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/Supertype.java",
+                "package p;\n"+
+                "class Supertype<T extends Supertype2> { }",
+
+                "p/Supertype2.java",
+                "package p;\n"+
+                "class Supertype2<T> { }"
+        },"success");
+    }
+
+    public void testEnum() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "public class Foo /*extends Supertype<Goo>*/ {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print Goo.R\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/Goo.java",
+                "package p;\n"+
+                "enum Goo { R,G,B; }",
+            },"R");
+    }
+
+    // Type already implements invokeMethod(String,Object) - should not be an error, just don't add the method
+    public void testDuplicateGroovyObjectMethods() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "public class Foo /*extends Supertype<Goo>*/ {\n"+
+                " public Object invokeMethod(String s, Object o) {\n" +
+                " return o;}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n",
+            },"success");
+    }
+
+    public void testDuplicateGroovyObjectMethods2() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "public class Foo /*extends Supertype<Goo>*/ {\n"+
+                "  public MetaClass getMetaClass() {return null;}\n"+
+                "  public void setMetaClass(MetaClass mc) {}\n"+
+                "  public Object getProperty(String propertyName) {return null;}\n"+
+                "  public void setProperty(String propertyName,Object newValue) {}\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n",
+            },"success");
+    }
+
+    public void testTwoTopLevelTypesInAFile() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n"+
+                "class Second {\n"+
+                "}\n",
+            },"success");
+    }
+
+    public void testImports1() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "import java.util.regex.Pattern\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    Pattern p = Pattern.compile(\".\")\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public Pattern getPattern() { return null;}\n"+
+                "}\n",
+            },"success");
+    }
+
+    public void testImports2() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "import java.util.regex.Pattern\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public File getFile() { return null;}\n"+ // java.io.File should be picked up magically
+                "}\n",
+            },"success");
+    }
+
+    public void testImportsBigDecimal1() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "import java.util.regex.Pattern\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
+                "}\n",
+            },"success");
+    }
+
+    // this version has no imports of its own, that can make a difference
+    public void testImportsBigDecimal2() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
+                "}\n",
+            },"success");
+    }
+
+    public void testImportsBigInteger1() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "import java.util.regex.Pattern\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public BigInteger getFile() { return null;}\n"+ // java.io.File should be picked up magically
+                "}\n",
+            },"success");
+    }
+
+    // Check we can refer to BigInteger from a static constant
+    public void testImportsBigInteger3() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "import java.util.regex.Pattern\n"+
+                "public class First {\n"+
+                "  private final static BigInteger bd = new BigInteger(\"3\");\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print bd+\"success\"\n"+
+                "  }\n"+
+                "  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
+                "}\n",
+            },"3success");
+    }
+
+    public void testMultipleTypesInOneFile01() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "class Foo {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n"+
+                "class Goo {}\n"
+            },"success");
+    }
+
+    // Refering to the secondary type from the primary (but internally to a method)
+    public void testMultipleTypesInOneFile02() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "class Foo {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new Goo();\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n"+
+                "class Goo {}\n"
+            },"success");
+    }
+
+    // Refering to the secondary type from the primary - from a method param
+    public void testMultipleTypesInOneFile03() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "class Foo {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new Foo().runnit(new Goo());\n"+
+                "  }\n"+
+                "  public void runnit(Goo g) {"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n"+
+                "class Goo {}\n"
+            },"success");
+    }
+
+    // Refering to the secondary type from the primary - from a method
+    public void testJDKClasses() {
+        this.runConformTest(new String[] {
+                "p/Foo.groovy",
+                "package p;\n"+
+                "class Foo {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new Foo().runnit(new Goo());\n"+
+                "  }\n"+
+                "  public void runnit(Goo g) {"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n"+
+                "class Goo {}\n"
+            },"success");
+    }
+
+    public void testImportsBigInteger2() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public BigInteger getFile() { return null;}\n"+
+                "}\n",
+            },"success");
+    }
+
+    // Test that the (package visible) source type in another package is visible to a groovy type
+    public void testVisibility() {
+        this.runConformTest(new String[] {
+                "p/First.groovy",
+                "package p;\n"+
+                "import q.Second;\n"+
+                "public class First {\n"+
+                "  public static void main(String[] argv) {\n"+
+                "    new First().getIt();\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "  public Second getIt() { return null;}\n"+
+                "}\n",
+                "q/Second.java",
+                "package q;\n"+
+                "class Second {}\n",
+            },"success");
+    }
+
+    public void testClosuresBasic() {
+        this.runConformTest(new String[] {
+            "Coroutine.groovy",
+            "def iterate(n, closure) {\n"+
+            "  1.upto(n) {\n" +
+            "    closure(it);\n" +
+            "  }\n"+
+            "}\n"+
+            "iterate (3) {\n"+
+            "  print it\n"+
+            "}\n"
+        },
+        "123");
+    }
+
+    public void testScriptWithError() {
+        this.runNegativeTest(new String[] {
+            "Foo.groovy",
+            "print Coolio!",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tprint Coolio!\n" +
+        "\t            ^\n" +
+        "Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" +
+        "----------\n"
+        );
+    }
+
+    public void testScript() {
+        this.runConformTest(new String[] {
+            "Foo.groovy",
+            "print 'Coolio'\n",
+        },"Coolio");
+    }
+
+    public void testScriptCallJava() {
+        this.runConformTest(new String[] {
+            "Foo.groovy",
+            "print SomeJava.constant\n",
+            "SomeJava.java",
+            "class SomeJava { static String constant = \"abc\";}"
+        },"abc");
+    }
+
+    public void testExtraImports() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.*");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(
+                new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"+
+                        "  public static void main(String[]argv) {\n"+
+                        "		Type.m();\n"+
+                        "       print 'done'\n"+
+                        "	}\n"+
+                        "}\n",
+
+                        "com/foo/Type.groovy",
+                "package com.foo\n" +
+                "class Type {\n"+
+                "  public static void m() {}\n"+
+                "}\n",
+                // @formatter:on
+                }, "done", null, true,
+                null, options, null);
+    }
+
+    public void testExtraImports_exactType() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    public void testExtraImports_withSuffixDotStar() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".groovy=com.foo.*");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    public void testExtraImports_withSuffixExactType() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".groovy=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    public void testExtraImports_withSuffixExactType2() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".groovy=com.foo.Type;.groovy=com.foo.TypeB");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "		TypeB.m();\n"
+                        + "       print 'done'\n" + "	}\n" + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+
+                "com/foo/TypeB.groovy",
+                "package com.foo\n" + "class TypeB {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    public void testExtraImports_noneMatchingSuffix() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".gradle=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    public void testExtraImports_typeDoesNotExist() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".groovy=com.foo.Type2");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runNegativeTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                },
+                "----------\n"
+                        + "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n"
+                        + "\tType.m();\n"
+                        + "\t^^^^\n"
+                        + "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
+                        + "----------\n", null, true, options);
+    }
+
+    public void testExtraImports_packageDoesNotExist() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".groovy=com.madeup.*");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runNegativeTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                },
+                "----------\n"
+                        + "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n"
+                        + "\tType.m();\n"
+                        + "\t^^^^\n"
+                        + "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
+                        + "----------\n", null, true, options);
+    }
+
+    public void testExtraImports_multiple() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                ".groovy=com.foo.Type,com.foo.Type2");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n" + "		Type2.m();\n"
+                        + "       print 'done'\n" + "	}\n"
+                        + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+                "com/foo/Type2.groovy",
+                "package com.foo\n" + "class Type2 {\n"
+                        + "  public static void m() {}\n" + "}\n",
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    public void testExtraImports_multipleSuffixes() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+                "com.madeup.*;.groovy=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        // From:
+        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        runConformTest(new String[] {
+                // @formatter:off
+                "com/bar/Runner.groovy",
+                "package com.bar\n"
+                        +
+                        // "import com.foo.*\n" + // this is what needs
+                        // 'simulating'
+                        "class Runner {\n"
+                        + "  public static void main(String[]argv) {\n"
+                        + "		Type.m();\n"
+                        + "       print 'done'\n" + "	}\n" + "}\n",
+
+                "com/foo/Type.groovy",
+                "package com.foo\n" + "class Type {\n"
+                        + "  public static void m() {}\n" + "}\n",
+
+        // @formatter:on
+                }, "done", null, true, null, options, null);
+    }
+
+    // Variable arguments
+    public void testInvokingVarargs01_JtoG() {
+        this.runConformTest(new String[] {
+            "p/Run.java",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = new X();\n"+
+            "    x.callit();\n"+
+            "    x.callit(1);\n"+
+            "    x.callit(1,2);\n"+
+            "    x.callit2();\n"+
+            "    x.callit2(1);\n"+
+            "    x.callit2(1,2);\n"+
+            "    x.callit3();\n"+
+            "    x.callit3(\"abc\");\n"+
+            "    x.callit3(\"abc\",\"abc\");\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public void callit(int... is) { print is.length; }\n"+
+            "  public void callit2(Integer... is) { print is.length; }\n"+
+            "  public void callit3(String... ss) { print ss.length; }\n"+
+            "}\n",
+        },"012012012");
+    }
+
+    public void testInvokingVarargs01_GtoJ() {
+        this.runConformTest(new String[] {
+            "p/Run.groovy",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = new X();\n"+
+            "    x.callit('abc');\n"+
+            "    x.callit('abc',1);\n"+
+            "    x.callit('abc',1,2);\n"+
+            "    x.callit2(3);\n"+
+            "    x.callit2(4,1);\n"+
+            "    x.callit2(1,1,2);\n"+
+            "    x.callit3('abc');\n"+
+            "    x.callit3('abc',\"abc\");\n"+
+            "    x.callit3('abc',\"abc\",\"abc\");\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public void callit(String a, int... is) { System.out.print(is.length); }\n"+
+            "  public void callit2(int a, Integer... is) { System.out.print(is.length); }\n"+
+            "  public void callit3(String s, String... ss) { System.out.print(ss.length); }\n"+
+            "}\n",
+        },"012012012");
+    }
+
+    // In these two cases the methods also take other values
+    public void testInvokingVarargs02_JtoG() {
+        this.runConformTest(new String[] {
+            "p/Run.java",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = new X();\n"+
+            "    x.callit(\"abc\");\n"+
+            "    x.callit(\"abc\",1);\n"+
+            "    x.callit(\"abc\",1,2);\n"+
+            "    x.callit2(3);\n"+
+            "    x.callit2(4,1);\n"+
+            "    x.callit2(1,1,2);\n"+
+            "    x.callit3(\"abc\");\n"+
+            "    x.callit3(\"abc\",\"abc\");\n"+
+            "    x.callit3(\"abc\",\"abc\",\"abc\");\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public void callit(String a, int... is) { print is.length; }\n"+
+            "  public void callit2(int a, Integer... is) { print is.length; }\n"+
+            "  public void callit3(String s, String... ss) { print ss.length; }\n"+
+            "}\n",
+        },"012012012");
+    }
+
+    // Groovy doesn't care about '...' and will consider [] as varargs
+    public void testInvokingVarargs03_JtoG() {
+        this.runConformTest(new String[] {
+            "p/Run.java",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = new X();\n"+
+            "    x.callit(\"abc\");\n"+
+            "    x.callit(\"abc\",1);\n"+
+            "    x.callit(\"abc\",1,2);\n"+
+            "    x.callit2(3);\n"+
+            "    x.callit2(4,1);\n"+
+            "    x.callit2(1,1,2);\n"+
+            "    x.callit3(\"abc\");\n"+
+            "    x.callit3(\"abc\",\"abc\");\n"+
+            "    x.callit3(\"abc\",\"abc\",\"abc\");\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public void callit(String a, int[] is) { print is.length; }\n"+
+            "  public void callit2(int a, Integer[] is) { print is.length; }\n"+
+            "  public void callit3(String s, String[] ss) { print ss.length; }\n"+
+            "}\n",
+        },"012012012");
+    }
+
+    public void testInners_1185() {
+        runConformTest(new String[] {
+            "WithInnerClass.groovy",
+            "class WithInnerClass {\n"+
+            "\n"+
+            "  interface InnerInterface {\n"+
+            "	 void foo()\n"+
+            "  }\n"+
+            "\n"+
+            "  private final InnerInterface foo = new InnerInterface() {\n"+
+            "	  void foo() {\n" +
+            "\n" +
+            "	  }\n" +
+            "  }\n"+
+            "}"
+        });
+    }
+
+    public void testInvokingVarargs02_GtoJ() {
+        this.runConformTest(new String[] {
+            "p/Run.groovy",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = new X();\n"+
+            "    x.callit();\n"+
+            "    x.callit(1);\n"+
+            "    x.callit(1,2);\n"+
+            "    x.callit2();\n"+
+            "    x.callit2(1);\n"+
+            "    x.callit2(1,2);\n"+
+            "    x.callit3();\n"+
+            "    x.callit3(\"abc\");\n"+
+            "    x.callit3(\"abc\",\"abc\");\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public void callit(int... is) { System.out.print(is.length); }\n"+
+            "  public void callit2(Integer... is) { System.out.print(is.length); }\n"+
+            "  public void callit3(String... ss) { System.out.print(ss.length); }\n"+
+            "}\n",
+        },"012012012");
+    }
+
+    public void testInvokingVarargsCtors01_JtoG() {
+        this.runConformTest(new String[] {
+            "p/Run.java",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = null;\n"+
+            "    x = new X();\n"+
+            "    x = new X(1);\n"+
+            "    x = new X(1,2);\n"+
+            "    x = new X(\"abc\");\n"+
+            "    x = new X(\"abc\",1);\n"+
+            "    x = new X(\"abc\",1,2);\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public X(int... is) { print is.length; }\n"+
+            "  public X(String s, int... is) { print is.length; }\n"+
+            "}\n",
+        },"012012");
+    }
+
+    public void testInvokingVarargsCtors01_GtoJ() {
+        this.runConformTest(new String[] {
+            "p/Run.groovy",
+            "package p;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    X x = null;\n"+
+            "    x = new X();\n"+
+            "    x = new X(1);\n"+
+            "    x = new X(1,2);\n"+
+            "    x = new X(\"abc\");\n"+
+            "    x = new X(\"abc\",1);\n"+
+            "    x = new X(\"abc\",1,2);\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public X(int... is) { System.out.print(is.length); }\n"+
+            "  public X(String s, int... is) { System.out.print(is.length); }\n"+
+            "}\n",
+        },"012012");
+    }
+
+    public void testPositions() {
+        this.runNegativeTest(new String[] {
+            "One.groovy",
+            "class One {\n" +
+            "		/*a*/			Stack plates;\n"+
+            "  /*b*/ Stack plates2;\n"+
+            "}\n",
+        },"----------\n" +
+        "1. WARNING in One.groovy (at line 2)\n" +
+        "\t/*a*/			Stack plates;\n" +
+        "\t     			^^^^^\n" +
+        "Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
+        "----------\n" +
+        "2. WARNING in One.groovy (at line 3)\n" +
+        "\t/*b*/ Stack plates2;\n" +
+        "\t      ^^^^^\n" +
+        "Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
+        "----------\n");
+
+    }
+
+    public void testPositions_2() {
+        this.runNegativeTest(new String[] {
+            "One.groovy",
+            "class One {\n" +
+            "		/*a*/			Stack plates;\n"+
+            "  /*b*/ Stack plates2;\n"+
+            "}\n",
+        },"----------\n" +
+        "1. WARNING in One.groovy (at line 2)\n" +
+        "\t/*a*/			Stack plates;\n" +
+        "\t     			^^^^^\n" +
+        "Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
+        "----------\n" +
+        "2. WARNING in One.groovy (at line 3)\n" +
+        "\t/*b*/ Stack plates2;\n" +
+        "\t      ^^^^^\n" +
+        "Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
+        "----------\n");
+    }
+
+    // FIXASC test varargs with default parameter values (methods/ctors)
+
+    // static imports
+    public void testStaticImports_JtoG() {
+        this.runConformTest(new String[] {
+            "p/Run.java",
+            "package p;\n"+
+            "import static p.q.r.Colour.*;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    System.out.print(Red);\n"+
+            "    System.out.print(Green);\n"+
+            "    System.out.print(Blue);\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/q/r/Colour.groovy",
+            "package p.q.r;\n" +
+            "enum Colour { Red,Green,Blue; }\n",
+        },"RedGreenBlue");
+    }
+
+    public void testStaticImports_GtoJ() {
+        this.runConformTest(new String[] {
+            "p/Run.groovy",
+            "package p;\n"+
+            "import static p.q.r.Colour.*;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    System.out.print(Red);\n"+
+            "    System.out.print(Green);\n"+
+            "    System.out.print(Blue);\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/q/r/Colour.java",
+            "package p.q.r;\n" +
+            "enum Colour { Red,Green,Blue; }\n",
+        },"RedGreenBlue");
+    }
+
+    public void testJDTClassNode_633() {
+        try {
+            JDTResolver.recordInstances = true;
+            this.runConformTest(new String[] {
+                "p/Run.groovy",
+                "package p;\n"+
+                "import static p.q.r.Colour.*;\n"+
+                "import p.q.r.Colour2;\n"+
+                "public class Run {\n" +
+                "  public static void main(String[] argv) {\n"+
+                "    System.out.print(Red);\n"+
+                "    System.out.print(Green);\n"+
+                "    System.out.print(Blue);\n"+
+                "   Colour2 c2 = new Colour2();\n"+
+                "   int i = c2.compareTo('abc');\n"+
+                "  }\n"+
+                "}\n",
+
+                "p/q/r/Colour.java",
+                "package p.q.r;\n" +
+                "enum Colour { Red,Green,Blue; }\n",
+
+                "p/q/r/Colour3.java",
+                "package p.q.r;\n"+
+                "@SuppressWarnings(\"rawtypes\")\n"+
+                "class Colour3 implements Comparable { public int compareTo(Object o) { return 0;}}\n",
+
+                "p/q/r/Colour2.java",
+                "package p.q.r;\n" +
+                "public class Colour2 implements Comparable<String> { \n"+
+                "  public int compareTo(String s) { return 0; } \n"+
+                    "}\n",
+                },"RedGreenBlue");
+
+            // Check on the state of Comparable
+            JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
+            assertNotNull(classnode);
+            // Should have one method
+            List<MethodNode> methods = classnode.getMethods();
+            assertEquals(1,methods.size());
+            assertEquals("int compareTo(java.lang.Object)", methods.get(0).getTypeDescriptor());
+        } finally {
+            JDTResolver.instances.clear();
+            JDTResolver.recordInstances=false;
+        }
+    }
+
+    public void testStaticImports2_GtoJ() {
+        this.runConformTest(new String[] {
+            "p/Run.java",
+            "package p;\n"+
+            "import static p.q.r.Colour.*;\n"+
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    Red.printme();\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/q/r/Colour.groovy",
+            "package p.q.r;\n" +
+            "enum Colour { Red,Green,Blue; \n" +
+            "  void printme() {\n"+
+            "    println \"${name()}\";\n" +
+             "  }\n"+
+             "}\n",
+        },"Red");
+    }
+
+    public void testStaticImportsAliasing_G() {
+        this.runConformTest(new String[] {
+            "p/Run.groovy",
+            "package p;\n"+
+            "import static java.lang.Math.PI\n"+
+            "import static java.lang.Math.sin as sine\n"+
+            "import static java.lang.Math.cos as cosine\n"+
+            "\n"+
+            " print sine(PI / 6) + cosine(PI / 3)"
+        },"1.0");
+    }
+
+    public void testSecondaryTypeTagging() {
+        this.runConformTest(new String[] {
+            "Run.groovy",
+            "class Run { public static void main(String[]argv) {print '1.0';} }\n"+
+            "class B {}\n"+
+            "class C {}\n"+
+            "class D {}\n"
+        },"1.0");
+        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
+        TypeDeclaration[] tds = gcud.types;
+        assertFalse((tds[0].bits&ASTNode.IsSecondaryType)!=0);
+        assertTrue((tds[1].bits&ASTNode.IsSecondaryType)!=0);
+        assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
+        assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
+
+        this.runConformTest(new String[] {
+                "Run2.groovy",
+                "class B {}\n"+
+                "class Run2 { public static void main(String[]argv) {print '1.0';} }\n"+
+                "class C {}\n"+
+                "class D {}\n"
+            },"1.0");
+            gcud = getCUDeclFor("Run2.groovy");
+            tds = gcud.types;
+            assertTrue((tds[0].bits&ASTNode.IsSecondaryType)!=0);
+            assertFalse((tds[1].bits&ASTNode.IsSecondaryType)!=0);
+            assertTrue((tds[2].bits&ASTNode.IsSecondaryType)!=0);
+            assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
+    }
+
+    // Test 'import static a.B.FOO'
+    public void testImportStatic1() {
+        this.runConformTest(new String[] {
+            "b/Run.groovy",
+            "package b\n"+
+            "import static a.B.FOO\n"+
+            "class Run { public static void main(String[]argv) { print FOO;} }\n",
+            "a/B.groovy",
+            "package a\n"+
+            "class B { public static String FOO='abc';}\n",
+        },"abc");
+        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
+        ImportReference[] irs = gcud.imports;
+        assertEquals("a.B.FOO",irs[0].toString().trim());
+        assertTrue(irs[0].isStatic());
+    }
+
+    // Test 'import static a.B.*'
+    public void testImportStatic2() {
+        this.runConformTest(new String[] {
+            "b/Run.groovy",
+            "package b\n"+
+            "import static a.B.*\n"+
+            "class Run { public static void main(String[]argv) { print FOO;} }\n",
+            "a/B.groovy",
+            "package a\n"+
+            "class B { public static String FOO='abc';}\n",
+        },"abc");
+        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
+        ImportReference[] irs = gcud.imports;
+        assertEquals("a.B.*",irs[0].toString().trim());
+        assertTrue(irs[0].isStatic());
+    }
+
+    // Test 'import static a.B.FOO as Wibble'
+    public void testImportStatic3() {
+        this.runConformTest(new String[] {
+            "b/Run.groovy",
+            "package b\n"+
+            "import static a.B.FOO as Wibble\n"+
+            "class Run { public static void main(String[]argv) { print Wibble;} }\n",
+            "a/B.groovy",
+            "package a\n"+
+            "class B { public static String FOO='abc';}\n",
+        },"abc");
+        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
+        ImportReference[] irs = gcud.imports;
+        assertTrue(irs[0] instanceof AliasImportReference);
+        assertEquals("a.B.Wibble",irs[0].toString().trim()); // FIXASC hmmm, why isn't that a.B.FOO (ie. declared long name)
+        assertTrue(irs[0].isStatic());
+        assertEquals("Wibble",new String(((AliasImportReference)irs[0]).getSimpleName()));
+    }
 
     public void testParsingBlankImport_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<21) {
-    		return;
-    	}
+        if (GroovyUtils.GROOVY_LEVEL<21) {
+            return;
+        }
         this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import "
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport \n" +
-		"\t ^\n" +
-		"Groovy:Invalid import specification @ line 1, column 1.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport \n" +
+        "\t ^\n" +
+        "Groovy:Invalid import specification @ line 1, column 1.\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        List imports = mn.getImports();
-        ImportNode brokenImportNode =(ImportNode) imports.get(0);
+        List<ImportNode> imports = mn.getImports();
+        ImportNode brokenImportNode = imports.get(0);
         if (GroovyUtils.GROOVY_LEVEL >= 21) {
             assertEquals(0,brokenImportNode.getStart());
             assertEquals(6,brokenImportNode.getEnd());
         } else {
-        	assertEquals(2,brokenImportNode.getStart());
-        	assertEquals(0,brokenImportNode.getEnd());
+            assertEquals(2,brokenImportNode.getStart());
+            assertEquals(0,brokenImportNode.getEnd());
         }
         assertEquals("java.lang.Object",brokenImportNode.getType().getName());
 
@@ -6655,25 +5162,25 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingDotTerminatedImport_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-			return;
-		}
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            return;
+        }
         this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import foo."
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport foo.\n" +
-		"\t        ^\n" +
-		"Groovy:Invalid import  @ line 1, column 8.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport foo.\n" +
+        "\t        ^\n" +
+        "Groovy:Invalid import  @ line 1, column 8.\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        List imports = mn.getStarImports();
-        ImportNode brokenImportNode =(ImportNode) imports.get(0);
+        List<ImportNode> imports = mn.getStarImports();
+        ImportNode brokenImportNode = imports.get(0);
         assertEquals("foo.",brokenImportNode.getPackageName());
 
         ClassNode cn = mn.getClasses().get(0);
@@ -6682,26 +5189,26 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingBlankImportStatic_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-			return;
-		}
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            return;
+        }
 
-    	this.runNegativeTest(new String[]{
+        this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import static \n"
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport static \n" +
-		"\t ^\n" +
-		"Groovy:Invalid import static specification @ line 1, column 1.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport static \n" +
+        "\t ^\n" +
+        "Groovy:Invalid import static specification @ line 1, column 1.\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        Map imports = mn.getStaticImports();
-        ImportNode brokenImportNode =(ImportNode)imports.get("");
+        Map<String, ImportNode> imports = mn.getStaticImports();
+        ImportNode brokenImportNode = imports.get("");
         assertEquals("java.lang.Object",brokenImportNode.getType().getName());
 
         ClassNode cn = mn.getClasses().get(0);
@@ -6711,25 +5218,25 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     /* removing for now: the order in here is what happens on e42, the other way round will work in <e42
     public void testParsingDotTerminatedImportStatic_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-			return;
-		}
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            return;
+        }
 
-    	this.runNegativeTest(new String[]{
+        this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import static foo.Bar."
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport static foo.Bar.\n" +
-		"\t               ^\n" +
-		"Groovy:Invalid import  @ line 1, column 15.\n" +
-		"----------\n" +
-		"2. ERROR in A.groovy (at line 1)\n" +
-		"\timport static foo.Bar.\n" +
-		"\t               ^\n" +
-		"Groovy:unable to resolve class foo.Bar\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport static foo.Bar.\n" +
+        "\t               ^\n" +
+        "Groovy:Invalid import  @ line 1, column 15.\n" +
+        "----------\n" +
+        "2. ERROR in A.groovy (at line 1)\n" +
+        "\timport static foo.Bar.\n" +
+        "\t               ^\n" +
+        "Groovy:unable to resolve class foo.Bar\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
@@ -6744,27 +5251,27 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }*/
 
     public void testParsingDotTerminatedImportFollowedByClassDeclaration_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-			return;
-		}
-    	this.runNegativeTest(new String[]{
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            return;
+        }
+        this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import foo.\n"+
                 "\n"+
                 "class Wibble {}\n"
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport foo.\n" +
-		"\t        ^\n" +
-		"Groovy:Invalid import  @ line 1, column 8.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport foo.\n" +
+        "\t        ^\n" +
+        "Groovy:Invalid import  @ line 1, column 8.\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        List imports = mn.getStarImports();
-        ImportNode brokenImportNode =(ImportNode) imports.get(0);
+        List<ImportNode> imports = mn.getStarImports();
+        ImportNode brokenImportNode = imports.get(0);
         assertEquals("foo.",brokenImportNode.getPackageName());
 
         ClassNode cn = mn.getClasses().get(0);
@@ -6773,28 +5280,28 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingDotTerminatedImportFollowedByModifierAndClassDeclaration_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-			return;
-		}
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            return;
+        }
 
-    	this.runNegativeTest(new String[]{
+        this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import foo.\n"+
                 "\n"+
                 "public class Wibble {}\n"
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport foo.\n" +
-		"\t        ^\n" +
-		"Groovy:Invalid import  @ line 1, column 8.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport foo.\n" +
+        "\t        ^\n" +
+        "Groovy:Invalid import  @ line 1, column 8.\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        List imports = mn.getStarImports();
-        ImportNode brokenImportNode =(ImportNode) imports.get(0);
+        List<ImportNode> imports = mn.getStarImports();
+        ImportNode brokenImportNode = imports.get(0);
         assertEquals("foo.",brokenImportNode.getPackageName());
 
         ClassNode cn = mn.getClasses().get(0);
@@ -6803,28 +5310,28 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingBlankImportFollowedByClassDeclaration_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<21) {
-			return;
-		}
+        if (GroovyUtils.GROOVY_LEVEL<21) {
+            return;
+        }
 
-    	this.runNegativeTest(new String[]{
+        this.runNegativeTest(new String[]{
                 "A.groovy",
                 "import\n"+
                 "\n"+
                 "public class Wibble {}\n"
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 1)\n" +
-		"\timport\n" +
-		"\t ^\n" +
-		"Groovy:Invalid import specification @ line 1, column 1.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport\n" +
+        "\t ^\n" +
+        "Groovy:Invalid import specification @ line 1, column 1.\n" +
+        "----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        List imports = mn.getImports();
-        ImportNode brokenImportNode =(ImportNode) imports.get(0);
+        List<ImportNode> imports = mn.getImports();
+        ImportNode brokenImportNode = imports.get(0);
         assertEquals("java.lang.Object",brokenImportNode.getType().getName());
 
         ClassNode cn = mn.getClasses().get(0);
@@ -6833,33 +5340,33 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingIncompleteClassDeclaration_495() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
-			return;
-		}
+        if (GroovyUtils.GROOVY_LEVEL<18) {
+            return;
+        }
 
-    	this.runNegativeTest(new String[]{
+        this.runNegativeTest(new String[]{
                 "A.groovy",
                 "class Bar {}\n"+
                 "class FooTest extends Bar { }\n" +
                 "class BBB extends FooTes"
         },
         "----------\n" +
-		"1. ERROR in A.groovy (at line 3)\n" +
-		"\tclass BBB extends FooTes\n" +
-		"\t                  ^^^^^^\n" +
-		"Groovy:unable to resolve class FooTes \n" +
-		"----------\n" +
-		"2. ERROR in A.groovy (at line 3)\n" +
-		"\tclass BBB extends FooTes\n" +
-		"\t                       ^\n" +
-		"Groovy:Malformed class declaration @ line 3, column 24.\n" +
-		"----------\n");
+        "1. ERROR in A.groovy (at line 3)\n" +
+        "\tclass BBB extends FooTes\n" +
+        "\t                  ^^^^^^\n" +
+        "Groovy:unable to resolve class FooTes \n" +
+        "----------\n" +
+        "2. ERROR in A.groovy (at line 3)\n" +
+        "\tclass BBB extends FooTes\n" +
+        "\t                       ^\n" +
+        "Groovy:Malformed class declaration @ line 3, column 24.\n" +
+        "----------\n");
         // missing end curly, but that shouldn't cause us to discard what we successfully parsed
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
-        List l = mn.getClasses();
+        List<ClassNode> l = mn.getClasses();
         for (int i=0;i<l.size();i++) {
-        	System.out.println(l.get(i));
+            System.out.println(l.get(i));
         }
         assertFalse(mn.encounteredUnrecoverableError());
         ClassNode cn = mn.getClasses().get(2);
@@ -6871,89 +5378,89 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testInnerClass1() throws Exception {
-		this.runConformTest(new String[] {
-				"A.groovy",
-				"def foo = new Runnable() {\n" +
-				"	void run() {\n" +
-				"		println \"hi!\";\n" +
-				"	}\n" +
-				"}\n" +
-				"foo.run()"
-		}, "hi!");
-	}
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "def foo = new Runnable() {\n" +
+                "	void run() {\n" +
+                "		println \"hi!\";\n" +
+                "	}\n" +
+                "}\n" +
+                "foo.run()"
+        }, "hi!");
+    }
     public void testInnerClass2() throws Exception {
-    	this.runConformTest(new String[] {
-    			"A.groovy",
-    			"def foo = new Runnable() {\n" +
-    			"	void run() {\n" +
-				"		println \"bye!\";\n" +
-				"	}\n" +
-				"}\n" +
-				"foo = new Runnable() {\n" +
-				"	void run() {\n" +
-				"		println \"hi!\";\n" +
-				"	}\n" +
-				"}\n" +
-				"foo.run()"
-    	}, "hi!");
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "def foo = new Runnable() {\n" +
+                "	void run() {\n" +
+                "		println \"bye!\";\n" +
+                "	}\n" +
+                "}\n" +
+                "foo = new Runnable() {\n" +
+                "	void run() {\n" +
+                "		println \"hi!\";\n" +
+                "	}\n" +
+                "}\n" +
+                "foo.run()"
+        }, "hi!");
     }
     public void testInnerClass3() throws Exception {
-    	this.runConformTest(new String[] {
-    			"A.groovy",
-    			"def foo() {\n" +
-    			"	new Runnable() {\n" +
-    			"		void run() {\n" +
-				"			println \"hi!\";\n" +
-				"		}\n" +
-				"	}\n" +
-				"}\n" +
-				"foo().run()"
-    	}, "hi!");
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "def foo() {\n" +
+                "	new Runnable() {\n" +
+                "		void run() {\n" +
+                "			println \"hi!\";\n" +
+                "		}\n" +
+                "	}\n" +
+                "}\n" +
+                "foo().run()"
+        }, "hi!");
     }
     public void testInnerClass4() throws Exception {
-    	this.runConformTest(new String[] {
-    			"A.groovy",
-    			"class Foo {\n" +
-    			"	def foo = new Runnable() {\n" +
-    			"		void run() {\n" +
-				"			println \"hi!\";\n" +
-				"		}\n" +
-				"	}\n" +
-				"}\n" +
-				"new Foo().foo.run()"
-    	}, "hi!");
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "class Foo {\n" +
+                "	def foo = new Runnable() {\n" +
+                "		void run() {\n" +
+                "			println \"hi!\";\n" +
+                "		}\n" +
+                "	}\n" +
+                "}\n" +
+                "new Foo().foo.run()"
+        }, "hi!");
     }
     public void testInnerClass5() throws Exception {
-    	this.runNegativeTest(new String[] {
-    			"A.groovy",
-    			"def foo = new Runnable() {\n" +
-    			"	void bad() {\n" +
-    			"		println \"hi!\";\n" +
-    			"	}\n" +
-    			"}"
-    	}, "----------\n" +
-  			"1. ERROR in A.groovy (at line 1)\n" +
-   			"	def foo = new Runnable() {\n" +
-   			"	              ^^^^^^^^\n" +
-   			"Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
-   			"----------\n");
+        this.runNegativeTest(new String[] {
+                "A.groovy",
+                "def foo = new Runnable() {\n" +
+                "	void bad() {\n" +
+                "		println \"hi!\";\n" +
+                "	}\n" +
+                "}"
+        }, "----------\n" +
+              "1. ERROR in A.groovy (at line 1)\n" +
+               "	def foo = new Runnable() {\n" +
+               "	              ^^^^^^^^\n" +
+               "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
+               "----------\n");
     }
 
     public void testAbstractMethodWithinEnum_STS3803() {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
         }
-    	this.runConformTest(new String[] {
-	        "Bad.groovy",
-	        "enum Bad {\n" +
-	        "	A() {\n" +
-	        "		@Override\n" +
-	        "		int foo() {\n" +
-	        "			1\n" +
-	        "		}\n" +
-	        "	}\n" +
-	        "	abstract int foo()\n" +
-			"}"});
+        this.runConformTest(new String[] {
+            "Bad.groovy",
+            "enum Bad {\n" +
+            "	A() {\n" +
+            "		@Override\n" +
+            "		int foo() {\n" +
+            "			1\n" +
+            "		}\n" +
+            "	}\n" +
+            "	abstract int foo()\n" +
+            "}"});
     }
 
 //	public void testSts3930() {
@@ -6974,7 +5481,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 //				"");
 //	}
 
-	// FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
+    // FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
 //  static Resource[] getPluginXmlMetadata(String pluginsDirPath) {
 //      return getPluginXmlMetadata(pluginsDirPath, DEFAULT_RESOURCE_RESOLVER)
 //  }
@@ -7003,31 +5510,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     //--------------------------------------------------------------------------
 
-    private void checkDisassemblyFor(String filename, String expectedOutput) {
-        checkDisassemblyFor(filename, expectedOutput, ClassFileBytesDisassembler.DETAILED);
-    }
-
-    /**
-     * Check the disassembly of a .class file for a particular piece of text
-     */
-    private void checkDisassemblyFor(String filename, String expectedOutput, int detail) {
-        try {
-            File f = new File(OUTPUT_DIR + File.separator + filename);
-            byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
-            ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
-            String result = disassembler.disassemble(classFileBytes, "\n", detail);
-            int index = result.indexOf(expectedOutput);
-            if (index == -1 || expectedOutput.length() == 0) {
-                System.out.println(Util.displayString(result, 3));
-            }
-            if (index == -1) {
-                assertEquals("Wrong contents", expectedOutput, result);
-            }
-        } catch (Exception e) {
-            fail(e.toString());
-        }
-    }
-
     private void assertEventCount(int expectedCount, EventListener listener) {
         if (listener.eventCount()!=expectedCount) {
             fail("Expected "+expectedCount+" events but found "+listener.eventCount()+"\nEvents:\n"+listener.toString());
@@ -7036,9 +5518,9 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     private void assertEvent(String eventText, EventListener listener) {
         boolean found = false;
-        Iterator eventIter = listener.getEvents().iterator();
+        Iterator<String> eventIter = listener.getEvents().iterator();
         while (eventIter.hasNext()) {
-            String s = (String) eventIter.next();
+            String s = eventIter.next();
             if (s.equals(eventText)) {
                 found=true;
                 break;

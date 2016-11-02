@@ -15,16 +15,16 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic
 
+import groovy.transform.InheritConstructors
+import groovy.transform.TypeChecked
+
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest
 
+@InheritConstructors @TypeChecked
 final class TraitsTests extends AbstractGroovyRegressionTest {
 
     static junit.framework.Test suite() {
         buildMinimalComplianceTestSuite(TraitsTests, F_1_6)
-    }
-
-    TraitsTests(String name) {
-        super(name)
     }
 
     void testTraits1() {
@@ -38,15 +38,13 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
                 def p = new Person()
                 print p.greeting()
               }
-            }
-            ''',
+            }''',
 
             'Greetable.groovy', '''
             trait Greetable {
                 abstract String name()
                 String greeting() { "Hello, ${name()}!" }
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources, 'Hello, Bob!')
@@ -67,8 +65,7 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
                 def p = new Person()
                 print p.greeting()
               }
-            }
-            ''',
+            }''',
 
             'Greetable.groovy', '''
             import groovy.transform.Trait;
@@ -76,8 +73,7 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
             class Greetable {
                 abstract String name()
                 String greeting() { "Hello, ${name()}!" }
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources, 'Hello, Bob!')
@@ -148,8 +144,7 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
             try {
                 g.greetingMessage()
             } catch (MissingMethodException e) {
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources)
@@ -324,8 +319,7 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
                 String name
             }
             trait Identified implements WithId, WithName {
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources)
@@ -1100,15 +1094,13 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
             package a
             trait MyTrait {
                 def m() { 'a' }
-            }
-            ''',
+            }''',
 
             'MySuperClass.groovy', '''
             package b
             class MySuperClass {
                 protected def m() { 'b' }
-            }
-            ''',
+            }''',
 
             'MyClass.groovy', '''
             package c
@@ -1131,15 +1123,13 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
             package a
             trait MyTrait {
                 def m() { 'a' }
-            }
-            ''',
+            }''',
 
             'MySuperClass.groovy', '''
             package b
             class MySuperClass {
                 protected def m() { 'b' }
-            }
-            ''',
+            }''',
 
             'MyClass.groovy', '''
             package c
@@ -1227,13 +1217,12 @@ final class TraitsTests extends AbstractGroovyRegressionTest {
                 public String showMeTheMoney() {
                     return "$" + getValue() + "$";
                 }
-            }
-            ''',
+            }''',
+
             'Valuable.groovy', '''
             trait Valuable {
                 String value
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources)

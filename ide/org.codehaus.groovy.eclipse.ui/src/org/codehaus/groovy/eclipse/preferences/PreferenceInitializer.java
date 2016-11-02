@@ -47,7 +47,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, new RGB(151, 44, 120));
         PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, new RGB(151, 44, 120));
         PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, new RGB(255, 0, 204));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR, new RGB(205, 50, 0));
         PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, new RGB(70, 70, 70));
         PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, new RGB(151, 44, 120));
         PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, new RGB(0, 0, 0));
@@ -61,7 +60,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
@@ -110,7 +108,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, new RGB(151, 44, 120));
         PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, new RGB(151, 44, 120));
         PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, new RGB(255, 0, 204));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR, new RGB(205, 50, 0));
         PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, new RGB(70, 70, 70));
         PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, new RGB(151, 44, 120));
         PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, new RGB(0, 0, 0));
@@ -124,7 +121,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);

@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.refactoring.test.extract;
 
 
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.codebrowsing.tests.AbstractCheckerTests;
+import org.codehaus.groovy.eclipse.codebrowsing.tests.CheckerTestCase;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.StaticFragmentChecker;
 import org.eclipse.core.runtime.CoreException;
 
@@ -26,7 +26,7 @@ import org.eclipse.core.runtime.CoreException;
  * @author andrew
  * @created May 12, 2010
  */
-public class StaticExpressionCheckerTests extends AbstractCheckerTests {
+public class StaticExpressionCheckerTests extends CheckerTestCase {
 
     public StaticExpressionCheckerTests() {
         super(StaticExpressionCheckerTests.class.getName());

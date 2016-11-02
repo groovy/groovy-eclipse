@@ -78,7 +78,7 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
         Reader input = new StringReader(getDocument().get());
         GroovyLexer lexer = new GroovyLexer(input);
         lexer.setWhitespaceIncluded(true);
-        TokenStream stream = (TokenStream) lexer.plumb();
+        TokenStream stream = lexer.plumb();
 
         Token token = null;
         tokens = new ArrayList<Token>();

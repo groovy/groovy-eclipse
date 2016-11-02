@@ -37,7 +37,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -53,7 +52,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -135,11 +133,11 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             Object obj = struct.getFirstElement();
             IJavaProject javaProject;
             if (obj instanceof IAdaptable) {
-                javaProject = (IJavaProject) ((IAdaptable) obj).getAdapter(IJavaProject.class);
+                javaProject = ((IAdaptable) obj).getAdapter(IJavaProject.class);
                 if (javaProject != null) {
                     return javaProject;
                 }
-                IProject project = (IProject) ((IAdaptable) obj).getAdapter(IProject.class);
+                IProject project = ((IAdaptable) obj).getAdapter(IProject.class);
                 if (project != null) {
                     return JavaCore.create(project);
                 }
@@ -158,11 +156,11 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             Object obj = struct.getFirstElement();
             ICompilationUnit unit;
             if (obj instanceof IAdaptable) {
-                unit = (ICompilationUnit) ((IAdaptable) obj).getAdapter(ICompilationUnit.class);
+                unit = ((IAdaptable) obj).getAdapter(ICompilationUnit.class);
                 if (unit != null) {
                     return unit;
                 }
-                IFile file = (IFile) ((IAdaptable) obj).getAdapter(IFile.class);
+                IFile file = ((IAdaptable) obj).getAdapter(IFile.class);
                 if (file != null) {
                     return JavaCore.createCompilationUnitFrom(file);
                 }
@@ -402,7 +400,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor, false);
         IEditorInput input = editor.getEditorInput();
-        IFile file = (IFile) input.getAdapter(IFile.class);
+        IFile file = input.getAdapter(IFile.class);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit != null) {
             launchGroovy(unit, unit.getJavaProject(), mode);

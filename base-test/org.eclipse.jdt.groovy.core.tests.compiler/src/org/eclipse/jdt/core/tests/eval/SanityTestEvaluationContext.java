@@ -28,7 +28,7 @@ public SanityTestEvaluationContext(String name) {
 	super(name);
 }
 public static Test suite() {
-	return setupSuite(testClass());
+	return setupSuite(SanityTestEvaluationContext.class);
 }
 /**
  * Sanity test of IEvaluationContext.allVariables()
@@ -65,9 +65,6 @@ public void testAllVariables() {
 	context.deleteVariable(vars[0]);
 	vars = context.allVariables();
 	assertEquals("No variables should be defined", 0, vars.length);
-}
-public static Class testClass() {
-	return SanityTestEvaluationContext.class;
 }
 /**
  * Sanity test of IEvaluationContext.evaluate(char[], INameEnvironment, ConfigurableOption[], IRequestor , IProblemFactory)
@@ -116,7 +113,7 @@ public void testEvaluateVariable() {
 		// Create the variable
 		var = context.newVariable("int".toCharArray(), "foo".toCharArray(), "1".toCharArray());
 
-		// Install it	
+		// Install it
 		class NoPbRequestor extends Requestor {
 			public void acceptResult(EvaluationResult result) {
 				assertTrue("No problems with the variable", !result.hasProblems());

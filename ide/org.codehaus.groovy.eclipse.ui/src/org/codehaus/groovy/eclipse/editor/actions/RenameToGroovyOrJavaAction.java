@@ -58,7 +58,7 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
 
-                    IResource file = (IResource) ((IAdaptable) object).getAdapter(IResource.class);
+                    IResource file = ((IAdaptable) object).getAdapter(IResource.class);
 
                     if (file != null) {
                         if (file.getType() != IResource.FILE) {

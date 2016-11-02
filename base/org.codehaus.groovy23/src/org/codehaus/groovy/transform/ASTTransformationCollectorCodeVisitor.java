@@ -41,8 +41,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This visitor walks the AST tree and collects references to Annotations that
@@ -64,14 +66,14 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     // GRECLIPSE start
     private boolean allowTransforms;
     private List<String> localTransformsAllowed;
-    
+
     public ASTTransformationCollectorCodeVisitor(SourceUnit source, GroovyClassLoader transformLoader, boolean allowTransforms, List<String> localTransformsAllowed) {
         this(source,transformLoader);
         this.allowTransforms = allowTransforms;
         this.localTransformsAllowed = localTransformsAllowed;
     }
     // GRECLIPSE end
-    
+
     public ASTTransformationCollectorCodeVisitor(SourceUnit source, GroovyClassLoader transformLoader) {
         this.source = source;
         this.transformLoader = transformLoader;
@@ -87,7 +89,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         super.visitClass(classNode);
         classNode = oldClass;
     }
-        
+
     /**
      * If the annotation is annotated with {@link GroovyASTTransformation}
      * the annotation is added to <code>stageVisitors</code> at the appropriate processor visitor.
@@ -102,9 +104,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             if (addCollectedAnnotations(collected, annotation, node)) it.remove();
         }
         node.getAnnotations().addAll(collected);
-        
+
         for (AnnotationNode annotation : node.getAnnotations()) {
-        	
+
         	// GRECLIPSE: start: under eclipse we may be asking a node that has no backing class
         	/*{
             Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
@@ -128,25 +130,25 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         	if (transformClassNames == null) { transformClassNames = NONE; }
         	if (transformClasses == null) { transformClasses = NO_CLASSES; }
             addTransformsToClassNode(annotation, transformClassNames, transformClasses);
-        	// end
+            // GRECLIPSE end
         }
     }
-    
+
     private void assertStringConstant(Expression exp) {
         if (exp==null) return;
         if (!(exp instanceof ConstantExpression)) {
             source.getErrorCollector().addErrorAndContinue(new SyntaxErrorMessage(new SyntaxException(
-                    "Expected a String constant.", exp.getLineNumber(), exp.getColumnNumber()), 
+                    "Expected a String constant.", exp.getLineNumber(), exp.getColumnNumber()),
                     source));
         }
         ConstantExpression ce = (ConstantExpression) exp;
         if (!(ce.getValue() instanceof String)) {
             source.getErrorCollector().addErrorAndContinue(new SyntaxErrorMessage(new SyntaxException(
-                    "Expected a String constant.", exp.getLineNumber(), exp.getColumnNumber()), 
+                    "Expected a String constant.", exp.getLineNumber(), exp.getColumnNumber()),
                     source));
         }
     }
-    
+
     private boolean addCollectedAnnotations(List<AnnotationNode> collected, AnnotationNode aliasNode, AnnotatedNode origin) {
         ClassNode classNode = aliasNode.getClassNode();
         boolean ret = false;
@@ -170,42 +172,43 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 } else {
                     act = new AnnotationCollectorTransform();
                 }
-                // GRECLIPSE: start: Information about original annotation added to meta 
-                // data to prevent import organizer from deleting original import
-                if (act!=null) { 
+                if (act!=null) {
+                    // GRECLIPSE edit
+                    //collected.addAll(act.visit(annotation, aliasNode, origin, source));
+                    // original annotation added to metadata to prevent import organizer from deleting its import
                     List<AnnotationNode> visitResult = act.visit(annotation, aliasNode, origin, source);
                     for (AnnotationNode annotationNode : visitResult) {
-	                    Object key = AnnotationCollector.class + annotationNode.getClassNode().getName();
-	                    if (annotationNode.getClassNode().getNodeMetaData(key) == null) {
-	                    	annotationNode.getClassNode().setNodeMetaData(key, aliasNode.getClassNode().getName());
-	                    }
+                        Set<AnnotationNode> aliases = annotationNode.getNodeMetaData("AnnotationCollector");
+                        if (aliases == null) annotationNode.setNodeMetaData("AnnotationCollector", (aliases = new HashSet(1)));
+
+                        aliases.add(aliasNode);
                     }
-					collected.addAll(visitResult);
+                    collected.addAll(visitResult);
+                    // GRECLIPSE end
                 }
-                // GRECLIPSE: end
                 ret = true;
             }
         }
         return ret;
     }
-        
+
     // GRECLIPSE: start: slight refactoring to provide a new method that can work with a real annotation
     @SuppressWarnings("unused")
     private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
-        String[] transformClassNames = getTransformClassNames(annotation.getClassNode()); 
+        String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
         Class[] transformClasses = getTransformClasses(transformClassAnnotation);
         addTransformsToClassNode(annotation,transformClassNames,transformClasses);
     }
-        
+
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
 
         if(transformClassNames.length == 0 && transformClasses.length == 0) {
-            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " + 
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
                     annotation.getClassNode().getName() + " does not specify any transform class names/classes", source));
-        } 
+        }
 
         if(transformClassNames.length > 0 && transformClasses.length > 0) {
-            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " + 
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
                     annotation.getClassNode().getName() +  " should specify transforms only by class names or by classes and not by both", source));
         }
 
@@ -226,7 +229,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             verifyAndAddTransform(annotation, klass);
         }
     }
-    
+
     private String[] getTransformClassNames(Annotation transformClassAnnotation) {
         try {
             Method valueMethod = transformClassAnnotation.getClass().getMethod("value");
@@ -247,7 +250,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
     }
     //GRECLIPSE end
-    
+
     private Class loadTransformClass(String transformClass, AnnotationNode annotation) {
         try {
             return transformLoader.loadClass(transformClass, false, true, false);
@@ -260,7 +263,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
         return null;
     }
-    
+
     private void verifyAndAddTransform(AnnotationNode annotation, Class klass) {
         verifyClass(annotation, klass);
         verifyCompilePhase(annotation, klass);
@@ -340,7 +343,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 
         return result;
     }
-    
+
     // GRECLIPSE: start
     private final static String[] NONE = new String[0];
     private final static Class[] NO_CLASSES = new Class[0];
@@ -348,19 +351,19 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     /**
      * For the supplied classnode, this method will check if there is an annotation on it of kind 'GroovyASTTransformationClass'.  If there is then
      * the 'value' member of that annotation will be retrieved and the value considered to be the class name of a transformation.
-     * 
+     *
      * @return null if no annotation found, otherwise a String[] of classnames - this will be size 0 if no value was specified
      */
     private String[] getTransformClassNames(ClassNode cn) {
-    	if (!cn.hasClass()) { 
+    	if (!cn.hasClass()) {
         	List<AnnotationNode> annotations = cn.getAnnotations();
         	AnnotationNode transformAnnotation = null;
         	for (AnnotationNode anno: annotations) {
         		if (anno.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())){
-                    transformAnnotation = anno; 
-                    break; 
+                    transformAnnotation = anno;
+                    break;
                 }
-            }  
+            }
         	if (transformAnnotation!=null) {
         		// will work so long as signature for the member 'value' is String[]
         		Expression expr2 = transformAnnotation.getMember("value");
@@ -394,18 +397,18 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 	        return getTransformClassNames(transformClassAnnotation);
     	}
     }
-    
+
 
     private Class[] getTransformClasses(ClassNode classNode) {
-    	if (!classNode.hasClass()) { 
+    	if (!classNode.hasClass()) {
         	List<AnnotationNode> annotations = classNode.getAnnotations();
         	AnnotationNode transformAnnotation = null;
         	for (AnnotationNode anno: annotations) {
         		if (anno.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())){
-                    transformAnnotation = anno; 
-                    break; 
+                    transformAnnotation = anno;
+                    break;
                 }
-            }  
+            }
         	if (transformAnnotation!=null) {
         		Expression expr = (Expression)transformAnnotation.getMember("classes");
         		if (expr==null) {
@@ -431,7 +434,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         			}
         			return values;
         		} else {
-        			
+
         		}
 
         		throw new RuntimeException("nyi implemented in eclipse: need to support: "+expr+" (class="+expr.getClass()+")");
@@ -444,13 +447,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 	        }
 	        return getTransformClasses(transformClassAnnotation);
     	}
-    	
+
     }
-        
+
     /**
      * Check the transform name against the allowed transforms.
-     * 
-     * @param transformName the name of the transform 
+     *
+     * @param transformName the name of the transform
      * @return true if it is allowed
      */
     private boolean isAllowed(String transformName) {
@@ -486,5 +489,5 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     	return false;
     }
     // GRECLIPSE end
-    
+
 }

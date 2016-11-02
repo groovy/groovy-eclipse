@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
@@ -21,13 +20,13 @@ import junit.framework.Test;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jun 29, 2012
  *
  */
 public class Groovy20InferencingTests extends AbstractInferencingTest {
- 
+
     public static Test suite() {
         return buildTestSuite(Groovy20InferencingTests.class);
     }
@@ -35,21 +34,21 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
     public Groovy20InferencingTests(String name) {
         super(name);
     }
-    
+
     // tests CompareToNullExpression
     public void testCompileStatic1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-        String contents = 
-                "import groovy.transform.CompileStatic;\n" + 
-        		"class CompilingStatic {\n" + 
-        		"\n" + 
-        		"    @CompileStatic\n" + 
-        		"    def foo(String args) {\n" + 
-        		"        args!= null\n" + 
-        		"    }\n" + 
-        		"}";
+        String contents =
+                "import groovy.transform.CompileStatic;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @CompileStatic\n" +
+                "    def foo(String args) {\n" +
+                "        args!= null\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
@@ -59,14 +58,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-         String contents = 
-                "import groovy.transform.CompileStatic;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @CompileStatic\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        args== null\n" + 
-                        "    }\n" + 
+         String contents =
+                "import groovy.transform.CompileStatic;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @CompileStatic\n" +
+                        "    def foo(String args) {\n" +
+                        "        args== null\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -77,14 +76,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-         String contents = 
-                "import groovy.transform.CompileStatic;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @CompileStatic\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        args== 9\n" + 
-                        "    }\n" + 
+         String contents =
+                "import groovy.transform.CompileStatic;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @CompileStatic\n" +
+                        "    def foo(String args) {\n" +
+                        "        args== 9\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -95,14 +94,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-        String contents = 
-                "import groovy.transform.CompileStatic;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @CompileStatic\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        9 == args\n" + 
-                        "    }\n" + 
+        String contents =
+                "import groovy.transform.CompileStatic;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @CompileStatic\n" +
+                        "    def foo(String args) {\n" +
+                        "        9 == args\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -113,34 +112,34 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-         String contents = 
-                "import groovy.transform.CompileStatic;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @CompileStatic\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        null== args\n" + 
-                        "    }\n" + 
+         String contents =
+                "import groovy.transform.CompileStatic;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @CompileStatic\n" +
+                        "    def foo(String args) {\n" +
+                        "        null== args\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
 
-    
+
     // tests CompareToNullExpression
     public void testTypeChecked1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-        String contents = 
-                "import groovy.transform.TypeChecked;\n" + 
-                "class CompilingStatic {\n" + 
-                "\n" + 
-                "    @TypeChecked\n" + 
-                "    def foo(String args) {\n" + 
-                "        args!= null\n" + 
-                "    }\n" + 
+        String contents =
+                "import groovy.transform.TypeChecked;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @TypeChecked\n" +
+                "    def foo(String args) {\n" +
+                "        args!= null\n" +
+                "    }\n" +
                 "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -151,14 +150,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-         String contents = 
-                "import groovy.transform.TypeChecked;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @TypeChecked\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        args== null\n" + 
-                        "    }\n" + 
+         String contents =
+                "import groovy.transform.TypeChecked;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @TypeChecked\n" +
+                        "    def foo(String args) {\n" +
+                        "        args== null\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -169,14 +168,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-         String contents = 
-                "import groovy.transform.TypeChecked;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @TypeChecked\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        args== 9\n" + 
-                        "    }\n" + 
+         String contents =
+                "import groovy.transform.TypeChecked;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @TypeChecked\n" +
+                        "    def foo(String args) {\n" +
+                        "        args== 9\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -187,14 +186,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-        String contents = 
-                "import groovy.transform.TypeChecked;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @TypeChecked\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        9 == args\n" + 
-                        "    }\n" + 
+        String contents =
+                "import groovy.transform.TypeChecked;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @TypeChecked\n" +
+                        "    def foo(String args) {\n" +
+                        "        9 == args\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
@@ -205,14 +204,14 @@ public class Groovy20InferencingTests extends AbstractInferencingTest {
         if (GroovyUtils.GROOVY_LEVEL < 20 ) {
             return;
         }
-         String contents = 
-                "import groovy.transform.TypeChecked;\n" + 
-                        "class CompilingStatic {\n" + 
-                        "\n" + 
-                        "    @TypeChecked\n" + 
-                        "    def foo(String args) {\n" + 
-                        "        null== args\n" + 
-                        "    }\n" + 
+         String contents =
+                "import groovy.transform.TypeChecked;\n" +
+                        "class CompilingStatic {\n" +
+                        "\n" +
+                        "    @TypeChecked\n" +
+                        "    def foo(String args) {\n" +
+                        "        null== args\n" +
+                        "    }\n" +
                         "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();

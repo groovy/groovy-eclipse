@@ -21,6 +21,7 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -57,6 +58,9 @@ public class ModuleNode extends ASTNode implements Opcodes {
     List<ClassNode> classes = new LinkedList<ClassNode>();
     private List<MethodNode> methods = new ArrayList<MethodNode>();
     private Map<String, ImportNode> imports = new HashMap<String, ImportNode>();
+    // GRECLIPSE add
+    private List<ImportNode> rawImports = new ArrayList<ImportNode>();
+    // GRECLIPSE end
     private List<ImportNode> starImports = new ArrayList<ImportNode>();
     private Map<String, ImportNode> staticImports = new LinkedHashMap<String, ImportNode>();
     private Map<String, ImportNode> staticStarImports = new LinkedHashMap<String, ImportNode>();
@@ -88,7 +92,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     public List<ClassNode> getClasses() {
         if (createClassForStatements && (!statementBlock.isEmpty() || !methods.isEmpty() || isPackageInfo())) {
             ClassNode mainClass = createStatementsClass();
-            mainClassName = mainClass.getName(); 
+            mainClassName = mainClass.getName();
             createClassForStatements = false;
             classes.add(0, mainClass);
             mainClass.setModule(this);
@@ -96,14 +100,14 @@ public class ModuleNode extends ASTNode implements Opcodes {
         }
         return classes;
     }
-    
+
     // GRECLIPSE:
     private boolean encounteredUnrecoverableError;
-    
+
     public void setEncounteredUnrecoverableError(boolean b) {
 	    encounteredUnrecoverableError= b;
     }
-    
+
     /**
      * @return true if a syntax error was encountered that prevented correct construction of the AST
      */
@@ -111,7 +115,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
 	    return encounteredUnrecoverableError;
     }
     // end
-    
+
     // GRECLIPSE: start: faster
     // old
 	//    private boolean isPackageInfo() {
@@ -119,7 +123,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
 	//    }
     // new
     private int knowIfPackageInfo = 0; // 0=dontknow 1=yes 2=no
-    
+
     private boolean isPackageInfo() {
     	if (knowIfPackageInfo==0) {
 	    	if (context != null && context.getName() != null && context.getName().endsWith("package-info.groovy")) {
@@ -134,7 +138,10 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
 
     public List<ImportNode> getImports() {
-        return new ArrayList<ImportNode>(imports.values());
+        // GRECLIPSE edit
+        //return new ArrayList<ImportNode>(imports.values());
+        return rawImports;
+        // GRECLIPSE end
     }
 
     public List<ImportNode> getStarImports() {
@@ -164,24 +171,27 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
     public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
         ImportNode importNode = new ImportNode(type, alias);
-        // GRECLIPSE: start: configure sloc...approximate from the type's sloc
-        // note that sloc configuration is done more precisely in AntlrParserPlugin.importDef()
-        // but we need to handle calls to this method from outside of importDef()
+        // GRECLIPSE add
+        // configure sloc from the type's sloc
+        // note: sloc configuration is done more precisely in AntlrParserPlugin.importDef()
+        //       but we need to handle calls to this method separately from importDef()
         if (type != null) {
             importNode.setSourcePosition(type);
-            importNode.setColumnNumber(1);  // assume beginning of line
-            if (type.getColumnNumber()!=-1) {
-            	importNode.setStart(type.getStart()-type.getColumnNumber()+1);
+            // adjust to beginning of line
+            importNode.setColumnNumber(1);
+            if (type.getColumnNumber() > 0) {
+                importNode.setStart(type.getStart() - type.getColumnNumber() + 1);
             }
         }
-        // end
+        rawImports.add(importNode);
+        // GRECLIPSE end
         imports.put(alias, importNode);
         importNode.addAnnotations(annotations);
         storeLastAddedImportNode(importNode);
     }
 
     public void addStarImport(String packageName) {
-        addStarImport(packageName, new ArrayList<AnnotationNode>());
+        addStarImport(packageName, Collections.EMPTY_LIST);
     }
 
     public void addStarImport(String packageName, List<AnnotationNode> annotations) {
@@ -277,7 +287,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
         	setScriptBaseClassFromConfig(scriptDummy);
         	return scriptDummy;
         }
-        
+
         String name = getPackageName();
         if (name == null) {
             name = "";
@@ -301,7 +311,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
         scriptDummy = classNode;
         return classNode;
     }
-    
+
     private void setScriptBaseClassFromConfig(ClassNode cn) {
         String baseClassName = null;
         if (unit != null) {
@@ -317,13 +327,13 @@ public class ModuleNode extends ASTNode implements Opcodes {
             }
         }
     }
-    
+
     protected ClassNode createStatementsClass() {
         ClassNode classNode = getScriptClassDummy();
         if (classNode.getName().endsWith("package-info")) {
             return classNode;
         }
-        
+
         handleMainMethodIfPresent(methods);
 
         // return new Foo(new ShellContext(args)).run()
@@ -377,7 +387,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     /*
-     * If a main method is provided by user, account for it under run() as scripts generate their own 'main' so they can run.  
+     * If a main method is provided by user, account for it under run() as scripts generate their own 'main' so they can run.
      */
     private void handleMainMethodIfPresent(List methods) {
     	boolean found = false;
@@ -391,7 +401,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
                     argTypeMatches = (argType.equals(ClassHelper.OBJECT_TYPE) || argType.getName().contains("String[]"));
                     retTypeMatches = (retType == ClassHelper.VOID_TYPE || retType == ClassHelper.OBJECT_TYPE);
-                    
+
                     if(retTypeMatches && argTypeMatches) {
                     	if(found) {
                     		throw new RuntimeException("Repetitive main method found.");
@@ -443,7 +453,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     public boolean isEmpty() {
         return classes.isEmpty() && statementBlock.getStatements().isEmpty();
     }
-    
+
     public void sortClasses(){
     	if (isEmpty()) return;
     	List<ClassNode> classes = getClasses();
@@ -486,7 +496,11 @@ public class ModuleNode extends ASTNode implements Opcodes {
     public void addStaticImport(ClassNode type, String fieldName, String alias, List<AnnotationNode> annotations) {
         ImportNode node = new ImportNode(type, fieldName, alias);
         node.addAnnotations(annotations);
-        staticImports.put(alias, node);
+        // GRECLIPSE edit
+        //staticImports.put(alias, node);
+        ImportNode prev = staticImports.put(alias, node);
+        if (prev != null) staticImports.put(prev.toString(), prev);
+        // GRECLIPSE end
         storeLastAddedImportNode(node);
     }
 

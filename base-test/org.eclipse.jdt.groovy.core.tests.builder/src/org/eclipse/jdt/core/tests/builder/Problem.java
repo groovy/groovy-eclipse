@@ -14,7 +14,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaModelMarker;
 
-public class Problem implements Comparable {
+public class Problem implements Comparable<Problem> {
 	private String location;
 	private String message;
 	private IPath resourcePath;
@@ -30,16 +30,11 @@ public class Problem implements Comparable {
 		this.end = end;
 		this.categoryId = categoryId;
 		this.severity = severity;
-//		if ((start > 0 || end > 0) && categoryId <= 0) {
-//			System.out.print("is categoryId properly set ? new Problem(\"" + location + "\", \"" + message + "\", \"" + resourcePath + "\"");
-//			System.out.print(", " + start + ", " + end +  ", " + categoryId);
-//			System.out.println(")");
-//		}
 	}
-	
+
 	public Problem(IMarker marker){
-		this.location = marker.getAttribute(IMarker.LOCATION, ""); //$NON-NLS-1$
-		this.message = marker.getAttribute(IMarker.MESSAGE, ""); //$NON-NLS-1$
+		this.location = marker.getAttribute(IMarker.LOCATION, "");
+		this.message = marker.getAttribute(IMarker.MESSAGE, "");
 		this.resourcePath = marker.getResource().getFullPath();
 		this.start = marker.getAttribute(IMarker.CHAR_START, -1);
 		this.end = marker.getAttribute(IMarker.CHAR_END, -1);
@@ -50,12 +45,12 @@ public class Problem implements Comparable {
 	public int getCategoryId() {
 		return categoryId;
 	}
-	
+
 /**
  * Return the IMarker.SOURCE_ID attribute of the underlying marker if any.
  * Value null denotes a problem created from explicit structural attributes
  * (instead of using a source marker). Value "missing" denotes that the marker
- * used to initialize the problem had no IMarker.SOURCE_ID attribute. 
+ * used to initialize the problem had no IMarker.SOURCE_ID attribute.
  * @return the IMarker.SOURCE_ID attribute of the underlying marker if any
  */
 public String getSourceId() {
@@ -82,7 +77,7 @@ public String getSourceId() {
 	public IPath getResourcePath() {
 		return resourcePath;
 	}
-	
+
 public int getSeverity() {
 	return this.severity;
 }
@@ -90,52 +85,51 @@ public int getSeverity() {
 	public int getStart() {
 		return this.start;
 	}
-	
+
 	public int getEnd() {
 		return this.end;
 	}
-	
+
 	public String toString(){
 // ignore locations since the builder no longer finds exact Java elements
-//		return "Problem : " + message + " [ resource : <" + resourcePath + "> location <"+ location + "> ]"; 
-		return 
-			"Problem : " 
-			+ message 
-			+ " [ resource : <" 
-			+ resourcePath 
-			+ ">" 
+//		return "Problem : " + message + " [ resource : <" + resourcePath + "> location <"+ location + "> ]";
+		return
+			"Problem : "
+			+ message
+			+ " [ resource : <"
+			+ resourcePath
+			+ ">"
 			+ (" range : <" + this.start + "," + this.end + ">")
 			+ (" category : <" + this.categoryId + ">")
 			+ (" severity : <" + this.severity + ">")
 			+ "]";
 	}
-	
+
 	public boolean equals(Object o){
-		if(o instanceof Problem){
+		if (o instanceof Problem){
 			return this.toString().equals(o.toString());
 		}
 		return false;
 	}
-	
-	public int compareTo(Object o) {
-		if(o instanceof Problem){
-			Problem problem = (Problem) o;
-			/* Replace initial implementation with toString() comparison otherwise the problems order may change
-			 * when different VM are used (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=213570)...
-			if (!(this.getLocation().equals(problem.getLocation()))) {
-				return this.getLocation().compareTo(problem.getLocation());
-			}
-			if (this.getStart() < problem.getStart()) {
-				return -1;
-			}
-			if (this.getEnd() < problem.getEnd()) {
-				return -1;
-			}
-			return this.getMessage().compareTo(problem.getMessage());
-			*/
-			return this.toString().compareTo(problem.toString());
+
+	public int hashCode() {
+		return this.toString().hashCode();
+	}
+
+	public int compareTo(Problem problem) {
+		/* Replace initial implementation with toString() comparison otherwise the problems order may change
+		 * when different VM are used (see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=213570)...
+		if (!(this.getLocation().equals(problem.getLocation()))) {
+			return this.getLocation().compareTo(problem.getLocation());
 		}
-		return -1;
+		if (this.getStart() < problem.getStart()) {
+			return -1;
+		}
+		if (this.getEnd() < problem.getEnd()) {
+			return -1;
+		}
+		return this.getMessage().compareTo(problem.getMessage());
+		*/
+		return this.toString().compareTo(problem.toString());
 	}
 }
-

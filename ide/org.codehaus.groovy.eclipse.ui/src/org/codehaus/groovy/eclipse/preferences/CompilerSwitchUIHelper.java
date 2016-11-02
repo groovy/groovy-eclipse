@@ -47,7 +47,6 @@ import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
-import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
 import org.osgi.framework.Version;
 
 /**

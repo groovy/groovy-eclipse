@@ -642,12 +642,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     // GRECLIPSE add
     public void addPropertyWithoutField(PropertyNode node) {
-        node.setDeclaringClass(redirect());
-        //FieldNode field = node.getField();
-        //addField(field);
-        final ClassNode r = redirect();
+        ClassNode r = redirect();
+        node.setDeclaringClass(r);
         if (r.properties == null)
-            r.properties = new ArrayList<PropertyNode> ();
+            r.properties = new ArrayList<PropertyNode>();
         r.properties.add(node);
     }
     // GRECLIPSE end
@@ -1103,7 +1101,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             return ClassHelper.OBJECT_TYPE;
         }
         // GRECLIPSE end
-         ClassNode sn = redirect().getUnresolvedSuperClass();
+        ClassNode sn = redirect().getUnresolvedSuperClass();
         if (sn!=null) sn=sn.redirect();
         return sn;
     }

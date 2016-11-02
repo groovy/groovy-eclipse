@@ -19,15 +19,15 @@ public class MacVMLauncher extends StandardVMLauncher {
 /**
  * @see LocalVMLauncher#getCommandLine
  */
-public String[] getCommandLine() {	
-	Vector commandLine= new Vector();
-	
+public String[] getCommandLine() {
+	Vector<String> commandLine= new Vector<String>();
+
 	// VM binary
 	commandLine.addElement(
-		this.vmPath + 
-		(this.vmPath.endsWith(File.separator) ? "" : File.separator) + 
-		"bin" + 
-		File.separator + 
+		this.vmPath +
+		(this.vmPath.endsWith(File.separator) ? "" : File.separator) +
+		"bin" +
+		File.separator +
 		"java");
 
 	// VM arguments
@@ -61,7 +61,7 @@ public String[] getCommandLine() {
 	if (this.evalPort != -1) {
 		commandLine.addElement(CODE_SNIPPET_RUNNER_CLASS_NAME);
 	}
-	
+
 	// code snippet runner arguments
 	if (this.evalPort != -1) {
 		commandLine.addElement(EVALPORT_ARG);
@@ -78,7 +78,7 @@ public String[] getCommandLine() {
 	if (this.programClass != null) {
 		commandLine.addElement(this.programClass);
 	}
-	
+
 	// program arguments
 	if (this.programArguments != null) {
 		for (int i=0;i<this.programArguments.length;i++) {
@@ -103,7 +103,7 @@ public String[] getCommandLine() {
 			result[i] = "\"" + argument + "\"";
 		}
 	}
-	
+
 	return result;
 }
 
@@ -113,7 +113,7 @@ public String[] getCommandLine() {
 protected String buildBootClassPath() {
 	StringBuffer bootPathString = new StringBuffer();
 	char pathSeparator = File.pathSeparatorChar;
-	
+
 	if (this.bootPath != null) {
 		// Add boot class path given by client
 		int length = this.bootPath.length;
@@ -122,7 +122,7 @@ protected String buildBootClassPath() {
 			bootPathString.append(pathSeparator);
 		}
 	}
-		
+
 	// Add boot class path directory if needed
 	if (this.evalTargetPath != null && TARGET_HAS_FILE_SYSTEM) {
 		bootPathString.append(this.evalTargetPath);

@@ -37,6 +37,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -59,6 +60,9 @@ public class ModuleNode extends ASTNode implements Opcodes {
     List<ClassNode> classes = new LinkedList<ClassNode>();
     private List<MethodNode> methods = new ArrayList<MethodNode>();
     private Map<String, ImportNode> imports = new HashMap<String, ImportNode>();
+    // GRECLIPSE add
+    private List<ImportNode> rawImports = new ArrayList<ImportNode>();
+    // GRECLIPSE end
     private List<ImportNode> starImports = new ArrayList<ImportNode>();
     private Map<String, ImportNode> staticImports = new LinkedHashMap<String, ImportNode>();
     private Map<String, ImportNode> staticStarImports = new LinkedHashMap<String, ImportNode>();
@@ -108,7 +112,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     /**
-     * @return true if a syntax error was encountered that prevented correct construction of the AST
+     * @return {@code true} if a syntax error was encountered that prevented correct construction of the AST
      */
     public boolean encounteredUnrecoverableError() {
         return encounteredUnrecoverableError;
@@ -125,13 +129,16 @@ public class ModuleNode extends ASTNode implements Opcodes {
                 knowIfPackageInfo = 2;
             }
         }
-        return knowIfPackageInfo == 1;
+        return (knowIfPackageInfo == 1);
     }
-    private int knowIfPackageInfo = 0; // 0=dontknow 1=yes 2=no
+    private int knowIfPackageInfo; // 0=dontknow 1=yes, 2=no
     // GRECLIPSE end
 
     public List<ImportNode> getImports() {
-        return new ArrayList<ImportNode>(imports.values());
+        // GRECLIPSE edit
+        //return new ArrayList<ImportNode>(imports.values());
+        return rawImports;
+        // GRECLIPSE end
     }
 
     public List<ImportNode> getStarImports() {
@@ -162,16 +169,18 @@ public class ModuleNode extends ASTNode implements Opcodes {
     public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
         ImportNode importNode = new ImportNode(type, alias);
         // GRECLIPSE add
-        // configure sloc...approximate from the type's sloc
-        // note that sloc configuration is done more precisely in AntlrParserPlugin.importDef()
-        // but we need to handle calls to this method from outside of importDef()
+        // configure sloc from the type's sloc
+        // note: sloc configuration is done more precisely in AntlrParserPlugin.importDef()
+        //       but we need to handle calls to this method separately from importDef()
         if (type != null) {
             importNode.setSourcePosition(type);
-            importNode.setColumnNumber(1);  // assume beginning of line
-            if (type.getColumnNumber() != -1) {
+            // adjust to beginning of line
+            importNode.setColumnNumber(1);
+            if (type.getColumnNumber() > 0) {
                 importNode.setStart(type.getStart() - type.getColumnNumber() + 1);
             }
         }
+        rawImports.add(importNode);
         // GRECLIPSE end
         imports.put(alias, importNode);
         importNode.addAnnotations(annotations);
@@ -179,7 +188,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public void addStarImport(String packageName) {
-        addStarImport(packageName, new ArrayList<AnnotationNode>());
+        addStarImport(packageName, Collections.EMPTY_LIST);
     }
 
     public void addStarImport(String packageName, List<AnnotationNode> annotations) {
@@ -497,7 +506,11 @@ public class ModuleNode extends ASTNode implements Opcodes {
     public void addStaticImport(ClassNode type, String fieldName, String alias, List<AnnotationNode> annotations) {
         ImportNode node = new ImportNode(type, fieldName, alias);
         node.addAnnotations(annotations);
-        staticImports.put(alias, node);
+        // GRECLIPSE edit
+        //staticImports.put(alias, node);
+        ImportNode prev = staticImports.put(alias, node);
+        if (prev != null) staticImports.put(prev.toString(), prev);
+        // GRECLIPSE end
         storeLastAddedImportNode(node);
     }
 

@@ -42,34 +42,31 @@ public AbstractSelectionTest(String testName){
  * DietParse with selectionNode check
  */
 public void checkDietParse(
-	char[] source, 
+	char[] source,
 	int selectionStart,
 	int selectionEnd,
-	String expectedSelection, 
-	String expectedUnitToString, 
+	String expectedSelection,
+	String expectedUnitToString,
 	String expectedSelectionIdentifier,
 	String expectedSelectedSource,
 	String testName) {
 
 	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	SelectionParser parser = 
+	SelectionParser parser =
 		new SelectionParser(
 			new ProblemReporter(
-				DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-				options, 
+				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+				options,
 				new DefaultProblemFactory(Locale.getDefault())));
 
 	ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
+	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
 
 	CompilationUnitDeclaration unit = parser.dietParse(sourceUnit, compilationResult, selectionStart, selectionEnd);
 
 	String computedUnitToString = unit.toString();
-	//System.out.println(computedUnitToString);
-	//System.out.println(Util.displayString(computedUnitToString));
-	//System.out.println(expectedUnitToString);
 
-	String computedSelection = parser.assistNode == null 
+	String computedSelection = parser.assistNode == null
 									? NONE
 									: parser.assistNode.toString();
 	assertEquals(
@@ -84,7 +81,7 @@ public void checkDietParse(
 		"invalid selection unit-" + testName,
 		expectedUnitToString,
 		computedUnitToString);
-	
+
 	if (expectedSelectionIdentifier != null){
 		char[] chars = ((SelectionScanner)parser.scanner).selectionIdentifier;
 		String computedSelectionIdentifier = chars == null ? NONE : new String(chars);
@@ -97,16 +94,16 @@ public void checkDietParse(
 		char[] chars = null;
 		if (parser.assistNode != null){
 			chars = CharOperation.subarray(
-				parser.scanner.source, 
-				parser.assistNode.sourceStart, 
+				parser.scanner.source,
+				parser.assistNode.sourceStart,
 				parser.assistNode.sourceEnd + 1);
 		} else {
 			if (parser.assistIdentifier() != null){
-				if (((SelectionScanner)parser.scanner).selectionEnd 
+				if (((SelectionScanner)parser.scanner).selectionEnd
 					>= ((SelectionScanner)parser.scanner).selectionStart){
 					chars = CharOperation.subarray(
-						parser.scanner.source, 
-						((SelectionScanner)parser.scanner).selectionStart, 
+						parser.scanner.source,
+						((SelectionScanner)parser.scanner).selectionStart,
 						((SelectionScanner)parser.scanner).selectionEnd + 1);
 				}
 			}
@@ -122,26 +119,26 @@ public void checkDietParse(
  * Parse a method with selectionNode check
  */
 public void checkMethodParse(
-		char[] source, 
+		char[] source,
 		int selectionStart,
-		int selectionEnd, 
-		String expectedSelection, 
-		String expectedUnitToString, 
-		String expectedSelectionIdentifier, 
+		int selectionEnd,
+		String expectedSelection,
+		String expectedUnitToString,
+		String expectedSelectionIdentifier,
 		String expectedSelectedSource,
 		String[] expectedLabels,
 		String testName) {
 
 	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	SelectionParser parser = 
+	SelectionParser parser =
 		new SelectionParser(
 			new ProblemReporter(
-				DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-				options, 
+				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+				options,
 				new DefaultProblemFactory(Locale.getDefault())));
 
 	ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
+	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
 
 	CompilationUnitDeclaration unit = parser.dietParse(sourceUnit, compilationResult, selectionStart, selectionEnd);
 
@@ -174,9 +171,9 @@ public void checkMethodParse(
 
 	String computedUnitToString = unit.toString();
 	//System.out.println(computedUnitToString);
-	//System.out.println(expectedUnitToString);	
-	
-	String computedCompletion = parser.assistNode == null 
+	//System.out.println(expectedUnitToString);
+
+	String computedCompletion = parser.assistNode == null
 								? NONE
 								: parser.assistNode.toString();
 	assertEquals(
@@ -204,16 +201,16 @@ public void checkMethodParse(
 		char[] chars = null;
 		if (parser.assistNode != null){
 			chars = CharOperation.subarray(
-				parser.scanner.source, 
-				parser.assistNode.sourceStart, 
+				parser.scanner.source,
+				parser.assistNode.sourceStart,
 				parser.assistNode.sourceEnd + 1);
 		} else {
 			if (parser.assistIdentifier() != null){
-				if (((SelectionScanner)parser.scanner).selectionEnd 
+				if (((SelectionScanner)parser.scanner).selectionEnd
 					>= ((SelectionScanner)parser.scanner).selectionStart){
 					chars = CharOperation.subarray(
-						parser.scanner.source, 
-						((SelectionScanner)parser.scanner).selectionStart, 
+						parser.scanner.source,
+						((SelectionScanner)parser.scanner).selectionStart,
 						((SelectionScanner)parser.scanner).selectionEnd + 1);
 				}
 			}
@@ -225,7 +222,7 @@ public void checkMethodParse(
 			computedReplacedSource);
 	}
 	if (expectedLabels != null) {
-/*	
+/*
 		assert("no labels-" + testName, parser.labels != null);
 		int length = parser.labels.length;
 		assertEquals("invalid number of labels-" + testName, expectedLabels.length, length);
@@ -233,27 +230,27 @@ public void checkMethodParse(
 			String label = new String(parser.labels[i]);
 			assertEquals("invalid label-" + testName, expectedLabels[i], label);
 		}
-*/	
+*/
 	}
 }
 /*
  * Parse a method with selectionNode check
  */
 public void checkMethodParse(
-		char[] source, 
+		char[] source,
 		int selectionStart,
-		int selectionEnd, 		
-		String expectedSelection, 
-		String expectedUnitToString, 
-		String expectedSelectionIdentifier, 
-		String expectedSelectedSource, 
+		int selectionEnd,
+		String expectedSelection,
+		String expectedUnitToString,
+		String expectedSelectionIdentifier,
+		String expectedSelectedSource,
 		String testName) {
 
 	this.checkMethodParse(
-		source, 
+		source,
 		selectionStart,
 		selectionEnd,
-		expectedSelection, 
+		expectedSelection,
 		expectedUnitToString,
 		expectedSelectionIdentifier,
 		expectedSelectedSource,
@@ -301,7 +298,7 @@ protected ASTNode findMethod(TypeDeclaration type, int cursorLocation) {
  * Runs the given test that checks that method completion parsing returns the given completion.
  */
 protected void runTestCheckMethodParse(
-		String compilationUnit, 
+		String compilationUnit,
 		String selectionStartBehind,
 		String selectionEndBehind,
 		String expectedSelectionNodeToString,
@@ -316,15 +313,15 @@ protected void runTestCheckMethodParse(
 	int selectionEndBehindStart = compilationUnit.indexOf(selectionEndBehind);
 	assertTrue("selectionEndBehind string not found", selectionEndBehindStart != -1);
 	int selectionEnd = selectionEndBehindStart + selectionEndBehind.length() - 1;
-		
+
 	this.checkMethodParse(
-		compilationUnit.toCharArray(), 
+		compilationUnit.toCharArray(),
 		selectionStart,
 		selectionEnd,
 		expectedSelectionNodeToString,
 		expectedUnitDisplayString,
 		expectedSelectionIdentifier,
 		expectedReplacedSource,
-		testName); 
+		testName);
 }
 }

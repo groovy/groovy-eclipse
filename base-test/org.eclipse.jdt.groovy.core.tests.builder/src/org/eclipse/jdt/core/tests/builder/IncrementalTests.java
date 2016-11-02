@@ -31,33 +31,33 @@ public class IncrementalTests extends BuilderTests {
 	public static Test suite() {
 		return buildTestSuite(IncrementalTests.class);
 	}
-	
+
 	/*
 	 * Ensures that the source range for a duplicate secondary type error is correct
 	 * (regression test for https://bugs.eclipse.org/bugs/show_bug.cgi?id=77283)
 	 */
 	public void testAddDuplicateSecondaryType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); 
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); 
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); 
-		env.setOutputFolder(projectPath, "bin"); 
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p", "C",  
-			"package p;	\n"+ 
-			"public class C {}	\n"+ 
-			"class CC {}"); 
+		env.addClass(root, "p", "C",
+			"package p;	\n"+
+			"public class C {}	\n"+
+			"class CC {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
-		IPath pathToD = env.addClass(root, "p", "D",  
-			"package p;	\n"+ 
-			"public class D {}	\n"+ 
-			"class CC {}"); 
+		IPath pathToD = env.addClass(root, "p", "D",
+			"package p;	\n"+
+			"public class D {}	\n"+
+			"class CC {}");
 
 		incrementalBuild(projectPath);
 		expectingProblemsFor(
@@ -68,42 +68,42 @@ public class IncrementalTests extends BuilderTests {
 	}
 
 	public void testDefaultPackage() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.setOutputFolder(projectPath, ""); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "");
 
-		env.addClass(projectPath, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}"); //$NON-NLS-1$
+		env.addClass(projectPath, "", "A",
+			"public class A {}");
 
-		env.addClass(projectPath, "", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class B {}"); //$NON-NLS-1$
+		env.addClass(projectPath, "", "B",
+			"public class B {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
-		env.addClass(projectPath, "", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class B {A a;}"); //$NON-NLS-1$
+		env.addClass(projectPath, "", "B",
+			"public class B {A a;}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 	}
 
 	public void testDefaultPackage2() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(projectPath, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}"); //$NON-NLS-1$
+		env.addClass(projectPath, "", "A",
+			"public class A {}");
 
-		env.addClass(projectPath, "", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class B {}"); //$NON-NLS-1$
+		env.addClass(projectPath, "", "B",
+			"public class B {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
-		env.addClass(projectPath, "", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class B {A a;}"); //$NON-NLS-1$
+		env.addClass(projectPath, "", "B",
+			"public class B {A a;}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
@@ -113,34 +113,34 @@ public class IncrementalTests extends BuilderTests {
 		//----------------------------
 		//           Step 1
 		//----------------------------
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 
-		IPath root = env.getPackageFragmentRootPath(projectPath, ""); //$NON-NLS-1$
+		IPath root = env.getPackageFragmentRootPath(projectPath, "");
 		fullBuild();
 		expectingNoProblems();
-		
+
 		//----------------------------
 		//           Step 2
 		//----------------------------
-		env.addClass(root, "java.lang", "Object", //$NON-NLS-1$ //$NON-NLS-2$
-			"package java.lang;\n" + //$NON-NLS-1$
-			"public class Object {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(root, "java.lang", "Object",
+			"package java.lang;\n" +
+			"public class Object {\n"+
+			"}\n"
 			);
-			
+
 
 		incrementalBuild();
 		expectingNoProblems();
-		
+
 		//----------------------------
 		//           Step 3
 		//----------------------------
-		env.addClass(root, "java.lang", "Throwable", //$NON-NLS-1$ //$NON-NLS-2$
-			"package java.lang;\n" + //$NON-NLS-1$
-			"public class Throwable {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(root, "java.lang", "Throwable",
+			"package java.lang;\n" +
+			"public class Throwable {\n"+
+			"}\n"
 			);
-			
+
 
 		incrementalBuild();
 		expectingNoProblems();
@@ -150,57 +150,57 @@ public class IncrementalTests extends BuilderTests {
 	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=17329
 	 */
 	public void testRenameMainType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
 		/* A.java */
-		IPath pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class A {}"); //$NON-NLS-1$
+		IPath pathToA = env.addClass(root, "p", "A",
+			"package p;	\n"+
+			"public class A {}");
 
 		/* B.java */
-		IPath pathToB = env.addClass(root, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class B extends A {}"); //$NON-NLS-1$
+		IPath pathToB = env.addClass(root, "p", "B",
+			"package p;	\n"+
+			"public class B extends A {}");
 
 		/* C.java */
-		IPath pathToC = env.addClass(root, "p", "C", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class C extends B {}"); //$NON-NLS-1$
+		IPath pathToC = env.addClass(root, "p", "C",
+			"package p;	\n"+
+			"public class C extends B {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
 		/* Touch both A and C, removing A main type */
-		pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class _A {}"); //$NON-NLS-1$
+		pathToA = env.addClass(root, "p", "A",
+			"package p;	\n"+
+			"public class _A {}");
 
-		pathToC = env.addClass(root, "p", "C", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class C extends B { }"); //$NON-NLS-1$
+		pathToC = env.addClass(root, "p", "C",
+			"package p;	\n"+
+			"public class C extends B { }");
 
 		incrementalBuild(projectPath);
 		expectingProblemsFor(
 			new IPath[]{ pathToA, pathToB, pathToC },
-			"Problem : A cannot be resolved to a type [ resource : </Project/src/p/B.java> range : <35,36> category : <40> severity : <2>]\n" + 
-			"Problem : The hierarchy of the type C is inconsistent [ resource : </Project/src/p/C.java> range : <25,26> category : <40> severity : <2>]\n" + 
+			"Problem : A cannot be resolved to a type [ resource : </Project/src/p/B.java> range : <35,36> category : <40> severity : <2>]\n" +
+			"Problem : The hierarchy of the type C is inconsistent [ resource : </Project/src/p/C.java> range : <25,26> category : <40> severity : <2>]\n" +
 			"Problem : The public type _A must be defined in its own file [ resource : </Project/src/p/A.java> range : <25,27> category : <40> severity : <2>]"
 		);
-		expectingSpecificProblemFor(pathToA, new Problem("_A", "The public type _A must be defined in its own file", pathToA, 25, 27, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingSpecificProblemFor(pathToB, new Problem("B", "A cannot be resolved to a type", pathToB, 35, 36, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingSpecificProblemFor(pathToC, new Problem("C", "The hierarchy of the type C is inconsistent", pathToC, 25, 26, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(pathToA, new Problem("_A", "The public type _A must be defined in its own file", pathToA, 25, 27, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
+		expectingSpecificProblemFor(pathToB, new Problem("B", "A cannot be resolved to a type", pathToB, 35, 36, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
+		expectingSpecificProblemFor(pathToC, new Problem("C", "The hierarchy of the type C is inconsistent", pathToC, 25, 26, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 
 		/* Touch both A and C, removing A main type */
-		pathToA = env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class A {}"); //$NON-NLS-1$
+		pathToA = env.addClass(root, "p", "A",
+			"package p;	\n"+
+			"public class A {}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
@@ -211,66 +211,66 @@ public class IncrementalTests extends BuilderTests {
 	 * case 1
 	 */
 	public void testRemoveSecondaryType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class AA {}	\n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p;	\n"+
+			"public class AA {}	\n"+
+			"class AZ {}");
 
-		IPath pathToAB = env.addClass(root, "p", "AB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class AB extends AZ {}"); //$NON-NLS-1$
+		IPath pathToAB = env.addClass(root, "p", "AB",
+			"package p;	\n"+
+			"public class AB extends AZ {}");
 
-		env.addClass(root, "p", "BB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class BB {	\n"+ //$NON-NLS-1$
-			"	void foo(){	\n" + //$NON-NLS-1$
-			"		System.out.println(new AB());	\n" + //$NON-NLS-1$
-			"		System.out.println(new ZA());	\n" + //$NON-NLS-1$
-			"	}	\n" + //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
+		env.addClass(root, "p", "BB",
+			"package p;	\n"+
+			"public class BB {	\n"+
+			"	void foo(){	\n" +
+			"		System.out.println(new AB());	\n" +
+			"		System.out.println(new ZA());	\n" +
+			"	}	\n" +
+			"}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class ZZ {}	\n"+ //$NON-NLS-1$
-			"class ZA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p;	\n"+
+			"public class ZZ {}	\n"+
+			"class ZA {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
 		/* Remove AZ and touch BB */
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class AA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p;	\n"+
+			"public class AA {}");
 
-		env.addClass(root, "p", "BB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class BB {	\n"+ //$NON-NLS-1$
-			"	void foo() {	\n" + //$NON-NLS-1$
-			"		System.out.println(new AB());	\n" + //$NON-NLS-1$
-			"		System.out.println(new ZA());	\n" + //$NON-NLS-1$
-			"	}	\n" + //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
+		env.addClass(root, "p", "BB",
+			"package p;	\n"+
+			"public class BB {	\n"+
+			"	void foo() {	\n" +
+			"		System.out.println(new AB());	\n" +
+			"		System.out.println(new ZA());	\n" +
+			"	}	\n" +
+			"}");
 
 		incrementalBuild(projectPath);
 		expectingProblemsFor(
 			pathToAB,
 			"Problem : AZ cannot be resolved to a type [ resource : </Project/src/p/AB.java> range : <36,38> category : <40> severity : <2>]"
 		);
-		expectingSpecificProblemFor(pathToAB, new Problem("AB", "AZ cannot be resolved to a type", pathToAB, 36, 38, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(pathToAB, new Problem("AB", "AZ cannot be resolved to a type", pathToAB, 36, 38, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class AA {}	\n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p;	\n"+
+			"public class AA {}	\n"+
+			"class AZ {}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
@@ -281,244 +281,244 @@ public class IncrementalTests extends BuilderTests {
 	 * case 2
 	 */
 	public void testRemoveSecondaryType2() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class AA {}	\n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p;	\n"+
+			"public class AA {}	\n"+
+			"class AZ {}");
 
-		env.addClass(root, "p", "AB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class AB extends AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AB",
+			"package p;	\n"+
+			"public class AB extends AZ {}");
 
-		IPath pathToBB = env.addClass(root, "p", "BB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class BB {	\n"+ //$NON-NLS-1$
-			"	void foo(){	\n" + //$NON-NLS-1$
-			"		System.out.println(new AB());	\n" + //$NON-NLS-1$
-			"		System.out.println(new ZA());	\n" + //$NON-NLS-1$
-			"	}	\n" + //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
+		IPath pathToBB = env.addClass(root, "p", "BB",
+			"package p;	\n"+
+			"public class BB {	\n"+
+			"	void foo(){	\n" +
+			"		System.out.println(new AB());	\n" +
+			"		System.out.println(new ZA());	\n" +
+			"	}	\n" +
+			"}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class ZZ {}	\n"+ //$NON-NLS-1$
-			"class ZA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p;	\n"+
+			"public class ZZ {}	\n"+
+			"class ZA {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
 		/* Remove ZA and touch BB */
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class ZZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p;	\n"+
+			"public class ZZ {}");
 
-		pathToBB = env.addClass(root, "p", "BB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class BB {	\n"+ //$NON-NLS-1$
-			"	void foo() {	\n" + //$NON-NLS-1$
-			"		System.out.println(new AB());	\n" + //$NON-NLS-1$
-			"		System.out.println(new ZA());	\n" + //$NON-NLS-1$
-			"	}	\n" + //$NON-NLS-1$
-			"}"); //$NON-NLS-1$
+		pathToBB = env.addClass(root, "p", "BB",
+			"package p;	\n"+
+			"public class BB {	\n"+
+			"	void foo() {	\n" +
+			"		System.out.println(new AB());	\n" +
+			"		System.out.println(new ZA());	\n" +
+			"	}	\n" +
+			"}");
 
 		incrementalBuild(projectPath);
 		expectingProblemsFor(
 			pathToBB,
 			"Problem : ZA cannot be resolved to a type [ resource : </Project/src/p/BB.java> range : <104,106> category : <40> severity : <2>]"
 		);
-		expectingSpecificProblemFor(pathToBB, new Problem("BB.foo()", "ZA cannot be resolved to a type", pathToBB, 104, 106, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(pathToBB, new Problem("BB.foo()", "ZA cannot be resolved to a type", pathToBB, 104, 106, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;	\n"+ //$NON-NLS-1$
-			"public class ZZ {}	\n"+ //$NON-NLS-1$
-			"class ZA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p;	\n"+
+			"public class ZZ {}	\n"+
+			"class ZA {}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 	}
 
 	public void testMoveSecondaryType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AA {} \n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p; \n"+
+			"public class AA {} \n"+
+			"class AZ {}");
 
-		env.addClass(root, "p", "AB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AB extends AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AB",
+			"package p; \n"+
+			"public class AB extends AZ {}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class ZZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p; \n"+
+			"public class ZZ {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
 		/* Move AZ from AA to ZZ */
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p; \n"+
+			"public class AA {}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class ZZ {} \n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p; \n"+
+			"public class ZZ {} \n"+
+			"class AZ {}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 
 		/* Move AZ from ZZ to AA */
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AA {} \n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p; \n"+
+			"public class AA {} \n"+
+			"class AZ {}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class ZZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p; \n"+
+			"public class ZZ {}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 	}
 
 	public void testMoveMemberType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AA {} \n"+ //$NON-NLS-1$
-			"class AZ {static class M{}}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p; \n"+
+			"public class AA {} \n"+
+			"class AZ {static class M{}}");
 
-		env.addClass(root, "p", "AB", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"import p.AZ.*; \n"+ //$NON-NLS-1$
-			"import p.ZA.*; \n"+ //$NON-NLS-1$
-			"public class AB extends M {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AB",
+			"package p; \n"+
+			"import p.AZ.*; \n"+
+			"import p.ZA.*; \n"+
+			"public class AB extends M {}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class ZZ {} \n"+ //$NON-NLS-1$
-			"class ZA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p; \n"+
+			"public class ZZ {} \n"+
+			"class ZA {}");
 
 		fullBuild(projectPath);
 		expectingOnlySpecificProblemsFor(
-			root, 
-			new Problem[]{ 
-				new Problem("", "The import p.ZA is never used", new Path("/Project/src/p/AB.java"), 35, 39, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			root,
+			new Problem[]{
+				new Problem("", "The import p.ZA is never used", new Path("/Project/src/p/AB.java"), 35, 39, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING),
 			});
 
 		/* Move M from AA to ZZ */
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AA {} \n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p; \n"+
+			"public class AA {} \n"+
+			"class AZ {}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class ZZ {} \n"+ //$NON-NLS-1$
-			"class ZA {static class M{}}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p; \n"+
+			"public class ZZ {} \n"+
+			"class ZA {static class M{}}");
 
 		incrementalBuild(projectPath);
 		expectingOnlySpecificProblemsFor(
-			root, 
-			new Problem[]{ 
-				new Problem("", "The import p.AZ is never used", new Path("/Project/src/p/AB.java"), 19, 23, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			root,
+			new Problem[]{
+				new Problem("", "The import p.AZ is never used", new Path("/Project/src/p/AB.java"), 19, 23, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING),
 			});
 
 		/* Move M from ZZ to AA */
-		env.addClass(root, "p", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class AA {} \n"+ //$NON-NLS-1$
-			"class AZ {static class M{}}"); //$NON-NLS-1$
+		env.addClass(root, "p", "AA",
+			"package p; \n"+
+			"public class AA {} \n"+
+			"class AZ {static class M{}}");
 
-		env.addClass(root, "p", "ZZ", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class ZZ {} \n"+ //$NON-NLS-1$
-			"class ZA {}"); //$NON-NLS-1$
+		env.addClass(root, "p", "ZZ",
+			"package p; \n"+
+			"public class ZZ {} \n"+
+			"class ZA {}");
 
 		incrementalBuild(projectPath);
 		expectingOnlySpecificProblemsFor(
-			root, 
-			new Problem[]{ 
-				new Problem("", "The import p.ZA is never used", new Path("/Project/src/p/AB.java"), 35, 39, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			root,
+			new Problem[]{
+				new Problem("", "The import p.ZA is never used", new Path("/Project/src/p/AB.java"), 35, 39, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING),
 			});
 	}
 
 	public void testMovePackage() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath[] exclusionPatterns = new Path[] {new Path("src2/")}; //$NON-NLS-1$
-		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", exclusionPatterns, null); //$NON-NLS-1$ 
-		IPath src2 = env.addPackageFragmentRoot(projectPath, "src1/src2"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath[] exclusionPatterns = new Path[] {new Path("src2/")};
+		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", exclusionPatterns, null);
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src1/src2");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(src1, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class A {}"); //$NON-NLS-1$
+		env.addClass(src1, "p", "A",
+			"package p; \n"+
+			"public class A {}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
-		env.removePackage(src1, "p"); //$NON-NLS-1$
-		env.addClass(src2, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class A {}"); //$NON-NLS-1$
+		env.removePackage(src1, "p");
+		env.addClass(src2, "p", "A",
+			"package p; \n"+
+			"public class A {}");
 
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 	}
 
 	public void testMovePackage2() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$ 
-		IPath other = env.addFolder(projectPath, "other"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src = env.addPackageFragmentRoot(projectPath, "src");
+		IPath other = env.addFolder(projectPath, "other");
+		env.setOutputFolder(projectPath, "bin");
 
-		IPath classA = env.addClass(src, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class A extends Missing {}"); //$NON-NLS-1$
-		IPath classB = env.addClass(src, "p.q", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p.q; \n"+ //$NON-NLS-1$
-			"public class B extends Missing {}"); //$NON-NLS-1$
+		IPath classA = env.addClass(src, "p", "A",
+			"package p; \n"+
+			"public class A extends Missing {}");
+		IPath classB = env.addClass(src, "p.q", "B",
+			"package p.q; \n"+
+			"public class B extends Missing {}");
 
 		fullBuild(projectPath);
 		expectingSpecificProblemFor(
-			classA, 
-			new Problem("", "Missing cannot be resolved to a type", new Path("/Project/src/p/A.java"), 35, 42, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
+			classA,
+			new Problem("", "Missing cannot be resolved to a type", new Path("/Project/src/p/A.java"), 35, 42, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)
 		);
 		expectingSpecificProblemFor(
-			classB, 
-			new Problem("", "Missing cannot be resolved to a type", new Path("/Project/src/p/q/B.java"), 37, 44, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
+			classB,
+			new Problem("", "Missing cannot be resolved to a type", new Path("/Project/src/p/q/B.java"), 37, 44, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)
 		);
-		
+
 		try {
 			IProject p = env.getProject(projectPath);
 			IFolder pFolder = p.getWorkspace().getRoot().getFolder(classA.removeLastSegments(1));
@@ -532,49 +532,49 @@ public class IncrementalTests extends BuilderTests {
 	}
 
 	public void testMemberTypeFromClassFile() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class A extends Z {M[] m;}"); //$NON-NLS-1$
+		env.addClass(root, "p", "A",
+			"package p; \n"+
+			"public class A extends Z {M[] m;}");
 
-		env.addClass(root, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class B {A a; E e; \n"+ //$NON-NLS-1$
-			"void foo() { System.out.println(a.m); }}"); //$NON-NLS-1$
+		env.addClass(root, "p", "B",
+			"package p; \n"+
+			"public class B {A a; E e; \n"+
+			"void foo() { System.out.println(a.m); }}");
 
-		env.addClass(root, "p", "E", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class E extends Z { \n"+ //$NON-NLS-1$
-			"void foo() { System.out.println(new M()); }}"); //$NON-NLS-1$
+		env.addClass(root, "p", "E",
+			"package p; \n"+
+			"public class E extends Z { \n"+
+			"void foo() { System.out.println(new M()); }}");
 
-		env.addClass(root, "p", "Z", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class Z {static class M {}}"); //$NON-NLS-1$
+		env.addClass(root, "p", "Z",
+			"package p; \n"+
+			"public class Z {static class M {}}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
 
-		env.addClass(root, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class B {A a; E e; \n"+ //$NON-NLS-1$
-			"void foo( ) { System.out.println(a.m); }}"); //$NON-NLS-1$
+		env.addClass(root, "p", "B",
+			"package p; \n"+
+			"public class B {A a; E e; \n"+
+			"void foo( ) { System.out.println(a.m); }}");
 
-		env.addClass(root, "p", "E", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class E extends Z { \n"+ //$NON-NLS-1$
-			"void foo( ) { System.out.println(new M()); }}"); //$NON-NLS-1$
+		env.addClass(root, "p", "E",
+			"package p; \n"+
+			"public class E extends Z { \n"+
+			"void foo( ) { System.out.println(new M()); }}");
 
-		env.addClass(root, "p", "Z", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p; \n"+ //$NON-NLS-1$
-			"public class Z { static class M {} }"); //$NON-NLS-1$
+		env.addClass(root, "p", "Z",
+			"package p; \n"+
+			"public class Z { static class M {} }");
 
 		int previous = org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE;
 		org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = 1; // reduce the lot size
@@ -582,139 +582,139 @@ public class IncrementalTests extends BuilderTests {
 		org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = previous;
 		expectingNoProblems();
 	}
-	
+
 	// http://dev.eclipse.org/bugs/show_bug.cgi?id=27658
 	public void testObjectWithSuperInterfaces() throws JavaModelException {
 		try {
-			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+			IPath projectPath = env.addProject("Project");
 			env.addExternalJars(projectPath, Util.getJavaClassLibs());
-	
+
 			// remove old package fragment root so that names don't collide
-			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-	
-			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-	
-			env.addClass(root, "java.lang", "Object", //$NON-NLS-1$ //$NON-NLS-2$
-				"package java.lang; \n"+ //$NON-NLS-1$
-				"public class Object implements I {} \n"+ //$NON-NLS-1$
-				"interface I {}	\n");	//$NON-NLS-1$
-	
+			env.removePackageFragmentRoot(projectPath, "");
+
+			IPath root = env.addPackageFragmentRoot(projectPath, "src");
+			env.setOutputFolder(projectPath, "bin");
+
+			env.addClass(root, "java.lang", "Object",
+				"package java.lang; \n"+
+				"public class Object implements I {} \n"+
+				"interface I {}	\n");
+
 			fullBuild(projectPath);
 
 			expectingOnlySpecificProblemsFor(
-				root, 
+				root,
 				new Problem[]{
-					new Problem("", "The type java.lang.Object cannot have a superclass or superinterfaces", new Path("/Project/src/java/lang/Object.java"), 33, 39, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
-				});
-	
-			env.addClass(root, "p", "X", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p; \n"+ //$NON-NLS-1$
-				"public class X {}\n"); //$NON-NLS-1$
-	
-			incrementalBuild(projectPath);
-	
-			expectingOnlySpecificProblemsFor(
-				root, 
-				new Problem[]{
-					new Problem("", "The type java.lang.Object cannot have a superclass or superinterfaces", new Path("/Project/src/java/lang/Object.java"), 33, 39, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
+					new Problem("", "The type java.lang.Object cannot have a superclass or superinterfaces", new Path("/Project/src/java/lang/Object.java"), 33, 39, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR),
 				});
 
-			env.addClass(root, "p", "Y", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p; \n"+ //$NON-NLS-1$
-				"public class Y extends X {}\n"); //$NON-NLS-1$
-	
+			env.addClass(root, "p", "X",
+				"package p; \n"+
+				"public class X {}\n");
+
 			incrementalBuild(projectPath);
 
 			expectingOnlySpecificProblemsFor(
-				root, 
+				root,
 				new Problem[]{
-					new Problem("", "The type java.lang.Object cannot have a superclass or superinterfaces", new Path("/Project/src/java/lang/Object.java"), 33, 39, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
+					new Problem("", "The type java.lang.Object cannot have a superclass or superinterfaces", new Path("/Project/src/java/lang/Object.java"), 33, 39, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR),
+				});
+
+			env.addClass(root, "p", "Y",
+				"package p; \n"+
+				"public class Y extends X {}\n");
+
+			incrementalBuild(projectPath);
+
+			expectingOnlySpecificProblemsFor(
+				root,
+				new Problem[]{
+					new Problem("", "The type java.lang.Object cannot have a superclass or superinterfaces", new Path("/Project/src/java/lang/Object.java"), 33, 39, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR),
 				});
 
 		} catch(StackOverflowError e){
-			assertTrue("Infinite loop in cycle detection", false); //$NON-NLS-1$
+			assertTrue("Infinite loop in cycle detection", false);
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
-	 * Bugs 6461 
+	 * Bugs 6461
 	 * TODO excluded test
 	 */
 	public void _testWrongCompilationUnitLocation() throws JavaModelException {
 		//----------------------------
 		//           Step 1
 		//----------------------------
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		IPath x = env.addClass(root, "", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class X {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		IPath bin = env.setOutputFolder(projectPath, "bin");
+		IPath x = env.addClass(root, "", "X",
+			"public class X {\n"+
+			"}\n"
 			);
 
-		
+
 		fullBuild();
 		expectingNoProblems();
-		expectingPresenceOf(bin.append("X.class")); //$NON-NLS-1$
-		
+		expectingPresenceOf(bin.append("X.class"));
+
 		//----------------------------
 		//           Step 2
 		//----------------------------
-		env.addClass(root, "", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class X {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(root, "", "X",
+			"package p1;\n"+
+			"public class X {\n"+
+			"}\n"
 			);
-			
+
 		incrementalBuild();
 		expectingProblemsFor(x, "???");
-		expectingNoPresenceOf(bin.append("X.class")); //$NON-NLS-1$
+		expectingNoPresenceOf(bin.append("X.class"));
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=100631
 	public void testMemberTypeCollisionWithBinary() throws JavaModelException {
 		int max = org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE;
 		try {
-			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+			IPath projectPath = env.addProject("Project");
 			env.addExternalJars(projectPath, Util.getJavaClassLibs());
-	
-			// remove old package fragment root so that names don't collide
-			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-	
-			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-			env.addClass(root, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-				"public class A {\n"+ //$NON-NLS-1$
-				"	Object foo(B b) { return b.i; }\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
-			env.addClass(root, "", "B", //$NON-NLS-1$ //$NON-NLS-2$
-				"public class B {\n"+ //$NON-NLS-1$
-				"	I.InnerType i;\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
-			env.addClass(root, "", "I", //$NON-NLS-1$ //$NON-NLS-2$
-				"public interface I {\n"+ //$NON-NLS-1$
-				"	interface InnerType {}\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, "");
+
+			IPath root = env.addPackageFragmentRoot(projectPath, "src");
+			env.setOutputFolder(projectPath, "bin");
+
+			env.addClass(root, "", "A",
+				"public class A {\n"+
+				"	Object foo(B b) { return b.i; }\n" +
+				"}");
+			env.addClass(root, "", "B",
+				"public class B {\n"+
+				"	I.InnerType i;\n" +
+				"}");
+			env.addClass(root, "", "I",
+				"public interface I {\n"+
+				"	interface InnerType {}\n" +
+				"}");
 
 			fullBuild(projectPath);
 			expectingNoProblems();
 
 			org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = 1;
 
-			env.addClass(root, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-				"public class A {\n"+ //$NON-NLS-1$
-				"	Object foo(B b) { return b.i; }\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
-			env.addClass(root, "", "I", //$NON-NLS-1$ //$NON-NLS-2$
-				"public interface I {\n"+ //$NON-NLS-1$
-				"	interface InnerType {}\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
-	
+			env.addClass(root, "", "A",
+				"public class A {\n"+
+				"	Object foo(B b) { return b.i; }\n" +
+				"}");
+			env.addClass(root, "", "I",
+				"public interface I {\n"+
+				"	interface InnerType {}\n" +
+				"}");
+
 			incrementalBuild(projectPath);
 			expectingNoProblems();
 		} finally {
@@ -726,55 +726,55 @@ public class IncrementalTests extends BuilderTests {
 	public void testMemberTypeCollisionWithBinary2() throws JavaModelException {
 		int max = org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE;
 		try {
-			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+			IPath projectPath = env.addProject("Project");
 			env.addExternalJars(projectPath, Util.getJavaClassLibs());
-	
+
 			// remove old package fragment root so that names don't collide
-			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-	
-			IPath src1 = env.addPackageFragmentRoot(projectPath, "src1"); //$NON-NLS-1$
-			IPath bin1 = env.setOutputFolder(projectPath, "bin1"); //$NON-NLS-1$
+			env.removePackageFragmentRoot(projectPath, "");
 
-			env.addClass(src1, "p1", "NoSource", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p1;	\n"+ 
-				"import p2.Foo;\n"+ //$NON-NLS-1$
-				"public class NoSource {\n"+ //$NON-NLS-1$
-				"	public NoSource(Foo.Bar b) {}\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
+			IPath src1 = env.addPackageFragmentRoot(projectPath, "src1");
+			IPath bin1 = env.setOutputFolder(projectPath, "bin1");
 
-			IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "bin2"); //$NON-NLS-1$ //$NON-NLS-2$
+			env.addClass(src1, "p1", "NoSource",
+				"package p1;	\n"+
+				"import p2.Foo;\n"+
+				"public class NoSource {\n"+
+				"	public NoSource(Foo.Bar b) {}\n" +
+				"}");
 
-			env.addClass(src2, "p2", "Foo", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p2; \n"+ 
-				"public class Foo {\n"+ //$NON-NLS-1$
-				"	public static class Bar {\n" + //$NON-NLS-1$
-				"		public static Bar LocalBar = new Bar();\n" + //$NON-NLS-1$
-				"	}\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
+			IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "bin2");
 
-			env.addClass(src2, "p2", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p2; \n"+ 
-				"import p1.NoSource;\n"+ //$NON-NLS-1$
-				"import p2.Foo.Bar;\n"+ //$NON-NLS-1$
-				"public class Test {\n"+ //$NON-NLS-1$
-				"	NoSource nosrc = new NoSource(Bar.LocalBar);\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
+			env.addClass(src2, "p2", "Foo",
+				"package p2; \n"+
+				"public class Foo {\n"+
+				"	public static class Bar {\n" +
+				"		public static Bar LocalBar = new Bar();\n" +
+				"	}\n" +
+				"}");
+
+			env.addClass(src2, "p2", "Test",
+				"package p2; \n"+
+				"import p1.NoSource;\n"+
+				"import p2.Foo.Bar;\n"+
+				"public class Test {\n"+
+				"	NoSource nosrc = new NoSource(Bar.LocalBar);\n" +
+				"}");
 
 			fullBuild(projectPath);
 			expectingNoProblems();
 
-			env.removePackageFragmentRoot(projectPath, "src1"); //$NON-NLS-1$
+			env.removePackageFragmentRoot(projectPath, "src1");
 			env.addClassFolder(projectPath, bin1, false);
 
 			org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = 1;
 
-			env.addClass(src2, "p2", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p2; \n"+ 
-				"import p1.NoSource;\n"+ //$NON-NLS-1$
-				"import p2.Foo.Bar;\n"+ //$NON-NLS-1$
-				"public class Test {\n"+ //$NON-NLS-1$
-				"	NoSource nosrc = new NoSource(Bar.LocalBar);\n" + //$NON-NLS-1$
-				"}");	//$NON-NLS-1$
+			env.addClass(src2, "p2", "Test",
+				"package p2; \n"+
+				"import p1.NoSource;\n"+
+				"import p2.Foo.Bar;\n"+
+				"public class Test {\n"+
+				"	NoSource nosrc = new NoSource(Bar.LocalBar);\n" +
+				"}");
 
 			incrementalBuild(projectPath);
 			expectingNoProblems();
@@ -783,66 +783,66 @@ public class IncrementalTests extends BuilderTests {
 		}
 	}
 
-	
+
 	public void test129316() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.setOutputFolder(projectPath, ""); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "");
 
-		IPath yPath = env.addClass(projectPath, "p", "Y", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;\n" + 
-			"public class Y extends Z {}"); //$NON-NLS-1$
-
-		env.addClass(projectPath, "p", "Z", //$NON-NLS-1$ //$NON-NLS-2$
+		IPath yPath = env.addClass(projectPath, "p", "Y",
 			"package p;\n" +
-			"public class Z {}"); //$NON-NLS-1$
+			"public class Y extends Z {}");
 
-		env.addClass(projectPath, "", "X", //$NON-NLS-1$ //$NON-NLS-2$
+		env.addClass(projectPath, "p", "Z",
+			"package p;\n" +
+			"public class Z {}");
+
+		env.addClass(projectPath, "", "X",
 			"import p.Y;\n" +
 			"public class X {\n" +
-			"	boolean b(Object o) {\n" + 
-			"		return o instanceof Y;\n" + 
+			"	boolean b(Object o) {\n" +
+			"		return o instanceof Y;\n" +
 			"    }\n" +
-			"}"); //$NON-NLS-1$
+			"}");
 
 		fullBuild(projectPath);
 		expectingNoProblems();
-		
-		env.addClass(projectPath, "p", "Y", //$NON-NLS-1$ //$NON-NLS-2$
+
+		env.addClass(projectPath, "p", "Y",
 				"package p;\n" +
-				"public class Y extends Zork {}"); //$NON-NLS-1$
+				"public class Y extends Zork {}");
 
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(yPath, new Problem("Y", "Zork cannot be resolved to a type", yPath, 34, 38, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(yPath, new Problem("Y", "Zork cannot be resolved to a type", yPath, 34, 38, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 
-		IPath xPath = env.addClass(projectPath, "", "X", //$NON-NLS-1$ //$NON-NLS-2$
+		IPath xPath = env.addClass(projectPath, "", "X",
 				"public class X {\n" +
-				"	boolean b(Object o) {\n" + 
-				"		return o instanceof p.Y;\n" + 
+				"	boolean b(Object o) {\n" +
+				"		return o instanceof p.Y;\n" +
 				"    }\n" +
-				"}"); //$NON-NLS-1$
+				"}");
 
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(yPath, new Problem("Y", "Zork cannot be resolved to a type", yPath, 34, 38, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(yPath, new Problem("Y", "Zork cannot be resolved to a type", yPath, 34, 38, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 		expectingNoProblemsFor(xPath);
 	}
 
 	public void testSecondaryType() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "", "AB", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class AB { AZ z = new AA();}"); //$NON-NLS-1$
+		env.addClass(root, "", "AB",
+			"public class AB { AZ z = new AA();}");
 
-		env.addClass(root, "", "AA", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class AA extends AZ {} \n"+ //$NON-NLS-1$
-			"class AZ {}"); //$NON-NLS-1$
+		env.addClass(root, "", "AA",
+			"public class AA extends AZ {} \n"+
+			"class AZ {}");
 
 		int max = org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE;
 		try {
@@ -853,133 +853,133 @@ public class IncrementalTests extends BuilderTests {
 		}
 		expectingNoProblems();
 	}
-	
+
 	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType001() throws JavaModelException {
 
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		IPath xPath = env.addClass(root, "p1", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class X {\n"+ //$NON-NLS-1$
-			"	void foo(p2.Y y) {	\n" + //$NON-NLS-1$
-			"		y.bar(null);" + //$NON-NLS-1$
-			"	}\n" + //$NON-NLS-1$
-			"	void X() {}\n" + //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		IPath xPath = env.addClass(root, "p1", "X",
+			"package p1;\n"+
+			"public class X {\n"+
+			"	void foo(p2.Y y) {	\n" +
+			"		y.bar(null);" +
+			"	}\n" +
+			"	void X() {}\n" +
+			"}\n"
 			);
-		IPath yPath = env.addClass(root, "p2", "Y", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p2;\n"+ //$NON-NLS-1$
-			"public class Y {\n"+ //$NON-NLS-1$
-			"	public void bar(Z z) {}\n" + //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		IPath yPath = env.addClass(root, "p2", "Y",
+			"package p2;\n"+
+			"public class Y {\n"+
+			"	public void bar(Z z) {}\n" +
+			"}\n"
 			);
 		fullBuild(projectPath);
-		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingSpecificProblemFor(yPath, new Problem("Y", "Z cannot be resolved to a type", yPath, 46, 47, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		env.addClass(root, "p2", "Z", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p2;\n"+ //$NON-NLS-1$
-			"public class Z {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING));
+		expectingSpecificProblemFor(yPath, new Problem("Y", "Z cannot be resolved to a type", yPath, 46, 47, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
+
+		env.addClass(root, "p2", "Z",
+			"package p2;\n"+
+			"public class Z {\n"+
+			"}\n"
 			);
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING));
 	}
 
 	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType002() throws JavaModelException {
 
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		IPath yPath = env.addClass(root, "p2", "Y", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p2;\n"+ //$NON-NLS-1$
-				"public class Y {\n"+ //$NON-NLS-1$
-				"	public void bar(Z z) {}\n" + //$NON-NLS-1$
-				"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		IPath yPath = env.addClass(root, "p2", "Y",
+				"package p2;\n"+
+				"public class Y {\n"+
+				"	public void bar(Z z) {}\n" +
+				"}\n"
 				);
 		fullBuild(projectPath);
-		expectingSpecificProblemFor(yPath, new Problem("Y", "Z cannot be resolved to a type", yPath, 46, 47, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(yPath, new Problem("Y", "Z cannot be resolved to a type", yPath, 46, 47, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 
-		IPath xPath = env.addClass(root, "p1", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class X {\n"+ //$NON-NLS-1$
-			"	void foo(p2.Y y) {	\n" + //$NON-NLS-1$
-			"		y.bar(null);" + //$NON-NLS-1$
-			"	}\n" + //$NON-NLS-1$
-			"	void X() {}\n" + //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		IPath xPath = env.addClass(root, "p1", "X",
+			"package p1;\n"+
+			"public class X {\n"+
+			"	void foo(p2.Y y) {	\n" +
+			"		y.bar(null);" +
+			"	}\n" +
+			"	void X() {}\n" +
+			"}\n"
 			);
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingSpecificProblemFor(yPath, new Problem("Y", "Z cannot be resolved to a type", yPath, 46, 47, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		env.addClass(root, "p2", "Z", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p2;\n"+ //$NON-NLS-1$
-			"public class Z {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING));
+		expectingSpecificProblemFor(yPath, new Problem("Y", "Z cannot be resolved to a type", yPath, 46, 47, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
+
+		env.addClass(root, "p2", "Z",
+			"package p2;\n"+
+			"public class Z {\n"+
+			"}\n"
 			);
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING));
 	}
 
 	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType003() throws JavaModelException {
 
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		IPath yPath = env.addClass(root, "p2", "Y", //$NON-NLS-1$ //$NON-NLS-2$
-				"package p2;\n"+ //$NON-NLS-1$
-				"public class Y {\n"+ //$NON-NLS-1$
-				"	public void bar(p1.Z z) {}\n" + //$NON-NLS-1$
-				"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		IPath yPath = env.addClass(root, "p2", "Y",
+				"package p2;\n"+
+				"public class Y {\n"+
+				"	public void bar(p1.Z z) {}\n" +
+				"}\n"
 				);
 		fullBuild(projectPath);
-		expectingSpecificProblemFor(yPath, new Problem("Y", "p1 cannot be resolved to a type", yPath, 46, 48, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(yPath, new Problem("Y", "p1 cannot be resolved to a type", yPath, 46, 48, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
 
-		IPath xPath = env.addClass(root, "p1", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class X {\n"+ //$NON-NLS-1$
-			"	void foo(p2.Y y) {	\n" + //$NON-NLS-1$
-			"		y.bar(null);" + //$NON-NLS-1$
-			"	}\n" + //$NON-NLS-1$
-			"	void X() {}\n" + //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		IPath xPath = env.addClass(root, "p1", "X",
+			"package p1;\n"+
+			"public class X {\n"+
+			"	void foo(p2.Y y) {	\n" +
+			"		y.bar(null);" +
+			"	}\n" +
+			"	void X() {}\n" +
+			"}\n"
 			);
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingSpecificProblemFor(yPath, new Problem("Y", "p1.Z cannot be resolved to a type", yPath, 46, 50, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		env.addClass(root, "p1", "Z", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Z {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING));
+		expectingSpecificProblemFor(yPath, new Problem("Y", "p1.Z cannot be resolved to a type", yPath, 46, 50, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
+
+		env.addClass(root, "p1", "Z",
+			"package p1;\n"+
+			"public class Z {\n"+
+			"}\n"
 			);
 		incrementalBuild(projectPath);
-		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingSpecificProblemFor(xPath, new Problem("X", "This method has a constructor name", xPath, 73, 76, CategorizedProblem.CAT_CODE_STYLE, IMarker.SEVERITY_WARNING));
 	}
 }

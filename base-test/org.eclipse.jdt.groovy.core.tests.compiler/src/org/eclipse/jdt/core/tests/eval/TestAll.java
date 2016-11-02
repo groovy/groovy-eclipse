@@ -11,6 +11,7 @@
 package org.eclipse.jdt.core.tests.eval;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 
@@ -24,8 +25,10 @@ public TestAll(String name) {
 	super(name);
 }
 public static Test suite() {
-	if (System.getProperty("os.name").indexOf("Linux") == -1) {//$NON-NLS-1$//$NON-NLS-2$
-		ArrayList testClasses = new ArrayList();
+	// Disable evaluation tests on Linux
+	if (System.getProperty("os.name").indexOf("Linux") == -1) {
+		List<Class<? extends Test>> testClasses = new ArrayList<Class<? extends Test>>();
+
 		testClasses.add(SanityTestEvaluationContext.class);
 		testClasses.add(SanityTestEvaluationResult.class);
 		testClasses.add(VariableTest.class);
@@ -33,10 +36,9 @@ public static Test suite() {
 		testClasses.add(NegativeCodeSnippetTest.class);
 		testClasses.add(NegativeVariableTest.class);
 		testClasses.add(DebugEvaluationTest.class);
-		
+
 		return AbstractCompilerTest.buildAllCompliancesTestSuite(TestAll.class, DebugEvaluationSetup.class, testClasses);
 	}
-	// Disable evaluation tests on Linux
 	return new TestSuite(TestAll.class.getName());
 }
 }

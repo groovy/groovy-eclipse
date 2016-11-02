@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +18,7 @@ package org.codehaus.groovy.frameworkadapter.util;
 import org.osgi.framework.Version;
 
 public enum SpecifiedVersion {
-    _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), 
+    _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"),
     _19(1, 9, "19"), _20(2, 0, "20"), _21(2,1,"21"),
     _22(2,2,"22"),_23(2,3,"23"),_24(2,4,"24"),DONT_CARE(0, 0, "-1"), UNSPECIFIED(0, 0, "0");
     public final int majorVersion;
@@ -32,11 +30,11 @@ public enum SpecifiedVersion {
         this.minorVersion = minorVersion;
         this.versionName = versionName;
     }
-    
+
     public String toVersionString() {
         return "[" + majorVersion + "." + minorVersion + "."  + 0 + "," + majorVersion + "." + minorVersion + "."  + 99 + ")";
     }
-    
+
     public String toReadableVersionString() {
         if (this == UNSPECIFIED) {
             return "unspecified";
@@ -46,8 +44,8 @@ public enum SpecifiedVersion {
             return majorVersion + "." + minorVersion;
         }
     }
-    
-    
+
+
     /**
      * Generates a {@link SpecifiedVersion} from a name of a groovy jar
      *
@@ -95,7 +93,7 @@ public enum SpecifiedVersion {
                                     return _24;
                             }
                             break;
-    
+
                     }
                 } catch (NumberFormatException e) {
                     // can ignore just return unspecified
@@ -109,7 +107,7 @@ public enum SpecifiedVersion {
         if (compilerLevel == null) {
             return UNSPECIFIED;
         }
-        
+
         if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
             return _16;
         }
@@ -143,8 +141,8 @@ public enum SpecifiedVersion {
         if ("-1".equals(compilerLevel)) {
             return DONT_CARE;
         }
-        
-        System.out.println("Invalid Groovy compiler level specified: " + compilerLevel + 
+
+        System.out.println("Invalid Groovy compiler level specified: " + compilerLevel +
                         "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24 or 2.4");
         return UNSPECIFIED;
     }
@@ -164,16 +162,16 @@ public enum SpecifiedVersion {
             case 2:
                 switch (ver.getMinor()) {
                     case 0:
-                        return _20; 
+                        return _20;
                     case 1:
-                        return _21; 
+                        return _21;
                     case 2:
-                        return _22; 
+                        return _22;
                     case 3:
                         return _23;
                     case 4:
-                    	return _24;
-                }                
+                        return _24;
+                }
         }
         return UNSPECIFIED;
     }

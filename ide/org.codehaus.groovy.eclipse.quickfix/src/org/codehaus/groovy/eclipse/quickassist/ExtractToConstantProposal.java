@@ -24,13 +24,11 @@ import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
  * Quick Assist for extracting expression to a constant. Delegates the logic to {@link ExtractGroovyConstantRefactoring}
- *   
- * @author Alex Boyko
  *
+ * @author Alex Boyko
  */
-@SuppressWarnings("restriction")
 public class ExtractToConstantProposal extends TextRefactoringProposal {
-	
+
 	public ExtractToConstantProposal(IInvocationContext context) {
 		super(context, new ExtractGroovyConstantRefactoring(
 				(GroovyCompilationUnit) context.getCompilationUnit(),
@@ -55,7 +53,7 @@ public class ExtractToConstantProposal extends TextRefactoringProposal {
 			return getDisplayString();
 		}
 	}
-	
+
 	@Override
 	protected String getImageBundleLocation() {
 		return JavaPluginImages.IMG_CORRECTION_LOCAL;

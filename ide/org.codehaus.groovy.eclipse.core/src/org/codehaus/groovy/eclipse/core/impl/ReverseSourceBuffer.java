@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,37 +19,37 @@ import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 
 /**
  * A buffer useful for reverse regex.
- * 
+ *
  * @author empovazan
  */
 public class ReverseSourceBuffer implements ISourceBuffer {
-	private ISourceBuffer buffer;
+    private ISourceBuffer buffer;
 
-	private int origin;
+    private int origin;
 
-	public ReverseSourceBuffer(ISourceBuffer buffer, int origin) {
-		this.buffer = buffer;
-		this.origin = origin;
-	}
+    public ReverseSourceBuffer(ISourceBuffer buffer, int origin) {
+        this.buffer = buffer;
+        this.origin = origin;
+    }
 
-	public char charAt(int offset) {
-		char ch = buffer.charAt(origin - offset);
-		return ch;
-	}
+    public char charAt(int offset) {
+        char ch = buffer.charAt(origin - offset);
+        return ch;
+    }
 
-	public int length() {
-		return origin + 1;
-	}
+    public int length() {
+        return origin + 1;
+    }
 
-	public CharSequence subSequence(int start, int end) {
-		return buffer.subSequence(origin - end + 1, origin - start + 1);
-	}
+    public CharSequence subSequence(int start, int end) {
+        return buffer.subSequence(origin - end + 1, origin - start + 1);
+    }
 
-	public int[] toLineColumn(int offset) {
-		throw new UnsupportedOperationException();
-	}
+    public int[] toLineColumn(int offset) {
+        throw new UnsupportedOperationException();
+    }
 
-	public int toOffset(int line, int column) {
-		throw new UnsupportedOperationException();
-	}
+    public int toOffset(int line, int column) {
+        throw new UnsupportedOperationException();
+    }
 }

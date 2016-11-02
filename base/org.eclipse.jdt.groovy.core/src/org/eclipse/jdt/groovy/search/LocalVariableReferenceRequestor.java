@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,75 +32,71 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 
 /**
- * 
  * @author Andrew Eisenberg
  * @created Apr 1, 2010
  */
 public class LocalVariableReferenceRequestor implements ITypeRequestor {
 
-	private List<IRegion> references;
-	private SearchRequestor requestor;
-	private IJavaElement enclosingElement = null;
-	private boolean foundEnclosingElement = false;
-	private String variableName;
-	private int declStart;
-	private SearchParticipant participant;
+    private List<IRegion> references;
+    private SearchRequestor requestor;
+    private IJavaElement enclosingElement = null;
+    private boolean foundEnclosingElement = false;
+    private String variableName;
+    private int declStart;
+    private SearchParticipant participant;
 
-	public LocalVariableReferenceRequestor(Variable variable, IJavaElement enclosingElement) {
-		this(variable.getName(), enclosingElement, null, null, -1);
-	}
+    public LocalVariableReferenceRequestor(Variable variable, IJavaElement enclosingElement) {
+        this(variable.getName(), enclosingElement, null, null, -1);
+    }
 
-	public LocalVariableReferenceRequestor(String name, IJavaElement enclosingElement, SearchRequestor requestor,
-			SearchParticipant participant, int declStart) {
-		references = new ArrayList<IRegion>();
-		this.enclosingElement = enclosingElement;
-		variableName = name;
+    public LocalVariableReferenceRequestor(String name, IJavaElement enclosingElement, SearchRequestor requestor,
+            SearchParticipant participant, int declStart) {
+        references = new ArrayList<IRegion>();
+        this.enclosingElement = enclosingElement;
+        variableName = name;
 
-		this.declStart = declStart;
-		this.requestor = requestor;
-		this.participant = participant;
-	}
+        this.declStart = declStart;
+        this.requestor = requestor;
+        this.participant = participant;
+    }
 
-	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-		if (enclosingElement.equals(this.enclosingElement)) {
-			foundEnclosingElement = true;
-			if (node instanceof Variable && ((Variable) node).getName().equals(variableName)) {
-				IRegion realSourceLocation = getRealSourceLocation(node);
-				references.add(realSourceLocation);
-				if (requestor != null && realSourceLocation.getOffset() >= declStart) {
-					try {
-						requestor.acceptSearchMatch(new LocalVariableReferenceMatch(enclosingElement, SearchMatch.A_ACCURATE,
-								realSourceLocation.getOffset(), realSourceLocation.getLength(), true /* isReadAccess */,
-								true /* isWriteAccess */, false, participant, enclosingElement.getResource()));
-					} catch (CoreException e) {
-						Util.log(e);
-					}
-				}
-			}
-		} else {
-			if (foundEnclosingElement) {
-				// end the visit once we have visited the element we are looking for.
-				return VisitStatus.STOP_VISIT;
-			}
-		}
-		return VisitStatus.CONTINUE;
-	}
+    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        if (enclosingElement.equals(this.enclosingElement)) {
+            foundEnclosingElement = true;
+            if (node instanceof Variable && ((Variable) node).getName().equals(variableName)) {
+                IRegion realSourceLocation = getRealSourceLocation(node);
+                references.add(realSourceLocation);
+                if (requestor != null && realSourceLocation.getOffset() >= declStart) {
+                    try {
+                        requestor.acceptSearchMatch(new LocalVariableReferenceMatch(enclosingElement, SearchMatch.A_ACCURATE,
+                                realSourceLocation.getOffset(), realSourceLocation.getLength(), true /* isReadAccess */,
+                                true /* isWriteAccess */, false, participant, enclosingElement.getResource()));
+                    } catch (CoreException e) {
+                        Util.log(e);
+                    }
+                }
+            }
+        } else {
+            if (foundEnclosingElement) {
+                // end the visit once we have visited the element we are looking for.
+                return VisitStatus.STOP_VISIT;
+            }
+        }
+        return VisitStatus.CONTINUE;
+    }
 
-	/**
-	 * Different behavior if selecting a parameter definition
-	 * 
-	 * @param node
-	 * @return
-	 */
-	private IRegion getRealSourceLocation(ASTNode node) {
-		if (node instanceof Parameter) {
-			Parameter parameter = (Parameter) node;
-			return new Region(parameter.getNameStart(), parameter.getNameEnd() - parameter.getNameStart());
-		}
-		return new Region(node.getStart(), variableName.length());
-	}
+    /**
+     * Different behavior if selecting a parameter definition
+     */
+    private IRegion getRealSourceLocation(ASTNode node) {
+        if (node instanceof Parameter) {
+            Parameter parameter = (Parameter) node;
+            return new Region(parameter.getNameStart(), parameter.getNameEnd() - parameter.getNameStart());
+        }
+        return new Region(node.getStart(), variableName.length());
+    }
 
-	public List<IRegion> getReferences() {
-		return references;
-	}
+    public List<IRegion> getReferences() {
+        return references;
+    }
 }

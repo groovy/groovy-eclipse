@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,12 +65,12 @@ public class FormatGroovyAction extends SelectionDispatchAction {
             return;
         }
 
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
         GroovyEditor groovyEditor = (GroovyEditor) part;
+        GroovyCompilationUnit unit = part.getAdapter(GroovyCompilationUnit.class);
         IDocument doc = groovyEditor.getDocumentProvider().getDocument(groovyEditor.getEditorInput());
 
         if (doc != null && unit != null) {
-            boolean isIndentOnly = kind == FormatKind.INDENT_ONLY;
+            boolean isIndentOnly = (kind == FormatKind.INDENT_ONLY);
             FormatterPreferences preferences = new FormatterPreferences(unit);
             DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(selection, doc, preferences, isIndentOnly);
             TextEdit edit = formatter.format();

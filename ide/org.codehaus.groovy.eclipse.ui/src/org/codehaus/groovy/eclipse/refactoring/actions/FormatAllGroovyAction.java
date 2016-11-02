@@ -130,9 +130,8 @@ public class FormatAllGroovyAction extends FormatAllAction {
             setToolTipText("Indent Groovy file");
             setDescription("Indent Groovy file");
         } else if (kind == FormatKind.FORMAT) {
-            setText("Format");
-            setToolTipText("Format Groovy file");
-            setDescription("Format Groovy file");
+            setToolTipText(getToolTipText().replace("Java", "Groovy"));
+            setDescription(getDescription().replace("Java", "Groovy"));
         }
     }
 
@@ -144,7 +143,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();
             if (part instanceof GroovyEditor) {
-                GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
+                GroovyCompilationUnit unit = part.getAdapter(GroovyCompilationUnit.class);
                 if (unit != null) {
                     super.run(new StructuredSelection(unit));
                 }

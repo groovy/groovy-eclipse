@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,14 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 
 /**
  * Used so that {@link GroovyCompilationUnit} can delegate to another class for its code completion
- * 
+ *
  * @author Andrew Eisenberg
  * @created Dec 3, 2009
  */
 public interface ICodeCompletionDelegate {
-	void codeComplete(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu,
-			org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip, int position, CompletionRequestor requestor,
-			WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor) throws JavaModelException;
+    void codeComplete(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu,
+            org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip, int position, CompletionRequestor requestor,
+            WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor) throws JavaModelException;
 
-	boolean shouldCodeComplete(CompletionRequestor requestor, ITypeRoot typeRoot);
+    boolean shouldCodeComplete(CompletionRequestor requestor, ITypeRoot typeRoot);
 }

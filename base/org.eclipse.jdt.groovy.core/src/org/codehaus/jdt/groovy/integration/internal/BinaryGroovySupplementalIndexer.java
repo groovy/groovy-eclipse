@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,50 +24,49 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 
 /**
- * 
  * @author Andrew Eisenberg
  * @created 2013-04-30
  */
 public class BinaryGroovySupplementalIndexer implements ISupplementalIndexer {
 
-	public List<char[]> extractNamedReferences(byte[] contents, ClassFileReader reader) {
-		int[] constantPoolOffsets = reader.getConstantPoolOffsets();
-		int constantPoolCount = constantPoolOffsets.length;
-		List<char[]> refs = new ArrayList<char[]>();
-		for (int i = 1; i < constantPoolCount; i++) {
-			int tag = reader.u1At(constantPoolOffsets[i]);
-			switch (tag) {
-				case ClassFileConstants.Utf8Tag:
-					char[] strConst = extractStringConstant(constantPoolOffsets, reader, i);
-					if (isValidId(strConst)) {
-						char[][] splits = CharOperation.splitOn('.', strConst);
-						for (char[] split : splits) {
-							refs.add(split);
-						}
-					}
-			}
-		}
-		return refs;
-	}
+    public List<char[]> extractNamedReferences(byte[] contents, ClassFileReader reader) {
+        int[] constantPoolOffsets = reader.getConstantPoolOffsets();
+        int constantPoolCount = constantPoolOffsets.length;
+        List<char[]> refs = new ArrayList<char[]>();
+        for (int i = 1; i < constantPoolCount; i++) {
+            int tag = reader.u1At(constantPoolOffsets[i]);
+            switch (tag) {
+                case ClassFileConstants.Utf8Tag:
+                    char[] strConst = extractStringConstant(constantPoolOffsets, reader, i);
+                    if (isValidId(strConst)) {
+                        char[][] splits = CharOperation.splitOn('.', strConst);
+                        for (char[] split : splits) {
+                            refs.add(split);
+                        }
+                    }
+            }
+        }
+        return refs;
+    }
 
-	private boolean isValidId(char[] strConst) {
-		if (strConst == null || strConst.length == 0) {
-			return false;
-		}
-		if (!(Character.isJavaIdentifierStart(strConst[0]) || strConst[0] == '.') || strConst[0] == '$') {
-			return false;
-		}
-		for (int i = 1; i < strConst.length; i++) {
-			if (!(Character.isJavaIdentifierPart(strConst[i]) || strConst[i] == '.') || strConst[i] == '$') {
-				return false;
-			}
-		}
-		return true;
-	}
+    private boolean isValidId(char[] strConst) {
+        if (strConst == null || strConst.length == 0) {
+            return false;
+        }
+        if (!(Character.isJavaIdentifierStart(strConst[0]) || strConst[0] == '.') || strConst[0] == '$') {
+            return false;
+        }
+        for (int i = 1; i < strConst.length; i++) {
+            if (!(Character.isJavaIdentifierPart(strConst[i]) || strConst[i] == '.') || strConst[i] == '$') {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	private char[] extractStringConstant(int[] constantPoolOffsets, ClassFileReader reader, int index) {
-		int strlen = reader.u2At(constantPoolOffsets[index] + 1); // / +1 for the tag type
-		int strstart = constantPoolOffsets[index] + 3; // +1 for the tag type and +2 for the strlen
-		return reader.utf8At(strstart, strlen);
-	}
+    private char[] extractStringConstant(int[] constantPoolOffsets, ClassFileReader reader, int index) {
+        int strlen = reader.u2At(constantPoolOffsets[index] + 1); // / +1 for the tag type
+        int strstart = constantPoolOffsets[index] + 3; // +1 for the tag type and +2 for the strlen
+        return reader.utf8At(strstart, strlen);
+    }
 }

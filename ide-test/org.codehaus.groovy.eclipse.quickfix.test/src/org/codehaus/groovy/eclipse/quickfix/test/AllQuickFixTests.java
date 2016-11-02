@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ import org.codehaus.groovy.eclipse.quickfix.test.resolvers.GroovyProjectJavaQuic
 import org.codehaus.groovy.eclipse.quickfix.test.resolvers.NonGroovyProjectQuickFixTest;
 
 public class AllQuickFixTests {
-	public static Test suite() throws Exception {
-		final TestSuite suite = new TestSuite(AllQuickFixTests.class.getName());
+    public static Test suite() throws Exception {
+        final TestSuite suite = new TestSuite(AllQuickFixTests.class.getName());
         suite.addTestSuite(GroovyProjectGroovyQuickFixTest.class);
         suite.addTestSuite(GroovyProjectJavaQuickFixTest.class);
         suite.addTestSuite(NonGroovyProjectQuickFixTest.class);
         suite.addTestSuite(QuickAssistTests.class);
-		return suite;
-	}
+        return suite;
+    }
 }

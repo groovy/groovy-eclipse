@@ -3,15 +3,11 @@ package org.codehaus.groovy.eclipse.refactoring.test;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.internal.corext.util.JavaElementResourceMapping;
-import org.eclipse.ltk.core.refactoring.participants.CopyArguments;
-import org.eclipse.ltk.core.refactoring.participants.MoveArguments;
 import org.eclipse.ltk.core.refactoring.participants.RenameArguments;
-
+import org.junit.Assert;
 
 /**
  * Copied from {@link org.eclipse.jdt.ui.tests.refactoring.ParticipantTesting}

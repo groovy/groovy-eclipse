@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.core.builder;
 
-import static org.codehaus.groovy.eclipse.core.util.ListUtil.newList;
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
@@ -43,6 +45,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathAttribute;
 
 public class GroovyClasspathContainer implements IClasspathContainer {
+
     public static final Path CONTAINER_ID = new Path("GROOVY_SUPPORT");
 
     public static final IClasspathAttribute MINIMAL_ATTRIBUTE = new ClasspathAttribute("minimal", "true");
@@ -60,9 +63,9 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     }
 
     public synchronized IClasspathEntry[] getClasspathEntries() {
-    	if (entries == null) {
-    		updateEntries();
-    	}
+        if (entries == null) {
+            updateEntries();
+        }
         return entries;
     }
 
@@ -71,46 +74,50 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     }
 
     private void updateEntries() {
-        final List<IClasspathEntry> newEntries = newList();
         try {
-	    	URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
-	        IPath runtimeJarPath = new Path(groovyURL.getPath());
-	        File srcJarFile = new File(groovyURL.getPath().replace(".jar", "-sources.jar"));
-	        IPath srcJarPath = srcJarFile.exists() ?
-	        		new Path(srcJarFile.getAbsolutePath()) : null;
+            boolean minimalLibraries = hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(JavaCore.create(project)));
 
-	        File javadocJarFile = new File(groovyURL.getPath().replace(".jar", "-javadoc.jar"));
-	        IClasspathAttribute[] attrs;
-	        if (javadocJarFile.exists()) {
-	            String javadocJarPath = javadocJarFile.getAbsolutePath();
-	            final IClasspathAttribute cpattr = new ClasspathAttribute(
-	                    IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME,
-	                    javadocJarPath);
+            Set<URL> libraryUrls = new LinkedHashSet<URL>();
+            libraryUrls.add(CompilerUtils.getExportedGroovyAllJar());
+            if (!minimalLibraries) {
+                libraryUrls.addAll(Arrays.asList(CompilerUtils.getExtraJarsForClasspath()));
+            }
 
-	            attrs = new IClasspathAttribute[] { cpattr };
-	        } else {
-	            attrs = new IClasspathAttribute[0];
-	        }
-	        IClasspathEntry entry = newLibraryEntry(runtimeJarPath,
-	        		srcJarPath, null, null,
-	                attrs, true);
-	        newEntries.add(entry);
+            final List<IClasspathEntry> cpEntries = new ArrayList<IClasspathEntry>(libraryUrls.size());
 
-            if (!hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(JavaCore.create(project)))) {
-                URL[] extraJars = CompilerUtils.getExtraJarsForClasspath();
-                for (URL jar : extraJars) {
-                    IPath jarPath = new Path(jar.getPath());
-                    newEntries.add(newLibraryEntry(jarPath, null, null));
+            for (URL libraryUrl : libraryUrls) {
+                IPath jarPath = new Path(libraryUrl.getPath());
+                IPath srcPath = null;
+
+                // check for sources
+                File srcJarFile = new File(libraryUrl.getPath().replace(".jar", "-sources.jar"));
+                if (srcJarFile.exists()) {
+                    srcPath = new Path(srcJarFile.getAbsolutePath());
                 }
 
-                if (useGroovyLibs()) {
-                    newEntries.addAll(getGroovyJarsInDotGroovyLib());
+                // check for javadoc
+                IClasspathAttribute[] cpAttrs;
+                File docJarFile = new File(libraryUrl.getPath().replace(".jar", "-javadoc.jar"));
+                if (docJarFile.exists()) {
+                    cpAttrs = new IClasspathAttribute[] { new ClasspathAttribute(
+                            IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docJarFile.getAbsolutePath()) };
+                } else {
+                    cpAttrs = new IClasspathAttribute[0];
                 }
-	        }
-	        entries = newEntries.toArray(new IClasspathEntry[0]);
+
+                cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, cpAttrs, true));
+            }
+
+            if (!minimalLibraries && useGroovyLibs()) {
+                cpEntries.addAll(getGroovyJarsInDotGroovyLib());
+            }
+
+            entries = cpEntries.toArray(new IClasspathEntry[cpEntries.size()]);
+
         } catch (Exception e) {
-        	GroovyCore.logException("Problem finding groovy runtime", e);
-        	entries = new IClasspathEntry[0];
+            GroovyCore.logException("Problem finding groovy runtime", e);
+
+            entries = new IClasspathEntry[0];
         }
     }
 
@@ -145,7 +152,6 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     /**
      * Finds all the jars in the ~/.groovy/lib directory and adds them
      * to the classpath
-     * @return
      */
     private Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
         File[] files = CompilerUtils.findJarsInDotGroovyLocation();

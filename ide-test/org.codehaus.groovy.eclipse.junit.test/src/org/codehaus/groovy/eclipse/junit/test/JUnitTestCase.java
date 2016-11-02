@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.junit.test;
 
 import org.eclipse.core.resources.IFile;
@@ -29,16 +33,16 @@ public class JUnitTestCase extends BuilderTests {
     public JUnitTestCase(String name) {
         super(name);
     }
-    
+
     protected IPath createGenericProject() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+        IPath projectPath = env.addProject("Project", "1.5");
         // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+        env.removePackageFragmentRoot(projectPath, "");
         env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addJUnitJar(projectPath);
-        env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+        env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         return projectPath;

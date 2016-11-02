@@ -120,6 +120,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         unit1.discardWorkingCopy();
     }
 
+    @SuppressWarnings("rawtypes")
     public void testGetModuleNode_4() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -500,33 +501,6 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         IMethod method = type.getMethod("m", new String[0]);
         assertEquals("Should have one annotation on field m", 1, method.getAnnotations().length);
         assertSingleMemberAnnotation(method, "p.Target");
-    }
-
-    /**
-     * Only marker annotations or SingleMember annotations whose
-     * member is a class literal are copied over.
-     * This class tests that these other kinds of annotaitons are not copied over
-     */
-    public void testSingleMemberAnnotation_7() throws Exception {
-        IPath root = createAnnotationGroovyProject();
-        env.addGroovyClass(root, "p", "X",
-                "package p;\n" +
-                "@Anno3(\"Hello\")\n"+
-                "@Anno4(value1 = Target.class)\n"+
-                "public class X {\n" +
-                "  public int foo = 5\n"+
-                "  public static void m() {\n"+
-                "    print \"success\"\n"+
-                "  }\n"+
-                "}\n"
-            );
-        incrementalBuild();
-        env.waitForAutoBuild();
-        expectingNoProblems();
-        IFile file = getFile("Project/src/p/X.groovy");
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-        IType type = unit.getType("X");
-        assertEquals("These annotations should not be included in the model", 0, type.getAnnotations().length);
     }
 
     public void testAnonymousInner1() throws Exception {

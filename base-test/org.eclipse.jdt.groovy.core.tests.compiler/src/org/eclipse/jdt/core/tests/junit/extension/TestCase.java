@@ -40,7 +40,7 @@ public class TestCase extends junit.framework.TestCase {
 	// Filters
 	public static final String METHOD_PREFIX = "test";
 	public  static String RUN_ONLY_ID = "ONLY_";
-	
+
 	// Ordering
 	public static final int NO_ORDER = 0;
 	public static final int ALPHABETICAL_SORT = 1;
@@ -123,7 +123,7 @@ public class TestCase extends junit.framework.TestCase {
 	// Debug Log Information
 	public final static File MEM_LOG_FILE;
 	public final static File MEM_LOG_DIR;
-	public static Class CURRENT_CLASS;
+	public static Class<?> CURRENT_CLASS;
 	public static String CURRENT_CLASS_NAME;
 	public final static String STORE_MEMORY;
 	public final static boolean ALL_TESTS_LOG;
@@ -189,7 +189,7 @@ public class TestCase extends junit.framework.TestCase {
 	 * Flag telling if current test is the first of TestSuite it belongs or not.
 	 */
 	private boolean first;
-	
+
 	/**
 	 * Flag telling whether test execution must stop on failure or not.
 	 * Default is true;
@@ -207,7 +207,7 @@ public class TestCase extends junit.framework.TestCase {
 	}
 
 public static void assertEquals(String expected, String actual) {
-    assertEquals(null, expected, actual);
+	assertEquals(null, expected, actual);
 }
 public static void assertEquals(String message, String expected, String actual) {
 	assertStringEquals(message, expected, actual, true);
@@ -229,20 +229,20 @@ public static void assertStringEquals(String message, String expected, String ac
 	if (showLineSeparators) {
 		final String expectedWithLineSeparators = showLineSeparators(expected);
 		final String actualWithLineSeparators = showLineSeparators(actual);
-		formatted.append("\n----------- Expected ------------\n"); //$NON-NLS-1$
+		formatted.append("\n----------- Expected ------------\n");
 		formatted.append(expectedWithLineSeparators);
-		formatted.append("\n------------ but was ------------\n"); //$NON-NLS-1$
+		formatted.append("\n------------ but was ------------\n");
 		formatted.append(actualWithLineSeparators);
-		formatted.append("\n--------- Difference is ----------\n"); //$NON-NLS-1$
+		formatted.append("\n--------- Difference is ----------\n");
 		throw new ComparisonFailure(formatted.toString(),
-			    expectedWithLineSeparators, 
-			    actualWithLineSeparators);
+				expectedWithLineSeparators,
+				actualWithLineSeparators);
 	} else {
-		formatted.append("\n----------- Expected ------------\n"); //$NON-NLS-1$
+		formatted.append("\n----------- Expected ------------\n");
 		formatted.append(expected);
-		formatted.append("\n------------ but was ------------\n"); //$NON-NLS-1$
+		formatted.append("\n------------ but was ------------\n");
 		formatted.append(actual);
-		formatted.append("\n--------- Difference is ----------\n"); //$NON-NLS-1$
+		formatted.append("\n--------- Difference is ----------\n");
 		throw new ComparisonFailure(formatted.toString(),  expected, actual);
 	}
 }
@@ -394,7 +394,7 @@ private void printAssertionFailure(AssertionFailedError afe) {
  * 	}
  * </pre>
  * This test suite will have only test "testONLY_100" put in test suite while running it.
- * 
+ *
  * Note that these 2 mechanisms should be reset while executing "global" test suites.
  * For example:
  * <pre>
@@ -414,11 +414,11 @@ private void printAssertionFailure(AssertionFailedError afe) {
  * </pre>
  * This will insure you that all tests will be put in TestAll test suite, even if static variables
  * values are set or some methods start as testONLY_...
- * 
+ *
  * @param evaluationTestClass the test suite class
  * @return a list ({@link List}) of tests ({@link Test}).
  */
-public static List buildTestsList(Class evaluationTestClass) {
+public static List<Test> buildTestsList(Class<? extends Test> evaluationTestClass) {
 	return buildTestsList(evaluationTestClass, 0/*only one level*/, ORDERING);
 }
 
@@ -427,12 +427,12 @@ public static List buildTestsList(Class evaluationTestClass) {
  * <br>
  * Differ from {@link #buildTestsList(Class)} in the fact that one
  * can specify level of recursion in hierarchy to find additional tests.
- * 
+ *
  * @param evaluationTestClass the test suite class
  * @param inheritedDepth level of recursion in top-level hierarchy to find other tests
  * @return a {@link List list} of {@link Test tests}.
  */
-public static List buildTestsList(Class evaluationTestClass, int inheritedDepth) {
+public static List<Test> buildTestsList(Class<? extends Test> evaluationTestClass, int inheritedDepth) {
 	return buildTestsList(evaluationTestClass, inheritedDepth, ORDERING);
 }
 
@@ -472,22 +472,22 @@ public static List buildTestsList(Class evaluationTestClass, int inheritedDepth)
  * </pre>
  * Returned list will have 5 tests if inheritedDepth is equals to 1 instead of
  * 3 if it was 0 as while calling by {@link #buildTestsList(Class)}.
- * 
+ *
  * @see #buildTestsList(Class) for complete explanation of subsets mechanisms.
- * 
+ *
  * @param evaluationTestClass the test suite class
  * @param inheritedDepth level of recursion in top-level hierarchy to find other tests
  * @param ordering kind of sort use for the list (see {@link #ORDERING} for possible values)
  * @return a {@link List list } of {@link Test tests}
  */
-public static List buildTestsList(Class evaluationTestClass, int inheritedDepth, long ordering) {
-	List tests = new ArrayList();
-	List testNames = new ArrayList();
-	List onlyNames = new ArrayList();
-	Constructor constructor = null;
+public static List<Test> buildTestsList(Class<? extends Test> evaluationTestClass, int inheritedDepth, long ordering) {
+	List<Test> tests = new ArrayList<Test>();
+	List<String> testNames = new ArrayList<String>();
+	List<String> onlyNames = new ArrayList<String>();
+	Constructor<? extends Test> constructor = null;
 	try {
 		// Get class constructor
-		Class[] paramTypes = new Class[] { String.class };
+		Class<?>[] paramTypes = new Class[] { String.class };
 		constructor = evaluationTestClass.getConstructor(paramTypes);
 	}
 	catch (Exception e) {
@@ -497,7 +497,7 @@ public static List buildTestsList(Class evaluationTestClass, int inheritedDepth,
 
 	// Get all tests from "test%" methods
 	Method[] methods = evaluationTestClass.getDeclaredMethods();
-	Class evaluationTestSuperclass = evaluationTestClass.getSuperclass();
+	Class<?> evaluationTestSuperclass = evaluationTestClass.getSuperclass();
 	for (int i=0; i<inheritedDepth && !Flags.isAbstract(evaluationTestSuperclass.getModifiers()); i++) {
 		Method[] superMethods = evaluationTestSuperclass.getDeclaredMethods();
 		Method[] mergedMethods = new Method[methods.length+superMethods.length];
@@ -591,7 +591,7 @@ public static List buildTestsList(Class evaluationTestClass, int inheritedDepth,
 	}
 
 	// Order tests
-	List names = onlyNames.size() > 0 ? onlyNames : testNames;
+	List<String> names = onlyNames.size() > 0 ? onlyNames : testNames;
 	if (ordering == ALPHA_REVERSE_SORT) {
 		Collections.sort(names, Collections.reverseOrder());
 	} else if (ordering == ALPHABETICAL_SORT) {
@@ -601,9 +601,9 @@ public static List buildTestsList(Class evaluationTestClass, int inheritedDepth,
 	}
 
 	// Add corresponding tests
-	Iterator iterator = names.iterator();
+	Iterator<String> iterator = names.iterator();
 	while (iterator.hasNext()) {
-		String testName = (String) iterator.next();
+		String testName = iterator.next();
 		try {
 			tests.add(constructor.newInstance(new Object[] { testName } ));
 		}
@@ -618,32 +618,32 @@ public static List buildTestsList(Class evaluationTestClass, int inheritedDepth,
  * Build a test suite with all tests computed from public methods starting with "test"
  * found in the given test class.
  * Test suite name is the name of the given test class.
- * 
+ *
  * Note that this lis maybe reduced using some mechanisms detailed in {@link #buildTestsList(Class)} method.
- * 
+ *
  * @param evaluationTestClass
- * @return a {@link Test test suite} 
+ * @return a {@link Test test suite}
  */
-public static Test buildTestSuite(Class evaluationTestClass) {
-	return buildTestSuite(evaluationTestClass, null); //$NON-NLS-1$
+public static Test buildTestSuite(Class<? extends Test> evaluationTestClass) {
+	return buildTestSuite(evaluationTestClass, null);
 }
 
 /**
  * Build a test suite with all tests computed from public methods starting with "test"
  * found in the given test class.
  * Test suite name is the given name.
- * 
+ *
  * Note that this lis maybe reduced using some mechanisms detailed in {@link #buildTestsList(Class)} method.
- * 
+ *
  * @param evaluationTestClass
  * @param suiteName
- * @return a test suite ({@link Test}) 
+ * @return a test suite ({@link Test})
  */
-public static Test buildTestSuite(Class evaluationTestClass, String suiteName) {
+public static Test buildTestSuite(Class<? extends Test> evaluationTestClass, String suiteName) {
 	TestSuite suite = new TestSuite(suiteName==null?evaluationTestClass.getName():suiteName);
-	List tests = buildTestsList(evaluationTestClass);
+	List<Test> tests = buildTestsList(evaluationTestClass);
 	for (int index=0, size=tests.size(); index<size; index++) {
-		suite.addTest((Test)tests.get(index));
+		suite.addTest(tests.get(index));
 	}
 	return suite;
 }
@@ -654,9 +654,10 @@ private static File createMemLogFile() {
 	}
 	// Get file (create if necessary)
 	File logFile = new File(MEM_LOG_DIR, STORE_MEMORY+".log");
+	PrintStream stream = null;
 	try {
 		boolean fileExist = logFile.exists();
-		PrintStream stream = new PrintStream(new FileOutputStream(logFile, true));
+		stream = new PrintStream(new FileOutputStream(logFile, true));
 		if (stream != null) {
 			if (fileExist) {
 				stream.println();
@@ -674,11 +675,13 @@ private static File createMemLogFile() {
 			stream.close();
 			System.out.println("Log file " + logFile.getPath() + " opened.");
 			return logFile;
-		} else {
-			System.err.println("Cannot open file " + logFile.getPath());
 		}
 	} catch (FileNotFoundException e) {
 		// no log available for this statistic
+	} finally {
+		if (stream != null) {
+			stream.close();
+		}
 	}
 	return null;
 }
@@ -693,15 +696,15 @@ protected static String showLineSeparators(String string) {
 	for (int i = 0; i < length; i++) {
 		char car = string.charAt(i);
 		switch (car) {
-			case '\n': 
-				buffer.append("\\n\n"); //$NON-NLS-1$
+			case '\n':
+				buffer.append("\\n\n");
 				break;
 			case '\r':
 				if (i < length-1 && string.charAt(i+1) == '\n') {
-					buffer.append("\\r\\n\n"); //$NON-NLS-1$
+					buffer.append("\\r\\n\n");
 					i++;
 				} else {
-					buffer.append("\\r\n"); //$NON-NLS-1$
+					buffer.append("\\r\n");
 				}
 				break;
 			default:
@@ -765,7 +768,7 @@ protected void clean() {
 
 /**
  * Return whether current test is on a new {@link Test test} class or not.
- * 
+ *
  * @return <code>true</code> if it's the first test of a {@link TestSuite},
  * 	<code>false</code> otherwise.
  */

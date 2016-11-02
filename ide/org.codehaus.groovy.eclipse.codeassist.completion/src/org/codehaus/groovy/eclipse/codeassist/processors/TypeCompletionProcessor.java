@@ -37,7 +37,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 /**
  * @author Andrew Eisenberg
  * @created Nov 10, 2009
- *
  */
 public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
@@ -70,16 +69,13 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
                 context.completionEnd - expressionStart,
                 getNameEnvironment().nameLookup, monitor);
 
-        getNameEnvironment().findTypes(toSearch.toCharArray(), true, // all member
-                                                            // types, should
-                                                            // be false when
-                                                            // in
-                                                            // constructor
+        getNameEnvironment().findTypes(toSearch.toCharArray(),
+                true, // all member types, should be false when in constructor
                 true, // camel case match
                 getSearchFor(), requestor, monitor);
 
-        List<ICompletionProposal> typeProposals = requestor
-                .processAcceptedTypes();
+        List<ICompletionProposal> typeProposals = requestor.processAcceptedTypes();
+
         return typeProposals;
     }
 
@@ -88,10 +84,6 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
      * Don't show types if there is a '.'
      * Don't show types when in a class body and there is a type declaration
      * immediately before
-     *
-     * @param context
-     * @param toSearch
-     * @return
      */
     private boolean shouldShowTypes(ContentAssistContext context,
             String toSearch) {
@@ -100,10 +92,6 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
                 || isBeforeTypeName(context.location, context.unit, context.completionLocation);
     }
 
-    /**
-     * @param context
-     * @return
-     */
     private int findExpressionStart(ContentAssistContext context) {
         // remove "new"
         int completionLength;
@@ -117,9 +105,6 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         return expressionStart;
     }
 
-    /**
-     * @return
-     */
     private int getSearchFor() {
         switch(getContext().location) {
             case EXTENDS:
@@ -151,5 +136,4 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         return !FIELD_MODIFIERS.contains(nameAndLocation.name.trim());
         // GRECLIPSE end
     }
-
 }

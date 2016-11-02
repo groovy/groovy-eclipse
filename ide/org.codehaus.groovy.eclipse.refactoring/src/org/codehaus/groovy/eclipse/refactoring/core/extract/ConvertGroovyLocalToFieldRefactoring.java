@@ -37,7 +37,6 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
@@ -73,7 +72,7 @@ import org.eclipse.text.edits.TextEditGroup;
 
 /**
  * See GRECLIPSE-1436 for areas where this refactoring can be improved.
- * 
+ *
  * @author Daniel Phan
  * @created 2012-01-26
  */
@@ -391,11 +390,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
                     references.add(variableExpression);
                 }
             }
-
-            @Override
-            protected SourceUnit getSourceUnit() {
-                return null;
-            }
         };
 
         referencesVisitor.visitClass(getContainingClassNode());
@@ -476,11 +470,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
                 }
                 super.visitVariableExpression(variableExpression);
             }
-
-            @Override
-            protected SourceUnit getSourceUnit() {
-                return null;
-            }
         };
 
         for (ClassNode classNode : getModuleNode().getClasses()) {
@@ -521,11 +510,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
                     throw new VisitCompleteException();
                 }
                 super.visitVariableExpression(variableExpression);
-            }
-
-            @Override
-            protected SourceUnit getSourceUnit() {
-                return null;
             }
         };
 

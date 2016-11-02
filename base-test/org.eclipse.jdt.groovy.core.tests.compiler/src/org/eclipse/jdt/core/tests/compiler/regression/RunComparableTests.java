@@ -13,6 +13,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 
@@ -24,9 +25,9 @@ import junit.framework.TestSuite;
  */
 public class RunComparableTests extends junit.framework.TestCase {
 
-	public static ArrayList ALL_CLASSES = null;
+	public static List<Class<? extends Test>> ALL_CLASSES = null;
 	static {
-		ALL_CLASSES = new ArrayList();
+		ALL_CLASSES = new ArrayList<Class<? extends Test>>();
 		ALL_CLASSES.add(AmbiguousMethodTest.class);
 		ALL_CLASSES.add(AutoBoxingTest.class);
 		ALL_CLASSES.add(Compliance_1_5.class);
@@ -45,7 +46,7 @@ public class RunComparableTests extends junit.framework.TestCase {
 		TestCase.TESTS_RANGE = null;
 		TestCase.RUN_ONLY_ID = null;
 	}
-	
+
 	public RunComparableTests(String testName) {
 		super(testName);
 	}
@@ -53,9 +54,9 @@ public class RunComparableTests extends junit.framework.TestCase {
 	public static Test suite() {
 		TestSuite ts = new TestSuite(RunComparableTests.class.getName());
 		for (int i = 0, size=ALL_CLASSES.size(); i < size; i++) {
-			Class testClass = (Class) ALL_CLASSES.get(i);
+			Class<? extends Test> testClass = ALL_CLASSES.get(i);
 			try {
-				Method suiteMethod = testClass.getDeclaredMethod("suite", new Class[0]); //$NON-NLS-1$
+				Method suiteMethod = testClass.getDeclaredMethod("suite", new Class[0]);
 				Test suite = (Test)suiteMethod.invoke(null, new Object[0]);
 				ts.addTest(suite);
 			} catch (IllegalAccessException e) {

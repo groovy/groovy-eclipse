@@ -39,7 +39,7 @@
 //
 ///**
 // * A tests series especially meant to validate the internals of our null
-// * reference analysis. See NullReferenceTest for tests targetted at 
+// * reference analysis. See NullReferenceTest for tests targetted at
 // * the source code compiler behavior level.
 // */
 //public class NullReferenceImplTests extends NullReferenceTest {
@@ -49,22 +49,22 @@
 //  	// -Dcompliance=1.4 (for example) to lower it if needed
 //  	static {
 ////    	TESTS_NAMES = new String[] { "test2050" };
-////    	TESTS_NUMBERS = new int[] { 2061 };   
-////    	TESTS_NUMBERS = new int[] { 2999 };   
-////    	TESTS_RANGE = new int[] { 2050, -1 }; 
+////    	TESTS_NUMBERS = new int[] { 2061 };
+////    	TESTS_NUMBERS = new int[] { 2999 };
+////    	TESTS_RANGE = new int[] { 2050, -1 };
 //  	}
 //
 ///**
 // * A class to hold states as seen by the low level validation tests and machinery.
 // * State provides:
-// * - singletons for all possible states given the number of bits for the said 
+// * - singletons for all possible states given the number of bits for the said
 // *   states;
 // * - semantic names for known states;
 // * - printable representation of states as bit fields;
 // * - coordination with other classes to perform transitive closure analysis, etc.
 // */
 //	/*
-//		This is a tabular definition for states. It can be completed/leveraged by 
+//		This is a tabular definition for states. It can be completed/leveraged by
 //		the Generator class so as to smoothen the transition between differing encodings
 //		of the states.
 //	// STATES DEFINITION START
@@ -205,7 +205,7 @@
 //			// STATES INITIALIZER END
 //		};
 //		public final static State start = states[0];
-//		public static final int 
+//		public static final int
 //			stateMaxValue = 0x3F,
 //			stateWidth = 6,
 //			statesNb = stateMaxValue + 1;
@@ -244,7 +244,7 @@
 //	private State(String commentLine) {
 //		char current = ' '; // keep the initialization status quiet
 //		int cursor, length;
-//		for (cursor = 0, length = commentLine.length(); 
+//		for (cursor = 0, length = commentLine.length();
 //			cursor < length;
 //			cursor++) {
 //			if ((current = commentLine.charAt(cursor)) == '0' ||
@@ -253,7 +253,7 @@
 //			}
 //		}
 //		if (cursor == length) {
-//			throw new RuntimeException("bad state definition format (missing bits field): " + commentLine); 
+//			throw new RuntimeException("bad state definition format (missing bits field): " + commentLine);
 //			// PREMATURE adopt consistent error policy
 //		}
 //		int valueDigits;
@@ -331,14 +331,14 @@
 //	static State fromLongValues(long bit1, long bit2, long bit3, long bit4, long bit5, long bit6) {
 //		// PREMATURE consider taking an UnconditionalFlowInfo in parameter
 //		return states[(int)(
-//			(bit6 & 1) + 
+//			(bit6 & 1) +
 //				2 * ((bit5 & 1) +
 //					2 * ((bit4 & 1) +
 //						2 * ((bit3 & 1) +
 //							2 * ((bit2 & 1) +
 //								2 * (bit1 & 1))))))];
 //	}
-//	private static Map namesIndex; 
+//	private static Map namesIndex;
 //	static State fromSymbolicName (String name) {
 //		if (namesIndex == null) {
 //			namesIndex = new HashMap(states.length);
@@ -404,7 +404,7 @@
 //	//	System.out.println(definitionEndMarker);
 //	//	System.out.println("*/");
 //	//}
-//	private final static String 
+//	private final static String
 //		definitionStartMarker = "// STATES " + CodeAnalysis.definitionStartMarker,
 //		definitionEndMarker = "// STATES " + CodeAnalysis.definitionEndMarker,
 //		initializerStartMarker = "// STATES " + CodeAnalysis.initializerStartMarker,
@@ -453,7 +453,7 @@
 //						}
 //					}
 //					if (reachedStart) {
-//						while ((line = input.readLine()) != null && 
+//						while ((line = input.readLine()) != null &&
 //								line.indexOf(initializerEndMarker) == -1) {
 //							// loop
 //						}
@@ -514,7 +514,7 @@
 //}
 //
 //  	// Tests tuning
-//	static final boolean 
+//	static final boolean
 //		skipHighOrderBits = false; // define to true when tuning encoding
 //	static final int
 //		combinationTestsloopsNb = 1; // define to 10000s to measure performances
@@ -529,7 +529,7 @@
 //    }
 //	return all;
 //}
-//  
+//
 //public static Class testClass() {
 //    return NullReferenceImplTests.class;
 //}
@@ -595,20 +595,20 @@
 ////						testUnconditionalFlowInfo(testData[i][0]);
 ////			result.encode();
 ////			result.decode();
-////			
+////
 ////			if (!result.testEquals(UnconditionalFlowInfoTestHarness.
 ////						testUnconditionalFlowInfo(testData[i][0]))) {
 ////				if (failures == 0) {
 ////					System.out.println(header);
 ////				}
 ////				failures++;
-////				System.out.println("\t\t{" + result.testString() + 
+////				System.out.println("\t\t{" + result.testString() +
 ////					"}, // instead of: " + testStringValueOf(testData[i][0]));
 ////			}
 ////		}
 ////	}
 ////	if (combinationTestsloopsNb > 1) {
-////		System.out.println("mergedWith\t\t\t" + combinationTestsloopsNb + "\t" + 
+////		System.out.println("mergedWith\t\t\t" + combinationTestsloopsNb + "\t" +
 ////				(System.currentTimeMillis() - start));
 ////	}
 ////	for (int i = 0; i < testData.length; i++) {
@@ -617,14 +617,14 @@
 ////					testUnconditionalFlowInfo(testData[i][0], 64);
 ////		result.encode();
 ////		result.decode();
-////		
+////
 ////		if (!result.testEquals(UnconditionalFlowInfoTestHarness.
 ////					testUnconditionalFlowInfo(testData[i][0], 64))) {
 ////			if (failures == 0) {
 ////				System.out.println(header);
 ////			}
 ////			failures++;
-////			System.out.println("\t\t{" + result.testString() + 
+////			System.out.println("\t\t{" + result.testString() +
 ////				"}, // (64) - instead of: " + testStringValueOf(testData[i][0]));
 ////		}
 ////	}
@@ -641,7 +641,7 @@
 //	for (int l = 0; l < combinationTestsloopsNb ; l++) {
 //		for (int i = 0; i < State.states.length; i++) {
 //			if (State.states[i].symbolic) {
-//				UnconditionalFlowInfoTestHarness 
+//				UnconditionalFlowInfoTestHarness
 //					state = UnconditionalFlowInfoTestHarness.
 //							testUnconditionalFlowInfo(State.states[i]);
 //				boolean
@@ -693,12 +693,12 @@
 //									|| isDefinitelyUnknown || isPotentiallyNull
 //									|| isPotentiallyUnknown || isProtectedNonNull
 //									|| isProtectedNull)
-//						|| cannotBeDefinitelyNullOrNonNull != 
+//						|| cannotBeDefinitelyNullOrNonNull !=
 //							(isPotentiallyUnknown ||
 //								isPotentiallyNull && isPotentiallyNonNull)
-//						|| cannotBeNull != (isProtectedNonNull || 
+//						|| cannotBeNull != (isProtectedNonNull ||
 //								isDefinitelyNonNull)
-//						|| canOnlyBeNull != (isProtectedNull || 
+//						|| canOnlyBeNull != (isProtectedNull ||
 //								isDefinitelyNull)) {
 //					if (failures == 0) {
 //						System.out.println(header);
@@ -710,7 +710,7 @@
 //		}
 //	}
 //	if (combinationTestsloopsNb > 1) {
-//		System.out.println("mergedWith\t\t\t" + combinationTestsloopsNb + "\t" + 
+//		System.out.println("mergedWith\t\t\t" + combinationTestsloopsNb + "\t" +
 //				(System.currentTimeMillis() - start));
 //	}
 //	for (int i = 0; i < State.states.length; i++) {
@@ -762,18 +762,18 @@
 //				if (isProtectedNonNull && !isDefinitelyNonNull
 //						|| isProtectedNull && !isDefinitelyNull
 //						|| i > 0 // not start
-//							&& !State.states[i].name.equals("pot. non null")						
+//							&& !State.states[i].name.equals("pot. non null")
 //							&& !(isDefinitelyNonNull || isDefinitelyNull
 //									|| isDefinitelyUnknown || isPotentiallyNull
 //									|| isPotentiallyUnknown || isProtectedNonNull
 //									|| isProtectedNull)
-//									|| cannotBeDefinitelyNullOrNonNull != 
+//									|| cannotBeDefinitelyNullOrNonNull !=
 //										(isPotentiallyUnknown ||
-//											isPotentiallyNull && 
+//											isPotentiallyNull &&
 //												isPotentiallyNonNull)
-//									|| cannotBeNull != (isProtectedNonNull || 
+//									|| cannotBeNull != (isProtectedNonNull ||
 //											isDefinitelyNonNull)
-//									|| canOnlyBeNull != (isProtectedNull || 
+//									|| canOnlyBeNull != (isProtectedNull ||
 //											isDefinitelyNull)) {
 //					if (failures == 0) {
 //						System.out.println(header);
@@ -821,7 +821,7 @@
 //					}
 //					else if (source2.nullBit1 != 0) {
 //						if (failures == 0) {
-//							System.out.println("addInitializationsFrom_for_definites failures: "); //$NON-NLS-1$
+//							System.out.println("addInitializationsFrom_for_definites failures: ");
 //						}
 //						failures++;
 //						System.out.println("\t\t" + State.states[j].name +
@@ -834,12 +834,12 @@
 //					result2.addInitializationsFrom(source2);
 //					if (!result1.testEquals(result2)) {
 //						if (failures == 0) {
-//							System.out.println("addInitializationsFrom_for_definites failures: "); //$NON-NLS-1$
+//							System.out.println("addInitializationsFrom_for_definites failures: ");
 //						}
 //						failures++;
-//						System.out.println("\t\t" + State.states[i].name + 
+//						System.out.println("\t\t" + State.states[i].name +
 //							" + " + State.states[j].name +
-//							" => " + result2.asState().name + 
+//							" => " + result2.asState().name +
 //							" instead of: " + result1.asState().name);
 //					}
 //				}
@@ -1001,7 +1001,7 @@
 //}
 //
 ///**
-// * A specific extension of LocalVariableBinding suitable for flow info 
+// * A specific extension of LocalVariableBinding suitable for flow info
 // * manipulation at an implementation level.
 // */
 //class TestLocalVariableBinding extends LocalVariableBinding {
@@ -1037,14 +1037,14 @@
 //	public Constant constant() {
 //		return Constant.NotAConstant;
 //	}
-//	static final TestLocalVariableBinding 
+//	static final TestLocalVariableBinding
 //		local0 = new TestLocalVariableBinding(0),
 //		local64 = new TestLocalVariableBinding(64),
-//		local128 = new TestLocalVariableBinding(128);	
+//		local128 = new TestLocalVariableBinding(128);
 //}
 //
 ///**
-// * A class meant to augment 
+// * A class meant to augment
 // * @link{org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo} with
 // * capabilities in the test domain. It especially provides factories to build
 // * fake flow info instances for use in state transitions validation.
@@ -1076,7 +1076,7 @@
 //}
 //
 //public FlowInfo copy() {
-//	UnconditionalFlowInfoTestHarness copy = 
+//	UnconditionalFlowInfoTestHarness copy =
 //		new UnconditionalFlowInfoTestHarness();
 //	copy.testPosition = this.testPosition;
 //	copy(this, copy);
@@ -1115,7 +1115,7 @@
 //
 ///**
 // * Return a fake unconditional flow info which bit fields represent the given
-// * null bits for a local variable of id position within a class that would have 
+// * null bits for a local variable of id position within a class that would have
 // * no field.
 // * @param nullBits the bits that must be set, given in the same order as the
 // *        nullAssignment* fields in UnconditionalFlowInfo definition; use 0
@@ -1128,7 +1128,7 @@
 // */
 //public static UnconditionalFlowInfoTestHarness testUnconditionalFlowInfo(
 //		long [] nullBits, int position) {
-// 	UnconditionalFlowInfoTestHarness result = 
+// 	UnconditionalFlowInfoTestHarness result =
 // 		new UnconditionalFlowInfoTestHarness();
 //	result.testPosition = position;
 //	init(result, nullBits, position);
@@ -1137,7 +1137,7 @@
 //
 ///**
 // * Return a fake unconditional flow info which bit fields represent the given
-// * state for a local variable of id 0 within a class that would have 
+// * state for a local variable of id 0 within a class that would have
 // * no field.
 // * @param state - State the desired state for the variable
 // * @return a fake unconditional flow info which bit fields represent the
@@ -1149,7 +1149,7 @@
 //
 ///**
 // * Return a fake unconditional flow info which bit fields represent the given
-// * state for a local variable of id position within a class that would have 
+// * state for a local variable of id position within a class that would have
 // * no field.
 // * @param state - State the desired state for the variable
 // * @param position the position of the variable within the bit fields; use
@@ -1160,7 +1160,7 @@
 // */
 //public static UnconditionalFlowInfoTestHarness testUnconditionalFlowInfo(
 //		NullReferenceImplTests.State state, int position) {
-// 	UnconditionalFlowInfoTestHarness result = 
+// 	UnconditionalFlowInfoTestHarness result =
 // 		new UnconditionalFlowInfoTestHarness();
 // 	long[] nullBits = state.asLongArray();
 //	result.testPosition = position;
@@ -1197,7 +1197,7 @@
 // */
 //public String testString() {
 //	if (this == DEAD_END) {
-//		return "FlowInfo.DEAD_END"; //$NON-NLS-1$
+//		return "FlowInfo.DEAD_END";
 //	}
 //	return testString(this, this.testPosition);
 //}
@@ -1212,7 +1212,7 @@
 //public String testString(int position) {
 //	return testString(this, position);
 //}
-//	
+//
 //	// Factorized implementation
 //static NullReferenceImplTests.State asState(UnconditionalFlowInfo zis, int position) {
 //	if ((zis.tagBits & NULL_FLAG_MASK) == 0) {
@@ -1226,7 +1226,7 @@
 //				(zis.nullBit4 >> position) & 1,
 //				0,
 //				0);
-//	} 
+//	}
 // 	else {
 //		int vectorIndex = (position / BitCacheSize) - 1;
 //        position %= BitCacheSize;
@@ -1248,7 +1248,7 @@
 //	target.definiteInits = source.definiteInits;
 //	target.potentialInits = source.potentialInits;
 //	boolean hasNullInfo = (source.tagBits & NULL_FLAG_MASK) != 0;
-//	if (hasNullInfo) { 
+//	if (hasNullInfo) {
 //		target.nullBit1 = source.nullBit1;
 //		target.nullBit2 = source.nullBit2;
 //		target.nullBit3 = source.nullBit3;
@@ -1261,13 +1261,13 @@
 //	if (source.extra != null) {
 //		int length;
 //        target.extra = new long[extraLength][];
-//		System.arraycopy(source.extra[0], 0, 
+//		System.arraycopy(source.extra[0], 0,
 //			(target.extra[0] = new long[length = source.extra[0].length]), 0, length);
-//		System.arraycopy(source.extra[1], 0, 
+//		System.arraycopy(source.extra[1], 0,
 //			(target.extra[1] = new long[length]), 0, length);
 //		if (hasNullInfo) {
 //            for (int j = 0; j < extraLength; j++) {
-//			    System.arraycopy(source.extra[j], 0, 
+//			    System.arraycopy(source.extra[j], 0,
 //				    (target.extra[j] = new long[length]), 0, length);
 //            }
 //		}
@@ -1289,7 +1289,7 @@
 //		}
 //	} else if (length > (oldLength = this.extra[2].length)) {
 //		for (int j = 0; j < extraLength; j++) {
-//			System.arraycopy(this.extra[j], 0, 
+//			System.arraycopy(this.extra[j], 0,
 //				this.extra[j] = new long[length], 0, oldLength);
 //		}
 //	}
@@ -1318,7 +1318,7 @@
 //	}
 //	if (nullBits[0] != 0 || nullBits[1] != 0
 //	        || nullBits[2] != 0 || nullBits[3] != 0
-//	        || nullBits[4] != 0 || nullBits[5] != 0) { 
+//	        || nullBits[4] != 0 || nullBits[5] != 0) {
 //		// cascade better than nullBits[0] | nullBits[1] | nullBits[2] | nullBits[3]
 //		// by 10%+
 //		// TODO (maxime) run stats to determine which is the better order
@@ -1331,11 +1331,11 @@
 //	if (zis.tagBits != other.tagBits) {
 //		return false;
 //	}
-//	if (zis.nullBit1 != other.nullBit1 
-//			|| zis.nullBit2 != other.nullBit2 
-//			|| zis.nullBit3 != other.nullBit3 
+//	if (zis.nullBit1 != other.nullBit1
+//			|| zis.nullBit2 != other.nullBit2
+//			|| zis.nullBit3 != other.nullBit3
 //			|| zis.nullBit4 != other.nullBit4
-//			/* || zis.nullBit5 != other.nullBit5 
+//			/* || zis.nullBit5 != other.nullBit5
 //			|| zis.nullBit6 != other.nullBit6 */) {
 //		return false;
 //	}
@@ -1349,22 +1349,22 @@
 //		both = left;
 //	}
 //	for (i = 0; i < both ; i++) {
-//		for (int j = 2; j < extraLength; j++) { 
-//			if (zis.extra[j][i] != 
+//		for (int j = 2; j < extraLength; j++) {
+//			if (zis.extra[j][i] !=
 //					other.extra[j][i]) {
 //				return false;
 //			}
 //		}
 //	}
 //	for (; i < left; i++) {
-//		for (int j = 2; j < extraLength; j++) { 
+//		for (int j = 2; j < extraLength; j++) {
 //			if (zis.extra[j][i] != 0) {
 //				return false;
 //			}
 //		}
 //	}
 //	for (; i < right; i++) {
-//		for (int j = 2; j < extraLength; j++) { 
+//		for (int j = 2; j < extraLength; j++) {
 //			if (other.extra[j][i] != 0) {
 //				return false;
 //			}
@@ -1405,7 +1405,7 @@
 //		if (vectorIndex < both) {
 //			mask = (1L << (position % BitCacheSize));
 //			for (int j = 2; j < extraLength; j++) {
-//				if (((zis.extra[j][vectorIndex] & mask) 
+//				if (((zis.extra[j][vectorIndex] & mask)
 //						^ (other.extra[j][vectorIndex] & mask)) != 0) {
 //					return false;
 //				}
@@ -1433,46 +1433,46 @@
 //
 //static String testString(UnconditionalFlowInfo zis, int position) {
 //	if (zis == DEAD_END) {
-//		return "FlowInfo.DEAD_END"; //$NON-NLS-1$
+//		return "FlowInfo.DEAD_END";
 //	}
 //	if (position < BitCacheSize) {
-//		return "{" + (zis.nullBit1 >> position) //$NON-NLS-1$
-//					+ "," + (zis.nullBit2 >> position) //$NON-NLS-1$
-//					+ "," + (zis.nullBit3 >> position) //$NON-NLS-1$
-//					+ "," + (zis.nullBit4 >> position) //$NON-NLS-1$
-////					+ "," + (zis.nullBit5 >> position) //$NON-NLS-1$
-////					+ "," + (zis.nullBit6 >> position) //$NON-NLS-1$
-//					+ "}"; //$NON-NLS-1$
+//		return "{" + (zis.nullBit1 >> position)
+//					+ "," + (zis.nullBit2 >> position)
+//					+ "," + (zis.nullBit3 >> position)
+//					+ "," + (zis.nullBit4 >> position)
+////					+ "," + (zis.nullBit5 >> position)
+////					+ "," + (zis.nullBit6 >> position)
+//					+ "}";
 //	}
 //	else {
 //		int vectorIndex = position / BitCacheSize - 1,
 //			shift = position % BitCacheSize;
-//			return "{" + (zis.extra[2][vectorIndex] //$NON-NLS-1$
-//			               >> shift) 
-//						+ "," + (zis.extra[3][vectorIndex] //$NON-NLS-1$
+//			return "{" + (zis.extra[2][vectorIndex]
+//			               >> shift)
+//						+ "," + (zis.extra[3][vectorIndex]
 //						   >> shift)
-//						+ "," + (zis.extra[4][vectorIndex] //$NON-NLS-1$
+//						+ "," + (zis.extra[4][vectorIndex]
 //						   >> shift)
-//						+ "," + (zis.extra[5][vectorIndex] //$NON-NLS-1$
+//						+ "," + (zis.extra[5][vectorIndex]
 //						   >> shift)
-////						+ "," + (zis.extra[6][vectorIndex] //$NON-NLS-1$
+////						+ "," + (zis.extra[6][vectorIndex]
 ////						   >> shift)
-////						+ "," + (zis.extra[7][vectorIndex] //$NON-NLS-1$
+////						+ "," + (zis.extra[7][vectorIndex]
 ////						   >> shift)
-//						+ "}"; //$NON-NLS-1$
+//						+ "}";
 //	}
 //}
 //}
 ///**
-// * A class meant to augment 
+// * A class meant to augment
 // * @link{org.eclipse.jdt.internal.compiler.flow.NullInfoRegistry} with
 // * capabilities in the test domain. It especially provides factories to build
 // * fake flow info instances for use in state transitions validation.
 // */
 ///*
-// * The reason why UnconditionalFlowInfoTestHarness and this class were 
+// * The reason why UnconditionalFlowInfoTestHarness and this class were
 // * separated is that NullInfoRegistry redefines part of the markAs* methods,
-// * in effect preventing a harness extending NullInfoRegistry to access 
+// * in effect preventing a harness extending NullInfoRegistry to access
 // * UnconditionalFlowInfo implementations of the said methods.
 // */
 //class NullInfoRegistryTestHarness extends NullInfoRegistry {
@@ -1481,7 +1481,7 @@
 //private NullInfoRegistryTestHarness() {
 //	super(FlowInfo.DEAD_END);
 //}
-//	
+//
 //	// Interface
 ///**
 // * Return the state represented by this.
@@ -1501,7 +1501,7 @@
 //}
 //
 //public FlowInfo copy() {
-//	NullInfoRegistryTestHarness copy = 
+//	NullInfoRegistryTestHarness copy =
 //		new NullInfoRegistryTestHarness();
 //	copy.testPosition = this.testPosition;
 //	UnconditionalFlowInfoTestHarness.copy(this, copy);
@@ -1517,7 +1517,7 @@
 //public static NullInfoRegistryTestHarness testNullInfoRegistry(
 //		UnconditionalFlowInfoTestHarness upstream) {
 //	NullInfoRegistry nullInfoRegistry = new NullInfoRegistry(upstream);
-// 	NullInfoRegistryTestHarness result = 
+// 	NullInfoRegistryTestHarness result =
 // 		new NullInfoRegistryTestHarness();
 //	result.testPosition = upstream.testPosition;
 //	if (result.testPosition < BitCacheSize) {
@@ -1527,7 +1527,7 @@
 //		result.nullBit4 = nullInfoRegistry.nullBit4;
 ////		result.nullBit5 = nullInfoRegistry.nullBit5;
 ////		result.nullBit6 = nullInfoRegistry.nullBit6;
-//	} 
+//	}
 // 	else if ((nullInfoRegistry.tagBits & NULL_FLAG_MASK) != 0){
 //		int vectorIndex = (result.testPosition / BitCacheSize) - 1,
 //			length = vectorIndex + 1;
@@ -1539,7 +1539,7 @@
 //		    result.extra[j][vectorIndex] = nullInfoRegistry.extra[j][vectorIndex];
 //        }
 //	}
-//	if ((nullInfoRegistry.tagBits & NULL_FLAG_MASK) != 0) { 
+//	if ((nullInfoRegistry.tagBits & NULL_FLAG_MASK) != 0) {
 //		result.tagBits |= NULL_FLAG_MASK;
 //	}
 //	result.maxFieldCount = 0;
@@ -1575,7 +1575,7 @@
 // */
 //public String testString() {
 //	if (this == DEAD_END) {
-//		return "FlowInfo.DEAD_END"; //$NON-NLS-1$
+//		return "FlowInfo.DEAD_END";
 //	}
 //	return UnconditionalFlowInfoTestHarness.testString(this, this.testPosition);
 //}
@@ -1679,9 +1679,9 @@
 ///**
 // * The Generator class is meant to generate the tabular data needed by the
 // * flow information implementation level tests. While the tests should ensure
-// * non regression by leveraging their initialization tables only, any change 
+// * non regression by leveraging their initialization tables only, any change
 // * into the flow information logic or encoding is due to yield considerable
-// * changes into the literal values sets of the initializers themselves. 
+// * changes into the literal values sets of the initializers themselves.
 // * Tooling the production of those literals buys us flexibility.
 // * {@link #printHelp printHelp} for details.
 // */
@@ -1698,7 +1698,7 @@
 //					computeOutputs(transitiveClosure.asArray()));
 //		}
 //		unknowns = transitiveClosure.notAlreadyKnowns();
-//	} 
+//	}
 //	return transitiveClosure.asArray();
 //}
 //public static void main(String[] args) {
@@ -1751,7 +1751,7 @@
 //			System.exit(1);
 //	}
 //}
-//	
+//
 //private static void reinitializeFromComments(
 //		String statesSource, String statesTarget,
 //		String transformationsSource, String transformationsTarget) {
@@ -1764,7 +1764,7 @@
 //		BufferedWriter out;
 //		NullReferenceImplTests.State.reinitializeFromComment(
 //			in = new BufferedReader(
-//				new FileReader(statesSource)), 
+//				new FileReader(statesSource)),
 //			out = new BufferedWriter(new FileWriter(statesTarget)));
 //		in.close();
 //		out.close();
@@ -1773,7 +1773,7 @@
 //		tempFiles[1] = File.createTempFile("generator", "java");
 //		NullReferenceImplTransformations.transformations[0].reinitializeFromComments(
 //			in = new BufferedReader(
-//				new FileReader(transformationsSource)), 
+//				new FileReader(transformationsSource)),
 //			out = new BufferedWriter(new FileWriter(tempFiles[0])));
 //		in.close();
 //		out.close();
@@ -1781,14 +1781,14 @@
 //		for (i = 1, length = NullReferenceImplTransformations.transformations.length - 1; i < length; i++) {
 //			NullReferenceImplTransformations.transformations[i].reinitializeFromComments(
 //				in = new BufferedReader(
-//					new FileReader(tempFiles[(i + 1) % 2])), 
+//					new FileReader(tempFiles[(i + 1) % 2])),
 //				out = new BufferedWriter(new FileWriter(tempFiles[i % 2])));
 //			in.close();
 //			out.close();
 //		}
 //		NullReferenceImplTransformations.transformations[i].reinitializeFromComments(
 //			in = new BufferedReader(
-//				new FileReader(tempFiles[(i + 1) % 2])), 
+//				new FileReader(tempFiles[(i + 1) % 2])),
 //			out = new BufferedWriter(new FileWriter(transformationsTarget)));
 //		in.close();
 //		out.close();
@@ -1813,7 +1813,7 @@
 //		tempFiles[1] = File.createTempFile("generator", "java");
 //		NullReferenceImplTransformations.transformations[0].reinitializeFromComputedValues(
 //			in = new BufferedReader(
-//				new FileReader(source)), 
+//				new FileReader(source)),
 //			out = new BufferedWriter(new FileWriter(tempFiles[0])),
 //			transitiveClosure);
 //		in.close();
@@ -1822,7 +1822,7 @@
 //		for (i = 1, length = NullReferenceImplTransformations.transformations.length - 1; i < length; i++) {
 //			NullReferenceImplTransformations.transformations[i].reinitializeFromComputedValues(
 //				in = new BufferedReader(
-//					new FileReader(tempFiles[(i + 1) % 2])), 
+//					new FileReader(tempFiles[(i + 1) % 2])),
 //				out = new BufferedWriter(new FileWriter(tempFiles[i % 2])),
 //				transitiveClosure);
 //			in.close();
@@ -1830,7 +1830,7 @@
 //		}
 //		NullReferenceImplTransformations.transformations[i].reinitializeFromComputedValues(
 //			in = new BufferedReader(
-//				new FileReader(tempFiles[(i + 1) % 2])), 
+//				new FileReader(tempFiles[(i + 1) % 2])),
 //			out = new BufferedWriter(new FileWriter(target)),
 //			transitiveClosure);
 //		in.close();

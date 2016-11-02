@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse;
+
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
@@ -50,7 +51,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private final class JUnitPageListener implements IPageListener {
         public void pageOpened(IWorkbenchPage page) {
             try {
-                IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
+                IPartService service = page.getActivePart().getSite().getService(IPartService.class);
                 service.addPartListener(ensure);
             } catch (NullPointerException e) {
                 // can ignore...something is not initialized anymore.
@@ -59,7 +60,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
         public void pageClosed(IWorkbenchPage page) {
             try {
-                IPartService service = (IPartService) page.getWorkbenchWindow().getService(IPartService.class);
+                IPartService service = page.getWorkbenchWindow().getService(IPartService.class);
                 if (service != null) {
                     service.removePartListener(ensure);
                 }
@@ -187,9 +188,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
         addMonospaceFontListener();
         DelegatingCleanUpPostSaveListener.installCleanUp();
 
-        // ensure that the user doesn't see any useless warning dialogs when breakpoints are added
-        // to a closure
-        IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
+        // ensure that the user doesn't see any useless warning dialogs when breakpoints are added to a closure
+        IPreferenceStore preferenceStore = JDIDebugUIPlugin.getDefault().getPreferenceStore();
         oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT = preferenceStore.getBoolean(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, false);
 
@@ -263,7 +263,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
     //        return true;
     //    }
 
-
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();
         junitListener = new JUnitPageListener();
@@ -318,7 +317,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         removeMonospaceFontListener();
 
         // undo the preference store damage
-        IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore preferenceStore = JDIDebugUIPlugin.getDefault().getPreferenceStore();
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
     }
 

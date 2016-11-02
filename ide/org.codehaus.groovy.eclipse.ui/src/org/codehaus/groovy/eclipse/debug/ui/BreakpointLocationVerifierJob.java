@@ -96,7 +96,7 @@ public class BreakpointLocationVerifierJob extends Job {
 		fTypeName= typeName;
 		fType= type;
 		fResource= resource;
-		fStatusLine= (IEditorStatusLine) editorPart.getAdapter(IEditorStatusLine.class);
+		fStatusLine= editorPart.getAdapter(IEditorStatusLine.class);
 	}
 
 	@Override

@@ -30,105 +30,192 @@ import org.codehaus.groovy.GroovyBugError;
  * @author Andrew Eisenberg
  * @created Jul 20, 2011
  */
-class ImmutableClassNode extends ClassNode {
-    
-    class ImmutableGenericsType extends GenericsType {
-        ImmutableGenericsType(GenericsType delegate) {
-            super.setType(delegate.getType());
-            super.setPlaceholder(delegate.isPlaceholder());
-            super.setResolved(delegate.isResolved());
-            super.setName(delegate.getName());
-            super.setWildcard(delegate.isWildcard());
-            super.setUpperBounds(delegate.getUpperBounds());
-            super.setLowerBound(delegate.getLowerBound());
-        }
+public class ImmutableClassNode extends ClassNode {
 
-        @Override
-        public void setType(ClassNode type) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
+    private volatile boolean genericsInitialized;
+    private volatile boolean writeProtected;
 
-        @Override
-        public void setPlaceholder(boolean placeholder) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
-
-        @Override
-        public void setResolved(boolean res) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
-
-        @Override
-        public void setName(String name) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
-
-        @Override
-        public void setWildcard(boolean wildcard) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
-
-        @Override
-        public void setUpperBounds(ClassNode[] bounds) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
-
-        @Override
-        public void setLowerBound(ClassNode bound) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + ImmutableClassNode.this.getName());
-        }
-    }
-    
-    private boolean genericsInitialized = false;
-	private boolean writeProtected = false;
-    
     public ImmutableClassNode(Class c) {
         super(c);
     }
 
+    // ASTNode overrides:
+
+    @Override
+    public void setColumnNumber(int n) {}
+
+    @Override
+    public void setLastColumnNumber(int n) {}
+
+    @Override
+    public void setLastLineNumber(int n) {}
+
+    @Override
+    public void setLineNumber(int n) {}
+
+    @Override
+    public void setNodeMetaData(Object k, Object v) {}
+
+    @Override
+    public void setSourcePosition(ASTNode n) {}
+
+    @Override
+    public void setStart(int i) {}
+
+    @Override
+    public void setEnd(int i) {}
+
+    // AnnotatedNode overrides:
+
+    @Override
+    public void setNameStart(int i) {}
+
+    @Override
+    public void setNameEnd(int i) {}
+
+    @Override
+    public void setDeclaringClass(ClassNode cn) {}
+
+    @Override
+    public void setHasNoRealSourcePosition(boolean b) {}
+
+    @Override
+    public void setSynthetic(boolean b) {}
+
+    // ClassNode overrides:
+
+    @Override
+    public List<MethodNode> getDeclaredMethods(String name) {
+        if (lazyInitDone && !writeProtected) {
+            synchronized (methods.map) {
+                if (!writeProtected) {
+                    for (Object key : methods.map.keySet()) {
+                        List<MethodNode> list = methods.get(key);
+                        methods.map.put(key, Collections.unmodifiableList(list));
+                    }
+                    methods.map = Collections.unmodifiableMap(methods.map);
+                    writeProtected = true;
+                }
+            }
+        }
+        return super.getDeclaredMethods(name);
+    }
+
+    @Override
+    public void setAnnotated(boolean b) {}
+
+    @Override
+    protected void setCompileUnit(CompileUnit cu) {}
+
+    @Override
+    public void setEnclosingMethod(MethodNode mn) {}
+
+    @Override
+    public void setGenericsPlaceHolder(boolean b) {}
+
+    @Override
+    public void setHasInconsistentHierarchy(boolean b) {}
+
+    //public void setInterfaces(ClassNode[] cn) {}
+
+    @Override
+    public void setModifiers(int bf) {}
+
+    @Override
+    public void setModule(ModuleNode mn) {}
+
+    @Override
+    public String setName(String s) {
+        return getName();
+    }
+
+    //public void setRedirect(ClassNode cn) {}
+
+    @Override
+    public void setSuperClass(ClassNode cn) {}
+
+    @Override
+    public void setScript(boolean b) {}
+
+    @Override
+    public void setScriptBody(boolean b) {}
+
+    @Override
+    public void setStaticClass(boolean b) {}
+
+    @Override
+    public void setSyntheticPublic(boolean b) {}
+
+    //public void setUnresolvedSuperClass(ClassNode cn) {}
+
+    @Override
+    public void setUsingGenerics(boolean b) {}
+
     @Override
     public void setGenericsTypes(GenericsType[] genericsTypes) {
         if (genericsInitialized && genericsTypes != this.genericsTypes) {
-            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + this.getName());
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + getName());
         }
         
         if (genericsTypes != null) {
             GenericsType[] immutable = new GenericsType[genericsTypes.length];
             for (int i = 0; i < genericsTypes.length; i++) {
-                immutable[i] = new ImmutableGenericsType(genericsTypes[i]);
+                immutable[i] = new ImmutableGenericsType(genericsTypes[i], getName());
             }
             genericsTypes = immutable;
         }
         super.setGenericsTypes(genericsTypes);
         genericsInitialized = true;
     }
-    
-    @Override
-    public List<MethodNode> getDeclaredMethods(String name) {
-// Tried this first, but is not enough to catch the culprits who mutate the 'immutable' class!
-// some parties must be getting their hands on the data directly.
-//    	List<MethodNode> methods = super.getDeclaredMethods(name);
-//    	if (methods!=null) {
-//    		//Protection against clients who try to modify the list behind our backs.
-//    		return Collections.unmodifiableList(methods);
-//    	}
-//    	return null;
-    	
-    	//So... more drastic measures are in order. Replace the entire data structure with an immutable copy
-    	// the first time we see it after its been initialized.
-    	if (lazyInitDone && !writeProtected) {
-    		enableWriteProtection();
-    	}
-    	return super.getDeclaredMethods(name);
-    }
 
-	private synchronized void enableWriteProtection() {
-		for (Object key : methods.map.keySet()) {
-			List<MethodNode> l = methods.get(key);
-			methods.map.put(key, Collections.unmodifiableList(l));
-		}
-		methods.map = Collections.unmodifiableMap(methods.map);
-		writeProtected = true;
-	}
-    
+    static class ImmutableGenericsType extends GenericsType {
+
+        ImmutableGenericsType(GenericsType delegate, String typeName) {
+            this.typeName = typeName;
+            super.setType(delegate.getType());
+            super.setName(delegate.getName());
+            super.setPlaceholder(delegate.isPlaceholder());
+            super.setResolved(delegate.isResolved());
+            super.setWildcard(delegate.isWildcard());
+            super.setLowerBound(delegate.getLowerBound());
+            super.setUpperBounds(delegate.getUpperBounds());
+        }
+
+        private final String typeName;
+
+        @Override
+        public void setType(ClassNode type) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+
+        @Override
+        public void setPlaceholder(boolean placeholder) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+
+        @Override
+        public void setResolved(boolean res) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+
+        @Override
+        public void setName(String name) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+
+        @Override
+        public void setWildcard(boolean wildcard) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+
+        @Override
+        public void setUpperBounds(ClassNode[] bounds) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+
+        @Override
+        public void setLowerBound(ClassNode bound) {
+            throw new GroovyBugError("Attempt to change an immutable Groovy class: " + typeName);
+        }
+    }
 }

@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.Arrays;
@@ -92,15 +96,15 @@ public abstract class CompletionTestCase extends BuilderTests {
         if (genericProjectExists()) {
             return env.getProject("Project").getFullPath();
         }
-        IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+        IPath projectPath = env.addProject("Project", "1.5");
         // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+        env.removePackageFragmentRoot(projectPath, "");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
-        env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+        env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
         return projectPath;
     }
 
@@ -147,7 +151,7 @@ public abstract class CompletionTestCase extends BuilderTests {
 
         IJavaCompletionProposalComputer computer = computerClass.newInstance();
         List<ICompletionProposal> proposals = computer.computeCompletionProposals(context, null);
-//        editor.close(false);
+
         return proposals.toArray(new ICompletionProposal[proposals.size()]);
     }
 
@@ -242,6 +246,9 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
 
     protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
+        // reconciler runs asynchronously; give it a chance to get caught up before creating edits
+        try { Thread.sleep(500); } catch (InterruptedException e) {}
+
         proposal.apply(document);
         String actual = document.get();
         actual = actual.replaceAll("\r\n", "\n");
@@ -350,7 +357,6 @@ public abstract class CompletionTestCase extends BuilderTests {
 
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
         unit.becomeWorkingCopy(null);
-        try { Thread.sleep(1000); } catch (Exception e) {}
 
         // intermittent failures on build server; proposals not found, so perform this part in a loop
         return createProposalsAtOffset(unit, completionOffset);
@@ -367,14 +373,13 @@ public abstract class CompletionTestCase extends BuilderTests {
                 System.err.println("In createProposalsAtOffset() count="+count);
                 performDummySearch(unit.getJavaProject());
 
-                int astLevel = AST.JLS3;
+                int astLevel = /*AST.JLS3*/3;
                 try {
                     AST.class.getDeclaredField("JLS8");
                     astLevel = 8;
                 } catch (NoSuchFieldException nsfe) {
                     // pre-java8
                 }
-                System.err.println("ast level = "+astLevel);
                 SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
                 unit.reconcile(astLevel, true, null, spm);
                 spm.waitForCompletion();

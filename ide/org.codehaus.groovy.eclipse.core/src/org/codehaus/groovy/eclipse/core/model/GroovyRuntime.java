@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -236,6 +236,7 @@ public class GroovyRuntime {
                 IClasspathEntry[] newClasspath = new IClasspathEntry[rawClasspath.length + 1];
                 System.arraycopy(rawClasspath, 0, newClasspath, 0, rawClasspath.length);
                 newClasspath[rawClasspath.length] = createContainerEntry(isMinimal);
+                rawClasspath = newClasspath;
                 workDone = true;
             }
 

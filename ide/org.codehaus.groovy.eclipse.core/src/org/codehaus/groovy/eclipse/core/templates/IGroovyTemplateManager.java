@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,20 +24,20 @@ import org.eclipse.core.runtime.IProgressMonitor;
 /**
  * Implementation of this interface can execute templates to generate new Groovy
  * classes or tests.
- * 
+ *
  * @author Thorsten Kamann <thorsten.kamann@googlemail.com>
  */
 public interface IGroovyTemplateManager {
 
-	/**
-	 * Processes the underlying template
-	 * 
-	 * @param bindings
-	 *            The bindings to use in the template
-	 * @param progressMonitor
-	 *            A ProgressMonitor to visualize the progress
-	 * @return The result of the processed template
-	 */
-	public String processTemplate(Map< String, Object > bindings, IProgressMonitor progressMonitor)
-			throws CompilationFailedException, IOException;
+    /**
+     * Processes the underlying template
+     *
+     * @param bindings
+     *            The bindings to use in the template
+     * @param progressMonitor
+     *            A ProgressMonitor to visualize the progress
+     * @return The result of the processed template
+     */
+    public String processTemplate(Map< String, Object > bindings, IProgressMonitor progressMonitor)
+            throws CompilationFailedException, IOException;
 }

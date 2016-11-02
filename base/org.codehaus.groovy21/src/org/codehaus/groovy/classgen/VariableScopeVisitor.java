@@ -564,7 +564,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         markClosureSharedVariables();
         popState();
     }
-    
+
     public void visitProperty(PropertyNode node) {
         pushState(node.isStatic());
         super.visitProperty(node);
@@ -575,18 +575,5 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState(node.isStatic());
         super.visitField(node);
         popState();
-    }
-
-    public void visitAnnotations(AnnotatedNode node) {
-        List<AnnotationNode> annotations = node.getAnnotations();
-        if (annotations.isEmpty()) return;
-        for (AnnotationNode an : annotations) {
-        	// skip built-in properties
-        	if (an.isBuiltIn()) continue;
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
-                Expression annMemberValue = member.getValue();
-                annMemberValue.visit(this);
-            }
-        }
     }
 }

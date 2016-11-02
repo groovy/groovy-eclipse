@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -16,18 +20,15 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-
-
 /**
  * @author Andrew Eisenberg
  * @created Nov 1, 2010
  *
  * Tests that constructor completions are working properly.  Ensures that the
  * resulting document has the correct text in it.
- * 
+ *
  */
 public class ConstructorCompletionTests extends CompletionTestCase {
-
 
     public ConstructorCompletionTests(String name) {
         super(name);
@@ -42,71 +43,71 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     }
     @Override
     protected void tearDown() throws Exception {
-        try {   
+        try {
             super.tearDown();
         } finally {
             GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, orig);
         }
     }
-    
+
     public void testConstructorCompletion1() throws Exception {
         String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY\nkkk";
         String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
-    
+
     public void testConstructorCompletion2() throws Exception {
         String contents = "package f\n\nclass YYY { YYY(x) { } }\nnew YY\nkkk";
         String expected = "package f\n\nclass YYY { YYY(x) { } }\nnew YYY(x)\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
-    
+
     public void testConstructorCompletion3() throws Exception {
         String contents = "package f\n\nclass YYY { YYY(x, y) { } }\nnew YY\nkkk";
         String expected = "package f\n\nclass YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
-    
+
     public void testContructorCompletionWithinEnumDeclaration1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
         }
-    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
-    			+ "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
-    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
-    			+ "	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
-    	checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
+        String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+                + "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
+        String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+                + "	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
-    
+
     public void testContructorCompletionWithinEnumDeclaration2() throws Exception {
-    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
-    			+ "	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
-    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
-    			+ "	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
-    	checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
+        String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+                + "	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
+        String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+                + "	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
-    
+
     /**
      * no named args since an explicit constructor exists
      * same file
      * @throws Exception
      */
     public void testNoNamedArgs1() throws Exception {
-        String contents = 
+        String contents =
                 "class Flar {\n" +
                 "  Flar() { }\n" +
-        		"  String aaa\n" +
-        		"  int bbb\n" +
-        		"  Date ccc\n" +
-        		"}\n" +
-        		"new Flar()";
+                "  String aaa\n" +
+                "  int bbb\n" +
+                "  Date ccc\n" +
+                "}\n" +
+                "new Flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 0);
         proposalExists(proposals, "bbb : __", 0);
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "Flar", 1);
     }
-    
+
     /**
      * no named args since an explicit constructor exists
      * Same package different file
@@ -150,14 +151,14 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "Flar", 2);
     }
-    
-    
+
+
     /**
      * same file
      * @throws Exception
      */
     public void testNamedArgs1() throws Exception {
-        String contents = 
+        String contents =
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
@@ -170,7 +171,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "Flar", 1);
     }
-    
+
     /**
      * Same package different file
      * @throws Exception
@@ -208,7 +209,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "Flar", 1);
     }
-    
+
     /**
      * Same package different file
      * Some args filled in
@@ -228,7 +229,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "Flar", 1);
     }
-    
+
     /**
      * Same package different file
      * Some args filled in
@@ -248,7 +249,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "Flar", 1);
     }
-    
+
     /**
      * Same package different file
      * Some args filled in
@@ -268,7 +269,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "Flar", 1);
     }
-    
+
     /**
      * STS-2628
      * ensure no double adding of named properties for booleans
@@ -287,8 +288,8 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "Flar", 1);
     }
-    
-    
+
+
     public void testParamGuessing1() throws Exception {
         create("p", "Flar",
                 "package p\n" +
@@ -297,7 +298,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  int bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
                 "int yyy\n" +
@@ -314,7 +315,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  int bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "String xxx\n" +
                 "int yyy\n" +
                 "boolean zzz\n" +
@@ -330,7 +331,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  int bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
                 "Integer yyy\n" +
@@ -347,7 +348,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
                 "Integer yyy\n" +
@@ -364,7 +365,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
                 "int yyy\n" +
@@ -382,7 +383,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
                 "int yyy\n" +
@@ -391,7 +392,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "xxx", "\"\"" };
         checkProposalChoices(contents, "Flar(", "aaa", "aaa: __, ", expectedChoices);
     }
-    
+
     public void testParamGuessing7() throws Exception {
         create("p", "Flar",
                 "package p\n" +
@@ -400,7 +401,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
                 "}\n");
-        String contents = 
+        String contents =
                 "import p.Flar\n" +
                 "Closure xxx\n" +
                 "int yyy\n" +

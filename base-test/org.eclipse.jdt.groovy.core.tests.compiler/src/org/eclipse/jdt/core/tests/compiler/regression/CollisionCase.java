@@ -13,15 +13,12 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import junit.framework.Test;
 
 public class CollisionCase extends AbstractRegressionTest {
-	
+
 public CollisionCase(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildAllCompliancesTestSuite(testClass());
-}
-public static Class testClass() {
-	return CollisionCase.class;
+	return buildAllCompliancesTestSuite(CollisionCase.class);
 }
 
 public void test001() {
@@ -59,11 +56,11 @@ public void test002() {
 			"package foo;\n" +
 			"public class bar {}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	foo.bar	abar; \n" + 
-		"	^^^^^^^\n" + 
-		"foo.bar cannot be resolved to a type\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	foo.bar	abar; \n" +
+		"	^^^^^^^\n" +
+		"foo.bar cannot be resolved to a type\n" +
 		"----------\n");
 }
 // http://bugs.eclipse.org/bugs/show_bug.cgi?id=84886
@@ -71,18 +68,18 @@ public void test003() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"class X {\n" + 
-			"	class MyFoo {\n" + 
-			"		class Bar {}\n" + 
-			"	}\n" + 
-			"	static class MyFoo$Bar {}\n" + 
+			"class X {\n" +
+			"	class MyFoo {\n" +
+			"		class Bar {}\n" +
+			"	}\n" +
+			"	static class MyFoo$Bar {}\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	static class MyFoo$Bar {}\n" + 
-		"	             ^^^^^^^^^\n" + 
-		"Duplicate nested type MyFoo$Bar\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	static class MyFoo$Bar {}\n" +
+		"	             ^^^^^^^^^\n" +
+		"Duplicate nested type MyFoo$Bar\n" +
 		"----------\n");
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,7 @@ import org.eclipse.text.edits.TextEdit;
  * @author Geoff Denning
  * @created Nov 15, 2011
  */
-// FIXGWD: This class should be converted into a proper refactoring class which
-// extends Refactoring.
+// FIXGWD: This class should be converted into a proper refactoring class which extends Refactoring.
 public class ConvertToClosureRefactoring {
 
     private final IMethod targetMethod;
@@ -47,9 +46,7 @@ public class ConvertToClosureRefactoring {
     }
 
     private IMethod findMethod(GroovyCompilationUnit unit, int offset) {
-        if (unit.isOnBuildPath()) {
-            return null;
-        }
+        //if (unit.isOnBuildPath()) return null;
         try {
             IJavaElement maybeMethod = unit.getElementAt(offset);
 

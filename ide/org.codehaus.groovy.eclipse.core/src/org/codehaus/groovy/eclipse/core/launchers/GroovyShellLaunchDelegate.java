@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.core.launchers
-;
+package org.codehaus.groovy.eclipse.core.launchers;
 
 import static org.eclipse.core.runtime.FileLocator.resolve;
 
@@ -28,6 +27,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -65,10 +65,9 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
             URL jar = resolve(enu.nextElement());
             return jar.getFile();
         } else {
-            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
+            throw new CoreException(new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
         }
     }
-
 
     public static List<String> getExtraClasspathElements() throws CoreException, IOException {
         return Collections.singletonList(GroovyShellLaunchDelegate.getPathTo(GroovyShellLaunchDelegate.JLINE_JAR));

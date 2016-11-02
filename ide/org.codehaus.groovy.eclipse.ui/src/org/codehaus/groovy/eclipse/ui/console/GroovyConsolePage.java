@@ -134,7 +134,7 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
     }
 
     public void setAutoScroll(boolean scroll) {
-        TextConsoleViewer viewer = (TextConsoleViewer) getViewer();
+        TextConsoleViewer viewer = getViewer();
         if (viewer != null) {
             fScrollLockAction.setChecked(!scroll);
         }

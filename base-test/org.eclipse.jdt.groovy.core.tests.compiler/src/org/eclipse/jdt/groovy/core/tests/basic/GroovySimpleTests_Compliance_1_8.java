@@ -37,10 +37,9 @@ public final class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegres
     }
 
     public void testDefaultAndStaticMethodInInterface() {
-        assertTrue("Groovy compiler level is less than 2.3", GroovyUtils.GROOVY_LEVEL >= 23);
-        assertTrue("JRE Compliance level is less than 1.8", isJRELevel(AbstractCompilerTest.F_1_8));
+        if (GroovyUtils.GROOVY_LEVEL < 23 || !isJRELevel(AbstractCompilerTest.F_1_8)) return;
 
-        Map customOptions = getCompilerOptions();
+        Map<String, String> customOptions = getCompilerOptions();
         customOptions.put(CompilerOptions.OPTION_Source, VERSION_1_8);
 
         runConformTest(
@@ -52,9 +51,10 @@ public final class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegres
                 "   static void callExample() {}\n" +
                 "   default void callDefault() {}\n" +
                 "}\n",
+
                 "p/ExampleGr.groovy",
                 "package p\n" + "class ExampleGr implements IExample {\n" +
-                "public void testExample() {}\n" + "}\n" 
+                "public void testExample() {}\n" + "}\n"
             },
             null, // no class libraries
             customOptions, // custom options

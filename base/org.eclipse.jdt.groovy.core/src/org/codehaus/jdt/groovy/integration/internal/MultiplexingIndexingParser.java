@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - Initial API and implementation
- *     Andy Clement     - Additional work
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.jdt.groovy.integration.internal;
 
 import java.util.Collections;
@@ -35,86 +39,84 @@ import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
 /**
  * @author Andrew Eisenberg
  * @created Aug 27, 2009
- * 
  */
 public class MultiplexingIndexingParser extends IndexingParser {
-	SourceElementNotifier notifier;
-	boolean groovyReportReferenceInfo;
-	ISourceElementRequestor requestor;
+    SourceElementNotifier notifier;
+    boolean groovyReportReferenceInfo;
+    ISourceElementRequestor requestor;
 
-	public MultiplexingIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options,
-			boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
-		super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
-		this.notifier = (SourceElementNotifier) ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
-		this.groovyReportReferenceInfo = reportLocalDeclarations;
-		this.requestor = requestor;
-	}
+    public MultiplexingIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options,
+            boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+        super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
+        this.notifier = (SourceElementNotifier) ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
+        this.groovyReportReferenceInfo = reportLocalDeclarations;
+        this.requestor = requestor;
+    }
 
-	@Override
-	public void setRequestor(ISourceElementRequestor requestor) {
-		super.setRequestor(requestor);
-		this.requestor = requestor;
-	}
+    @Override
+    public void setRequestor(ISourceElementRequestor requestor) {
+        super.setRequestor(requestor);
+        this.requestor = requestor;
+    }
 
-	@Override
-	public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit unit, boolean fullParse, IProgressMonitor pm) {
-		if (ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
+    @Override
+    public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit unit, boolean fullParse, IProgressMonitor pm) {
+        if (ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
 
-			// ASSUMPTIONS:
-			// 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
-			// 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
-			// 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
+            // ASSUMPTIONS:
+            // 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
+            // 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
+            // 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
 
-			CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
+            CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
-			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-			GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration) new GroovyParser(this.options,
-					problemReporter, false, true).dietParse(unit, compilationResult);
+            // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
+            GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration) new GroovyParser(this.options,
+                    problemReporter, false, true).dietParse(unit, compilationResult);
 
-			// CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
-			HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
-			GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
-			visitor.doVisit(cud.getModuleNode(), cud.currentPackage);
+            // CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
+            HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
+            GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
+            visitor.doVisit(cud.getModuleNode(), cud.currentPackage);
 
-			notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, sourceEnds,
-			/* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
-			return cud;
-		} else {
-			return super.parseCompilationUnit(unit, fullParse, pm);
-		}
-	}
+            notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, sourceEnds,
+            /* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
+            return cud;
+        } else {
+            return super.parseCompilationUnit(unit, fullParse, pm);
+        }
+    }
 
-	// FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
-	// FIXASC This should be calculated in GroovyCompilationUnitDeclaration
-	private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
-		HashtableOfObjectToInt table = new HashtableOfObjectToInt();
-		if (cDecl.types != null) {
-			for (TypeDeclaration tDecl : cDecl.types) {
-				createSourceEndsForType(tDecl, table);
-			}
-		}
-		return table;
-	}
+    // FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
+    // FIXASC This should be calculated in GroovyCompilationUnitDeclaration
+    private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
+        HashtableOfObjectToInt table = new HashtableOfObjectToInt();
+        if (cDecl.types != null) {
+            for (TypeDeclaration tDecl : cDecl.types) {
+                createSourceEndsForType(tDecl, table);
+            }
+        }
+        return table;
+    }
 
-	// FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
-	// FIXASC This should be calculated in GroovyCompilationUnitDeclaration
-	private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
-		table.put(tDecl, tDecl.sourceEnd);
-		if (tDecl.fields != null) {
-			for (FieldDeclaration fDecl : tDecl.fields) {
-				table.put(fDecl, fDecl.sourceEnd);
-			}
-		}
-		if (tDecl.methods != null) {
-			for (AbstractMethodDeclaration mDecl : tDecl.methods) {
-				table.put(mDecl, mDecl.sourceEnd);
-			}
-		}
-		if (tDecl.memberTypes != null) {
-			for (TypeDeclaration innerTDecl : tDecl.memberTypes) {
-				createSourceEndsForType(innerTDecl, table);
-			}
-		}
-	}
-
+    // FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
+    // FIXASC This should be calculated in GroovyCompilationUnitDeclaration
+    private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
+        table.put(tDecl, tDecl.sourceEnd);
+        if (tDecl.fields != null) {
+            for (FieldDeclaration fDecl : tDecl.fields) {
+                table.put(fDecl, fDecl.sourceEnd);
+            }
+        }
+        if (tDecl.methods != null) {
+            for (AbstractMethodDeclaration mDecl : tDecl.methods) {
+                table.put(mDecl, mDecl.sourceEnd);
+            }
+        }
+        if (tDecl.memberTypes != null) {
+            for (TypeDeclaration innerTDecl : tDecl.memberTypes) {
+                createSourceEndsForType(innerTDecl, table);
+            }
+        }
+    }
 }

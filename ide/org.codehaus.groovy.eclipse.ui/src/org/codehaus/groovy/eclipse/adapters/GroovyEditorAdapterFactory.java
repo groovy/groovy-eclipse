@@ -38,8 +38,7 @@ public class GroovyEditorAdapterFactory implements IAdapterFactory {
         if (adapter != null)
             return adapter;
 
-        IFile file = (IFile) ((GroovyEditor) adaptableObject).getEditorInput()
-                .getAdapter(IFile.class);
+        IFile file = ((GroovyEditor) adaptableObject).getEditorInput().getAdapter(IFile.class);
         if (file != null) {
             return adaptFromFile(adapterType, file);
         }

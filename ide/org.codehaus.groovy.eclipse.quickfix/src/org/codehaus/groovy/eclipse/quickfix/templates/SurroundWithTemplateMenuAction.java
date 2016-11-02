@@ -66,7 +66,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 
 public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownDelegate2 {
 
-	//TODO make api
 	public static final String SURROUND_WITH_QUICK_MENU_ACTION_ID= "org.eclipse.jdt.ui.edit.text.java.surround.with.quickMenu";  //$NON-NLS-1$
 
 	private static final String GROOVY_TEMPLATE_PREFERENCE_PAGE_ID= "org.codehaus.groovy.eclipse.quickfix.preferencepage.template"; //$NON-NLS-1$
@@ -83,9 +82,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 			super(ActionMessages.SurroundWithTemplateMenuAction_ConfigureTemplatesActionName);
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		public void run() {
 			PreferenceDialog preferenceDialog= PreferencesUtil.createPreferenceDialogOn(getShell(), GROOVY_TEMPLATE_PREFERENCE_PAGE_ID, new String[] { GROOVY_TEMPLATE_PREFERENCE_PAGE_ID, CODE_TEMPLATE_PREFERENCE_PAGE_ID }, null);
@@ -128,7 +124,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 
 		public void partOpened(IWorkbenchPart part) {
 		}
-
 	};
 
 	protected void disposeMenuItems() {
@@ -144,9 +139,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public Menu getMenu(Menu parent) {
 		setMenu(new Menu(parent));
 		fillMenu(fMenu);
@@ -154,9 +146,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		return fMenu;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public Menu getMenu(Control parent) {
 		setMenu(new Menu(parent));
 		fillMenu(fMenu);
@@ -180,9 +169,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		menu.add(new ConfigureTemplatesAction());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public void dispose() {
 		if (fPartService != null) {
 			fPartService.removePartListener(fPartListener);
@@ -191,9 +177,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		setMenu(null);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public void init(IWorkbenchWindow window) {
 		if (fPartService != null) {
 			fPartService.removePartListener(fPartListener);
@@ -209,9 +192,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public void run(IAction action) {
 		IWorkbenchPart activePart= JavaPlugin.getActivePage().getActivePart();
 		if (!(activePart instanceof CompilationUnitEditor))
@@ -227,9 +207,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		}.createMenu();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public void selectionChanged(IAction action, ISelection selection) {
 		// Default do nothing
 	}
@@ -328,11 +305,12 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 		return (ITextSelection)selection;
 	}
 
-	private static boolean isInJavadoc(JavaEditor editor) {
+	@SuppressWarnings("unused")
+    private static boolean isInJavadoc(JavaEditor editor) {
 		ITextSelection selection= getTextSelection(editor);
 		if (selection == null)
 			return false;
-		
+
 		IDocument document= editor.getDocumentProvider().getDocument(editor.getEditorInput());
 		try {
 			String contentType= TextUtilities.getContentType(document, IJavaPartitions.JAVA_PARTITIONING, selection.getOffset(), true);
@@ -357,9 +335,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 				actionName.append(cnadidate.getDisplayString());
 
 				Action action= new Action(actionName.toString()) {
-					/**
-					 * {@inheritDoc}
-					 */
 					@Override
 					public void run() {
 						applyProposal(proposal, viewer, (char)0, 0, offset);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,174 +13,283 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.test.actions;
+package org.codehaus.groovy.eclipse.test.actions
 
 /**
- * @author Andrew Eisenberg
- * @created Dec 15, 2010
+ * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}
  */
-public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
+final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-	
-    // should not be removed
-    void testSimpleAlias() {
-        String contents = 
-                """ 
-                import other.FirstClass as F${LINE_SEPARATOR}
-                
-                F
-                """
-        doAddImportTest(contents)
+    void testRetainTypeAlias() {
+        String contents = '''
+            import org.w3c.dom.Node as N
+            N x
+            '''
+        doContentsCompareTest(contents, contents)
     }
-//    // should be removed
-//    void testSimpleAliasRemoval() {
-//        String contents = 
-//            """ 
-//            import other.FirstClass as F
-//            
-//            def x
-//            """
-//            doDeleteImportTest(contents, 1)
-//    }
-//    // should not be removed
-//    void testInnerTypeAlias() {
-//        String contents = 
-//            """ 
-//            import other.Outer.Inner as F
-//            
-//            F
-//            """
-//            doAddImportTest(contents)
-//    }
-//    // should be removed
-//    void testInnerTypeAliasRemoval() {
-//        String contents = 
-//            """ 
-//            import other.Outer.Inner as F
-//            
-//            def x
-//            """
-//            doDeleteImportTest(contents, 1)
-//    }
-    // should be removed
-    // this test really should be moved to OrganizeImportsTest
-//    void testInnerTypeRemoval() {
-//        String contents = 
-//            """ 
-//            import other.Outer.Inner as F
-//            
-//            def x
-//            """
-//            doDeleteImportTest(contents, 1)
-//    }
-    // should not be removed
-    void testStaticAlias() {
-        String contents = 
-            """ 
-            import static other2.FourthClass.m as j${LINE_SEPARATOR}
-            
-            j
-            """
-            doAddImportTest(contents)
+
+    void testRetainTypeAlias2() {
+        String contents = '''
+            import org.w3c.dom.Node as N
+            N[] x
+            '''
+        doContentsCompareTest(contents, contents)
     }
-    // should not be removed
-    void testStaticAlias2() {
-        String contents = 
-            """ 
-            import static other2.FourthClass.m as j${LINE_SEPARATOR}
-            
+
+    void testRetainTypeAlias3() {
+        // List is a default import
+        String contents = '''
+            import java.util.List as L
+            L list = []
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainTypeAlias4() {
+        String contents = '''
+            import java.util.LinkedList as LL
+            def list = [] as LL
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainTypeAlias5() {
+        String contents = '''
+            import java.util.LinkedList as LL
+            def list = (LL) []
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRemoveTypeAlias() {
+        String contents = '''
+            import org.w3c.dom.Node as N
             def x
-            """
-            doAddImportTest(contents)
+            '''
+        doDeleteImportTest(contents, 1)
     }
-    // should not be removed
-    void testStaticAliasAnnotation() {
-        String contents =
-            """
-            @Deprecated
-            import static other2.FourthClass.m as j
-            
-            j
-            """
-            doAddImportTest(contents)
-    }
-    // should not be removed
-    void testAliasAnnotation() {
-        String contents =
-            """
-            @Deprecated
-            import static other2.FourthClass as k
-            @Deprecated
-            import static other2.FourthClass.m as j
-            
-            j
-            """
-            doAddImportTest(contents)
-    }
-    
 
-    // https://issuetracker.springsource.com/browse/STS-3314
-    void testMultiAliasing1() {
-        String contents =
-"""
-import other2.FourthClass${LINE_SEPARATOR}
-import other3.FourthClass as FourthClass2${LINE_SEPARATOR}
-import other4.FourthClass as FourthClass3${LINE_SEPARATOR}
-
-class TypeHelper {
-    FourthClass f1
-    FourthClass2 f2
-    FourthClass3 f3
-}
-"""
-        doAddImportTest(contents)
+    void testRemoveTypeAlias1() {
+        String contents = '''
+            import java.util.List as L
+            def x
+            '''
+        doDeleteImportTest(contents, 1)
     }
-//    void testMultiAliasing2() {
-//        String contents =
-//                """
-//import other2.FourthClass
-//import other3.FourthClass as FourthClass2
-//import other4.FourthClass as FourthClass3
-//
-//class TypeHelper {
-//    FourthClass f1
-//    FourthClass2 f2
-////    FourthClass3 f3
-//}
-//"""
-//                doDeleteImportTest(contents, 1)
-//    }
-//    
-//    // TODO failing on build server...disabled
-//    void _testMultiAliasing2a() {
-//        String contents =
-//                """
-//import other3.FourthClass as FourthClass2
-//import other4.FourthClass as FourthClass3
-//import other2.FourthClass
-//
-//class TypeHelper {
-//    FourthClass f1
-//    FourthClass2 f2
-////    FourthClass3 f3
-//}
-//                """
-//                doDeleteImportTest(contents, 1)
-//    }
-//    void testMultiAliasing3() {
-//        String contents =
-//                """
-//import other2.FourthClass
-//import other3.FourthClass as FourthClass2
-//import other4.FourthClass as FourthClass3
-//
-//class TypeHelper {
-////    FourthClass f1
-//    FourthClass2 f2
-////    FourthClass3 f3
-//}
-//                """
-//                doDeleteImportTest(contents, 2)
-//    }
+
+    void testRetainInnerTypeAlias() {
+        String contents = '''
+            import java.util.Map.Entry as E
+            E x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainInnerTypeAlias2() {
+        String contents = '''
+            import java.util.Map.Entry as E
+            E[] x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRemoveInnerTypeAlias() {
+        String contents = '''
+            import java.util.Map.Entry as E
+            def x
+            '''
+        doDeleteImportTest(contents, 1)
+    }
+
+    void testRetainStaticAlias() {
+        String contents = '''
+            import static java.lang.Math.PI as Pie
+            def x = Pie
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainStaticAlias2() {
+        String contents = '''
+            import static java.lang.Math.pow as f
+            f(2,Math.PI)
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainStaticAlias3() {
+        String contents = '''
+            import static java.lang.Math.pow as f
+            class C {
+              void method() {
+                f(2,Math.PI)
+              }
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainStaticAlias4() {
+        String contents = '''
+            import static java.math.RoundingMode.CEILING as ceiling
+            BigDecimal one = 1.0, two = one.divide(0.5, ceiling)
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainStaticAlias5() {
+        String contents = '''
+            import static java.util.concurrent.TimeUnit.MILLISECONDS as msec
+            msec.toNanos(1234)
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainStaticAlias6() {
+        createGroovyType 'other', 'Wrapper.groovy', '''
+        class Wrapper {
+          enum Feature {
+            TopRanking,
+            SomethingElse
+          }
+        }
+        '''
+        String contents = '''
+            import static other.Wrapper.Feature.TopRanking as feature
+            import static other.Wrapper.Feature.values as features
+            new Object().equals(feature)
+            for (f in features()) {
+              print f
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRemoveStaticAlias() {
+        String contents = '''
+            import static java.lang.Math.PI as P
+            def x
+            '''
+        doDeleteImportTest(contents, 1)
+    }
+
+    void testRemoveStaticAlias2() {
+        String contents = '''
+            import static java.util.List.emptyList as empty
+            def x
+            '''
+        doDeleteImportTest(contents, 1)
+    }
+
+    void testRemoveStaticAlias3() {
+        String contents = '''
+            import static java.math.RoundingMode.CEILING as ceiling
+            def x
+            '''
+        doDeleteImportTest(contents, 1)
+    }
+
+    void testRetainAnnotatedStaticAlias() {
+        String contents = '''
+            @Deprecated
+            import static java.lang.Math.PI as P
+            P x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAnnotatedStaticAlias2() {
+        String contents = '''
+            @Deprecated
+            import static java.lang.Math as M
+            @Deprecated
+            import static java.lang.Math.PI as P
+            P x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    // STS-3314
+    void testMultiAliasing() {
+        String contents = '''
+            import javax.xml.soap.Node as SoapNode
+
+            import org.w3c.dom.Node
+
+            class SomeType {
+              Node n
+              SoapNode s
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testMultiAliasing2() {
+        String contents = '''
+            import other2.FourthClass
+            import other3.FourthClass as FourthClass2
+            import other4.FourthClass as FourthClass3
+
+            class TypeHelper {
+              FourthClass f1
+              FourthClass2 f2
+              FourthClass3 f3
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testMultiAliasing3() {
+        String contents = '''
+            import other2.FourthClass
+            import other3.FourthClass as FourthClass2
+            import other4.FourthClass as FourthClass3
+
+            class TypeHelper {
+              FourthClass f1
+              FourthClass2 f2
+            }
+            '''
+        doDeleteImportTest(contents, 1)
+    }
+
+    void testMultiAliasing4() {
+        String originalContents = '''
+            import other3.FourthClass as FourthClass2
+            import other4.FourthClass as FourthClass3
+            import other2.FourthClass
+
+            class TypeHelper {
+              FourthClass f1
+              FourthClass2 f2
+            }
+            '''
+        String expectedContents = '''
+            import other2.FourthClass
+            import other3.FourthClass as FourthClass2
+
+            class TypeHelper {
+              FourthClass f1
+              FourthClass2 f2
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    void testMultiAliasing5() {
+        String contents = '''
+            import other2.FourthClass
+            import other3.FourthClass as FourthClass2
+            import other4.FourthClass as FourthClass3
+
+            class TypeHelper {
+              FourthClass2 f2
+            }
+            '''
+        doDeleteImportTest(contents, 2)
+    }
+
+    // TODO: What about an alias that is the same as the type or field/method?
+
+    // TODO: What happens if an alias is repeated multiple times in the compliation unit?
 }

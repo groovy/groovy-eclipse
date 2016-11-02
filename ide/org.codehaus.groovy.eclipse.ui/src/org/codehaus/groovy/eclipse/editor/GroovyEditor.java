@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -655,7 +655,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         setSourceViewerConfiguration(createJavaSourceViewerConfiguration());
     }
 
-
     public GroovyConfiguration getGroovyConfiguration() {
         return (GroovyConfiguration) getSourceViewerConfiguration();
     }
@@ -689,7 +688,6 @@ public class GroovyEditor extends CompilationUnitEditor {
     private boolean semanticHighlightingInstalled() {
         return semanticReconciler != null;
     }
-
 
     @Override
     public void dispose() {
@@ -732,7 +730,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             if (reference instanceof IImportDeclaration && moveCursor) {
                 int offset;
                 int length;
-                ISourceRange range = ((ISourceReference) reference).getSourceRange();
+                ISourceRange range = reference.getSourceRange();
                 String content= reference.getSource();
                 if (content != null) {
                     int start = Math.max(content.indexOf("import") + 6, 7); //$NON-NLS-1$
@@ -777,7 +775,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-
     @Override
     protected void createActions() {
         super.createActions();
@@ -785,30 +782,30 @@ public class GroovyEditor extends CompilationUnitEditor {
         GenerateActionGroup group = getGenerateActionGroup();
 
         // use our Organize Imports instead
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, new OrganizeGroovyImportsAction(this));
-        IAction organizeImports = new OrganizeGroovyImportsAction(this);
-        organizeImports.setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
-        setAction("OrganizeImports", organizeImports); //$NON-NLS-1$
+        IAction organizeGroovyImportsAction = new OrganizeGroovyImportsAction(this);
+        organizeGroovyImportsAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
+        setAction("OrganizeImports", organizeGroovyImportsAction);
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, organizeGroovyImportsAction);
 
-        // use our FormatAll instead
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group,
-                new FormatAllGroovyAction(this.getEditorSite(), FormatKind.FORMAT));
+        // use our Format All instead
+        IAction formatAllAction = new FormatAllGroovyAction(getEditorSite(), FormatKind.FORMAT);
+        // setActionDefinitionId?
+        // setAction?
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group, formatAllAction);
 
         // use our Format instead
-        IAction formatAction = new FormatGroovyAction(this.getEditorSite(), FormatKind.FORMAT);
-        formatAction
-        .setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
-        setAction("Format", formatAction); //$NON-NLS-1$
+        IAction formatAction = new FormatGroovyAction(getEditorSite(), FormatKind.FORMAT);
+        formatAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
+        setAction("Format", formatAction);
         PlatformUI.getWorkbench().getHelpSystem().setHelp(formatAction, IJavaHelpContextIds.FORMAT_ACTION);
 
         // use our Indent instead
-        IAction indentAction = new FormatGroovyAction(this.getEditorSite(), FormatKind.INDENT_ONLY);
-        indentAction
-        .setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
-        setAction("Indent", indentAction); //$NON-NLS-1$
+        IAction indentAction = new FormatGroovyAction(getEditorSite(), FormatKind.INDENT_ONLY);
+        indentAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
+        setAction("Indent", indentAction);
         PlatformUI.getWorkbench().getHelpSystem().setHelp(indentAction, IJavaHelpContextIds.INDENT_ACTION);
 
-        // Use our IndentOnTab instead
+        // use our IndentOnTab instead
         IAction indentOnTabAction = new GroovyTabAction(this);
         setAction(INDENT_ON_TAB, indentOnTabAction);
         markAsStateDependentAction(INDENT_ON_TAB, true);
@@ -825,7 +822,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         // remove most refactorings since they are not yet really supported
         removeRefactoringAction("fSelfEncapsulateField");
         removeRefactoringAction("fMoveAction");
-        //        removeRefactoringAction("fRenameAction");
+        //removeRefactoringAction("fRenameAction");
         removeRefactoringAction("fModifyParametersAction");
         // fPullUpAction
         // fPushDownAction
@@ -856,8 +853,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         // use our Extract constant action instead
         GroovyExtractConstantAction extractConstantAction = new GroovyExtractConstantAction(this);
-        extractConstantAction
-        .setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_CONSTANT);
+        extractConstantAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_CONSTANT);
         setAction("ExtractConstant", extractConstantAction); //$NON-NLS-1$
         replaceRefactoringAction("fExtractConstantAction", extractConstantAction);
 
@@ -1484,5 +1480,4 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
         return super.createOutlinePage();
     }
-
 }

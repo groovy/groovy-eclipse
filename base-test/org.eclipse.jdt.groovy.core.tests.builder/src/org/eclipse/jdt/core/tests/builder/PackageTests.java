@@ -22,15 +22,15 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
 
 public class PackageTests extends BuilderTests {
-	
+
 	public PackageTests(String name) {
 		super(name);
 	}
-	
+
 	public static Test suite() {
 		return buildTestSuite(PackageTests.class);
 	}
-	
+
 	/**
 	 * Bugs 6564
 	 */
@@ -38,47 +38,47 @@ public class PackageTests extends BuilderTests {
 		//----------------------------
 		//           Step 1
 		//----------------------------
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		env.addClass(src, "pack", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package pack;\n"+ //$NON-NLS-1$
-			"public class X {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
-			);
-			
-		env.addClass(src2, "p1", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class X {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
-			);
-			
-		env.addClass(src2, "p2", "Y", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p2;\n"+ //$NON-NLS-1$
-			"public class Y extends p1.X {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
-			);
-			
-		env.addClass(src2, "p3", "Z", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p3;\n"+ //$NON-NLS-1$
-			"public class Z extends p2.Y {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src = env.addPackageFragmentRoot(projectPath, "src");
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(src, "pack", "X",
+			"package pack;\n"+
+			"public class X {\n"+
+			"}\n"
 			);
 
-		
+		env.addClass(src2, "p1", "X",
+			"package p1;\n"+
+			"public class X {\n"+
+			"}\n"
+			);
+
+		env.addClass(src2, "p2", "Y",
+			"package p2;\n"+
+			"public class Y extends p1.X {\n"+
+			"}\n"
+			);
+
+		env.addClass(src2, "p3", "Z",
+			"package p3;\n"+
+			"public class Z extends p2.Y {\n"+
+			"}\n"
+			);
+
+
 		fullBuild();
 		expectingNoProblems();
-		
+
 		//----------------------------
 		//           Step 2
 		//----------------------------
-		env.removeClass(env.getPackagePath(src, "pack"), "X"); //$NON-NLS-1$ //$NON-NLS-2$
-		env.removePackage(src2, "p3"); //$NON-NLS-1$
-			
+		env.removeClass(env.getPackagePath(src, "pack"), "X");
+		env.removePackage(src2, "p3");
+
 		incrementalBuild();
 		expectingNoProblems();
 	}
@@ -112,11 +112,11 @@ public void test001() throws CoreException {
 				"public class Z extends p.q.Y {\n" +
 				"}\n"
 				);
-		assertTrue(new File(externalPackageDir.getAbsolutePath() + 
+		assertTrue(new File(externalPackageDir.getAbsolutePath() +
 				File.separator + "r" + File.separator + "Z.java").exists());
 		fullBuild();
 		expectingPresenceOf(bin.append("p/q/r/Z.class"));
-		
+
 		expectingNoProblems();
 		env.removeClass(env.getPackagePath(src, "p.q.r"), "Z");
 		env.removePackage(src, "p.q.r");
@@ -145,7 +145,7 @@ public void test002() throws CoreException {
 			);
 		IProject externalProject = env.getProject(externalProjectPath);
 		IFolder externalFolder = externalProject.getFolder("q");
-		externalFolder.create(false /* no need to force */, true /*local */, 
+		externalFolder.create(false /* no need to force */, true /*local */,
 				null /* no progress monitor */);
 		IFolder folder = env.getWorkspace().getRoot().getFolder(src.append("p/q"));
 		folder.createLink(externalFolder.getLocationURI(), 0, null);
@@ -159,11 +159,11 @@ public void test002() throws CoreException {
 				"public class Z extends p.q.Y {\n" +
 				"}\n"
 				);
-		assertTrue(new File(externalFolder.getLocation() + 
+		assertTrue(new File(externalFolder.getLocation() +
 				File.separator + "r" + File.separator + "Z.java").exists());
 		env.incrementalBuild(projectPath);
 		expectingPresenceOf(bin.append("p/q/r/Z.class"));
-		
+
 		expectingNoProblems();
 		env.removeClass(env.getPackagePath(src, "p.q.r"), "Z");
 		env.removePackage(src, "p.q.r");

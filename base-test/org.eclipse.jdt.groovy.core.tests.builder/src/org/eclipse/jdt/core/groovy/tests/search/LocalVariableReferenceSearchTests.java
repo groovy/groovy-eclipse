@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
@@ -30,7 +29,7 @@ public class LocalVariableReferenceSearchTests extends AbstractGroovySearchTest 
     public LocalVariableReferenceSearchTests(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
         return buildTestSuite(LocalVariableReferenceSearchTests.class);
     }
@@ -129,7 +128,7 @@ public class LocalVariableReferenceSearchTests extends AbstractGroovySearchTest 
         int nameStart2 = contents.indexOf(XXX, nameStart+1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
     }
-    
+
     private MatchRegion[] createRegions(int...nameStarts) {
         MatchRegion[] regions = new MatchRegion[nameStarts.length];
         for (int i = 0; i < nameStarts.length; i++) {
@@ -137,7 +136,7 @@ public class LocalVariableReferenceSearchTests extends AbstractGroovySearchTest 
         }
         return regions;
     }
-    
+
     private void doTestForReferencesInScript(String contents, MatchRegion[] matchLocations) throws JavaModelException {
         doTestForVarReferences(contents, 3, XXX, matchLocations[0].offset, matchLocations);
     }

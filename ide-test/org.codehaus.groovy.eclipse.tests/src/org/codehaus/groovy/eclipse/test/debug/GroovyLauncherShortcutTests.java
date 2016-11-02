@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.Map;
 import junit.framework.AssertionFailedError;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.test.TestProject;
@@ -38,7 +37,6 @@ import org.eclipse.debug.core.model.IStreamMonitor;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants;
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -79,7 +77,6 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         super.setUp();
         DebugUIPlugin.getDefault().getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD, MessageDialogWithToggle.NEVER);
         DebugUIPlugin.getDefault().getPreferenceStore().setValue(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT, false);
-        GroovyRuntime.addGroovyRuntime(testProject.getProject());
     }
 
     public GroovyLauncherShortcutTests() {
@@ -166,7 +163,6 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     public void testScriptLaunch9() throws Exception {
         TestProject otherProject = new TestProject("OtherProject");
         try {
-            GroovyRuntime.addGroovyRuntime(otherProject.getProject());
             testProject.addProjectReference(otherProject.getJavaProject());
             otherProject.createGroovyTypeAndPackage("pack", "Other.groovy", "class Other { String foo() { return \"hi!\"; } }");
             otherProject.fullBuild();

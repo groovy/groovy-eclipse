@@ -26,11 +26,7 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 //		TESTS_RANGE = new int[] { 11, -1 };
 //	}
 	public static Test suite() {
-		return buildAllCompliancesTestSuite(testClass());
-	}
-	
-	public static Class testClass() {
-		return ConditionalExpressionTest.class;
+		return buildAllCompliancesTestSuite(ConditionalExpressionTest.class);
 	}
 
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=100162

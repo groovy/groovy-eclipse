@@ -21,9 +21,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Map;
 
-import junit.framework.Assert;
-
-import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestPlugin;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -58,7 +55,7 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Synchronizer;
-import org.eclipse.ui.dialogs.IOverwriteQuery;
+import org.junit.Assert;
 import org.osgi.framework.Bundle;
 
 
@@ -166,11 +163,11 @@ public class JavaProjectHelper {
 	    } else {
 	        project.refreshLocal(IResource.DEPTH_INFINITE, null);
 	    }
-	    
+
 	    if (!project.isOpen()) {
 	        project.open(null);
 	    }
-	    
+
 	    IPath outputLocation;
 	    if (binFolderName != null && binFolderName.length() > 0) {
 	        IFolder binFolder= project.getFolder(binFolderName);
@@ -181,19 +178,19 @@ public class JavaProjectHelper {
 	    } else {
 	        outputLocation= project.getFullPath();
 	    }
-	    
+
 	    if (!project.hasNature(JavaCore.NATURE_ID)) {
 	        addNatureToProject(project, JavaCore.NATURE_ID, null);
 	    }
 	    if (!project.hasNature(GroovyNature.GROOVY_NATURE)) {
 	        addNatureToProject(project, GroovyNature.GROOVY_NATURE, null);
 	    }
-	    
+
 	    IJavaProject jproject= JavaCore.create(project);
-	    
+
 	    jproject.setOutputLocation(outputLocation, null);
 	    jproject.setRawClasspath(new IClasspathEntry[0], null);
-	    
+
 	    return jproject;
 	}
 
@@ -747,12 +744,6 @@ public class JavaProjectHelper {
 				IFile file= importTarget.getFile(name);
 				file.create(url.openStream(), true, null);
 			}
-		}
-	}
-
-	private static class ImportOverwriteQuery implements IOverwriteQuery {
-		public String queryOverwrite(String file) {
-			return ALL;
 		}
 	}
 

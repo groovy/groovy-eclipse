@@ -472,9 +472,9 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 //				System.out.println(sourceUnits[u].getFileName());
 //			}
 		}
+		//CompilationUnitDeclaration unit = null;
+		//ProcessTaskManager processingTask = null;
 		// GROOVY end
-		CompilationUnitDeclaration unit = null;
-		ProcessTaskManager processingTask = null;
 		try {
 			// build and record parsed units
 			reportProgress(Messages.compilation_beginningToCompile);

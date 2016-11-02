@@ -111,11 +111,10 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> T adapt(Object target, Class<T> clazz) {
         T result;
         if (target instanceof IAdaptable) {
-            result = (T) ((IAdaptable) target).getAdapter(clazz);
+            result = ((IAdaptable) target).getAdapter(clazz);
         } else {
             result = null;
         }

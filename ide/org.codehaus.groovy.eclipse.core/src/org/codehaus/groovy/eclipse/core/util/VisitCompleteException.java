@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@ package org.codehaus.groovy.eclipse.core.util;
 
 /**
  * An exception that may be thrown by visitors to indicate that a visit is complete. Used to short circuit a visit.
- * 
+ *
  * @author empovazan
  */
 public class VisitCompleteException extends RuntimeException {
-	public VisitCompleteException() {
-	}
+    public VisitCompleteException() {
+    }
 
-	public VisitCompleteException(String message) {
-		super(message);
-	}
+    public VisitCompleteException(String message) {
+        super(message);
+    }
 
-	private static final long serialVersionUID = 4199826438765194340L;
+    private static final long serialVersionUID = 4199826438765194340L;
 }

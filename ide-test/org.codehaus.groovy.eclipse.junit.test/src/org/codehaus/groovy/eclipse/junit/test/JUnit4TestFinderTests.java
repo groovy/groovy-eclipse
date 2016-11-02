@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.junit.test;
 
 import java.util.HashSet;
@@ -28,7 +32,7 @@ import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder;
 /**
  * @author Andrew Eisenberg
  * @created Jun 3, 2009
- * 
+ *
  */
 public class JUnit4TestFinderTests extends JUnitTestCase {
 
@@ -46,15 +50,15 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
                 "   public static Test suite() throws Exception { }\n" +
                 "}\n"
                 );
-        
+
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         IFile file = getFile(projectPath, "src/p2/Hello.groovy");
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("Hello");
         assertTrue("Groovy type Hello should exist.", type.exists());
-        assertTrue("Groovy type Hello should be a test suite", 
+        assertTrue("Groovy type Hello should be a test suite",
                 new JUnit4TestFinder().isTest(type));
     }
     public void testFinderOfSubclass() throws Exception {
@@ -71,21 +75,21 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
                 "abstract class Tester extends TestCase {\n"+
                 "}\n"
                 );
-        
+
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         IFile file = getFile(projectPath, "src/p2/Hello.groovy");
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("Hello");
         assertTrue("Groovy type Hello should exist.", type.exists());
-        assertTrue("Groovy type Hello should be a test suite", 
+        assertTrue("Groovy type Hello should be a test suite",
                 new JUnit4TestFinder().isTest(type));
         file = getFile(projectPath, "src/p2/Tester.groovy");
         unit = JavaCore.createCompilationUnitFrom(file);
         type = unit.getType("Tester");
         assertTrue("Groovy type Tester should exist.", type.exists());
-        assertFalse("Groovy type Tester should not be a test suite (it is abstract)", 
+        assertFalse("Groovy type Tester should not be a test suite (it is abstract)",
                 new JUnit4TestFinder().isTest(type));
     }
     public void testFinderOfNonPublicSubclass() throws Exception {
@@ -102,27 +106,27 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
                 "abstract class Tester extends TestCase {\n"+
                 "}\n"
                 );
-        
+
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         IFile file = getFile(projectPath, "src/p2/Hello.groovy");
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("Hello");
         assertTrue("Groovy type Hello should exist.", type.exists());
-        assertTrue("Groovy type Hello should be a test suite (even though it is non-public)", 
+        assertTrue("Groovy type Hello should be a test suite (even though it is non-public)",
                 new JUnit4TestFinder().isTest(type));
         file = getFile(projectPath, "src/p2/Tester.groovy");
         unit = JavaCore.createCompilationUnitFrom(file);
         type = unit.getType("Tester");
         assertTrue("Groovy type Tester should exist.", type.exists());
-        assertFalse("Groovy type Tester should not be a test suite (it is abstract)", 
+        assertFalse("Groovy type Tester should not be a test suite (it is abstract)",
                 new JUnit4TestFinder().isTest(type));
     }
-    
+
     public void testUsingTestAnnotation() throws Exception {
         IPath projectPath = createGenericProject();
-        
+
         IPath root = projectPath.append("src");
         env.addGroovyClass(root, "", "T2", "" +
                 "import org.junit.Test\n"+
@@ -135,18 +139,18 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
         );
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         IFile file = getFile(projectPath, "src/T2.groovy");
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("T2");
         assertTrue("Groovy type T2 should exist.", type.exists());
-        assertTrue("Groovy type T2 should be a test suite", 
+        assertTrue("Groovy type T2 should be a test suite",
                 new JUnit4TestFinder().isTest(type));
     }
-    
+
     public void testUsingRunWithAnnotation() throws Exception {
         IPath projectPath = createGenericProject();
-        
+
         IPath root = projectPath.append("src");
         env.addGroovyClass(root, "", "T3", "" +
                 "import org.junit.runner.RunWith\n"+
@@ -159,15 +163,15 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
         );
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         IFile file = getFile(projectPath, "src/T3.groovy");
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("T3");
         assertTrue("Groovy type T3 should exist.", type.exists());
-        assertTrue("Groovy type T3 should be a test suite", 
+        assertTrue("Groovy type T3 should be a test suite",
                 new JUnit4TestFinder().isTest(type));
     }
-    
+
     public void testFindAllTestSuites() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
@@ -220,15 +224,15 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
                 "}\n"+
                 "}\n"
         );
-        
+
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         Set<IType> testTypes = new HashSet<IType>();
         IProject project = getProject(projectPath);
-        
+
         new JUnit4TestFinder().findTestsInContainer(JavaCore.create(project), testTypes, new NullProgressMonitor());
-        
+
         boolean testerFound = false;
         boolean helloFound = false;
         boolean hello2Found = false;
@@ -252,7 +256,7 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
 
         assertEquals("Should have found 6 test classes", 6, testTypes.size());
     }
-    
+
     // GRECLIPSE-569 @Test(expected = RuntimeException) not being found
     public void testFindTestWithExpectedException() throws Exception {
         IPath projectPath = createGenericProject();
@@ -267,9 +271,9 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
                 );
         incrementalBuild(projectPath);
         expectingNoProblems();
-        
+
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(unitPath));
         boolean found = new JUnitPropertyTester().test(unit, "canLaunchAsJUnit", new Object[0], null);
         assertTrue("Tester should be a test type for " + unit, found);
-    }    
+    }
 }

@@ -64,7 +64,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         if (editor == null) {
             return null;
         }
-        IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+        IFile file = editor.getEditorInput().getAdapter(IFile.class);
         if (file == null) {
             return null;
         }

@@ -25,7 +25,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -151,7 +150,7 @@ public class ContentAssistContext {
     /**
      * The completion text that is being used for completion
      * (may be different than the default if doing a method context completon
-     * 
+     *
      * @return
      */
     public String getPerceivedCompletionExpression() {

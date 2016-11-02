@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
  */
 public class TestAll extends junit.framework.TestCase {
 
-	public final static List TEST_CLASSES_1_5 = new ArrayList();
+	public final static List<Class<? extends Test>> TEST_CLASSES_1_5 = new ArrayList<Class<? extends Test>>();
 	static {
 		/* completion tests */
 		TEST_CLASSES_1_5.addAll(RunCompletionParserTests.TEST_CLASSES_1_5);
@@ -45,21 +45,21 @@ public TestAll(String testName) {
 }
 
 public static Test suite() {
-	ArrayList testClasses = new ArrayList();
+	List<Class<? extends Test>> testClasses = new ArrayList<Class<? extends Test>>();
 
 	/* completion tests */
 	testClasses.addAll(RunCompletionParserTests.TEST_CLASSES);
-	
+
 	/* selection tests */
 	testClasses.add(ExplicitConstructorInvocationSelectionTest.class);
 	testClasses.add(SelectionTest.class);
 	testClasses.add(SelectionTest2.class);
 	testClasses.add(SelectionJavadocTest.class);
-	
+
 	/* recovery tests */
 	testClasses.add(DietRecoveryTest.class);
 	testClasses.add(StatementRecoveryTest.class);
-	
+
 	/* source element parser tests */
 	testClasses.add(SourceElementParserTest.class);
 
@@ -71,11 +71,11 @@ public static Test suite() {
 	testClasses.add(DualParseSyntaxErrorTest.class);
 	testClasses.add(ParserTest.class);
 	testClasses.add(ComplianceDiagnoseTest.class);
-	
+
 	TestSuite all = new TestSuite(TestAll.class.getName());
 	int possibleComplianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_3) != 0) {
-		ArrayList tests_1_3 = (ArrayList)testClasses.clone();
+		List<Class<? extends Test>> tests_1_3 = new ArrayList<Class<? extends Test>>(testClasses);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
 		TestCase.TESTS_NAMES = null;
@@ -85,7 +85,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_3, tests_1_3));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_4) != 0) {
-		ArrayList tests_1_4 = (ArrayList)testClasses.clone();
+		List<Class<? extends Test>> tests_1_4 = new ArrayList<Class<? extends Test>>(testClasses);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
 		TestCase.TESTS_NAMES = null;
@@ -95,7 +95,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_4, tests_1_4));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_5) != 0) {
-		ArrayList tests_1_5 = (ArrayList)testClasses.clone();
+		List<Class<? extends Test>> tests_1_5 = new ArrayList<Class<? extends Test>>(testClasses);
 		tests_1_5.addAll(TEST_CLASSES_1_5);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
@@ -106,7 +106,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_5, tests_1_5));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_6) != 0) {
-		ArrayList tests_1_6 = (ArrayList)testClasses.clone();
+		List<Class<? extends Test>> tests_1_6 = new ArrayList<Class<? extends Test>>(testClasses);
 		tests_1_6.addAll(TEST_CLASSES_1_5);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;
@@ -117,7 +117,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_6, tests_1_6));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_7) != 0) {
-		ArrayList tests_1_7 = (ArrayList)testClasses.clone();
+		List<Class<? extends Test>> tests_1_7 = new ArrayList<Class<? extends Test>>(testClasses);
 		tests_1_7.addAll(TEST_CLASSES_1_5);
 		// Reset forgotten subsets tests
 		TestCase.TESTS_PREFIX = null;

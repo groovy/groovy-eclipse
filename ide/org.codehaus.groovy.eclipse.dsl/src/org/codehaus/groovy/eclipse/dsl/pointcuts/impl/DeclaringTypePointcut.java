@@ -20,7 +20,6 @@ import java.util.Collections;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
@@ -34,8 +33,8 @@ public class DeclaringTypePointcut extends FilteringPointcut<ClassNode>  {
     public DeclaringTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, ClassNode.class);
     }
-    
-    
+
+
     /**
      * Grabs the explicit declaring type of the {@link AnnotatedNode}.  This will not return
      *  the expected value for {@link MethodCallExpression}s.

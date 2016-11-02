@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,15 @@ import org.eclipse.jdt.internal.core.BinaryType;
  * @created Oct 25, 2010
  */
 public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
+
     public GroovyClassFileTests(String name) {
         super(name);
     }
+
     public static Test suite() {
         return buildTestSuite(GroovyClassFileTests.class);
     }
-    
+
     // a class file in a groovy project should not include the non-source children
     public void testClassFileHasNoNonSourceChildren() throws Exception {
         IProject project = createSimpleGroovyProject().getProject();
@@ -51,11 +53,11 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         assertEquals("should have 2 children: prop1 and prop2...no getters or setters", 2, binaryType.getChildren().length);
         assertEquals("wrong property name", "prop1", binaryType.getChildren()[0].getElementName());
         assertEquals("wrong property name", "prop2", binaryType.getChildren()[1].getElementName());
-        
+
         assertTrue("source range for prop1 should be valid", ((IMember) binaryType.getChildren()[0]).getSourceRange().getOffset() > 0);
         assertTrue("source range for prop2 should be valid", ((IMember) binaryType.getChildren()[1]).getSourceRange().getOffset() > 0);
     }
-    
+
     // a class file in a java project should include the non-source children
     public void testClassFileInJavaProjectHasNonSourceChildren() throws Exception {
         IProject project = createSimpleJavaProject().getProject();
@@ -63,14 +65,14 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         IJavaProject javaProject = JavaCore.create(project);
         IType binaryType = javaProject.findType("AGroovyClass");
         ((BinaryType) binaryType).getSource();
-        
+
         // the value should be somewhere upwards of 39.
         assertTrue("should have many children: prop1 and prop2 and generated methods and fields", binaryType.getChildren().length > 2);
-        
+
         assertTrue("source range for prop1 should be valid", binaryType.getField("prop1").getSourceRange().getOffset() > 0);
         assertTrue("source range for prop2 should be valid", binaryType.getField("prop2").getSourceRange().getOffset() > 0);
     }
-    
+
     public void testCodeSelectInClassFile() throws Exception {
         IProject project = createSimpleJavaProject().getProject();
         env.addJar(project.getFullPath(), "lib/code-select/test-project-for-code-select.jar");
@@ -79,12 +81,12 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         IType binaryType = javaProject.findType("AGroovyClassForCodeSelect");
         IClassFile classFile = binaryType.getClassFile();
         String contents = classFile.getBuffer().getContents();
-        
+
         // now select multiple locations in the file
         lookForProperties(classFile, contents, "prop1");
         lookForProperties(classFile, contents, "prop2");
-        
-        
+
+
     }
     private void lookForProperties(IClassFile classFile, String contents, String prop)
             throws JavaModelException {
@@ -105,5 +107,5 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         assertEquals("Expected to find a field but didn't", IJavaElement.FIELD, found[0].getElementType());
         assertEquals("Element found with wrong name", prop, found[0].getElementName());
     }
-    
+
 }

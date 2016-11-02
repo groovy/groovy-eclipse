@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,27 +39,27 @@ public class SanityTest extends TestCase {
         Bundle eclipseplatform = Platform.getBundle("org.eclipse.platform");
         System.out.println("org.eclipse.platform?"+eclipseplatform);
 //        assertNotNull("Can't find eclipse platform", eclipseplatform);
-        return eclipseplatform==null?null:eclipseplatform.getVersion();    	
+        return eclipseplatform==null?null:eclipseplatform.getVersion();
     }
-    
+
     private Version getEclipseVersion() {
         Bundle jdtcore = Platform.getBundle("org.eclipse.jdt.core");
         assertNotNull("Can't find jdt core", jdtcore);
         return jdtcore.getVersion();
     }
-    
+
     private Version getGroovyCompilerVersion() {
         Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
         assertEquals(CompilerUtils.getWorkspaceCompilerLevel().majorVersion, version.getMajor());
         assertEquals(CompilerUtils.getWorkspaceCompilerLevel().minorVersion, version.getMinor());
         return version;
     }
-    
+
     public void testCompilerVersion() throws Exception {
         Version jdtVersion = getEclipseVersion();
         Version eclipseplatformVersion = getEclipsePlatformVersion();
         Version groovyVersion = getGroovyCompilerVersion();
-        
+
         //use sys *err* because build run on bamboo eats the sys out
         System.err.println("---------------------------------------");
         System.err.println("SanityTest.testCompilerVersion()");
@@ -72,18 +70,18 @@ public class SanityTest extends TestCase {
         System.err.println("Groovy bundle status "+ (Platform.getBundle("org.codehaus.groovy").getState() == Bundle.ACTIVE ? "ACTIVE" : "NOT ACTIVE"));
         System.err.println("Groovy bundle version "+ Platform.getBundle("org.codehaus.groovy").getVersion());
         System.err.println("---------------------------------------");
-        
+
         //Ideally:
         // JDT 3.7 test against Groovy 2.1
         // JDT 3.8 test against Groovy 2.1
         // JDT 3.9 test against Groovy 2.2
         // JDT 3.10 test against Groovy 2.3
-        
+
         //Reality: all tests run against latest Groovy. I.e. 2.3.x
         assertEquals("2.4", groovyVersion.getMajor() + "." +groovyVersion.getMinor());
 
     }
-    
+
     public void testCompilerJars() throws Exception {
         System.out.println("---------------------------------------");
         System.out.println("SanityTest.testCompilerJars()");

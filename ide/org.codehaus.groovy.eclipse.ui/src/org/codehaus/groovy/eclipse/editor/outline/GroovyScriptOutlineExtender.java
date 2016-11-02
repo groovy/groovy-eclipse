@@ -32,7 +32,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -113,7 +112,7 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
                 if (elt.getElementName().equals(scriptName)) {
                     candidate = (IType) elt;
                 } else if (elt instanceof IJavaElement) {
-                    fakeChildren.add((IJavaElement) elt);
+                    fakeChildren.add(elt);
                 }
             }
             scriptType = candidate;
@@ -128,18 +127,13 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
                         if (isRunMethod(scriptElt) || isMainMethod(scriptElt) || isConstructor(scriptElt)) {
                             continue;
                         }
-                        fakeChildren.add((IMember) scriptElt);
+                        fakeChildren.add(scriptElt);
                     }
                 }
 
                 // next add all of the variable declarations
                 BlockStatement block = node.getStatementBlock();
                 ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
-                    @Override
-                    protected SourceUnit getSourceUnit() {
-                        return null;
-                    }
-
                     @Override
                     public void visitClosureExpression(ClosureExpression expression) {
                     }
@@ -228,7 +222,7 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
 class GroovyScriptVariable extends OField {
 
     /**
-     * 
+     *
      */
     private static final String NO_NAME = "no name";
     private static final String DEF_SIGNATURE = "Qdef;";
