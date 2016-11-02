@@ -128,6 +128,22 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             """.stripIndent().toString())
     }
 
+    void testLocalAnnotationConstant() {
+        // there was an error because the variable expression VALUE was not recognized as constant
+        // see ResolveVisitor.transformInlineConstants(Expression)
+        String[] sources = [
+            'Main.groovy', '''
+            class Main {
+              public static final String VALUE = 'nls'
+              @SuppressWarnings(VALUE)
+              def method() {
+              }
+            }'''
+        ]
+
+        runConformTest(sources)
+    }
+
     void testTargetMetaAnnotation() {
         String[] sources = [
             'Anno.java', '''
