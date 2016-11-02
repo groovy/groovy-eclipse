@@ -26,4 +26,4 @@ Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.util
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.core.GroovyCoreActivator
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
