@@ -144,8 +144,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         return context;
     }
 
-
-// @Override
     @Override
     public void visitImports(ModuleNode node) {
         PackageNode packageNode = node.getPackage();

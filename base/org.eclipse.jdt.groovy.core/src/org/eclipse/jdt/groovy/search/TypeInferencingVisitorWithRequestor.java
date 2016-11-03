@@ -877,7 +877,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         try {
                             if (type != null) {
                                 visitClassReference(type);
-                                // FIXADE this is a bit messy, shoud use existing infra to push and pop
                                 completeExpressionStack.push(imp);
                                 if (imp.getFieldNameExpr() != null) {
                                     primaryTypeStack.push(type);
@@ -885,11 +884,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                     dependentDeclarationStack.pop();
                                     dependentTypeStack.pop();
                                 }
-
-                                // if (imp.getAliasExpr() != null) {
-                                // primaryTypeStack.push(type);
-                                // imp.getAliasExpr().visit(this);
-                                // }
                                 completeExpressionStack.pop();
                             }
                         } catch (VisitCompleted e) {
@@ -1001,9 +995,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         toVisitPrimary.visit(this);
 
-        ClassNode primaryExprType;
-
-        primaryExprType = primaryTypeStack.pop();
+        ClassNode primaryExprType = primaryTypeStack.pop();
         if (isAssignment) {
             assignmentStorer.storeAssignment(node, scopes.peek(), primaryExprType);
         }
@@ -1013,10 +1005,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         completeExpressionStack.pop();
         // type of the entire expression
         ClassNode completeExprType = primaryExprType;
-
         ClassNode dependentExprType = primaryTypeStack.pop();
 
-        if (!isAssignment) {
+// TODO: Is it an illegal state to have either as null?
+assert primaryExprType != null && dependentExprType != null;
+
+        if (!isAssignment && primaryExprType != null && dependentExprType != null) {
             // type of RHS of binary expression
             // find the type of the complete expression
             String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
@@ -1024,13 +1018,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 // another special case.
                 // In 1.8 and later, Groovy will not go through the
                 // MOP for standard arithmetic operations on numbers
-                completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE
-                        : primaryExprType;
+                completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE : primaryExprType;
             } else if (associatedMethod != null) {
                 // there is an overloadable method associated with this operation
                 // convert to a constant expression and infer type
-                TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false,
-                        scopes.peek());
+                TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false, scopes.peek());
                 completeExprType = result.type;
                 if (associatedMethod.equals("getAt") && result.declaringType.equals(VariableScope.DGM_CLASS_NODE)) {
                     // special case getAt coming from DGM.
@@ -1069,13 +1061,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * Make assumption that no one has overloaded the basic arithmetic operations on numbers These operations will bypass the mop in
-     * most situations anyway
-     *
-     * @param text
-     * @param primaryExprType
-     * @param dependentExprType
-     * @return
+     * Make assumption that no one has overloaded the basic arithmetic operations on numbers.
+     * These operations will bypass the mop in most situations anyway.
      */
     private boolean isArithmeticOperationOnNumberOrStringOrList(String text, ClassNode lhs, ClassNode rhs) {
         if (text.length() != 1) {
@@ -2029,8 +2016,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private void postVisit(Expression node, ClassNode type, ClassNode declaringType, ASTNode declaration) {
         if (isPrimaryExpression(node)) {
+            assert type != null;
             primaryTypeStack.push(type);
         } else if (isDependentExpression(node)) {
+            // TODO: null has been seen here for type; is that okay?
             dependentTypeStack.push(type);
             dependentDeclarationStack.push(new Tuple(declaringType, declaration));
         }
@@ -2180,7 +2169,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             if (method.isConstructor()) {
                 List<ConstructorNode> constructors = clazz.getDeclaredConstructors();
-                if (constructors.size() == 0) {
+                if (constructors == null || constructors.isEmpty()) {
                     return null;
                 }
                 String[] jdtParamTypes = method.getParameterTypes() == null ? NO_PARAMS : method.getParameterTypes();
@@ -2415,8 +2404,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 TernaryExpression prop = (TernaryExpression) complete;
                 return prop.getTrueExpression() == node;
             } else if (complete instanceof ForStatement) {
-                // this check is used to store the type of the collection expression so that it can be assigned to the for loop
-                // variable
+                // this check is used to store the type of the collection expression
+                // so that it can be assigned to the for loop variable
                 ForStatement prop = (ForStatement) complete;
                 return prop.getCollectionExpression() == node;
             } else if (complete instanceof ListExpression) {
@@ -2460,8 +2449,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * <li>property/field (ie- right part) of an attribute expression
      * </ul>
      *
-     * Note that for statements and ternary expressions do not have any dependent expression even though they have primary
-     * expressions
+     * Note that for statements and ternary expressions do not have any dependent
+     * expression even though they have primary expressions.
      *
      * @param node expression node to check
      * @return true iff the node is the primary expression in an expression pair.

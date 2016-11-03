@@ -59,8 +59,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 import org.eclipse.jdt.internal.core.search.indexing.BinaryIndexer;
 
 public abstract class AbstractRegressionTest extends AbstractCompilerTest implements StopableTestCase {
-	// javac comparison related types, fields and methods - see runJavac for
-	// details
+	// javac comparison related types, fields and methods - see runJavac for details
 static class JavacCompiler {
 	String rootDirectoryPath;
 	String javacPathName;
@@ -121,6 +120,8 @@ static class JavacCompiler {
 			this.version = JavaCore.VERSION_1_6;
 		} else if (rawVersion.indexOf("1.7") != -1) {
 			this.version = JavaCore.VERSION_1_7;
+		} else if (rawVersion.indexOf("1.8") != -1) {
+			this.version = JavaCore.VERSION_1_8;
 		} else {
 			throw new RuntimeException("unknown javac version: " + rawVersion);
 		}
@@ -821,6 +822,8 @@ protected static class JavacTestOptions {
 			buffer.append("\" -1.6");
 		} else if (this.complianceLevel == ClassFileConstants.JDK1_7) {
 			buffer.append("\" -1.7");
+		} else if (this.complianceLevel == JDK1_8) {
+			buffer.append("\" -1.8");
 		}
 		buffer
 			.append(" -preserveAllLocals -nowarn -g -classpath \"")
