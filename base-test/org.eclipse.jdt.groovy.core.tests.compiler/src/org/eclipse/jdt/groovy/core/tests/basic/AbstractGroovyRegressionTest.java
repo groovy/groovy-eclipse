@@ -68,7 +68,7 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
 
-        String[] groovyVersions = {"2.4.7", "2.3.11", "2.2.2", "2.1.9", "2.0.7", "1.8.6"};
+        String[] groovyVersions = {"2.4.7", "2.3.11", "2.2.2", "2.1.9", "2.0.8", "1.8.6"};
         try {
             URL groovyJar=null;
             for (String groovyVer : groovyVersions) {

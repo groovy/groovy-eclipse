@@ -233,20 +233,28 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (node.getEnd() > 0) {
             ClassNode returnType = node.getReturnType();
             if (returnType != null /*&& !returnType.isPrimitive()*/) { // allow primitives to be found to stop the visit
-                int n, offset = node.getStart();
+                int n, offset = -1;
 
-                // constrain the return type's start offset using generics or annotations
-                ASTNode last = ArrayUtils.lastElement(node.getGenericsTypes());
-                if (last != null) {
-                    offset = last.getEnd() + 1;
-                } else if ((n = node.getAnnotations().size()) > 0) {
-                    last = GroovyUtils.lastElement(node.getAnnotations().get(n - 1));
-                    offset = last.getEnd() + 1;
-                } else if (returnType.getEnd() < 1) {
-                    // TODO: select on modifiers shows as return type
+                if (returnType.getEnd() < 1) {
+                    // constrain the return type's start offset using generics or annotations
+                    ASTNode last = ArrayUtils.lastElement(node.getGenericsTypes());
+                    if (last != null) {
+                        offset = last.getEnd() + 1;
+                    } else if ((n = node.getAnnotations().size()) > 0) {
+                        for (int i = (n - 1); i >= 0; i -= 1) {
+                            // find the rightmost annotation with source position
+                            AnnotationNode anno = node.getAnnotations().get(i);
+                            if (anno.getEnd() > 0) {
+                                last = GroovyUtils.lastElement(anno);
+                                offset = last.getEnd() + 1;
+                                break;
+                            }
+                        }
+                    }
+                    // TODO: if offset is still -1, select on modifiers shows as return type
                 }
 
-                check(returnType, offset, node.getNameStart() - 1);
+                check(returnType, Math.max(offset, node.getStart()), node.getNameStart() - 1);
             }
 
             if (node.getNameEnd() > 0) {

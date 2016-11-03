@@ -604,6 +604,11 @@ public abstract class StaticTypeCheckingSupport {
     public static boolean checkCompatibleAssignmentTypes(ClassNode left, ClassNode right, Expression rightExpression) {
         ClassNode leftRedirect = left.redirect();
         ClassNode rightRedirect = right.redirect();
+        if (leftRedirect==rightRedirect) return true;
+
+        if (leftRedirect.isArray() && rightRedirect.isArray()) {
+            return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression);
+        }
 
         if (right==VOID_TYPE||right==void_WRAPPER_TYPE) {
             return left==VOID_TYPE||left==void_WRAPPER_TYPE;

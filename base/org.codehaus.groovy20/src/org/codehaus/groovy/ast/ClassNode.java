@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.ast;
 
-
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Array;
@@ -45,6 +44,7 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
+
 /**
  * Represents a class in the AST.<br/>
  * A ClassNode should be created using the methods in ClassHelper.
@@ -1255,6 +1255,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public String toString(boolean showRedirect) {
+        if (isArray()) {
+            return componentType.toString(showRedirect)+"[]";
+        }
         String ret = getName();
         if (genericsTypes != null) {
             ret += " <";
