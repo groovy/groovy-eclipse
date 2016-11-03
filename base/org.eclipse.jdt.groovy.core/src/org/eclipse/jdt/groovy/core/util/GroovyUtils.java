@@ -37,7 +37,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * Helper methods - can be made more eclipse friendly or replaced if the groovy infrastructure provides the information.
  */
-public class GroovyUtils {
+public abstract class GroovyUtils {
 
     public static char[] readSourceRange(SourceUnit unit, int offset, int length) {
         Reader reader = null;

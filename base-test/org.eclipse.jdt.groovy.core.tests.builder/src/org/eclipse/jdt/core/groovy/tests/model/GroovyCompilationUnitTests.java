@@ -36,8 +36,8 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 
 /**
  * @author Andrew Eisenberg
@@ -114,7 +114,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
         unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
-        unit1.reconcile(AST.JLS3, true, unit1.owner, null);
+        unit1.reconcile(JavaConstants.AST_LEVEL, true, unit1.owner, null);
         ModuleNode node2 = unit1.getModuleNode();
         assertTrue("Multiple calls to getModuleNode should not return the same object after a call to reconcile with problem detection enabled", node1 != node2);
         unit1.discardWorkingCopy();
@@ -126,7 +126,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
         unit1.becomeWorkingCopy(null);
         ModuleNode node1 = unit1.getModuleNode();
-        unit1.makeConsistent(AST.JLS3, true, ICompilationUnit.FORCE_PROBLEM_DETECTION, new HashMap(), null);
+        unit1.makeConsistent(JavaConstants.AST_LEVEL, true, ICompilationUnit.FORCE_PROBLEM_DETECTION, new HashMap(), null);
         ModuleNode node2 = unit1.getModuleNode();
         assertTrue("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node1 == node2);
         unit1.discardWorkingCopy();

@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.util.CompilerUtils;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
@@ -349,7 +350,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 if (createAST) {
                     org.eclipse.jdt.core.dom.CompilationUnit ast;
                     try {
-                        ast = AST.convertCompilationUnit(/*AST.JLS3*/3, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
+                        ast = AST.convertCompilationUnit(JavaConstants.AST_LEVEL, compilationUnitDeclaration, options, computeProblems, source, reconcileFlags, pm);
                         ReflectionUtils.setPrivateField(ASTHolderCUInfo.class, "ast", info, ast);
                     } catch (OperationCanceledException e) {
                         // catch this exception so as to not enter the catch(RuntimeException e) below
