@@ -35,7 +35,7 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 
-public class TestCase extends junit.framework.TestCase {
+public abstract class TestCase extends junit.framework.TestCase {
 
 	// Filters
 	public static final String METHOD_PREFIX = "test";
@@ -621,7 +621,6 @@ public static List<Test> buildTestsList(Class<? extends Test> evaluationTestClas
  *
  * Note that this lis maybe reduced using some mechanisms detailed in {@link #buildTestsList(Class)} method.
  *
- * @param evaluationTestClass
  * @return a {@link Test test suite}
  */
 public static Test buildTestSuite(Class<? extends Test> evaluationTestClass) {
@@ -635,8 +634,6 @@ public static Test buildTestSuite(Class<? extends Test> evaluationTestClass) {
  *
  * Note that this lis maybe reduced using some mechanisms detailed in {@link #buildTestsList(Class)} method.
  *
- * @param evaluationTestClass
- * @param suiteName
  * @return a test suite ({@link Test})
  */
 public static Test buildTestSuite(Class<? extends Test> evaluationTestClass, String suiteName) {
@@ -658,26 +655,23 @@ private static File createMemLogFile() {
 	try {
 		boolean fileExist = logFile.exists();
 		stream = new PrintStream(new FileOutputStream(logFile, true));
-		if (stream != null) {
-			if (fileExist) {
-				stream.println();
-			}
-			// Log date and time
-			Date date = new Date(System.currentTimeMillis());
-			stream.println("Tests:\t" + STORE_MEMORY);
-			stream.println("Date:\t" + DateFormat.getDateInstance(3).format(date));
-			stream.println("Time:\t" + DateFormat.getTimeInstance(3).format(date));
-			// Log columns title
-			stream.print("Class");
-			if (ALL_TESTS_LOG) stream.print("\tTest");
-			stream.print("\tUsed\tTotal\tMax");
+		if (fileExist) {
 			stream.println();
-			stream.close();
-			System.out.println("Log file " + logFile.getPath() + " opened.");
-			return logFile;
 		}
+		// Log date and time
+		Date date = new Date(System.currentTimeMillis());
+		stream.println("Tests:\t" + STORE_MEMORY);
+		stream.println("Date:\t" + DateFormat.getDateInstance(3).format(date));
+		stream.println("Time:\t" + DateFormat.getTimeInstance(3).format(date));
+		// Log columns title
+		stream.print("Class");
+		if (ALL_TESTS_LOG) stream.print("\tTest");
+		stream.print("\tUsed\tTotal\tMax");
+		stream.println();
+		System.out.println("Log file " + logFile.getPath() + " opened.");
+		return logFile;
 	} catch (FileNotFoundException e) {
-		// no log available for this statistic
+		System.err.println("Cannot open file " + logFile.getPath());
 	} finally {
 		if (stream != null) {
 			stream.close();

@@ -25,8 +25,8 @@
 	    -->
 
 	<properties>
-		<tycho-version>0.19.0</tycho-version>
-		<tycho-extras-version>0.19.0</tycho-extras-version>
+		<tycho-version>0.26.0</tycho-version>
+		<tycho-extras-version>0.26.0</tycho-extras-version>
 
 		<!-- Version of greclipse maven compiler to use for building. (Some bundles, 
 			mostly test related, have groovy code that can't be compiled with standard 
@@ -137,10 +137,9 @@
 	  	 <id>e46</id>
 		 <layout>p2</layout>
 		 <!-- TODO: after neon release change this: -->
-                 <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url>
+                 <url>http://download.eclipse.org/eclipse/updates/4.6</url> 
 <!--
                  <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url> 
-                 <url>http://download.eclipse.org/eclipse/updates/4.6</url> 
 -->
 	       </repository>
 	  <!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
