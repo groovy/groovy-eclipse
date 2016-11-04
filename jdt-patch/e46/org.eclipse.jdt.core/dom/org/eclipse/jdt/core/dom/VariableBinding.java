@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,19 +89,19 @@ class VariableBinding implements IVariableBinding {
 			case TypeIds.T_boolean:
 				return Boolean.valueOf(c.booleanValue());
 			case TypeIds.T_byte:
-				return new Byte(c.byteValue());
+				return Byte.valueOf(c.byteValue());
 			case TypeIds.T_char:
-				return new Character(c.charValue());
+				return Character.valueOf(c.charValue());
 			case TypeIds.T_double:
 				return new Double(c.doubleValue());
 			case TypeIds.T_float:
 				return new Float(c.floatValue());
 			case TypeIds.T_int:
-				return new Integer(c.intValue());
+				return Integer.valueOf(c.intValue());
 			case TypeIds.T_long:
-				return new Long(c.longValue());
+				return Long.valueOf(c.longValue());
 			case TypeIds.T_short:
-				return new Short(c.shortValue());
+				return Short.valueOf(c.shortValue());
 			case TypeIds.T_JavaLangString:
 				return c.stringValue();
 		}

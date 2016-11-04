@@ -1928,7 +1928,7 @@ protected int applyCloseableInterfaceWhitelists() {
 	return 0;
 }
 
-protected MethodBinding [] getInterfaceAbstractContracts(Scope scope) throws InvalidInputException {
+protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards) throws InvalidInputException {
 	
 	if (!isInterface() || !isValidBinding()) {
 		throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
@@ -1941,7 +1941,7 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope) throws Inv
 	
 	ReferenceBinding [] superInterfaces = superInterfaces();
 	for (int i = 0, length = superInterfaces.length; i < length; i++) {
-		MethodBinding [] superInterfaceContracts = superInterfaces[i].getInterfaceAbstractContracts(scope);
+		MethodBinding [] superInterfaceContracts = superInterfaces[i].getInterfaceAbstractContracts(scope, replaceWildcards);
 		final int superInterfaceContractsLength = superInterfaceContracts == null  ? 0 : superInterfaceContracts.length;
 		if (superInterfaceContractsLength == 0) continue;
 		if (contractsLength < contractsCount + superInterfaceContractsLength) {
@@ -1994,7 +1994,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 		scope.compilationUnitScope().recordQualifiedReference(this.compoundName);
 	MethodBinding[] methods = null;
 	try {
-		methods = getInterfaceAbstractContracts(scope);
+		methods = getInterfaceAbstractContracts(scope, replaceWildcards);
 		if (methods == null || methods.length == 0)
 			return this.singleAbstractMethod[index] = samProblemBinding;
 		int contractParameterLength = 0;

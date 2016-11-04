@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,8 +43,10 @@ import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
+import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -2522,27 +2524,23 @@ public void generateSyntheticBodyForEnumValueOf(SyntheticMethodBinding methodBin
 public void generateSyntheticBodyForDeserializeLambda(SyntheticMethodBinding methodBinding,SyntheticMethodBinding[] syntheticMethodBindings) {
 	initializeMaxLocals(methodBinding);
 
-	// Compute the list of the serializable lambdas from the full set of synthetic method bindings
-	// Also compute a map of hashcodes to a list of serializable lambdas whose names share a hashcode 
-	List syntheticsForSerializableLambdas = new ArrayList();	
-	Map hashcodesToLambdas = new LinkedHashMap();
+	// Compute a map of hashcodes to a list of synthetic methods whose names share a hashcode 
+	Map hashcodesTosynthetics = new LinkedHashMap();
 	for (int i=0,max=syntheticMethodBindings.length;i<max;i++) {
 		SyntheticMethodBinding syntheticMethodBinding = syntheticMethodBindings[i];
-		if (syntheticMethodBinding.lambda!=null && syntheticMethodBinding.lambda.isSerializable) {
-			syntheticsForSerializableLambdas.add(syntheticMethodBinding);
+		if (syntheticMethodBinding.lambda!=null && syntheticMethodBinding.lambda.isSerializable ||
+				syntheticMethodBinding.serializableMethodRef != null) {
 			// TODO can I use > Java 1.4 features here?
-			Integer hashcode = new Integer(new String(syntheticMethodBinding.selector).hashCode());
-			List lambdasForThisHashcode = (List)hashcodesToLambdas.get(hashcode);
-			if (hashcodesToLambdas.get(hashcode)==null) {
-				lambdasForThisHashcode = new ArrayList();
-				hashcodesToLambdas.put(hashcode,lambdasForThisHashcode);
+			Integer hashcode = Integer.valueOf(new String(syntheticMethodBinding.selector).hashCode());
+			List syntheticssForThisHashcode = (List)hashcodesTosynthetics.get(hashcode);
+			if (syntheticssForThisHashcode==null) {
+				syntheticssForThisHashcode = new ArrayList();
+				hashcodesTosynthetics.put(hashcode,syntheticssForThisHashcode);
 			}
-			lambdasForThisHashcode.add(syntheticMethodBinding);
+			syntheticssForThisHashcode.add(syntheticMethodBinding);
 		}
 	}
-	int lambdaCount = syntheticsForSerializableLambdas.size();
 	ClassScope scope = ((SourceTypeBinding)methodBinding.declaringClass).scope;
-	
 	
 	// Generate the first switch, on method name hashcode
 	aload_0();
@@ -2561,11 +2559,11 @@ public void generateSyntheticBodyForDeserializeLambda(SyntheticMethodBinding met
 	
 	BranchLabel label = new BranchLabel(this);
 	CaseLabel defaultLabel = new CaseLabel(this);
-	int numberOfHashcodes = hashcodesToLambdas.size();
+	int numberOfHashcodes = hashcodesTosynthetics.size();
 	CaseLabel[] switchLabels = new CaseLabel[numberOfHashcodes];
 	int[] keys = new int[numberOfHashcodes];
 	int[] sortedIndexes = new int[numberOfHashcodes];
-	Set hashcodes = hashcodesToLambdas.keySet();
+	Set hashcodes = hashcodesTosynthetics.keySet();
 	Iterator hashcodeIterator = hashcodes.iterator();
 	int index=0;
 	while (hashcodeIterator.hasNext()) {
@@ -2585,152 +2583,187 @@ public void generateSyntheticBodyForDeserializeLambda(SyntheticMethodBinding met
 	index = 0;
 	while (hashcodeIterator.hasNext()) {
 		Integer hashcode = (Integer)hashcodeIterator.next();
-		List lambdas = (List)hashcodesToLambdas.get(hashcode);
+		List synthetics = (List)hashcodesTosynthetics.get(hashcode);
 		switchLabels[index].place();
 		BranchLabel nextOne = new BranchLabel(this);
 		// Loop through all lambdas that share the same hashcode
-		for (int j=0,max=lambdas.size();j<max;j++) {
-			SyntheticMethodBinding syntheticMethodBinding = (SyntheticMethodBinding)lambdas.get(j);
+		// TODO: isn't doing this for just one of these enough because they all share
+		// the same name?
+		for (int j=0,max=synthetics.size();j<max;j++) {
+			SyntheticMethodBinding syntheticMethodBinding = (SyntheticMethodBinding)synthetics.get(j);
 			aload_1();
 			ldc(new String(syntheticMethodBinding.selector));
 			invokeStringEquals();
 			ifeq(nextOne);
-			loadInt(index++);
+			loadInt(index);
 			istore_2();
 			goto_(label);
 			nextOne.place();
 			nextOne = new BranchLabel(this);
 		}
+		index++;
 		goto_(label);
 	}
 	defaultLabel.place();
 	label.place();
-	
+	int syntheticsCount = hashcodes.size();
 	// Second block is switching on the lambda id, -1 is the error (unrecognized) case
-	switchLabels = new CaseLabel[lambdaCount];
-	keys = new int[lambdaCount];
-	sortedIndexes = new int[lambdaCount];
+	switchLabels = new CaseLabel[syntheticsCount];
+	keys = new int[syntheticsCount];
+	sortedIndexes = new int[syntheticsCount];
 	BranchLabel errorLabel = new BranchLabel(this);
 	defaultLabel = new CaseLabel(this);
 	iload_2();
-	for (int j=0;j<lambdaCount;j++) {
+	for (int j=0;j<syntheticsCount;j++) {
 		switchLabels[j] = new CaseLabel(this);
 		keys[j] = j;
 		sortedIndexes[j] = j;
 	}
-	System.arraycopy(keys,0,(localKeysCopy = new int[lambdaCount]),0,lambdaCount);
+	System.arraycopy(keys,0,(localKeysCopy = new int[syntheticsCount]),0,syntheticsCount);
 	// TODO no need to sort here? They should all be in order
-	sort(localKeysCopy, 0, lambdaCount-1, sortedIndexes);
+	sort(localKeysCopy, 0, syntheticsCount-1, sortedIndexes);
 	// TODO need to use a tableswitch at some size threshold?
 	lookupswitch(defaultLabel, keys, sortedIndexes, switchLabels);
-	for (int i=0;i<lambdaCount;i++) {
-		SyntheticMethodBinding syntheticMethodBinding = (SyntheticMethodBinding)syntheticsForSerializableLambdas.get(i);
-		switchLabels[i].place();
-		
-		// Compare ImplMethodKind
-		aload_0();
-		LambdaExpression lambdaEx = syntheticMethodBinding.lambda;
-		MethodBinding mb = lambdaEx.binding;
-		invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-				ConstantPool.GetImplMethodKind, ConstantPool.GetImplMethodKindSignature);
-		byte methodKind = 0;
-		if (mb.isStatic()) {
-			methodKind = ClassFileConstants.MethodHandleRefKindInvokeStatic;
-		} else if (mb.isPrivate()) {
-			methodKind = ClassFileConstants.MethodHandleRefKindInvokeSpecial;
-		} else {
-			methodKind = ClassFileConstants.MethodHandleRefKindInvokeVirtual;
-		}
-		bipush(methodKind);// TODO see table below
-		if_icmpne(errorLabel);
-
-		// Compare FunctionalInterfaceClass
-		aload_0();
-		invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-				ConstantPool.GetFunctionalInterfaceClass, ConstantPool.GetFunctionalInterfaceClassSignature);
-		String functionalInterface = null;
-		final TypeBinding expectedType = lambdaEx.expectedType();
-		if (expectedType instanceof IntersectionTypeBinding18) {
-			functionalInterface = new String(((IntersectionTypeBinding18)expectedType).getSAMType(scope).constantPoolName());
-		} else {
-			functionalInterface = new String(expectedType.constantPoolName());
-		}
-		ldc(functionalInterface);// e.g. "com/foo/X$Foo"
-		invokeObjectEquals();
-		ifeq(errorLabel);
-		
-		// Compare FunctionalInterfaceMethodName
-		aload_0();
-		invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-				ConstantPool.GetFunctionalInterfaceMethodName, ConstantPool.GetFunctionalInterfaceMethodNameSignature);
-		ldc(new String(lambdaEx.descriptor.selector)); // e.g. "m"
-		invokeObjectEquals();
-		ifeq(errorLabel);
-
-		// Compare FunctionalInterfaceMethodSignature
-		aload_0();
-		invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-				ConstantPool.GetFunctionalInterfaceMethodSignature, ConstantPool.GetFunctionalInterfaceMethodSignatureSignature);
-		ldc(new String(lambdaEx.descriptor.original().signature())); // e.g "()I"
-		invokeObjectEquals();
-		ifeq(errorLabel);
-
-		// Compare ImplClass
-		aload_0();
-		invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-				ConstantPool.GetImplClass, ConstantPool.GetImplClassSignature);
-		ldc(new String(mb.declaringClass.constantPoolName())); // e.g. "com/foo/X"
-		invokeObjectEquals();
-		ifeq(errorLabel);
-
-		// Compare ImplMethodSignature
-		aload_0();
-		invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-				ConstantPool.GetImplMethodSignature, ConstantPool.GetImplMethodSignatureSignature);
-		ldc(new String(mb.signature())); // e.g. "(I)I"
-		invokeObjectEquals();
-		ifeq(errorLabel);
-
-		// Captured arguments
-		StringBuffer sig = new StringBuffer("("); //$NON-NLS-1$
-		index = 0;
-		if (lambdaEx.shouldCaptureInstance) {
+	hashcodeIterator = hashcodes.iterator();
+	int hashcodeIndex = 0;
+	while (hashcodeIterator.hasNext()) {
+		Integer hashcode = (Integer)hashcodeIterator.next();
+		List synthetics = (List)hashcodesTosynthetics.get(hashcode);
+		switchLabels[hashcodeIndex++].place();
+		BranchLabel nextOne = synthetics.size() > 1 ? new BranchLabel(this) : errorLabel;
+		// Loop through all lambdas that share the same hashcode
+		for (int j = 0, count = synthetics.size(); j < count; j++) {
+			SyntheticMethodBinding syntheticMethodBinding = (SyntheticMethodBinding) synthetics.get(j);
+			// Compare ImplMethodKind
 			aload_0();
-			loadInt(index++);
-			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-					ConstantPool.GetCapturedArg, ConstantPool.GetCapturedArgSignature);
-			checkcast(mb.declaringClass);
-			sig.append(mb.declaringClass.signature());
-		}
-		
-		SyntheticArgumentBinding[] outerLocalVariables = lambdaEx.outerLocalVariables;
-		for (int p=0,max=outerLocalVariables.length;p<max;p++) {
-			aload_0();
-			loadInt(index);
-			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName, 
-					ConstantPool.GetCapturedArg, ConstantPool.GetCapturedArgSignature);
-			TypeBinding varType = outerLocalVariables[p].type;
-			if (varType.isBaseType()) {
-				checkcast(scope.boxing(varType));
-				generateUnboxingConversion(varType.id);
-				if (varType.id == TypeIds.T_JavaLangLong || varType.id == TypeIds.T_JavaLangDouble) {
-					index++;
-				}
+			FunctionalExpression funcEx = syntheticMethodBinding.lambda != null ? syntheticMethodBinding.lambda
+					: syntheticMethodBinding.serializableMethodRef;
+			MethodBinding mb = funcEx.binding;
+			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+					ConstantPool.GetImplMethodKind, ConstantPool.GetImplMethodKindSignature);
+			byte methodKind = 0;
+			if (mb.isStatic()) {
+				methodKind = ClassFileConstants.MethodHandleRefKindInvokeStatic;
+			} else if (mb.isPrivate()) {
+				methodKind = ClassFileConstants.MethodHandleRefKindInvokeSpecial;
+			} else if (mb.isConstructor()) {
+				methodKind = ClassFileConstants.MethodHandleRefKindNewInvokeSpecial;
 			} else {
-				checkcast(varType);
+				methodKind = ClassFileConstants.MethodHandleRefKindInvokeVirtual;
 			}
-			index++;
-			sig.append(varType.signature());
+			bipush(methodKind);// TODO see table below
+			if_icmpne(nextOne);
+
+			// Compare FunctionalInterfaceClass
+			aload_0();
+			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+					ConstantPool.GetFunctionalInterfaceClass, ConstantPool.GetFunctionalInterfaceClassSignature);
+			String functionalInterface = null;
+			final TypeBinding expectedType = funcEx.expectedType();
+			if (expectedType instanceof IntersectionTypeBinding18) {
+				functionalInterface = new String(
+						((IntersectionTypeBinding18) expectedType).getSAMType(scope).constantPoolName());
+			} else {
+				functionalInterface = new String(expectedType.constantPoolName());
+			}
+			ldc(functionalInterface);// e.g. "com/foo/X$Foo"
+			invokeObjectEquals();
+			ifeq(nextOne);
+
+			// Compare FunctionalInterfaceMethodName
+			aload_0();
+			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+					ConstantPool.GetFunctionalInterfaceMethodName,
+					ConstantPool.GetFunctionalInterfaceMethodNameSignature);
+			ldc(new String(funcEx.descriptor.selector)); // e.g. "m"
+			invokeObjectEquals();
+			ifeq(nextOne);
+
+			// Compare FunctionalInterfaceMethodSignature
+			aload_0();
+			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+					ConstantPool.GetFunctionalInterfaceMethodSignature,
+					ConstantPool.GetFunctionalInterfaceMethodSignatureSignature);
+			ldc(new String(funcEx.descriptor.original().signature())); // e.g "()I"
+			invokeObjectEquals();
+			ifeq(nextOne);
+
+			// Compare ImplClass
+			aload_0();
+			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+					ConstantPool.GetImplClass, ConstantPool.GetImplClassSignature);
+			ldc(new String(mb.declaringClass.constantPoolName())); // e.g. "com/foo/X"
+			invokeObjectEquals();
+			ifeq(nextOne);
+
+			// Compare ImplMethodSignature
+			aload_0();
+			invoke(Opcodes.OPC_invokevirtual, 1, 1, ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+					ConstantPool.GetImplMethodSignature, ConstantPool.GetImplMethodSignatureSignature);
+			ldc(new String(mb.signature())); // e.g. "(I)I"
+			invokeObjectEquals();
+			ifeq(nextOne);
+
+			// Captured arguments
+			StringBuffer sig = new StringBuffer("("); //$NON-NLS-1$
+			index = 0;
+			boolean isLambda = funcEx instanceof LambdaExpression;
+			TypeBinding receiverType = null;
+			SyntheticArgumentBinding[] outerLocalVariables = null;
+			if (isLambda) {
+				LambdaExpression lambdaEx = (LambdaExpression) funcEx;
+				if (lambdaEx.shouldCaptureInstance)
+					receiverType = mb.declaringClass;
+				outerLocalVariables = lambdaEx.outerLocalVariables;
+			} else {
+				ReferenceExpression refEx = (ReferenceExpression)funcEx;
+				if (refEx.haveReceiver)
+					receiverType = ((ReferenceExpression)funcEx).receiverType;
+				// Should never have outer locals
+			}
+			if (receiverType != null) {
+				aload_0();
+				loadInt(index++);
+				invoke(Opcodes.OPC_invokevirtual, 1, 1,
+						ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+						ConstantPool.GetCapturedArg, ConstantPool.GetCapturedArgSignature);
+				checkcast(isLambda ? mb.declaringClass : ((ReferenceExpression)funcEx).receiverType);
+				sig.append(mb.declaringClass.signature());
+			}
+			for (int p = 0, max = outerLocalVariables == null ? 0 : outerLocalVariables.length; p < max; p++) {
+				TypeBinding varType = outerLocalVariables[p].type;
+				aload_0();
+				loadInt(index);
+				invoke(Opcodes.OPC_invokevirtual, 1, 1,
+						ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
+						ConstantPool.GetCapturedArg, ConstantPool.GetCapturedArgSignature);
+				if (varType.isBaseType()) {
+					checkcast(scope.boxing(varType));
+					generateUnboxingConversion(varType.id);
+					if (varType.id == TypeIds.T_JavaLangLong || varType.id == TypeIds.T_JavaLangDouble) {
+						index++;
+					}
+				} else {
+					checkcast(varType);
+				}
+				index++;
+				sig.append(varType.signature());
+			}
+			sig.append(")"); //$NON-NLS-1$
+			if (funcEx.resolvedType instanceof IntersectionTypeBinding18) {
+				sig.append(((IntersectionTypeBinding18) funcEx.resolvedType).getSAMType(scope).signature());
+			} else {
+				sig.append(funcEx.resolvedType.signature());
+			}
+			// Example: invokeDynamic(0, 0, 1, "m".toCharArray(), "()Lcom/foo/X$Foo;".toCharArray());
+			invokeDynamic(funcEx.bootstrapMethodNumber, index, 1, funcEx.descriptor.selector,
+					sig.toString().toCharArray());
+			areturn();
+			if (j < count - 1) {
+				nextOne.place();
+				nextOne = j < count - 2 ? new BranchLabel(this) : errorLabel;
+			}
 		}
-		sig.append(")"); //$NON-NLS-1$
-		if (lambdaEx.resolvedType instanceof IntersectionTypeBinding18) {
-			sig.append(((IntersectionTypeBinding18)lambdaEx.resolvedType).getSAMType(scope).signature());
-		} else {
-			sig.append(lambdaEx.resolvedType.signature());
-		}
-		// Example: invokeDynamic(0, 0, 1, "m".toCharArray(), "()Lcom/foo/X$Foo;".toCharArray());
-		invokeDynamic(lambdaEx.bootstrapMethodNumber, index, 1, lambdaEx.descriptor.selector, sig.toString().toCharArray());
-		areturn();
 	}
 	
 	removeVariable(lvb1);

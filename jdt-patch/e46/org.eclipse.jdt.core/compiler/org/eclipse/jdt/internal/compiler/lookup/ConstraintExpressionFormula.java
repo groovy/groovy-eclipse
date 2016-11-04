@@ -288,13 +288,20 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 							// not checking r.mentionsAny for constructors, because A::new resolves to the raw type
 							// whereas in fact the type of all expressions of this shape depends on their type variable (if any)
 			{
-				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(functionType.parameters));
+				TypeBinding[] argumentTypes;
+				if (t.isParameterizedType()) {
+					MethodBinding capturedFunctionType = ((ParameterizedTypeBinding)t).getSingleAbstractMethod(inferenceContext.scope, true, reference.sourceStart, reference.sourceEnd);
+					argumentTypes = capturedFunctionType.parameters;
+				} else {
+					argumentTypes = functionType.parameters;
+				}
+				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(argumentTypes));
 
 				// Invocation Applicability Inference: 18.5.1 & Invocation Type Inference: 18.5.2
 				try {
 					InferenceContext18 innerContex = reference.getInferenceContext((ParameterizedMethodBinding) compileTimeDecl);
 					int innerInferenceKind = innerContex != null ? innerContex.inferenceKind : InferenceContext18.CHECK_STRICT;
-					inferInvocationApplicability(inferenceContext, original, functionType.parameters, original.isConstructor()/*mimic a diamond?*/, innerInferenceKind);
+					inferInvocationApplicability(inferenceContext, original, argumentTypes, original.isConstructor()/*mimic a diamond?*/, innerInferenceKind);
 					if (!inferPolyInvocationType(inferenceContext, reference, r, original))
 						return FALSE;
 					if (!original.isConstructor() 

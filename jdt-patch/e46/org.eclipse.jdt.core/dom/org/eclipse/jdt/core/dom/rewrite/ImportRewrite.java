@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1009,7 +1009,7 @@ public final class ImportRewrite {
 			context= this.defaultContext;
 		}
 		int kind= isField ? ImportRewriteContext.KIND_STATIC_FIELD : ImportRewriteContext.KIND_STATIC_METHOD;
-		this.importsKindMap.put(key, new Integer(kind));
+		this.importsKindMap.put(key, Integer.valueOf(kind));
 		int res= context.findInContext(declaringTypeName, simpleName, kind);
 		if (res == ImportRewriteContext.RES_NAME_CONFLICT) {
 			return key;

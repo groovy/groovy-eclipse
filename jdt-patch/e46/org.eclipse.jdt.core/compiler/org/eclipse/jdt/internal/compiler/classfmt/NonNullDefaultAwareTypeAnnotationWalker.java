@@ -122,6 +122,13 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	}
 
 	@Override
+	public ITypeAnnotationWalker toField() {
+		// don't set nextIsDefaultLocation, because field-level nullness is handled by BinaryTypeBinding.scanFieldForNullAnnotation
+		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
+		return super.toField();
+	}
+	
+	@Override
 	public ITypeAnnotationWalker toMethodReturn() {
 		// don't set nextIsDefaultLocation, because signature-level nullness is handled by ImplicitNullAnnotationVerifier (triggered per invocation via MessageSend.resolveType() et al)
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);

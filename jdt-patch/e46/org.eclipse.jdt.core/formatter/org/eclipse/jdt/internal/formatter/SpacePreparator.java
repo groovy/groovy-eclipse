@@ -859,10 +859,11 @@ public class SpacePreparator extends ASTVisitor {
 	@Override
 	public boolean visit(ParameterizedType node) {
 		List<Type> typeArguments = node.typeArguments();
-		if (!typeArguments.isEmpty()) {
-			handleTokenAfter(node.getType(), TokenNameLESS,
-					this.options.insert_space_before_opening_angle_bracket_in_parameterized_type_reference,
-					this.options.insert_space_after_opening_angle_bracket_in_parameterized_type_reference);
+		boolean hasArguments = !typeArguments.isEmpty();
+		handleTokenAfter(node.getType(), TokenNameLESS,
+				this.options.insert_space_before_opening_angle_bracket_in_parameterized_type_reference,
+				hasArguments && this.options.insert_space_after_opening_angle_bracket_in_parameterized_type_reference);
+		if (hasArguments) {
 			handleTokenAfter(typeArguments.get(typeArguments.size() - 1), TokenNameGREATER,
 					this.options.insert_space_before_closing_angle_bracket_in_parameterized_type_reference, false);
 			handleCommas(node.typeArguments(),

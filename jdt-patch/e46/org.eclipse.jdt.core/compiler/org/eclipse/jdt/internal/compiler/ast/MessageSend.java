@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -121,7 +121,7 @@ public class MessageSend extends Expression implements IPolyExpression, Invocati
 	public TypeBinding valueCast; // extra reference type cast to perform on method returned value
 	public TypeReference[] typeArguments;
 	public TypeBinding[] genericTypeArguments;
-	private ExpressionContext expressionContext = VANILLA_CONTEXT;
+	public ExpressionContext expressionContext = VANILLA_CONTEXT;
 
 	 // hold on to this context from invocation applicability inference until invocation type inference (per method candidate):
 	private SimpleLookupTable/*<PGMB,InferenceContext18>*/ inferenceContexts;
@@ -375,8 +375,18 @@ private FlowInfo analyseNullAssertion(BlockScope currentScope, Expression argume
 
 public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
 	// message send as a receiver
-	if ((nullStatus(flowInfo, flowContext) & FlowInfo.POTENTIALLY_NULL) != 0) // note that flowInfo is not used inside nullStatus(..)
-		scope.problemReporter().messageSendPotentialNullReference(this.binding, this);
+	int nullStatus = nullStatus(flowInfo, flowContext); // note that flowInfo is not used inside nullStatus(..)
+	if ((nullStatus & FlowInfo.POTENTIALLY_NULL) != 0) {
+		if(this.binding.returnType.isTypeVariable() && nullStatus == FlowInfo.FREE_TYPEVARIABLE && scope.environment().globalOptions.pessimisticNullAnalysisForFreeTypeVariablesEnabled) {
+			scope.problemReporter().methodReturnTypeFreeTypeVariableReference(this.binding, this);			
+		} else {
+			scope.problemReporter().messageSendPotentialNullReference(this.binding, this);
+		}
+	} else if ((this.resolvedType.tagBits & TagBits.AnnotationNonNull) != 0) {
+		NullAnnotationMatching nonNullStatus = NullAnnotationMatching.okNonNullStatus(this);
+		if (nonNullStatus.wantToReport())
+			nonNullStatus.report(scope);
+	}
 	return true; // done all possible checking
 }
 /**
@@ -540,7 +550,10 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		// try to retrieve null status of this message send from an annotation of the called method:
 		long tagBits = this.binding.tagBits;
 		if ((tagBits & TagBits.AnnotationNullMASK) == 0L) // alternatively look for type annotation (will only be present in 1.8+):
-			tagBits = this.binding.returnType.tagBits;
+			tagBits = this.binding.returnType.tagBits & TagBits.AnnotationNullMASK;
+		if(tagBits == 0L && this.binding.returnType.isFreeTypeVariable()) {
+			return FlowInfo.FREE_TYPEVARIABLE;
+		}
 		return FlowInfo.tagBitsToNullStatus(tagBits);
 	}
 	return FlowInfo.UNKNOWN;
@@ -1082,6 +1095,8 @@ public void cleanUpInferenceContexts() {
 		if (value != null)
 			((InferenceContext18) value).cleanUp();
 	this.inferenceContexts = null;
+	this.outerInferenceContext = null;
+	this.solutionsPerTargetType = null;
 }
 public Expression[] arguments() {
 	return this.arguments;

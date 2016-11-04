@@ -36,7 +36,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 
 	public TypeReference[][] typeArguments;
 	ReferenceBinding[] typesPerToken;
-	
+
 	/**
 	 * @param tokens
 	 * @param dim
@@ -66,7 +66,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		}
 	}
 	public void checkBounds(Scope scope) {
-		if (this.resolvedType == null) return;
+		if (this.resolvedType == null || !this.resolvedType.isValidBinding()) return;
 
 		checkBounds(
 			(ReferenceBinding) this.resolvedType.leafComponentType(),

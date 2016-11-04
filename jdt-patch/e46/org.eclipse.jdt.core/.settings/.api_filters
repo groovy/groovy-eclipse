@@ -1,9 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.eclipse.jdt.core" version="2">
-    <resource path="dom/org/eclipse/jdt/core/dom/IExtendedModifier.java" type="org.eclipse.jdt.core.dom.IExtendedModifier">
-        <filter comment="IExtendedModifier was never meant to be extendable (bug 416586)" id="403853384">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="New constant in IProblem is not API announced in 3.12" id="924844039">
             <message_arguments>
-                <message_argument value="org.eclipse.jdt.core.dom.IExtendedModifier"/>
+                <message_argument value="3.12.1"/>
+                <message_argument value="3.12.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="compiler/org/eclipse/jdt/core/compiler/IProblem.java" type="org.eclipse.jdt.core.compiler.IProblem">
+        <filter comment="backported to 3.12.1 from 3.13 - not publically announced in 3.12" id="1209008130">
+            <message_arguments>
+                <message_argument value="3.13"/>
+                <message_argument value="3.12"/>
+                <message_argument value="CannotInferInvocationType"/>
+            </message_arguments>
+        </filter>
+        <filter comment="backported to 3.12.1 from 3.13 - not publically announced in 3.12" id="1209008130">
+            <message_arguments>
+                <message_argument value="3.13"/>
+                <message_argument value="3.12"/>
+                <message_argument value="InterfaceStaticMethodInvocationNotBelow18"/>
+            </message_arguments>
+        </filter>
+        <filter comment="backported to 3.12.1 from 3.13 - not publically announced in 3.12" id="1209008130">
+            <message_arguments>
+                <message_argument value="3.13"/>
+                <message_argument value="3.12"/>
+                <message_argument value="InterfaceSuperInvocationNotBelow18"/>
             </message_arguments>
         </filter>
     </resource>

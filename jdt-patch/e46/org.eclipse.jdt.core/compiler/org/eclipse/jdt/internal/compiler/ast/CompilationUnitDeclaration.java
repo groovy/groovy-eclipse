@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +13,7 @@
  *							  Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335             
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
+
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -543,7 +544,7 @@ public void record(LocalTypeBinding localType) {
 
 /*
  * Keep track of all lambda/method reference expressions, so as to be able to look it up later without 
- * having to traverse AST. Return the 1 based "ordinal" in the CUD.
+ * having to traverse AST. Return the "ordinal" returned by the enclosing type.
  */
 public int record(FunctionalExpression expression) {
 	if (this.functionalExpressionsCount == 0) {
@@ -551,8 +552,8 @@ public int record(FunctionalExpression expression) {
 	} else if (this.functionalExpressionsCount == this.functionalExpressions.length) {
 		System.arraycopy(this.functionalExpressions, 0, (this.functionalExpressions = new FunctionalExpression[this.functionalExpressionsCount * 2]), 0, this.functionalExpressionsCount);
 	}
-	this.functionalExpressions[this.functionalExpressionsCount] = expression;
-	return ++this.functionalExpressionsCount;
+	this.functionalExpressions[this.functionalExpressionsCount++] = expression;
+	return expression.enclosingScope.classScope().referenceContext.record(expression);
 }
 
 public void resolve() {

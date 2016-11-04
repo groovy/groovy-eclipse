@@ -20,7 +20,6 @@ import java.io.StringReader;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import junit.framework.Test;
 
@@ -741,7 +740,7 @@ private void runClasspathTest(String classpathInput, String[] expectedClasspathE
 	if (!outputDirectory.isDirectory()) {
 		outputDirectory.mkdirs();
 	}
-	List<ClasspathLocation> paths = new ArrayList<ClasspathLocation>(Main.DEFAULT_SIZE_CLASSPATH);
+	ArrayList<ClasspathLocation> paths = new ArrayList<ClasspathLocation>(Main.DEFAULT_SIZE_CLASSPATH);
 //	try {
 		(new Main(new PrintWriter(System.out), new PrintWriter(System.err), true/*systemExit*/, null/*options*/, null/*progress*/)).
 			processPathEntries(Main.DEFAULT_SIZE_CLASSPATH, paths, classpathInput, null /* customEncoding */, true /* isSourceOnly */, false /* rejectDestinationPathOnJars*/);

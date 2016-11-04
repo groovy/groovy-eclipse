@@ -142,7 +142,7 @@ public class LanguageSupportFactory {
 				if (separator == -1) {
 					JavaCore javaCore = JavaCore.getJavaCore();
 					if (javaCore==null) {
-						Class clazz = Class.forName(className);
+						Class<?> clazz = Class.forName(className);
 						return (LanguageSupport)clazz.newInstance();
 					} else {
 						bundle= javaCore.getBundle();
@@ -152,7 +152,7 @@ public class LanguageSupportFactory {
 					className = className.substring(separator + 1);
 					bundle = Platform.getBundle(bundleName);
 				}
-				Class c= bundle.loadClass(className);
+				Class<?> c = bundle.loadClass(className);
 				instance= (LanguageSupport) c.newInstance();
 			} catch (ClassNotFoundException e) {
 		        log(e);

@@ -174,13 +174,23 @@ public class InferenceContext18 {
 				InferenceVariable var = interned[i];
 				if (var == null)
 					break;
-				if (var.typeParameter == typeParameter && var.rank == rank && var.site == site) //$IDENTITY-COMPARISON$
+				if (var.typeParameter == typeParameter && var.rank == rank && isSameSite(var.site, site)) //$IDENTITY-COMPARISON$
 					return var;
 			}
 			if (i >= len)
 				System.arraycopy(interned, 0, outermostContext.internedVariables = new InferenceVariable[len+10], 0, len);
 		}
 		return outermostContext.internedVariables[i] = new InferenceVariable(typeParameter, rank, this.nextVarId++, site, this.environment, this.object);
+	}
+	
+	boolean isSameSite(InvocationSite site1, InvocationSite site2) {
+		if (site1 == site2)
+			return true;
+		if (site1 == null || site2 == null)
+			return false;
+		if (site1.sourceStart() == site2.sourceStart() && site1.sourceEnd() == site2.sourceEnd() && site1.toString().equals(site2.toString()))
+			return true;
+		return false;
 	}
 
 	public static final int CHECK_UNKNOWN = 0;
@@ -396,10 +406,15 @@ public class InferenceContext18 {
 			Set<ConstraintFormula> c = new HashSet<ConstraintFormula>();
 			if (!addConstraintsToC(this.invocationArguments, c, method, this.inferenceKind, false, invocationSite))
 				return null;
+			// not spec'd:
+			BoundSet connectivityBoundSet = this.currentBounds.copy();
+			for(ConstraintFormula cf : c)
+				connectivityBoundSet.reduceOneConstraint(this, cf);
 			// 5. bullet: determine B4 from C
+			List<Set<InferenceVariable>> components = connectivityBoundSet.computeConnectedComponents(this.inferenceVariables);
 			while (!c.isEmpty()) {
 				// *
-				Set<ConstraintFormula> bottomSet = findBottomSet(c, allOutputVariables(c));
+				Set<ConstraintFormula> bottomSet = findBottomSet(c, allOutputVariables(c), components);
 				if (bottomSet.isEmpty()) {
 					bottomSet.add(pickFromCycle(c));
 				}
@@ -496,6 +511,10 @@ public class InferenceContext18 {
 					if (withWildCards != null) {
 						t = ConstraintExpressionFormula.findGroundTargetType(this, skope, lambda, withWildCards);
 					}
+					if (!t.isProperType(true) && t.isParameterizedType()) {
+						// prevent already resolved inference variables from leaking into the lambda
+						t = (ReferenceBinding) Scope.substitute(getResultSubstitution(this.currentBounds, false), t);
+					}
 					MethodBinding functionType;
 					if (t != null && (functionType = t.getSingleAbstractMethod(skope, true)) != null && (lambda = lambda.resolveExpressionExpecting(t, this.scope, this)) != null) {
 						TypeBinding r = functionType.returnType;
@@ -522,25 +541,22 @@ public class InferenceContext18 {
 			TypeBinding[] argumentTypes = arguments == null ? Binding.NO_PARAMETERS : new TypeBinding[arguments.length];
 			for (int i = 0; i < argumentTypes.length; i++)
 				argumentTypes[i] = arguments[i].resolvedType;
-			int applicabilityKind;
 			InferenceContext18 innerContext = null;
 			if (innerMethod instanceof ParameterizedGenericMethodBinding)
 				 innerContext = invocation.getInferenceContext((ParameterizedGenericMethodBinding) innerMethod);
-			applicabilityKind = innerContext != null ? innerContext.inferenceKind : getInferenceKind(innerMethod, argumentTypes);
 			
-			if (interleaved) {
+			if (interleaved && innerContext != null) {
 				MethodBinding shallowMethod = innerMethod.shallowOriginal();
-				SuspendedInferenceRecord prevInvocation = enterPolyInvocation(invocation, arguments);
-				try {
-					this.inferenceKind = applicabilityKind;
-					if (innerContext != null)
-						innerContext.outerContext = this;
-					createInitialBoundSet(shallowMethod.getAllTypeVariables(shallowMethod.isConstructor())); // minimal preparation to work with inner inference variables
-				} finally {
-					resumeSuspendedInference(prevInvocation);
-				}
+				innerContext.outerContext = this;
+				if (innerContext.stepCompleted < InferenceContext18.APPLICABILITY_INFERRED) // shouldn't happen, but let's play safe
+					innerContext.inferInvocationApplicability(shallowMethod, argumentTypes, shallowMethod.isConstructor());
+				if (!ConstraintExpressionFormula.inferPolyInvocationType(innerContext, invocation, substF, shallowMethod))
+					return false;
+				return innerContext.addConstraintsToC(arguments, c, innerMethod.genericMethod(), innerContext.inferenceKind, interleaved, invocation);
+			} else {
+				int applicabilityKind = getInferenceKind(innerMethod, argumentTypes);
+				return this.addConstraintsToC(arguments, c, innerMethod.genericMethod(), applicabilityKind, interleaved, invocation);
 			}
-			return addConstraintsToC(arguments, c, innerMethod.genericMethod(), applicabilityKind, interleaved, invocation);
 		} else if (expri instanceof ConditionalExpression) {
 			ConditionalExpression ce = (ConditionalExpression) expri;
 			return addConstraintsToC_OneExpr(ce.valueIfTrue, c, fsi, substF, method, interleaved)
@@ -901,7 +917,7 @@ public class InferenceContext18 {
 		for (int i = 0; i < typeParameters.length; i++) {
 			for (int j = 0; j < this.inferenceVariables.length; j++) {
 				InferenceVariable variable = this.inferenceVariables[j];
-				if (variable.site == site && TypeBinding.equalsEquals(variable.typeParameter, typeParameters[i])) {
+				if (isSameSite(variable.site, site) && TypeBinding.equalsEquals(variable.typeParameter, typeParameters[i])) {
 					TypeBinding outerVar = null;
 					if (outerVariables != null && (outerVar = boundSet.getEquivalentOuterVariable(variable, outerVariables)) != null)
 						substitutions[i] = outerVar;
@@ -1085,7 +1101,7 @@ public class InferenceContext18 {
 	private boolean setUpperBounds(CaptureBinding18 typeVariable, TypeBinding[] substitutedUpperBounds) {
 		// 18.4: ... define the upper bound of Zi as glb(L1θ, ..., Lkθ)
 		if (substitutedUpperBounds.length == 1) {
-			typeVariable.setUpperBounds(substitutedUpperBounds, this.object); // shortcut
+			return typeVariable.setUpperBounds(substitutedUpperBounds, this.object); // shortcut
 		} else {
 			TypeBinding[] glbs = Scope.greaterLowerBound(substitutedUpperBounds, this.scope, this.environment);
 			if (glbs == null)
@@ -1340,25 +1356,37 @@ public class InferenceContext18 {
 		return sum;
 	}
 
-	private Set<ConstraintFormula> findBottomSet(Set<ConstraintFormula> constraints, Set<InferenceVariable> allOutputVariables) {
+	private Set<ConstraintFormula> findBottomSet(Set<ConstraintFormula> constraints, 
+			Set<InferenceVariable> allOutputVariables, List<Set<InferenceVariable>> components)
+	{
 		// 18.5.2 bullet 5.(1)
 		//  A subset of constraints is selected, satisfying the property that,
 		//  for each constraint, no input variable can influence an output variable of another constraint in C. ...
 		//  An inference variable α can influence an inference variable β if α depends on the resolution of β (§18.4), or vice versa;
 		//  or if there exists a third inference variable γ such that α can influence γ and γ can influence β.  ...
-		// TODO: is indirect influence respected?
 		Set<ConstraintFormula> result = new HashSet<ConstraintFormula>();
 	  constraintLoop:
 		for (ConstraintFormula constraint : constraints) {
 			for (InferenceVariable in : constraint.inputVariables(this)) {
-				for (InferenceVariable out : allOutputVariables) {
-					if (this.currentBounds.dependsOnResolutionOf(in, out) || this.currentBounds.dependsOnResolutionOf(out, in))
-						continue constraintLoop;
-				}
+				if (canInfluenceAnyOf(in, allOutputVariables, components))
+					continue constraintLoop;
 			}
 			result.add(constraint);
-		}		
+		}
 		return result;
+	}
+
+	private boolean canInfluenceAnyOf(InferenceVariable in, Set<InferenceVariable> allOuts, List<Set<InferenceVariable>> components) {
+		// can influence == lives in the same component
+		for (Set<InferenceVariable> component : components) {
+			if (component.contains(in)) {
+				for (InferenceVariable out : allOuts)
+					if (component.contains(out))
+						return true;
+				return false;
+			}
+		}
+		return false;
 	}
 
 	Set<InferenceVariable> allOutputVariables(Set<ConstraintFormula> constraints) {
@@ -1479,7 +1507,7 @@ public class InferenceContext18 {
 		   best and nothing more to do than to signal error. 
 		 */
 		ProblemMethodBinding problemMethod = new ProblemMethodBinding(method, method.selector, method.parameters, ProblemReasons.InvocationTypeInferenceFailure);
-		problemMethod.returnType = expectedType;
+		problemMethod.returnType = expectedType != null ? expectedType : method.returnType;
 		problemMethod.inferenceContext = this;
 		return problemMethod;
 	}

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,12 +84,12 @@ public final static String[] JAVA_TASK_MARKER_ATTRIBUTE_NAMES = {
 	IMarker.USER_EDITABLE,
 	IMarker.SOURCE_ID,
 };
-public final static Integer S_ERROR = new Integer(IMarker.SEVERITY_ERROR);
-public final static Integer S_WARNING = new Integer(IMarker.SEVERITY_WARNING);
-public final static Integer S_INFO = new Integer(IMarker.SEVERITY_INFO);
-public final static Integer P_HIGH = new Integer(IMarker.PRIORITY_HIGH);
-public final static Integer P_NORMAL = new Integer(IMarker.PRIORITY_NORMAL);
-public final static Integer P_LOW = new Integer(IMarker.PRIORITY_LOW);
+public final static Integer S_ERROR = Integer.valueOf(IMarker.SEVERITY_ERROR);
+public final static Integer S_WARNING = Integer.valueOf(IMarker.SEVERITY_WARNING);
+public final static Integer S_INFO = Integer.valueOf(IMarker.SEVERITY_INFO);
+public final static Integer P_HIGH = Integer.valueOf(IMarker.PRIORITY_HIGH);
+public final static Integer P_NORMAL = Integer.valueOf(IMarker.PRIORITY_NORMAL);
+public final static Integer P_LOW = Integer.valueOf(IMarker.PRIORITY_LOW);
 
 protected AbstractImageBuilder(JavaBuilder javaBuilder, boolean buildStarting, State newState) {
 	// local copies
@@ -443,7 +443,7 @@ protected void createProblemFor(IResource resource, IMember javaElement, String 
 		int end = range == null ? 1 : start + range.getLength();
 		marker.setAttributes(
 			new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IMarker.CHAR_START, IMarker.CHAR_END, IMarker.SOURCE_ID},
-			new Object[] {message, new Integer(severity), new Integer(start), new Integer(end), JavaBuilder.SOURCE_ID});
+			new Object[] {message, Integer.valueOf(severity), Integer.valueOf(start), Integer.valueOf(end), JavaBuilder.SOURCE_ID});
 	} catch (CoreException e) {
 		throw internalException(e);
 	}
@@ -731,8 +731,8 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 				new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IJavaModelMarker.CATEGORY_ID, IMarker.SOURCE_ID},
 				new Object[] {
 					Messages.bind(Messages.build_incompleteClassPath, missingClassfileName),
-					new Integer(isInvalidClasspathError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING),
-					new Integer(CategorizedProblem.CAT_BUILDPATH),
+					Integer.valueOf(isInvalidClasspathError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING),
+					Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
 					JavaBuilder.SOURCE_ID
 				}
 			);
@@ -797,12 +797,12 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 			int index = 0;
 			allValues[index++] = problem.getMessage(); // message
 			allValues[index++] = problem.isError() ? S_ERROR : problem.isWarning() ? S_WARNING : S_INFO; // severity
-			allValues[index++] = new Integer(id); // ID
-			allValues[index++] = new Integer(problem.getSourceStart()); // start
-			allValues[index++] = new Integer(problem.getSourceEnd() + 1); // end
-			allValues[index++] = new Integer(problem.getSourceLineNumber()); // line
+			allValues[index++] = Integer.valueOf(id); // ID
+			allValues[index++] = Integer.valueOf(problem.getSourceStart()); // start
+			allValues[index++] = Integer.valueOf(problem.getSourceEnd() + 1); // end
+			allValues[index++] = Integer.valueOf(problem.getSourceLineNumber()); // line
 			allValues[index++] = Util.getProblemArgumentsForMarker(problem.getArguments()); // arguments
-			allValues[index++] = new Integer(problem.getCategoryID()); // category ID
+			allValues[index++] = Integer.valueOf(problem.getCategoryID()); // category ID
 			// SOURCE_ID attribute for JDT problems
 			if (managedLength > 0)
 				allValues[index++] = JavaBuilder.SOURCE_ID;
@@ -848,10 +848,10 @@ protected void storeTasksFor(SourceFile sourceFile, CategorizedProblem[] tasks) 
 			int index = 0;
 			allValues[index++] = task.getMessage();
 			allValues[index++] = priority;
-			allValues[index++] = new Integer(task.getID());
-			allValues[index++] = new Integer(task.getSourceStart());
-			allValues[index++] = new Integer(task.getSourceEnd() + 1);
-			allValues[index++] = new Integer(task.getSourceLineNumber());
+			allValues[index++] = Integer.valueOf(task.getID());
+			allValues[index++] = Integer.valueOf(task.getSourceStart());
+			allValues[index++] = Integer.valueOf(task.getSourceEnd() + 1);
+			allValues[index++] = Integer.valueOf(task.getSourceLineNumber());
 			allValues[index++] = Boolean.FALSE;
 			allValues[index++] = JavaBuilder.SOURCE_ID;
 			// optional extra attributes

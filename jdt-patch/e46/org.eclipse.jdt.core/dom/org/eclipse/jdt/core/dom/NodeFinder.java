@@ -99,7 +99,7 @@ public final class NodeFinder {
 		NodeFinder finder = new NodeFinder(root, start, length);
 		ASTNode result= finder.getCoveredNode();
 		if (result == null || result.getStartPosition() != start || result.getLength() != length) {
-			return finder.getCoveringNode();
+			result = finder.getCoveringNode();
 		}
 		return result;
 	}

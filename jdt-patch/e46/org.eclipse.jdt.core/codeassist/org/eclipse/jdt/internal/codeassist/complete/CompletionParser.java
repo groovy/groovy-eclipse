@@ -4419,10 +4419,10 @@ public NameReference createSingleAssistNameReference(char[] assistName, long pos
 		} else if((kind == K_BLOCK_DELIMITER || kind == K_LAMBDA_EXPRESSION_DELIMITER)
 			&& this.previousKind == K_BLOCK_DELIMITER
 			&& this.previousInfo == TRY) {
-			return new CompletionOnKeyword3(assistName, position, new char[][]{Keywords.CATCH, Keywords.FINALLY});
+			return new CompletionOnKeyword3(assistName, position, new char[][]{Keywords.CATCH, Keywords.FINALLY}, true);
 		} else if(kind == K_BLOCK_DELIMITER
 			&& topKnownElementInfo(COMPLETION_OR_ASSIST_PARSER) == SWITCH) {
-			return new CompletionOnKeyword3(assistName, position, new char[][]{Keywords.CASE, Keywords.DEFAULT});
+			return new CompletionOnKeyword3(assistName, position, new char[][]{Keywords.CASE, Keywords.DEFAULT}, false);
 		} else {
 			char[][] keywords = new char[Keywords.COUNT][];
 			int count = 0;

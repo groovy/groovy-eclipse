@@ -167,6 +167,11 @@ public class CommentWrapExecutor extends TokenTraverser {
 		int lineLenght = this.options.comment_line_length;
 		if (this.wrapDisabled || this.counter <= lineLenght)
 			return false;
+		if (getLineBreaksAfter() == 0 && getNext() != null && getNext().getWrapPolicy() == WrapPolicy.DISABLE_WRAP) {
+			// The next token cannot be wrapped, so there's no need to wrap now.
+			// Let's wait and decide when there's more information available.
+			return false;
+		}
 		if (this.potentialWrapToken != null && this.potentialWrapTokenSubstitute != null
 				&& this.counterIfWrapped > lineLenght && this.counterIfWrappedSubstitute < this.counterIfWrapped) {
 			// there is a normal token to wrap, but the line would overflow anyway - better use substitute

@@ -1,3 +1,4 @@
+//GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -20,9 +21,9 @@ import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
 public class LongLiteral extends NumberLiteral {
 
-	private static final char[] HEXA_MIN_VALUE        = "0x8000000000000000L".toCharArray(); //$NON-NLS-1$
+	//private static final char[] HEXA_MIN_VALUE        = "0x8000000000000000L".toCharArray(); //$NON-NLS-1$
 	private static final char[] HEXA_MINUS_ONE_VALUE  = "0xffffffffffffffffL".toCharArray(); //$NON-NLS-1$
-	private static final char[] OCTAL_MIN_VALUE       = "01000000000000000000000L".toCharArray(); //$NON-NLS-1$
+	//private static final char[] OCTAL_MIN_VALUE       = "01000000000000000000000L".toCharArray(); //$NON-NLS-1$
 	private static final char[] OCTAL_MINUS_ONE_VALUE = "01777777777777777777777L".toCharArray(); //$NON-NLS-1$
 	private static final char[] DECIMAL_MIN_VALUE     = "9223372036854775808L".toCharArray(); //$NON-NLS-1$
 	private static final char[] DECIMAL_MAX_VALUE     = "9223372036854775807L".toCharArray(); //$NON-NLS-1$
@@ -47,7 +48,7 @@ public class LongLiteral extends NumberLiteral {
 //				}
 //				break;
 //		}
-		// GROOVY
+		// GROOVY end
 		return new LongLiteral(token, longReducedToken != token ? longReducedToken : null, s, e);
 	}
 

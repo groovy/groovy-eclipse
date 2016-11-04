@@ -903,6 +903,9 @@ public final boolean isUsed() {
 public boolean isVarargs() {
 	return (this.modifiers & ClassFileConstants.AccVarargs) != 0;
 }
+public boolean isParameterizedGeneric() {
+	return false;
+}
 public boolean isPolymorphic() {
 	return false;
 }

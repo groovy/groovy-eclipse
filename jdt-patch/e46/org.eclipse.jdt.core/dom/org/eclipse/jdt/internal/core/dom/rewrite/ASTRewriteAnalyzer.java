@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1548,11 +1548,20 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		boolean isAnnotationsProperty = isVarargsAnnotationsProperty 
 				|| node instanceof AnnotatableType && property == ((AnnotatableType) node).getAnnotationsProperty();
 		Prefix formatterPrefix;
-		if (property == SingleVariableDeclaration.MODIFIERS2_PROPERTY || 
-				property == TypeParameter.MODIFIERS_PROPERTY || isAnnotationsProperty)
-			formatterPrefix= this.formatter.PARAM_ANNOTATION_SEPARATION;
-		else
+		if (property == SingleVariableDeclaration.MODIFIERS2_PROPERTY ||
+				property == VariableDeclarationExpression.MODIFIERS2_PROPERTY ||
+				property == VariableDeclarationStatement.MODIFIERS2_PROPERTY ||
+				property == TypeParameter.MODIFIERS_PROPERTY || isAnnotationsProperty) {
+			ASTNode parent = node.getParent();
+			if (parent instanceof MethodDeclaration)
+				formatterPrefix= this.formatter.PARAM_ANNOTATION_SEPARATION;
+			else if (parent instanceof Block || parent instanceof TryStatement || parent instanceof ForStatement)
+				formatterPrefix= this.formatter.LOCAL_ANNOTATION_SEPARATION;
+			else
+				formatterPrefix= this.formatter.TYPE_ANNOTATION_SEPARATION;
+		} else {
 			formatterPrefix= this.formatter.ANNOTATION_SEPARATION;
+		}
 
 		int endPos= new ModifierRewriter(formatterPrefix).rewriteList(node, property, pos, keyword, " "); //$NON-NLS-1$ 
 

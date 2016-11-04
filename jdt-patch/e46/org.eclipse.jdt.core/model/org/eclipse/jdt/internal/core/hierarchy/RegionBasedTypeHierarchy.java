@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,30 +37,7 @@ public class RegionBasedTypeHierarchy extends TypeHierarchy {
 public RegionBasedTypeHierarchy(IRegion region, ICompilationUnit[] workingCopies, IType type, boolean computeSubtypes) {
 	super(type, workingCopies, (IJavaSearchScope)null, computeSubtypes);
 
-	Region newRegion = new Region() {
-		public void add(IJavaElement element) {
-			if (!contains(element)) {
-				//"new" element added to region
-				removeAllChildren(element);
-				this.rootElements.add(element);
-				if (element.getElementType() == IJavaElement.JAVA_PROJECT) {
-					// add jar roots as well so that jars don't rely on their parent to know
-					// if they are contained in the region
-					// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=146615)
-					try {
-						IPackageFragmentRoot[] roots = ((IJavaProject) element).getPackageFragmentRoots();
-						for (int i = 0, length = roots.length; i < length; i++) {
-							if (roots[i].isArchive() && !this.rootElements.contains(roots[i]))
-								this.rootElements.add(roots[i]);
-						}
-					} catch (JavaModelException e) {
-						// project doesn't exist
-					}
-				}
-				this.rootElements.trimToSize();
-			}
-		}
-	};
+	Region newRegion = new Region();
 	IJavaElement[] elements = region.getElements();
 	for (int i = 0, length = elements.length; i < length; i++) {
 		newRegion.add(elements[i]);

@@ -1,6 +1,6 @@
 //GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -623,12 +623,16 @@ public void resolve(IGenericType suppliedType) {
 			this.superTypesOnly = true;
 			reportHierarchy(this.builder.getType(), null, binaryTypeBinding);
 		} else {
-			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
-			if (cu != null) {
-				HashSet localTypes = new HashSet();
-				localTypes.add(cu.getPath().toString());
-				this.superTypesOnly = true;
-				resolve(new Openable[] {(Openable)cu}, localTypes, null);
+			// GROOVY edit -- added null check
+			IType it = ((SourceTypeElementInfo)suppliedType).getHandle();
+			if (it != null) {
+				org.eclipse.jdt.core.ICompilationUnit cu = it.getCompilationUnit();
+				if (cu != null) {
+					HashSet localTypes = new HashSet();
+					localTypes.add(cu.getPath().toString());
+					this.superTypesOnly = true;
+					resolve(new Openable[] {(Openable)cu}, localTypes, null);
+				}
 			}
 		}
 	} catch (AbortCompilation e) { // ignore this exception for now since it typically means we cannot find java.lang.Object
@@ -825,7 +829,9 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 			// remember type bindings
 			for (int i = 0; i < unitsIndex; i++) {
 				CompilationUnitDeclaration parsedUnit = parsedUnits[i];
-				if (parsedUnit != null && !parsedUnit.hasErrors()) {
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=462158
+				// Certain assist features require type hierarchy even with code with compiler errors.
+				if (parsedUnit != null) {
 					boolean containsLocalType = hasLocalType[i];
 					if (containsLocalType) {
 						if (monitor != null && monitor.isCanceled())

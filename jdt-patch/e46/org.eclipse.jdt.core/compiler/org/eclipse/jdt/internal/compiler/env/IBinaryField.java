@@ -32,8 +32,8 @@ IBinaryTypeAnnotation[] getTypeAnnotations();
 Constant getConstant();
 
 /**
- * Answer the receiver's signature which describes the parameter &
- * return types as specified in section 4.4.4 of the Java 2 VM spec.
+ * Answer the receiver's FieldSignature, which describes the field's type
+ * as specified in "4.7.9.1 Signatures" of the Java SE 8 VM spec.
  */
 char[] getGenericSignature();
 

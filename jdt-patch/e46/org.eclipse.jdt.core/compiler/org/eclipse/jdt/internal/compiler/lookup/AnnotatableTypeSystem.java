@@ -32,9 +32,10 @@ public class AnnotatableTypeSystem extends TypeSystem {
 	
 	public AnnotatableTypeSystem(LookupEnvironment environment) {
 		super(environment);
+		this.environment = environment;
 		this.isAnnotationBasedNullAnalysisEnabled = environment.globalOptions.isAnnotationBasedNullAnalysisEnabled;
 	}
-
+	
 	// Given a type, return all its annotated variants: parameter may be annotated.
 	public TypeBinding[] getAnnotatedTypes(TypeBinding type) {
 		

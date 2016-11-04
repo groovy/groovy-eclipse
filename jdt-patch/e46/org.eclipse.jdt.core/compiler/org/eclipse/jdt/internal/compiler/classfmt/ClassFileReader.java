@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class ClassFileReader extends ClassFileStruct implements IBinaryType {
@@ -67,6 +68,7 @@ public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 	private int enclosingNameAndTypeIndex;
 	private char[] enclosingMethod;
 	private ExternalAnnotationProvider annotationProvider;
+	private ExternalAnnotationStatus externalAnnotationStatus = ExternalAnnotationStatus.NOT_EEA_CONFIGURED;
 
 private static String printTypeModifiers(int modifiers) {
 	java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
@@ -427,6 +429,7 @@ public interface ZipFileProducer { ZipFile produce() throws IOException; }
  *		this is unexpected.
  */
 public ZipFile setExternalAnnotationProvider(String basePath, String qualifiedBinaryTypeName, ZipFile zipFile, ZipFileProducer producer) throws IOException {
+	this.externalAnnotationStatus = ExternalAnnotationStatus.NO_EEA_FILE;
 	String qualifiedBinaryFileName = qualifiedBinaryTypeName + ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX;
 	if (zipFile == null) {
 		File annotationBase = new File(basePath);
@@ -434,6 +437,7 @@ public ZipFile setExternalAnnotationProvider(String basePath, String qualifiedBi
 			try {
 				String filePath = annotationBase.getAbsolutePath()+'/'+qualifiedBinaryFileName;
 				this.annotationProvider = new ExternalAnnotationProvider(new FileInputStream(filePath), String.valueOf(getName()));
+				this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
 			} catch (FileNotFoundException e) {
 				// expected, no need to report an error here
 			}
@@ -444,14 +448,22 @@ public ZipFile setExternalAnnotationProvider(String basePath, String qualifiedBi
 		zipFile = (producer != null ? producer.produce() : new ZipFile(annotationBase));
 	}
 	ZipEntry entry = zipFile.getEntry(qualifiedBinaryFileName);
-	if (entry != null)
+	if (entry != null) {
 		this.annotationProvider = new ExternalAnnotationProvider(zipFile.getInputStream(entry), String.valueOf(getName()));
+		this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
+	}
 	return zipFile;
 }
 public boolean hasAnnotationProvider() {
 	return this.annotationProvider != null;
 }
-
+public void markAsFromSource() {
+	this.externalAnnotationStatus = ExternalAnnotationStatus.FROM_SOURCE;
+}
+@Override
+public ExternalAnnotationStatus getExternalAnnotationStatus() {
+	return this.externalAnnotationStatus;
+}
 /**
  * Conditionally add external annotations to the mix.
  * If 'member' is given it must be either of IBinaryField or IBinaryMethod, in which case we're seeking annotations for that member.

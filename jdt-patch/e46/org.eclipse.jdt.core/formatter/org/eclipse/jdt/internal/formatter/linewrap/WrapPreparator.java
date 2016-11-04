@@ -19,6 +19,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameC
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameDOT;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameEQUAL;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameLBRACE;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameLESS;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameLPAREN;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameOR;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameQUESTION;
@@ -51,9 +52,11 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
+import org.eclipse.jdt.core.dom.CreationReference;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ForStatement;
@@ -65,16 +68,19 @@ import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodReference;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.TypeMethodReference;
 import org.eclipse.jdt.core.dom.TypeParameter;
 import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
@@ -238,6 +244,9 @@ public class WrapPreparator extends ASTVisitor {
 			handleWrap(this.options.alignment_for_superinterfaces_in_type_declaration, PREFERRED);
 		}
 
+		prepareElementsList(node.typeParameters(), TokenNameCOMMA, TokenNameLESS);
+		handleWrap(this.options.alignment_for_type_parameters);
+
 		this.fieldAligner.handleAlign(node.bodyDeclarations());
 
 		return true;
@@ -298,6 +307,10 @@ public class WrapPreparator extends ASTVisitor {
 			this.wrapGroupEnd = this.tm.lastIndexIn(node.getName(), -1);
 			handleWrap(this.options.alignment_for_method_declaration);
 		}
+
+		prepareElementsList(node.typeParameters(), TokenNameCOMMA, TokenNameLESS);
+		handleWrap(this.options.alignment_for_type_parameters);
+
 		return true;
 	}
 
@@ -360,6 +373,7 @@ public class WrapPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(MethodInvocation node) {
 		handleArguments(node.arguments(), this.options.alignment_for_arguments_in_method_invocation);
+		handleTypeArguments(node.typeArguments());
 
 		boolean isInvocationChainRoot = !(node.getParent() instanceof MethodInvocation)
 				|| node.getLocationInParent() != MethodInvocation.EXPRESSION_PROPERTY;
@@ -386,6 +400,7 @@ public class WrapPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
 		handleArguments(node.arguments(), this.options.alignment_for_arguments_in_method_invocation);
+		handleTypeArguments(node.typeArguments());
 		return true;
 	}
 
@@ -400,18 +415,22 @@ public class WrapPreparator extends ASTVisitor {
 				? this.options.alignment_for_arguments_in_qualified_allocation_expression
 				: this.options.alignment_for_arguments_in_allocation_expression;
 		handleArguments(node.arguments(), wrappingOption);
+
+		handleTypeArguments(node.typeArguments());
 		return true;
 	}
 
 	@Override
 	public boolean visit(ConstructorInvocation node) {
 		handleArguments(node.arguments(), this.options.alignment_for_arguments_in_explicit_constructor_call);
+		handleTypeArguments(node.typeArguments());
 		return true;
 	}
 
 	@Override
 	public boolean visit(SuperConstructorInvocation node) {
 		handleArguments(node.arguments(), this.options.alignment_for_arguments_in_explicit_constructor_call);
+		handleTypeArguments(node.typeArguments());
 		return true;
 	}
 
@@ -543,10 +562,13 @@ public class WrapPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(ConditionalExpression node) {
-		this.wrapIndexes.add(this.tm.firstIndexAfter(node.getExpression(), TokenNameQUESTION));
-		this.wrapIndexes.add(this.tm.firstIndexAfter(node.getThenExpression(), TokenNameCOLON));
-		this.secondaryWrapIndexes.add(this.tm.firstIndexIn(node.getThenExpression(), -1));
-		this.secondaryWrapIndexes.add(this.tm.firstIndexIn(node.getElseExpression(), -1));
+		boolean wrapBefore = this.options.wrap_before_conditional_operator;
+		List<Integer> before = wrapBefore ? this.wrapIndexes : this.secondaryWrapIndexes;
+		List<Integer> after = wrapBefore ? this.secondaryWrapIndexes : this.wrapIndexes;
+		before.add(this.tm.firstIndexAfter(node.getExpression(), TokenNameQUESTION));
+		before.add(this.tm.firstIndexAfter(node.getThenExpression(), TokenNameCOLON));
+		after.add(this.tm.firstIndexIn(node.getThenExpression(), -1));
+		after.add(this.tm.firstIndexIn(node.getElseExpression(), -1));
 		this.wrapParentIndex = this.tm.lastIndexIn(node.getExpression(), -1);
 		this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
 		handleWrap(this.options.alignment_for_conditional_expression);
@@ -576,17 +598,17 @@ public class WrapPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(Assignment node) {
-		int wrapIndex = this.tm.firstIndexIn(node.getRightHandSide(), -1);
-		if (this.tm.get(wrapIndex).getLineBreaksBefore() > 0)
-			return true;
+		int rightSideIndex = this.tm.firstIndexIn(node.getRightHandSide(), -1);
+		if (this.tm.get(rightSideIndex).getLineBreaksBefore() > 0)
+			return true; // must be an array initializer in new line because of brace_position_for_array_initializer
 
 		int operatorIndex = this.tm.firstIndexBefore(node.getRightHandSide(), -1);
 		while (this.tm.get(operatorIndex).isComment())
 			operatorIndex--;
 		assert node.getOperator().toString().equals(this.tm.toString(operatorIndex));
 
-		this.wrapIndexes.add(wrapIndex);
-		this.secondaryWrapIndexes.add(operatorIndex);
+		this.wrapIndexes.add(this.options.wrap_before_assignment_operator ? operatorIndex : rightSideIndex);
+		this.secondaryWrapIndexes.add(this.options.wrap_before_assignment_operator ? rightSideIndex : operatorIndex);
 		this.wrapParentIndex = operatorIndex - 1;
 		this.wrapGroupEnd = this.tm.lastIndexIn(node.getRightHandSide(), -1);
 		handleWrap(this.options.alignment_for_assignment);
@@ -597,13 +619,13 @@ public class WrapPreparator extends ASTVisitor {
 	public boolean visit(VariableDeclarationFragment node) {
 		if (node.getInitializer() == null)
 			return true;
-		int wrapIndex = this.tm.firstIndexIn(node.getInitializer(), -1);
-		if (this.tm.get(wrapIndex).getLineBreaksBefore() > 0)
-			return true;
+		int rightSideIndex = this.tm.firstIndexIn(node.getInitializer(), -1);
+		if (this.tm.get(rightSideIndex).getLineBreaksBefore() > 0)
+			return true; // must be an array initializer in new line because of brace_position_for_array_initializer
 		int equalIndex = this.tm.firstIndexBefore(node.getInitializer(), TokenNameEQUAL);
 
-		this.wrapIndexes.add(wrapIndex);
-		this.secondaryWrapIndexes.add(equalIndex);
+		this.wrapIndexes.add(this.options.wrap_before_assignment_operator ? equalIndex : rightSideIndex);
+		this.secondaryWrapIndexes.add(this.options.wrap_before_assignment_operator ? rightSideIndex : equalIndex);
 		this.wrapParentIndex = equalIndex - 1;
 		this.wrapGroupEnd = this.tm.lastIndexIn(node.getInitializer(), -1);
 		handleWrap(this.options.alignment_for_assignment);
@@ -649,7 +671,7 @@ public class WrapPreparator extends ASTVisitor {
 			this.wrapGroupEnd = this.tm.firstIndexBefore(node.getBody(), TokenNameRPAREN);
 			handleWrap(this.options.alignment_for_expressions_in_for_loop_header, node);
 		}
-		return super.visit(node);
+		return true;
 	}
 
 	@Override
@@ -710,6 +732,44 @@ public class WrapPreparator extends ASTVisitor {
 	public boolean visit(VariableDeclarationStatement node) {
 		handleVariableDeclarations(node.fragments());
 		return true;
+	}
+
+	@Override
+	public boolean visit(ParameterizedType node) {
+		prepareElementsList(node.typeArguments(), TokenNameCOMMA, TokenNameLESS);
+		handleWrap(this.options.alignment_for_parameterized_type_references);
+		return true;
+	}
+
+	@Override
+	public boolean visit(TypeMethodReference node) {
+		handleTypeArguments(node.typeArguments());
+		return true;
+	}
+
+	@Override
+	public boolean visit(ExpressionMethodReference node) {
+		handleTypeArguments(node.typeArguments());
+		return true;
+	}
+
+	@Override
+	public boolean visit(SuperMethodReference node) {
+		handleTypeArguments(node.typeArguments());
+		return true;
+	}
+
+	@Override
+	public boolean visit(CreationReference node) {
+		handleTypeArguments(node.typeArguments());
+		return true;
+	}
+
+	private void handleTypeArguments(List<Type> typeArguments) {
+		if (typeArguments.isEmpty())
+			return;
+		prepareElementsList(typeArguments, TokenNameCOMMA, TokenNameLESS);
+		handleWrap(this.options.alignment_for_type_arguments);
 	}
 
 	/**
@@ -814,7 +874,7 @@ public class WrapPreparator extends ASTVisitor {
 		}
 
 		boolean forceWrap = (wrappingOption & Alignment.M_FORCE) != 0;
-		if (forceWrap) {
+		if (forceWrap && policy.wrapMode != WrapMode.DISABLED) {
 			boolean satisfied = false;
 			for (int index : this.wrapIndexes) {
 				Token token = this.tm.get(index);
@@ -984,8 +1044,6 @@ public class WrapPreparator extends ASTVisitor {
 		int toPreserve = this.options.number_of_empty_lines_to_preserve;
 		if (token1 != null && token2 != null)
 			toPreserve++; // n empty lines = n+1 line breaks, except for file start and end
-		if (token1 != null && token1.tokenType == Token.TokenNameEMPTY_LINE)
-			toPreserve--;
 		return Math.min(lineBreaks, toPreserve);
 	}
 
@@ -1044,7 +1102,7 @@ public class WrapPreparator extends ASTVisitor {
 
 				@Override
 				public boolean visit(EnumConstantDeclaration node) {
-					WrapPreparator.this.tm.firstTokenIn(node, TokenNameIdentifier).setWrapPolicy(null);
+					WrapPreparator.this.tm.firstTokenIn(node, -1).setWrapPolicy(null);
 					return true;
 				}
 			});

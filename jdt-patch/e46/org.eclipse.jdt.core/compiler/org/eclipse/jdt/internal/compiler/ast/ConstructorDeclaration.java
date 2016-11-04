@@ -204,7 +204,7 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 								((this.bits & ASTNode.IsDefaultConstructor) != 0)
 									? (ASTNode) this.scope.referenceType().declarationOf(field.original())
 									: this);
-					} else if (field.isNonNull()) {
+					} else if (field.isNonNull() || field.type.isFreeTypeVariable()) {
 						FieldDeclaration fieldDecl = this.scope.referenceType().declarationOf(field.original());
 						if (!isValueProvidedUsingAnnotation(fieldDecl))
 							this.scope.problemReporter().uninitializedNonNullField(

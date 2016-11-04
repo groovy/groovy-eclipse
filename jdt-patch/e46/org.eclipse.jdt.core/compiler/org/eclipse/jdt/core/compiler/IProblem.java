@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1470,6 +1470,13 @@ void setSourceStart(int sourceStart);
 	int ConstructionTypeMismatch = Internal + TypeRelated + 665;
     /** @since 3.10 */
     int ToleratedMisplacedTypeAnnotations = Syntax + Internal + 666;
+    /**
+     * More errors when source level < 1.8
+     */
+    /** @since 3.13*/
+    int InterfaceSuperInvocationNotBelow18 = Internal + Syntax + 667;
+    /** @since 3.13*/
+    int InterfaceStaticMethodInvocationNotBelow18 = Internal + Syntax + 668;
 
 
 	/**
@@ -1816,6 +1823,18 @@ void setSourceStart(int sourceStart);
 	int IllegalReturnNullityRedefinitionFreeTypeVariable = MethodRelated + 974;
 	/** @since 3.12 */
 	int IllegalRedefinitionOfTypeVariable = 975;
+	/** @since 3.12 */
+	int UncheckedAccessOfValueOfFreeTypeVariable = 976;
+	/** @since 3.12 */
+	int UninitializedFreeTypeVariableField = 977;
+	/** @since 3.12 */
+	int UninitializedFreeTypeVariableFieldHintMissingDefault = 978;
+	/** @since 3.12 */
+	int RequiredNonNullButProvidedFreeTypeVariable = TypeRelated + 979;
+	/** @since 3.12 */
+	int NonNullTypeVariableFromLegacyMethod = TypeRelated + 980;
+	/** @since 3.12 */
+	int NonNullMethodTypeVariableFromLegacyMethod = TypeRelated + 981;
 
 
 	// Java 8 work
@@ -1850,6 +1869,8 @@ void setSourceStart(int sourceStart);
 	int IllegalStrictfpForAbstractInterfaceMethod = MethodRelated + 1057;
 	/** @since 3.10 */
 	int IllegalDefaultModifierSpecification = MethodRelated + 1058;
+	/** @since 3.13 */
+	int CannotInferInvocationType = TypeRelated + 1059;
 
 	/** @since 3.10 */
 	int GenericInferenceError = 1100; 	// FIXME: This is just a stop-gap measure, be more specific via https://bugs.eclipse.org/404675

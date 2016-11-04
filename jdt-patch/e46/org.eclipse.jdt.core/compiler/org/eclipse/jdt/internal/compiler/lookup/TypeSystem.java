@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2013, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -155,6 +156,7 @@ public class TypeSystem {
 	
 	public TypeSystem(LookupEnvironment environment) {
 		this.environment = environment;
+		// GROOVY start
 		reset();
 	}
 
@@ -165,6 +167,7 @@ public class TypeSystem {
 		this.typeid = TypeIds.T_LastWellKnownTypeId;
 		this.types = new TypeBinding[TypeIds.T_LastWellKnownTypeId * 4][];
 	}
+	// GROOVY end
 
 	// Given a type, answer its unannotated aka naked prototype. This is also a convenient way to "register" a type with TypeSystem and have it id stamped.
 	public final TypeBinding getUnannotatedType(TypeBinding type) {
@@ -173,7 +176,11 @@ public class TypeSystem {
 			urb = (UnresolvedReferenceBinding) type;
 			ReferenceBinding resolvedType = urb.resolvedType;
 			if (resolvedType != null) {
-				type = this.environment.convertToRawType(resolvedType, false);
+				if (CharOperation.indexOf('$', type.sourceName()) > 0) {
+					type = this.environment.convertToRawType(resolvedType, false);
+				} else {
+					type = resolvedType;
+				}
 			} else if (CharOperation.indexOf('$', type.sourceName()) > 0) {
 				boolean mayTolerateMissingType = this.environment.mayTolerateMissingType;
 				this.environment.mayTolerateMissingType = true;
@@ -185,15 +192,19 @@ public class TypeSystem {
 			}
 		}
 		try {
+			// GROOVY start
 			int typesLength = this.types.length;
 			if (type.id == TypeIds.NoId) {
 				if (type.hasTypeAnnotations())
 					throw new IllegalStateException();
+				//int typesLength = this.types.length;
 				if (this.typeid == typesLength)
 					System.arraycopy(this.types, 0, this.types = new TypeBinding[typesLength * 2][], 0, typesLength);
 				this.types[type.id = this.typeid++] = new TypeBinding[4];
 			} else {
 				TypeBinding nakedType = (type.id >= typesLength || this.types[type.id] == null) ? null : this.types[type.id][0];
+				//if (type.hasTypeAnnotations() && nakedType == null)
+				//	throw new IllegalStateException();
 				if (nakedType != null)
 					return nakedType;
 				if (type.hasTypeAnnotations())
@@ -310,10 +321,12 @@ public class TypeSystem {
 
 	/* Note: Parameters will not have type type annotations if lookup environment directly uses TypeSystem. However when AnnotatableTypeSystem is in use,
 	   they may and we need to materialize the unannotated versions and work on them.
-	*/ 
+	*/
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType) {
-		ReferenceBinding unannotatedGenericType = getUnannotatedReferenceType(genericType);
-		ReferenceBinding unannotatedEnclosingType = enclosingType == null ? null : getUnannotatedReferenceType(enclosingType);
+		// GROOVY edit
+		ReferenceBinding unannotatedGenericType = getUnannotatedReferenceBinding(genericType);
+		ReferenceBinding unannotatedEnclosingType = enclosingType == null ? null : getUnannotatedReferenceBinding(enclosingType);
+		// GROOVY end
 
 		TypeBinding[] derivedTypes = this.types[unannotatedGenericType.id];
 		int i, length = derivedTypes.length;
@@ -344,7 +357,8 @@ public class TypeSystem {
 		return getRawType(genericType, enclosingType);
 	}
 
-	protected ReferenceBinding getUnannotatedReferenceType(ReferenceBinding originalType) {
+	// GROOVY add
+	protected ReferenceBinding getUnannotatedReferenceBinding(ReferenceBinding originalType) {
 		TypeBinding unannotatedType = getUnannotatedType(originalType);
 		if (unannotatedType != null && !(unannotatedType instanceof ReferenceBinding)) {
 			System.err.println("Expected an instance of ReferenceBinding but got: " + unannotatedType.getClass().getName()); //$NON-NLS-1$
@@ -354,6 +368,7 @@ public class TypeSystem {
 		}
 		return (ReferenceBinding) unannotatedType;
 	}
+	// GROOVY end
 
 	/* Parameters will not have type type annotations if lookup environment directly uses TypeSystem. When AnnotatableTypeSystem is in use,
 	   they may and we need to materialize the unannotated versions and work on them.
@@ -524,6 +539,7 @@ public class TypeSystem {
 
 	public void updateCaches(UnresolvedReferenceBinding unresolvedType, ReferenceBinding resolvedType) {
 		final int unresolvedTypeId = unresolvedType.id;
+		// GROOVY added length check
 		if (unresolvedTypeId != TypeIds.NoId && unresolvedTypeId < this.types.length) {
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=432977
 			TypeBinding[] derivedTypes = this.types[unresolvedTypeId];

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -562,7 +562,7 @@ public abstract class Scope {
 
 				case Binding.TYPE:
 					if (!originalType.isMemberType()) break;
-					ReferenceBinding originalReferenceType = (ReferenceBinding) originalType;
+					ReferenceBinding originalReferenceType = (ReferenceBinding) originalType.unannotated();
 					originalEnclosing = originalType.enclosingType();
 					substitutedEnclosing = originalEnclosing;
 					if (originalEnclosing != null) {
@@ -579,7 +579,7 @@ public abstract class Scope {
 					}
 					break;
 				case Binding.GENERIC_TYPE:
-					originalReferenceType = (ReferenceBinding) originalType;
+					originalReferenceType = (ReferenceBinding) originalType.unannotated();
 					originalEnclosing = originalType.enclosingType();
 					substitutedEnclosing = originalEnclosing;
 					if (originalEnclosing != null) {
@@ -1571,7 +1571,7 @@ public abstract class Scope {
 	// put thought into this approach
 	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
 		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
-		if (extraMethods!=null) {
+		if (extraMethods != null && extraMethods.length > 0) {
 			return extraMethods[0];
 		} else {
 			return null;
@@ -1668,7 +1668,8 @@ public abstract class Scope {
 				MethodBinding methodBinding = (MethodBinding) found.elementAt(i);
 				MethodBinding compatibleMethod = computeCompatibleMethod(methodBinding, argumentTypes, invocationSite);
 				if (compatibleMethod != null) {
-					if (compatibleMethod.isValidBinding()) {
+					if (compatibleMethod.isValidBinding() || compatibleMethod.problemId() == ProblemReasons.InvocationTypeInferenceFailure) {
+						// we need to accept methods with InvocationTypeInferenceFailure, because logically overload resolution happens *before* invocation type inference
 						if (foundSize == 1 && compatibleMethod.canBeSeenBy(receiverType, invocationSite, this)) {
 							// return the single visible match now
 							if (searchForDefaultAbstractMethod)
@@ -1778,8 +1779,14 @@ public abstract class Scope {
 				findDefaultAbstractMethod(receiverType, selector, argumentTypes, invocationSite, classHierarchyStart, found, null);
 				if (interfaceMethod != null) return interfaceMethod;
 				MethodBinding candidate = candidates[0];
-				return new ProblemMethodBinding(candidates[0], candidates[0].selector, candidates[0].parameters, 
-						candidate.isStatic() && candidate.declaringClass.isInterface() ? ProblemReasons.NonStaticOrAlienTypeReceiver : ProblemReasons.NotVisible);
+				int reason = ProblemReasons.NotVisible;
+				if (candidate.isStatic() && candidate.declaringClass.isInterface()) {
+					if (soureLevel18)
+						reason = ProblemReasons.NonStaticOrAlienTypeReceiver;
+					else
+						reason = ProblemReasons.InterfaceMethodInvocationNotBelow18;
+				}
+				return new ProblemMethodBinding(candidate, candidate.selector, candidate.parameters, reason);
 			case 1 :
 				if (searchForDefaultAbstractMethod)
 					return findDefaultAbstractMethod(receiverType, selector, argumentTypes, invocationSite, classHierarchyStart, found, new MethodBinding [] { candidates[0] });
@@ -1802,8 +1809,8 @@ public abstract class Scope {
 		if (compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
 			for (int i = 0; i < visiblesCount; i++) {
 				MethodBinding candidate = candidates[i];
-				if (candidate instanceof ParameterizedGenericMethodBinding)
-					candidate = ((ParameterizedGenericMethodBinding) candidate).originalMethod;
+				if (candidate.isParameterizedGeneric())
+					candidate = candidate.shallowOriginal();
 				if (candidate.hasSubstitutedParameters()) {
 					for (int j = i + 1; j < visiblesCount; j++) {
 						MethodBinding otherCandidate = candidates[j];
@@ -4680,6 +4687,12 @@ public abstract class Scope {
 	
 	// Version that just answers based on inference kind (at 1.8+) when available.
 	public int parameterCompatibilityLevel(MethodBinding method, TypeBinding[] arguments, InvocationSite site) {
+		if (method.problemId() == ProblemReasons.InvocationTypeInferenceFailure) {
+			// we need to accept methods with InvocationTypeInferenceFailure, because logically overload resolution happens *before* invocation type inference
+			method = ((ProblemMethodBinding)method).closestMatch; // for compatibility checks use the actual method
+			if (method == null)
+				return NOT_COMPATIBLE;
+		}
 		if (compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8 && method instanceof ParameterizedGenericMethodBinding) {
 			int inferenceKind = InferenceContext18.CHECK_UNKNOWN;
 			InferenceContext18 context = null;
@@ -4703,8 +4716,14 @@ public abstract class Scope {
 					if (!argument.isFunctionalType())
 						continue;
 					TypeBinding parameter = InferenceContext18.getParameter(method.parameters, i, context.isVarArgs());
-					if (!argument.isCompatibleWith(parameter, this))
+					if (!argument.isCompatibleWith(parameter, this)) {
+						if (argument.isPolyType()) {
+							parameter = InferenceContext18.getParameter(method.original().parameters, i, context.isVarArgs());
+							if (!((PolyTypeBinding)argument).expression.isPertinentToApplicability(parameter, method))
+								continue;
+						}
 						return NOT_COMPATIBLE;
+					}
 				}
 			}
 			switch (inferenceKind) {

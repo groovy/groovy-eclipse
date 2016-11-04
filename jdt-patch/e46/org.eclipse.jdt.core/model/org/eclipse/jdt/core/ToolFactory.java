@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -72,7 +72,8 @@ public class ToolFactory {
 	 * @see #createCodeFormatter(Map, int)
 	 * @since 3.3
 	 */
-	public static final int M_FORMAT_NEW = new Integer(0).intValue();
+	// Supposed to be a non-compile time constant
+	public static final int M_FORMAT_NEW = Integer.valueOf(0).intValue();
 
 	/**
 	 * This mode is used for formatting existing code when all formatter options should be used.
@@ -85,7 +86,8 @@ public class ToolFactory {
 	 * @see #createCodeFormatter(Map, int)
 	 * @since 3.3
 	 */
-	public static final int M_FORMAT_EXISTING = new Integer(1).intValue();
+	// Supposed to be a non-compile time constant
+	public static final int M_FORMAT_EXISTING = Integer.valueOf(1).intValue();
 
 	/**
 	 * Create an instance of a code formatter. A code formatter implementation can be contributed via the
