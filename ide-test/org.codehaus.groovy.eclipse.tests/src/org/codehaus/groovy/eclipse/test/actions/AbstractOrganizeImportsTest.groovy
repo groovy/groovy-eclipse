@@ -113,22 +113,6 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
     }
 
-    protected void doDeleteImportTest(CharSequence contents, Number numDeletes) {
-        def file = createGroovyType('main', 'Main.groovy', contents)
-        testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        def unit = JavaCore.createCompilationUnitFrom(file) as GroovyCompilationUnit
-        testProject.waitForIndexer()
-
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
-        TextEdit edit = organize.calculateMissingImports()
-        TextEdit[] children = edit.children
-        assertEquals("Wrong number of deleted imports:\n$contents\nand edits:\n$edit", numDeletes, children.length)
-        for (TextEdit child : children) {
-            assertTrue("$child is not a delete edit", child instanceof DeleteEdit)
-        }
-        unit.discardWorkingCopy()
-    }
-
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
         def file = createGroovyType('main', 'Main.groovy', originalContents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
@@ -143,7 +127,7 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         Document doc = new Document(prefix + normalizeLineEndings(originalContents))
         edit.apply(doc)
 
-        assertEquals(prefix + normalizeLineEndings(expectedContents), doc.get())
+        assertEquals(prefix + normalizeLineEndings(expectedContents), normalizeLineEndings(doc.get()))
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {

@@ -21,7 +21,7 @@ package org.codehaus.groovy.eclipse.test.actions
 final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testRetainTypeAlias() {
-        String contents = '''
+        String contents = '''\
             import org.w3c.dom.Node as N
             N x
             '''
@@ -29,7 +29,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainTypeAlias2() {
-        String contents = '''
+        String contents = '''\
             import org.w3c.dom.Node as N
             N[] x
             '''
@@ -38,7 +38,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testRetainTypeAlias3() {
         // List is a default import
-        String contents = '''
+        String contents = '''\
             import java.util.List as L
             L list = []
             '''
@@ -46,7 +46,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainTypeAlias4() {
-        String contents = '''
+        String contents = '''\
             import java.util.LinkedList as LL
             def list = [] as LL
             '''
@@ -54,7 +54,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainTypeAlias5() {
-        String contents = '''
+        String contents = '''\
             import java.util.LinkedList as LL
             def list = (LL) []
             '''
@@ -62,23 +62,29 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRemoveTypeAlias() {
-        String contents = '''
+        String originalContents = '''\
             import org.w3c.dom.Node as N
             def x
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            def x
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRemoveTypeAlias1() {
-        String contents = '''
+        String originalContents = '''\
             import java.util.List as L
             def x
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            def x
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRetainInnerTypeAlias() {
-        String contents = '''
+        String contents = '''\
             import java.util.Map.Entry as E
             E x
             '''
@@ -86,7 +92,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainInnerTypeAlias2() {
-        String contents = '''
+        String contents = '''\
             import java.util.Map.Entry as E
             E[] x
             '''
@@ -94,15 +100,18 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRemoveInnerTypeAlias() {
-        String contents = '''
+        String originalContents = '''\
             import java.util.Map.Entry as E
             def x
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            def x
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRetainStaticAlias() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.Math.PI as Pie
             def x = Pie
             '''
@@ -110,7 +119,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainStaticAlias2() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.Math.pow as f
             f(2,Math.PI)
             '''
@@ -118,7 +127,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainStaticAlias3() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.Math.pow as f
             class C {
               void method() {
@@ -130,7 +139,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainStaticAlias4() {
-        String contents = '''
+        String contents = '''\
             import static java.math.RoundingMode.CEILING as ceiling
             BigDecimal one = 1.0, two = one.divide(0.5, ceiling)
             '''
@@ -138,7 +147,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainStaticAlias5() {
-        String contents = '''
+        String contents = '''\
             import static java.util.concurrent.TimeUnit.MILLISECONDS as msec
             msec.toNanos(1234)
             '''
@@ -154,7 +163,8 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
           }
         }
         '''
-        String contents = '''
+
+        String contents = '''\
             import static other.Wrapper.Feature.TopRanking as feature
             import static other.Wrapper.Feature.values as features
             new Object().equals(feature)
@@ -166,31 +176,40 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRemoveStaticAlias() {
-        String contents = '''
+        String originalContents = '''\
             import static java.lang.Math.PI as P
             def x
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            def x
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRemoveStaticAlias2() {
-        String contents = '''
+        String originalContents = '''\
             import static java.util.List.emptyList as empty
             def x
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            def x
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRemoveStaticAlias3() {
-        String contents = '''
+        String originalContents = '''\
             import static java.math.RoundingMode.CEILING as ceiling
             def x
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            def x
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRetainAnnotatedStaticAlias() {
-        String contents = '''
+        String contents = '''\
             @Deprecated
             import static java.lang.Math.PI as P
             P x
@@ -199,7 +218,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAnnotatedStaticAlias2() {
-        String contents = '''
+        String contents = '''\
             @Deprecated
             import static java.lang.Math as M
             @Deprecated
@@ -211,7 +230,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // STS-3314
     void testMultiAliasing() {
-        String contents = '''
+        String contents = '''\
             import javax.xml.soap.Node as SoapNode
 
             import org.w3c.dom.Node
@@ -225,7 +244,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testMultiAliasing2() {
-        String contents = '''
+        String contents = '''\
             import other2.FourthClass
             import other3.FourthClass as FourthClass2
             import other4.FourthClass as FourthClass3
@@ -240,7 +259,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testMultiAliasing3() {
-        String contents = '''
+        String originalContents = '''\
             import other2.FourthClass
             import other3.FourthClass as FourthClass2
             import other4.FourthClass as FourthClass3
@@ -250,11 +269,20 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
               FourthClass2 f2
             }
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            import other2.FourthClass
+            import other3.FourthClass as FourthClass2
+
+            class TypeHelper {
+              FourthClass f1
+              FourthClass2 f2
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testMultiAliasing4() {
-        String originalContents = '''
+        String originalContents = '''\
             import other3.FourthClass as FourthClass2
             import other4.FourthClass as FourthClass3
             import other2.FourthClass
@@ -264,7 +292,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
               FourthClass2 f2
             }
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import other2.FourthClass
             import other3.FourthClass as FourthClass2
 
@@ -277,7 +305,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testMultiAliasing5() {
-        String contents = '''
+        String originalContents = '''\
             import other2.FourthClass
             import other3.FourthClass as FourthClass2
             import other4.FourthClass as FourthClass3
@@ -286,7 +314,14 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
               FourthClass2 f2
             }
             '''
-        doDeleteImportTest(contents, 2)
+        String expectedContents = '''\
+            import other3.FourthClass as FourthClass2
+
+            class TypeHelper {
+              FourthClass2 f2
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // TODO: What about an alias that is the same as the type or field/method?
