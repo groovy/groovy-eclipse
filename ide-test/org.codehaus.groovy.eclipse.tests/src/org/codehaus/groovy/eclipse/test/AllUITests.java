@@ -44,12 +44,8 @@ import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTest;
 import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTest;
 import org.codehaus.groovy.eclipse.ui.search.FindOccurrencesTests;
 
-/**
- * Suite needs to be run as eclipse plugin test
- */
 public class AllUITests {
-
-    public static Test suite() throws Exception {
+    public static Test suite() {
         TestSuite suite = new TestSuite(AllUITests.class.getName());
 
         suite.addTestSuite(ErrorLogTest.class); //This must be first or it will pick up garbage left in log by other tests.
