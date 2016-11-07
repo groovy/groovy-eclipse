@@ -24,13 +24,12 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
 
 class DebugRequestor implements IGroovyDebugRequestor {
 
-    Map<String, GroovyCompilationUnitDeclaration> declarations =
-            new HashMap<String, GroovyCompilationUnitDeclaration>();
+    Map<String, GroovyCompilationUnitDeclaration> declarations = new HashMap<String, GroovyCompilationUnitDeclaration>();
 
     public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
         System.out.println(gcuDeclaration);
         String filename = new String(gcuDeclaration.getFileName());
-        filename=filename.substring(filename.lastIndexOf(File.separator)+1); // Filename now being just X.groovy or Foo.java
-        declarations.put(filename,gcuDeclaration);
+        filename = filename.substring(filename.lastIndexOf(File.separator) + 1); // Filename now being just X.groovy or Foo.java
+        declarations.put(filename, gcuDeclaration);
     }
 }

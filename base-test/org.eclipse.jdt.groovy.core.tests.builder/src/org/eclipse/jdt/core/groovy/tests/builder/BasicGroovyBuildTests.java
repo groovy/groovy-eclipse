@@ -341,71 +341,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
             expectingNoProblems();
             expectingCompiledClassesV("A");
         }
-
     }
-
-
-    // bug not yet fixed
-//    public void testGreclipse1506() throws Exception {
-//	   	if (GroovyUtils.GROOVY_LEVEL < 20) {
-//	   		return;
-//	   	}
-//	    IPath projectPath = env.addProject("Project","1.6");
-//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//		env.addGroovyJars(projectPath);
-////		URL jar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("lib/slf4j-api-1.6.6.jar");
-////        env.addExternalJar(projectPath, FileLocator.resolve(jar).getFile());
-//		fullBuild(projectPath);
-//		// remove old package fragment root so that names don't collide
-//		env.removePackageFragmentRoot(projectPath, "");
-//
-//		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-//		env.setOutputFolder(projectPath, "bin");
-//
-//		JDTResolver.recordInstances = true;
-//
-//		env.addGroovyClass(root, "", "LoggerTest",
-//				"import groovy.transform.TypeChecked;\n"+
-//				"import groovy.util.logging.Slf4j;\n"+
-//				"\n"+
-//				"@Slf4j\n"+
-//			    "@TypeChecked\n"+
-//			    "public class LoggerTest\n"+
-//			    "{\n"+
-//			    "	public static void main(String... args)\n"+
-//			    "	{\n"+
-//			    "		println 'println'\n"+
-//	//		    "		LoggerTest.log.info('Logged');\n"+
-//			    "		log.info('foo')\n"+
-//			    "	}\n"+
-//			    "}\n" );
-//
-//		incrementalBuild(projectPath);
-//	//	expectingCompiledClassesV("Foo","List2");
-//		expectingNoProblems();
-//	}
-
-//	if (GroovyUtils.GROOVY_LEVEL<20) {
-//		return;
-//	}
-//	runNegativeTest(new String[]{
-//			"Foo.groovy",
-//			"import groovy.transform.CompileStatic\n"+
-//			"@CompileStatic\n"+
-//			"void method(String message) {\n"+
-//			"   List<Integer> ls = new ArrayList<Integer>();\n"+
-//			"   ls.add(123);\n"+
-//			"   ls.add('abc');\n"+
-//			"}"
-//	},
-//	"----------\n" +
-//	"1. ERROR in Foo.groovy (at line 6)\n" +
-//	"	ls.add(\'abc\');\n" +
-//	"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" +
-//	"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" +
-//	"----------\n");
-
-
 
     public void testCompileStatic_1505() throws Exception {
         try {

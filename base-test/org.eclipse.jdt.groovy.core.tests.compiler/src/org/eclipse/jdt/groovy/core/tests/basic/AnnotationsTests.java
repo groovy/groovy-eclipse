@@ -13,35 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.groovy.core.tests.basic
+package org.eclipse.jdt.groovy.core.tests.basic;
 
-import groovy.transform.InheritConstructors
-import groovy.transform.TypeChecked
+import junit.framework.Test;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
-@InheritConstructors @TypeChecked
-final class AnnotationsTests extends AbstractGroovyRegressionTest {
+public final class AnnotationsTests extends AbstractGroovyRegressionTest {
 
-    static junit.framework.Test suite() {
-        buildMinimalComplianceTestSuite(AnnotationsTests, F_1_5)
+    public static Test suite() {
+        return buildMinimalComplianceTestSuite(AnnotationsTests.class, F_1_5);
     }
 
-    void testGroovyAnnotation() {
-        String[] sources = [
-            'Foo.groovy',
-            '@interface A {}',
+    public AnnotationsTests(String name) {
+        super(name);
+    }
 
-            'Bar.groovy',
-            '@A class Bar {}'
-        ]
+    public void testGroovyAnnotation() {
+        String[] sources = {
+            "Foo.groovy",
+            "@interface A {}",
 
-        runConformTest(sources)
+            "Bar.groovy",
+            "@A class Bar {}"
+        };
+
+        runConformTest(sources);
     }
 
     // GRECLIPSE-697
-    void testInlineDeclaration() {
-        String[] sources = [
+    public void testInlineDeclaration() {
+        String[] sources = {
             "A.groovy",
             "@B\n"+
             "class A { \n"+
@@ -50,124 +52,122 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "@interface B {\n"+
             "   String value() default \"\"\n"+
             "}"
-        ]
+        };
 
-        runConformTest(sources, "abc")
+        runConformTest(sources, "abc");
     }
 
-    void testLongLiteral() {
+    public void testLongLiteral() {
         // ArrayIndexOutOfBoundsException in LongLiteral.computeConstant
-        String[] sources = [
-            'Min.java', '''
-            import java.lang.annotation.*;
-            @Target(ElementType.FIELD)
-            @interface Min {
-              long value();
-            }''',
+        String[] sources = {
+            "Min.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Min {\n" +
+            "  long value();\n" +
+            "}",
 
-            'Main.groovy', '''
-            class Main {
-              @Min(0L)
-              Integer index
-            }'''
-        ]
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Min(0L)\n" +
+            "  Integer index\n" +
+            "}"
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
     // GRECLIPSE-629
-    void testConstAnnotationValue() {
-        String[] sources = [
-            'Const.java', '''
-            public class Const {
-            static final String instance= \"abc\";
-              public static void main(String[] argv) {
-                System.out.println(XXX.class.getAnnotation(Anno.class));
-              }
-            }''',
+    public void testConstAnnotationValue() {
+        String[] sources = {
+            "Const.java",
+            "public class Const {\n" +
+            "static final String instance= \"abc\";\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println(XXX.class.getAnnotation(Anno.class));\n" +
+            "  }\n" +
+            "}",
 
-            'B.groovy', '''
-            import java.lang.annotation.*
-            @Anno(Const.instance)
-            class XXX {}
-            @Retention(RetentionPolicy.RUNTIME)
-            @interface Anno {
-              String value()
-            }'''
-        ]
+            "B.groovy",
+            "import java.lang.annotation.*\n" +
+            "@Anno(Const.instance)\n" +
+            "class XXX {}\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno {\n" +
+            "  String value()\n" +
+            "}"
+        };
 
-        runConformTest(sources, '@Anno(value=abc)');
+        runConformTest(sources, "@Anno(value=abc)");
     }
 
     // GRECLIPSE-830
-    void testDoubleAttributeWithBigDecimalValue() {
-        String[] sources = [
-            'AnnotationDouble.groovy', '''
-            import java.lang.annotation.*
-            @Target(ElementType.FIELD)
-            @Retention(RetentionPolicy.RUNTIME)
-            @interface AnnotationDouble {
-              String value()
-              double width() default 5.0d
-            }''',
+    public void testDoubleAttributeWithBigDecimalValue() {
+        String[] sources = {
+            "AnnotationDouble.groovy",
+            "import java.lang.annotation.*\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface AnnotationDouble {\n" +
+            "  String value()\n" +
+            "  double width() default 5.0d\n" +
+            "}",
 
-            'AnnotationDoubleTest.groovy', '''
-            class AnnotationDoubleTest {
-            class FooWithAnnotation { @AnnotationDouble(value="test", width=1.0) double value; }
-            def test = new AnnotationDoubleTest()
-            }'''.stripIndent()
-        ]
+            "AnnotationDoubleTest.groovy",
+            "class AnnotationDoubleTest {\n" +
+            "class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" +
+            "def test = new AnnotationDoubleTest()\n" +
+            "}"
+        };
 
-        runNegativeTest(sources, """\
-            ----------
-            1. ERROR in AnnotationDoubleTest.groovy (at line 3)
-            \tclass FooWithAnnotation { @AnnotationDouble(value="test", width=1.0) double value; }
-            \t                                                                ^${GroovyUtils.isAtLeastGroovy(20) ? '^^' : ''}
-            Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble
-            ----------
-            """.stripIndent().toString())
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in AnnotationDoubleTest.groovy (at line 2)\n" +
+            "\tclass FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" +
+            "\t                                                                ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^" : "") + "\n" +
+            "Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble\n" +
+            "----------\n");
     }
 
-    void testLocalAnnotationConstant() {
+    public void testLocalAnnotationConstant() {
         // there was an error because the variable expression VALUE was not recognized as constant
         // see ResolveVisitor.transformInlineConstants(Expression)
-        String[] sources = [
-            'Main.groovy', '''
-            class Main {
-              public static final String VALUE = 'nls'
-              @SuppressWarnings(VALUE)
-              def method() {
-              }
-            }'''
-        ]
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  public static final String VALUE = 'nls'\n" +
+            "  @SuppressWarnings(VALUE)\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "}"
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testTargetMetaAnnotation() {
-        String[] sources = [
-            'Anno.java', '''
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            @interface Anno {
-            }''',
+    public void testTargetMetaAnnotation() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.METHOD)\n" +
+            "@interface Anno {\n" +
+            "}",
 
-            'Bar.groovy',
-            '@Anno class Bar {}'
-        ]
+            "Bar.groovy",
+            "@Anno class Bar {}"
+        };
 
-        runNegativeTest(sources, '''\
-            ----------
-            1. ERROR in Bar.groovy (at line 1)
-            \t@Anno class Bar {}
-            \t ^^^^
-            Groovy:Annotation @Anno is not allowed on element TYPE
-            ----------
-            '''.stripIndent())
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Bar.groovy (at line 1)\n" +
+            "\t@Anno class Bar {}\n" +
+            "\t ^^^^\n" +
+            "Groovy:Annotation @Anno is not allowed on element TYPE\n" +
+            "----------\n");
     }
 
-    void testTypeLevelAnnotations01() {
-        String[] sources = [
+    public void testTypeLevelAnnotations01() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno\n"+
@@ -182,18 +182,18 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public @Anno class X {")
+        checkGCUDeclaration("X.groovy", "public @Anno class X {");
 
         checkDisassemblyFor("p/X.class", "@p.Anno\n" +
-            "public class p.X implements groovy.lang.GroovyObject {\n")
+            "public class p.X implements groovy.lang.GroovyObject {\n");
     }
 
-    void testMethodLevelAnnotations() {
-        String[] sources = [
+    public void testMethodLevelAnnotations() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -208,7 +208,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -223,8 +223,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
-    void testFieldLevelAnnotations01() {
-        String[] sources = [
+    public void testFieldLevelAnnotations01() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -240,7 +240,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -254,8 +254,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
-    void testFieldLevelAnnotations_classRetention() {
-        String[] sources = [
+    public void testFieldLevelAnnotations_classRetention() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -271,7 +271,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -282,8 +282,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
-    void testFieldLevelAnnotations_sourceRetention() {
-        String[] sources = [
+    public void testFieldLevelAnnotations_sourceRetention() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -299,7 +299,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.SOURCE)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -310,8 +310,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
-    void testFieldLevelAnnotations_defaultRetention() {
-        String[] sources = [
+    public void testFieldLevelAnnotations_defaultRetention() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -325,7 +325,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Anno.java",
             "package p;\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -336,8 +336,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
-    void testFieldLevelAnnotations_delegate() {
-        String[] sources = [
+    public void testFieldLevelAnnotations_delegate() {
+        String[] sources = {
             "Bar.groovy",
             "class Bar {\n"+
             " public void m() {\n"+
@@ -353,7 +353,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources);
 
@@ -365,8 +365,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    void testConstructorLevelAnnotations01() {
-        String[] sources = [
+    public void testConstructorLevelAnnotations01() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -382,12 +382,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno X(public String s) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
 
         expectedOutput =
             //"  // Method descriptor #18 (Ljava/lang/String;)V\n" +
@@ -399,8 +399,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
-    void testAnnotations04_defaultParamMethods() {
-        String[] sources = [
+    public void testAnnotations04_defaultParamMethods() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -416,7 +416,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno {}\n"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -427,8 +427,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
-    void testTypeLevelAnnotations_SingleMember() {
-        String[] sources = [
+    public void testTypeLevelAnnotations_SingleMember() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(Target.class)\n"+
@@ -448,7 +448,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Target.java",
             "package p;\n"+
             "class Target { }"
-        ]
+        };
 
         runConformTest(sources, "success");
 
@@ -457,8 +457,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
     }
 
     // All types in groovy with TYPE specified for Target and obeyed
-    void testAnnotationsTargetType() {
-        String[] sources = [
+    public void testAnnotationsTargetType() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -479,14 +479,14 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.groovy",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
     }
 
     // All groovy but annotation can only be put on METHOD - that is violated by class X
-    void testAnnotationsTargetType02() {
-        String[] sources = [
+    public void testAnnotationsTargetType02() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -507,7 +507,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.groovy",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -515,12 +515,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // All groovy but annotation can only be put on FIELD - that is violated by class X
-    void testAnnotationsTargetType03() {
-        String[] sources = [
+    public void testAnnotationsTargetType03() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -541,7 +541,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.groovy",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -549,12 +549,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // All groovy but annotation can only be put on FIELD or METHOD - that is violated by class X
-    void testAnnotationsTargetType04() {
-        String[] sources = [
+    public void testAnnotationsTargetType04() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -575,7 +575,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.groovy",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -583,12 +583,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // Two types in groovy, one in java with TYPE specified for Target and obeyed
-    void testAnnotationsTargetType05() {
-        String[] sources = [
+    public void testAnnotationsTargetType05() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -609,14 +609,14 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
     }
 
     // 2 groovy, 1 java but annotation can only be put on METHOD - that is violated by class X
-    void testAnnotationsTargetType06() {
-        String[] sources = [
+    public void testAnnotationsTargetType06() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -637,7 +637,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -645,12 +645,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // 2 groovy, 1 java but annotation can only be put on FIELD - that is violated by class X
-    void testAnnotationsTargetType07() {
-        String[] sources = [
+    public void testAnnotationsTargetType07() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -671,7 +671,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.groovy",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -679,12 +679,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // 2 groovy, 1 java but annotation can only be put on FIELD or METHOD - that is violated by class X
-    void testAnnotationsTargetType08() {
-        String[] sources = [
+    public void testAnnotationsTargetType08() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -705,7 +705,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -713,13 +713,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n"
-            );
+            "----------\n");
     }
 
     // 1 groovy, 2 java with TYPE specified for Target and obeyed
-    void testAnnotationsTargetType09() {
-        String[] sources = [
+    public void testAnnotationsTargetType09() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -740,14 +739,14 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
     }
 
     // 1 groovy, 2 java but annotation can only be put on METHOD - that is violated by class X
-    void testAnnotationsTargetType10() {
-        String[] sources = [
+    public void testAnnotationsTargetType10() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -768,7 +767,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -776,13 +775,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n"
-            );
+            "----------\n");
     }
 
     // 1 groovy, 2 java but annotation can only be put on FIELD - that is violated by class X
-    void testAnnotationsTargetType11() {
-        String[] sources = [
+    public void testAnnotationsTargetType11() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -803,7 +801,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.groovy",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -811,13 +809,12 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n"
-            );
+            "----------\n");
     }
 
     // 1 groovy, 2 java but annotation can only be put on FIELD or METHOD - that is violated by class X
-    void testAnnotationsTargetType12() {
-        String[] sources = [
+    public void testAnnotationsTargetType12() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Foo.class)\n"+
@@ -838,7 +835,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo { }"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -846,12 +843,11 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(p.Foo.class)\n" +
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n"
-            );
+            "----------\n");
     }
 
-    void testTypeLevelAnnotations_SingleMember02() {
-        String[] sources = [
+    public void testTypeLevelAnnotations_SingleMember02() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(p.Target.class)\n"+
@@ -871,16 +867,16 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Target.java",
             "package p;\n"+
             "class Target { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(p.Target.class) class X";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
-    void testMethodLevelAnnotations_SingleMember() {
-        String[] sources = [
+    public void testMethodLevelAnnotations_SingleMember() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -900,17 +896,17 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Target.java",
             "package p;\n"+
             "class Target { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(Target.class) void foo(public String s) {";
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
     // FIXASC flesh out annotation value types for transformation in JDTAnnotationNode - might as well complete it
-    void testMethodLevelAnnotations_SingleMember02() {
-        String[] sources = [
+    public void testMethodLevelAnnotations_SingleMember02() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -930,16 +926,16 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Target.java",
             "package p;\n"+
             "class Target { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(p.Target.class) void foo(public String s) {";
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
-    void testFieldLevelAnnotations_SingleMember() {
-        String[] sources = [
+    public void testFieldLevelAnnotations_SingleMember() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -959,16 +955,16 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Target.java",
             "package p;\n"+
             "class Target { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(Target.class) int foo";
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
-    void testAnnotations10_singleMemberAnnotationField() {
-        String[] sources = [
+    public void testAnnotations10_singleMemberAnnotationField() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -988,16 +984,16 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Target.java",
             "package p;\n"+
             "class Target { }"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(p.Target.class) int foo";
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
-    void testAnnotations11_singleMemberAnnotationFailure() {
-        String[] sources = [
+    public void testAnnotations11_singleMemberAnnotationFailure() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -1013,7 +1009,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<?> value(); }\n"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1034,8 +1030,8 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    void testAnnotationsAndMetaMethods() {
-        String[] sources = [
+    public void testAnnotationsAndMetaMethods() {
+        String[] sources = {
             "p/A.java",
             "package p; public class A{ public static void main(String[]argv){}}",
 
@@ -1047,14 +1043,14 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@Target([ElementType.TYPE])\n"+
             "public @interface Validateable { }\n"
-        ]
+        };
 
         runConformTest(sources);
     }
 
     // FIXASC groovy bug?  Why didn't it complain that String doesn't meet the bound - at the moment letting JDT complain...
-    void testWildcards01() {
-        String[] sources = [
+    public void testWildcards01() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(String.class)\n"+
@@ -1070,7 +1066,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? extends Number> value(); }\n"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1078,11 +1074,11 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(String.class)\n" +
             "\t      ^^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testWildcards02() {
-        String[] sources = [
+    public void testWildcards02() {
+        String[] sources = {
             "p/X.java",
             "package p;\n" +
             "@Anno(String.class)\n"+
@@ -1098,7 +1094,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? extends Number> value(); }\n"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1106,11 +1102,11 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(String.class)\n" +
             "\t      ^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testWildcards03() {
-        String[] sources = [
+    public void testWildcards03() {
+        String[] sources = {
             "p/X.java",
             "package p;\n" +
             "@Anno(String.class)\n"+
@@ -1126,7 +1122,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? extends Number> value(); }\n"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1134,11 +1130,11 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(String.class)\n" +
             "\t      ^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testWildcards04() {
-        String[] sources = [
+    public void testWildcards04() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(String.class)\n"+
@@ -1154,7 +1150,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? extends Number> value(); }\n"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1162,11 +1158,11 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "\t@Anno(String.class)\n" +
             "\t      ^^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testWildcards05() {
-        String[] sources = [
+    public void testWildcards05() {
+        String[] sources = {
             "p/X.java",
             "package p;\n" +
             "@Anno(Integer.class)\n"+
@@ -1182,13 +1178,13 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? extends Number> value(); }\n"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
     }
 
-    void testWildcards06() {
-        String[] sources = [
+    public void testWildcards06() {
+        String[] sources = {
             "p/X.java",
             "package p;\n" +
             "@Anno(Number.class)\n"+
@@ -1204,14 +1200,14 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? super Integer> value(); }\n"
-        ]
+        };
 
-        runConformTest(sources, "success")
+        runConformTest(sources, "success");
     }
 
     // bounds violation: String does not meet '? super Integer'
-    void testWildcards07() {
-        String[] sources = [
+    public void testWildcards07() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "@Anno(String.class)\n"+
@@ -1226,19 +1222,19 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
             "@interface Anno { Class<? super Integer> value(); }\n"
-        ]
+        };
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(String.class)\n" +
             "\t      ^^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? super Integer>\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // double upper bounds
-    void testWildcards08() {
-        String[] sources = [
+    public void testWildcards08() {
+        String[] sources = {
             "p/X.java",
             "package p;\n" +
             "public class X {\n" +
@@ -1255,19 +1251,19 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/I.java",
             "package p;\n"+
             "interface I {}\n"
-        ]
+        };
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
             "\tObject o = new Wibble<Integer>().run();\n" +
             "\t                      ^^^^^^^\n" +
             "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // double upper bounds
-    void testWildcards09() {
-        String[] sources = [
+    public void testWildcards09() {
+        String[] sources = {
             "p/X.java",
             "package p;\n" +
             "public class X {\n" +
@@ -1284,19 +1280,19 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/I.java",
             "package p;\n"+
             "interface I {}\n"
-        ]
+        };
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
             "\tObject o = new Wibble<Integer>().run();\n" +
             "\t                      ^^^^^^^\n" +
             "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // FIXASC groovy bug? Why does groovy not care about bounds violation?
-    void _testWildcards10() {
-        String[] sources = [
+    public void _testWildcards10() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -1313,18 +1309,18 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/I.java",
             "package p;\n"+
             "interface I {}\n"
-        ]
+        };
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
             "\tObject o = new Wibble<Integer>().run();\n" +
             "\t                      ^^^^^^^\n" +
             "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testWildcards11() {
-        String[] sources = [
+    public void testWildcards11() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X extends Wibble<Foo> {\n" +
@@ -1344,19 +1340,19 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo implements I {}\n"
-        ]
+        };
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\tpublic class X extends Wibble<Foo> {\n" +
             "\t                       ^^^^^^\n" +
             "Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // FIXASC groovy bug? why doesn't it complain - the type parameter doesn't meet the secondary upper bound
-    void _testWildcards12() {
-        String[] sources = [
+    public void _testWildcards12() {
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "public class X extends Wibble<Integer> {\n" +
@@ -1376,14 +1372,14 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "p/Foo.java",
             "package p;\n"+
             "class Foo implements I {}\n"
-        ]
+        };
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\tpublic class X extends Wibble<Foo> {\n" +
             "\t               ^^\n" +
             "Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
-            "----------\n")
+            "----------\n");
     }
 
     // TODO: closure for class param
