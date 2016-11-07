@@ -66,11 +66,8 @@
 		<module>ide-test</module> <!-- parent pom for all the ide-test modules -->
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
-<!-- TODO:  <module>ide-test/org.codehaus.groovy22.tests</module> -->
-		<module>ide-test/org.codehaus.groovy21.tests</module>
-		<module>ide-test/org.codehaus.groovy20.tests</module>
 
-	    <module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
@@ -125,8 +122,7 @@
 		<!-- update site -->
 		<module>Site-org.codehaus.groovy.eclipse</module>
 
-		<!-- note: Beware: these are not all the modules. There are are also some 
-			profile-specific ones declared below! -->
+		<!-- note: Beware: these are not all the modules. There are are also some profile-specific ones declared below! -->
 	</modules>
 
 	<profiles>
