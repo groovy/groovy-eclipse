@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.test.ui;
+
+import static org.codehaus.groovy.runtime.StringGroovyMethods.stripIndent;
 
 import java.io.File;
 
@@ -105,8 +107,7 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
 
     /**
      * Pretend to type a backwards Tab character (i.e. a tab character with the
-     * shift
-     * key pressed.
+     * shift key pressed.
      */
     protected void sendBackTab() {
         Event e = new Event();
@@ -133,7 +134,7 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
     }
 
     /**
-     * Get the text of the editor (does not include cursor position marker).
+     * @return the text of the editor (does not include cursor position marker).
      */
     protected String getText() {
         return getDocument().get();
@@ -147,12 +148,16 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
     }
 
     /**
+     * @return the current position of the caret in the Editor
+     */
+    private int getCaret() {
+        return editor.getCaretOffset();
+    }
+
+    /**
      * Check the contents of the editor. If the text that is expected contains
      * the CURSOR marker, then the cursor position of the editor will be
-     * verified to
-     * be in that position as well.
-     *
-     * @param expected
+     * verified to be in that position as well.
      */
     protected void assertEditorContents(String expected) {
         String actual = getText();
@@ -161,17 +166,8 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
             actual = actual.substring(0, cursor) + CARET + actual.substring(cursor);
         }
         if (File.separatorChar == '\\') { // Windows
-        	actual = actual.replace("\r\n", "\n");
+            actual = actual.replace("\r\n", "\n");
         }
-        assertEquals(expected, actual);
+        assertEquals(stripIndent((CharSequence) expected), actual);
     }
-
-    /**
-     * @return the current position of the caret in the Editor
-     */
-    private int getCaret() {
-        return editor.getCaretOffset();
-    }
-
 }
-

@@ -77,7 +77,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectio
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
-import org.eclipse.jdt.internal.ui.text.JavaPartitionScanner;
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
@@ -541,9 +540,8 @@ public class GroovyEditor extends CompilationUnitEditor {
          */
         private boolean shouldCloseCurly(IDocument document, int offset, ITypedRegion partition, char peer)
                 throws BadLocationException {
-            if (offset < 2
-                    || !(JavaPartitionScanner.JAVA_STRING.equals(partition.getType()) || GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
-                            .equals(partition.getType()))) {
+            if (offset < 2 || !(IJavaPartitions.JAVA_STRING.equals(partition.getType()) ||
+                    GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(partition.getType()))) {
                 return false;
             }
 
@@ -969,26 +967,24 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    @Override
-    public Object getAdapter(Class required) {
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Class<T> required) {
         if (IResource.class == required || IFile.class == required) {
-            return this.getFile();
+            return (T) this.getFile();
         }
         if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
-            return super.getInputJavaElement();
+            return (T) super.getInputJavaElement();
         }
 
         if (ModuleNode.class == required) {
-            return this.getModuleNode();
+            return (T) this.getModuleNode();
         }
-
-        // The new variant test in e43 which addresses bug 391253 means groovy doesn't get an outline (it must fail the
-        // isCalledByOutline() test but I haven't investigated deeply)
+        // new variant test in e43 which addresses bug 391253 means groovy doesn't get an outline
+        // (it must fail the isCalledByOutline() test but I haven't investigated deeply)
         if (IContentOutlinePage.class.equals(required)) {
             if (fOutlinePage == null && getSourceViewer() != null)
                 fOutlinePage= createOutlinePage();
-            return fOutlinePage;
+            return (T) fOutlinePage;
         }
         return super.getAdapter(required);
     }
@@ -1125,9 +1121,9 @@ public class GroovyEditor extends CompilationUnitEditor {
                 return Status.CANCEL_STATUS;
 
             // Add occurrence annotations
-            int length = fLocations.length;
-            Map annotationMap = new HashMap(length);
-            for (int i = 0; i < length; i++) {
+            int n = fLocations.length;
+            Map<Annotation, Position> annotationMap = new HashMap<Annotation, Position>(n);
+            for (int i = 0; i < n; i += 1) {
 
                 if (isCanceled(progressMonitor))
                     return Status.CANCEL_STATUS;
@@ -1149,14 +1145,11 @@ public class GroovyEditor extends CompilationUnitEditor {
                     ((IAnnotationModelExtension) annotationModel).replaceAnnotations(getOccurrenceAnnotations(), annotationMap);
                 } else {
                     myRemoveOccurrenceAnnotations();
-                    Iterator iter = annotationMap.entrySet().iterator();
-                    while (iter.hasNext()) {
-                        Map.Entry mapEntry = (Map.Entry) iter.next();
-                        annotationModel.addAnnotation((Annotation) mapEntry.getKey(), (Position) mapEntry.getValue());
+                    for (Map.Entry<Annotation, Position> mapEntry : annotationMap.entrySet()) {
+                        annotationModel.addAnnotation(mapEntry.getKey(), mapEntry.getValue());
                     }
                 }
-                setOccurrenceAnnotations((Annotation[]) annotationMap.keySet().toArray(
-                        new Annotation[annotationMap.keySet().size()]));
+                setOccurrenceAnnotations(annotationMap.keySet().toArray(new Annotation[annotationMap.keySet().size()]));
             }
 
             return Status.OK_STATUS;
@@ -1429,7 +1422,7 @@ public class GroovyEditor extends CompilationUnitEditor {
      */
     public GroovyOutlinePage getOutlinePage() {
         if (page == null) {
-            IContentOutlinePage outlinePage = (IContentOutlinePage) getAdapter(IContentOutlinePage.class);
+            IContentOutlinePage outlinePage = getAdapter(IContentOutlinePage.class);
             if (outlinePage instanceof GroovyOutlinePage) {
                 page = (GroovyOutlinePage) outlinePage;
             }

@@ -33,7 +33,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
@@ -45,6 +44,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
@@ -318,7 +318,7 @@ public class SourceLocationsTests extends GroovierBuilderTests {
             throws Exception, JavaModelException {
         assertUnit(unit, source);
 
-        ASTParser newParser = ASTParser.newParser(AST.JLS4);
+        ASTParser newParser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         newParser.setSource(unit);
         org.eclipse.jdt.core.dom.CompilationUnit ast = (org.eclipse.jdt.core.dom.CompilationUnit) newParser.createAST(null);
         int maxLength = ((CompilationUnit) unit).getContents().length-1;

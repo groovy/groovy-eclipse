@@ -18,6 +18,7 @@ package org.codehaus.groovy.vmplugin.v5;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.vmplugin.VMPlugin;
@@ -412,7 +413,8 @@ public class Java5 implements VMPlugin {
             front.setRedirect(back);
             return front;
         }
-        return back;//.getPlainNodeReference(); // GRECLIPSE did we remove the getPlain at some point???
+        // GRECLIPSE edit -- prevent stack overflow
+        return back;//.getPlainNodeReference();
     }
 
     private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {

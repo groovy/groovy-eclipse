@@ -23,11 +23,11 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
 
 /**
@@ -72,21 +72,6 @@ public class GroovyImportRewriteFactory {
         this.unit = unit;
     }
 
-    public static int astlevel = -1;
-
-    public static int getAstLevel() {
-        if (astlevel == -1) {
-            astlevel = /*AST.JLS3*/3;
-            try {
-                AST.class.getDeclaredField("JLS8");
-                astlevel = 8;
-            } catch (NoSuchFieldException nsfe) {
-                // pre-java8
-            }
-        }
-        return astlevel;
-    }
-
     /**
      * Returns an import rewrite for the module node only if
      * ModuleNode.encounteredUnrecoverableError()
@@ -122,7 +107,7 @@ public class GroovyImportRewriteFactory {
             // Now send this to a parser
             // need to be very careful here that if we can't parse, then don't send to rewriter
 
-            ASTParser parser = ASTParser.newParser(getAstLevel());
+            ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
             parser.setSource(unit.cloneCachingContents(CharOperation.concat(imports.getChars(), "class X { }".toCharArray())));
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
             ASTNode result = null;

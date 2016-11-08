@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,13 +35,13 @@ import org.eclipse.ui.IActionDelegate;
  *
  */
 public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         testProject.addNature(GroovyNature.GROOVY_NATURE);
     }
-    
+
     public void testRenameToGroovy() throws Exception {
         IType type = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
         IResource file = type.getCompilationUnit().getResource();
@@ -52,10 +52,11 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.run(null);
         waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
-        
+
         file = file.getParent().getFile(new Path("Bar.groovy"));
         assertTrue(file.getName() + " should exist", file.exists());
     }
+
     public void testRenameToJava() throws Exception {
         IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }");
         assertTrue(file.getName() + " should exist", file.exists());
@@ -65,10 +66,11 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.run(null);
         waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
-        
+
         file = file.getParent().getFile(new Path("Bar.java"));
         assertTrue(file.getName() + " should exist", file.exists());
     }
+
     public void testRenameToGroovyAndBack() throws Exception {
         IType type = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
         IResource file = type.getCompilationUnit().getResource();
@@ -79,7 +81,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.run(null);
         waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
-        
+
         file = file.getParent().getFile(new Path("Bar.groovy"));
         assertTrue(file.getName() + " should exist", file.exists());
 
@@ -90,11 +92,11 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.run(null);
         waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
-        
+
         file = file.getParent().getFile(new Path("Bar.java"));
         assertTrue(file.getName() + " should exist", file.exists());
-
     }
+
     public void testRenameToJavaAndBack() throws Exception {
         IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.roovy", "class Bar { }");
         assertTrue(file.getName() + " should exist", file.exists());
@@ -104,7 +106,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.run(null);
         waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
-        
+
         file = file.getParent().getFile(new Path("Bar.java"));
         assertTrue(file.getName() + " should exist", file.exists());
 
@@ -115,20 +117,14 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.run(null);
         waitForJobAndRefresh(file);
         assertFalse(file.getName() + " should not exist", file.exists());
-        
+
         file = file.getParent().getFile(new Path("Bar.groovy"));
         assertTrue(file.getName() + " should exist", file.exists());
-
     }
-    /**
-     * @param file
-     * @throws InterruptedException
-     * @throws CoreException
-     */
+
     private void waitForJobAndRefresh(IResource file)
             throws InterruptedException, CoreException {
         Job.getJobManager().join(RenameToGroovyOrJavaAction.class, null);
         file.getParent().refreshLocal(IResource.DEPTH_INFINITE, null);
     }
-
 }

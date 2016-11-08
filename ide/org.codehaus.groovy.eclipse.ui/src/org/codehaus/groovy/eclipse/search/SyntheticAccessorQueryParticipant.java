@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,13 +61,13 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
 
         /**
          * Rules for when to match and when not to match.  See GRECLIPSE-1369
-         * 
+         *
          * Target is:
          *      Groovy property: match field and getter references in Java and Groovy.  Field reference will be error in Java</br>
          *      Groovy getter: match field and getter references in Groovy.  Getter references only in Java</br>
          *      Java field: match field and getter references in Groovy.  Field references only in Java</br>
          *      Java method: match field and getter references in Groovy.  Getter references only in Java</br>
-         * 
+         *
          * If Java target, then ignore extra references in Java
          * If Groovy target, then ignore
          */
@@ -106,11 +106,11 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
 
         private Match createJavaElementMatch(IJavaElement enclosingElement, int rule, int offset, int length, int accuracy,
                 boolean isReadAccess, boolean isWriteAccess, boolean insideDocComment, boolean isSuperInvocation) {
-            return ReflectionUtils.executePrivateConstructor(JavaElementMatch.class, new Class<?>[] { Object.class,
-                int.class,
-                int.class, int.class, int.class, boolean.class, boolean.class, boolean.class, boolean.class }, new Object[] {
-                enclosingElement, rule, offset, length, accuracy, isReadAccess, isWriteAccess, insideDocComment,
-                isSuperInvocation });
+            return ReflectionUtils.invokeConstructor(JavaElementMatch.class, new Class<?>[] {
+                Object.class, int.class, int.class, int.class, int.class, boolean.class, boolean.class, boolean.class, boolean.class
+            }, new Object[] {
+                enclosingElement, rule, offset, length, accuracy, isReadAccess, isWriteAccess, insideDocComment, isSuperInvocation
+            });
         }
     }
 
@@ -146,10 +146,8 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
             }
 
             public void showMatch(Match match, int currentOffset, int currentLength, boolean activate) throws PartInitException {
-                // nop
+                // no-op
             }
-
         };
     }
-
 }

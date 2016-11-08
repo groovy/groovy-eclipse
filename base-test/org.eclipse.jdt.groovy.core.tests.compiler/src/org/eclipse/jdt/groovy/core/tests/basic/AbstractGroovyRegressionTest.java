@@ -68,7 +68,7 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
 
-        String[] groovyVersions = {"2.4.7", "2.3.11", "2.2.2", "2.1.9", "2.0.7", "1.8.6"};
+        String[] groovyVersions = {"2.4.7", "2.3.11", "2.2.2", "2.1.9", "2.0.8", "1.8.6"};
         try {
             URL groovyJar=null;
             for (String groovyVer : groovyVersions) {
@@ -81,7 +81,6 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
             // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
             // classpath for just this reason, hmm.
             newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
-            // newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
         } catch (IOException e) {
             fail("IOException thrown " + e.getMessage());
         }

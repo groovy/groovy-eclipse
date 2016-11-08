@@ -4,6 +4,8 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.ant;singleton:=true
 Bundle-Name: Groovy Ant support
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.9.2.qualifier
+Bundle-ClassPath: .,
+ groovyAntEclipse.jar
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ant.core,
  org.apache.ant;bundle-version="1.7.0",

@@ -1,58 +1,59 @@
-/*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andy Clement        - Initial API and implementation
- *     Andrew Eisenberg - Additional work
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package examples.local
 
 /**
-* Demonstrates how a local transformation works. 
-* 
+* Demonstrates how a local transformation works.
+*
 * @author Hamlet D'Arcy
-*/ 
+*/
 
 def greet() {
     println "Hello World"
 }
-    
+
 @WithLogging    //this should trigger extra logging
 def greetWithLogging() {
     println "Hello World"
 }
-    
+
 // this prints out a simple Hello World
 greet()
 
 // this prints out Hello World along with the extra compile time logging
 greetWithLogging()
 
-
 //
-// The rest of this script is asserting that this all works correctly. 
+// The rest of this script is asserting that this all works correctly.
 //
 
 // redirect standard out so we can make assertions on it
 def standardOut = new ByteArrayOutputStream();
-System.setOut(new PrintStream(standardOut)); 
-  
+System.setOut(new PrintStream(standardOut));
+
 greet()
 assert "Hello World" == standardOut.toString("ISO-8859-1").trim()
 
 // reset standard out and redirect it again
 standardOut.close()
 standardOut = new ByteArrayOutputStream();
-System.setOut(new PrintStream(standardOut)); 
+System.setOut(new PrintStream(standardOut));
 
 greetWithLogging()
 def result = standardOut.toString("ISO-8859-1").split('\n')
 assert "Starting greetWithLogging"  == result[0].trim()
 assert "Hello World"                == result[1].trim()
 assert "Ending greetWithLogging"    == result[2].trim()
-
-

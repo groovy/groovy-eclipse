@@ -38,7 +38,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -46,6 +45,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -373,15 +373,8 @@ public abstract class CompletionTestCase extends BuilderTests {
                 System.err.println("In createProposalsAtOffset() count="+count);
                 performDummySearch(unit.getJavaProject());
 
-                int astLevel = /*AST.JLS3*/3;
-                try {
-                    AST.class.getDeclaredField("JLS8");
-                    astLevel = 8;
-                } catch (NoSuchFieldException nsfe) {
-                    // pre-java8
-                }
                 SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
-                unit.reconcile(astLevel, true, null, spm);
+                unit.reconcile(JavaConstants.AST_LEVEL, true, null, spm);
                 spm.waitForCompletion();
                 env.fullBuild();
                 SynchronizationUtils.joinBackgroudActivities();

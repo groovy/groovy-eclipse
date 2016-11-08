@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2012 the original author or authors.
+/*
+ * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.antlr;
-
-
 
 import groovyjarjarantlr.RecognitionException;
 import groovyjarjarantlr.TokenStreamException;
@@ -996,11 +994,23 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             element = element.getNextSibling();
         }
         String identifier = identifier(element);
+        int savedLine = element.getLine();
+        int savedColumn = element.getColumn();
         Expression init = null;
         element = element.getNextSibling();
         if (element!=null) {
             init = expression(element);
-            ClassNode innerClass = getAnonymousInnerClassNode(init);
+            ClassNode innerClass;
+            if (element.getNextSibling() == null) {
+                innerClass = getAnonymousInnerClassNode(init);
+                if (innerClass != null) {
+                    init = null;
+                }
+            } else {
+                element = element.getNextSibling();
+                Expression next = expression(element);
+                innerClass = getAnonymousInnerClassNode(next);
+            }
 
             if (innerClass!=null) {
                 // we have to handle an enum that defines a class for a constant
@@ -1008,12 +1018,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // to configure the inner class
                 innerClass.setSuperClass(classNode.getPlainNodeReference());
                 innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
-                // we use a ClassExpression for transportation o EnumVisitor
-                init = new ClassExpression(innerClass);
+                // we use a ClassExpression for transportation to EnumVisitor
+                Expression inner = new ClassExpression(innerClass);
+                if (init == null) {
+                    init = inner;
+                } else {
+                    if (init instanceof ListExpression) {
+                        ((ListExpression) init).addExpression(inner);
+                    } else {
+                        ListExpression le = new ListExpression();
+                        le.addExpression(init);
+                        le.addExpression(inner);
+                        init = le;
+                    }
+                }
                 // and remove the final modifier from classNode to allow the sub class
                 classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_FINAL);
-            } else if (isType(ELIST,element)) {
-            	if(init instanceof ListExpression && !((ListExpression)init).isWrapped()) {
+            } else if (isType(ELIST, element)) {
+                if (init instanceof ListExpression && !((ListExpression) init).isWrapped()) {
                     ListExpression le = new ListExpression();
                     le.addExpression(init);
                     init = le;
@@ -1021,10 +1043,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
         }
 
-        // GRECLIPSE: start
-        /*old{
-		EnumHelper.addEnumConstant(classNode, identifier, init);
-        }new */
+        // GRECLIPSE edit
+        //EnumHelper.addEnumConstant(classNode, identifier, init, savedLine, savedColumn);
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = nameStart + identifier.length()-1;
@@ -1032,16 +1052,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue = ClassHelper.make(classNode.getName());
         fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue.setRedirect(classNode);
 
-        FieldNode fn =
-        // end
-        EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue,classNode, identifier, init);
-        // GRECLIPSE: start
+        FieldNode fn = EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
         configureAST(fn, node);
         fn.setNameStart(nameStart);
         fn.setNameEnd(nameEnd);
         fn.setStart(nameStart);
         fn.setEnd(nameEnd);
-        // end
+        // GRECLIPSE end
         enumConstantBeingDef = false;
     }
 
