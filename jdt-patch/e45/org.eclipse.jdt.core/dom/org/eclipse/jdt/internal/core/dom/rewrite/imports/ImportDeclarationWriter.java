@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2015 Google Inc and others.
  * All rights reserved. This program and the accompanying materials
@@ -11,9 +12,10 @@
 package org.eclipse.jdt.internal.core.dom.rewrite.imports;
 
 final class ImportDeclarationWriter {
-	private final boolean insertSpaceBeforeSemicolon;
+	// GROOVY edit -- change to wrapper type
+	private final Boolean insertSpaceBeforeSemicolon;
 
-	ImportDeclarationWriter(boolean insertSpaceBeforeSemicolon) {
+	ImportDeclarationWriter(Boolean insertSpaceBeforeSemicolon) {
 		this.insertSpaceBeforeSemicolon = insertSpaceBeforeSemicolon;
 	}
 
@@ -30,6 +32,11 @@ final class ImportDeclarationWriter {
 		}
 
 		sb.append(importName.qualifiedName);
+
+		// GROOVY add
+		if (this.insertSpaceBeforeSemicolon == null)
+			return sb.toString();
+		// GROOVY end
 
 		if (this.insertSpaceBeforeSemicolon) {
 			sb.append(' ');
