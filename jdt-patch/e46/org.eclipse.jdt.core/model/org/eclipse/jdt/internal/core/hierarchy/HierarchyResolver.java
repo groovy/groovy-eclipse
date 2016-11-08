@@ -623,12 +623,16 @@ public void resolve(IGenericType suppliedType) {
 			this.superTypesOnly = true;
 			reportHierarchy(this.builder.getType(), null, binaryTypeBinding);
 		} else {
-			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
-			if (cu != null) {
-				HashSet localTypes = new HashSet();
-				localTypes.add(cu.getPath().toString());
-				this.superTypesOnly = true;
-				resolve(new Openable[] {(Openable)cu}, localTypes, null);
+			// GROOVY edit -- added null check
+			IType it = ((SourceTypeElementInfo)suppliedType).getHandle();
+			if (it != null) {
+				org.eclipse.jdt.core.ICompilationUnit cu = it.getCompilationUnit();
+				if (cu != null) {
+					HashSet localTypes = new HashSet();
+					localTypes.add(cu.getPath().toString());
+					this.superTypesOnly = true;
+					resolve(new Openable[] {(Openable)cu}, localTypes, null);
+				}
 			}
 		}
 	} catch (AbortCompilation e) { // ignore this exception for now since it typically means we cannot find java.lang.Object

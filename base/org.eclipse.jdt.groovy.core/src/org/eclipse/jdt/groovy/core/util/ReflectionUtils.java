@@ -30,49 +30,70 @@ import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 
 /**
+ * Common functionality for accessing private fields and methods.
+ *
  * @author Andrew Eisenberg
  * @created May 8, 2009
- *
- *          common functionality for accessing private fields and methods
  */
 public class ReflectionUtils {
 
-    private static final Class<?>[] NO_TYPES = new Class[0];
-    private static final Object[] NO_ARGS = new Object[0];
-    private static Map<String, Field> fieldMap = new HashMap<String, Field>();
+    public static <T> Constructor<T> getConstructor(Class<T> instanceType, Class<?>... parameterTypes) {
+        try {
+            Constructor<T> ctor = instanceType.getDeclaredConstructor(parameterTypes);
+            ctor.setAccessible(true);
+            return ctor;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public static <T> Object getPrivateField(Class<T> clazz, String fieldName, Object target) {
+    public static <T> T invokeConstructor(Constructor<T> ctor, Object... args) {
+        try {
+            return ctor.newInstance(args);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static <T> T invokeConstructor(Class<T> instanceType, Class<?>[] parameterTypes, Object[] args) {
+        try {
+            return invokeConstructor(getConstructor(instanceType, parameterTypes), args);
+        } catch (RuntimeException e) {
+            log("Error executing private constructor for '" + instanceType.getName() + "' on class " + instanceType, e);
+            return null;
+        }
+    }
+
+    public static Object getPrivateField(Class<?> clazz, String fieldName, Object target) {
         String key = clazz.getCanonicalName() + fieldName;
-        Field field = fieldMap.get(key);
+        Field field = FIELDS.get(key);
         try {
             if (field == null) {
                 field = clazz.getDeclaredField(fieldName);
                 field.setAccessible(true);
-                fieldMap.put(key, field);
+                FIELDS.put(key, field);
             }
             return field.get(target);
         } catch (Exception e) {
-            Activator.getDefault().getLog()
-                    .log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting private field '" + fieldName
-                            + "' on class " + clazz, e));
+            log("Error getting private field '" + fieldName + "' on class " + clazz, e);
         }
         return null;
     }
 
-    public static <T> void setPrivateField(Class<T> clazz, String fieldName, Object target, Object newValue) {
+    public static void setPrivateField(Class<?> clazz, String fieldName, Object target, Object newValue) {
         String key = clazz.getCanonicalName() + fieldName;
-        Field field = fieldMap.get(key);
+        Field field = FIELDS.get(key);
         try {
             if (field == null) {
                 field = clazz.getDeclaredField(fieldName);
                 field.setAccessible(true);
-                fieldMap.put(key, field);
+                FIELDS.put(key, field);
             }
             field.set(target, newValue);
         } catch (Exception e) {
-            Activator.getDefault().getLog()
-                    .log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + fieldName
-                            + "' on class " + clazz, e));
+            log("Error setting private field '" + fieldName + "' on class " + clazz, e);
         }
     }
 
@@ -87,15 +108,12 @@ public class ReflectionUtils {
             method.setAccessible(true);
             return method.invoke(target, args);
         } catch (Exception e) {
-            Activator.getDefault().getLog()
-                    .log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error executing private method '" + methodName
-                            + "' on class " + clazz, e));
+            log("Error executing private method '" + methodName + "' on class " + clazz, e);
             return null;
         }
     }
 
-    public static <T> Object throwableExecutePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, T target,
-            Object[] args) throws Exception {
+    public static <T> Object throwableExecutePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, T target, Object[] args) throws Exception {
         // forget caching for now...
         Method method = clazz.getDeclaredMethod(methodName, types);
         method.setAccessible(true);
@@ -104,11 +122,11 @@ public class ReflectionUtils {
 
     public static <T> Object throwableGetPrivateField(Class<T> clazz, String fieldName, T target) throws Exception {
         String key = clazz.getCanonicalName() + fieldName;
-        Field field = fieldMap.get(key);
+        Field field = FIELDS.get(key);
         if (field == null) {
             field = clazz.getDeclaredField(fieldName);
             field.setAccessible(true);
-            fieldMap.put(key, field);
+            FIELDS.put(key, field);
         }
         return field.get(target);
     }
@@ -134,44 +152,27 @@ public class ReflectionUtils {
         LocalVariable localVariable;
         try {
             // 3.6 variant
-            Constructor<LocalVariable> cons = LocalVariable.class.getConstructor(JavaElement.class, String.class, int.class,
-                    int.class, int.class, int.class, String.class, Annotation[].class);
-            localVariable = cons.newInstance(parent, varName, start, start + varName.length() - 1, start, start + varName.length()
-                    - 1, returnTypeSignature, new Annotation[0]);
+            Constructor<LocalVariable> cons = LocalVariable.class.getConstructor(JavaElement.class, String.class, int.class, int.class, int.class, int.class, String.class, Annotation[].class);
+            localVariable = cons.newInstance(parent, varName, start, start + varName.length() - 1, start, start + varName.length() - 1, returnTypeSignature, new Annotation[0]);
             return localVariable;
         } catch (Exception e) {
             // 3.7 variant
             try {
-                Constructor<LocalVariable> cons = LocalVariable.class.getConstructor(JavaElement.class, String.class, int.class,
-                        int.class, int.class, int.class, String.class, Annotation[].class, int.class, boolean.class);
-                localVariable = cons.newInstance(parent, varName, start, start + varName.length() - 1, start,
-                        start + varName.length() - 1, returnTypeSignature, new Annotation[0], 0, false);
+                Constructor<LocalVariable> cons = LocalVariable.class.getConstructor(JavaElement.class, String.class, int.class, int.class, int.class, int.class, String.class, Annotation[].class, int.class, boolean.class);
+                localVariable = cons.newInstance(parent, varName, start, start + varName.length() - 1, start, start + varName.length() - 1, returnTypeSignature, new Annotation[0], 0, false);
                 return localVariable;
             } catch (Exception e1) {
-                Activator.getDefault().getLog()
-                        .log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error creating local variable'" + varName
-                                + "' in element " + parent.getHandleIdentifier(), e));
+                log("Error creating local variable'" + varName + "' in element " + parent.getHandleIdentifier(), e);
                 return null;
             }
         }
     }
 
-    /**
-     * Executes a constructor reflectively
-     */
-    public static <T> T executePrivateConstructor(Class<T> clazz, Class<? extends Object>[] parameterTypes, Object[] args) {
-        try {
-            Constructor<T> constructor = clazz.getDeclaredConstructor(parameterTypes);
-            constructor.setAccessible(true);
-            return constructor.newInstance(args);
-        } catch (Exception e) {
-            Activator
-                    .getDefault()
-                    .getLog()
-                    .log(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                            "Error executing private constructor for '" + clazz.getName()
-                                    + "' on class " + clazz, e));
-            return null;
-        }
+    private static void log(String message, Throwable throwable) {
+        Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message, throwable));
     }
+
+    private static final Object[] NO_ARGS = new Object[0];
+    private static final Class<?>[] NO_TYPES = new Class[0];
+    private static final Map<String, Field> FIELDS = new HashMap<String, Field>();
 }

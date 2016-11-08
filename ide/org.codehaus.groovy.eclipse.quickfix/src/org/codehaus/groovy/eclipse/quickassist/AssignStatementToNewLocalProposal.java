@@ -1,7 +1,5 @@
 /*
- * Copyright 2012 SpringSource, a division of VMware, Inc
- * 
- * Daniel and Stephanie - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.quickassist;
 
-
 import org.codehaus.groovy.eclipse.refactoring.core.convert.AssignStatementToNewLocalRefactoring;
-
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
@@ -31,68 +27,65 @@ import org.eclipse.swt.graphics.Point;
 
 /**
  * Assigns a statement to a new local variable. eg. "new Point(2,3)" becomes "def temp = new Point(2,3)"
- * 
- * @author Stephanie Van Dyk sevandyk@gmail.com
+ *
+ * @author Stephanie Van Dyk
  * @created April 12, 2012
  */
-public class AssignStatementToNewLocalProposal extends
-		AbstractGroovyCompletionProposal {
+public class AssignStatementToNewLocalProposal extends AbstractGroovyCompletionProposal {
 
-	private final GroovyCompilationUnit unit;
-	private final int length;
-	private final int offset;
+    protected final GroovyCompilationUnit unit;
+    protected final int offset;
+    protected final int length;
 
-	
-	private AssignStatementToNewLocalRefactoring assignStatementRefactoring;
+    private AssignStatementToNewLocalRefactoring assignStatementRefactoring;
 
-	public AssignStatementToNewLocalProposal(IInvocationContext context) {
-		super(context);
-		ICompilationUnit compUnit = context.getCompilationUnit();
-		if (compUnit instanceof GroovyCompilationUnit) {
-			this.unit = (GroovyCompilationUnit) compUnit;
-		} else {
-			this.unit = null;
-		}
-		length = context.getSelectionLength();
-		offset = context.getSelectionOffset();
-	}
+    public AssignStatementToNewLocalProposal(IInvocationContext context) {
+        super(context);
+        ICompilationUnit compUnit = context.getCompilationUnit();
+        if (compUnit instanceof GroovyCompilationUnit) {
+            this.unit = (GroovyCompilationUnit) compUnit;
+        } else {
+            this.unit = null;
+        }
+        offset = context.getSelectionOffset();
+        length = context.getSelectionLength();
+    }
 
-	public int getRelevance() {
-		return 0;
-	}
+    public int getRelevance() {
+        return 0;
+    }
 
-	public void apply(IDocument document) {
-		assignStatementRefactoring.applyRefactoring(document);
-	}
+    public void apply(IDocument document) {
+        assignStatementRefactoring.applyRefactoring(document);
+    }
 
-	public Point getSelection(IDocument document) {
-		return assignStatementRefactoring.getNewSelection();
-	}
+    public Point getSelection(IDocument document) {
+        return assignStatementRefactoring.getNewSelection();
+    }
 
-	public String getAdditionalProposalInfo() {
-		return getDisplayString();
-	}
+    public String getAdditionalProposalInfo() {
+        return getDisplayString();
+    }
 
-	public String getDisplayString() {
-		return "Assign statement to new local variable.";
-	}
+    public String getDisplayString() {
+        return "Assign statement to new local variable.";
+    }
 
-	public IContextInformation getContextInformation() {
-		return new ContextInformation(getImage(), getDisplayString(),
-				getDisplayString());
-	}
+    public IContextInformation getContextInformation() {
+        return new ContextInformation(getImage(), getDisplayString(), getDisplayString());
+    }
 
-	@Override
-	protected String getImageBundleLocation() {
-		return JavaPluginImages.IMG_CORRECTION_CHANGE;
-	}
+    @Override
+    protected String getImageBundleLocation() {
+        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+    }
 
-	@Override
-	public boolean hasProposals() {
-		if (unit == null) {
+    @Override
+    public boolean hasProposals() {
+        if (unit == null) {
             return false;
         }
-		assignStatementRefactoring = new AssignStatementToNewLocalRefactoring(unit, offset);
+        assignStatementRefactoring = new AssignStatementToNewLocalRefactoring(unit, offset);
         return assignStatementRefactoring.isApplicable();
-	}
+    }
 }

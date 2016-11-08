@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 
 public class ParticipantBuildTests extends BuilderTests {
 	public ParticipantBuildTests(String name) {
@@ -70,7 +71,7 @@ public class ParticipantBuildTests extends BuilderTests {
 
 	CompilationUnit buildCompilationUnit(BuildContext file) {
 		IJavaProject javaProject = JavaCore.create(file.getFile().getProject());
-		ASTParser p = ASTParser.newParser(AST.JLS3);
+		ASTParser p = ASTParser.newParser(JavaConstants.AST_LEVEL);
 		p.setProject(javaProject);
 		p.setSource(file.getContents());
 		p.setResolveBindings(true);

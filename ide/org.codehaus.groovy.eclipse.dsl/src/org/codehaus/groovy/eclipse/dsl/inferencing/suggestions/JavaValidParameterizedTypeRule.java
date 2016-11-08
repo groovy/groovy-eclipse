@@ -25,7 +25,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ArrayType;
@@ -35,6 +34,7 @@ import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 
 /**
@@ -135,21 +135,6 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         return false;
     }
 
-    public static int astlevel = -1;
-
-    public static int getAstLevel() {
-        if (astlevel == -1) {
-            astlevel = AST.JLS3;
-            try {
-                AST.class.getDeclaredField("JLS8");
-                astlevel = 8;
-            } catch (NoSuchFieldException nsfe) {
-                // pre-java8
-            }
-        }
-        return astlevel;
-    }
-
     protected Type getASTType(String typeToCheck, StringBuffer sourceBuffer) {
 
         sourceBuffer.append("class __C__ {"); //$NON-NLS-1$
@@ -160,7 +145,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
 
         sourceBuffer.append("}");
 
-        ASTParser parser = ASTParser.newParser(getAstLevel());
+        ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         parser.setSource(sourceBuffer.toString().toCharArray());
 
         Map<String, String> options = new HashMap<String, String>();

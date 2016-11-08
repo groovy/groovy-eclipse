@@ -20,13 +20,13 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
@@ -67,23 +67,8 @@ public class ASTConverterTests extends TestCase {
         assertEquals("Invalid length position", length, name.getLength());
     }
 
-    public static int astlevel = -1;
-
-    public static int getAstLevel() {
-        if (astlevel == -1) {
-            astlevel = AST.JLS3;
-            try {
-                AST.class.getDeclaredField("JLS8");
-                astlevel = 8;
-            } catch (NoSuchFieldException nsfe) {
-                // pre-java8
-            }
-        }
-        return astlevel;
-    }
-
     private ASTNode findJavaNodeAt(String contents, int start, int length) {
-        ASTParser parser = ASTParser.newParser(getAstLevel());
+        ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTION_Source, "1.5");
         parser.setCompilerOptions(options);

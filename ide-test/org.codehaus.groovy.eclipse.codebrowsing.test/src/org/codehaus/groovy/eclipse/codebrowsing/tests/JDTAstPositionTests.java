@@ -22,10 +22,10 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IProblemRequestor;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 
 /**
  * @author Kris De Volder
@@ -37,21 +37,12 @@ public final class JDTAstPositionTests extends BrowsingTestCase {
         return newTestSuite(JDTAstPositionTests.class);
     }
 
-    @SuppressWarnings("deprecation")
-    private int astLevel = AST.JLS3;
     private WorkingCopyOwner workingCopyOwner;
     private IProblemRequestor problemRequestor;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-
-        try {
-            AST.class.getDeclaredField("JLS8");
-            astLevel = 8;
-        } catch (NoSuchFieldException nsfe) {
-            // pre-java8
-        }
 
         // Need an active problem requestor to make reconcile turn on binding
         // resolution.
@@ -203,7 +194,7 @@ public final class JDTAstPositionTests extends BrowsingTestCase {
         GroovyCompilationUnit unit = addGroovySource(contents);
         IProgressMonitor monitor = new NullProgressMonitor();
         unit.becomeWorkingCopy(monitor);
-        CompilationUnit ast = unit.reconcile(astLevel, true, workingCopyOwner, monitor);
+        CompilationUnit ast = unit.reconcile(JavaConstants.AST_LEVEL, true, workingCopyOwner, monitor);
         return ast;
     }
 }
