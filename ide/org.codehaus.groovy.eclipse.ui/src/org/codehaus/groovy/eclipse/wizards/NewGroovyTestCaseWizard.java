@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,34 +15,30 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
-import greclipse.org.eclipse.jdt.internal.junit.wizards.NewTestCaseCreationWizard;
-
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.junit.wizards.NewTestCaseCreationWizard;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
 /**
  * @author Andrew Eisenberg
  * @created Jul 22, 2009
- * 
- *
  */
 public class NewGroovyTestCaseWizard extends NewTestCaseCreationWizard {
 
-	public NewGroovyTestCaseWizard() {
-		super();
-		setWindowTitle("New Groovy JUnit test case"); 
+    public NewGroovyTestCaseWizard() {
+        super();
+        setWindowTitle("New Groovy JUnit test case");
     }
-	
-	@Override
-	public void addPages() {
-	    NewTestCaseWizardPageTwo fPage2= new NewTestCaseWizardPageTwo();
-	    NewGroovyTestTypeWizardPage fPage1= new NewGroovyTestTypeWizardPage(fPage2);
+
+    @Override
+    public void addPages() {
+        NewTestCaseWizardPageTwo fPage2 = new NewTestCaseWizardPageTwo();
+        NewGroovyTestTypeWizardPage fPage1 = new NewGroovyTestTypeWizardPage(fPage2);
         addPage(fPage1);
         fPage1.init(getSelection());
         addPage(fPage2);
-        
+
         ReflectionUtils.setPrivateField(NewTestCaseCreationWizard.class, "fPage1", this, fPage1);
         ReflectionUtils.setPrivateField(NewTestCaseCreationWizard.class, "fPage2", this, fPage2);
-	}
-
+    }
 }

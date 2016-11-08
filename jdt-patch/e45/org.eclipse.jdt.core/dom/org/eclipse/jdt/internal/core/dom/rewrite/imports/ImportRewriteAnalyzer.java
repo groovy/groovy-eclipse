@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013, 2014, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -474,7 +475,11 @@ public final class ImportRewriteAnalyzer {
 
 		this.importsByNameIdentity = mapImportsByNameIdentity(this.originalImportEntries);
 
-		this.importDeclarationWriter = new ImportDeclarationWriter(shouldInsertSpaceBeforeSemicolon(javaProject));
+		// GROOVY edit -- prevent the addition of semicolons to import declarations
+		boolean groovy = cu.getClass().getName().contains("Groovy"); //$NON-NLS-1$
+		this.importDeclarationWriter = new ImportDeclarationWriter(
+				groovy ? null : shouldInsertSpaceBeforeSemicolon(javaProject));
+		// GROOVY end
 
 		this.lineDelimiter = cu.findRecommendedLineSeparator();
 

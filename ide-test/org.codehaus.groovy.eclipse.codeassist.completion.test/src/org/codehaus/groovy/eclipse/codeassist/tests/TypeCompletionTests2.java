@@ -49,113 +49,113 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     public void testTypeCompletionInScript1() {
         String contents = "HTML";
-        String expected = "import javax.swing.text.html.HTML;\n\nHTML";
+        String expected = "import javax.swing.text.html.HTML\n\nHTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript2() {
-        String contents = "import javax.swing.plaf.ButtonUI;\n\nHTML\nButtonUI";
-        String expected = "import javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+        String contents = "import javax.swing.plaf.ButtonUI\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\nHTML\nButtonUI";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript2_() {
-        String contents = "/*header*/\nimport javax.swing.plaf.ButtonUI; //note\n\nHTML\nButtonUI";
-        String expected = "/*header*/\nimport javax.swing.plaf.ButtonUI; //note\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+        String contents = "/*header*/\nimport javax.swing.plaf.ButtonUI //note\n\nHTML\nButtonUI";
+        String expected = "/*header*/\nimport javax.swing.plaf.ButtonUI //note\nimport javax.swing.text.html.HTML\n\nHTML\nButtonUI";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript2a() {
         String contents = "import javax.swing.plaf.ButtonUI\n\nHTML\nButtonUI";
-        String expected = "import javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\nHTML\nButtonUI";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript2b() {
-        String contents = "import javax.swing.plaf.ButtonUI as Button;\n\nHTML\nButton";
-        String expected = "import javax.swing.plaf.ButtonUI as Button;\nimport javax.swing.text.html.HTML;\n\nHTML\nButton";
+        String contents = "import javax.swing.plaf.ButtonUI as Button\n\nHTML\nButton";
+        String expected = "import javax.swing.plaf.ButtonUI as Button\nimport javax.swing.text.html.HTML\n\nHTML\nButton";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript2c() {
         String contents = "import javax.swing.plaf.ButtonUI as Button\n\nHTML\nButton";
-        String expected = "import javax.swing.plaf.ButtonUI as Button\nimport javax.swing.text.html.HTML;\n\nHTML\nButton";
+        String expected = "import javax.swing.plaf.ButtonUI as Button\nimport javax.swing.text.html.HTML\n\nHTML\nButton";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript3() {
-        String contents = "import javax.swing.plaf.*;\n\nHTML\nButtonUI";
-        String expected = "import javax.swing.plaf.*;\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+        String contents = "import javax.swing.plaf.*\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.*\nimport javax.swing.text.html.HTML\n\nHTML\nButtonUI";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript3a() {
         String contents = "import javax.swing.plaf.*\n\nHTML\nButtonUI";
-        String expected = "import javax.swing.plaf.*\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.*\nimport javax.swing.text.html.HTML\n\nHTML\nButtonUI";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript4() {
-        String contents = "import static java.util.Collections.emptyList;\n\nHTML\ndef list = emptyList()";
-        String expected = "import static java.util.Collections.emptyList;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+        String contents = "import static java.util.Collections.emptyList\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.emptyList\n\nimport javax.swing.text.html.HTML\n\nHTML\ndef list = emptyList()";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript4a() {
         String contents = "import static java.util.Collections.emptyList\n\nHTML\ndef list = emptyList()";
-        String expected = "import static java.util.Collections.emptyList\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.emptyList\n\nimport javax.swing.text.html.HTML\n\nHTML\ndef list = emptyList()";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript4b() {
-        String contents = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nHTML\ndef list = EMPTY";
-        String expected = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = EMPTY";
+        String contents = "import static java.util.Collections.EMPTY_LIST as EMPTY\n\nHTML\ndef list = EMPTY";
+        String expected = "import static java.util.Collections.EMPTY_LIST as EMPTY\n\nimport javax.swing.text.html.HTML\n\nHTML\ndef list = EMPTY";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript4c() {
-        String contents = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nHTML\ndef list = EMPTY";
-        String expected = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = EMPTY";
+        String contents = "import static java.util.Collections.EMPTY_LIST as EMPTY\n\nHTML\ndef list = EMPTY";
+        String expected = "import static java.util.Collections.EMPTY_LIST as EMPTY\n\nimport javax.swing.text.html.HTML\n\nHTML\ndef list = EMPTY";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript5() {
-        String contents = "import static java.util.Collections.*;\n\nHTML\ndef list = emptyList()";
-        String expected = "import static java.util.Collections.*;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+        String contents = "import static java.util.Collections.*\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.*\n\nimport javax.swing.text.html.HTML\n\nHTML\ndef list = emptyList()";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInScript5b() {
         String contents = "import static java.util.Collections.*\n\nHTML\ndef list = emptyList()";
-        String expected = "import static java.util.Collections.*\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.*\n\nimport javax.swing.text.html.HTML\n\nHTML\ndef list = emptyList()";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void _testTypeCompletionInScript6() {
         String contents = "/* header comment */\n" +
-                "import javax.swing.plaf.ButtonUI; /*tag*/ //note\n" +
+                "import javax.swing.plaf.ButtonUI /*tag*/ //note\n" +
                 "  // some single-line comment\n" +
                 "\n" +
                 "HTML\n" +
                 "ButtonUI";
         String expected = "/* header comment */\n" +
-                "import javax.swing.plaf.ButtonUI; /*tag*/ //note\n" +
+                "import javax.swing.plaf.ButtonUI /*tag*/ //note\n" +
                 "  // some single-line comment\n" +
-                "import javax.swing.text.html.HTML;\n" +
+                "import javax.swing.text.html.HTML\n" +
                 "\n" +
                 "HTML\n" +
                 "ButtonUI";
@@ -167,7 +167,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     public void testTypeCompletionInBrokenScript1() {
         String contents = "def x(HTML";
-        String expected = "import javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String expected = "import javax.swing.text.html.HTML\n\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -178,7 +178,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
             return;
         }
         String contents = "package f\n\ndef x(HTML";
-        String expected = "package f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
+        String expected = "package f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -189,7 +189,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
             return;
         }
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
-        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -200,8 +200,8 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
         }
-        String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
-        String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI\n\ndef x(HTML";
+        String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -212,8 +212,8 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
         }
-        String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
-        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI\n\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -227,7 +227,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" +
                 "package f\n" +
                 "\n" +
-                "import javax.swing.text.html.HTML;\n" +
+                "import javax.swing.text.html.HTML\n" +
                 "\n" +
                 "HTML";
 
@@ -243,7 +243,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" +
                 "package f\n" +
                 "\n" +
-                "import javax.swing.plaf.ButtonUI;\n" +
+                "import javax.swing.plaf.ButtonUI\n" +
                 "\n" +
                 "def x(HTML\n" +
                 "";
@@ -251,8 +251,8 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" +
                 "package f\n" +
                 "\n" +
-                "import javax.swing.plaf.ButtonUI;\n" +
-                "import javax.swing.text.html.HTML;\n" +
+                "import javax.swing.plaf.ButtonUI\n" +
+                "import javax.swing.text.html.HTML\n" +
                 "\n" +
                 "def x(HTML\n" +
                 "";
@@ -273,7 +273,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "package f\n" +
                 "\n" +
                 "import javax.swing.plaf.ButtonUI\n" +
-                "import javax.swing.text.html.HTML;\n" +
+                "import javax.swing.text.html.HTML\n" +
                 "\n" +
                 "def x(HTML";
 
@@ -294,7 +294,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "package f\n" +
                 "\n" +
                 "import javax.swing.plaf.ColorChooserUI\n" +
-                "import javax.swing.text.html.HTML;\n" +
+                "import javax.swing.text.html.HTML\n" +
                 "\n" +
                 "import java.awt.dnd.DropTarget as Foo\n" +
                 "\n" +
@@ -315,7 +315,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" +
                 "\n" +
                 "import javax.swing.plaf.ColorChooserUI\n" +
-                "import javax.swing.text.html.HTML;\n" +
+                "import javax.swing.text.html.HTML\n" +
                 "\n" +
                 "import java.awt.dnd.DropTarget as Foo\n" +
                 "\n" +
@@ -346,7 +346,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "\n" +
                 "import javax.swing.text.html.HTML\n" +
                 "\n" +
-                "import org.w3c.dom.html.HTMLTableCaptionElement;\n" +
+                "import org.w3c.dom.html.HTMLTableCaptionElement\n" +
                 "\n" +
                 "\n" +
                 "   void nuthin() {\n" +
@@ -360,14 +360,14 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     public void testTypeCompletionInBrokenClass1() {
         String contents = "/**some stuff*/\npackage f\n\nclass Y {\ndef x(HTML";
-        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y {\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\nclass Y {\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     public void testTypeCompletionInBrokenClass2() {
         String contents = "/**some stuff*/\npackage f\n\nclass Y extends HTML {\ndef x(H";
-        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y extends HTML {\ndef x(H";
+        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\nclass Y extends HTML {\ndef x(H";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -391,7 +391,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
                 "    }\n" +
                 "}";
         String expected = "import static org.mockito.Mockito.mock\n\n" +
-                "import groovy.transform.TypeChecked;\n\n" +
+                "import groovy.transform.TypeChecked\n\n" +
                 "import org.junit.Test\n\n" +
                 "@TypeChecked\n" +
                 "final class WeakReferenceSetTests {\n" +
