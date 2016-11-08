@@ -588,6 +588,9 @@ protected void acceptTypeParameter(TypeParameterInfo typeParameterInfo, JavaElem
 	}
 	this.newElements.put(handle, info);
 	info.setSourceRangeEnd(typeParameterInfo.declarationEnd);
+	if (typeParameterInfo.typeAnnotated) {
+		this.unitInfo.annotationNumber = CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE;
+	}
 }
 /**
  * @see ISourceElementRequestor

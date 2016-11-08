@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 GK Software AG.
+ * Copyright (c) 2014, 2016 GK Software AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,13 +36,14 @@ public class SyntheticFactoryMethodBinding extends MethodBinding {
 	/** Apply the given type arguments on the (declaring class of the) actual constructor being represented by this factory method and
 	    if method type arguments is not empty materialize the parameterized generic constructor 
 	*/
-	public ParameterizedMethodBinding applyTypeArgumentsOnConstructor(TypeBinding[] typeArguments, TypeBinding[] constructorTypeArguments) {
+	public ParameterizedMethodBinding applyTypeArgumentsOnConstructor(TypeBinding[] typeArguments, TypeBinding[] constructorTypeArguments, boolean inferredWithUncheckedConversion) {
 		ReferenceBinding parameterizedType = this.environment.createParameterizedType(this.declaringClass, typeArguments,
 																						this.enclosingType);
 		for (MethodBinding parameterizedMethod : parameterizedType.methods()) {
 			if (parameterizedMethod.original() == this.staticFactoryFor)
-				return constructorTypeArguments.length > 0 ? this.environment.createParameterizedGenericMethod(parameterizedMethod, constructorTypeArguments) :
-													         (ParameterizedMethodBinding) parameterizedMethod;
+				return (constructorTypeArguments.length > 0 || inferredWithUncheckedConversion)
+						? this.environment.createParameterizedGenericMethod(parameterizedMethod, constructorTypeArguments, inferredWithUncheckedConversion, false)
+						: (ParameterizedMethodBinding) parameterizedMethod;
 			if (parameterizedMethod instanceof ProblemMethodBinding) {
 				MethodBinding closestMatch = ((ProblemMethodBinding)parameterizedMethod).closestMatch;
 				if (closestMatch instanceof ParameterizedMethodBinding && closestMatch.original() == this.staticFactoryFor)

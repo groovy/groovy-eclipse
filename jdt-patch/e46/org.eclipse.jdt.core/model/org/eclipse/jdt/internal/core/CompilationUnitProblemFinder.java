@@ -178,7 +178,6 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
 		// GROOVY
-		//boolean reset = true; 
 		try {
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
@@ -188,9 +187,6 @@ public class CompilationUnitProblemFinder extends Compiler {
 			// GROOVY start
 			// options fetched prior to building problem finder then configured based on project
 			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
-			if (compilerOptions.buildGroovyFiles == 2) {
-			//	reset = false;
-			}
 			// GROOVY end
 			problemFinder = new CompilationUnitProblemFinder(
 				environment,

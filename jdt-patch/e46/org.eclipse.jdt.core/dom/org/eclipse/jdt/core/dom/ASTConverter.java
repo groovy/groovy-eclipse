@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -482,6 +482,10 @@ class ASTConverter {
 			throw new OperationCanceledException();
 	}
 
+	private int checkLength(int start, int end) {
+		int len = end - start + 1;
+		return len > 0 ? len : 0;
+	}
 	protected void completeRecord(ArrayType arrayType, org.eclipse.jdt.internal.compiler.ast.ASTNode astNode) {
 		ArrayType array = arrayType;
 		this.recordNodes(arrayType, astNode);
@@ -641,7 +645,7 @@ class ASTConverter {
 		}
 		int declarationSourceStart = methodDeclaration.declarationSourceStart;
 		int bodyEnd = methodDeclaration.bodyEnd;
-		methodDecl.setSourceRange(declarationSourceStart, bodyEnd - declarationSourceStart + 1);
+		methodDecl.setSourceRange(declarationSourceStart, checkLength(declarationSourceStart, bodyEnd));
 		int declarationSourceEnd = methodDeclaration.declarationSourceEnd;
 		int rightBraceOrSemiColonPositionStart = bodyEnd == declarationSourceEnd ? bodyEnd : bodyEnd + 1;
 		int closingPosition = retrieveRightBraceOrSemiColonPosition(rightBraceOrSemiColonPositionStart, declarationSourceEnd);
@@ -705,13 +709,13 @@ class ASTConverter {
 					}
 				}
 				int startPosition = methodDecl.getStartPosition();
-				methodDecl.setSourceRange(startPosition, end - startPosition + 1);
+				methodDecl.setSourceRange(startPosition, checkLength(startPosition, end));
 				if (start != -1 && end != -1) {
 					/*
 					 * start or end can be equal to -1 if we have an interface's method.
 					 */
 					Block block = new Block(this.ast);
-					block.setSourceRange(start, end - start + 1);
+					block.setSourceRange(start, checkLength(start, end));
 					methodDecl.setBody(block);
 				}
 			}
@@ -3768,7 +3772,7 @@ class ASTConverter {
 								isTypeArgumentBased = false;
 								break;
 							}
-						}						
+						}
 						int start = (int) (positions[0] >>> 32);
 						int end = (int) positions[firstTypeIndex];
 						
@@ -3782,8 +3786,8 @@ class ASTConverter {
 							if (this.resolveBindings) {
 								recordNodes(parameterizedType, typeReference);
 							}
-							Type type2 = null; 
-							for (int i = 0; i < arglen; ++i ) {
+							Type type2 = null;
+							for (int i = 0; i < arglen; ++i) {
 								type2 = convertType(arguments[i]);
 								parameterizedType.typeArguments().add(type2);
 							}

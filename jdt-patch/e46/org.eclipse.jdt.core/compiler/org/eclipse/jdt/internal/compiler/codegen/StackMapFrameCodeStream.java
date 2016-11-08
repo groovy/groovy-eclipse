@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2013 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -204,7 +204,7 @@ public void addExceptionMarker(int pc, TypeBinding typeBinding) {
 	}
 }
 public void addFramePosition(int pc) {
-	Integer newEntry = new Integer(pc);
+	Integer newEntry = Integer.valueOf(pc);
 	FramePosition value;
 	if ((value = (FramePosition) this.framePositions.get(newEntry)) != null) {
 		value.counter++;
@@ -217,7 +217,7 @@ public void optimizeBranch(int oldPosition, BranchLabel lbl) {
 	removeFramePosition(oldPosition);
 }
 public void removeFramePosition(int pc) {
-	Integer entry = new Integer(pc);
+	Integer entry = Integer.valueOf(pc);
 	FramePosition value;
 	if ((value = (FramePosition) this.framePositions.get(entry)) != null) {
 		value.counter--;

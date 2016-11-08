@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,17 +38,52 @@ public ProblemMethodBinding(MethodBinding closestMatch, char[] selector, TypeBin
 	if (closestMatch != null && problemReason != ProblemReasons.Ambiguous) {
 		this.declaringClass = closestMatch.declaringClass;
 		this.returnType = closestMatch.returnType;
+		if (problemReason == ProblemReasons.InvocationTypeInferenceFailure) {
+			this.thrownExceptions = closestMatch.thrownExceptions;
+			this.typeVariables = closestMatch.typeVariables;
+			this.modifiers = closestMatch.modifiers;
+			this.tagBits = closestMatch.tagBits;
+		}
 	}
+}
+@Override
+MethodBinding computeSubstitutedMethod(MethodBinding method, LookupEnvironment env) {
+	return this.closestMatch == null ? this : this.closestMatch.computeSubstitutedMethod(method, env);
+}
+@Override
+public MethodBinding findOriginalInheritedMethod(MethodBinding inheritedMethod) {
+	return this.closestMatch == null ? this : this.closestMatch.findOriginalInheritedMethod(inheritedMethod);
+}
+@Override
+public MethodBinding genericMethod() {
+	return this.closestMatch == null ? this : this.closestMatch.genericMethod();
+}
+@Override
+public MethodBinding original() {
+	return this.closestMatch == null ? this : this.closestMatch.original();
 }
 @Override
 public MethodBinding shallowOriginal() {
 	return this.closestMatch == null ? this : this.closestMatch.shallowOriginal();
 }
-/* API
-* Answer the problem id associated with the receiver.
-* NoError if the receiver is a valid binding.
-*/
-
+@Override
+public MethodBinding tiebreakMethod() {
+	return this.closestMatch == null ? this : this.closestMatch.tiebreakMethod();
+}
+@Override
+public boolean hasSubstitutedParameters() {
+	if (this.closestMatch != null)
+		return this.closestMatch.hasSubstitutedParameters();
+	return false;
+}
+@Override
+public boolean isParameterizedGeneric() {
+	return this.closestMatch instanceof ParameterizedGenericMethodBinding;
+}
+/** API
+ * Answer the problem id associated with the receiver.
+ * NoError if the receiver is a valid binding.
+ */
 public final int problemId() {
 	return this.problemReason;
 }

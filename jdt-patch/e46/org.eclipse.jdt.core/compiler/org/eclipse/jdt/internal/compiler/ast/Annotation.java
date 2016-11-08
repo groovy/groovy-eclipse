@@ -1196,7 +1196,8 @@ public abstract class Annotation extends Expression {
 	public void setPersistibleAnnotation(ContainerAnnotation container) {
 		this.persistibleAnnotation = container; // will be a legitimate container for the first of the repeating ones and null for the followers.
 	}
-		// GROOVY start
+
+	// GROOVY start
 	public boolean isFakeGroovyAnnotation(TypeBinding tb) {
 		if (tb instanceof BinaryTypeBinding) {
 			BinaryTypeBinding btb = (BinaryTypeBinding) tb;
@@ -1216,7 +1217,7 @@ public abstract class Annotation extends Expression {
 					}
 				} catch (Throwable e) {
 					//Safe: our code misbehaves? Then don't break JDT!
-							e.printStackTrace();
+					e.printStackTrace();
 				}
 			}
 		}

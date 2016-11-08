@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,6 +39,7 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 
 	public int modifiers = ClassFileConstants.AccDefault;
 	public int modifiersSourceStart;
+	public int functionalExpressionsCount = 0;
 	public Annotation[] annotations;
 	public char[] name;
 	public TypeReference superclass;
@@ -990,7 +991,13 @@ public StringBuffer printStatement(int tab, StringBuffer output) {
 	return print(tab, output);
 }
 
-
+/*
+ * Keep track of number of lambda/method reference expressions in this type declaration.
+ * Return the 0 based "ordinal" in the TypeDeclaration.
+ */
+public int record(FunctionalExpression expression) {
+	return this.functionalExpressionsCount++;
+}
 
 public void resolve() {
 	SourceTypeBinding sourceType = this.binding;

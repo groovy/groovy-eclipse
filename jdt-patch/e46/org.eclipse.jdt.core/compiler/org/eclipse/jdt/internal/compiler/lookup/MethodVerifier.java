@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,6 +40,11 @@ public abstract class MethodVerifier extends ImplicitNullAnnotationVerifier {
 	SourceTypeBinding type;
 	HashtableOfObject inheritedMethods;
 	HashtableOfObject currentMethods;
+	/** 
+	 * Methods that are to be considered inherited even though they are overridden somewhere in the
+	 * hierarchy - notably for bridge method generation
+	 */
+	HashtableOfObject inheritedOverriddenMethods;
 	/*
 Binding creation is responsible for reporting all problems with types:
 	- all modifier problems (duplicates & multiple visibility modifiers + incompatible combinations - abstract/final)
@@ -62,6 +67,7 @@ MethodVerifier(LookupEnvironment environment) {
 	this.type = null;  // Initialized with the public method verify(SourceTypeBinding)
 	this.inheritedMethods = null;
 	this.currentMethods = null;
+	this.inheritedOverriddenMethods = null;
 }
 boolean areMethodsCompatible(MethodBinding one, MethodBinding two) {
 	return areMethodsCompatible(one, two, this.environment);
@@ -191,6 +197,26 @@ void checkAgainstInheritedMethods(MethodBinding currentMethod, MethodBinding[] m
 		if (!inheritedMethod.isStatic() && !inheritedMethod.isFinal())
 			checkForBridgeMethod(currentMethod, inheritedMethod, allInheritedMethods);
 	}
+	MethodBinding[] overridden = (MethodBinding[])this.inheritedOverriddenMethods.get(currentMethod.selector);
+	if (overridden != null) {
+		for (int i = overridden.length; --i >= 0;) {
+			MethodBinding inheritedMethod = overridden[i];
+			if (isParameterSubsignature(currentMethod, inheritedMethod) &&
+					!inheritedMethod.isStatic() && !inheritedMethod.isFinal())
+				checkForBridgeMethod(currentMethod, inheritedMethod, allInheritedMethods);
+		}
+	}
+}
+void addBridgeMethodCandidate(MethodBinding overriddenMethod) {
+	MethodBinding[] existing = (MethodBinding[])this.inheritedOverriddenMethods.get(overriddenMethod.selector);
+	if (existing == null) {
+		existing = new MethodBinding[]{overriddenMethod};
+	} else {
+		int length = existing.length;
+		System.arraycopy(existing, 0, existing = new MethodBinding[length + 1], 0, length);
+		existing[length] = overriddenMethod;
+	}
+	this.inheritedOverriddenMethods.put(overriddenMethod.selector, existing);
 }
 
 public void reportRawReferences(MethodBinding currentMethod, MethodBinding inheritedMethod) {
@@ -504,6 +530,7 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
     // see usage of canOverridingMethodDifferInErasure below.
 	this.inheritedMethods = new HashtableOfObject(51); // maps method selectors to an array of methods... must search to match paramaters & return type
 
+	this.inheritedOverriddenMethods = new HashtableOfObject(11);
 	ReferenceBinding superType = superclass;
 	HashtableOfObject nonVisibleDefaultMethods = new HashtableOfObject(3); // maps method selectors to an array of methods
 
@@ -529,6 +556,10 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 									continue existing; // may need to record incompatible return type
 							}
 						}
+						if (TypeBinding.notEquals(inheritedMethod.returnType.erasure(), existingMethod.returnType.erasure()) &&
+								areReturnTypesCompatible(existingMethod, inheritedMethod)) {
+							addBridgeMethodCandidate(inheritedMethod);
+						}
 						continue nextMethod;
 					}
 				}
@@ -545,7 +576,7 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 				this.inheritedMethods.put(inheritedMethod.selector, existingMethods);
 			} else {
 				MethodBinding[] nonVisible = (MethodBinding[]) nonVisibleDefaultMethods.get(inheritedMethod.selector);
-				if (nonVisible != null)
+				if (nonVisible != null && inheritedMethod.isAbstract())
 					for (int i = 0, l = nonVisible.length; i < l; i++)
 						if (areMethodsCompatible(nonVisible[i], inheritedMethod))
 							continue nextMethod;
@@ -612,9 +643,17 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 					// look to see if any of the existingMethods implement this inheritedMethod
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302358, skip inherited method only if any overriding version
 					// in a subclass is guaranteed to have the same erasure as an existing method.
-					for (int e = 0; e < length; e++)
-						if (isInterfaceMethodImplemented(inheritedMethod, existingMethods[e], superType) && !canOverridingMethodDifferInErasure(existingMethods[e], inheritedMethod))
-							continue nextMethod; // skip interface method with the same signature if visible to its declaringClass
+					for (int e = 0; e < length; e++) {
+						if (isInterfaceMethodImplemented(inheritedMethod, existingMethods[e], superType)) {
+							if (TypeBinding.notEquals(inheritedMethod.returnType.erasure(), existingMethods[e].returnType.erasure())) {
+								// overridden, but with different return type, need to check
+								// for bridge method
+								addBridgeMethodCandidate(inheritedMethod);
+							}
+							if (!canOverridingMethodDifferInErasure(existingMethods[e], inheritedMethod))
+								continue nextMethod;
+						}
+					}
 					System.arraycopy(existingMethods, 0, existingMethods = new MethodBinding[length + 1], 0, length);
 					existingMethods[length] = inheritedMethod;
 				}

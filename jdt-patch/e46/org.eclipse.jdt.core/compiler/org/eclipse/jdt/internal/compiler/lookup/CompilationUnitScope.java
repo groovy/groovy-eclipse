@@ -89,11 +89,11 @@ void buildFieldsAndMethods() {
 }
 //GROOVY start: new method, can be overridden
 /**
-* @param referenceContext
+* @param refContext
 * @return true if error gets reported
 */
-protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration referenceContext) {
-	problemReporter().packageIsNotExpectedPackage(referenceContext);	
+protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration refContext) {
+	problemReporter().packageIsNotExpectedPackage(refContext);
 	return true;
 }
 //GROOVY end
@@ -224,8 +224,8 @@ protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
 		}
 	}
 }
-protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
-	return new ClassScope(parent, typeDecl);
+protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl) {
+	return new ClassScope(parentScope, typeDecl);
 }
 //GROOVY end
 void checkAndSetImports() {

@@ -117,6 +117,13 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		condLoopContext.complainOnDeferredNullChecks(currentScope,
 				actionInfo.addPotentialNullInfoFrom(
 				  condInfo.initsWhenTrue().unconditionalInits()));
+	} else {
+		loopingContext.complainOnDeferredNullChecks(currentScope,
+				flowInfo.unconditionalCopy().addPotentialNullInfoFrom(
+					  condInfo.initsWhenTrue().unconditionalInits()), false);
+		condLoopContext.complainOnDeferredNullChecks(currentScope,
+				actionInfo.addPotentialNullInfoFrom(
+				  condInfo.initsWhenTrue().unconditionalInits()), false);
 	}
 	if (loopingContext.hasEscapingExceptions()) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=321926
 		FlowInfo loopbackFlowInfo = flowInfo.copy();

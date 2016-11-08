@@ -4,11 +4,7 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.ui;singleton:=true
 Bundle-Name: Groovy UI
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.9.2.qualifier
-Export-Package: greclipse.org.eclipse.jdt.core.dom.rewrite,
- greclipse.org.eclipse.jdt.internal.core.dom.rewrite,
- greclipse.org.eclipse.jdt.internal.junit.wizards,
- greclipse.org.eclipse.jdt.internal.ui.javaeditor,
- greclipse.org.eclipse.jdt.ui,
+Export-Package: greclipse.org.eclipse.jdt.internal.ui.javaeditor,
  org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.actions,
  org.codehaus.groovy.eclipse.adapters,

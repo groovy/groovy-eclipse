@@ -201,6 +201,7 @@ private TypeParameterInfo[] getTypeParameterInfos(TypeParameter[] typeParameters
 		TypeParameter typeParameter = typeParameters[i];
 		char[][] typeParameterBounds = getTypeParameterBounds(typeParameter);
 		ISourceElementRequestor.TypeParameterInfo typeParameterInfo = new ISourceElementRequestor.TypeParameterInfo();
+		typeParameterInfo.typeAnnotated = ((typeParameter.bits & ASTNode.HasTypeAnnotations) != 0);
 		typeParameterInfo.declarationStart = typeParameter.declarationSourceStart;
 		typeParameterInfo.declarationEnd = typeParameter.declarationSourceEnd;
 		typeParameterInfo.name = typeParameter.name;

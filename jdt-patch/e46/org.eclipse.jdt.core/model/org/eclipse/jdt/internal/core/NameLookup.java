@@ -312,7 +312,7 @@ public class NameLookup implements SuffixConstants {
 				case TypeDeclaration.ENUM_DECL :
 					return (acceptFlags & ACCEPT_ENUMS) != 0;
 				default:
-					//case IGenericType.ANNOTATION_TYPE :
+					//case TypeDeclaration.ANNOTATION_TYPE_DECL :
 					return (acceptFlags & ACCEPT_ANNOTATIONS) != 0;
 			}
 		} catch (JavaModelException npe) {

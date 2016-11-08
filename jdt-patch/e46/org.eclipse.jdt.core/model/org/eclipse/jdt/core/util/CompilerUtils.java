@@ -67,7 +67,7 @@ public class CompilerUtils {
 	 * Configure an options map (usually retrieved from a CompilerOptions object) based on the project. 
 	 * If anything goes wrong it will configure the options to just build java.
 	 */
-	public static void configureOptionsBasedOnNature(Map optionMap, IJavaProject javaProject) {
+	public static void configureOptionsBasedOnNature(Map<String, String> optionMap, IJavaProject javaProject) {
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
@@ -114,7 +114,7 @@ public class CompilerUtils {
 	 * @param javaProject the project involved right now (may have the groovy nature)
 	 */
 	public static void setGroovyClasspath(CompilerOptions compilerOptions, IJavaProject javaProject) {
-		Map newOptions = new HashMap();
+		Map<String, String> newOptions = new HashMap<String, String>();
 		setGroovyClasspath(newOptions, javaProject);
 		compilerOptions.groovyProjectName = javaProject.getProject().getName();
 		if (!newOptions.isEmpty()) {
@@ -122,18 +122,16 @@ public class CompilerUtils {
 		}
 	}
 	
-	public static void setGroovyClasspath(Map optionMap, IJavaProject javaProject) {
+	public static void setGroovyClasspath(Map<String, String> optionMap, IJavaProject javaProject) {
 		IFile file = javaProject.getProject().getFile("groovy.properties"); //$NON-NLS-1$
 		if (file.exists()) {
 			try {
 				PropertyResourceBundle prb = new PropertyResourceBundle(file.getContents());
-				Enumeration e = prb.getKeys();
-				// System.err.println("Loading groovy settings for project '"+project.getName()+"'");
+				Enumeration<String> e = prb.getKeys();
 				while (e.hasMoreElements()) {
-					String k = (String)e.nextElement();
+					String k = e.nextElement();
 					String v = (String)prb.getObject(k);
 					v = fixup(v,javaProject);
-					// System.out.println(k+"="+v);
 					if (k.equals(CompilerOptions.OPTIONG_GroovyClassLoaderPath)) {
 						optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath,v);
 					}
@@ -313,7 +311,7 @@ public class CompilerUtils {
 	 * @param otherProject a project something in the dependency chain for the original project
 	 * @param accumulatedPathEntries a String set of classpath entries, into which new entries should be added
 	 */
-	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set accumulatedPathEntries) throws JavaModelException {
+	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set<String> accumulatedPathEntries) throws JavaModelException {
 		 
 		// First the output location for the project:
 		IProject iproject = baseProject.getWorkspace().getRoot().getProject(otherProject);

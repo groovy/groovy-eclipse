@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -226,7 +226,7 @@ protected IProject[] build(int kind, Map ignored, IProgressMonitor monitor) thro
 			new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IMarker.SOURCE_ID},
 			new Object[] {
 				Messages.bind(Messages.build_missingSourceFile, e.missingSourceFile),
-				new Integer(IMarker.SEVERITY_ERROR),
+				Integer.valueOf(IMarker.SEVERITY_ERROR),
 				JavaBuilder.SOURCE_ID
 			}
 		);
@@ -319,8 +319,8 @@ private void createInconsistentBuildMarker(CoreException coreException) throws C
 		new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IJavaModelMarker.CATEGORY_ID, IMarker.SOURCE_ID},
 		new Object[] {
 			Messages.bind(Messages.build_inconsistentProject, message),
-			new Integer(IMarker.SEVERITY_ERROR),
-			new Integer(CategorizedProblem.CAT_BUILDPATH),
+			Integer.valueOf(IMarker.SEVERITY_ERROR),
+			Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
 			JavaBuilder.SOURCE_ID
 		}
 	);
@@ -671,8 +671,8 @@ private boolean isWorthBuilding() throws CoreException {
 			new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IJavaModelMarker.CATEGORY_ID, IMarker.SOURCE_ID},
 			new Object[] {
 				Messages.build_abortDueToClasspathProblems,
-				new Integer(IMarker.SEVERITY_ERROR),
-				new Integer(CategorizedProblem.CAT_BUILDPATH),
+				Integer.valueOf(IMarker.SEVERITY_ERROR),
+				Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
 				JavaBuilder.SOURCE_ID
 			}
 		);
@@ -714,8 +714,8 @@ private boolean isWorthBuilding() throws CoreException {
 					isClasspathBroken(prereq, true)
 						? Messages.bind(Messages.build_prereqProjectHasClasspathProblems, p.getName())
 						: Messages.bind(Messages.build_prereqProjectMustBeRebuilt, p.getName()),
-					new Integer(IMarker.SEVERITY_ERROR),
-					new Integer(CategorizedProblem.CAT_BUILDPATH),
+					Integer.valueOf(IMarker.SEVERITY_ERROR),
+					Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
 					JavaBuilder.SOURCE_ID
 				}
 			);

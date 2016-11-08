@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2015 IBM Corporation and others.
+ * Copyright (c) 2004, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,8 +21,8 @@ public class ResolvedBinaryMethod extends BinaryMethod {
 
 	private String uniqueKey;
 
-	/*
-	 * See class comments.
+	/**
+	 * The parameter type signatures are expected to be dot-based.
 	 */
 	public ResolvedBinaryMethod(JavaElement parent, String name, String[] parameterTypes, String uniqueKey) {
 		super(parent, name, parameterTypes);

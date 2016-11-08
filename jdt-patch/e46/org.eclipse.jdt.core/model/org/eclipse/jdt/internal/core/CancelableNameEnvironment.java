@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others.
+ * Copyright (c) 2004, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,6 +43,10 @@ public class CancelableNameEnvironment extends SearchableEnvironment implements 
 	public NameEnvironmentAnswer findType(char[] name, char[][] packageName) {
 		checkCanceled();
 		return super.findType(name, packageName);
+	}
+
+	public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes) {
+		return findType(typeName, packageName);
 	}
 
 	public NameEnvironmentAnswer findType(char[][] compoundTypeName) {

@@ -182,8 +182,8 @@ public class ClassScope extends Scope {
 		sourceType.setFields(fieldBindings);
 	}
 
-	public // GROOVY patched
-	void buildFieldsAndMethods() {
+	// GROOVY package->public
+	public void buildFieldsAndMethods() {
 		buildFields();
 		buildMethods();
 
@@ -321,8 +321,8 @@ public class ClassScope extends Scope {
 	}
 
 	// GROOVY start: overridable method so the scope can build the right kind of new scope
-	protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
-		return new ClassScope(parent, typeDecl);
+	protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl) {
+		return new ClassScope(parentScope, typeDecl);
 	}
 	// GROOVY end
 
@@ -1061,7 +1061,7 @@ public class ClassScope extends Scope {
 
 		Answer false if an error was reported against the sourceType.
 	*/
-	// GROOVY patched: private to protected
+	// GROOVY  private->protected
 	protected boolean connectSuperInterfaces() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;
 		sourceType.setSuperInterfaces(Binding.NO_SUPERINTERFACES);

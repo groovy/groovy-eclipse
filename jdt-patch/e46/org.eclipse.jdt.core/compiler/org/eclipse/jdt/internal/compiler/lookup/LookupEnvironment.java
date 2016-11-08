@@ -789,9 +789,18 @@ public PackageBinding createPackage(char[][] compoundName) {
 			// catches the case of a package statement of: package java.lang.Object;
 			// since the package can be added after a set of source files have already been compiled,
 			// we need to check whenever a package is created
-			if (this.nameEnvironment.findType(compoundName[i], parent.compoundName) != null)
-				return null;
-
+			if(this.nameEnvironment instanceof INameEnvironmentExtension) {
+				//When the nameEnvironment is an instance of INameEnvironmentWithProgress, it can get avoided to search for secondaryTypes (see flag).
+				// This is a performance optimization, because it is very expensive to search for secondary types and it isn't necessary to check when creating a package,
+				// because package name can not collide with a secondary type name.
+				if (((INameEnvironmentExtension)this.nameEnvironment).findType(compoundName[i], parent.compoundName, false) != null) {
+					return null;
+				}
+			} else {
+				if (this.nameEnvironment.findType(compoundName[i], parent.compoundName) != null) {
+					return null;
+				}
+			}
 			packageBinding = new PackageBinding(CharOperation.subarray(compoundName, 0, i + 1), parent, this);
 			parent.addPackage(packageBinding);
 		}
@@ -1765,5 +1774,15 @@ public boolean containsNullTypeAnnotation(IBinaryAnnotation[] typeAnnotations) {
 			return true;
 	}
 	return false;
+}
+public boolean containsNullTypeAnnotation(AnnotationBinding[] typeAnnotations) {
+	if (typeAnnotations.length == 0)
+		return false;
+	for (int i = 0; i < typeAnnotations.length; i++) {
+		AnnotationBinding typeAnnotation = typeAnnotations[i];
+		if (typeAnnotation.type.hasNullBit(TypeIds.BitNonNullAnnotation|TypeIds.BitNullableAnnotation))
+			return true;
+	}
+	return false;	
 }
 }

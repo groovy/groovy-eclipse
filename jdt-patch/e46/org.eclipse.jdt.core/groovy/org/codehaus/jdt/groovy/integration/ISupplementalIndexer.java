@@ -28,6 +28,5 @@ public interface ISupplementalIndexer {
 	 * @param reader a reader for the class file
 	 * @return a char[] list of extra things to add to the index
 	 */
-	List extractNamedReferences(byte[] contents, ClassFileReader reader);
-
+	List<char[]> extractNamedReferences(byte[] contents, ClassFileReader reader);
 }

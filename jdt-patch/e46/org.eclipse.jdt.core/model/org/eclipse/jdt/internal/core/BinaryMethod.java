@@ -1,4 +1,3 @@
-// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -37,16 +36,16 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * @see IMethod
  */
-// GROOVY package->public
+
 public class BinaryMethod extends BinaryMember implements IMethod {
 	/**
 	 * The parameter type signatures of the method - stored locally
 	 * to perform equality test. <code>CharOperation.NO_STRINGS</code> indicates no
-	 * parameters.
+	 * parameters. Note that the parameter type signatures are expected to be dot-based.
 	 */
 	protected String[] parameterTypes;
 	protected String [] erasedParamaterTypes; // lazily initialized via call to getErasedParameterTypes
-
+	
 	/**
 	 * The parameter names for the method.
 	 */
@@ -299,7 +298,7 @@ public String[] getParameterNames() throws JavaModelException {
 				projectInfo.javadocCache.put(declaringType, BinaryType.EMPTY_JAVADOC);
 			}
 		}
-
+		
 		String methodDoc = null;
 		if (javadocContents == null) {
 			long timeOut = 50; // default value

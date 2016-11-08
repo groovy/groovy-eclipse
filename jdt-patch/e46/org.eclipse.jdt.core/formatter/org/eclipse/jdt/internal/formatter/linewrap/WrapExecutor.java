@@ -110,7 +110,7 @@ public class WrapExecutor {
 		boolean lineExceeded;
 		final List<Integer> extraLinesPerComment = new ArrayList<Integer>();
 		final List<Integer> topPriorityGroupStarts = new ArrayList<Integer>();
-		int currentTopPriorityGroupEnd;
+		private int currentTopPriorityGroupEnd;
 		private boolean isNLSTagInLine;
 
 		public LineAnalyzer(TokenManager tokenManager, DefaultCodeFormatterOptions options) {
@@ -319,15 +319,24 @@ public class WrapExecutor {
 		index++;
 		token.setIndent(indent);
 		int groupEnd = token.getWrapPolicy() != null ? token.getWrapPolicy().groupEndIndex : -1;
+		int separateLinesOnWrapFrom = -1;
 		while (index < this.tm.size()) {
 			token = this.tm.get(index);
 			if (token.isNextLineOnWrap() && this.tm.get(this.tm.findFirstTokenInLine(index)).isWrappable()) {
 				token.breakBefore();
 				return index;
 			}
+			if (separateLinesOnWrapFrom >= 0
+					&& token == this.tm.get(separateLinesOnWrapFrom).getSeparateLinesOnWrapUntil()) {
+				separateLinesOnWrapFrom = -1;
+			}
+			if (separateLinesOnWrapFrom == -1 && token.getSeparateLinesOnWrapUntil() != null) {
+				separateLinesOnWrapFrom = index;
+			}
 			while (wrapInfo != null && wrapInfo.wrapTokenIndex < index)
 				wrapInfo = this.wrapSearchResults.get(wrapInfo).nextWrap;
 			if (wrapInfo != null && wrapInfo.wrapTokenIndex == index) {
+				checkSeparateLinesOnWrap(separateLinesOnWrapFrom);
 				token.breakBefore();
 				handleOnColumnIndent(index, token.getWrapPolicy());
 				checkTopPriorityWraps(index);
@@ -338,6 +347,7 @@ public class WrapExecutor {
 			boolean isNewLine = this.tm.get(index - 1).getLineBreaksAfter() > 0 || token.getLineBreaksBefore() > 0;
 			if (isNewLine) {
 				if (token.getWrapPolicy() != null) {
+					checkSeparateLinesOnWrap(separateLinesOnWrapFrom);
 					handleOnColumnIndent(index, token.getWrapPolicy());
 					checkTopPriorityWraps(index);
 					int newIndent = getWrapIndent(token);
@@ -426,7 +436,7 @@ public class WrapExecutor {
 
 		if ((!lineExceeded || firstPotentialWrap < 0) && lastIndex + 1 < this.tm.size()) {
 			Token nextLineToken = this.tm.get(lastIndex + 1);
-			if ((nextLineToken.getWrapPolicy() != null && nextLineToken.getWrapPolicy().wrapMode != WrapMode.FORCED)
+			if (nextLineToken.getWrapPolicy() != null && nextLineToken.getWrapPolicy().wrapMode != WrapMode.FORCED
 					&& (this.tm.get(lastIndex).isComment() || nextLineToken.isComment())) {
 				// this might be a pre-existing wrap forced by a comment, calculate penalties as normal
 				bestIndent = getWrapIndent(nextLineToken);
@@ -549,7 +559,7 @@ public class WrapExecutor {
 			WrapPolicy nextPolicy = this.tm.get(nextWrap.wrapTokenIndex).getWrapPolicy();
 			if (nextPolicy.wrapParentIndex == wrapPolicy.wrapParentIndex
 					|| (penaltyDiff != 0 && !wrapPolicy.isFirstInGroup)) {
-				penalty -= penaltyDiff * 1.25;
+				penalty -= penaltyDiff * (1 + 1.0 / 64);
 				break;
 			}
 			if (nextPolicy.structureDepth <= wrapPolicy.structureDepth)
@@ -563,6 +573,26 @@ public class WrapExecutor {
 
 	private double getPenalty(WrapPolicy policy) {
 		return Math.exp(policy.structureDepth) * policy.penaltyMultiplier;
+	}
+
+	private void checkSeparateLinesOnWrap(final int separateLinesOnWrapFrom) throws WrapRestartThrowable {
+		if (separateLinesOnWrapFrom < 0)
+			return;
+		Token next = this.tm.get(separateLinesOnWrapFrom + 1);
+		Token end = this.tm.get(separateLinesOnWrapFrom).getSeparateLinesOnWrapUntil();
+		if (next.getLineBreaksBefore() > 0 && end.getLineBreaksBefore() > 0)
+			return;
+
+		if (next.getWrapPolicy() == null || next.getWrapPolicy().wrapMode == WrapMode.FORCED) {
+			next.setWrapPolicy(new WrapPolicy(WrapMode.WHERE_NECESSARY, separateLinesOnWrapFrom,
+					this.options.indentation_size));
+		}
+		next.breakBefore();
+		if (end.getWrapPolicy() == null || end.getWrapPolicy().wrapMode == WrapMode.FORCED) {
+			end.setWrapPolicy(new WrapPolicy(WrapMode.WHERE_NECESSARY, separateLinesOnWrapFrom, 0));
+		}
+		end.breakBefore();
+		throw new WrapRestartThrowable(-1);
 	}
 
 	private void checkForceWrap(Token token, int index, int currentIndent) throws WrapRestartThrowable {

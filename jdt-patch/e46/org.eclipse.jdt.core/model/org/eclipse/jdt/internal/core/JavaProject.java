@@ -1,6 +1,6 @@
 //GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -491,7 +491,7 @@ public class JavaProject
 			}
 		}
 		// GROOVY start
-		LanguageSupportFactory.getEventHandler().handle(this,"close");
+		LanguageSupportFactory.getEventHandler().handle(this, "close"); //$NON-NLS-1$
 		// GROOVY end
 		super.close();
 	}
@@ -876,14 +876,14 @@ public class JavaProject
 				},
 				new Object[] {
 					status.getMessage(),
-					new Integer(severity),
+					Integer.valueOf(severity),
 					Messages.classpath_buildPath,
 					isCycleProblem ? "true" : "false",//$NON-NLS-1$ //$NON-NLS-2$
 					isClasspathFileFormatProblem ? "true" : "false",//$NON-NLS-1$ //$NON-NLS-2$
 					isOutputOverlapping ? "true" : "false", //$NON-NLS-1$ //$NON-NLS-2$
-					new Integer(status.getCode()),
+					Integer.valueOf(status.getCode()),
 					Util.getProblemArgumentsForMarker(arguments) ,
-					new Integer(CategorizedProblem.CAT_BUILDPATH),
+					Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
 					JavaBuilder.SOURCE_ID,
 				}
 			);

@@ -193,7 +193,7 @@ void recordLocatorForType(String qualifiedTypeName, String typeLocator) {
 void recordStructuralDependency(IProject prereqProject, State prereqState) {
 	if (prereqState != null)
 		if (prereqState.lastStructuralBuildTime > 0) // can skip if 0 (full build) since its assumed to be 0 if unknown
-			this.structuralBuildTimes.put(prereqProject.getName(), new Long(prereqState.lastStructuralBuildTime));
+			this.structuralBuildTimes.put(prereqProject.getName(), Long.valueOf(prereqState.lastStructuralBuildTime));
 }
 
 void removeLocator(String typeLocatorToRemove) {
@@ -280,7 +280,7 @@ static State read(IProject project, DataInputStream in) throws IOException {
 
 	newState.structuralBuildTimes = new SimpleLookupTable(length = in.readInt());
 	for (int i = 0; i < length; i++)
-		newState.structuralBuildTimes.put(in.readUTF(), new Long(in.readLong()));
+		newState.structuralBuildTimes.put(in.readUTF(), Long.valueOf(in.readLong()));
 
 	String[] internedTypeLocators = new String[length = in.readInt()];
 	for (int i = 0; i < length; i++)
@@ -502,7 +502,7 @@ void write(DataOutputStream out) throws IOException {
 				length--;
 				String key = (String) keyTable[i];
 				out.writeUTF(key);
-				internedTypeLocators.put(key, new Integer(internedTypeLocators.elementSize));
+				internedTypeLocators.put(key, Integer.valueOf(internedTypeLocators.elementSize));
 			}
 		}
 		if (JavaBuilder.DEBUG && length != 0)
@@ -546,17 +546,17 @@ void write(DataOutputStream out) throws IOException {
 			for (int j = 0, m = rNames.length; j < m; j++) {
 				char[] rName = rNames[j];
 				if (!internedRootNames.containsKey(rName)) // remember the names have been interned
-					internedRootNames.put(rName, new Integer(internedRootNames.elementSize));
+					internedRootNames.put(rName, Integer.valueOf(internedRootNames.elementSize));
 			}
 			char[][][] qNames = collection.qualifiedNameReferences;
 			for (int j = 0, m = qNames.length; j < m; j++) {
 				char[][] qName = qNames[j];
 				if (!internedQualifiedNames.containsKey(qName)) { // remember the names have been interned
-					internedQualifiedNames.put(qName, new Integer(internedQualifiedNames.elementSize));
+					internedQualifiedNames.put(qName, Integer.valueOf(internedQualifiedNames.elementSize));
 					for (int k = 0, n = qName.length; k < n; k++) {
 						char[] sName = qName[k];
 						if (!internedSimpleNames.containsKey(sName)) // remember the names have been interned
-							internedSimpleNames.put(sName, new Integer(internedSimpleNames.elementSize));
+							internedSimpleNames.put(sName, Integer.valueOf(internedSimpleNames.elementSize));
 					}
 				}
 			}
@@ -564,7 +564,7 @@ void write(DataOutputStream out) throws IOException {
 			for (int j = 0, m = sNames.length; j < m; j++) {
 				char[] sName = sNames[j];
 				if (!internedSimpleNames.containsKey(sName)) // remember the names have been interned
-					internedSimpleNames.put(sName, new Integer(internedSimpleNames.elementSize));
+					internedSimpleNames.put(sName, Integer.valueOf(internedSimpleNames.elementSize));
 			}
 		}
 	}

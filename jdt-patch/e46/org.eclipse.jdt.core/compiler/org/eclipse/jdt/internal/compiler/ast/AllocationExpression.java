@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -132,7 +132,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if (currentScope.compilerOptions().analyseResourceLeaks && FakedTrackingVariable.isAnyCloseable(this.resolvedType))
 		FakedTrackingVariable.analyseCloseableAllocation(currentScope, flowInfo, this);
 
-	if (this.binding.declaringClass.isMemberType() && !this.binding.declaringClass.isStatic()) {
+	ReferenceBinding declaringClass = this.binding.declaringClass;
+	MethodScope methodScope = currentScope.methodScope();
+	if ((declaringClass.isMemberType() && !declaringClass.isStatic()) || 
+			(declaringClass.isLocalType() && !methodScope.isStatic && methodScope.isLambdaScope())) {
 		// allocating a non-static member type without an enclosing instance of parent type
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
 		currentScope.tagAsAccessingEnclosingInstanceStateOf(this.binding.declaringClass.enclosingType(), false /* type variable access */);
@@ -575,7 +578,7 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 		if (constructorTypeArguments.length > 0)
 			System.arraycopy(((ParameterizedGenericMethodBinding)factory).typeArguments, sfmb.typeVariables().length - constructorTypeArguments.length , 
 												constructorTypeArguments, 0, constructorTypeArguments.length);
-		MethodBinding constructor = sfmb.applyTypeArgumentsOnConstructor(((ParameterizedTypeBinding)factory.returnType).arguments, constructorTypeArguments);
+		MethodBinding constructor = sfmb.applyTypeArgumentsOnConstructor(((ParameterizedTypeBinding)factory.returnType).arguments, constructorTypeArguments, genericFactory.inferredWithUncheckedConversion);
 		if (constructor instanceof ParameterizedGenericMethodBinding && scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8) {
 			// force an inference context to be established for nested poly allocations (to be able to transfer b2), but avoid tunneling through overload resolution. We know this is the MSMB.
 			if (this.expressionContext == INVOCATION_CONTEXT && this.typeExpected == null)
@@ -746,6 +749,8 @@ public void cleanUpInferenceContexts() {
 		if (value != null)
 			((InferenceContext18) value).cleanUp();
 	this.inferenceContexts = null;
+	this.outerInferenceContext = null;
+	this.solutionsPerTargetType = null;
 }
 
 //-- interface InvocationSite: --

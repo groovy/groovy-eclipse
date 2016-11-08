@@ -1,3 +1,4 @@
+//GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -20,9 +21,9 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
 public class IntLiteral extends NumberLiteral {
-	private static final char[] HEXA_MIN_VALUE        = "0x80000000".toCharArray(); //$NON-NLS-1$
+	//private static final char[] HEXA_MIN_VALUE        = "0x80000000".toCharArray(); //$NON-NLS-1$
 	private static final char[] HEXA_MINUS_ONE_VALUE  = "0xffffffff".toCharArray(); //$NON-NLS-1$
-	private static final char[] OCTAL_MIN_VALUE       = "020000000000".toCharArray(); //$NON-NLS-1$
+	//private static final char[] OCTAL_MIN_VALUE       = "020000000000".toCharArray(); //$NON-NLS-1$
 	private static final char[] OCTAL_MINUS_ONE_VALUE = "037777777777".toCharArray(); //$NON-NLS-1$
 	private static final char[] DECIMAL_MIN_VALUE     = "2147483648".toCharArray(); //$NON-NLS-1$
 	private static final char[] DECIMAL_MAX_VALUE     = "2147483647".toCharArray(); //$NON-NLS-1$
@@ -52,7 +53,7 @@ public class IntLiteral extends NumberLiteral {
 //				}
 //				break;
 //		}
-		// GROOVY: end
+		// GROOVY end
 		return new IntLiteral(token, intReducedToken != token ? intReducedToken : null, s, e);
 	}
 IntLiteral(char[] token, char[] reducedForm, int start, int end) {

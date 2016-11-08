@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
@@ -285,6 +286,9 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
         		return;
         	default :
         		return;
+        }
+        if (formalArguments == null || actualArguments == null) { // band-aid for https://bugs.eclipse.org/460491 TODO: remove once really fixed
+        	return;
         }
         inferenceContext.depth++;
         for (int i = 0, length = formalArguments.length; i < length; i++) {
@@ -1395,6 +1399,27 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 	
 	public FieldBinding[] unResolvedFields() {
 		return this.fields;
+	}
+	@Override
+	protected MethodBinding[] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards) throws InvalidInputException {
+		if (replaceWildcards) {
+			TypeBinding[] types = getNonWildcardParameterization(scope);
+			if (types == null)
+				return new MethodBinding[] { new ProblemMethodBinding(TypeConstants.ANONYMOUS_METHOD, null, ProblemReasons.NotAWellFormedParameterizedType) };
+			for (int i = 0; i < types.length; i++) {
+				if (TypeBinding.notEquals(types[i], this.arguments[i])) {
+					// non-wildcard parameterization differs from this, so use it:
+					ParameterizedTypeBinding declaringType = scope.environment().createParameterizedType(this.type, types, this.type.enclosingType());
+					TypeVariableBinding [] typeParameters = this.type.typeVariables();
+					for (int j = 0, length = typeParameters.length; j < length; j++) {
+						if (!typeParameters[j].boundCheck(declaringType, types[j], scope, null).isOKbyJLS())
+							return new MethodBinding[] { new ProblemMethodBinding(TypeConstants.ANONYMOUS_METHOD, null, ProblemReasons.NotAWellFormedParameterizedType) };			
+					}
+					return declaringType.getInterfaceAbstractContracts(scope, replaceWildcards);
+				}
+			}
+		}
+		return super.getInterfaceAbstractContracts(scope, replaceWildcards);
 	}
 	public MethodBinding getSingleAbstractMethod(final Scope scope, boolean replaceWildcards) {
 		return getSingleAbstractMethod(scope, replaceWildcards, -1, -1 /* do not capture */);

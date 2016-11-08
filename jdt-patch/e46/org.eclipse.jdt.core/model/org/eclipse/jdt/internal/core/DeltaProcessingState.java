@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -499,7 +499,7 @@ public class DeltaProcessingState implements IResourceChangeListener {
 				while (size-- > 0) {
 					String key = in.readUTF();
 					long timestamp = in.readLong();
-					timeStamps.put(Path.fromPortableString(key), new Long(timestamp));
+					timeStamps.put(Path.fromPortableString(key), Long.valueOf(timestamp));
 				}
 			} catch (IOException e) {
 				if (timestampsFile.exists())

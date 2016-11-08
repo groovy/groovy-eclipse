@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,18 +56,18 @@ public Object getConstant() throws JavaModelException {
 	String signature = info.getTypeSignature();
 	try {
 		if (signature.equals(Signature.SIG_INT)) {
-			constant = new Integer(constantSource);
+			constant = Integer.valueOf(constantSource);
 		} else if (signature.equals(Signature.SIG_SHORT)) {
-			constant = new Short(constantSource);
+			constant = Short.valueOf(constantSource);
 		} else if (signature.equals(Signature.SIG_BYTE)) {
-			constant = new Byte(constantSource);
+			constant = Byte.valueOf(constantSource);
 		} else if (signature.equals(Signature.SIG_BOOLEAN)) {
 			constant = Boolean.valueOf(constantSource);
 		} else if (signature.equals(Signature.SIG_CHAR)) {
 			if (constantSourceChars.length != 3) {
 				return null;
 			}
-			constant = new Character(constantSourceChars[1]);
+			constant = Character.valueOf(constantSourceChars[1]);
 		} else if (signature.equals(Signature.SIG_DOUBLE)) {
 			constant = new Double(constantSource);
 		} else if (signature.equals(Signature.SIG_FLOAT)) {
@@ -76,12 +76,12 @@ public Object getConstant() throws JavaModelException {
 			if (constantSource.endsWith("L") || constantSource.endsWith("l")) { //$NON-NLS-1$ //$NON-NLS-2$
 				int index = constantSource.lastIndexOf("L");//$NON-NLS-1$
 				if (index != -1) {
-					constant = new Long(constantSource.substring(0, index));
+					constant = Long.valueOf(constantSource.substring(0, index));
 				} else {
-					constant = new Long(constantSource.substring(0, constantSource.lastIndexOf("l")));//$NON-NLS-1$
+					constant = Long.valueOf(constantSource.substring(0, constantSource.lastIndexOf("l")));//$NON-NLS-1$
 				}
 			} else {
-				constant = new Long(constantSource);
+				constant = Long.valueOf(constantSource);
 			}
 		} else if (signature.equals("QString;")) {//$NON-NLS-1$
 			constant = constantSource;

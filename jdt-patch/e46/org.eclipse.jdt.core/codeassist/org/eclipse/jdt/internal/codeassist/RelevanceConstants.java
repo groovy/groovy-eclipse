@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ public interface RelevanceConstants {
 	 * 4. The value of R_DEFAULT is maintained at a positive value such that the sum of all the negative relevance constants
 	 *    and R_DEFAULT must not be negative. 
 	 */
-	int R_DEFAULT = 5;
+	int R_DEFAULT = 30;
 	int R_INTERESTING = 5;
 	int R_CASE = 10;
 	int R_CAMEL_CASE = 5;
@@ -44,7 +44,7 @@ public interface RelevanceConstants {
 	int R_NAME_FIRST_SUFFIX = 4;
 	int R_NAME_SUFFIX = 3;
 	int R_NAME_LESS_NEW_CHARACTERS = 15;
-	int R_SUBSTRING = -1;
+	int R_SUBSTRING = -20;
 	int R_METHOD_OVERIDE = 3;
 	int R_NON_RESTRICTED = 3;
 	int R_TRUE_OR_FALSE = 1;
