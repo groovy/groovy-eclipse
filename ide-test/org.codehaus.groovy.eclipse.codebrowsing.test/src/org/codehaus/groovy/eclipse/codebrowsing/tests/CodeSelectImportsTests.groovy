@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
 
 final class CodeSelectImportsTests extends BrowsingTestCase {
 
@@ -48,7 +47,6 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
     void testCodeSelectOnImportType2() {
         String source = '''\
             import java.lang.Thread.State
-            import java.util.regex.Pattern
             Pattern p = ~/123/
             '''.stripIndent()
 
