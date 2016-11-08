@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.ui;
 
-import static org.codehaus.groovy.runtime.StringGroovyMethods.stripIndent;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.stripIndent;
 
 import java.io.File;
 

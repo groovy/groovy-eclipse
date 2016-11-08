@@ -135,7 +135,7 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
             return ((FieldNode) node).isFinal();
         }
         if (node instanceof MethodNode) {
-            return ((MethodNode) node).isFinal();
+            return (((MethodNode) node).getModifiers() & Opcodes.ACC_FINAL) != 0;
         }
         return false;
     }

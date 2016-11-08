@@ -15,12 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
-import groovy.transform.TypeChecked
-
 /**
  * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}
  */
-@TypeChecked
 final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testRetainTypeAlias() {

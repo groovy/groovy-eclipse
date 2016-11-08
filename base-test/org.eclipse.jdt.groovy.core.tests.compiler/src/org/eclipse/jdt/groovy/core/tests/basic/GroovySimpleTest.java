@@ -290,7 +290,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "\tclass Foo {}\n" +
         "\t ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
         "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+
-        (GroovyUtils.isGroovy20() || GroovyUtils.isGroovy21() ? "are containing both a class of the name" : "each contain a class with the name") + " Foo.\n" +
+        (GroovyUtils.isAtLeastGroovy(22) ? "each contain a class with the name" : "are containing both a class of the name") + " Foo.\n" +
         "----------\n" +
         "2. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo {}\n" +
@@ -312,7 +312,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n" +
         "1. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
-        "\t^^^^^^^^^^^^\n" +
+        "\t^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^":"")+"\n" +
         "Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" +
         "----------\n" +
         "2. ERROR in a\\Foo.groovy (at line 3)\n" +
@@ -2381,13 +2381,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testFailureWhilstAttemptingToReportError() {
-        // error message change in Groovy 2.1
-        String msgPart;
-//		if (GroovyUtils.GROOVY_LEVEL > 20) {
-       msgPart = "\t     ^^\n";
-//		} else {
-//		    msgPart = "\t     ^\n";
-//		}
         this.runNegativeTest(new String[] {
             "T.groovy",
             "public class T{\n"+
@@ -2398,7 +2391,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"----------\n" +
         "1. ERROR in T.groovy (at line 3)\n" +
         "\tthis \"\"\n" +
-        msgPart +
+        "\t     ^"+(GroovyUtils.isAtLeastGroovy(20)?"^":"")+"\n" +
         "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" +
         "----------\n");
     }

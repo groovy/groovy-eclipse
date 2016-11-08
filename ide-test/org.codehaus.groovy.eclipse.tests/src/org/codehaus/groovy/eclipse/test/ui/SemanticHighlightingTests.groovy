@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 
-import groovy.transform.TypeChecked
-
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
@@ -31,7 +29,6 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
 
-@TypeChecked
 final class SemanticHighlightingTests extends EclipseTestCase {
 
     boolean semanticHightlightOriginalValue
