@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: org.codehaus.groovy21.tests
-Bundle-SymbolicName: org.codehaus.groovy21.tests
-Bundle-Version: 2.9.2.qualifier
-Require-Bundle: org.codehaus.groovy.alltests;bundle-version="2.9.2",
- org.junit;bundle-version="4.11.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7

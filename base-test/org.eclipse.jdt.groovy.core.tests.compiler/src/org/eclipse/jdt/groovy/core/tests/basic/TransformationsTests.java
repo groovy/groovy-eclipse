@@ -13,45 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.groovy.core.tests.basic
+package org.eclipse.jdt.groovy.core.tests.basic;
 
-import groovy.transform.InheritConstructors
-import groovy.transform.TypeChecked
+import java.io.File;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
-import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.FieldNode
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration
-import org.eclipse.core.runtime.FileLocator
-import org.eclipse.core.runtime.Platform
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest
-import org.eclipse.jdt.core.tests.util.GroovyUtils
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
+import junit.framework.Test;
 
-@InheritConstructors @TypeChecked
-final class TransformationsTests extends AbstractGroovyRegressionTest {
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-    static junit.framework.Test suite() {
-        buildMinimalComplianceTestSuite(TransformationsTests, F_1_5)
+public final class TransformationsTests extends AbstractGroovyRegressionTest {
+
+    public static Test suite() {
+        return buildMinimalComplianceTestSuite(TransformationsTests.class, F_1_5);
     }
 
-    void testDelegate() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) return
+    public TransformationsTests(String name) {
+        super(name);
+    }
 
-        String[] sources = [
+    private String getJarPath(String entry) throws Exception {
+        URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
+        return FileLocator.resolve(url).getFile();
+    }
+    
+    public void testDelegate() {
+        if (GroovyUtils.GROOVY_LEVEL < 18) return;
+
+        String[] sources = {
             "Bar.groovy",
             "class Foo { @Delegate URL myUrl }\n" +
             "\n" +
             "print Foo.class.getDeclaredMethod('getContent', Class[].class)"
-        ]
+        };
 
-        runConformTest(sources, "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException")
+        runConformTest(sources, "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException");
     }
 
-    void testGreclipse1514() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testGreclipse1514() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "C.groovy",
             "@SuppressWarnings(\"rawtypes\")\n"+
             "@groovy.transform.CompileStatic\n"+
@@ -60,15 +73,15 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "    list.unique().each { }\n"+
             "  }\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void _testGreclipse1515() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void _testGreclipse1515() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "C.groovy",
             "import groovy.transform.CompileStatic;\n"+
             "import java.util.regex.Pattern\n"+
@@ -82,14 +95,14 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "    }\n"+
             "  }\n"+
             "}"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
     // not a great test, needs work
-    void testBadCodeCategory_STS3822() {
-        String[] sources = [
+    public void testBadCodeCategory_STS3822() {
+        String[] sources = {
             "bad.groovy",
             "@Category(C.class) \n"+
             "@ScriptMixin(C.class)\n"+
@@ -98,7 +111,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "  public String toString()\n"+
             "  { return \"Bad [takeI()=\" + takeI() + \"]\"; }\n"+
             "}\n"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -136,28 +149,28 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "\t@Override\n" +
             "\t ^^^^^^^^\n" +
             "Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testGreclipse1521() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testGreclipse1521() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "\n"+
             "@groovy.transform.CompileStatic\n"+
             "class Foo {\n"+
             "  enum Status { ON, OFF}\n"+
             "}"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void _testGreclipse1506() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void _testGreclipse1506() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "import groovy.transform.TypeChecked;\n"+
             "import groovy.util.logging.Slf4j;\n"+
@@ -172,9 +185,9 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "        log.info('foo')\n"+
             "    }\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
     /**
@@ -182,8 +195,8 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
      * still it is referencable from Java.  This is not possible with normal joint compilation.
      * currently have to 'turn on' support in GroovyClassScope.getAnyExtraMethods() - still thinking about this stuff...
      */
-    void _testJavaAccessingTransformedGroovy_Singleton() {
-        String[] sources = [
+    public void _testJavaAccessingTransformedGroovy_Singleton() {
+        String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
             "  public static void main(String[] argv) {\n"+
@@ -202,84 +215,81 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "@Singleton class Wibble {" +
             "  public String field = 'abc';\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources, "abc")
+        runConformTest(sources, "abc");
     }
 
-    void testAnnotationCollector() {
+    public void testAnnotationCollector() {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return
+            return;
         }
 
-        String[] sources = [
-            'Book.groovy', '''
-            import java.lang.reflect.*;
-            class Book {
-              @ISBN String isbn;
-              public static void main(String []argv) {
-                Field f = Book.class.getDeclaredField('isbn');
-                Object[] os = f.getDeclaredAnnotations();
-                for (Object o: os) {
-                  System.out.print(o);
-                }
-              }
-            }''',
+        String[] sources = {
+            "Book.groovy",
+            "import java.lang.reflect.*;\n" +
+            "class Book {\n" +
+            "  @ISBN String isbn;\n" +
+            "  public static void main(String []argv) {\n" +
+            "    Field f = Book.class.getDeclaredField('isbn');\n" +
+            "    Object[] os = f.getDeclaredAnnotations();\n" +
+            "    for (Object o: os) {\n" +
+            "      System.out.print(o);\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
 
-            'NotNull.java', '''
-            import java.lang.annotation.*;
-            @Retention(RetentionPolicy.RUNTIME) public @interface NotNull {
-            }''',
+            "NotNull.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME) public @interface NotNull {\n" +
+            "}",
 
-            'Length.java', '''
-            import java.lang.annotation.*;
-            @Retention(RetentionPolicy.RUNTIME) public @interface Length {
-              int value() default 0;
-            }''',
+            "Length.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME) public @interface Length {\n" +
+            "  int value() default 0;\n" +
+            "}",
 
-            'ISBN.groovy', '''
-            @NotNull @Length @groovy.transform.AnnotationCollector
-            public @interface ISBN {
-            }'''
-        ]
+            "ISBN.groovy",
+            "@NotNull @Length @groovy.transform.AnnotationCollector\n" +
+            "public @interface ISBN {\n" +
+            "}"
+        };
 
-        runConformTest(sources, '@NotNull()@Length(value=0)')
+        runConformTest(sources, "@NotNull()@Length(value=0)");
     }
 
-    void testBuiltInTransforms_Singleton() {
-        String[] sources = [
-            'Goo.groovy', '''
-            class Goo {
-              public static void main(String[] argv) {
-                Run.main(argv)
-              }
-            }
-            ''',
+    public void testBuiltInTransforms_Singleton() {
+        String[] sources = {
+            "Goo.groovy",
+            "class Goo {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    Run.main(argv)\n" +
+            "  }\n" +
+            "}",
 
-            'Run.groovy', '''
-            public class Run {
-              public static void main(String[] argv) {
-                System.out.println(Wibble.getInstance().field)
-              }
-            }
-            ''',
+            "Run.groovy",
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println(Wibble.getInstance().field)\n" +
+            "  }\n" +
+            "}",
 
-            'Wibble.groovy', '''
-            @Singleton class Wibble {
-              public String field = 'abcd'
-            }
-            '''
-        ]
+            "Wibble.groovy",
+            "@Singleton class Wibble {\n" +
+            "  public String field = 'abcd'\n" +
+            "}"
+        };
 
-        runConformTest(sources, "abcd")
+        runConformTest(sources, "abcd");
     }
 
     // lazy option set in Singleton
-    void testBuiltInTransforms_Singleton2() {
+    public void testBuiltInTransforms_Singleton2() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (GroovyUtils.GROOVY_LEVEL < 22) return
+        if (GroovyUtils.GROOVY_LEVEL < 22) return;
 
-        String[] sources = [
+        String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
             "  public static void main(String[] argv) {\n"+
@@ -302,16 +312,16 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "  private Wibble() { print \"ctor \";}\n"+
             "  static void run() {}\n"+
             "}\n"
-        ]
+        };
 
-        this.runConformTest(sources, "ctor running abcd")
+        runConformTest(sources, "ctor running abcd");
     }
 
-    void testBuiltInTransforms_Singleton3() {
+    public void testBuiltInTransforms_Singleton3() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (GroovyUtils.GROOVY_LEVEL < 22) return
+        if (GroovyUtils.GROOVY_LEVEL < 22) return;
 
-        String[] sources = [
+        String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
             "  public static void main(String[] argv) {\n"+
@@ -334,13 +344,13 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "  private Wibble() { print \"ctor \";}\n"+
             "  static void run() {}\n"+
             "}\n"
-        ]
+        };
 
-        this.runConformTest(sources, "running ctor abcd")
+        runConformTest(sources, "running ctor abcd");
     }
 
-    void testBuiltInTransforms_Category1() {
-        String[] sources = [
+    public void testBuiltInTransforms_Category1() {
+        String[] sources = {
             "Demo.groovy",
             "   use(NumberCategory) {\n"+
             "       def dist = 300.meters\n"+
@@ -348,28 +358,27 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "       assert dist instanceof Distance\n"+
             "       assert dist.toString() == \"300m\"\n"+
             "  print dist.toString()\n"+
-            "   }\n",
+            "}",
 
             "Distance.groovy",
             "   final class Distance {\n"+
             "       def number\n"+
-            '       String toString() { \"${number}m\" }\n'+
-            "   }\n",
+            "       String toString() { \"${number}m\" }\n"+
+            "}",
 
             "NumberCategory.groovy",
             "   class NumberCategory {\n"+
             "       static Distance getMeters(Number self) {\n"+
             "           new Distance(number: self)\n"+
             "       }\n"+
-            "   }\n"+
-            "\n"
-        ]
+            "}"
+        };
 
-        this.runConformTest(sources, "300m")
+        runConformTest(sources, "300m");
     }
 
-    void testBuiltInTransforms_Category2() {
-        String[] sources = [
+    public void testBuiltInTransforms_Category2() {
+        String[] sources = {
             "Demo.groovy",
             "   use(NumberCategory) {\n"+
             "       def dist = 300.meters\n"+
@@ -382,7 +391,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "Distance.groovy",
             "   final class Distance {\n"+
             "       def number\n"+
-            '       String toString() { \"${number}m\" }\n'+
+            "       String toString() { \"${number}m\" }\n"+
             "   }\n",
 
             "NumberCategory.groovy",
@@ -392,13 +401,13 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "       }\n"+
             "   }\n"+
             "\n"
-        ]
+        };
 
-        this.runConformTest(sources, "300m")
+        runConformTest(sources, "300m");
     }
 
-    void testBuiltInTransforms_Category3() {
-        String[] sources = [
+    public void testBuiltInTransforms_Category3() {
+        String[] sources = {
             "Foo.groovy",
             "assert new Plane().fly() ==\n"+
             "       \"I'm the Concorde and I fly!\"\n"+
@@ -413,12 +422,12 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
 
             "FlyingAbility.groovy",
             "@Category(Vehicle) class FlyingAbility {\n"+
-            '    def fly() { \"I\'m the ${name} and I fly!\" }\n'+
+            "    def fly() { \"I'm the ${name} and I fly!\" }\n"+
             "}\n",
 
             "DivingAbility.groovy",
             "@Category(Vehicle) class DivingAbility {\n"+
-            '    def dive() { \"I\'m the ${name} and I dive!\" }\n'+
+            "    def dive() { \"I'm the ${name} and I dive!\" }\n"+
             "}\n",
 
             "Vehicle.java",
@@ -443,18 +452,18 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "class JamesBondVehicle implements Vehicle {\n"+
             "    String getName() { \"James Bond's vehicle\" }\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources, "I'm the James Bond's vehicle and I dive!")
+        runConformTest(sources, "I'm the James Bond's vehicle and I dive!");
     }
 
-    void testBuiltInTransforms_PackageScope() {
+    public void testBuiltInTransforms_PackageScope() {
         // in a different place on 1.7
-        if (GroovyUtils.GROOVY_LEVEL < 18) return
+        if (GroovyUtils.GROOVY_LEVEL < 18) return;
 
         // http://groovy.codehaus.org/PackageScope+transformation
         // Adjust the visibility of a property so instead of private it is package default
-        String[] sources = [
+        String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
             "  public static void main(String[] argv) {\n"+
@@ -479,24 +488,24 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "  String field = 'abcd';\n"+
             "  @groovy.transform.PackageScope String field2 = 'abcd';\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources, "20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation)
+        runConformTest(sources, "20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation);
     }
 
-    void testTypeChecked() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testTypeChecked() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "import groovy.transform.TypeChecked\n"+
             "@TypeChecked\n"+
             "void method(String message) {\n"+
             "   if (rareCondition) {\n"+
-            '        println \"Did you spot the error in this ${message.toUppercase()}?\"\n'+
+            "        println \"Did you spot the error in this ${message.toUppercase()}?\"\n"+
             "   }\n"+
             "}"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -506,16 +515,16 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" +
             "----------\n" +
             "2. ERROR in Foo.groovy (at line 5)\n" +
-            '\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n' +
+            "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
             "\t                                         ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(GroovyUtils.isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":"")+"\n" +
-            "----------\n")
+            "----------\n");
     }
 
-    void testTypeChecked2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testTypeChecked2() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "import groovy.transform.TypeChecked\n"+
             "@TypeChecked\n"+
@@ -524,7 +533,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "   ls.add(123);\n"+
             "   ls.add('abc');\n"+
             "}"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -533,7 +542,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "\t^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^^^^^^^^^^^" : "") + "\n" +
             (GroovyUtils.isAtLeastGroovy(23) ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
             "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)" + (GroovyUtils.isAtLeastGroovy(20) ? ". Please check if the declared type is right and if the method exists." : "")) + "\n" +
-            "----------\n")
+            "----------\n");
     }
 
     /**
@@ -541,10 +550,10 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
      *
      * That method does a lot of equality by == testing against classnode constants, which doesn't work so well for us...
      */
-    void testCompileStatic2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testCompileStatic2() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "import groovy.transform.CompileStatic;\n"+
             "\n"+
@@ -571,15 +580,15 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "       return value\n"+
             "   } \n"+
             "}  \n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testCompileStatic() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testCompileStatic() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "import groovy.transform.CompileStatic\n"+
             "@CompileStatic\n"+
@@ -588,7 +597,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "   ls.add(123);\n"+
             "   ls.add('abc');\n"+
             "}"
-        ]
+        };
 
         runNegativeTest(sources,
             "----------\n" +
@@ -598,13 +607,13 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             (GroovyUtils.isAtLeastGroovy(23)?
             "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n":
             "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(GroovyUtils.isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":""))+(GroovyUtils.isAtLeastGroovy(23)?"":"\n") +
-            "----------\n")
+            "----------\n");
     }
 
-    void testCompileStatic3() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testCompileStatic3() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "import groovy.transform.CompileStatic;\n"+
             "\n"+
@@ -612,15 +621,15 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "   int littleInt = 3\n"+
             "   Integer objectInt = littleInt\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testCompileStatic_1511() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testCompileStatic_1511() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n"+
             "def meth() {\n"+
@@ -630,15 +639,15 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "   println 'abc'\n"+
             "}\n"+
             "meth();"
-        ]
+        };
 
-        runConformTest(sources, "abc")
+        runConformTest(sources, "abc");
     }
 
-    void testCompileStatic_1505() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testCompileStatic_1505() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "DynamicQuery.groovy",
             "import groovy.transform.TypeChecked\n"+
             "@TypeChecked\n"+
@@ -652,15 +661,15 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "       print 'abc';\n"+
             "   }\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources, "abc")
+        runConformTest(sources, "abc");
     }
 
-    void _testCompileStatic_1506() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void _testCompileStatic_1506() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        String[] sources = [
+        String[] sources = {
             "LoggerTest.groovy",
             "import groovy.transform.TypeChecked\n"+
             "import groovy.util.logging.*\n"+
@@ -673,16 +682,16 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "           log.info(\"foo\")\n"+
             "       }\n"+
             "   }\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testCompileStatic4() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+    public void testCompileStatic4() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
-        String[] sources = [
+        String[] sources = {
             "A.groovy",
             "class A {\n"+
             "   public void profile(String name, groovy.lang.Closure<?> callable) { }\n"+
@@ -699,40 +708,39 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "   }\n"+
             "\n"+
             "}\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testCompileDynamic() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+    public void testCompileDynamic() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
-        String[] sources = [
-            'A.groovy', '''
-            @groovy.transform.CompileStatic
-            class A {
-                int prop
-                int computeStatic(int input) {
-                    prop + input
-                }
-                @groovy.transform.CompileDynamic
-                int computeDynamic(int input) {
-                    missing(prop, input)
-                }
-            }
-            '''
-        ]
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "    int prop\n" +
+            "    int computeStatic(int input) {\n" +
+            "        prop + input\n" +
+            "    }\n" +
+            "    @groovy.transform.CompileDynamic\n" +
+            "    int computeDynamic(int input) {\n" +
+            "        missing(prop, input)\n" +
+            "    }\n" +
+            "}"
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testTransforms_BasicLogging() {
-        Map options = getCompilerOptions()
-        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile())
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test")
+    public void testTransforms_BasicLogging() throws Exception {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, getJarPath("astTransformations/transforms.jar"));
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
 
         // From: http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-        String[] sources = [
+        String[] sources = {
             "examples/local/LoggingExample.groovy",
             "package examples.local\n"+
             "\n"+
@@ -805,7 +813,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
 //          "@GroovyASTTransformationClass([\"examples.local.LoggingASTTransformation\"])\n"+
 //          "public @interface WithLogging {\n"+
 //          "}\n"
-        ]
+        };
 
         runConformTest(sources,
             "Hello World\n" +
@@ -817,14 +825,14 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             true,
             null,
             options,
-            null)
+            null);
     }
 
-    void testTransforms_AtLog() {
+    public void testTransforms_AtLog() {
         // See
         // https://jira.codehaus.org/browse/GRECLIPSE-1503
         // https://jira.codehaus.org/browse/GROOVY-5736
-        String[] sources = [
+        String[] sources = {
             "examples/local/Log4jExample.groovy",
             "package examples.local\n" +
             "import groovy.util.logging.*\n" +
@@ -864,19 +872,19 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
                     "    logger.info('yay!')\n" +
                     "  }\n" +
                     "}"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testJDTClassNode_1731() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+    public void testJDTClassNode_1731() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         // Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
         // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
         // the described constructs across the Java/Groovy divide.
 
-        String[] sources = [
+        String[] sources = {
             "c/Main.java",
             "package c;\n" +
             "import java.lang.reflect.Method;\n" +
@@ -926,13 +934,13 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "    @SampleAnnotation\n" +
             "    def something() {}\n" +
             "}\n"
-        ]
+        };
 
-        runConformTest(sources, "@a.SampleAnnotation()")
+        runConformTest(sources, "@a.SampleAnnotation()");
     }
 
-    void testImmutable_1723() {
-        String[] sources = [
+    public void testImmutable_1723() {
+        String[] sources = {
             "c/Main.java",
             "package c;\n" +
             "public class Main {\n" +
@@ -956,20 +964,20 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "class SomeValueObject {\n" +
             "    SomeId id\n" +
             "}\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
 
-        GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy")
-        ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject")
-        FieldNode field = classNode.getField("id")
-        ClassNode type = field.getType()
-        List annotations = type.getAnnotations(ClassHelper.make(groovy.transform.Immutable))
-        assertEquals(1, annotations.size())
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject");
+        FieldNode field = classNode.getField("id");
+        ClassNode type = field.getType();
+        List<AnnotationNode> annotations = type.getAnnotations(ClassHelper.make(groovy.transform.Immutable.class));
+        assertEquals(1, annotations.size());
     }
 
     public void testGrab() {
-        String[] sources = [
+        String[] sources = {
             "Printer.groovy",
             "import groovy.lang.Grab;\n"+
             "\n"+
@@ -978,9 +986,9 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "      def dt = new org.joda.time.DateTime()\n"+
             "}\n"+
             "printDate()"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
     /**
@@ -993,7 +1001,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
      */
     public void testGrabWithErrors() {
         if (GroovyUtils.isGroovy21() || GroovyUtils.isGroovy22()) {
-            String[] sources = [
+            String[] sources = {
                 "Grab1.groovy",
                 "\n"+
                 "@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
@@ -1009,7 +1017,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
                 "       new C().printDate()\n"+
                 "   }\n"+
                 "}\n"
-            ]
+            };
 
             runNegativeTest(sources,
                 "----------\n" +
@@ -1022,12 +1030,12 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
                 "\tdef world = new org.aspectj.weaver.bcel.BcelWorld();\n" +
                 "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
                 "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
-                "----------\n")
+                "----------\n");
         }
     }
 
     public void testGrabError() {
-        String[] sources = [
+        String[] sources = {
             "Printer.groovy",
             "import groovy.lang.Grab;\n"+
             "\n"+
@@ -1036,13 +1044,13 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "      def dt = new org.joda.time.DateTime()\n"+
             "}\n"+
             "printDate()"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
     public void testGrabScriptAndImports_GRE680() {
-        String[] sources = [
+        String[] sources = {
             "Script.groovy",
             "import org.mortbay.jetty.Server\n"+
             "import org.mortbay.jetty.servlet.*\n"+
@@ -1051,43 +1059,41 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "@Grab(group = 'org.mortbay.jetty', module = 'jetty-embedded', version = '6.1.0')\n"+
             "def runServer(duration) {  }\n"+
             "runServer(10000)\n"
-        ]
+        };
 
-        runConformTest(sources)
+        runConformTest(sources);
     }
 
-    void testTransforms_Gaelyk() {
+    public void testTransforms_Gaelyk() throws Exception {
         // See https://jira.codehaus.org/browse/GRECLIPSE-1639
         if (isJRELevel(AbstractCompilerTest.F_1_8) || isJRELevel(AbstractCompilerTest.F_1_7)) {
-            return
+            return;
         }
-        float classVersion = Float.parseFloat(System.getProperty("java.class.version"))
+        float classVersion = Float.parseFloat(System.getProperty("java.class.version"));
         if (classVersion < 51.0f) {
-            System.out.println("TEST DISABLED: Gaelyk requires a java.class.version of 51.0 or greater. This JRE is java.class.version " + classVersion +
-                    "\nand you are running Java version " + System.getProperty("java.version"))
-            return
+            System.out.println("TEST DISABLED: Gaelyk requires a java.class.version of 51.0 or greater. This JRE is java.class.version " + classVersion + "\nand you are running Java version " + System.getProperty("java.version"));
+            return;
         }
-        Map options = getCompilerOptions()
-        String[] defaultClassPaths = getDefaultClassPaths()
-        String[] augmented = new String[defaultClassPaths.length + 2]
-        System.arraycopy(defaultClassPaths, 0, augmented, 0,
-                defaultClassPaths.length)
-        augmented[augmented.length-1] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("gaelyk-2.0.jar")).getFile()
-        augmented[augmented.length-2] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("appengine-api-1.0-sdk-1.8.0.jar")).getFile()
 
-        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("gaelyk-2.0.jar")).getFile()
-                + File.pathSeparator + FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("appengine-api-1.0-sdk-1.8.0.jar")).getFile())
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test")
+        Map<String, String> options = getCompilerOptions();
+        String[] defaultClassPaths = getDefaultClassPaths();
+        String[] augmented = new String[defaultClassPaths.length + 2];
+        System.arraycopy(defaultClassPaths, 0, augmented, 0, defaultClassPaths.length);
+        augmented[augmented.length-1] = getJarPath("gaelyk-2.0.jar");
+        augmented[augmented.length-2] = getJarPath("appengine-api-1.0-sdk-1.8.0.jar");
 
-        String[] sources = [
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, getJarPath("gaelyk-2.0.jar") + File.pathSeparator + getJarPath("appengine-api-1.0-sdk-1.8.0.jar"));
+
+        String[] sources = {
             "Foo.groovy",
             "import groovyx.gaelyk.datastore.Entity\r\n" +
             "@Entity\n" +
             "class Avatar{}\n" +
             "println 'done'"
-        ]
+        };
 
-        runConformTest(sources, "done", augmented, true, null, options, null)
+        runConformTest(sources, "done", augmented, true, null, options, null);
     }
 
     // FIXASC1) test mechanism for running JUnit based tests not yet in place for these Spock tests

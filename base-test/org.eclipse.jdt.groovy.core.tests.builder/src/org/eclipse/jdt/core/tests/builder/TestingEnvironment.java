@@ -1332,6 +1332,6 @@ public void cleanBuild() {
 	}
 
 	public void addJUnitJar(IPath projectPath) throws Exception {
-		addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib/junit-4.3.1.jar")).getFile());
+		addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib/junit4_4.5.0.jar")).getFile());
 	}
 }
