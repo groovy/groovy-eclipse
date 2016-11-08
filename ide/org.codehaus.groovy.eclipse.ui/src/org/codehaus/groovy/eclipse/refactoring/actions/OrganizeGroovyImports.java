@@ -53,6 +53,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -113,6 +114,15 @@ public class OrganizeGroovyImports {
         private ClassNode current;
 
         @Override
+        protected void visitAnnotation(AnnotationNode annotation) {
+            // skip nodes added by an annotation collector transformation
+            if (annotation.getNodeMetaData("AnnotationCollector") == null) {
+                handleType(annotation.getClassNode(), true);
+            }
+            super.visitAnnotation(annotation);
+        }
+
+        @Override
         public void visitCastExpression(CastExpression expression) {
             handleType(expression.getType(), false);
             super.visitCastExpression(expression);
@@ -123,6 +133,17 @@ public class OrganizeGroovyImports {
             if (expression.getEnd() > 0) {
                 handleType(expression.getType(), false);
             }
+        }
+
+        @Override
+        public void visitClosureExpression(ClosureExpression expression) {
+            Parameter[] parameters = expression.getParameters();
+            if (parameters != null) {
+                for (Parameter param : parameters) {
+                    handleType(param.getType(), false);
+                }
+            }
+            super.visitClosureExpression(expression);
         }
 
         @Override
@@ -252,29 +273,15 @@ public class OrganizeGroovyImports {
         }
 
         @Override
-        protected void visitAnnotation(AnnotationNode node) {
-            // skip over nodes added by an annotation collector transformation
-            if (node.getNodeMetaData("AnnotationCollector") == null) {
-                handleType(node.getClassNode(), true);
-            }
-            super.visitAnnotation(node);
-        }
-
-        @Override
         public void visitCatchStatement(CatchStatement node) {
             handleType(node.getVariable().getType(), false);
             super.visitCatchStatement(node);
         }
 
         @Override
-        public void visitClosureExpression(ClosureExpression node) {
-            Parameter[] parameters = node.getParameters();
-            if (parameters != null) {
-                for (Parameter param : parameters) {
-                    handleType(param.getType(), false);
-                }
-            }
-            super.visitClosureExpression(node);
+        public void visitForLoop(ForStatement node) {
+            handleType(node.getVariable().getType(), false);
+            super.visitForLoop(node);
         }
 
         //
@@ -282,7 +289,7 @@ public class OrganizeGroovyImports {
         /**
          * Assume dynamic variables are a candidate for organize imports, but
          * only if name begins with a capital letter and does not match the
-         * canonical static constant naming.  This will hopefully filter out
+         * idiomatic static constant naming.  This will hopefully filter out
          * most false positives, but will miss types that start with lower case.
          */
         private void handleVariable(VariableExpression expr) {
@@ -297,8 +304,8 @@ public class OrganizeGroovyImports {
         }
 
         /**
-         * add the type name to missingTypes if it is not resolved
-         * ensure that we don't remove the import if the type is resolved
+         * Adds the type name to missingTypes if it is not resolved or ensures
+         * that the import will be retained if the type is resolved.
          */
         private void handleType(ClassNode node, boolean isAnnotation) {
             int start = Math.max(node.getNameStart(), node.getStart()),
@@ -322,14 +329,15 @@ public class OrganizeGroovyImports {
                     }
                 }
             } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
-                assert getBaseType(node).getEnd() < until;
+assert start <= getBaseType(node).getStart();
+assert until <= 0 || getBaseType(node).getEnd() < until;
+
+                start = getBaseType(node).getStart();
                 until = getBaseType(node).getEnd();
             }
 
             int length = until - start;
             String name = getTypeName(node);
-
-//System.err.printf("Found referenced type '%s' at %s%n", name, new SourceRange(start, length));
 
             if (!node.isResolved() && node.redirect() != current) {
                 // aliases come through as unresolved types

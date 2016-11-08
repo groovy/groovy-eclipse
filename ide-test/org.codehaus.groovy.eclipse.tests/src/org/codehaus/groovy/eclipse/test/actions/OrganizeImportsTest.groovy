@@ -15,11 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import groovy.transform.TypeChecked
+
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 
 /**
  * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}
  */
+@TypeChecked
 final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testAddImport1() {
@@ -333,11 +336,72 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainImport2() {
+        String contents = '''\
+            import java.lang.reflect.Method
+            for (Method m : Object.class.getDeclaredMethods()) {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport3() {
+        String contents = '''\
+            import java.lang.reflect.Method
+            for (Method m in Object.class.getDeclaredMethods()) {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport4() {
         // generics make the node length > "java.util.concurrent.Callable".length()
         String contents = '''\
             import java.util.concurrent.Callable
             class C implements Callable<java.util.List<java.lang.Object>> {
               List<Object> call() { }
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport5() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            class C {
+              @Lazy Pattern p = ~/123/
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport6() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            class C {
+              @Lazy def p = Pattern.compile('123')
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport7() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            class C {
+              @Lazy def p = compile('123')
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport8() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            class C {
+              @groovy.transform.Memoized
+              def meth() {
+                compile('123')
+              }
             }
             '''
         doContentsCompareTest(contents, contents)
