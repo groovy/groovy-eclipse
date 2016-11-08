@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2014 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ import org.osgi.framework.BundleContext;
 
 public class GroovyActivator extends Plugin {
 
-    public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
+    public static final String PLUGIN_ID = "org.codehaus.groovy";
 
-    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.0.7.jar"; //$NON-NLS-1$
+    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.0.8.jar";
 
     public static URL GROOVY_ALL_JAR_URL;
 

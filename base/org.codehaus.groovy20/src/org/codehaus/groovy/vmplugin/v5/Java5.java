@@ -412,7 +412,8 @@ public class Java5 implements VMPlugin {
             front.setRedirect(back);
             return front;
         }
-        return back;//.getPlainNodeReference(); // GRECLIPSE did we remove the getPlain at some point???
+        // GRECLIPSE edit -- prevent stack overflow
+        return back;//.getPlainNodeReference();
     }
 
     private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {
