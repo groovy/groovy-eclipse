@@ -16,19 +16,12 @@
 
 package org.codehaus.groovy.ast;
 
-import groovy.lang.Closure;
-import groovy.lang.GString;
-import groovy.lang.GroovyInterceptable;
-import groovy.lang.GroovyObject;
-import groovy.lang.GroovyObjectSupport;
-import groovy.lang.MetaClass;
-import groovy.lang.Range;
-import groovy.lang.Reference;
-import groovy.lang.Script;
+import groovy.lang.*;
+
+import org.codehaus.groovy.runtime.GeneratedClosure;
+import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.annotation.Annotation;
-import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
@@ -36,45 +29,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
-
-import org.codehaus.groovy.runtime.GeneratedClosure;
-import org.codehaus.groovy.vmplugin.VMPluginFactory;
+import java.lang.annotation.Annotation;
+import java.lang.ref.SoftReference;
 
 /**
  * This class is a Helper for ClassNode and classes handling ClassNodes.
- * It does contain a set of predefined ClassNodes for the most used
- * types and some code for cached ClassNode creation and basic
- * ClassNode handling
- *
+ * It does contain a set of predefined ClassNodes for the most used 
+ * types and some code for cached ClassNode creation and basic 
+ * ClassNode handling 
+ * 
  * @author Jochen Theodorou
  */
 public class ClassHelper {
 
-    // GRECLIPSE: start: made public, was private
-    public static final Class[] classes = new Class[] {
+    private static final Class[] classes = new Class[] {
         Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
         Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
         Closure.class, GString.class, List.class, Map.class, Range.class,
-        Pattern.class, Script.class, String.class,  Boolean.class,
+        Pattern.class, Script.class, String.class,  Boolean.class, 
         Character.class, Byte.class, Short.class, Integer.class, Long.class,
-        Double.class, Float.class, BigDecimal.class, BigInteger.class,
-        Number.class, Void.class, Reference.class, Class.class, MetaClass.class,
+        Double.class, Float.class, BigDecimal.class, BigInteger.class, 
+        Number.class, Void.class, Reference.class, Class.class, MetaClass.class, 
         Iterator.class, GeneratedClosure.class, GroovyObjectSupport.class
     };
 
     private static final String[] primitiveClassNames = new String[] {
-        "", "boolean", "char", "byte", "short",
+        "", "boolean", "char", "byte", "short", 
         "int", "long", "double", "float", "void"
     };
-
-    public static final ClassNode
+    
+    public static final ClassNode 
         DYNAMIC_TYPE = makeCached(Object.class),  OBJECT_TYPE = DYNAMIC_TYPE,
         VOID_TYPE = makeCached(Void.TYPE),        CLOSURE_TYPE = makeCached(Closure.class),
         GSTRING_TYPE = makeCached(GString.class), LIST_TYPE = makeWithoutCaching(List.class),
-        MAP_TYPE = makeWithoutCaching(Map.class),         RANGE_TYPE = makeCached(Range.class),
+        MAP_TYPE = makeWithoutCaching(Map.class), RANGE_TYPE = makeCached(Range.class),
         PATTERN_TYPE = makeCached(Pattern.class), STRING_TYPE = makeCached(String.class),
         SCRIPT_TYPE = makeCached(Script.class),   REFERENCE_TYPE = makeWithoutCaching(Reference.class),
-
+        
         boolean_TYPE = makeCached(boolean.class),     char_TYPE = makeCached(char.class),
         byte_TYPE = makeCached(byte.class),           int_TYPE = makeCached(int.class),
         long_TYPE = makeCached(long.class),           short_TYPE = makeCached(short.class),
@@ -86,37 +77,36 @@ public class ClassHelper {
         BigInteger_TYPE =  makeCached(java.math.BigInteger.class),
         BigDecimal_TYPE = makeCached(java.math.BigDecimal.class),
         Number_TYPE = makeCached(Number.class),
-
+        
         void_WRAPPER_TYPE = makeCached(Void.class),   METACLASS_TYPE = makeCached(MetaClass.class),
         Iterator_TYPE = makeCached(Iterator.class),
 
         // uncached constants.
-        CLASS_Type = makeWithoutCaching(Class.class), COMPARABLE_TYPE = makeWithoutCaching(Comparable.class),
+        CLASS_Type = makeWithoutCaching(Class.class), COMPARABLE_TYPE = makeWithoutCaching(Comparable.class),        
         GENERATED_CLOSURE_Type = makeWithoutCaching(GeneratedClosure.class),
         GROOVY_OBJECT_SUPPORT_TYPE = makeWithoutCaching(GroovyObjectSupport.class),
         GROOVY_OBJECT_TYPE = makeWithoutCaching(GroovyObject.class),
         GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class),
-
+        
         // GRECLIPSE start: GROOVY-6184 Resolve the enum and annotation ClassNodes
-        // old
-//                Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
-//                Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
-        // new
+        /* old
+        Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
+        Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
+         new */
         Enum_Type = make(Enum.class, true),
         Annotation_TYPE = make(Annotation.class, true),
         // GRECLIPSE end
         ELEMENT_TYPE_TYPE = new ClassNode("java.lang.annotation.ElementType",0,Enum_Type)
         ;
-
-
+        
+        
     // GRECLIPSE start: GROOVY-6184
-    // old
-//            static {
-//                Enum_Type.isPrimaryNode = false;
-//                Annotation_TYPE.isPrimaryNode = false;
-//            }
+    /*static {
+        Enum_Type.isPrimaryNode = false;
+        Annotation_TYPE.isPrimaryNode = false;
+    }*/
     // GRECLIPSE end
-
+    
     private static ClassNode[] types = new ClassNode[] {
         OBJECT_TYPE,
         boolean_TYPE, char_TYPE, byte_TYPE, short_TYPE,
@@ -128,34 +118,22 @@ public class ClassHelper {
         Double_TYPE, Float_TYPE, BigDecimal_TYPE, BigInteger_TYPE,
         Number_TYPE,
         void_WRAPPER_TYPE, REFERENCE_TYPE, CLASS_Type, METACLASS_TYPE,
-        Iterator_TYPE, GENERATED_CLOSURE_Type, GROOVY_OBJECT_SUPPORT_TYPE,
+        Iterator_TYPE, GENERATED_CLOSURE_Type, GROOVY_OBJECT_SUPPORT_TYPE, 
         GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
 
-    @SuppressWarnings("unused")
-    private static ClassNode[] numbers = new ClassNode[] {
-        char_TYPE, byte_TYPE, short_TYPE, int_TYPE, long_TYPE,
-        double_TYPE, float_TYPE, Short_TYPE, Byte_TYPE, Character_TYPE,
-        Integer_TYPE, Float_TYPE, Long_TYPE, Double_TYPE, BigInteger_TYPE,
-        BigDecimal_TYPE
-    };
-
     protected static final ClassNode[] EMPTY_TYPE_ARRAY = {};
-
+    
     public static final String OBJECT = "java.lang.Object";
-
 
     public static ClassNode makeCached(Class c){
         final SoftReference<ClassNode> classNodeSoftReference = ClassHelperCache.classCache.get(c);
         ClassNode classNode;
         if (classNodeSoftReference == null || (classNode = classNodeSoftReference.get()) == null) {
-            // GRECLIPSE: start: made public, was private
-            /* old
-            classNode = new ClassNode(c);
-            */
-            // new
+            // GRECLIPSE edit
+            //classNode = new ClassNode(c);
             classNode = new ImmutableClassNode(c);
-            // GRECLIPSE: end
+            // GRECLIPSE end
             ClassHelperCache.classCache.put(c, new SoftReference<ClassNode>(classNode));
 
             VMPluginFactory.getPlugin().setAdditionalClassInformation(classNode);
@@ -163,10 +141,10 @@ public class ClassHelper {
 
         return classNode;
     }
-
+    
     /**
      * Creates an array of ClassNodes using an array of classes.
-     * For each of the given classes a new ClassNode will be
+     * For each of the given classes a new ClassNode will be 
      * created
      * @see #make(Class)
      * @param classes an array of classes used to create the ClassNodes
@@ -177,22 +155,22 @@ public class ClassHelper {
         for (int i=0; i<cns.length; i++) {
             cns[i] = make(classes[i]);
         }
-
+        
         return cns;
     }
-
+    
     /**
      * Creates a ClassNode using a given class.
      * A new ClassNode object is only created if the class
      * is not one of the predefined ones
-     *
+     * 
      * @param c class used to created the ClassNode
      * @return ClassNode instance created from the given class
      */
     public static ClassNode make(Class c) {
         return make(c,true);
     }
-
+    
     public static ClassNode make(Class c, boolean includeGenerics) {
         for (int i=0; i<classes.length; i++) {
             if (c==classes[i]) return types[i];
@@ -203,11 +181,11 @@ public class ClassHelper {
         }
         return makeWithoutCaching(c,includeGenerics);
     }
-
+    
     public static ClassNode makeWithoutCaching(Class c){
         return makeWithoutCaching(c,true);
     }
-
+    
     public static ClassNode makeWithoutCaching(Class c, boolean includeGenerics){
         if (c.isArray()) {
             ClassNode cn = makeWithoutCaching(c.getComponentType(),includeGenerics);
@@ -224,58 +202,58 @@ public class ClassHelper {
             return t;
         }
     }
-
-
+    
+    
     /**
      * Creates a ClassNode using a given class.
      * Unlike make(String) this method will not use the cache
      * to create the ClassNode. This means the ClassNode created
      * from this method using the same name will have a different
      * reference
-     *
+     * 
      * @see #make(String)
      * @param name of the class the ClassNode is representing
      */
-    public static ClassNode makeWithoutCaching(String name) {
+    public static ClassNode makeWithoutCaching(String name) { 
         ClassNode cn = new ClassNode(name,Opcodes.ACC_PUBLIC,OBJECT_TYPE);
         cn.isPrimaryNode = false;
         return cn;
     }
-
+    
     /**     * Creates a ClassNode using a given class.
-     * If the name is one of the predefined ClassNodes then the
+     * If the name is one of the predefined ClassNodes then the 
      * corresponding ClassNode instance will be returned. If the
      * name is null or of length 0 the dynamic type is returned
-     *
+     * 
      * @param name of the class the ClassNode is representing
      */
     public static ClassNode make(String name) {
         if (name == null || name.length() == 0) return DYNAMIC_TYPE;
-
+        
         for (int i=0; i<primitiveClassNames.length; i++) {
             if (primitiveClassNames[i].equals(name)) return types[i];
         }
-
+        
         for (int i=0; i<classes.length; i++) {
             String cname = classes[i].getName();
             if (name.equals(cname)) return types[i];
-        }
+        }        
         return makeWithoutCaching(name);
     }
-
+    
     /**
-     * Creates a ClassNode containing the wrapper of a ClassNode
+     * Creates a ClassNode containing the wrapper of a ClassNode 
      * of primitive type. Any ClassNode representing a primitive
      * type should be created using the predefined types used in
-     * class. The method will check the parameter for known
+     * class. The method will check the parameter for known 
      * references of ClassNode representing a primitive type. If
      * Reference is found, then a ClassNode will be contained that
      * represents the wrapper class. For example for boolean, the
      * wrapper class is java.lang.Boolean.
-     *
-     * If the parameter is no primitive type, the redirected
-     * ClassNode will be returned
-     *
+     * 
+     * If the parameter is no primitive type, the redirected 
+     * ClassNode will be returned 
+     *   
      * @see #make(Class)
      * @see #make(String)
      * @param cn the ClassNode containing a possible primitive type
@@ -337,7 +315,7 @@ public class ClassHelper {
      * Test to determine if a ClassNode is a primitive type.
      * Note: this only works for ClassNodes created using a
      * predefined ClassNode
-     *
+     * 
      * @see #make(Class)
      * @see #make(String)
      * @param cn the ClassNode containing a possible primitive type

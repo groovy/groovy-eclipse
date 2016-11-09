@@ -16,6 +16,16 @@
 
 package org.codehaus.groovy.transform;
 
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.*;
+import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.control.messages.WarningMessage;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.GroovyException;
+
 import groovy.lang.GroovyClassLoader;
 
 import java.io.BufferedReader;
@@ -23,35 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
-import org.codehaus.groovy.GroovyException;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.classgen.GeneratorContext;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.CompilationUnit;
-import org.codehaus.groovy.control.CompilePhase;
-import org.codehaus.groovy.control.Phases;
-import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.messages.SimpleMessage;
-import org.codehaus.groovy.control.messages.WarningMessage;
-import org.codehaus.groovy.eclipse.GroovyLogManager;
-import org.codehaus.groovy.eclipse.TraceCategory;
-import org.codehaus.groovy.syntax.SyntaxException;
+import java.util.*;
 
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
@@ -149,6 +131,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             // second pass, call visit on all of the collected nodes
             for (ASTNode[] node : targetNodes) {
                 for (ASTTransformation snt : transforms.get(node[0])) {
+                    // GRECLIPSE add
                 	try {
                 		long stime = System.nanoTime();
                 		boolean okToSet = source!=null && source.getErrorCollector()!=null;
@@ -156,7 +139,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=true; 
                 			}
-	                		snt.visit(node, source);
+                    // GRECLIPSE end
+                    snt.visit(node, source);
+                    // GRECLIPSE add
                 		} finally {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=false;
@@ -178,7 +163,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 		sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined? http://groovy.codehaus.org/Eclipse+Plugin+2.0.0+FAQ#EclipsePlugin2.0.0FAQ-Q.DoesitsupportcustomASTtransformations%3F");
                 		source.addError(new SyntaxException(sb.toString(), ncdfe, 0, 0));
                 	}
-                	// GRECLIPSE - end
+                    // GRECLIPSE end
                 }
             }
         }
@@ -197,7 +182,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
-    
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
         addGlobalTransforms(compilationUnit);
@@ -236,7 +220,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
-
+    
     public static void addGlobalTransformsAfterGrab() {
         doAddGlobalTransforms(compUnit, false);
     }
@@ -256,7 +240,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
                 String className;
-                
                 // GRECLIPSE: start: don't consume our own META-INF entries - bit of a hack...
 //                try {
 //                	// this unfortunately also prevents the execution of transforms from project dependencies!
@@ -277,10 +260,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 // was
                 // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
                 // now
-           
                 InputStream is = service.openStream();
                 BufferedReader svcIn = new BufferedReader(new InputStreamReader(is));
-               
                 // end
                 try {
                     className = svcIn.readLine();
@@ -394,7 +375,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     	}
     }
     // GRECLIPSE: end
-    
+
     private static void addPhaseOperationsForGlobalTransforms(CompilationUnit compilationUnit, 
             Map<String, URL> transformNames, boolean isFirstScan) {
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();

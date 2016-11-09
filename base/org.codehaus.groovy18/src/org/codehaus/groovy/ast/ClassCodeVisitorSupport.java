@@ -53,7 +53,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         node.visitContents(this);
         visitObjectInitializerStatements(node);
     }
-
+    
     protected void visitObjectInitializerStatements(ClassNode node) {
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -208,13 +208,13 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         // end
         
         SourceUnit source = getSourceUnit();
-		source.getErrorCollector().addErrorAndContinue(
+        source.getErrorCollector().addErrorAndContinue(
                 // GRECLIPSE: start
                 new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
                 // end
         );
     }
-    
+
     // GRECLIPSE start
     protected void addTypeError(String msg, ClassNode expr ) {
         int line = expr.getLineNumber();

@@ -81,12 +81,12 @@ public class MethodCallExpression extends Expression {
         answer.setSafe(safe);
         answer.setSpreadSafe(spreadSafe);
         answer.setImplicitThis(implicitThis);
+        answer.setSourcePosition(this);
+        answer.setMethodTarget(target);
         // GRECLIPSE add
         answer.setGenericsTypes(genericsTypes);
-        // GRECLIPSE end
-        answer.setMethodTarget(target);
-        answer.setSourcePosition(this);
         answer.copyNodeMetaData(this);
+        // GRECLIPSE end
         return answer;
     }
 

@@ -26,22 +26,15 @@ import java.util.Set;
  * @see ClassNode
  */
 public class GenericsType extends ASTNode {
-	/**
-	 * Andys observations:
-	 * - this is used to represent either a type variable with bounds (T extends I) or type parameter value (<String>).  In the former I think
-	 * just the name and bounds are used, whilst in the latter the type is used.  If the name is used then it is a placeholder.
-	 * but why does the first constructor take a set of parameters that wouldn't seem to make sense together?
-	 * 
-	 */
-	// GRECLIPSE: start: five from private to protected and first two non-final 
-    protected ClassNode[] upperBounds;
-    protected ClassNode lowerBound;
-    protected ClassNode type;
-    protected String name;
-    protected boolean placeholder;
+    // GRECLIPSE edit
+    private /*final*/ ClassNode[] upperBounds;
+    private /*final*/ ClassNode lowerBound;
+    private ClassNode type;
+    private String name;
+    private boolean placeholder;
     private boolean resolved;
     private boolean wildcard;
-    
+
     public GenericsType(ClassNode type, ClassNode[] upperBounds, ClassNode lowerBound) {
         this.type = type;
         this.name = type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getName();
@@ -50,42 +43,19 @@ public class GenericsType extends ASTNode {
         placeholder = type.isGenericsPlaceHolder();
         resolved = false;
     }
-    // GRECLIPSE: start
-    public GenericsType() {}
-    
-    public String toDetailsString() {
-    	StringBuilder s = new StringBuilder();
-    	s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
-    	s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
-    	s.append(",type=").append(type);
-    	if (lowerBound!=null) {
-    		s.append(",lowerBound=").append(lowerBound);
-    	}
-    	if (upperBounds!=null) {
-    	s.append(",upperBounds=[");
-    	for (int i=0;i<upperBounds.length;i++) {
-    		if (i>0) { s.append(","); }
-    		s.append(upperBounds[i]);
-    	}
-    	}
-    	s.append("]]");
-    	s.append(this.getClass().getName());
-    	return s.toString();
-    }
-    // end
-        
+
     public GenericsType(ClassNode basicType) {
-        this(basicType,null,null);
+        this(basicType, null, null);
     }
 
     public ClassNode getType() {
         return type;
     }
-    
+
     public void setType(ClassNode type) {
         this.type = type;
     }
-    
+
     public String toString() {
         Set<String> visited = new HashSet<String>();
         return toString(visited);
@@ -129,39 +99,44 @@ public class GenericsType extends ASTNode {
         ret += ">";
         return ret;
     }
-    /* GRECLIPSE delete these on 1.8.6 upgrade if the 1.8.5 tostring is behaving
-    public String toString() {
-        String ret = (type == null || placeholder || wildcard) ? name : genericsBounds(type);
-        if (upperBounds!=null) {
-            ret += " extends ";
-            for (int i = 0; i < upperBounds.length; i++) {
-                ret += genericsBounds(upperBounds[i]);
-                if (i+1<upperBounds.length) ret += " & ";
-            }
-        } else if (lowerBound!=null) {
-            ret += " super " + genericsBounds(lowerBound);
+
+    // GRECLIPSE: start
+    public GenericsType() {}
+
+    public String toDetailsString() {
+        StringBuilder s = new StringBuilder();
+        s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
+        s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
+        s.append(",type=").append(type);
+        if (lowerBound!=null) {
+            s.append(",lowerBound=").append(lowerBound);
         }
-        return ret;
+        if (upperBounds!=null) {
+            s.append(",upperBounds=[");
+            for (int i=0;i<upperBounds.length;i++) {
+                if (i>0) { s.append(","); }
+                s.append(upperBounds[i]);
+            }
+        }
+        s.append("]]");
+        s.append(this.getClass().getName());
+        return s.toString();
     }
 
-    private String genericsBounds(ClassNode theType) {
-        String ret = theType.getName();
-        GenericsType[] genericsTypes = theType.getGenericsTypes();
-        if (genericsTypes == null || genericsTypes.length == 0) return ret;
-        ret += "<";
-        for (int i = 0; i < genericsTypes.length; i++) {
-            if (i != 0) ret += ", ";
-            ret += genericsTypes[i].toString();
-        }
-        ret += ">";
-        return ret;
-    }*/
+    public void setLowerBound(ClassNode bound) {
+        this.lowerBound = bound;
+    }
+
+    public void setUpperBounds(ClassNode[] bounds) {
+        this.upperBounds = bounds;
+    }
+    // end
 
     public ClassNode[] getUpperBounds() {
         return upperBounds;
     }
-    
-    public String getName(){
+
+    public String getName() {
         return name;
     }
 
@@ -173,11 +148,11 @@ public class GenericsType extends ASTNode {
         this.placeholder = placeholder;
         type.setGenericsPlaceHolder(placeholder);
     }
-    
+
     public boolean isResolved() {
         return resolved || placeholder;
     }
-    
+
     public void setResolved(boolean res) {
         resolved = res;
     }
@@ -193,18 +168,8 @@ public class GenericsType extends ASTNode {
     public void setWildcard(boolean wildcard) {
         this.wildcard = wildcard;
     }
-    
+
     public ClassNode getLowerBound() {
         return lowerBound;
     }
-    
-    // GRECLIPSE: start
-	public void setUpperBounds(ClassNode[] bounds) {
-		this.upperBounds = bounds;		
-	}
-
-	public void setLowerBound(ClassNode bound) {
-		this.lowerBound = bound;		
-	}
-	// end
 }
