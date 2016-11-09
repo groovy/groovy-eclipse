@@ -32,6 +32,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 
 /**
@@ -49,28 +50,21 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
 
     protected void setUp() throws Exception {
         super.setUp();
-
         IPackageFragment subtestPackFrag = testProject.createPackage(SUBTEST);
         topLevelUnit = createGroovyType(subtestPackFrag, "TopLevelType.groovy", TOP_LEVEL_TYPE);
     }
 
     public void testAddImportField() throws Exception {
-
         String typeToImport = "TopLevelType";
-
+        String typeToAddImport = "BarField";
         String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
-        String typeToAddImport = "BarField";
         String typeToAddImportContent = "class BarField { TopLevelType typeVar }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     public void testBasicAddImportInnerType() throws Exception {
-
         // When an InnerType is referenced with its declaring type, for example,
         // Map.Entry,
         // "Map" is imported. When the InnerType is referenced by it's simple
@@ -82,17 +76,12 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
 
         // This tests the inner type reference by itself: InnerType
         String typeToImport = "InnerType";
-        String innerFullyQualified = "com.test.subtest.TopLevelType.InnerType";
-
-        String expectedQuickFixDisplay = "Import 'InnerType' (com.test.subtest.TopLevelType)";
-
         String typeToAddImport = "BarUsingInner";
+        String innerFullyQualified = "com.test.subtest.TopLevelType.InnerType";
+        String expectedQuickFixDisplay = "Import 'InnerType' (com.test.subtest.TopLevelType)";
         String typeToAddImportContent = "class BarUsingInner { InnerType innerTypeVar }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                innerFullyQualified, expectedQuickFixDisplay, typeToAddImport,
-                typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, innerFullyQualified, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     public void testBasicAddImportInnerType2() throws Exception {
@@ -108,129 +97,84 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
         // This tests the inner type when it also contains the top level type:
         // TopLevelType.InnerType
         String typeToImport = "TopLevelType";
-        String typeToImportFullyQualified = "com.test.subtest.TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-
         String typeToAddImport = "BarUsingInnerB";
+        String typeToImportFullyQualified = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarUsingInnerB { TopLevelType.InnerType innerTypeVar }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                typeToImportFullyQualified, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, typeToImportFullyQualified, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     public void testBasicAddImportInnerInnerType() throws Exception {
-
         String typeToImport = "InnerInnerType";
-        String typeToImportFullyQualified = "com.test.subtest.TopLevelType.InnerType.InnerInnerType";
-
-        String expectedQuickFixDisplay = "Import 'InnerInnerType' (com.test.subtest.TopLevelType.InnerType)";
-
         String typeToAddImport = "BarUsingInnerInner";
+        String typeToImportFullyQualified = "com.test.subtest.TopLevelType.InnerType.InnerInnerType";
+        String expectedQuickFixDisplay = "Import 'InnerInnerType' (com.test.subtest.TopLevelType.InnerType)";
         String typeToAddImportContent = "class BarUsingInnerInner { InnerInnerType innerTypeVar }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                typeToImportFullyQualified, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, typeToImportFullyQualified, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     public void testAddImportReturnType() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarReturnType";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarReturnType { public TopLevelType doSomething() { \n return null \n } }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
      * Tests if an add import resolver can be found if the unresolved type is in a local variable declaration
-     * @throws Exception
      */
     public void testAddImportMethodParameter() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarMethodParameter";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarMethodParameter { public void doSomething(TopLevelType ttI) {  } }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
      * Tests if an add import resolver can be found if the unresolved type is a generic
-     * @throws Exception
      */
     public void testAddImportGeneric() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarGeneric";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarGeneric { List<TopLevelType> aList }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
      * Tests if an add import resolver can be found if a class is extending an unresolved type
-     * @throws Exception
      */
     public void testAddImportSubclassing() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarSubclassing";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarSubclassing extends TopLevelType {  }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
      * Tests if an add import resolver can be found if the unresolved type is in a local variable declaration
-     * @throws Exception
      */
     public void testAddImportLocalVariable() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarLocalVariable";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarLocalVariable  { public void doSomething () { TopLevelType localVar  }  }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
@@ -238,19 +182,13 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
      * the unresolved type is encountered in multiple places in the code.
      */
     public void testAddImportMultipleLocations() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarMultipleLocations";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarMultipleLocations extends TopLevelType { public List<TopLevelType> doSomething () {\n TopLevelType localVar \n return null }  }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
@@ -258,19 +196,13 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
      * unresolved types exist in the Groovy file
      */
     public void testAddImportMultipleUnresolved() throws Exception {
-
         String typeToImport = "TopLevelType";
-
-        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
-        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
         String typeToAddImport = "BarMultipleUnresolved";
-
+        String fullQualifiedTypeToImport = "com.test.subtest.TopLevelType";
+        String expectedQuickFixDisplay = "Import 'TopLevelType' (com.test.subtest)";
         String typeToAddImportContent = "class BarMultipleUnresolved extends TopLevelType { \n CSS css \n HTML val = new Entry() \n  }";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     /**
@@ -296,20 +228,14 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
      * unresolved type that does not exist.
      */
     public void testAddImportNoProposals() throws Exception {
-
         String typeToAddImport = "BarAddImportNoProposal";
         String nonExistantType = "DoesNotExistTopLevelType";
 
         String typeToAddImportContent = "class BarAddImportNoProposal  { public void doSomething () { DoesNotExistTopLevelType localVar  }  }";
+        ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport + ".groovy", typeToAddImportContent);
+        AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(nonExistantType, unit);
 
-        ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport
-                + ".groovy", typeToAddImportContent);
-
-        AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
-                nonExistantType, unit);
-
-        assertNull("Expected no resolver for nonexistant type: "
-                + nonExistantType, resolver);
+        assertNull("Expected no resolver for nonexistant type: " + nonExistantType, resolver);
     }
 
     /**
@@ -324,10 +250,7 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
 
         String typeToAddImportContent = "@Target() public @interface Test {}";
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport,
-                fullQualifiedTypeToImport, expectedQuickFixDisplay,
-                typeToAddImport, typeToAddImportContent);
-
+        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent);
     }
 
     public void testAddGroovyRuntime() throws Exception {
@@ -338,8 +261,7 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
         IMarker[] markers = getProjectJDTFailureMarkers();
         assumeTrue("Should have found problems in this project", markers != null && markers.length > 0);
 
-        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
-                markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit);
+        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit);
         assertEquals("Should have found exactly one resolver", 1, resolvers.size());
         assertEquals("Wrong type of resolver", AddGroovyRuntimeResolver.class, resolvers.get(0).getClass());
         resolvers.get(0).getQuickFixProposals().get(0).apply(null);
@@ -373,10 +295,11 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
                     "Encountered resolvers for unknown compilation error. None expected.",
                     resolvers == null || resolvers.isEmpty());
         }
-
     }
 
     public void testAddImportGRECLIPSE1612() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+
         testProject.createJavaType(testProject.createPackage("other"), "FooJava.java",
                 "package other;\n" +
                 "public class FooJava {\n" +
@@ -387,13 +310,10 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
 
         String typeToAddImport = "FooGroovy";
         String typeToAddImportContent = "@groovy.transform.TypeChecked\nclass FooGroovy {\n def main() { FooJava.getProperty() } }";
-        ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport + ".groovy",
-                typeToAddImportContent);
-
+        ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport + ".groovy", typeToAddImportContent);
         IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
+        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_IMPORTS_TYPE, unit);
 
-        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
-                    markers, ProblemType.MISSING_IMPORTS_TYPE, unit);
         assertEquals("Should have found exactly one resolver", 1, resolvers.size());
         assertEquals("Wrong type of resolver", AddMissingGroovyImportsResolver.class, resolvers.get(0).getClass());
         IJavaCompletionProposal proposal = resolvers.get(0).getQuickFixProposals().get(0);
@@ -401,7 +321,7 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
     }
 
     public void testGRECLIPSE1777() throws Exception {
-        String expectedQuickFixDisplay = "Add cast to Integer";
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
         ICompilationUnit unit = createGroovyTypeInTestPackage("D.groovy",
                 "import groovy.transform.CompileStatic\n" +
@@ -416,20 +336,11 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
                 "    }\n" +
                 "}");
 
-
+        String expectedQuickFixDisplay = "Add cast to Integer";
         AddClassCastResolver resolver = getAddClassCastResolver(unit);
-
         assertNotNull("Expected a resolver for " + unit, resolver);
-
-        AddClassCastProposal proposal = getAddClassCastProposal(
-                expectedQuickFixDisplay, resolver);
-
-        assertNotNull(
-                "Expected a quick fix proposal for " + unit,
-                proposal);
-
-        assertEquals("Actual quick fix display expression should be: "
-                + expectedQuickFixDisplay, expectedQuickFixDisplay,
-                proposal.getDisplayString());
+        AddClassCastProposal proposal = getAddClassCastProposal(expectedQuickFixDisplay, resolver);
+        assertNotNull("Expected a quick fix proposal for " + unit, proposal);
+        assertEquals("Actual quick fix display expression should be: " + expectedQuickFixDisplay, expectedQuickFixDisplay, proposal.getDisplayString());
     }
 }

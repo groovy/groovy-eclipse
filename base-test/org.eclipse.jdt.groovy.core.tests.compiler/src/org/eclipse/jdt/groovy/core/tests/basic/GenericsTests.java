@@ -21,6 +21,7 @@ import junit.framework.Test;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -912,8 +913,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "package p;\n" +
             "public class B extends A<String> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}\n",
 
@@ -936,8 +937,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "package p;\n" +
             "public class B extends A<Impl> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}\n",
 
@@ -955,7 +956,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
-    public void testExtendingGenerics_GroovyExtendsJava3a() {
+    public void testExtendingGenerics_GroovyExtendsJava2a() {
         // TODO create more variations around mixing types up (including generics bounds)
         // variation of above - the interface type is a java file and not a groovy file
         String[] sources = {
@@ -963,8 +964,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "package p;\n" +
             "public class B extends A<Impl> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}\n",
 
@@ -991,8 +992,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "package p;\n" +
             "public class B extends A<Impl> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}\n",
 
@@ -1010,14 +1011,14 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
-    public void testExtendingGenerics_GroovyExtendsJava3_ERROR() {
+    public void testExtendingGenerics_GroovyExtendsJava3() {
         // GRECLIPSE-430: the declaration of B violates the 'T extends I' specification of A
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<String> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    System.out.println( \"success\");\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}\n",
 
@@ -1042,15 +1043,17 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testExtendingGenerics_GroovyExtendsJava4() {
+        if (isJRELevel(AbstractCompilerTest.F_1_8)) return;
+
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends java.util.ArrayList<String> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    B b = new B();\n"+
-            "    b.add(\"abc\");\n"+
-            "    print(b.get(0));\n"+
-            "    System.out.println( \"success\");\n"+
+            "    B b = new B()\n"+
+            "    b.add('abc')\n"+
+            "    print b.get(0)\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "  void print(String msg) { print msg; }\n"+
             "}"
@@ -1060,13 +1063,15 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testExtendingGenerics_GroovyExtendsJava5() {
+        if (isJRELevel(AbstractCompilerTest.F_1_8)) return;
+
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends java.util.ArrayList<String> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}"
         };
@@ -1075,13 +1080,15 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testExtendingGenerics_GroovyExtendsJava5a() {
+        if (isJRELevel(AbstractCompilerTest.F_1_8)) return;
+
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends ArrayList<String> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}"
         };
@@ -1095,8 +1102,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "package p;\n" +
             "public class B extends A<String> {\n" +
             "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
+            "    new B()\n"+
+            "    println 'success'\n"+
             "  }\n"+
             "}\n",
 
@@ -1201,6 +1208,81 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     }
 
     /**
+     * https://issuetracker.springsource.com/browse/STS-3930
+     *
+     * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope#buildFieldsAndMethods()
+     */
+    public void testExtendingGenerics_GroovyExtendsJava11() {
+        String[] sources = {
+            "Groovy.groovy",
+            "class Groovy {\n" +
+            "  static <T> List method(Class<T> factory, ClassLoader loader = Groovy.class.classLoader) {\n" +
+            "    null\n" +
+            "  }\n" +
+            "}",
+
+            "Java.java",
+            "public class Java {\n" +
+            "  public static void method() {\n" +
+            "    Groovy.method(Java.class);\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    /**
+     * https://github.com/groovy/groovy-eclipse/issues/144
+     *
+     * java.lang.NullPointerException
+     *     at org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope.fixupTypeParameters(GroovyClassScope.java:559)
+     */
+    public void testExtendingGenerics_GroovyExtendsJava12() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+
+        String[] sources = {
+            "Template.java",
+            "public interface Template<S> {\n" +
+            "  interface Callback<T,S> {\n" +
+            "    T apply(S context);\n" +
+            "  }\n" +
+            "  <T> T execute(Callback<T,S> callback);\n" +
+            "}",
+
+            "TemplateImpl.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class TemplateImpl<S> implements Template<S> {\n" +
+            "  @Override\n" +
+            "  public <T> T execute(Callback<T,S> callback) {\n" +
+            "    return callback.apply(null)\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    /**
+     * https://github.com/groovy/groovy-eclipse/issues/148
+     */
+    public void testExtendingGenerics_GroovyExtendsJava13() {
+        String[] sources = {
+            "A.java",
+            "public interface A<Q extends A<? super Q>> {\n" +
+            "}",
+
+            "B.groovy",
+            "class B {\n" +
+            "  public void test(A<?> a) {\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    /**
      * https://github.com/groovy/groovy-eclipse/issues/174
      *
      * java.lang.NullPointerException
@@ -1221,7 +1303,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
      */
-    public void _testExtendingGenerics_GroovyExtendsJava11() {
+    public void testExtendingGenerics_GroovyExtendsJava14() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic class Main {\n" +
