@@ -56,7 +56,6 @@ public class LocatedMessage extends SimpleMessage
     }
     // <<<GRECLIPSE
     
-    
     public void write( PrintWriter writer, Janitor janitor )
     {
         if (owner instanceof SourceUnit) {

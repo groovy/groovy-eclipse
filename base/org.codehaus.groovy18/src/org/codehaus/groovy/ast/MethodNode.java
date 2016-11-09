@@ -19,6 +19,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 /**

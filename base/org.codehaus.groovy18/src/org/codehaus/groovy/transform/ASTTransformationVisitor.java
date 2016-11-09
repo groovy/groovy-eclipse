@@ -30,7 +30,6 @@ import groovy.lang.GroovyClassLoader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
@@ -240,8 +239,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
                 String className;
+                BufferedReader svcIn = null;
+                try {
                 // GRECLIPSE: start: don't consume our own META-INF entries - bit of a hack...
-//                try {
 //                	// this unfortunately also prevents the execution of transforms from project dependencies!
 //					String file = service.getFile().toString();
 //					System.out.println("TRANSFORM: Processing META-INF file "+file);					
@@ -256,60 +256,55 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 //                	t.printStackTrace();
 //                }
                 // end
-                // GRECLIPSE start
-                // was
-                // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
-                // now
-                InputStream is = service.openStream();
-                BufferedReader svcIn = new BufferedReader(new InputStreamReader(is));
-                // end
-                try {
-                    className = svcIn.readLine();
-                } catch (IOException ioe) {
-                    compilationUnit.getErrorCollector().addError(new SimpleMessage(
-                        "IOException reading the service definition at "
-                        + service.toExternalForm() + " because of exception " + ioe.toString(), null));
-                    continue;
-                }
-                while (className != null) {
-                    if (!className.startsWith("#") && className.length() > 0) {
-                        if (transformNames.containsKey(className)) {
-                            if (!service.equals(transformNames.get(className))) {
-                                compilationUnit.getErrorCollector().addWarning(
-                                        WarningMessage.POSSIBLE_ERRORS,
-                                        "The global transform for class " + className + " is defined in both "
-                                            + transformNames.get(className).toExternalForm()
-                                            + " and "
-                                            + service.toExternalForm()
-                                            + " - the former definition will be used and the latter ignored.",
-                                        null,
-                                        null);
-                            }
+                    svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
+                    try {
+                        className = svcIn.readLine();
+                    } catch (IOException ioe) {
+                        compilationUnit.getErrorCollector().addError(new SimpleMessage(
+                                "IOException reading the service definition at "
+                                        + service.toExternalForm() + " because of exception " + ioe.toString(), null));
+                        continue;
+                    }
+                    while (className != null) {
+                        if (!className.startsWith("#") && className.length() > 0) {
+                            if (transformNames.containsKey(className)) {
+                                if (!service.equals(transformNames.get(className))) {
+                                    compilationUnit.getErrorCollector().addWarning(
+                                            WarningMessage.POSSIBLE_ERRORS,
+                                            "The global transform for class " + className + " is defined in both "
+                                                    + transformNames.get(className).toExternalForm()
+                                                    + " and "
+                                                    + service.toExternalForm()
+                                                    + " - the former definition will be used and the latter ignored.",
+                                            null,
+                                            null);
+                                }
 
-                        } else {
+                            } else {
                         	// GRECLIPSE: start
                         	/*old{
                         		transformNames.put(className, service);
                         	}new*/
                         	if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className)) {
-                        		transformNames.put(className, service);
-                        	}
+                                transformNames.put(className, service);
+                            }
                         	// GRECLIPSE: end
                         }
+                        }
+                        try {
+                            className = svcIn.readLine();
+                        } catch (IOException ioe) {
+                            compilationUnit.getErrorCollector().addError(new SimpleMessage(
+                                    "IOException reading the service definition at "
+                                            + service.toExternalForm() + " because of exception " + ioe.toString(), null));
+                            //noinspection UnnecessaryContinue
+                            continue;
+                        }
                     }
-                    try {
-                        className = svcIn.readLine();
-                    } catch (IOException ioe) {
-                        compilationUnit.getErrorCollector().addError(new SimpleMessage(
-                            "IOException reading the service definition at "
-                            + service.toExternalForm() + " because of exception " + ioe.toString(), null));
-                        //noinspection UnnecessaryContinue
-                        continue;
-                    }
+                } finally {
+                    if (svcIn != null)
+                        svcIn.close();
                 }
-                // GRECLIPSE: start
-                is.close();
-                // end
             }
         } catch (IOException e) {
             //FIXME the warning message will NPE with what I have :(
@@ -396,7 +391,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 }
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
                 	try {
-                	final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
+                    final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
                 		// GRECLIPSE: start
                     	private boolean isBuggered = false;

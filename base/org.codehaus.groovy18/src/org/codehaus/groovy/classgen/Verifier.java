@@ -181,8 +181,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         addInitialization(node);
         checkReturnInObjectInitializer(node.getObjectInitializerStatements());
         node.getObjectInitializerStatements().clear();
-        addCovariantMethods(node);
         node.visitContents(this);
+        addCovariantMethods(node);
     }
 
     private FieldNode checkFieldDoesNotExist(ClassNode node, String fieldName) {
@@ -650,6 +650,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         Parameter[] parameters = method.getParameters();
         ClassNode methodReturnType = method.getReturnType();
         for (MethodNode node : abstractMethods) {
+            if (!node.getDeclaringClass().equals(classNode)) continue;
             if (node.getName().equals(methodName)
                     && node.getParameters().length==parameters.length) {
                 if (parameters.length==1) {
@@ -693,8 +694,19 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 } else {
                     code = new ReturnStatement(expression);
                 }
-
                 MethodNode newMethod = new MethodNode(method.getName(), method.getModifiers(), method.getReturnType(), newParams, method.getExceptions(), code);
+                // GROOVY-5681
+                for (Expression argument : arguments.getExpressions()) {
+                    if (argument instanceof CastExpression) {
+                        argument = ((CastExpression) argument).getExpression();
+                    }
+                    if (argument instanceof ConstructorCallExpression) {
+                        ClassNode type = argument.getType();
+                        if (type instanceof InnerClassNode && ((InnerClassNode) type).isAnonymous()) {
+                            type.setEnclosingMethod(newMethod);
+                        }
+                    }
+                }
                 List<AnnotationNode> annotations = method.getAnnotations();
                 if(annotations != null) {
                     newMethod.addAnnotations(annotations);
@@ -1292,11 +1304,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     private boolean isAssignable(ClassNode node, ClassNode testNode) {
         if (testNode.isInterface()) {
-            if (node.isInterface()) {
-                if (node.isDerivedFrom(testNode)) return true;
-            } else {
-                if (node.implementsInterface(testNode)) return true;
-            }
+            if (node.equals(testNode) || node.implementsInterface(testNode)) return true;
         } else {
             if (node.isDerivedFrom(testNode)) return true;
         }

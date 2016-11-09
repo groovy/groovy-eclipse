@@ -133,7 +133,7 @@ public class AnnotationVisitor {
                     if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
                         return new ConstantExpression(field.get(null));
                     }
-	              // GRECLIPSE: start
+                    // GRECLIPSE: start
                     } else {
                         FieldNode fieldNode = type.getField(pe.getPropertyAsString());
                         if (fieldNode != null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {

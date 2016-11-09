@@ -19,6 +19,8 @@ package org.codehaus.groovy.ast;
 import groovy.lang.*;
 
 import org.codehaus.groovy.runtime.GeneratedClosure;
+import org.codehaus.groovy.util.ManagedConcurrentMap;
+import org.codehaus.groovy.util.ReferenceBundle;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import groovyjarjarasm.asm.Opcodes;
 
@@ -27,10 +29,9 @@ import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.regex.Pattern;
-import java.lang.annotation.Annotation;
 import java.lang.ref.SoftReference;
+import java.lang.annotation.Annotation;
 
 /**
  * This class is a Helper for ClassNode and classes handling ClassNodes.
@@ -384,6 +385,6 @@ public class ClassHelper {
     }
 
     static class ClassHelperCache {
-        static Map<Class, SoftReference<ClassNode>> classCache = new WeakHashMap<Class,SoftReference<ClassNode>>();
+        static ManagedConcurrentMap<Class, SoftReference<ClassNode>> classCache = new ManagedConcurrentMap<Class, SoftReference<ClassNode>>(ReferenceBundle.getWeakBundle());
     }
 }

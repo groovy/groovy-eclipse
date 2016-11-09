@@ -82,6 +82,7 @@ public class CompilationUnit extends ProcessingUnit {
     protected ResolveVisitor resolveVisitor;
     protected StaticImportVisitor staticImportVisitor;
     protected OptimizerVisitor optimizer;
+    protected ClassNodeResolver classNodeResolver;
 
     LinkedList[] phaseOperations;
     LinkedList[] newPhaseOperations;
@@ -247,6 +248,7 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }
         this.classgenCallback = null;
+        this.classNodeResolver = new ClassNodeResolver();
     }
 
     // GRECLIPSE: new method: force the phase on
@@ -674,6 +676,7 @@ public class CompilationUnit extends ProcessingUnit {
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
 
+                resolveVisitor.setClassNodeResolver(classNodeResolver);
                 resolveVisitor.startResolving(node, source);
             }
 
@@ -682,7 +685,7 @@ public class CompilationUnit extends ProcessingUnit {
 
     private PrimaryClassNodeOperation staticImport = new PrimaryClassNodeOperation() {
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-            if (staticImportVisitor != null)
+          if (staticImportVisitor != null)
             staticImportVisitor.visitClass(classNode, source);
         }
     };
@@ -1118,14 +1121,6 @@ public class CompilationUnit extends ProcessingUnit {
                         offset++;
                     }
                     body.call(context, new GeneratorContext(this.ast, offset), classNode);
-/****                1.8.6 seemed to adjust this code, who is impacted? can I remove our change below?
-                  body.call(context, new GeneratorContext(this.ast), classNode);
-                    // GRECLIPSE: start
-                    if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
-                    	getProgressListener().generateComplete(phase,classNode);
-                    }
-                    // FIXASC (groovychange) end
-*****/
                 }
             } catch (CompilationFailedException e) {
                 // fall through, getErrorReporter().failIfErrors() will trigger
@@ -1184,23 +1179,33 @@ public class CompilationUnit extends ProcessingUnit {
     private void changeBugText(GroovyBugError e, SourceUnit context) {
         e.setBugText("exception in phase '" + getPhaseDescription() + "' in source unit '" + ((context != null) ? context.getName() : "?") + "' " + e.getBugText());
     }
-    // GRECLIPSE: start
+    
+    public ClassNodeResolver getClassNodeResolver() {
+        return classNodeResolver;
+    }
+
+
+    public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
+        this.classNodeResolver = classNodeResolver;
+    }
+
+    // GRECLIPSE add
+    public ResolveVisitor getResolveVisitor() {
+        return this.resolveVisitor;
+    }
+
     public void setResolveVisitor(ResolveVisitor resolveVisitor2) {
-		this.resolveVisitor = resolveVisitor2;
-	}
+        this.resolveVisitor = resolveVisitor2;
+    }
 
-	public ResolveVisitor getResolveVisitor() {
-		return this.resolveVisitor;
-	}
-
-	public String toString() {
-		if (sources==null || sources.isEmpty()) return super.toString();
-		Set s = sources.keySet();
-		for (Object o: s) {
-			return "CompilationUnit: source is " + o.toString();
-		}
-		return "CompilationUnit: null";
-	}
+    public String toString() {
+        if (sources==null || sources.isEmpty()) return super.toString();
+        Set s = sources.keySet();
+        for (Object o: s) {
+            return "CompilationUnit: source is " + o.toString();
+        }
+        return "CompilationUnit: null";
+    }
 
 	public boolean allowTransforms = true;
 	public boolean isReconcile = false;
