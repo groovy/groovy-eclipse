@@ -145,7 +145,6 @@ public class Java5 implements VMPlugin {
         //TODO: more than one lower bound for wildcards?
         ClassNode[] lowers = configureTypes(wildcardType.getLowerBounds());
         ClassNode lower = null;
-        // TODO: is it safe to remove this? What was the original intention?
         if (lowers != null) lower = lowers[0];
 
         ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());

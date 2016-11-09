@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import junit.extensions.TestSetup
 import junit.framework.Test
 
-import groovy.transform.TypeChecked
-
 import org.codehaus.groovy.eclipse.test.TestProject
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IContainer
@@ -33,7 +31,6 @@ import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.core.JavaProject
 
-@TypeChecked
 class BrowsingTestSetup extends TestSetup {
 
     private static Hashtable<String, String> savedPreferences

@@ -268,6 +268,12 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             if (mce.isImplicitThis()) {
                 Expression ret = findStaticMethodImportFromModule(method, args);
                 if (ret != null) {
+                    // GRECLIPSE add
+                    if (!((StaticMethodCallExpression) ret).getMethod().equals(method.getText())) {
+                        // store the identifier to facilitate organizing static imports
+                        ret.setNodeMetaData("static.import.alias", method.getText());
+                    }
+                    // GRECLIPSE end
                     setSourcePosition(ret, mce);
                     return ret;
                 }
@@ -309,6 +315,8 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         result.setImplicitThis(mce.isImplicitThis());
         result.setSpreadSafe(mce.isSpreadSafe());
         result.setMethodTarget(mce.getMethodTarget());
+        // GROOVY-6757
+        result.setGenericsTypes(mce.getGenericsTypes());
         setSourcePosition(result, mce);
         return result;
     }
@@ -374,7 +382,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         ModuleNode module = currentClass.getModule();
         if (module == null) return null;
         Map<String, ImportNode> importNodes = module.getStaticImports();
-        Expression expression;
+        Expression expression = null;
         String accessorName = getAccessorName(name);
         // look for one of these:
         //   import static MyClass.setProp [as setOtherProp]
@@ -402,19 +410,24 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         //   import static MyClass.prop [as otherProp]
         // when resolving prop or field reference
         if (importNodes.containsKey(name)) {
-            // GRECLIPSE: turn off during reconcile
             ImportNode importNode = importNodes.get(name);
-            /*old{
+            // GRECLIPSE add
+            try {
+            if (!isReconcile) {
+            // GRECLIPSE end
             expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
-            } new:*/
-            if (!isReconcile) {
-                expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
-                if (expression != null) return expression;
+            // GRECLIPSE add
             }
             // end
             expression = findStaticField(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
+            // GRECLIPSE add
+            } finally {
+                // store the identifier to facilitate organizing static imports
+                if (expression != null) expression.setNodeMetaData("static.import.alias", name);
+            }
+            // GRECLIPSE end
         }
         // look for one of these:
         //   import static MyClass.*

@@ -19,8 +19,6 @@ import junit.framework.Test
 import junit.framework.TestCase
 import junit.framework.TestSuite
 
-import groovy.transform.TypeChecked
-
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.IJavaElement
@@ -32,7 +30,6 @@ import org.eclipse.jdt.core.search.SearchPattern
 import org.eclipse.jdt.core.search.TypeNameRequestor
 import org.eclipse.jdt.internal.core.CompilationUnit
 
-@TypeChecked
 abstract class BrowsingTestCase extends TestCase {
 
     /**

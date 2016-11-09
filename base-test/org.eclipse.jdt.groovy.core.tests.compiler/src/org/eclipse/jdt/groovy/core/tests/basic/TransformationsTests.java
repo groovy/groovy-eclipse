@@ -117,7 +117,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n" +
             "1. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t  ^^^^^^^^\n" +
+            "\t  ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^":"")+"\n" +
             "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 2.\n" +
             "----------\n" +
             "2. ERROR in bad.groovy (at line 1)\n" +
@@ -127,7 +127,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n" +
             "3. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t           ^^^^^^^\n" +
+            "\t           ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^":"")+"\n" +
             "Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" +
             "----------\n" +
             "4. ERROR in bad.groovy (at line 2)\n" +
@@ -137,7 +137,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n" +
             "5. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
-            "\t ^^^^^^^^^^^\n" +
+            "\t ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
             "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
             "----------\n" +
             "6. ERROR in bad.groovy (at line 2)\n" +
@@ -1000,38 +1000,38 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
      * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
      */
     public void testGrabWithErrors() {
-        if (GroovyUtils.isGroovy21() || GroovyUtils.isGroovy22()) {
-            String[] sources = {
-                "Grab1.groovy",
-                "\n"+
-                "@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
-                "\n"+
-                "@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n"+
-                "class C {\n"+
-                "   def printDate() {\n"+
-                "         def dt = new org.joda.time.DateTime()\n"+
-                "         def world = new org.aspectj.weaver.bcel.BcelWorld();\n"+
-                "         print dt;\n"+
-                "   }\n"+
-                "   public static void main(String[] argv) {\n"+
-                "       new C().printDate()\n"+
-                "   }\n"+
-                "}\n"
-            };
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Grab1.groovy (at line 4)\n" +
-                "\t@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n" +
-                "\t ^^^\n" +
-                "Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" +
-                "----------\n" +
-                "2. ERROR in Grab1.groovy (at line 8)\n" +
-                "\tdef world = new org.aspectj.weaver.bcel.BcelWorld();\n" +
-                "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
-                "----------\n");
-        }
+        String[] sources = {
+            "Grab1.groovy",
+            "@Grapes([\n"+
+            "  @Grab(group='joda-time', module='joda-time', version='1.6'),\n"+
+            "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.6.11x')\n"+
+            "])\n" +
+            "class C {\n"+
+            "  def printDate() {\n"+
+            "    def dt = new org.joda.time.DateTime()\n"+
+            "    def world = new org.aspectj.weaver.bcel.BcelWorld()\n"+
+            "    print dt\n"+
+            "  }\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    new C().printDate()\n"+
+            "  }\n"+
+            "}\n"
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Grab1.groovy (at line 3)\n" +
+            "\t@Grab(group='org.aspectj', module='aspectjweaver', version='1.6.11x')\n" +
+            "\t ^^^\n" +
+            "Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" +
+            "----------\n" +
+            "2. ERROR in Grab1.groovy (at line 8)\n" +
+            "\tdef world = new org.aspectj.weaver.bcel.BcelWorld()\n" +
+            "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
+            "----------\n");
     }
 
     public void testGrabError() {

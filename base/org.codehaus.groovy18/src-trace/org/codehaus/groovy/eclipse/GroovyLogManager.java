@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,22 +30,22 @@ import java.util.Map;
 // See http://www.eclipse.org/legal/epl-v10.html
 public class GroovyLogManager {
     public static final GroovyLogManager manager = new GroovyLogManager();
-    
+
     private GroovyLogManager() {
         // uninstantiable
         defaultLogger = new DefaultGroovyLogger();
         timers = new HashMap<String, Long>();
     }
-    
+
     private IGroovyLogger[] loggers = null;
-    
+
     // only use default logger if no others are registered
     private IGroovyLogger defaultLogger;
-    
+
     private Map<String, Long> timers;
 
     private boolean useDefaultLogger;
-    
+
     /**
      * @return true if logger was added.  False if not
      * if not added, then this means the exact logger is already in the list
@@ -62,7 +62,7 @@ public class GroovyLogManager {
                     return false;
                 }
             }
-            
+
             newIndex = loggers.length;
             IGroovyLogger[] newLoggers = new IGroovyLogger[newIndex+1];
             System.arraycopy(loggers, 0, newLoggers, 0, newIndex);
@@ -71,7 +71,7 @@ public class GroovyLogManager {
         loggers[newIndex] = logger;
         return true;
     }
-    
+
     /**
      * Removes the logger from the logger list
      * @return true iff found and removed
@@ -99,20 +99,20 @@ public class GroovyLogManager {
                 return true;
             }
         }
-        
+
         // not found
         return false;
     }
-    
-    
+
+
     public void logStart(String event) {
         timers.put(event, System.currentTimeMillis());
     }
-    
+
     public void logEnd(String event, TraceCategory category) {
         logEnd(event, category, null);
     }
-    
+
     public void logEnd(String event, TraceCategory category, String message) {
         Long then = timers.get(event);
         if (then != null) {
@@ -120,9 +120,9 @@ public class GroovyLogManager {
                 long now = System.currentTimeMillis();
                 long elapsed = now - then.longValue();
                 if ((message != null) && (message.length() > 0)) {
-                    log(category,"Event complete: "+elapsed + "ms: " + event + " (" + message + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    log(category,"Event complete: "+elapsed + "ms: " + event + " (" + message + ")");
                 } else {
-                    log(category,"Event complete: "+elapsed + "ms: " + event); //$NON-NLS-1$ //$NON-NLS-2$
+                    log(category,"Event complete: "+elapsed + "ms: " + event);
                 }
             }
             timers.remove(event);
@@ -132,12 +132,12 @@ public class GroovyLogManager {
     public void log(String message) {
         log(TraceCategory.DEFAULT, message);
     }
-    
+
     public void log(TraceCategory category, String message) {
         if (!hasLoggers()) {
             return;
         }
-        
+
         if (loggers != null) {
             for (IGroovyLogger logger : loggers) {
                 if (logger.isCategoryEnabled(category)) {
@@ -145,22 +145,22 @@ public class GroovyLogManager {
                 }
             }
         }
-        
+
         if (useDefaultLogger) {
             defaultLogger.log(category, message);
         }
     }
-    
+
     /**
-     * Call this method to check if any loggers are currently 
-     * installed.  Doing so can help avoid creating costly 
+     * Call this method to check if any loggers are currently
+     * installed.  Doing so can help avoid creating costly
      * logging messages unless required
      * @return
      */
     public boolean hasLoggers() {
         return loggers != null || useDefaultLogger;
     }
-    
+
     /**
      * enables/disables the default logger (printing to sysout
      * @param useDefaultLogger
@@ -168,7 +168,7 @@ public class GroovyLogManager {
     public void setUseDefaultLogger(boolean useDefaultLogger) {
         this.useDefaultLogger = useDefaultLogger;
     }
-    
+
     public void logException(TraceCategory cat, Throwable t) {
         if (hasLoggers()) {
             // only log if logger is available, otherwise, ignore
@@ -178,5 +178,4 @@ public class GroovyLogManager {
                     writer.getBuffer());
         }
     }
-    
 }

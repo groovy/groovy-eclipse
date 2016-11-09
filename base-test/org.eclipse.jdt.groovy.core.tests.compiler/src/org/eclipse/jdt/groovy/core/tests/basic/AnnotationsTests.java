@@ -1016,17 +1016,12 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "1. ERROR in p\\X.groovy (at line 3)\n" +
             "\t@Anno(IDontExist.class)\n" +
             "\t      ^^^^^^^^^^\n" +
-            (GroovyUtils.isGroovy16()?
-            "Groovy:unable to find class for enum\n":
-            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n") +
+            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
             "----------\n" +
             "2. ERROR in p\\X.groovy (at line 3)\n" +
             "\t@Anno(IDontExist.class)\n" +
-            "\t      ^^^^^^^^^^^^^^^^\n" +
-            (GroovyUtils.GROOVY_LEVEL<18?
-            "Groovy:Only classes can be used for attribute 'value' in @p.Anno\n":
-            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n"
-            )+
+            "\t      ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^":"")+"\n" +
+            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
             "----------\n");
     }
 
