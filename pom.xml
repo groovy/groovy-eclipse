@@ -63,7 +63,9 @@
 
 		<!-- SDK and test bits -->
 
-		<module>ide-test</module> <!-- parent pom for all the ide-test modules -->
+		<!-- parent pom for all the ide-test modules -->
+<!--
+		<module>ide-test</module>
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
 
@@ -77,6 +79,7 @@
 		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
 
 		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
+-->
 
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>

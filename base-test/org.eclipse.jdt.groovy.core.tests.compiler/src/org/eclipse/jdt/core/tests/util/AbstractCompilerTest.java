@@ -426,15 +426,15 @@ public abstract class AbstractCompilerTest extends TestCase {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Test setupSuite(Class<? extends junit.framework.TestCase> clazz) {
+	public static Test setupTestcaseSuite(Class<? extends junit.framework.TestCase> clazz) {
 		return suite(clazz.getName(), RegressionTestSetup.class, Arrays.<Class<? extends junit.framework.TestCase>>asList(clazz));
 	}
 
-	public static Test buildTestSuite(Class<? extends junit.framework.TestCase> evaluationTestClass) {
+	public static Test buildTestcaseSuite(Class<? extends junit.framework.TestCase> evaluationTestClass) {
 		if (TESTS_PREFIX != null || TESTS_NAMES != null || TESTS_NUMBERS!=null || TESTS_RANGE !=null) {
 			return buildTestSuite(evaluationTestClass, highestComplianceLevels());
 		}
-		return setupSuite(evaluationTestClass);
+		return setupTestcaseSuite(evaluationTestClass);
 	}
 
 	public static Test buildTestSuite(Class<? extends Test> evaluationTestClass, long complianceLevel) {
