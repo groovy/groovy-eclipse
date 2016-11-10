@@ -18,6 +18,7 @@ package org.codehaus.groovy.vmplugin.v5;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.vmplugin.VMPlugin;
