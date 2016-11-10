@@ -16,24 +16,17 @@
 
 package org.codehaus.groovy.classgen.asm;
 
-import groovyjarjarasm.asm.Label;
-import groovyjarjarasm.asm.MethodVisitor;
-import groovyjarjarasm.asm.Opcodes;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
+import groovyjarjarasm.asm.Label;
+import groovyjarjarasm.asm.MethodVisitor;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.util.*;
 
 /**
  * This class is a helper for AsmClassGenerator. It manages
@@ -638,17 +631,18 @@ public class CompileStack implements Opcodes {
         Label startLabel  = new Label();
         answer.setStartLabel(startLabel);
         ClassNode type = answer.getType().redirect();
-                OperandStack operandStack = controller.getOperandStack();
+        OperandStack operandStack = controller.getOperandStack();
 
         if (!initFromStack) pushInitValue(type, mv);
-                operandStack.push(answer.getType());
+        operandStack.push(answer.getType());
         if (answer.isHolder())  {
-                operandStack.box();
-                operandStack.remove(1);
+            operandStack.box();
+            operandStack.remove(1);
             createReference(answer);
         } else {
             operandStack.storeVar(answer);
         } 
+        
         mv.visitLabel(startLabel);
         return answer;
     }

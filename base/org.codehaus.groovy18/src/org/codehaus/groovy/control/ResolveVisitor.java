@@ -16,64 +16,26 @@
 package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
-import groovyjarjarasm.asm.Opcodes;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.DynamicVariable;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.Verifier;
-import org.codehaus.groovy.control.messages.ExceptionMessage;
+import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.GroovyBugError;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
 
 /**
  * Visitor to resolve Types and convert VariableExpression to
@@ -109,6 +71,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean checkingVariableTypeInDeclaration = false;
     private ImportNode currImportNode = null;
     private MethodNode currentMethod;
+    private ClassNodeResolver classNodeResolver;
 
     /**
      * we use ConstructedClassWithPackage to limit the resolving the compiler
@@ -180,6 +143,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public ResolveVisitor(CompilationUnit cu) {
         compilationUnit = cu;
+        this.classNodeResolver = new ClassNodeResolver();
     }
 
     public void startResolving(ClassNode node, SourceUnit source) {
@@ -234,7 +198,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void visitField(FieldNode node) {
         ClassNode t = node.getType();
         if(!fieldTypesChecked.contains(node)) {
-        resolveOrFail(t, node);
+            resolveOrFail(t, node);
         }
         super.visitField(node);
     }
@@ -262,7 +226,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (resolve(type)) return true;
         }
         if(resolveToInnerEnum (type)) return true;
-
+        
         type.setName(saved);
         return false;
     }
@@ -271,7 +235,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     /*private*/ protected boolean resolveToInnerEnum (ClassNode type) {
         // GROOVY-3110: It may be an inner enum defined by this class itself, in which case it does not need to be
         // explicitly qualified by the currentClass name
-    	String name = type.getName();
+        String name = type.getName();
         if(currentClass != type && !name.contains(".") && type.getClass().equals(ClassNode.class)) {
             type.setName(currentClass.getName() + "$" + name);
             if (resolve(type)) return true;
@@ -341,7 +305,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
 
         resolveGenericsTypes(type.getGenericsTypes());
-
         if (type.isResolved() || type.isPrimaryClassNode()) return true;
         if (type.isArray()) {
             ClassNode element = type.getComponentType();
@@ -374,9 +337,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveFromCompileUnit(type) ||
                 resolveFromDefaultImports(type, testDefaultImports) ||
                 resolveFromStaticInnerClasses(type, testStaticInnerClasses) ||
-                resolveToClass(type);
+                resolveToOuter(type);
     }
-
 
     // GRECLIPSE: added as a helper
     /**
@@ -407,47 +369,46 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE: end
 
         // we have for example a class name A, are in class X
-        // and there is a nested class A$X. we want to be able
+        // and there is a nested class A$X. we want to be able 
         // to access that class directly, so A becomes a valid
         // name in X.
-    	// GROOVY-4043: Do this check up the hierarchy, if needed
-    	Map<String, ClassNode> hierClasses = new LinkedHashMap<String, ClassNode>();
-    	ClassNode val;
+        // GROOVY-4043: Do this check up the hierarchy, if needed
+        Map<String, ClassNode> hierClasses = new LinkedHashMap<String, ClassNode>();
+        ClassNode val;
         String name;
-    	for(ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE;
-    		classToCheck = classToCheck.getSuperClass()) {
-    		if(classToCheck == null || hierClasses.containsKey(classToCheck.getName())) break;
+        for(ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE; 
+            classToCheck = classToCheck.getSuperClass()) {
+            if(classToCheck == null || hierClasses.containsKey(classToCheck.getName())) break;
             hierClasses.put(classToCheck.getName(), classToCheck);
-    	}
-
-    	for (ClassNode classToCheck : hierClasses.values()) {
-            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName()+"$"+firstComponent)) {  // GRECLIPSE
-            name = classToCheck.getName()+"$"+qualName;
+        }
+        
+        for (ClassNode classToCheck : hierClasses.values()) {
+          if (!classToCheck.mightHaveInners() || !existsAsInnerClass(classToCheck, classToCheck.getName()+"$"+firstComponent)) continue;
+            name = classToCheck.getName()+"$"+type.getName();
             val = ClassHelper.make(name);
-	        if (resolveFromCompileUnit(val)) {
-	            type.setRedirect(val);
-	            return true;
-	    	}
-	  		}
-    	}
-
-    	// another case we want to check here is if we are in a
+            if (resolveFromCompileUnit(val)) {
+                type.setRedirect(val);
+                return true;
+            }
+        }
+        
+        // another case we want to check here is if we are in a
         // nested class A$B$C and want to access B without
         // qualifying it by A.B. A alone will work, since that
         // is the qualified (minus package) name of that class
-        // anyway.
-
+        // anyway. 
+        
         // That means if the current class is not an InnerClassNode
         // there is nothing to be done.
         if (!(currentClass instanceof InnerClassNode)) return false;
-
-        // since we have B and want to get A we start with the most
+        
+        // since we have B and want to get A we start with the most 
         // outer class, put them together and then see if that does
-        // already exist. In case of B from within A$B we are done
+        // already exist. In case of B from within A$B we are done 
         // after the first step already. In case of for example
-        // A.B.C.D.E.F and accessing E from F we test A$E=failed,
+        // A.B.C.D.E.F and accessing E from F we test A$E=failed, 
         // A$B$E=failed, A$B$C$E=fail, A$B$C$D$E=success
-
+        
         LinkedList<ClassNode> outerClasses = new LinkedList<ClassNode>();
         ClassNode outer = currentClass.getOuterClass();
         while (outer!=null) {
@@ -456,17 +417,16 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         // most outer class is now element 0
         for (ClassNode testNode : outerClasses) {
-            if (testNode.mightHaveInners() && existsAsInnerClass(testNode, testNode.getName()+"$"+firstComponent)) {  // GRECLIPSE
-            name = testNode.getName()+"$"+qualName;
+          if (!testNode.mightHaveInners() || !existsAsInnerClass(testNode, testNode.getName()+"$"+firstComponent)) continue;
+            name = testNode.getName()+"$"+type.getName();
             val = ClassHelper.make(name);
             if (resolveFromCompileUnit(val)) {
                 type.setRedirect(val);
                 return true;
             }
-            }
-        }
-
-        return false;
+        }        
+        
+        return false;   
     }
 
     // GRECLIPSE: from private to protected
@@ -514,7 +474,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE: from private to protected
     protected boolean resolveToScript(ClassNode type) {
         String name = type.getName();
-
 
         if (name.startsWith("java.")) return type.isResolved();
         //TODO: don't ignore inner static classes completely
@@ -574,7 +533,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if (type instanceof ConstructedClassWithPackage) {
                 // we replace '.' only in the className part
                 // with '$' to find an inner class. The case that
-                // the package is really a class is handled else where
+                // the package is really a class is handled elsewhere
                 ConstructedClassWithPackage tmp = (ConstructedClassWithPackage) type;
                 String savedName = tmp.className;
                 tmp.className = replaceLastPoint(savedName);
@@ -592,10 +551,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 type.setName(replacedPointType);
                 if (resolve(type, false, true, true)) return true;
                 type.setName(savedName);
-*/
-	// newcode
-	           	return resolveStaticInner(type);
- //end
+             */
+                // newcode
+                return resolveStaticInner(type);
+                //end
             }
         }
         return false;
@@ -616,7 +575,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // test default imports
         testDefaultImports &= !type.hasPackageName();
         // we do not resolve a vanilla name starting with a lower case letter
-        // try to resolve against adefault import, because we know that the
+        // try to resolve against a default import, because we know that the
         // default packages do not contain classes like these
         testDefaultImports &= !(type instanceof LowerCaseClass);
         if (testDefaultImports) {
@@ -626,7 +585,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // We limit the inner class lookups here by using ConstructedClassWithPackage.
                 // This way only the name will change, the packagePrefix will
                 // not be included in the lookup. The case where the
-                // packagePrefix is really a class is handled else where.
+                // packagePrefix is really a class is handled elsewhere.
                 // WARNING: This code does not expect a class that has a static
                 //          inner class in DEFAULT_IMPORTS
                 ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(packagePrefix,name);
@@ -692,7 +651,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             pname = name.substring(0, index);
             ClassNode aliasedNode = null;
             ImportNode importNode = module.getImport(pname);
-            if(importNode != null && importNode != currImportNode) {
+            if (importNode != null && importNode != currImportNode) {
                 aliasedNode = importNode.getType();
             }
             if (aliasedNode == null) {
@@ -727,7 +686,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     // Since we do not want to have useless lookups we create the name
                     // completely and use a ConstructedClassWithPackage to prevent lookups against the package.
                     String className = aliasedNode.getNameWithoutPackage() + '$' +
-                                       name.substring(pname.length()+1).replace('.', '$');
+                            name.substring(pname.length() + 1).replace('.', '$');
                     ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(aliasedNode.getPackageName()+".", className);
                     if (resolve(tmp, true, true, false)) {
                         type.setRedirect(tmp.redirect());
@@ -785,7 +744,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // check package this class is defined in. The usage of ConstructedClassWithPackage here
                 // means, that the module package will not be involved when the
                 // compiler tries to find an inner class.
-                ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(module.getPackageName(),name);
+                ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(module.getPackageName(), name);
                 if (resolve(tmp, false, false, false)) {
                     ambiguousClass(type, tmp, name);
                     type.setRedirect(tmp.redirect());
@@ -812,7 +771,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // We limit the inner class lookups here by using ConstructedClassWithPackage.
                 // This way only the name will change, the packagePrefix will
                 // not be included in the lookup. The case where the
-                // packagePrefix is really a class is handled else where.
+                // packagePrefix is really a class is handled elsewhere.
                 ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, name);
                 if (resolve(tmp, false, false, true)) {
                     ambiguousClass(type, tmp, name);
@@ -823,7 +782,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
             // check for star imports (import static pkg.Outer.*) matching static inner classes
             for (ImportNode importNode : module.getStaticStarImports().values()) {
-            	if (!importNode.isUnresolvable()) { // GRECLIPSE - extra check
+              if (importNode.isUnresolvable()) continue;
                 ClassNode tmp = ClassHelper.make(importNode.getClassName() + "$" + name);
                 if (resolve(tmp, false, false, true)) {
                     if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
@@ -832,7 +791,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         return true;
                     }
                 }
-            	} // GRECLIPSE - end of check
 
             }
         }
@@ -846,69 +804,32 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 	// end
 
     // GRECLIPSE: from private to protected
-    protected boolean resolveToClass(ClassNode type) {
+    protected boolean resolveToOuter(ClassNode type) {
         String name = type.getName();
-
-        // We use here the class cache cachedClasses to prevent
-        // calls to ClassLoader#loadClass. disabling this cache will
-        // cause a major performance hit. Unlike at the end of this
-        // method we do not return true or false depending on if we
-        // want to recompile or not. If the class was cached, then
-        // we do not want to recompile, recompilation is already
-        // scheduled then
-        Object cached = cachedClasses.get(name);
-        if (cached == NO_CLASS)
-            return false;
-
-        if (cached != null) {
-        // cached == SCRIPT should not happen here!
-            type.setRedirect((ClassNode) cached);
-            return true;
-        }
-
 
         // We do not need to check instances of LowerCaseClass
         // to be a Class, because unless there was an import for
-        // for this we  do not lookup these cases. This was a decision
+        // for this we do not lookup these cases. This was a decision
         // made on the mailing list. To ensure we will not visit this
         // method again we set a NO_CLASS for this name
         if (type instanceof LowerCaseClass) {
-            cachedClasses.put(name,NO_CLASS);
+            classNodeResolver.cacheClass(name, ClassNodeResolver.NO_CLASS);
             return false;
         }
 
         if (currentClass.getModule().hasPackageName() && name.indexOf('.') == -1) return false;
-        GroovyClassLoader loader = compilationUnit.getClassLoader();
-        Class cls;
-        try {
-            // NOTE: it's important to do no lookup against script files
-            // here since the GroovyClassLoader would create a new CompilationUnit
-            cls = loader.loadClass(name, false, true);
-        } catch (ClassNotFoundException cnfe) {
-            cachedClasses.put(name, NO_CLASS);
-            return resolveToScript(type);
-        } catch (CompilationFailedException cfe) {
-            compilationUnit.getErrorCollector().addErrorAndContinue(new ExceptionMessage(cfe, true, source));
-            return resolveToScript(type);
+        LookupResult lr = null;
+        lr = classNodeResolver.resolveName(name, compilationUnit);
+        if (lr!=null) {
+            if (lr.isSourceUnit()) {
+                SourceUnit su = lr.getSourceUnit();
+                currentClass.getCompileUnit().addClassNodeToCompile(type, su);
+            } else {
+                type.setRedirect(lr.getClassNode());
+            }
+            return true;
         }
-        //TODO: the case of a NoClassDefFoundError needs a bit more research
-        // a simple recompilation is not possible it seems. The current class
-        // we are searching for is there, so we should mark that somehow.
-        // Basically the missing class needs to be completely compiled before
-        // we can again search for the current name.
-        /*catch (NoClassDefFoundError ncdfe) {
-            cachedClasses.put(name,SCRIPT);
-            return false;
-        }*/
-        if (cls == null) return false;
-        ClassNode cn = ClassHelper.make(cls);
-        cachedClasses.put(name, cn);
-        type.setRedirect(cn);
-        //NOTE: we might return false here even if we found a class,
-        //      because  we want to give a possible script a chance to
-        //      recompile. This can only be done if the loader was not
-        //      the instance defining the class.
-        return cls.getClassLoader() == loader || resolveToScript(type);
+        return false;
     }
 
 
@@ -1077,49 +998,44 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return ret;
     }
 
-
     private void checkThisAndSuperAsPropertyAccess(PropertyExpression expression) {
         if (expression.isImplicitThis()) return;
         String prop = expression.getPropertyAsString();
-        if (prop==null) return;
+        if (prop == null) return;
         if (!prop.equals("this") && !prop.equals("super")) return;
 
         if (expression.getObjectExpression() instanceof ClassExpression) {
-        if (!(currentClass instanceof InnerClassNode)) {
+            if (!(currentClass instanceof InnerClassNode)) {
                 addError("The usage of 'Class.this' and 'Class.super' is only allowed in nested/inner classes.", expression);
-            return;
-        }
-
-
-        ClassNode type  = expression.getObjectExpression().getType();
-        ClassNode iterType = currentClass;
-        while (iterType!=null) {
-            if (iterType.equals(type)) break;
-            iterType = iterType.getOuterClass();
-        }
-        if (iterType==null) {
+                return;
+            }
+            ClassNode type = expression.getObjectExpression().getType();
+            ClassNode iterType = currentClass;
+            while (iterType != null) {
+                if (iterType.equals(type)) break;
+                iterType = iterType.getOuterClass();
+            }
+            if (iterType == null) {
                 addError("The class '" + type.getName() + "' needs to be an outer class of '" +
                         currentClass.getName() + "' when using '.this' or '.super'.", expression);
-        }
-
-
-        if ((currentClass.getModifiers() & Opcodes.ACC_STATIC)==0) return;
-        if (!currentScope.isInStaticContext()) return;
+            }
+            if ((currentClass.getModifiers() & Opcodes.ACC_STATIC) == 0) return;
+            if (!currentScope.isInStaticContext()) return;
             addError("The usage of 'Class.this' and 'Class.super' within static nested class '" +
                     currentClass.getName() + "' is not allowed in a static context.", expression);
-    }
+        }
     }
 
     protected Expression transformVariableExpression(VariableExpression ve) {
         visitAnnotations(ve);
         Variable v = ve.getAccessedVariable();
-
+        
         if(!(v instanceof DynamicVariable) && !checkingVariableTypeInDeclaration) {
-        	/*
-        	 *  GROOVY-4009: when a normal variable is simply being used, there is no need to try to
-        	 *  resolve its type. Variable type resolve should proceed only if the variable is being declared.
-        	 */
-        	return ve;
+            /*
+             *  GROOVY-4009: when a normal variable is simply being used, there is no need to try to 
+             *  resolve its type. Variable type resolve should proceed only if the variable is being declared. 
+             */
+            return ve;
         }
         if (v instanceof DynamicVariable){
             String name = ve.getName();
@@ -1235,7 +1151,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (para.hasInitialExpression()) {
                     Object initialVal = para.getInitialExpression();
                     if (initialVal instanceof Expression) {
-                    	para.setInitialExpression(transform((Expression) initialVal));
+                        para.setInitialExpression(transform((Expression) initialVal));
                     }
                 }
                 visitAnnotations(para);
@@ -1261,14 +1177,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private String getDescription(ClassNode node) {
         return (node.isInterface() ? "interface" : "class") + " '" + node.getName() + "'";
     }
-
+    
     protected Expression transformMethodCallExpression(MethodCallExpression mce) {
         Expression args = transform(mce.getArguments());
         Expression method = transform(mce.getMethod());
         Expression object = transform(mce.getObjectExpression());
 
         resolveGenericsTypes(mce.getGenericsTypes());
-
+        
         MethodCallExpression result = new MethodCallExpression(object, method, args);
         result.setSafe(mce.isSafe());
         result.setImplicitThis(mce.isImplicitThis());
@@ -1278,7 +1194,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         result.setMethodTarget(mce.getMethodTarget());
         return result;
     }
-
+    
     protected Expression transformDeclarationExpression(DeclarationExpression de) {
         visitAnnotations(de);
         Expression oldLeft = de.getLeftExpression();
@@ -1339,14 +1255,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE: start: cant do this
             /*
             if(annType.isResolved()) {
-            	Class annTypeClass = annType.getTypeClass();
-            	Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
-            	if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
-            		AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
-            		if(anyPrevAnnNode != null) {
-            			addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
-            		}
-            	}
+                Class annTypeClass = annType.getTypeClass();
+                Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
+                if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
+                    AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
+                    if(anyPrevAnnNode != null) {
+                        addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
+                    }
+                }
             }
 */
         }
@@ -1444,6 +1360,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void visitClass(ClassNode node) {
         ClassNode oldNode = currentClass;
+
         if (node instanceof InnerClassNode) {
             if (Modifier.isStatic(node.getModifiers())) {
                 genericParameterNames = new HashMap<String, GenericsType>();
@@ -1462,11 +1379,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         ModuleNode module = node.getModule();
         if (!module.hasImportsResolved()) {
             for (ImportNode importNode : module.getImports()) {
-            	currImportNode = importNode;
+                currImportNode = importNode;
                 ClassNode type = importNode.getType();
                 if (resolve(type, false, false, true)) {
-                	currImportNode = null;
-                	continue;
+                    currImportNode = null;
+                    continue;
                 }
                 currImportNode = null;
                 addError("unable to resolve class " + type.getName(), type);
@@ -1474,17 +1391,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode type = importNode.getType();
                 if (resolve(type, false, false, true)) continue;
-                // May be this type belongs in the same package as the node that is doing the
+                // Maybe this type belongs in the same package as the node that is doing the
                 // static import. In that case, the package may not have been explicitly specified.
                 // Try with the node's package too. If still not found, revert to original type name.
                 if (type.getPackageName() == null && node.getPackageName() != null) {
-                	String oldTypeName = type.getName();
-                	type.setName(node.getPackageName() + "." + oldTypeName);
-                	if (resolve(type, false, false, true)) continue;
-                	type.setName(oldTypeName);
+                    String oldTypeName = type.getName();
+                    type.setName(node.getPackageName() + "." + oldTypeName);
+                    if (resolve(type, false, false, true)) continue;
+                    type.setName(oldTypeName);
                 }
                 addError("unable to resolve class " + type.getName(), type);
-            	importNode.markAsUnresolvable();
+                importNode.markAsUnresolvable();
             }
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
@@ -1494,9 +1411,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode type = importNode.getType();
                 if (resolve(type, true, true, true)) continue;
-                if (!importNode.isUnresolvable()) {
-                	addError("unable to resolve class " + type.getName(), type);
-                }
+                if (importNode.isUnresolvable()) continue;
+                addError("unable to resolve class " + type.getName(), type);
             }
             module.setImportsResolved(true);
         }
@@ -1509,16 +1425,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         checkCyclicInheritence(node, node.getUnresolvedSuperClass(), node.getInterfaces());
-
+        
         super.visitClass(node);
-
 
         // GRECLIPSE: start
         finishedResolution();
         // end
         currentClass = oldNode;
     }
-
+    
     private void checkCyclicInheritence(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {
         if(!originalNode.isInterface()) {
             if(parentToCompare == null) return;
@@ -1646,5 +1561,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         resolveGenericsTypes(type.getGenericsTypes());
         genericsType.setResolved(genericsType.getType().isResolved());
+    }
+
+    public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
+        this.classNodeResolver = classNodeResolver;
     }
 }

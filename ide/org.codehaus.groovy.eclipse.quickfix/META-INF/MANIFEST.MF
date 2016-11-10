@@ -8,7 +8,7 @@ Export-Package: org.codehaus.groovy.eclipse.quickassist,
  org.codehaus.groovy.eclipse.quickfix.processors,
  org.codehaus.groovy.eclipse.quickfix.proposals,
  org.codehaus.groovy.eclipse.quickfix.templates
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.6",
+Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.core;bundle-version="2.9.2",

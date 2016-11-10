@@ -10,6 +10,6 @@
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy</artifactId>
-  <version>1.8.6-SNAPSHOT</version>
+  <version>1.8.9-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 </project>

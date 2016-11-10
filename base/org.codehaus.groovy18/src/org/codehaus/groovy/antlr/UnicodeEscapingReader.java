@@ -17,12 +17,12 @@
 
 package org.codehaus.groovy.antlr;
 
+import java.io.IOException;
+import java.io.Reader;
+
 import groovyjarjarantlr.CharScanner;
 import groovyjarjarantlr.Token;
 import groovyjarjarantlr.TokenStreamException;
-
-import java.io.IOException;
-import java.io.Reader;
 
 /**
  * Translates GLS-defined unicode escapes into characters. Throws an exception

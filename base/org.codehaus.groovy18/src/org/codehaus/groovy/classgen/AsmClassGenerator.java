@@ -17,105 +17,23 @@
 package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyRuntimeException;
-import groovyjarjarasm.asm.ClassVisitor;
-import groovyjarjarasm.asm.FieldVisitor;
-import groovyjarjarasm.asm.Label;
-import groovyjarjarasm.asm.MethodVisitor;
-import groovyjarjarasm.asm.Opcodes;
-import groovyjarjarasm.asm.Type;
-import groovyjarjarasm.asm.AnnotationVisitor;
-
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.InterfaceHelperClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.PackageNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ArrayExpression;
-import org.codehaus.groovy.ast.expr.AttributeExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
-import org.codehaus.groovy.ast.expr.BooleanExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ClosureListExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.EmptyExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.GStringExpression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.MethodPointerExpression;
-import org.codehaus.groovy.ast.expr.NotExpression;
-import org.codehaus.groovy.ast.expr.PostfixExpression;
-import org.codehaus.groovy.ast.expr.PrefixExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.SpreadExpression;
-import org.codehaus.groovy.ast.expr.SpreadMapExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TernaryExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
-import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.AssertStatement;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.BreakStatement;
-import org.codehaus.groovy.ast.stmt.CaseStatement;
-import org.codehaus.groovy.ast.stmt.CatchStatement;
-import org.codehaus.groovy.ast.stmt.ContinueStatement;
-import org.codehaus.groovy.ast.stmt.DoWhileStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ForStatement;
-import org.codehaus.groovy.ast.stmt.IfStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.stmt.SwitchStatement;
-import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
-import org.codehaus.groovy.ast.stmt.ThrowStatement;
-import org.codehaus.groovy.ast.stmt.TryCatchStatement;
-import org.codehaus.groovy.ast.stmt.WhileStatement;
-import org.codehaus.groovy.classgen.asm.BytecodeHelper;
-import org.codehaus.groovy.classgen.asm.BytecodeVariable;
-import org.codehaus.groovy.classgen.asm.MethodCaller;
-import org.codehaus.groovy.classgen.asm.MethodCallerMultiAdapter;
-import org.codehaus.groovy.classgen.asm.MopWriter;
-import org.codehaus.groovy.classgen.asm.OperandStack;
-import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter;
-import org.codehaus.groovy.classgen.asm.WriterController;
+
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.classgen.asm.*;
+
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter;
 import org.codehaus.groovy.syntax.RuntimeParserException;
+
+import groovyjarjarasm.asm.AnnotationVisitor;
+import groovyjarjarasm.asm.*;
+
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 /**
  * Generates Java class versions of Groovy classes using ASM.
@@ -177,8 +95,6 @@ public class AsmClassGenerator extends ClassGenerator {
     public static final boolean CREATE_DEBUG_INFO = true;
     public static final boolean CREATE_LINE_NUMBER_INFO = true;
     public static final boolean ASM_DEBUG = false; // add marker in the bytecode to show source-bytecode relationship
-    
-    private int lineNumber = -1;
     private ASTNode currentASTNode = null;
     private Map genericParameterNames = null;
     private SourceUnit source;
@@ -325,7 +241,7 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
-        lineNumber = -1;
+        controller.resetLineNumber();
         Parameter[] parameters = node.getParameters();
         String methodType = BytecodeHelper.getMethodDescriptor(node.getReturnType(), parameters);
         String signature = BytecodeHelper.getGenericsMethodSignature(node);
@@ -382,8 +298,8 @@ public class AsmClassGenerator extends ClassGenerator {
                 }
             }
             if (!hasCallToSuper) {
-            	// invokes the super class constructor
-            	mv.visitVarInsn(ALOAD, 0);
+                // invokes the super class constructor
+                mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, BytecodeHelper.getClassInternalName(superClass), "<init>", "()V");
             }
         } 
@@ -841,7 +757,7 @@ public class AsmClassGenerator extends ClassGenerator {
     private void makeMOPBasedConstructorCall(List<ConstructorNode> constructors, ConstructorCallExpression call, ClassNode callNode) {
         MethodVisitor mv = controller.getMethodVisitor();
         OperandStack operandStack = controller.getOperandStack();
-        
+
         call.getArguments().visit(this);
         // keep Object[] on stack
         mv.visitInsn(DUP);
@@ -1023,7 +939,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
     private void visitAttributeOrProperty(PropertyExpression expression, MethodCallerMultiAdapter adapter) {
         MethodVisitor mv = controller.getMethodVisitor();
-        
+
         Expression objectExpression = expression.getObjectExpression();
         ClassNode classNode = controller.getClassNode();
         if (isThisOrSuper(objectExpression)) {
@@ -1057,8 +973,8 @@ public class AsmClassGenerator extends ClassGenerator {
                                     return;
                                 }
                                 outer = outer.getSuperClass();
-                	}
-                }
+                            }
+                        }
                 	}
                 }
                 if (field != null && !privateSuperField) {//GROOVY-4497: don't visit super field if it is private 
@@ -1376,13 +1292,22 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     protected void createInterfaceSyntheticStaticFields() {
+        InterfaceHelperClassNode icl =  controller.getInterfaceClassLoadingClass();
+
         if (referencedClasses.isEmpty()) {
-        	// GRECLIPSE-1167
-        	controller.getClassNode().forgetInnerClass(controller.getInterfaceClassLoadingClass());
-        	return;
+            // GRECLIPSE-1167
+            controller.getClassNode().forgetInnerClass(icl);
+            Iterator<InnerClassNode> it = controller.getClassNode().getInnerClasses();
+            while(it.hasNext()) {
+                InnerClassNode inner = it.next();
+                if (inner==icl) {
+                    it.remove();
+                    return;
+                }
+            }
+            return;
         }
 
-        ClassNode icl =  controller.getInterfaceClassLoadingClass();
         addInnerClass(icl);
         for (String staticFieldName : referencedClasses.keySet()) {            // generate a field node
             icl.addField(staticFieldName, ACC_STATIC + ACC_SYNTHETIC, ClassHelper.CLASS_Type.getPlainNodeReference(), new ClassExpression(referencedClasses.get(staticFieldName)));
@@ -2136,9 +2061,9 @@ public class AsmClassGenerator extends ClassGenerator {
         this.currentASTNode = statement;
 
         if (line < 0) return;
-        if (!ASM_DEBUG && line==lineNumber) return;
+        if (!ASM_DEBUG && line==controller.getLineNumber()) return;
 
-        lineNumber = line;
+        controller.setLineNumber(line);
         if (mv != null) {
             Label l = new Label();
             mv.visitLabel(l);

@@ -379,6 +379,7 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
     }
 
     public void testSelectAnnotationOnMethod2() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return; // CompileDynamic was added in 2.0
         String contents = "import groovy.transform.*; class Type { @CompileStatic void method() {} }";
         assertCodeSelect(asList(contents), "CompileStatic");
     }
@@ -390,6 +391,7 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
     }
 
     public void testSelectAnnotationOnMethod4() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return; // TypeChecked was added in 2.0
         String contents = "import groovy.transform.*; class Type { @TypeChecked(TypeCheckingMode.SKIP) void method() {} }";
         assertCodeSelect(asList(contents), "TypeChecked");
         assertCodeSelect(asList(contents), "TypeCheckingMode");

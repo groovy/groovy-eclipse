@@ -11,7 +11,7 @@ Export-Package: org.codehaus.groovy.eclipse.codeassist,
  org.codehaus.groovy.eclipse.codeassist.proposals,
  org.codehaus.groovy.eclipse.codeassist.relevance,
  org.codehaus.groovy.eclipse.codeassist.requestor
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.6",
+Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.codehaus.groovy.eclipse.core;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.ui;bundle-version="2.9.2",
  org.eclipse.core.resources,

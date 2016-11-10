@@ -16,42 +16,23 @@
 
 package org.codehaus.groovy.transform;
 
-import groovy.lang.GroovyClassLoader;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
-import org.codehaus.groovy.GroovyException;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.GeneratorContext;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.CompilationUnit;
-import org.codehaus.groovy.control.CompilePhase;
-import org.codehaus.groovy.control.Phases;
-import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.*;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.GroovyException;
+
+import groovy.lang.GroovyClassLoader;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.*;
 
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
@@ -149,6 +130,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             // second pass, call visit on all of the collected nodes
             for (ASTNode[] node : targetNodes) {
                 for (ASTTransformation snt : transforms.get(node[0])) {
+                    // GRECLIPSE add
                 	try {
                 		long stime = System.nanoTime();
                 		boolean okToSet = source!=null && source.getErrorCollector()!=null;
@@ -156,7 +138,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=true; 
                 			}
-	                		snt.visit(node, source);
+                    // GRECLIPSE end
+                    snt.visit(node, source);
+                    // GRECLIPSE add
                 		} finally {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=false;
@@ -178,7 +162,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 		sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined? http://groovy.codehaus.org/Eclipse+Plugin+2.0.0+FAQ#EclipsePlugin2.0.0FAQ-Q.DoesitsupportcustomASTtransformations%3F");
                 		source.addError(new SyntaxException(sb.toString(), ncdfe, 0, 0));
                 	}
-                	// GRECLIPSE - end
+                    // GRECLIPSE end
                 }
             }
         }
@@ -197,7 +181,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
-    
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
         addGlobalTransforms(compilationUnit);
@@ -236,7 +219,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
-
+    
     public static void addGlobalTransformsAfterGrab() {
         doAddGlobalTransforms(compUnit, false);
     }
@@ -256,9 +239,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
                 String className;
-                
+                BufferedReader svcIn = null;
+                try {
                 // GRECLIPSE: start: don't consume our own META-INF entries - bit of a hack...
-//                try {
 //                	// this unfortunately also prevents the execution of transforms from project dependencies!
 //					String file = service.getFile().toString();
 //					System.out.println("TRANSFORM: Processing META-INF file "+file);					
@@ -273,62 +256,55 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 //                	t.printStackTrace();
 //                }
                 // end
-                // GRECLIPSE start
-                // was
-                // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
-                // now
-           
-                InputStream is = service.openStream();
-                BufferedReader svcIn = new BufferedReader(new InputStreamReader(is));
-               
-                // end
-                try {
-                    className = svcIn.readLine();
-                } catch (IOException ioe) {
-                    compilationUnit.getErrorCollector().addError(new SimpleMessage(
-                        "IOException reading the service definition at "
-                        + service.toExternalForm() + " because of exception " + ioe.toString(), null));
-                    continue;
-                }
-                while (className != null) {
-                    if (!className.startsWith("#") && className.length() > 0) {
-                        if (transformNames.containsKey(className)) {
-                            if (!service.equals(transformNames.get(className))) {
-                                compilationUnit.getErrorCollector().addWarning(
-                                        WarningMessage.POSSIBLE_ERRORS,
-                                        "The global transform for class " + className + " is defined in both "
-                                            + transformNames.get(className).toExternalForm()
-                                            + " and "
-                                            + service.toExternalForm()
-                                            + " - the former definition will be used and the latter ignored.",
-                                        null,
-                                        null);
-                            }
+                    svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
+                    try {
+                        className = svcIn.readLine();
+                    } catch (IOException ioe) {
+                        compilationUnit.getErrorCollector().addError(new SimpleMessage(
+                                "IOException reading the service definition at "
+                                        + service.toExternalForm() + " because of exception " + ioe.toString(), null));
+                        continue;
+                    }
+                    while (className != null) {
+                        if (!className.startsWith("#") && className.length() > 0) {
+                            if (transformNames.containsKey(className)) {
+                                if (!service.equals(transformNames.get(className))) {
+                                    compilationUnit.getErrorCollector().addWarning(
+                                            WarningMessage.POSSIBLE_ERRORS,
+                                            "The global transform for class " + className + " is defined in both "
+                                                    + transformNames.get(className).toExternalForm()
+                                                    + " and "
+                                                    + service.toExternalForm()
+                                                    + " - the former definition will be used and the latter ignored.",
+                                            null,
+                                            null);
+                                }
 
-                        } else {
+                            } else {
                         	// GRECLIPSE: start
                         	/*old{
                         		transformNames.put(className, service);
                         	}new*/
                         	if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className)) {
-                        		transformNames.put(className, service);
-                        	}
+                                transformNames.put(className, service);
+                            }
                         	// GRECLIPSE: end
                         }
+                        }
+                        try {
+                            className = svcIn.readLine();
+                        } catch (IOException ioe) {
+                            compilationUnit.getErrorCollector().addError(new SimpleMessage(
+                                    "IOException reading the service definition at "
+                                            + service.toExternalForm() + " because of exception " + ioe.toString(), null));
+                            //noinspection UnnecessaryContinue
+                            continue;
+                        }
                     }
-                    try {
-                        className = svcIn.readLine();
-                    } catch (IOException ioe) {
-                        compilationUnit.getErrorCollector().addError(new SimpleMessage(
-                            "IOException reading the service definition at "
-                            + service.toExternalForm() + " because of exception " + ioe.toString(), null));
-                        //noinspection UnnecessaryContinue
-                        continue;
-                    }
+                } finally {
+                    if (svcIn != null)
+                        svcIn.close();
                 }
-                // GRECLIPSE: start
-                is.close();
-                // end
             }
         } catch (IOException e) {
             //FIXME the warning message will NPE with what I have :(
@@ -394,7 +370,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     	}
     }
     // GRECLIPSE: end
-    
+
     private static void addPhaseOperationsForGlobalTransforms(CompilationUnit compilationUnit, 
             Map<String, URL> transformNames, boolean isFirstScan) {
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
@@ -415,7 +391,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 }
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
                 	try {
-                	final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
+                    final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
                 		// GRECLIPSE: start
                     	private boolean isBuggered = false;

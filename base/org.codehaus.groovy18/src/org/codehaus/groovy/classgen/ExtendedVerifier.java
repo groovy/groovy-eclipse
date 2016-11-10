@@ -15,20 +15,7 @@
  */
 package org.codehaus.groovy.classgen;
 
-import groovyjarjarasm.asm.Opcodes;
-
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.GroovyClassVisitor;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.PackageNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -36,6 +23,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
+import groovyjarjarasm.asm.Opcodes;
 
 /**
  * A specialized Groovy AST visitor meant to perform additional verifications upon the
@@ -124,7 +112,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation(unvisited);
             boolean isTargetAnnotation = visited.getClassNode().isResolved() &&
-            visited.getClassNode().getName().equals("java.lang.annotation.Target");
+                    visited.getClassNode().getName().equals("java.lang.annotation.Target");
 
             // Check if the annotation target is correct, unless it's the target annotating an annotation definition
             // defining on which target elements the annotation applies
@@ -221,7 +209,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
     	// end
         this.source.getErrorCollector().addErrorAndContinue(
                 new SyntaxErrorMessage(
-                 new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
+                        new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
         );
         // GRECLIPSE: start:
     	}

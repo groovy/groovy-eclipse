@@ -374,6 +374,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     // https://github.com/groovy/groovy-eclipse/issues/177
     public void testTypeCompletionForClassAnnotation() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore();
         String originalOrder = prefs.getString(PreferenceConstants.ORGIMPORTS_IMPORTORDER);
         prefs.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, "\\#;java;javax;groovy;groovyx;;");

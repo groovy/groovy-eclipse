@@ -136,7 +136,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.HashSet");
     }
 
-
     public void testMap1() throws Exception {
         String contents = "new HashMap<String,Integer>()";
         assertType(contents, "java.util.HashMap<java.lang.String,java.lang.Integer>");
@@ -218,7 +217,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, "java.util.HashMap");
     }
 
-
     public void testMapOfList() throws Exception {
         String contents = "Map<String,List<Integer>> x\nx.entrySet().iterator().next().value";
         String toFind = "value";
@@ -268,7 +266,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
     }
-
 
     private static final String XX = "class XX {\nXX[] xx\nXX yy\n}";
     public void testArray4() throws Exception {
@@ -360,8 +357,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "XX[]");
     }
 
-
-
     public void testMapOfList3() throws Exception {
         String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().key";
         String toFind = "key";
@@ -369,7 +364,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
-
 
     // not working yet since our approach to determining the type of a map only looks at the static types of the
     // first elements.  It does not try to infer the type of these elements.
@@ -979,6 +973,7 @@ def h = [8: 1, bb:8]
     // GRECLIPSE-1696
     // Generic method type inference with @CompileStatic
     public void testMethod1() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "import groovy.transform.CompileStatic\n" +
                 "class A {\n" +
@@ -1000,6 +995,7 @@ def h = [8: 1, bb:8]
 
     // Generic method type inference without @CompileStatic
     public void testMethod2() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "class A {\n" +
                 "    public <T> T myMethod(Class<T> claz) {\n" +
@@ -1019,6 +1015,7 @@ def h = [8: 1, bb:8]
 
     // Generic method without object type inference with @CompileStatic
     public void testMethod3() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "import groovy.transform.CompileStatic\n" +
                 "class A {\n" +
@@ -1039,6 +1036,7 @@ def h = [8: 1, bb:8]
 
     // Generic method type without object inference without @CompileStatic
     public void testMethod4() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "class A {\n" +
                 "    public <T> T myMethod(Class<T> claz) {\n" +
@@ -1058,6 +1056,7 @@ def h = [8: 1, bb:8]
     // GRECLIPSE-1129
     // Static generic method type inference with @CompileStatic
     public void testStaticMethod1() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "class A {\n" +
                 "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1076,6 +1075,7 @@ def h = [8: 1, bb:8]
 
     // Static generic method type inference without @CompileStatic
     public void testStaticMethod2() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "class A {\n" +
                 "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1093,6 +1093,7 @@ def h = [8: 1, bb:8]
 
     // Static generic method without class type inference with @CompileStatic
     public void testStaticMethod3() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "class A {\n" +
                 "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1111,6 +1112,7 @@ def h = [8: 1, bb:8]
 
     // Static generic method without class type inference without @CompileStatic
     public void testStaticMethod4() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
                 "class A {\n" +
                 "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1128,9 +1130,7 @@ def h = [8: 1, bb:8]
 
     // Test according GRECLIPSE-1129 description
     public void testStaticMethod5() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 23) {
-            return;
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 23) return;
         String contents =
                 "class A { }\n" +
                 "class B extends A {}\n" +
