@@ -226,7 +226,9 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         lexer.parser = parser;
         parser.getASTFactory().setASTNodeClass(GroovySourceAST.class);
         parser.warningList = new ArrayList();
+        // GRECLIPSE add
         parser.errorList = new ArrayList();
+        // GRECLIPSE end
         return parser;
     }
     // Create a scanner that reads from the input stream passed to us...
@@ -241,11 +243,13 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     List warningList;
     public List getWarningList() { return warningList; }
 
+    // GRECLIPSE add
     List errorList;
     public List getErrorList() { return errorList; }
 
-	List<Comment> comments = new ArrayList<Comment>();
-	public List<Comment> getComments() { return comments; }
+    List<Comment> comments = new ArrayList<Comment>();
+    public List<Comment> getComments() { return comments; }
+    // GRECLIPSE end
 
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
@@ -282,7 +286,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
 
     // GRE292
     private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) node;
             GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
             groovySourceAst.setColumnLast(lastInfo.getColumnLast());
@@ -315,27 +319,26 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return attachLast(create(type, txt, first), last);
     }
 
-	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+// GRECLIPSE add
+    private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
-	public void startComment(int line, int column) {
-		// System.out.println(">> comment at l"+line+"c"+column);
-		commentStartPositions.push((line<<16)+column);
-	}
+    public void startComment(int line, int column) {
+        commentStartPositions.push((line<<16)+column);
+    }
 
-	public void endComment(int type, int line, int column,String text) {
-		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
-		int lineAndColumn = commentStartPositions.pop();
-		int startLine = lineAndColumn>>>16;
-		int startColumn = lineAndColumn&0xffff;
-		if (type==0) {
-			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} else if (type==1) {
-			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		}
-	}
-
+    public void endComment(int type, int line, int column,String text) {
+        int lineAndColumn = commentStartPositions.pop();
+        int startLine = lineAndColumn>>>16;
+        int startColumn = lineAndColumn&0xffff;
+        if (type==0) {
+            Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        } else if (type==1) {
+            Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        }
+    }
+// GRECLIPSE end
 
     /**
     *   Clones the token
@@ -894,8 +897,8 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				// report the error but don't throw away what we've successfully parsed
-					reportError(e);
-							compilationUnit_AST = (AST)currentAST.root;
+				reportError(e);
+				compilationUnit_AST = (AST)currentAST.root;
 				
 			} else {
 				throw e;
@@ -992,10 +995,10 @@ inputState.guessing--;
 			packageDefinition_AST = (AST)currentAST.root;
 			// error recovery for missing package name
 			if (id_AST==null) {
-							reportError("Invalid package specification",LT(0));
-						} else {
+			reportError("Invalid package specification",LT(0));
+			} else {
 			packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
-						}
+			}
 			
 			currentAST.root = packageDefinition_AST;
 			currentAST.child = packageDefinition_AST!=null &&packageDefinition_AST.getFirstChild()!=null ?
@@ -2034,11 +2037,11 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
-					reportError("Invalid import ",first);
+				reportError("Invalid import ",first);
 				identifierStar_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add((AST)astFactory.make( (new ASTArray(1)).add(create(STAR,"*",null)))));
 				// Give up on this line and just go to the next
-							rewind(mark);
-							consumeUntil(NLS);
+				rewind(mark);
+				consumeUntil(NLS);
 				
 			} else {
 				throw e;
@@ -10421,7 +10424,7 @@ inputState.guessing--;
 		AST pc_AST = null;
 		AST ca_AST = null;
 		
-			AST prev = head;
+		AST prev = head;
 		
 		
 		{
@@ -13742,8 +13745,8 @@ inputState.guessing--;
  *  new
  *   |
  *   T --  ELIST
- *                 |
- *                arg1 -- arg2 -- .. -- argn
+ *           |
+ *          arg1 -- arg2 -- .. -- argn
  *
  *  new int[]
  *
@@ -13756,31 +13759,31 @@ inputState.guessing--;
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR -- ARRAY_INIT
- *                                                                |
- *                                                              EXPR -- EXPR
- *                                                                |   |
- *                                                                1       2
+ *                                  |
+ *                                EXPR -- EXPR
+ *                                  |       |
+ *                                  1       2
  *
  *  new int[3]
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR
- *                              |
- *                        EXPR
- *                              |
- *                              3
+ *               |
+ *             EXPR
+ *               |
+ *               3
  *
  *  new int[1][2]
  *
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR
- *                         |
- *               ARRAY_DECLARATOR -- EXPR
- *                         |                  |
- *                       EXPR                    1
- *                         |
- *                         2
+ *               |
+ *         ARRAY_DECLARATOR -- EXPR
+ *               |               |
+ *             EXPR              1
+ *               |
+ *               2
  *
  */
 	public final void newExpression() throws RecognitionException, TokenStreamException {

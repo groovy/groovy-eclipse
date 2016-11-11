@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.ast;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Base class for any AST node which is capable of being annotated
@@ -99,7 +97,7 @@ public class AnnotatedNode extends ASTNode {
     public void setDeclaringClass(ClassNode declaringClass) {
         this.declaringClass = declaringClass;
     }
-    
+
     /**
      * Currently only ever returns true for default constructors
      * added by the compiler. See GROOVY-4161.

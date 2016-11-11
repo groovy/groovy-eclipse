@@ -17,7 +17,9 @@ package org.codehaus.groovy.ast;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -41,7 +43,6 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
-import org.codehaus.groovy.syntax.SyntaxException;
 
 public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport implements GroovyClassVisitor {
 
@@ -52,7 +53,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         node.visitContents(this);
         visitObjectInitializerStatements(node);
     }
-
+    
     protected void visitObjectInitializerStatements(ClassNode node) {
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -89,15 +90,51 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
 
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
-        if (annotations.isEmpty()) return;
-        for (AnnotationNode an : annotations) {
+        // GRECLIPSE edit
+        if (!annotations.isEmpty())
+            visitAnnotations(annotations);
+        // GRECLIPSE end
+    }
+
+    // GRECLIPSE add
+    protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
+        for (AnnotationNode node : nodes) {
             // skip built-in properties
-            if (an.isBuiltIn()) continue;
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
-                member.getValue().visit(this);
-            }
+            if (node.isBuiltIn()) continue;
+
+            visitAnnotation(node);
         }
     }
+
+    protected void visitAnnotation(AnnotationNode node) {
+        for (Expression expr : node.getMembers().values()) {
+            expr.visit(this);
+        }
+    }
+
+    @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        // check for inlined constant (see ResolveVisitor.transformInlineConstants)
+        Expression original = (Expression) expression.getNodeMetaData(ORIGINAL_EXPRESSION);
+        if (original != null) {
+            original.visit(this);
+        }
+    }
+
+    /**
+     * Returns the original source expression (in case of constant inlining) or
+     * the input expression.
+     *
+     * @see org.codehaus.groovy.control.ResolveVisitor#transformInlineConstants
+     * @see org.codehaus.groovy.control.ResolveVisitor#cloneConstantExpression
+     */
+    public static final Expression getNonInlinedExpression(Expression expression) {
+        Expression original = (Expression) expression.getNodeMetaData(ORIGINAL_EXPRESSION);
+        return original != null ? original : expression;
+    }
+
+    public static final String ORIGINAL_EXPRESSION = "OriginalExpression";
+    // GRECLIPSE end
 
     protected void visitClassCodeContainer(Statement code) {
         if (code != null) code.visit(this);
@@ -171,13 +208,13 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         // end
         
         SourceUnit source = getSourceUnit();
-		source.getErrorCollector().addErrorAndContinue(
+        source.getErrorCollector().addErrorAndContinue(
                 // GRECLIPSE: start
                 new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
                 // end
         );
     }
-    
+
     // GRECLIPSE start
     protected void addTypeError(String msg, ClassNode expr ) {
         int line = expr.getLineNumber();
@@ -191,7 +228,12 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
     // end
 
-    protected abstract SourceUnit getSourceUnit();
+    // GRECLIPSE edit
+    //protected abstract SourceUnit getSourceUnit();
+    protected SourceUnit getSourceUnit() {
+        return null;
+    }
+    // GRECLIPSE end
 
     protected void visitStatement(Statement statement) {
     }

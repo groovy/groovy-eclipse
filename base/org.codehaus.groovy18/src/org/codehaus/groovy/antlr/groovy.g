@@ -246,7 +246,9 @@ tokens {
         lexer.parser = parser;
         parser.getASTFactory().setASTNodeClass(GroovySourceAST.class);
         parser.warningList = new ArrayList();
+        // GRECLIPSE add
         parser.errorList = new ArrayList();
+        // GRECLIPSE end
         return parser;
     }
     // Create a scanner that reads from the input stream passed to us...
@@ -261,11 +263,13 @@ tokens {
     List warningList;
     public List getWarningList() { return warningList; }
 
+    // GRECLIPSE add
     List errorList;
     public List getErrorList() { return errorList; }
 
-	List<Comment> comments = new ArrayList<Comment>();
-	public List<Comment> getComments() { return comments; }
+    List<Comment> comments = new ArrayList<Comment>();
+    public List<Comment> getComments() { return comments; }
+    // GRECLIPSE end
 
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
@@ -302,7 +306,7 @@ tokens {
 
     // GRE292
     private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) node;
             GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
             groovySourceAst.setColumnLast(lastInfo.getColumnLast());
@@ -335,27 +339,26 @@ tokens {
         return attachLast(create(type, txt, first), last);
     }
 
-	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+// GRECLIPSE add
+    private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
-	public void startComment(int line, int column) {
-		// System.out.println(">> comment at l"+line+"c"+column);
-		commentStartPositions.push((line<<16)+column);
-	}
+    public void startComment(int line, int column) {
+        commentStartPositions.push((line<<16)+column);
+    }
 
-	public void endComment(int type, int line, int column,String text) {
-		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
-		int lineAndColumn = commentStartPositions.pop();
-		int startLine = lineAndColumn>>>16;
-		int startColumn = lineAndColumn&0xffff;
-		if (type==0) {
-			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} else if (type==1) {
-			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		}
-	}
-
+    public void endComment(int type, int line, int column,String text) {
+        int lineAndColumn = commentStartPositions.pop();
+        int startLine = lineAndColumn>>>16;
+        int startColumn = lineAndColumn&0xffff;
+        if (type==0) {
+            Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        } else if (type==1) {
+            Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        }
+    }
+// GRECLIPSE end
 
     /**
     *   Clones the token
@@ -608,13 +611,13 @@ compilationUnit
         // Semicolons and/or significant newlines serve as separators.
         ( sep! (statement[sepToken])? )*
         EOF!
-		exception
+        exception
         catch [RecognitionException e] {
             // report the error but don't throw away what we've successfully parsed
-        	reportError(e);
-			compilationUnit_AST = (AST)currentAST.root;
+            reportError(e);
+            compilationUnit_AST = (AST)currentAST.root;
         }
-        ;
+    ;
 
 /** A Groovy script or simple expression.  Can be anything legal inside {...}. */
 snippetUnit
@@ -629,10 +632,10 @@ packageDefinition
     :   an:annotationsOpt! "package"! (id:identifier!)?
         { // error recovery for missing package name
             if (id_AST==null) {
-				reportError("Invalid package specification",LT(0));
-			} else {
+                reportError("Invalid package specification",LT(0));
+            } else {
                 #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
-			}
+            }
         }
     ;
 
@@ -676,8 +679,6 @@ importStatement
          }
         }
     ;
-
-
 
 // TODO REMOVE
 // A type definition is either a class, interface, enum or annotation with possible additional semis.
@@ -1044,7 +1045,7 @@ identifierStar {Token first = LT(1); int mark=mark();}
             d1:DOT! nls! i2:IDENT!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,i2);}
         )*
-        (d2:DOT!  nls! s:STAR!
+        (   d2:DOT!  nls! s:STAR!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,s);}
         |   "as"! nls! alias:IDENT!
             {#i1 = #(create(LITERAL_as,"as",first,LT(1)),i1,alias);}
@@ -1058,11 +1059,11 @@ identifierStar {Token first = LT(1); int mark=mark();}
          */
         exception
         catch [RecognitionException e] {
-        	reportError("Invalid import ",first);
+            reportError("Invalid import ",first);
             #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
             // Give up on this line and just go to the next
-			rewind(mark);
-			consumeUntil(NLS);
+            rewind(mark);
+            consumeUntil(NLS);
         }
     ;
 
@@ -1560,7 +1561,7 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-	// RECOVERY: GRECLIPSE-494
+        // RECOVERY: GRECLIPSE-494
         exception
         catch [RecognitionException e] {
         	reportError(e);
@@ -1568,7 +1569,8 @@ classField!  {Token first = LT(1);}
         	// Type is object
         	#classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
         	consumeUntil(NLS);
-        }    ;
+        }
+    ;
 
 // Now the various things that can be defined inside an interface
 interfaceField!
@@ -1585,7 +1587,6 @@ interfaceField!
         // type declaration
         (typeDeclarationStart)=>
         mods:modifiersOpt
-
         (   td:typeDefinitionInternal[#mods]
             {#interfaceField = #td;}
         )
@@ -2240,7 +2241,7 @@ branchStatement {Token first = LT(1);}
         "return"!
         ( returnE:expression[0]! )?
         // GRE292
-		{#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
+        {#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
 
 
     // break:  get out of a loop, or switch, or method call
@@ -2292,7 +2293,7 @@ statementLabelPrefix
 expressionStatement[int prevToken]
         { Token first = LT(1); }
     :
-        (   (suspiciousExpressionStatementStart)=>
+        ( (suspiciousExpressionStatementStart) =>
             checkSuspiciousExpressionStatement[prevToken]
         )?
         esn:expressionStatementNoCheck
@@ -2304,7 +2305,7 @@ expressionStatementNoCheck
     :
         // Checks are now out of the way; here's the real rule:
         head:expression[LC_STMT]
-        {   isPathExpr = (#head == lastPathExpression);  }
+        { isPathExpr = (#head == lastPathExpression); }
         (
             // A path expression (e.g., System.out.print) can take arguments.
             {LA(1)!=LITERAL_else && isPathExpr /*&& #head.getType()==METHOD_CALL*/}?
@@ -2453,9 +2454,9 @@ handler {Token first = LT(1);}
  *  without labels or spread operators.
  */
 commandArguments[AST head]
-  {
-      Token first = LT(1);
-  }
+{
+    Token first = LT(1);
+}
     :
         commandArgument ( options {greedy=true;}: COMMA! nls! commandArgument )*
         // println 2+2 //OK
@@ -2481,31 +2482,31 @@ reportError(e);
     ;
 
 commandArgumentsGreedy[AST head]
-{
-	AST prev = #head;
+{ 
+    AST prev = #head;
 }
     :
-
+       
         // argument to the already existing method name
-        (   ({#prev==null || #prev.getType()!=METHOD_CALL}? commandArgument)=> (
+        (   ({#prev==null || #prev.getType()!=METHOD_CALL}? commandArgument)=> (   
                 first : commandArguments[head]!
                 { #prev = #first; }
-        )
+            )
             |
         )
-
+        
         // we start a series of methods and arguments
         (   options { greedy = true; } :
-        (   options { greedy = true; } :
+            (   options { greedy = true; } :
                 // method name
-            pre:primaryExpression!
-            { #prev = #(create(DOT, ".", #prev), #prev, #pre); }
-                // what follows is either a normal argument, parens,
+                pre:primaryExpression!
+                { #prev = #(create(DOT, ".", #prev), #prev, #pre); }
+                // what follows is either a normal argument, parens, 
                 // an appended block, an index operation, or nothing
-                // parens (a b already processed):
+                // parens (a b already processed): 
                 //      a b c() d e -> a(b).c().d(e)
                 //      a b c()() d e -> a(b).c().call().d(e)
-                // index (a b already processed):
+                // index (a b already processed): 
                 //      a b c[x] d e -> a(b).c[x].d(e)
                 //      a b c[x][y] d e -> a(b).c[x][y].d(e)
                 // block (a b already processed):
@@ -2513,22 +2514,22 @@ commandArgumentsGreedy[AST head]
                 //
                 // parens/block completes method call
                 // index makes method call to property get with index
-                //
-                (   options { greedy = true; } :
-                (pathElementStart)=>
-                (
+                // 
+                (options {greedy=true;}:
+                (pathElementStart)=>   
+                    (   
                         pc:pathChain[LC_STMT,#prev]!
                         { #prev = #pc; }
-                    )
-                    |
+                    )      
+                |
                     (   ca:commandArguments[#prev]!
                         { #prev = #ca; })
                 )?
-        )*
+            )*
         )
-        { #commandArgumentsGreedy = prev; }
+        { #commandArgumentsGreedy = prev; } 
     ;
-
+    
 commandArgument
     :
         (argumentLabel COLON nls!) => (
@@ -2649,7 +2650,6 @@ pathExpression[int lc_stmt]
     :
         pre:primaryExpression!
         { prefix = #pre; }
-
         (
             options {
                 // \n{foo} could match here or could begin a new statement
@@ -2683,7 +2683,6 @@ pathExpression[int lc_stmt]
        		(DOT! | SPREAD_DOT! | OPTIONAL_DOT)
       		{ reportError("Expecting an identifier, found a trailing '.' instead."); }
         )*
-
         {
             #pathExpression = prefix;
             lastPathExpression = #pathExpression;
@@ -2825,7 +2824,7 @@ keywordPropertyNames
         | "try"
         | "while"
         | modifier
-        |   builtInType
+        | builtInType
         )
         { #keywordPropertyNames.setType(IDENT); }
     ;
@@ -3199,7 +3198,6 @@ parenthesizedExpression
                 #parenthesizedExpression = #(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1)),#parenthesizedExpression);
             }
         }
-
 exception
 catch [RecognitionException e] {
 	// GRECLIPSE1213 - missing closing paren
@@ -3358,8 +3356,8 @@ identPrimary
  *  new
  *   |
  *   T --  ELIST
- *                 |
- *                arg1 -- arg2 -- .. -- argn
+ *           |
+ *          arg1 -- arg2 -- .. -- argn
  *
  *  new int[]
  *
@@ -3372,31 +3370,31 @@ identPrimary
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR -- ARRAY_INIT
- *                                                                |
- *                                                              EXPR -- EXPR
- *                                                                |   |
- *                                                                1       2
+ *                                  |
+ *                                EXPR -- EXPR
+ *                                  |       |
+ *                                  1       2
  *
  *  new int[3]
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR
- *                              |
- *                        EXPR
- *                              |
- *                              3
+ *               |
+ *             EXPR
+ *               |
+ *               3
  *
  *  new int[1][2]
  *
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR
- *                         |
- *               ARRAY_DECLARATOR -- EXPR
- *                         |                  |
- *                       EXPR                    1
- *                         |
- *                         2
+ *               |
+ *         ARRAY_DECLARATOR -- EXPR
+ *               |               |
+ *             EXPR              1
+ *               |
+ *               2
  *
  */
 newExpression {Token first = LT(1); int jumpBack = mark();}
@@ -3423,7 +3421,8 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
             // Groovy does not support Java syntax for initialized new arrays.
             // Use sequence constructors instead.
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
-		)
+
+        )
         // RECOVERY: missing '(' or '['
         exception
         catch [RecognitionException e] {
@@ -3458,7 +3457,6 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
               throw e;
             }
         }
-
     ;
 
 argList
@@ -4051,7 +4049,7 @@ options {
         }
     ;
 
-    protected
+protected
 ONE_NL_KEEP[boolean check]
 options {
     paraphrase="a newline";

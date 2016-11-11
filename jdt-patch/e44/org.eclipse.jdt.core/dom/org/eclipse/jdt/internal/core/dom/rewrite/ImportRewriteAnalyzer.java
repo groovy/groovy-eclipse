@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -1015,8 +1016,6 @@ public final class ImportRewriteAnalyzer {
 	}
 
 	private Set evaluateStarImportConflicts(IProgressMonitor monitor) throws JavaModelException {
-		//long start= System.currentTimeMillis();
-
 		final HashSet/*String*/ onDemandConflicts= new HashSet();
 
 		IJavaSearchScope scope= SearchEngine.createJavaSearchScope(new IJavaElement[] { this.compilationUnit.getJavaProject() });
@@ -1085,8 +1084,14 @@ public final class ImportRewriteAnalyzer {
 			buf.append("static "); //$NON-NLS-1$
 		}
 		buf.append(importName);
+		// GROOVY add
+		if (!compilationUnit.getClass().getName().contains("Groovy")) { //$NON-NLS-1$
+		// GROOVY end
 		if (insertSpaceBeforeSemicolon()) buf.append(' ');
 		buf.append(';');
+		// GROOVY add
+		}
+		// GROOVY end
 		if (trailingComment != null) {
 			buf.append(trailingComment);
 		}

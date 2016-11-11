@@ -11,29 +11,9 @@
  ******************************************************************************/
 package org.codehaus.groovy.classgen;
 
-import static java.lang.reflect.Modifier.isAbstract;
-import static java.lang.reflect.Modifier.isFinal;
-import static java.lang.reflect.Modifier.isNative;
-import static java.lang.reflect.Modifier.isStatic;
-import static java.lang.reflect.Modifier.isStrict;
-import static java.lang.reflect.Modifier.isSynchronized;
-import static java.lang.reflect.Modifier.isTransient;
-import static java.lang.reflect.Modifier.isVolatile;
-import groovyjarjarasm.asm.Opcodes;
-
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -46,8 +26,11 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.control.SourceUnit;
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
+
+import static java.lang.reflect.Modifier.*;
 
 /**
  * ClassCompletionVerifier
@@ -85,7 +68,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         super.visitClass(node);
         currentClass = oldClass;
     }
-
+    
     private void checkInterfaceMethodVisibility(ClassNode node) {
         if (!node.isInterface()) return;
         for (MethodNode method : node.getMethods()) {
@@ -118,7 +101,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         if (!isAbstract(node.getModifiers())) return;
         if (!isFinal(node.getModifiers())) return;
         if (node.isInterface()) {
-            addError("The " + getDescription(node) +" must not be final. It is by definition abstract.", node);
+            addError("The " + getDescription(node) + " must not be final. It is by definition abstract.", node);
         } else {
             addError("The " + getDescription(node) + " must not be both final and abstract.", node);
         }
@@ -285,8 +268,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
     }
 
     public void visitMethod(MethodNode node) {
-    	inConstructor = false;
-    	inStaticConstructor = node.isStaticConstructor();
+        inConstructor = false;
+        inStaticConstructor = node.isStaticConstructor();
         checkAbstractDeclaration(node);
         checkRepetitiveMethod(node);
         checkOverloadingPrivateAndPublic(node);
@@ -315,8 +298,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
                     (mn.isProtected() && superMethod.isPublic())) {
                 addWeakerAccessError(cn, mn, params, superMethod);
                 return;
-        	}
-  	  	}
+            }
+        }
     }
 
     private void checkOverloadingPrivateAndPublic(MethodNode node) {
@@ -327,16 +310,16 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
             if (method == node) continue;
             if (!method.getDeclaringClass().equals(node.getDeclaringClass())) continue;
             if (method.isPublic() || method.isProtected()) {
-                hasPublic=true;
+                hasPublic = true;
             } else {
-                hasPrivate=true;
+                hasPrivate = true;
             }
         }
         if (hasPrivate && hasPublic) {
-            addError("Mixing private and public/protected methods of the same name causes multimethods to be disabled and is forbidden to avoid surprising behaviour. Renaming the private methods will solve the problem.",node);
+            addError("Mixing private and public/protected methods of the same name causes multimethods to be disabled and is forbidden to avoid surprising behaviour. Renaming the private methods will solve the problem.", node);
         }
     }
-    
+
     private void checkRepetitiveMethod(MethodNode node) {
         if (isConstructor(node)) return;
         for (MethodNode method : currentClass.getMethods(node.getName())) {
@@ -372,28 +355,28 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
     }
 
     public void visitProperty(PropertyNode node) {
-    	checkDuplicateProperties(node);
+        checkDuplicateProperties(node);
         checkGenericsUsage(node, node.getType());
-    	super.visitProperty(node);
+        super.visitProperty(node);
     }
-    
+
     private void checkDuplicateProperties(PropertyNode node) {
-    	ClassNode cn = node.getDeclaringClass();
-    	String name = node.getName();
-    	String getterName = "get" + MetaClassHelper.capitalize(name);
-    	if(Character.isUpperCase(name.charAt(0))) {
-    		for (PropertyNode propNode : cn.getProperties()) {
-    			String otherName = propNode.getField().getName();
-    			String otherGetterName = "get" + MetaClassHelper.capitalize(otherName);
-    			if(node != propNode && getterName.equals(otherGetterName)) {
-    				String msg = "The field " + name + " and " + otherName + " on the class " +
-    				cn.getName() + " will result in duplicate JavaBean properties, which is not allowed";
-    				addError(msg, node);
-    			}
-    		}
-    	}
+        ClassNode cn = node.getDeclaringClass();
+        String name = node.getName();
+        String getterName = "get" + MetaClassHelper.capitalize(name);
+        if (Character.isUpperCase(name.charAt(0))) {
+            for (PropertyNode propNode : cn.getProperties()) {
+                String otherName = propNode.getField().getName();
+                String otherGetterName = "get" + MetaClassHelper.capitalize(otherName);
+                if (node != propNode && getterName.equals(otherGetterName)) {
+                    String msg = "The field " + name + " and " + otherName + " on the class " +
+                            cn.getName() + " will result in duplicate JavaBean properties, which is not allowed";
+                    addError(msg, node);
+                }
+            }
+        }
     }
-    
+
     private void checkInterfaceFieldModifiers(FieldNode node) {
         if (!currentClass.isInterface()) return;
         if ((node.getModifiers() & (ACC_PUBLIC | ACC_STATIC | ACC_FINAL)) == 0 ||
@@ -412,23 +395,23 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         }
         super.visitBinaryExpression(expression);
 
-        switch (expression.getOperation().getType()){
-	        case Types.EQUAL: // = assignment
-	        case Types.BITWISE_AND_EQUAL:
-	        case Types.BITWISE_OR_EQUAL:
-	        case Types.BITWISE_XOR_EQUAL:
-	        case Types.PLUS_EQUAL:
-	        case Types.MINUS_EQUAL:
-	        case Types.MULTIPLY_EQUAL:
-	        case Types.DIVIDE_EQUAL:
-	        case Types.INTDIV_EQUAL:
-	        case Types.MOD_EQUAL:
-	        case Types.POWER_EQUAL:
-	        case Types.LEFT_SHIFT_EQUAL:
-	        case Types.RIGHT_SHIFT_EQUAL:
-	        case Types.RIGHT_SHIFT_UNSIGNED_EQUAL:
-	            checkFinalFieldAccess(expression.getLeftExpression());
-	            break;
+        switch (expression.getOperation().getType()) {
+            case Types.EQUAL: // = assignment
+            case Types.BITWISE_AND_EQUAL:
+            case Types.BITWISE_OR_EQUAL:
+            case Types.BITWISE_XOR_EQUAL:
+            case Types.PLUS_EQUAL:
+            case Types.MINUS_EQUAL:
+            case Types.MULTIPLY_EQUAL:
+            case Types.DIVIDE_EQUAL:
+            case Types.INTDIV_EQUAL:
+            case Types.MOD_EQUAL:
+            case Types.POWER_EQUAL:
+            case Types.LEFT_SHIFT_EQUAL:
+            case Types.RIGHT_SHIFT_EQUAL:
+            case Types.RIGHT_SHIFT_UNSIGNED_EQUAL:
+                checkFinalFieldAccess(expression.getLeftExpression());
+                break;
             default:
                 break;
         }
@@ -438,17 +421,17 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         if (!(expression instanceof VariableExpression) && !(expression instanceof PropertyExpression)) return;
         Variable v = null;
         if (expression instanceof VariableExpression) {
-        VariableExpression ve = (VariableExpression) expression;
+            VariableExpression ve = (VariableExpression) expression;
             v = ve.getAccessedVariable();
         } else {
-        	PropertyExpression propExp = ((PropertyExpression) expression);
-        	Expression objectExpression = propExp.getObjectExpression();
-        	if(objectExpression instanceof VariableExpression) {
-        		VariableExpression varExp = (VariableExpression) objectExpression;
-        		if(varExp.isThisExpression()) {
-        			v = currentClass.getDeclaredField(propExp.getPropertyAsString());
-        		}
-        	}
+            PropertyExpression propExp = ((PropertyExpression) expression);
+            Expression objectExpression = propExp.getObjectExpression();
+            if (objectExpression instanceof VariableExpression) {
+                VariableExpression varExp = (VariableExpression) objectExpression;
+                if (varExp.isThisExpression()) {
+                    v = currentClass.getDeclaredField(propExp.getPropertyAsString());
+                }
+            }
         }
         if (v instanceof FieldNode) {
             FieldNode fn = (FieldNode) v;
@@ -467,8 +450,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
     }
 
     public void visitConstructor(ConstructorNode node) {
-    	inConstructor = true;
-    	inStaticConstructor = node.isStaticConstructor();
+        inConstructor = true;
+        inStaticConstructor = node.isStaticConstructor();
         checkGenericsUsage(node, node.getParameters());
         super.visitConstructor(node);
     }
@@ -479,7 +462,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         }
         super.visitCatchStatement(cs);
     }
-    
+
     public void visitMethodCallExpression(MethodCallExpression mce) {
         super.visitMethodCallExpression(mce);
         Expression aexp = mce.getArguments();
@@ -492,7 +475,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
             checkForInvalidDeclaration(aexp);
         }
     }
-    
+
     @Override
     public void visitDeclarationExpression(DeclarationExpression expression) {
         super.visitDeclarationExpression(expression);
@@ -519,29 +502,29 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         if (!(exp instanceof DeclarationExpression)) return;
         addError("Invalid use of declaration inside method call.", exp);
     }
-    
+
     public void visitConstantExpression(ConstantExpression expression) {
         super.visitConstantExpression(expression);
         checkStringExceedingMaximumLength(expression);
     }
-    
+
     public void visitGStringExpression(GStringExpression expression) {
         super.visitGStringExpression(expression);
         for (ConstantExpression ce : expression.getStrings()) {
             checkStringExceedingMaximumLength(ce);
         }
     }
-    
-    private void checkStringExceedingMaximumLength(ConstantExpression expression){
+
+    private void checkStringExceedingMaximumLength(ConstantExpression expression) {
         Object value = expression.getValue();
         if (value instanceof String) {
             String s = (String) value;
-            if (s.length()>65535) {
-                addError("String too long. The given string is "+s.length()+" Unicode code units long, but only a maximum of 65535 is allowed.",expression);
+            if (s.length() > 65535) {
+                addError("String too long. The given string is " + s.length() + " Unicode code units long, but only a maximum of 65535 is allowed.", expression);
             }
         }
     }
-    
+
     private void checkGenericsUsage(ASTNode ref, ClassNode[] nodes) {
         for (ClassNode node : nodes) {
             checkGenericsUsage(ref, node);
@@ -561,8 +544,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
             addError(   
                     "A transform used a generics containing ClassNode "+ node + " " +
                     "for "+getRefDescriptor(ref) + 
- "directly. You are not supposed to do this. "
-							+
+                    "directly. You are not suppposed to do this. " +
                     "Please create a new ClassNode refering to the old ClassNode " +
                     "and use the new ClassNode instead of the old one. Otherwise " +
                     "the compiler will create wrong descriptors and a potential " +

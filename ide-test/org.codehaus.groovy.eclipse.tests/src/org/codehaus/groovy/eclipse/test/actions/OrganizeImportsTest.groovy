@@ -224,40 +224,44 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRemoveImport() {
-        String contents = '''
+        String originalContents = '''\
             import other.SecondClass
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '\n'
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRemoveImport2() {
-        String contents = '''
+        String originalContents = '''\
             import other.SecondClass
             a
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            a
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRemoveImport3() {
         String originalContents = '''\
             import other.SecondClass
             other.SecondClass a
-            '''.stripIndent()
+            '''
         String expectedContents = '''\
             other.SecondClass a
-            '''.stripIndent()
+            '''
         doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testRemoveImport4() {
-        String originalContents = '''
+        String originalContents = '''\
             import other.SecondClass
             import javax.swing.text.html.HTML
             class Main {
               HTML f = null
             }
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import javax.swing.text.html.HTML
             class Main {
               HTML f = null
@@ -267,7 +271,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRemoveImport5() {
-        String originalContents = '''
+        String originalContents = '''\
             import other.ThirdClass
             import javax.swing.text.html.HTML
             import other.SecondClass
@@ -275,7 +279,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
               HTML f = null
             }
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import javax.swing.text.html.HTML
             class Main {
               HTML f = null
@@ -285,7 +289,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRemoveImport6() {
-        String originalContents = '''
+        String originalContents = '''\
             import java.util.logging.Logger
             import groovy.util.logging.Log
             @Log
@@ -295,7 +299,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
               }
             }
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import groovy.util.logging.Log
             @Log
             class Main {
@@ -308,12 +312,12 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRepeatImport() {
-        String originalContents = '''
+        String originalContents = '''\
             import javax.swing.text.html.HTML
             import javax.swing.text.html.HTML
             HTML.class
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import javax.swing.text.html.HTML
             HTML.class
             '''
@@ -321,7 +325,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainImport() {
-        String contents = '''
+        String contents = '''\
             import javax.swing.text.html.HTML
             HTML.class
             '''
@@ -329,11 +333,72 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainImport2() {
+        String contents = '''\
+            import java.lang.reflect.Method
+            for (Method m : Object.class.getDeclaredMethods()) {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport3() {
+        String contents = '''\
+            import java.lang.reflect.Method
+            for (Method m in Object.class.getDeclaredMethods()) {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport4() {
         // generics make the node length > "java.util.concurrent.Callable".length()
-        String contents = '''
+        String contents = '''\
             import java.util.concurrent.Callable
             class C implements Callable<java.util.List<java.lang.Object>> {
               List<Object> call() { }
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport5() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            class C {
+              @Lazy Pattern p = ~/123/
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport6() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            class C {
+              @Lazy def p = Pattern.compile('123')
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport7() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            class C {
+              @Lazy def p = compile('123')
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport8() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            class C {
+              @groovy.transform.Memoized
+              def meth() {
+                compile('123')
+              }
             }
             '''
         doContentsCompareTest(contents, contents)
@@ -348,7 +413,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-506
     void testImportDateFormat() {
-        String contents = '''
+        String contents = '''\
             import java.text.DateFormat
             new String(DateFormat.getDateInstance())
             '''
@@ -357,7 +422,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-546
     void testImportDateFormat2() {
-        String contents = '''
+        String contents = '''\
             import java.text.DateFormat
             class Foo {
               Foo(DateFormat arg) { }
@@ -378,7 +443,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-643
     void testNoStackOverflowOnEnum() {
-        String contents = '''
+        String contents = '''\
             enum MyEnum {
               ONE_VALUE, ANOTHER_VALUE
             }
@@ -395,7 +460,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testDynamicVariable2() {
-        String contents = '''
+        String contents = '''\
             nothing.HTML.NULL_ATTRIBUTE_VALUE
             '''
         doContentsCompareTest(contents, contents)
@@ -463,7 +528,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
             @interface NamedQuery {
             }'''
-        String contents = '''
+        String contents = '''\
             import anns.NamedQueries
             import anns.NamedQuery
 
@@ -503,7 +568,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             @interface NamedQuery {
             }
             '''
-        String contents = '''
+        String contents = '''\
             import anns.NamedQueries
             import anns.NamedQuery
 
@@ -533,7 +598,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
               class InnerInner { }
             }
             '''
-        String contents = '''
+        String contents = '''\
             import inner.HasInner.InnerInner
             InnerInner f
             '''
@@ -558,7 +623,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
               class InnerInner { }
             }
             '''
-        String contents = '''
+        String contents = '''\
             import inner.HasInner
             HasInner.InnerInner f
             '''
@@ -566,7 +631,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.String.format
             format
             '''
@@ -574,18 +639,18 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImportX() {
-        String originalContents = '''
+        String originalContents = '''\
             import static java.lang.String.format
             formage
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             formage
             '''
         doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testStaticImport2() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.String.format
             format('Some %d', 1)
             '''
@@ -593,7 +658,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport3() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.String.format
             def formatter = { format 'blah', 42 }
             '''
@@ -601,7 +666,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport4() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.Math.PI
             def area = n * PI
             '''
@@ -609,7 +674,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport4a() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.Math.PI
             def nan = PI.isNaN()
             '''
@@ -617,7 +682,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport5() {
-        String contents = '''
+        String contents = '''\
             import static java.lang.Math.PI
             def area = compute(n, PI)
             '''
@@ -625,18 +690,18 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport5a() {
-        String originalContents = '''
+        String originalContents = '''\
             import static java.lang.Math.PI
             def area = compute(n, Math.PI)
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             def area = compute(n, Math.PI)
             '''
         doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testStaticImport6() {
-        String contents = '''
+        String contents = '''\
             import static org.apache.commons.lang.ArrayUtils.EMPTY_STRING_ARRAY
             @SuppressWarnings(value=EMPTY_STRING_ARRAY)
             def area = compute(n, PI)
@@ -645,7 +710,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport7() {
-        String contents = '''
+        String contents = '''\
             import static java.util.Collections.emptyList
             class C {
               def method() {
@@ -657,7 +722,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport7a() {
-        String contents = '''
+        String contents = '''\
             import static java.util.Collections.emptyList
             @groovy.transform.CompileStatic
             class C {
@@ -670,7 +735,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testStaticImport7b() {
-        String contents = '''
+        String contents = '''\
             import static java.util.Collections.emptyList
             @groovy.transform.TypeChecked
             class C {
@@ -683,12 +748,12 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRepeatStaticImport() {
-        String originalContents = '''
+        String originalContents = '''\
             import static java.util.Collections.emptyList
             import static java.util.Collections.emptyList
             List list = emptyList();
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import static java.util.Collections.emptyList
             List list = emptyList();
             '''
@@ -697,7 +762,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-929
     void testStarImport() {
-        String contents = '''
+        String contents = '''\
             import javax.swing.text.html.*
             HTML
             '''
@@ -707,19 +772,19 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-929
     void testStarImport2() {
         // never remove star imports
-        String contents = '''
+        String contents = '''\
             import javax.swing.text.html.*
             '''
         doContentsCompareTest(contents, contents)
     }
 
     void testStarImport3() {
-        String originalContents = '''
+        String originalContents = '''\
             import java.util.regex.Pattern
             import java.util.regex.*
             Pattern p = ~/123/
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import java.util.regex.*
             Pattern p = ~/123/
             '''
@@ -729,7 +794,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-929
     void testStaticStarImport() {
         // never remove static star imports
-        String contents = '''
+        String contents = '''\
             import static java.lang.String.*
             format
             '''
@@ -739,19 +804,19 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-929
     void testStaticStarImport2() {
         // never remove static star imports
-        String contents = '''
+        String contents = '''\
             import static java.lang.String.*
             '''
         doContentsCompareTest(contents, contents)
     }
 
     void testStaticStarImport3() {
-        String originalContents = '''
+        String originalContents = '''\
             import static java.util.Collections.emptyList
             import static java.util.Collections.*
             List l = emptyList()
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import static java.util.Collections.*
             List l = emptyList()
             '''
@@ -760,7 +825,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-1219
     void testAnnotationsOnImports1() {
-        String contents = '''
+        String contents = '''\
             @Deprecated
             import javax.swing.text.html.*
             '''
@@ -769,7 +834,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-1692
     void testFieldAnnotationImport() {
-        String contents = '''
+        String contents = '''\
             import groovy.transform.Field
             @Field
             def x = 0
@@ -790,7 +855,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-1794
     void testCompileDynamicImport2() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return
-        String contents = '''
+        String contents = '''\
             import groovy.transform.CompileDynamic
             @CompileDynamic
             public void x() {
@@ -802,14 +867,14 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-1794
     void testCompileDynamicImport3() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return
-        String originalContents = '''
+        String originalContents = '''\
             import groovy.transform.CompileDynamic
             import groovy.transform.CompileStatic
             @CompileDynamic
             public void x() {
             }
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import groovy.transform.CompileDynamic
             @CompileDynamic
             public void x() {
@@ -820,16 +885,17 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-1219
     void testAnnotationsOnImports2() {
-        String contents = '''
+        String originalContents = '''\
             @Deprecated
             import javax.swing.text.html.HTML
             '''
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '\n'
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-1219
     void testAnnotationsOnImports3() {
-        String contents = '''
+        String contents = '''\
             @Deprecated
             import javax.swing.text.html.*
             HTML
@@ -838,7 +904,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testDefaultImport0() {
-        String contents = '''
+        String contents = '''\
         interface Pattern {} // this should shadow java.util.regex.Pattern, et al.
         Pattern p = null
         '''
@@ -848,55 +914,64 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-1392
     void testDefaultImport1() {
         // test a simple default import is removed
-        String contents = '''
+        String originalContents = '''\
             import java.util.List
             import groovy.util.Proxy
             List
             Proxy
             '''
-        // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            List
+            Proxy
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-1392
     void testDefaultImport2() {
         // test that star default imports are removed
-        String contents = '''
+        String originalContents = '''\
             import java.util.*
             import groovy.util.*
             List
             Proxy
             '''
-        // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            List
+            Proxy
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-1392
     void testDefaultImport3() {
         // test that BigInteger and BigDecimal are removed
-        String contents = '''
+        String originalContents = '''\
             import java.math.BigDecimal
             import java.math.BigInteger
             BigDecimal
             BigInteger
             '''
-        // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 1)
+        String expectedContents = '''\
+            BigDecimal
+            BigInteger
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-1392
     void testDefaultImport4() {
         // test that aliased default import not removed
-        String originalContents = '''
+        String originalContents = '''\
             import java.util.List as LL
             import groovy.util.Proxy as PP
             LL
             PP
             '''
-        String expectedContents = '''
-            import groovy.util.Proxy as PP
-
+        String expectedContents = '''\
             import java.util.List as LL
+
+            import groovy.util.Proxy as PP
             LL
             PP
             '''
@@ -906,7 +981,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-1392
     void testDefaultImport5() {
         // test that static import whose container is default is not removed
-        String contents = '''
+        String contents = '''\
             import static java.util.Collections.swap
             swap
             '''
@@ -937,12 +1012,12 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
               }
             }'''
 
-        doDeleteImportTest(contents, 0)
+        doContentsCompareTest(contents, contents)
     }
 
     void testReorderExistingImports() {
         // I've seen the static import get wiped out because it's not in the right position
-        String originalContents = '''
+        String originalContents = '''\
             import java.util.List
             import org.w3c.dom.Node
             import static java.util.Collections.emptyList
@@ -952,7 +1027,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             Pattern p = ~/abc/
             Node n = null
             '''
-        String expectedContents = '''
+        String expectedContents = '''\
             import static java.util.Collections.emptyList
 
             import java.util.regex.Pattern

@@ -42,16 +42,6 @@
    <feature url="features/org.codehaus.groovy.m2eclipse.feature_2.9.2.qualifier.jar" id="org.codehaus.groovy.m2eclipse.feature" version="2.9.2.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
-   <!--
-   <feature url="features/org.codehaus.groovy.m2eclipse.source_2.9.2.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.m2eclipse"/>
-   </feature>
-   <feature url="features/org.codehaus.groovy.alltests.feature.source_2.9.2.qualifier.jar" id="org.codehaus.groovy.alltests.feature.source" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.sdk"/>
-   </feature> -->
-   <feature url="features/org.codehaus.groovy.alltests.feature_2.9.2.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="2.9.2.qualifier">
-      <!-- <category name="org.codehaus.groovy.sdk"/> -->
-   </feature>
    
    <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
       <description>

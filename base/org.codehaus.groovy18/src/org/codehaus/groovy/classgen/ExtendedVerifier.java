@@ -15,20 +15,7 @@
  */
 package org.codehaus.groovy.classgen;
 
-import groovyjarjarasm.asm.Opcodes;
-
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.GroovyClassVisitor;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.PackageNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -36,6 +23,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
+import groovyjarjarasm.asm.Opcodes;
 
 /**
  * A specialized Groovy AST visitor meant to perform additional verifications upon the
@@ -124,7 +112,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation(unvisited);
             boolean isTargetAnnotation = visited.getClassNode().isResolved() &&
-            visited.getClassNode().getName().equals("java.lang.annotation.Target");
+                    visited.getClassNode().getName().equals("java.lang.annotation.Target");
 
             // Check if the annotation target is correct, unless it's the target annotating an annotation definition
             // defining on which target elements the annotation applies
@@ -134,6 +122,9 @@ public class ExtendedVerifier implements GroovyClassVisitor {
                         visited);
             }
             visitDeprecation(node, visited);
+            // GRECLIPSE add
+            visitOverride(node, visited);
+            // GRECLIPSE end
         }
     }
 
@@ -151,6 +142,36 @@ public class ExtendedVerifier implements GroovyClassVisitor {
             }
         }
     }
+
+    // GRECLIPSE add -- backported from Groovy 2.2
+    // TODO GROOVY-5011 handle case of @Override on a property
+    private void visitOverride(AnnotatedNode node, AnnotationNode visited) {
+        ClassNode annotationClassNode = visited.getClassNode();
+        if (annotationClassNode.isResolved() && annotationClassNode.getName().equals("java.lang.Override")) {
+            if (node instanceof MethodNode) {
+                MethodNode mn = (MethodNode) node;
+                ClassNode cNode = node.getDeclaringClass();
+                ClassNode sNode = cNode;
+                outer:
+                while (sNode != null) {
+                    if (sNode != cNode && sNode.getDeclaredMethod(mn.getName(), mn.getParameters()) != null) break;
+                    for (ClassNode anInterface : sNode.getInterfaces()) {
+                        ClassNode iNode = anInterface;
+                        while (iNode != null) {
+                            if (iNode.getDeclaredMethod(mn.getName(), mn.getParameters()) != null) break outer;
+                            iNode = iNode.getSuperClass();
+                        }
+                    }
+                    sNode = sNode.getSuperClass();
+                }
+                if (sNode == null) {
+                    addError("Method '" + mn.getName() + "' from class '" + cNode.getName() + "' does not override " +
+                            "method from its superclass or interfaces but is annotated with @Override.", visited);
+                }
+            }
+        }
+    }
+    // GRECLIPSE end
 
     /**
      * Resolve metadata and details of the annotation.
@@ -188,7 +209,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
     	// end
         this.source.getErrorCollector().addErrorAndContinue(
                 new SyntaxErrorMessage(
-                 new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
+                        new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber()), this.source)
         );
         // GRECLIPSE: start:
     	}

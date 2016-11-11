@@ -16,41 +16,16 @@
 
 package org.codehaus.groovy.vmplugin.v5;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.List;
-
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.PackageNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.vmplugin.VMPlugin;
+
+import java.lang.annotation.*;
+import java.lang.reflect.*;
+import java.util.List;
 
 /**
  * java 5 based functions
@@ -145,7 +120,6 @@ public class Java5 implements VMPlugin {
         //TODO: more than one lower bound for wildcards?
         ClassNode[] lowers = configureTypes(wildcardType.getLowerBounds());
         ClassNode lower = null;
-        // TODO: is it safe to remove this? What was the original intention?
         if (lowers != null) lower = lowers[0];
 
         ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
@@ -236,27 +210,27 @@ public class Java5 implements VMPlugin {
         }
         // GRECLIPSE: start
         } else {
-        	String typename = type.getName();
-        	if (typename.equals("java.lang.annotation.Retention")) {
-	            Expression exp = definition.getMember("value");
-	            if (!(exp instanceof PropertyExpression)) return;
-	            PropertyExpression pe = (PropertyExpression) exp;
-	            String name = pe.getPropertyAsString();
-	            RetentionPolicy policy = RetentionPolicy.valueOf(name);
-	            setRetentionPolicy(policy,root);
-        	} else if (typename.equals("java.lang.annotation.Target")) {
-        		Expression exp = definition.getMember("value");
- 	            if (!(exp instanceof ListExpression)) return;
- 	            ListExpression le = (ListExpression) exp;
- 	            int bitmap = 0;
- 	            for (Expression expression: le.getExpressions()) {
- 	                PropertyExpression element = (PropertyExpression)expression;
- 	                String name = element.getPropertyAsString();
- 	                ElementType value = ElementType.valueOf(name);
- 	                bitmap |= getElementCode(value);
- 	            }
- 	            root.setAllowedTargets(bitmap);
-        	}
+            String typename = type.getName();
+            if (typename.equals("java.lang.annotation.Retention")) {
+                Expression exp = definition.getMember("value");
+                if (!(exp instanceof PropertyExpression)) return;
+                PropertyExpression pe = (PropertyExpression) exp;
+                String name = pe.getPropertyAsString();
+                RetentionPolicy policy = RetentionPolicy.valueOf(name);
+                setRetentionPolicy(policy,root);
+            } else if (typename.equals("java.lang.annotation.Target")) {
+                Expression exp = definition.getMember("value");
+                if (!(exp instanceof ListExpression)) return;
+                ListExpression le = (ListExpression) exp;
+                int bitmap = 0;
+                for (Expression expression: le.getExpressions()) {
+                    PropertyExpression element = (PropertyExpression)expression;
+                    String name = element.getPropertyAsString();
+                    ElementType value = ElementType.valueOf(name);
+                    bitmap |= getElementCode(value);
+                }
+                root.setAllowedTargets(bitmap);
+            }
         }
         // end
     }
