@@ -23,6 +23,7 @@ import org.codehaus.groovy.GroovyException;
  *
  *  @version $Id$
  */
+@SuppressWarnings("serial")
 public class SyntaxException extends GroovyException {
 
     /** Line upon which the error occurred. */
