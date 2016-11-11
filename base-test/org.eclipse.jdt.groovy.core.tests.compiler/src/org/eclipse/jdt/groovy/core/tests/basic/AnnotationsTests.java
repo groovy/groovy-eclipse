@@ -77,6 +77,63 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    public void testClassAnnotationValue() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(URL.class)\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testClassAnnotationValue2() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(URL)\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testClosureAnnotationValue() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(value={ println 'hello' })\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
     // GRECLIPSE-629
     public void testConstAnnotationValue() {
         String[] sources = {

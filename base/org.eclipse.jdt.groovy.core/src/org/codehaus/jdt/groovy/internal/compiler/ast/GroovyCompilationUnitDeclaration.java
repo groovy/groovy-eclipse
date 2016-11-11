@@ -49,6 +49,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.TaskEntry;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -1211,8 +1212,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             ClassNode outerClass = inner.getClassNode().getOuterClass();
                             enclosingMethodGroovy = outerClass.getMethod("run", new Parameter[0]);
                             if (enclosingMethodGroovy == null) {
-                                throw new GroovyEclipseBug(
-                                        "Failed to find the enclosing method for anonymous type " + inner.getClassNode().getName());
+                                throw new GroovyEclipseBug("Failed to find the enclosing method for anonymous type " + inner.getClassNode().getName());
                             }
                         }
                         AbstractMethodDeclaration enclosingMethodJDT = enclosingMethodMap.get(enclosingMethodGroovy);
@@ -1220,14 +1220,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         inner.enclosingMethod = enclosingMethodJDT;
 
                         // just a dummy scope to be filled in for real later. needed for structure requesting
-                        enclosingMethodJDT.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethodJDT,
-                                enclosingMethodJDT.isStatic());
+                        enclosingMethodJDT.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethodJDT, enclosingMethodJDT.isStatic());
                         if (inner.enclosingMethod.statements == null || inner.enclosingMethod.statements.length == 0) {
                             inner.enclosingMethod.statements = new Statement[] { inner.allocation };
                         } else {
                             Statement[] newStatements = new Statement[inner.enclosingMethod.statements.length + 1];
-                            System.arraycopy(inner.enclosingMethod.statements, 0, newStatements, 0,
-                                    inner.enclosingMethod.statements.length);
+                            System.arraycopy(inner.enclosingMethod.statements, 0, newStatements, 0, inner.enclosingMethod.statements.length);
                             newStatements[inner.enclosingMethod.statements.length] = inner.allocation;
                             inner.enclosingMethod.statements = newStatements;
                         }
@@ -1624,13 +1622,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             } else if (expr instanceof VariableExpression) {
                 String name = ((VariableExpression) expr).getName();
-// TODO: Look up name to determine if it is a class or a constant
+                // TODO: Look up name to determine if it is a class or a constant
                 if (name.matches("[a-z_]\\w*|[A-Z][A-Z_0-9]*")) {
                     // could be a class field or statically imported constant also...
                     return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
                 }
                 // likely a class literal; Groovy does not require ".class"
                 return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1)));
+
+            } else if (expr instanceof ClosureExpression) {
+                // annotation is something like "@Tag(value = { some computation })" return "Closure.class" to appease JDT
+                return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd())));
 
             } else {
                 Util.log(IStatus.WARNING, "Unhandled annotation value type: " + expr.getClass().getSimpleName());
