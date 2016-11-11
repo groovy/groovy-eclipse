@@ -1338,6 +1338,32 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "no error");
     }
 
+    /**
+     * https://github.com/groovy/groovy-eclipse/issues/221
+     */
+    public void testExtendingGenerics_GroovyExtendsJava15() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+
+        String[] sources = {
+            "AttributeConverter.java",
+            "interface AttributeConverter<X,Y> {\n" +
+            "  Y encode(X eks);\n" +
+            "  X decode(Y why);\n" +
+            "}",
+
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class Main implements AttributeConverter<String,Object> {\n" +
+            "  @Override\n" +
+            "  Object encode(String s) { return null; }\n" +
+            "  @Override\n" +
+            "  String decode(Object o) { return null; }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
     public void testImplementingInterface_JavaExtendingGroovyGenericType() {
         String[] sources = {
             "p/C.java",

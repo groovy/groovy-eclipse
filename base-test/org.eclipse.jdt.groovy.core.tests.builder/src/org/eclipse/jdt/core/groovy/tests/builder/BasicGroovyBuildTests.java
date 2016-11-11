@@ -3812,8 +3812,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         expectingProblemsFor(class1, "Problem : Groovy:unexpected token: abstract @ line 3, column 5. [ resource : </Project/src/test/Class1.groovy> range : <41,42> category : <60> severity : <2>]");
+        if (GroovyUtils.isAtLeastGroovy(20)) { // Groovy 1.8 has no @Override checking
         expectingProblemsFor(class2, "Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <48,56> category : <60> severity : <2>]");
         expectingProblemsFor(class3, "Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <48,56> category : <60> severity : <2>]");
+        }
 
         // modify the body of the abstract class to fix build
         env.addGroovyClass(root, "test", "Class1",

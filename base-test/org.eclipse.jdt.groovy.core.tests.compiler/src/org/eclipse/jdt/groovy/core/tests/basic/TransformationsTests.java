@@ -145,11 +145,12 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "\t             ^\n" +
             "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
             "----------\n" +
+            (!GroovyUtils.isAtLeastGroovy(20)?"":
             "7. ERROR in bad.groovy (at line 4)\n" +
             "\t@Override\n" +
             "\t ^^^^^^^^\n" +
             "Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
-            "----------\n");
+            "----------\n"));
     }
 
     public void testGreclipse1521() {
