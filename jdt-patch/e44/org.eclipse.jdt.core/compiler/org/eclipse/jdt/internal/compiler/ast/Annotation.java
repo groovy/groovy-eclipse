@@ -1186,8 +1186,9 @@ public abstract class Annotation extends Expression {
 				ReferenceBinding trb = (ReferenceBinding) tb;
 				if (isInterestingGroovyType(trb)) {
 					AnnotationBinding[] abs = trb.getAnnotations();
-					if (abs != null) {
+					if (abs != null && abs.length > 0) {
 						for (AnnotationBinding ab : abs) {
+							if (ab == null) continue;
 							ReferenceBinding arb = ab.getAnnotationType();
 							if (arb != null && arb.compoundName != null) {
 								String name = CharOperation.toString(arb.compoundName);

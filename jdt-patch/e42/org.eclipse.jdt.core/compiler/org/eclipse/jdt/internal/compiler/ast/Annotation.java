@@ -287,29 +287,18 @@ public abstract class Annotation extends Expression {
 			return null;
 		}
 		this.resolvedType = typeBinding;
+		// GROOVY edit
+		boolean isGroovyAlias = isFakeGroovyAnnotation(typeBinding);
 		// ensure type refers to an annotation type
 		if (!typeBinding.isAnnotationType() && typeBinding.isValidBinding()) {
-			// GRECLIPSE - cope with AnnotationCollector looking ones - GRECLIPSE-1586
-			if (typeBinding instanceof BinaryTypeBinding) {
-				MethodBinding[] mbs = ((BinaryTypeBinding)typeBinding).methods();
-				boolean isOK = false;
-				if (mbs!=null) {
-					for (int m=0;m<mbs.length;m++) {
-						MethodBinding mb = mbs[m];
-						if (CharOperation.equals("value".toCharArray(),mb.selector) && 
-							CharOperation.equals("()[[Ljava/lang/Object;".toCharArray(),mb.signature())) {
-							isOK = true;
-						}
-					}
-				}
-				if (isOK) {
-					this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, Binding.NO_ELEMENT_VALUE_PAIRS);
-					return typeBinding;
-//					return null; // skip error reporting
-				}
+			if (isGroovyAlias) {
+				// allow the Groovy annotation to show in Javadoc
+				// TODO: Does this cause unanticipated side effects?
+				this.compilerAnnotation = scope.environment().createAnnotation(
+						(ReferenceBinding) this.resolvedType, computeElementValuePairs());
+			} else {
+				scope.problemReporter().typeMismatchError(typeBinding, scope.getJavaLangAnnotationAnnotation(), this.type, null);
 			}
-			// GRECLIPSE end
-			scope.problemReporter().typeMismatchError(typeBinding, scope.getJavaLangAnnotationAnnotation(), this.type, null);
 			return null;
 		}
 
@@ -368,6 +357,10 @@ public abstract class Annotation extends Expression {
 				scope.problemReporter().missingValueForAnnotationMember(this, selector);
 			}
 		}
+		// GROOVY add
+		// don't validate collector annotation pairs
+		if (!isGroovyAlias)
+		// GROOVY end
 		// check unused pairs
 		for (int i = 0; i < pairsLength; i++) {
 			if (pairs[i] != null) {
@@ -375,8 +368,10 @@ public abstract class Annotation extends Expression {
 				pairs[i].resolveTypeExpecting(scope, null); // resilient
 			}
 		}
-//		if (scope.compilerOptions().storeAnnotations)
-		this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, computeElementValuePairs());
+		this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType,
+				// GROOVY add
+				isGroovyAlias ? Binding.NO_ELEMENT_VALUE_PAIRS : computeElementValuePairs());
+				// GROOVY end
 		// recognize standard annotations ?
 		long tagBits = detectStandardAnnotation(scope, annotationType, valueAttribute);
 
@@ -496,4 +491,43 @@ public abstract class Annotation extends Expression {
 
 	public abstract void traverse(ASTVisitor visitor, BlockScope scope);
 
+	// GROOVY add
+	private boolean isFakeGroovyAnnotation(TypeBinding tb) {
+		try {
+			if (tb instanceof ReferenceBinding) {
+				ReferenceBinding trb = (ReferenceBinding) tb;
+				if (isInterestingGroovyType(trb)) {
+					AnnotationBinding[] abs = trb.getAnnotations();
+					if (abs != null && abs.length > 0) {
+						for (AnnotationBinding ab : abs) {
+							if (ab == null) continue;
+							ReferenceBinding arb = ab.getAnnotationType();
+							if (arb != null && arb.compoundName != null) {
+								String name = CharOperation.toString(arb.compoundName);
+								if (name.equals("groovy.transform.AnnotationCollector")) { //$NON-NLS-1$
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch (Throwable t) {
+			// Protect the JDT!
+			t.printStackTrace();
+		}
+		return false;
+	}
+
+	/**
+	 * Try to eliminate things we don't care about from being 'special groovy handled'.
+	 */
+	private static boolean isInterestingGroovyType(ReferenceBinding rtb) {
+		if (rtb instanceof SourceTypeBinding) return true; // TODO: Find better check
+		FieldBinding f = rtb.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve:*/ false);
+		return (f != null);
+	}
+
+	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$callSiteArray".toCharArray(); //$NON-NLS-1$
+	// GROOVY end
 }
