@@ -315,19 +315,38 @@ public class OrganizeGroovyImports {
                 return;
             }
 
-            int start = Math.max(node.getNameStart(), node.getStart()),
-                until = Math.max(node.getNameEnd(), node.getEnd());
+            GenericsType[] generics = node.getGenericsTypes();
+            int start = node.getNameStart(),
+                until = node.getNameEnd();
+            if (until < 1) {
+                start = node.getStart();
+                until = node.getEnd()-1;
 
-            if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-                for (GenericsType gen : node.getGenericsTypes()) {
-                    if (gen.getStart() > 0) until = gen.getStart() - 1;
-                    if (!gen.isPlaceholder() && !gen.isWildcard()) {
-                        handleType(gen.getType(), false);
+                // getEnd() includes generics; try to constrain the range
+                if (generics != null && generics.length > 0) {
+                    if (generics[0].getStart() > 0)
+                        until = generics[0].getStart() - 1;
+                } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
+                    assert start <= getBaseType(node).getStart();
+                    assert until <= 0 || getBaseType(node).getEnd() < until;
+
+                    start = getBaseType(node).getStart();
+                    until = getBaseType(node).getEnd();
+                }
+            }
+            int length = until - start;
+            String name = getTypeName(node);
+
+            // check node's generics types
+            if (node.isUsingGenerics() && generics != null && generics.length > 0) {
+                for (GenericsType gt : generics) {
+                    if (!gt.isPlaceholder() && !gt.isWildcard()) {
+                        handleType(gt.getType(), false);
                     }
-                    if (gen.getLowerBound() != null) {
-                        handleType(gen.getLowerBound(), false);
-                    } else if (gen.getUpperBounds() != null) {
-                        for (ClassNode upper : gen.getUpperBounds()) {
+                    if (gt.getLowerBound() != null) {
+                        handleType(gt.getLowerBound(), false);
+                    } else if (gt.getUpperBounds() != null) {
+                        for (ClassNode upper : gt.getUpperBounds()) {
                             // handle enums where the upper bound is the same as the type
                             if (!upper.getName().equals(node.getName())) {
                                 handleType(upper, false);
@@ -335,16 +354,7 @@ public class OrganizeGroovyImports {
                         }
                     }
                 }
-            } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
-assert start <= getBaseType(node).getStart();
-assert until <= 0 || getBaseType(node).getEnd() < until;
-
-                start = getBaseType(node).getStart();
-                until = getBaseType(node).getEnd();
             }
-
-            int length = until - start;
-            String name = getTypeName(node);
 
             if (!node.isResolved() && node.redirect() != current) {
                 // aliases come through as unresolved types
@@ -379,6 +389,11 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
                     innerIndex = name.lastIndexOf('$', innerIndex - 1);
                 }
                 doNotRemoveImport(partialName);
+
+            } else if (length > name.length()) {
+                GroovyCore.logException(String.format(
+                    "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
+                    name, start, until, node.getLineNumber(), length, name.length()), new Exception());
             }
         }
 
