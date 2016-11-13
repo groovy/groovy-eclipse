@@ -280,7 +280,11 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitForLoop(ForStatement node) {
-            handleType(node.getVariable().getType(), false);
+            // check the type node of "for (Item i in x)" but skip "for (i in x)"
+            Parameter parm = node.getVariable(); ClassNode type = parm.getType();
+            if (type.getStart() > 0 && type.getEnd() < parm.getStart()) {
+                handleType(type, false);
+            }
             super.visitForLoop(node);
         }
 
@@ -294,12 +298,11 @@ public class OrganizeGroovyImports {
          */
         private void handleVariable(VariableExpression expr) {
             String name = expr.getName();
-            if (!missingTypes.containsKey(name)) {
-                if (Character.isUpperCase(name.charAt(0)) &&
-                        !STATIC_CONSTANT.matcher(name).matches()) {
-                    missingTypes.put(name, new UnresolvedTypeData(name, false,
-                            new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
-                }
+            if (!missingTypes.containsKey(name) &&
+                    Character.isUpperCase(name.charAt(0)) &&
+                    !STATIC_CONSTANT.matcher(name).matches()) {
+                missingTypes.put(name, new UnresolvedTypeData(name, false,
+                        new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
             }
         }
 
@@ -308,6 +311,10 @@ public class OrganizeGroovyImports {
          * that the import will be retained if the type is resolved.
          */
         private void handleType(ClassNode node, boolean isAnnotation) {
+            if (getBaseType(node).isPrimitive()) {
+                return;
+            }
+
             int start = Math.max(node.getNameStart(), node.getStart()),
                 until = Math.max(node.getNameEnd(), node.getEnd());
 
@@ -342,7 +349,7 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
             if (!node.isResolved() && node.redirect() != current) {
                 // aliases come through as unresolved types
                 if (ALIASED_IMPORT.matcher(name).find()) {
-                    importsSlatedForRemoval.remove(name);
+                    doNotRemoveImport(name);
                     return;
                 }
                 String[] parts = name.split("\\.");
@@ -350,7 +357,7 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
                     name = parts[0]; // Map.Entry -> Map
                 } else if (length < name.length()) {
                     // name range too small to include the full name
-                    importsSlatedForRemoval.remove(name); // keep import
+                    doNotRemoveImport(name); // keep import
                     name = ArrayUtils.lastElement(parts); // foo.Bar -> Bar
                 }
                 if (!missingTypes.containsKey(name)) {
@@ -389,7 +396,7 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
         }
 
         private boolean checkRetainImport(String name) {
-            if (!importsSlatedForRemoval.isEmpty()) {
+            if (!importsSlatedForRemoval.isEmpty() && !"this".equals(name) && !"super".equals(name)) {
                 String suffix = '.' + name;
                 for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
                     if (entry.getValue().isStatic() && entry.getKey().endsWith(suffix)) {
