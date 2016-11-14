@@ -46375,4 +46375,17 @@ public void test1424() {
 			"Zork cannot be resolved to a type\n" +
 			"----------\n");
 }
+//https://github.com/groovy/groovy-eclipse/issues/148
+public void test1425() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
+		return;
+	}
+	this.runConformTest(
+			new String[] {
+					"A.java",
+					"public interface A<Q extends A<? super Q>> {}",
+					"B.groovy",
+					"class B {public void test(A<?> a) {}}"
+			});
+}
 }
