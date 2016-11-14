@@ -32,6 +32,7 @@ public class ExtractGroovyConstantRefactoringContribution extends JavaUIRefactor
         return RefactoringSignatureDescriptorFactory.createExtractConstantDescriptor();
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map arguments, int flags) {
         return RefactoringSignatureDescriptorFactory.createExtractConstantDescriptor(project, description, comment, arguments, flags);
     }

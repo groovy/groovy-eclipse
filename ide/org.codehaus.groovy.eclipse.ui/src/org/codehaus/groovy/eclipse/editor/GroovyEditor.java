@@ -967,24 +967,24 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Class<T> required) {
+    @Override @SuppressWarnings({"rawtypes", "unchecked"})
+    public Object getAdapter(Class required) {
         if (IResource.class == required || IFile.class == required) {
-            return (T) this.getFile();
+            return this.getFile();
         }
         if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
-            return (T) super.getInputJavaElement();
+            return super.getInputJavaElement();
         }
 
         if (ModuleNode.class == required) {
-            return (T) this.getModuleNode();
+            return this.getModuleNode();
         }
         // new variant test in e43 which addresses bug 391253 means groovy doesn't get an outline
         // (it must fail the isCalledByOutline() test but I haven't investigated deeply)
         if (IContentOutlinePage.class.equals(required)) {
             if (fOutlinePage == null && getSourceViewer() != null)
                 fOutlinePage= createOutlinePage();
-            return (T) fOutlinePage;
+            return fOutlinePage;
         }
         return super.getAdapter(required);
     }

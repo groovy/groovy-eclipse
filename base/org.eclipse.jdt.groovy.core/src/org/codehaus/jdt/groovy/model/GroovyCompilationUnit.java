@@ -434,13 +434,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
         return op.ast;
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Class<T> adapter) {
+    @Override @SuppressWarnings({"rawtypes", "unchecked"})
+    public Object getAdapter(Class adapter) {
         if (adapter == GroovyCompilationUnit.class) {
-            return (T) this;
+            return this;
         }
         if (adapter == ModuleNode.class) {
-            return (T) getModuleNode();
+            return getModuleNode();
         }
         return super.getAdapter(adapter);
     }

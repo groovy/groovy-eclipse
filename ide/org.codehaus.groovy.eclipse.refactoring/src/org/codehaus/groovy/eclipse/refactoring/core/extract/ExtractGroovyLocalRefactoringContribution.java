@@ -28,12 +28,11 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 public class ExtractGroovyLocalRefactoringContribution extends JavaUIRefactoringContribution {
 
-    @Override
     public RefactoringDescriptor createDescriptor() {
         return RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor();
     }
 
-    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map arguments, int flags) {
         return RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project, description, comment, arguments, flags);
     }
