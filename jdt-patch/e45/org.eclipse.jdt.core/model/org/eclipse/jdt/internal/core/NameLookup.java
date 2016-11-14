@@ -283,6 +283,10 @@ public class NameLookup implements SuffixConstants {
 	protected boolean acceptType(IType type, int acceptFlags, boolean isSourceType) {
 		if (acceptFlags == 0 || acceptFlags == ACCEPT_ALL)
 			return true; // no flags or all flags, always accepted
+		try {
+			int kind = isSourceType
+					? TypeDeclaration.kind(((SourceTypeElementInfo) ((SourceType) type).getElementInfo()).getModifiers())
+					: TypeDeclaration.kind(((IBinaryType) ((BinaryType) type).getElementInfo()).getModifiers());
 
 		// GRECLIPSE add
 		if (kind == TypeDeclaration.CLASS_DECL && (acceptFlags & ACCEPT_CLASSES) == 0 && (acceptFlags & ACCEPT_ANNOTATIONS) != 0) {
@@ -298,10 +302,6 @@ public class NameLookup implements SuffixConstants {
 		}
 		// GRECLIPSE end
 
-		try {
-			int kind = isSourceType
-					? TypeDeclaration.kind(((SourceTypeElementInfo) ((SourceType) type).getElementInfo()).getModifiers())
-					: TypeDeclaration.kind(((IBinaryType) ((BinaryType) type).getElementInfo()).getModifiers());
 			switch (kind) {
 				case TypeDeclaration.CLASS_DECL :
 					return (acceptFlags & ACCEPT_CLASSES) != 0;
@@ -310,7 +310,7 @@ public class NameLookup implements SuffixConstants {
 				case TypeDeclaration.ENUM_DECL :
 					return (acceptFlags & ACCEPT_ENUMS) != 0;
 				default:
-					//case IGenericType.ANNOTATION_TYPE :
+					//case TypeDeclaration.ANNOTATION_TYPE_DECL :
 					return (acceptFlags & ACCEPT_ANNOTATIONS) != 0;
 			}
 		} catch (JavaModelException npe) {
