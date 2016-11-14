@@ -361,6 +361,15 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doContentsCompareTest(contents, contents)
     }
 
+    void testRetainImport4a() {
+        // multiple generics caused type to be perceived as "ConcurrentMap<java.util.regex.Pattern,"
+        String contents = '''\
+            import java.util.concurrent.ConcurrentMap
+            ConcurrentMap<java.util.regex.Pattern, String> m
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
     void testRetainImport5() {
         String contents = '''\
             import java.util.regex.Pattern

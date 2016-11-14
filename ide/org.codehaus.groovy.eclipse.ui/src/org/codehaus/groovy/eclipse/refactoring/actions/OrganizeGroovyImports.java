@@ -280,7 +280,11 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitForLoop(ForStatement node) {
-            handleType(node.getVariable().getType(), false);
+            // check the type node of "for (Item i in x)" but skip "for (i in x)"
+            Parameter parm = node.getVariable(); ClassNode type = parm.getType();
+            if (type.getStart() > 0 && type.getEnd() < parm.getStart()) {
+                handleType(type, false);
+            }
             super.visitForLoop(node);
         }
 
@@ -294,12 +298,11 @@ public class OrganizeGroovyImports {
          */
         private void handleVariable(VariableExpression expr) {
             String name = expr.getName();
-            if (!missingTypes.containsKey(name)) {
-                if (Character.isUpperCase(name.charAt(0)) &&
-                        !STATIC_CONSTANT.matcher(name).matches()) {
-                    missingTypes.put(name, new UnresolvedTypeData(name, false,
-                            new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
-                }
+            if (!missingTypes.containsKey(name) &&
+                    Character.isUpperCase(name.charAt(0)) &&
+                    !STATIC_CONSTANT.matcher(name).matches()) {
+                missingTypes.put(name, new UnresolvedTypeData(name, false,
+                        new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
             }
         }
 
@@ -308,19 +311,42 @@ public class OrganizeGroovyImports {
          * that the import will be retained if the type is resolved.
          */
         private void handleType(ClassNode node, boolean isAnnotation) {
-            int start = Math.max(node.getNameStart(), node.getStart()),
-                until = Math.max(node.getNameEnd(), node.getEnd());
+            if (getBaseType(node).isPrimitive()) {
+                return;
+            }
 
-            if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-                for (GenericsType gen : node.getGenericsTypes()) {
-                    if (gen.getStart() > 0) until = gen.getStart() - 1;
-                    if (!gen.isPlaceholder() && !gen.isWildcard()) {
-                        handleType(gen.getType(), false);
+            GenericsType[] generics = node.getGenericsTypes();
+            int start = node.getNameStart(),
+                until = node.getNameEnd();
+            if (until < 1) {
+                start = node.getStart();
+                until = node.getEnd()-1;
+
+                // getEnd() includes generics; try to constrain the range
+                if (generics != null && generics.length > 0) {
+                    if (generics[0].getStart() > 0)
+                        until = generics[0].getStart() - 1;
+                } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
+                    assert start <= getBaseType(node).getStart();
+                    assert until <= 0 || getBaseType(node).getEnd() < until;
+
+                    start = getBaseType(node).getStart();
+                    until = getBaseType(node).getEnd();
+                }
+            }
+            int length = until - start;
+            String name = getTypeName(node);
+
+            // check node's generics types
+            if (node.isUsingGenerics() && generics != null && generics.length > 0) {
+                for (GenericsType gt : generics) {
+                    if (!gt.isPlaceholder() && !gt.isWildcard()) {
+                        handleType(gt.getType(), false);
                     }
-                    if (gen.getLowerBound() != null) {
-                        handleType(gen.getLowerBound(), false);
-                    } else if (gen.getUpperBounds() != null) {
-                        for (ClassNode upper : gen.getUpperBounds()) {
+                    if (gt.getLowerBound() != null) {
+                        handleType(gt.getLowerBound(), false);
+                    } else if (gt.getUpperBounds() != null) {
+                        for (ClassNode upper : gt.getUpperBounds()) {
                             // handle enums where the upper bound is the same as the type
                             if (!upper.getName().equals(node.getName())) {
                                 handleType(upper, false);
@@ -328,21 +354,12 @@ public class OrganizeGroovyImports {
                         }
                     }
                 }
-            } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
-assert start <= getBaseType(node).getStart();
-assert until <= 0 || getBaseType(node).getEnd() < until;
-
-                start = getBaseType(node).getStart();
-                until = getBaseType(node).getEnd();
             }
-
-            int length = until - start;
-            String name = getTypeName(node);
 
             if (!node.isResolved() && node.redirect() != current) {
                 // aliases come through as unresolved types
                 if (ALIASED_IMPORT.matcher(name).find()) {
-                    importsSlatedForRemoval.remove(name);
+                    doNotRemoveImport(name);
                     return;
                 }
                 String[] parts = name.split("\\.");
@@ -350,7 +367,7 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
                     name = parts[0]; // Map.Entry -> Map
                 } else if (length < name.length()) {
                     // name range too small to include the full name
-                    importsSlatedForRemoval.remove(name); // keep import
+                    doNotRemoveImport(name); // keep import
                     name = ArrayUtils.lastElement(parts); // foo.Bar -> Bar
                 }
                 if (!missingTypes.containsKey(name)) {
@@ -372,6 +389,11 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
                     innerIndex = name.lastIndexOf('$', innerIndex - 1);
                 }
                 doNotRemoveImport(partialName);
+
+            } else if (length > name.length()) {
+                GroovyCore.logException(String.format(
+                    "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
+                    name, start, until, node.getLineNumber(), length, name.length()), new Exception());
             }
         }
 
@@ -389,7 +411,7 @@ assert until <= 0 || getBaseType(node).getEnd() < until;
         }
 
         private boolean checkRetainImport(String name) {
-            if (!importsSlatedForRemoval.isEmpty()) {
+            if (!importsSlatedForRemoval.isEmpty() && !"this".equals(name) && !"super".equals(name)) {
                 String suffix = '.' + name;
                 for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
                     if (entry.getValue().isStatic() && entry.getKey().endsWith(suffix)) {
