@@ -47,7 +47,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
         return FileLocator.resolve(url).getFile();
     }
-    
+
     public void testDelegate() {
         if (GroovyUtils.GROOVY_LEVEL < 18) return;
 
@@ -1000,8 +1000,6 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
      * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
      */
     public void testGrabWithErrors() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
-
         String[] sources = {
             "Grab1.groovy",
             "@Grapes([\n"+
@@ -1032,21 +1030,6 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
             "----------\n");
-    }
-
-    public void testGrabError() {
-        String[] sources = {
-            "Printer.groovy",
-            "import groovy.lang.Grab;\n"+
-            "\n"+
-            "@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
-            "def printDate() {\n"+
-            "      def dt = new org.joda.time.DateTime()\n"+
-            "}\n"+
-            "printDate()"
-        };
-
-        runConformTest(sources);
     }
 
     public void testGrabScriptAndImports_GRE680() {

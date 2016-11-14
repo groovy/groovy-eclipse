@@ -77,6 +77,63 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    public void testClassAnnotationValue() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(URL.class)\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testClassAnnotationValue2() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(URL)\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testClosureAnnotationValue() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(value={ println 'hello' })\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
     // GRECLIPSE-629
     public void testConstAnnotationValue() {
         String[] sources = {
@@ -454,6 +511,230 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
 
         String expectedOutput = "public @Anno(Target.class) class X";
         checkGCUDeclaration("X.groovy",expectedOutput);
+    }
+
+    public void testTypeLevelAnnotations_SingleMember02() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(p.Target.class)\n"+
+            "public class X {\n" +
+            "  public void foo(String s = \"abc\") {}\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n"+
+            "import java.lang.annotation.*;\n"+
+            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n"+
+            "class Target { }"
+        };
+
+        runConformTest(sources, "success");
+
+        String expectedOutput = "public @Anno(p.Target.class) class X";
+        checkGCUDeclaration("X.groovy", expectedOutput);
+    }
+
+    public void testMethodLevelAnnotations_SingleMember() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno(Target.class)\n"+
+            "  public void foo(String s = \"abc\") {}\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n"+
+            "import java.lang.annotation.*;\n"+
+            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n"+
+            "class Target { }"
+        };
+
+        runConformTest(sources, "success");
+
+        String expectedOutput = "public @Anno(Target.class) void foo(public String s) {";
+        checkGCUDeclaration("X.groovy",expectedOutput);
+    }
+
+    public void testMethodLevelAnnotations_SingleMember02() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno(p.Target.class)\n"+
+            "  public void foo(String s = \"abc\") {}\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n"+
+            "import java.lang.annotation.*;\n"+
+            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n"+
+            "class Target { }"
+        };
+
+        runConformTest(sources, "success");
+
+        String expectedOutput = "public @Anno(p.Target.class) void foo(public String s) {";
+        checkGCUDeclaration("X.groovy",expectedOutput);
+    }
+
+    public void testFieldLevelAnnotations_SingleMember() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno(Target.class)\n"+
+            "  public int foo = 5\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n"+
+            "import java.lang.annotation.*;\n"+
+            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n"+
+            "class Target { }"
+        };
+
+        runConformTest(sources, "success");
+
+        String expectedOutput = "public @Anno(Target.class) int foo";
+        checkGCUDeclaration("X.groovy",expectedOutput);
+    }
+
+    public void testAnnotations_singleMemberAnnotationField() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno(p.Target.class)\n"+
+            "  public int foo = 5\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n"+
+            "import java.lang.annotation.*;\n"+
+            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "@interface Anno { Class<?> value(); }\n",
+
+            "p/Target.java",
+            "package p;\n"+
+            "class Target { }"
+        };
+
+        runConformTest(sources, "success");
+
+        String expectedOutput = "public @Anno(p.Target.class) int foo";
+        checkGCUDeclaration("X.groovy",expectedOutput);
+    }
+
+    public void testAnnotations_singleMemberAnnotationFailure() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno(IDontExist.class)\n"+
+            "  public int foo = 5\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n"+
+            "import java.lang.annotation.*;\n"+
+            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "@interface Anno { Class<?> value(); }\n"
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@Anno(IDontExist.class)\n" +
+            "\t      ^^^^^^^^^^\n" +
+            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
+            "----------\n" +
+            "2. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@Anno(IDontExist.class)\n" +
+            "\t      ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^":"")+"\n" +
+            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
+            "----------\n");
+    }
+
+    public void testAnnotationCollector() {
+        String[] sources = {
+            "Type.groovy",
+            "@Alias(includes='id')\n"+
+            "class Type {\n" +
+            "  String id\n" +
+            "  String hidden = '456'\n" +
+            "  \n" +
+            "  static void main(String[] args) {\n" +
+            "    print(new Type(id:'123'))\n" +
+            "  }\n" +
+            "}",
+
+            "Alias.groovy",
+            "import groovy.transform.*\n" +
+            "@AnnotationCollector\n" +
+            "@EqualsAndHashCode\n" +
+            "@ToString\n" +
+            "@interface Alias { }",
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testAnnotationCollector2() {
+        String[] sources = {
+            "Type.groovy",
+            "@Alias(includes='id')\n"+
+            "class Type {\n" +
+            "  String id\n" +
+            "  String hidden = '456'\n" +
+            "  \n" +
+            "  static void main(String[] args) {\n" +
+            "    print(new Type(id:'123'))\n" +
+            "  }\n" +
+            "}",
+
+            "Alias.groovy",
+            "import groovy.transform.*\n" +
+            "@AnnotationCollector([EqualsAndHashCode, ToString])\n" +
+            "@interface Alias { }",
+        };
+
+        runConformTest(sources, "Type(123)");
     }
 
     // All types in groovy with TYPE specified for Target and obeyed
@@ -846,203 +1127,6 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    public void testTypeLevelAnnotations_SingleMember02() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "@Anno(p.Target.class)\n"+
-            "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n"+
-            "class Target { }"
-        };
-
-        runConformTest(sources, "success");
-
-        String expectedOutput = "public @Anno(p.Target.class) class X";
-        checkGCUDeclaration("X.groovy", expectedOutput);
-    }
-
-    public void testMethodLevelAnnotations_SingleMember() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(Target.class)\n"+
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n"+
-            "class Target { }"
-        };
-
-        runConformTest(sources, "success");
-
-        String expectedOutput = "public @Anno(Target.class) void foo(public String s) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
-    }
-
-    // FIXASC flesh out annotation value types for transformation in JDTAnnotationNode - might as well complete it
-    public void testMethodLevelAnnotations_SingleMember02() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(p.Target.class)\n"+
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n"+
-            "class Target { }"
-        };
-
-        runConformTest(sources, "success");
-
-        String expectedOutput = "public @Anno(p.Target.class) void foo(public String s) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
-    }
-
-    public void testFieldLevelAnnotations_SingleMember() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(Target.class)\n"+
-            "  public int foo = 5\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n"+
-            "class Target { }"
-        };
-
-        runConformTest(sources, "success");
-
-        String expectedOutput = "public @Anno(Target.class) int foo";
-        checkGCUDeclaration("X.groovy",expectedOutput);
-    }
-
-    public void testAnnotations10_singleMemberAnnotationField() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(p.Target.class)\n"+
-            "  public int foo = 5\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n",
-
-            "p/Target.java",
-            "package p;\n"+
-            "class Target { }"
-        };
-
-        runConformTest(sources, "success");
-
-        String expectedOutput = "public @Anno(p.Target.class) int foo";
-        checkGCUDeclaration("X.groovy",expectedOutput);
-    }
-
-    public void testAnnotations11_singleMemberAnnotationFailure() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno(IDontExist.class)\n"+
-            "  public int foo = 5\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n"
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@Anno(IDontExist.class)\n" +
-            "\t      ^^^^^^^^^^\n" +
-            "Groovy:unable to find class 'IDontExist.class' for annotation attribute constant\n" +
-            "----------\n" +
-            "2. ERROR in p\\X.groovy (at line 3)\n" +
-            "\t@Anno(IDontExist.class)\n" +
-            "\t      ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^":"")+"\n" +
-            "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
-            "----------\n");
-    }
-
-    public void testAnnotationsAndMetaMethods() {
-        String[] sources = {
-            "p/A.java",
-            "package p; public class A{ public static void main(String[]argv){}}",
-
-            "p/Validateable.groovy",
-            "import java.lang.annotation.Retention\n"+
-            "import java.lang.annotation.RetentionPolicy\n"+
-            "import java.lang.annotation.Target\n"+
-            "import java.lang.annotation.ElementType\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.TYPE])\n"+
-            "public @interface Validateable { }\n"
-        };
-
-        runConformTest(sources);
-    }
-
     // FIXASC groovy bug?  Why didn't it complain that String doesn't meet the bound - at the moment letting JDT complain...
     public void testWildcards01() {
         String[] sources = {
@@ -1376,6 +1460,4 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
-
-    // TODO: closure for class param
 }
