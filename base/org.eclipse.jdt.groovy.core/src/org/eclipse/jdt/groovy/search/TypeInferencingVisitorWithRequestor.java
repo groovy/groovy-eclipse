@@ -1841,7 +1841,7 @@ assert primaryExprType != null && dependentExprType != null;
         }
         boolean shouldContinue = handleSimpleExpression(node);
         if (inferredStaticMethodType != null) {
-            primaryTypeStack.pop();
+            if (!primaryTypeStack.isEmpty()) primaryTypeStack.pop();
             primaryTypeStack.push(inferredStaticMethodType);
             inferredStaticMethodType = null;
         }

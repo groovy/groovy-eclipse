@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.ArrayList;
@@ -48,25 +53,24 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
 
 public class RefreshDSLDJob extends Job {
-    
+
     public class DSLDResourceVisitor implements IResourceVisitor {
-    
+
         private static final String PLUGIN_DSLD_SUPPORT = "plugin_dsld_support";
         private static final String GLOBAL_DSLD_SUPPORT = "global_dsld_support";
+
         private final IProject project;
         private final Set<IStorage> dsldFiles;
-        private final Set<String> alreadyAdded; 
-        
-        
+        private final Set<String> alreadyAdded;
+
         public DSLDResourceVisitor(IProject project) {
             this.project = project;
-            this.dsldFiles = new HashSet<IStorage>();
+            dsldFiles = new HashSet<IStorage>();
             alreadyAdded = new HashSet<String>();
         }
-    
+
         public boolean visit(IResource resource) throws CoreException {
             // don't visit the output folders
             if (resource.isDerived()) {
@@ -77,7 +81,6 @@ public class RefreshDSLDJob extends Job {
                 if (!alreadyAdded.contains(file) && (isDSLD(file) || isSuggestionFile(file))) {
                     alreadyAdded.add(file.getName());
                     dsldFiles.add(file);
-                    
                 } else {
                     if (alreadyAdded.contains(file.getName())) {
                         GroovyDSLCoreActivator.logWarning("DSLD File " + file.getFullPath() + " already added, so skipping.");
@@ -86,7 +89,7 @@ public class RefreshDSLDJob extends Job {
             }
             return true;
         }
-    
+
         public Set<IStorage> findFiles(IProgressMonitor monitor) {
             try {
                 // first look for files in the project
@@ -101,7 +104,7 @@ public class RefreshDSLDJob extends Job {
                     GroovyDSLCoreActivator.logException(e);
                 }
             }
-            
+
             return dsldFiles;
         }
 
@@ -109,66 +112,58 @@ public class RefreshDSLDJob extends Job {
             IJavaProject javaProject = JavaCore.create(project);
             IPackageFragmentRoot[] roots = getFragmentRoots(javaProject, monitor);
             for (IPackageFragmentRoot root : roots) {
-                
                 if (monitor.isCanceled()) {
                     throw new OperationCanceledException();
                 }
-                
-                if (root.getKind() == IPackageFragmentRoot.K_BINARY ||
-                        // GRECLIPSE-1458 must check source folders, but avoid source folders from same project
-                        isSourceFolderFromOtherProject(root)) {
-                    IPackageFragment frag = root.getPackageFragment("dsld");
-                    if (frag.exists() || root.getElementName().equals(GLOBAL_DSLD_SUPPORT) || root.getElementName().equals(PLUGIN_DSLD_SUPPORT)) {
-                        
-                        // FIXADE start workaround for Bug 346928
-                        // in 3.6 and earlier, it was not possible to refresh scripts in external folders 
-                        // fixed in 3.7, consider removing when 3.6 is no longer supported.
-                        IResource rootResource = root.getResource();
-                        if (rootResource == null && root instanceof ExternalPackageFragmentRoot) {
-                            // external source roots return null for getResource, but do have a resource 
-                            rootResource = ((ExternalPackageFragmentRoot) root).resource();
-                        }
-                        if (rootResource != null) {
-                            try {
-                                rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-                                root.close();
-                                root.open(monitor);
-                                if (monitor.isCanceled()) {
-                                    throw new OperationCanceledException();
-                                }
-                                if (!root.exists() || !frag.exists()) {
-                                    // must check a second time for existence because the close and re-opening of the root may 
-                                    // have changed things
-                                    continue;
-                                }
-                            } catch (CoreException e) {
-                                GroovyDSLCoreActivator.logException(e);
-                            }
-                        }
-                        // FIXADE end workaround
-                        
-                        if (rootResource instanceof IFolder && ((IFolder) rootResource).getFolder("dsld").exists()) {
-                            IFolder dsldFolder = ((IFolder) rootResource).getFolder("dsld");
-                            try {
-                                for (IResource resource : dsldFolder.members()) {
-                                    if (resource.getType() == IResource.FILE && !alreadyAdded.contains(resource.getName()) && isDSLD((IFile) resource)) {
-                                        alreadyAdded.add(resource.getName());
-                                        dsldFiles.add((IStorage) resource);
-                                    } else {
-                                        if (alreadyAdded.contains(resource.getName())) {
-                                            GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD File " + resource.getFullPath() + " already added, so skipping.");
+                try {
+                    // GRECLIPSE-1458 must check source folders, but avoid source folders from same project
+                    if (root.getKind() == IPackageFragmentRoot.K_BINARY || isSourceFolderFromOtherProject(root)) {
+                        IPackageFragment frag = root.getPackageFragment("dsld");
+                        if (frag.exists() || root.getElementName().equals(GLOBAL_DSLD_SUPPORT) || root.getElementName().equals(PLUGIN_DSLD_SUPPORT)) {
+                            IResource rootResource = root.getResource();
+
+//                            // FIXADE start workaround for Bug 346928
+//                            // in 3.6 and earlier, it was not possible to refresh scripts in external folders
+//                            // fixed in 3.7, consider removing when 3.6 is no longer supported.
+//                            if (rootResource == null && root instanceof ExternalPackageFragmentRoot) {
+//                                // external source roots return null for getResource, but do have a resource
+//                                rootResource = ((ExternalPackageFragmentRoot) root).resource();
+//                            }
+//                            if (rootResource != null) {
+//                                try {
+//                                    rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+//                                    root.close();
+//                                    root.open(monitor);
+//                                    if (monitor.isCanceled()) {
+//                                        throw new OperationCanceledException();
+//                                    }
+//                                    if (!root.exists() || !frag.exists()) {
+//                                        // must check a second time for existence because the close and re-opening of the root may
+//                                        // have changed things
+//                                        continue;
+//                                    }
+//                                } catch (CoreException e) {
+//                                    GroovyDSLCoreActivator.logException(e);
+//                                }
+//                            }
+//                            // FIXADE end workaround
+
+                            if (rootResource instanceof IFolder && ((IFolder) rootResource).getFolder("dsld").exists()) {
+                                IFolder dsldFolder = ((IFolder) rootResource).getFolder("dsld");
+                                    for (IResource resource : dsldFolder.members()) {
+                                        if (resource.getType() == IResource.FILE && !alreadyAdded.contains(resource.getName()) && isDSLD((IFile) resource)) {
+                                            alreadyAdded.add(resource.getName());
+                                            dsldFiles.add((IStorage) resource);
+                                        } else {
+                                            if (alreadyAdded.contains(resource.getName())) {
+                                                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD File " + resource.getFullPath() + " already added, so skipping.");
+                                            }
                                         }
                                     }
-                                }
-                            } catch (CoreException e) {
-                                GroovyDSLCoreActivator.logException(e);
-                            }
-                        } else {
-                            
-                            try {
+                            } else {
                                 Object[] resources = frag.getNonJavaResources();
                                 // make sure we don't add files with the same names.
-                                // this ensures that a dsld file that is coming from 2 different places is 
+                                // this ensures that a dsld file that is coming from 2 different places is
                                 // not added twice.
                                 for (Object resource : resources) {
                                     if (resource instanceof IStorage) {
@@ -183,14 +178,16 @@ public class RefreshDSLDJob extends Job {
                                         }
                                     }
                                 }
-                            } catch (JavaModelException e) {
-                                if (e.getStatus().getCode() == IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
-                                    // can ignore, most likely classpath change during refresh operation
-                                } else {
-                                    throw e;
-                                }
                             }
                         }
+                    }
+                } catch (CoreException e) {
+                    switch (e.getStatus().getCode()) {
+                    case IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST:
+                    case IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH:
+                        break;
+                    default:
+                        GroovyDSLCoreActivator.logException(e);
                     }
                 }
             }
@@ -205,7 +202,6 @@ public class RefreshDSLDJob extends Job {
             if (resource == null) {
                 return false;
             }
-            
             if (resource.getProject().equals(project)) {
                 return false;
             }
@@ -215,10 +211,6 @@ public class RefreshDSLDJob extends Job {
         /**
          * Get all package fragment roots in a safe way so that concurrent modifications aren't thrown
          * See http://jira.codehaus.org/browse/GRECLIPSE-1284
-         * @param javaProject
-         * @param monitor
-         * @return
-         * @throws JavaModelException
          */
         private IPackageFragmentRoot[] getFragmentRoots(final IJavaProject javaProject, IProgressMonitor monitor) throws JavaModelException {
             final IPackageFragmentRoot[][] roots = new IPackageFragmentRoot[1][];
@@ -236,17 +228,16 @@ public class RefreshDSLDJob extends Job {
                 }
             }
             return roots[0] != null ? roots[0] : new IPackageFragmentRoot[0];
-        }  
-        
+        }
+
         private ISchedulingRule getSchedulingRule() {
             IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
-            
             // FIXADE Arrrrgh...we need to grab a build rule here.  Looks like a classpath container refresh
             // will grab the rule of projects that are contained in the container.
 //            return new MultiRule(new ISchedulingRule[] {
 //                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
 //                ruleFactory.modifyRule(this.project.getProject()),
-//                
+//
 //                // and external project modification rule in case the external folders are modified
 //                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
 //            });
@@ -277,15 +268,15 @@ public class RefreshDSLDJob extends Job {
         super("Refresh DSLD scripts");
         this.projects = contextStoreManager.addInProgress(projects);
     }
-    
+
     protected boolean isDSLD(IStorage file) {
         return isFile(file, "dsld");
     }
-    
+
     protected boolean isSuggestionFile(IStorage file) {
         return isFile(file, SuggestionsFileProperties.FILE_TYPE);
     }
-    
+
     protected boolean isFile(IStorage file, String extension) {
         if (file instanceof IFile) {
             IFile iFile = (IFile) file;
@@ -305,7 +296,7 @@ public class RefreshDSLDJob extends Job {
                 }
                 return Status.OK_STATUS;
             }
-    
+
             List<IStatus> errorStatuses = new ArrayList<IStatus>();
             if (monitor == null) {
                 monitor = new NullProgressMonitor();
@@ -325,7 +316,7 @@ public class RefreshDSLDJob extends Job {
                 }
             }
             monitor.done();
-            
+
             if (errorStatuses.isEmpty()) {
                 return Status.OK_STATUS;
             } else {
@@ -336,14 +327,14 @@ public class RefreshDSLDJob extends Job {
                 return multi;
             }
         } finally {
-            // in case the job was exited early, ensure all projects 
+            // in case the job was exited early, ensure all projects
             // have their initialization stage removed
             for (IProject project : projects) {
                 contextStoreManager.removeInProgress(project);
             }
         }
     }
-    
+
     private IStatus refreshProject(IProject project, IProgressMonitor monitor) {
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
@@ -351,22 +342,22 @@ public class RefreshDSLDJob extends Job {
             event = "Refreshing inferencing scripts: " + project.getName();
             GroovyLogManager.manager.logStart(event);
         }
-        
+
         monitor.beginTask("Refreshing DSLD files for project " + project.getName(), 9);
-        
+
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
         }
         monitor.worked(1);
 
-        
+
         // purge existing
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Purging old state");
         }
         DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(project);
         store.purgeAll();
-        
+
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
         }
@@ -377,39 +368,39 @@ public class RefreshDSLDJob extends Job {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Finding inferencing DSL scripts");
         }
         Set<IStorage> findDSLDFiles = new DSLDResourceVisitor(project).findFiles(monitor);
-        
+
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
         }
         monitor.worked(1);
-        
+
         // now add the rest
         for (IStorage file : findDSLDFiles) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName() + " in project " + project.getName());
             }
             monitor.subTask("Processing " + file.getName() + " in project " + project.getName());
-            
+
             if (isDSLD(file)) {
                 DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
                 executor.executeScript(file);
             } else if (isSuggestionFile(file)) {
                 new SuggestionsLoader((IFile)file).loadExistingSuggestions();
             }
-             
+
             if (monitor.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
         }
         monitor.worked(6);
-        
+
         monitor.done();
         if (event != null) {
             GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
         }
         return Status.OK_STATUS;
     }
-    
+
     @Override
     public boolean belongsTo(Object family) {
         return family == RefreshDSLDJob.class;
