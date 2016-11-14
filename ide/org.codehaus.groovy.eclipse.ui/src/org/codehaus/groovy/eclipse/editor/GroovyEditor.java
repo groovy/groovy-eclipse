@@ -1422,7 +1422,7 @@ public class GroovyEditor extends CompilationUnitEditor {
      */
     public GroovyOutlinePage getOutlinePage() {
         if (page == null) {
-            IContentOutlinePage outlinePage = getAdapter(IContentOutlinePage.class);
+            IContentOutlinePage outlinePage = (IContentOutlinePage) getAdapter(IContentOutlinePage.class);
             if (outlinePage instanceof GroovyOutlinePage) {
                 page = (GroovyOutlinePage) outlinePage;
             }

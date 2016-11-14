@@ -585,7 +585,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
         // allow a delegate to perform completion if required
         // this is used by the grails plugin when editing in gsp editor
-        ICodeCompletionDelegate delegate = getAdapter(ICodeCompletionDelegate.class);
+        ICodeCompletionDelegate delegate = (ICodeCompletionDelegate) getAdapter(ICodeCompletionDelegate.class);
         if (delegate != null && delegate.shouldCodeComplete(requestor, typeRoot)) {
             delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
         } else {
