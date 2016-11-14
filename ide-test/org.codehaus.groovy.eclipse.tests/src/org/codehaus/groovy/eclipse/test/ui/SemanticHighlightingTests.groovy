@@ -176,6 +176,26 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('singletonList'), 'singletonList'.length(), STATIC_CALL))
     }
 
+    void testStaticMethods4() {
+        String contents = '''\
+            import static java.lang.Integer.valueOf
+            @groovy.transform.CompileStatic
+            class C {
+              String number
+              int getN() {
+                valueOf(number) // needs sloc; see StaticMethodCallExpressionTransformer
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getN'), 'getN'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('number'), 'number'.length(), FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('number'), 'number'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('valueOf'), 'valueOf'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('valueOf'), 'valueOf'.length(), STATIC_CALL))
+    }
+
     // GRECLIPSE-1138
     void testMultipleStaticMethods() {
         String contents = '''\

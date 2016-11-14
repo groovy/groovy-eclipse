@@ -107,8 +107,9 @@ public class BinaryExpressionTransformer {
                         CompareIdentityExpression compareIdentity = new CompareIdentityExpression(
                                 left, right
                         );
-                        compareIdentity.setSourcePosition(bin); //was this one of our greclipse changes?
-                        
+                        // GRECLIPSE add
+                        compareIdentity.setSourcePosition(bin);
+                        // GRECLIPSE end
                         compareIdentity.putNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE, ClassHelper.boolean_TYPE);
                         TernaryExpression result = new TernaryExpression(
                                 new BooleanExpression(compareIdentity), // a==b
