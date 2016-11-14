@@ -143,6 +143,7 @@
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
 				</repository>
+			</repositories>
 			<modules>
 				<module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e46/org.eclipse.jdt.core</module>
