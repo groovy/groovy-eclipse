@@ -94,7 +94,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         }
     }
 
-    private GroovyEditor editor;
+    private volatile GroovyEditor editor;
     private final Semaphore lock = new Semaphore(1);
     private SemanticHighlightingPresenter presenter;
 
@@ -218,6 +218,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         // ensure that only one thread performs this task
         if (ast != null && lock.tryAcquire())
         try {
+            if (editor == null) return; // uninstalled?
             monitor.beginTask("Groovy semantic highlighting", 10);
             GroovyCompilationUnit unit = editor.getGroovyCompilationUnit();
             if (unit != null) {
