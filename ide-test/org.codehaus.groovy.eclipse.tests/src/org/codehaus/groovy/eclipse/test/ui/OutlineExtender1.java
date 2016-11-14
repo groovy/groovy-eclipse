@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,160 +31,141 @@ import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IMember;
 
-/*******************************************************
+/**
  * @author Maxime Hamm
  * @created April 11, 2011
  */
 public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
-  public static final String NATURE = "org.codehaus.groovy.eclipse.tests.testNature1";
-  
-  public void configure() throws CoreException {
-  }
-  public void deconfigure() throws CoreException {
-  }
-  
-  IProject p;
-  public IProject getProject() {
-      return p;
-  }
-  public void setProject(IProject project) {
-      this.p = project;
-  }
+    public static final String NATURE = "org.codehaus.groovy.eclipse.tests.testNature1";
 
-  public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
-    TCompilationUnit ounit = new TCompilationUnit(this, editor.getGroovyCompilationUnit());       
-    return new TGroovyOutlinePage(null, editor, ounit);
-  }
-  
-  public boolean appliesTo(GroovyCompilationUnit unit) {
-    return new String(unit.getFileName()).contains("X");
-  }
-  
-  /*******************************************************
-   * @author Maxime Hamm
-   * @created April 12, 2011
-   */
-  public static class TGroovyOutlinePage extends GroovyOutlinePage {
-    public TGroovyOutlinePage(String contextMenuID, GroovyEditor editor, OCompilationUnit unit) {
-      super(contextMenuID, editor, unit);
-    }
-    
-    public JavaOutlineViewer getViewer() {
-      return getOutlineViewer();
-    }
-  }
-  
-  /*******************************************************
-   * @author Maxime Hamm
-   * @created April 11, 2011
-   */
-  public static class TCompilationUnit extends OCompilationUnit {
-    
-    public OutlineExtender1 outlineExtender;
-    public TType type; 
-    
-    public TCompilationUnit(OutlineExtender1 outlineExtender, GroovyCompilationUnit unit) {
-      super(unit);
-      this.outlineExtender = outlineExtender;
-    }
-    
-    @Override
-    public IMember[] refreshChildren() {
-      type = new TType(this, getElementName());
-      return new IMember[] {type};
-    }
-    
-    @Override
-    public IMember getOutlineElementAt(int caretOffset) {
-      return type;
-    }  
-  }
-  
-  /*******************************************************
-   * @author Maxime Hamm
-   * @created April 11, 2011
-   */
-  public static class TType extends OType {
-    
-    public TType(IOJavaElement parent, String name) {
-      super(parent, new ConstantExpression(name), name);
-      this.name = name;
+    public void configure() throws CoreException {
     }
 
-    @Override
-    public ASTNode getElementNameNode() {
-      return getNode();
-    }      
-
-    public TType addTestType(String name) {
-      TType t = new TType(this, name);
-      addChild(t);
-      return t;
-    }
-    
-    public TMethod addTestMethod(String name, String returnType) {
-      TMethod m = new TMethod(this, name, returnType);
-      addChild(m);
-      return m;
-    }
-    
-    public TField addTestField(String name, String typeSignature) {
-      TField f = new TField(this, name, typeSignature);
-      addChild(f);
-      return f;
-    }
-  }
-  
-  /*******************************************************
-   * @author Maxime Hamm
-   * @created April 12, 2011
-   */
-  public static class TMethod extends OMethod {
-    
-    private String returnType;
-
-    public TMethod(OType parent, String name, String returnType) {
-      super(parent, new ConstantExpression(name), name);      
-      this.name = name;
-      this.returnType = returnType;
+    public void deconfigure() throws CoreException {
     }
 
-    @Override
-    public ASTNode getElementNameNode() {
-      return getNode();
+    IProject p;
+
+    public IProject getProject() {
+        return p;
     }
 
-    @Override
-    public String getReturnTypeName() {
-      return returnType; 
-    }      
-    
-  }
-  
-  /*******************************************************
-   * @author Maxime Hamm
-   * @created April 12, 2011
-   */
-  public static class TField extends OField {
-    
-    private String typeSignature;
-
-    public TField(OType parent, String name, String typeSignature) {
-      super(parent, new ConstantExpression(name), name);      
-      this.name = name;
-      this.typeSignature = typeSignature;
+    public void setProject(IProject project) {
+        this.p = project;
     }
 
-    @Override
-    public ASTNode getElementNameNode() {
-      return getNode();
+    public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
+        TCompilationUnit ounit = new TCompilationUnit(this, editor.getGroovyCompilationUnit());
+        return new TGroovyOutlinePage(null, editor, ounit);
     }
 
-    @Override
-    public String getTypeSignature() {     
-      return typeSignature;
-    }   
-    
-  }
+    public boolean appliesTo(GroovyCompilationUnit unit) {
+        return new String(unit.getFileName()).contains("X");
+    }
+
+    public static class TGroovyOutlinePage extends GroovyOutlinePage {
+        public TGroovyOutlinePage(String contextMenuID, GroovyEditor editor, OCompilationUnit unit) {
+            super(contextMenuID, editor, unit);
+        }
+
+        public JavaOutlineViewer getViewer() {
+            return getOutlineViewer();
+        }
+    }
+
+    public static class TCompilationUnit extends OCompilationUnit {
+
+        public OutlineExtender1 outlineExtender;
+        public TType type;
+
+        public TCompilationUnit(OutlineExtender1 outlineExtender, GroovyCompilationUnit unit) {
+            super(unit);
+            this.outlineExtender = outlineExtender;
+        }
+
+        @Override
+        public IMember[] refreshChildren() {
+            type = new TType(this, getElementName());
+            return new IMember[] { type };
+        }
+
+        @Override
+        public IMember getOutlineElementAt(int caretOffset) {
+            return type;
+        }
+    }
+
+    public static class TType extends OType {
+
+        public TType(IOJavaElement parent, String name) {
+            super(parent, new ConstantExpression(name), name);
+            this.name = name;
+        }
+
+        @Override
+        public ASTNode getElementNameNode() {
+            return getNode();
+        }
+
+        public TType addTestType(String name) {
+            TType t = new TType(this, name);
+            addChild(t);
+            return t;
+        }
+
+        public TMethod addTestMethod(String name, String returnType) {
+            TMethod m = new TMethod(this, name, returnType);
+            addChild(m);
+            return m;
+        }
+
+        public TField addTestField(String name, String typeSignature) {
+            TField f = new TField(this, name, typeSignature);
+            addChild(f);
+            return f;
+        }
+    }
+
+    public static class TMethod extends OMethod {
+
+        private String returnType;
+
+        public TMethod(OType parent, String name, String returnType) {
+            super(parent, new ConstantExpression(name), name);
+            this.name = name;
+            this.returnType = returnType;
+        }
+
+        @Override
+        public ASTNode getElementNameNode() {
+            return getNode();
+        }
+
+        @Override
+        public String getReturnTypeName() {
+            return returnType;
+        }
+    }
+
+    public static class TField extends OField {
+
+        private String typeSignature;
+
+        public TField(OType parent, String name, String typeSignature) {
+            super(parent, new ConstantExpression(name), name);
+            this.name = name;
+            this.typeSignature = typeSignature;
+        }
+
+        @Override
+        public ASTNode getElementNameNode() {
+            return getNode();
+        }
+
+        @Override
+        public String getTypeSignature() {
+            return typeSignature;
+        }
+    }
 }
