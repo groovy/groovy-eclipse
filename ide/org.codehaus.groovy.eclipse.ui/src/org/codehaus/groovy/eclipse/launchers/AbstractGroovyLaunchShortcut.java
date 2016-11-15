@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.launchers;
 
 import java.io.File;
@@ -64,7 +63,6 @@ import org.eclipse.ui.PlatformUI;
 /**
  * @author Andrew Eisenberg
  * @created Oct 7, 2009
- *
  */
 public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     /**
@@ -131,13 +129,14 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection struct = (IStructuredSelection) selection;
             Object obj = struct.getFirstElement();
-            IJavaProject javaProject;
             if (obj instanceof IAdaptable) {
-                javaProject = ((IAdaptable) obj).getAdapter(IJavaProject.class);
+                @SuppressWarnings("cast")
+                IJavaProject javaProject = (IJavaProject) ((IAdaptable) obj).getAdapter(IJavaProject.class);
                 if (javaProject != null) {
                     return javaProject;
                 }
-                IProject project = ((IAdaptable) obj).getAdapter(IProject.class);
+                @SuppressWarnings("cast")
+                IProject project = (IProject) ((IAdaptable) obj).getAdapter(IProject.class);
                 if (project != null) {
                     return JavaCore.create(project);
                 }
@@ -146,21 +145,18 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         return null;
     }
 
-    /**
-     * @param selection
-     * @return
-     */
     private ICompilationUnit extractCompilationUnit(ISelection selection) {
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection struct = (IStructuredSelection) selection;
             Object obj = struct.getFirstElement();
-            ICompilationUnit unit;
             if (obj instanceof IAdaptable) {
-                unit = ((IAdaptable) obj).getAdapter(ICompilationUnit.class);
+                @SuppressWarnings("cast")
+                ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) obj).getAdapter(ICompilationUnit.class);
                 if (unit != null) {
                     return unit;
                 }
-                IFile file = ((IAdaptable) obj).getAdapter(IFile.class);
+                @SuppressWarnings("cast")
+                IFile file = (IFile) ((IAdaptable) obj).getAdapter(IFile.class);
                 if (file != null) {
                     return JavaCore.createCompilationUnitFrom(file);
                 }
@@ -252,6 +248,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
         return launchConfigProperties;
     }
+
+    @SuppressWarnings("unused")
     private String getGroovyConf() {
         return "\"${groovy_home}/conf/groovy-starter.conf\"";
     }
@@ -400,7 +398,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor, false);
         IEditorInput input = editor.getEditorInput();
-        IFile file = input.getAdapter(IFile.class);
+        @SuppressWarnings("cast")
+        IFile file = (IFile) input.getAdapter(IFile.class);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit != null) {
             launchGroovy(unit, unit.getJavaProject(), mode);

@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.ui.decorators;
 
 import org.eclipse.core.resources.IResource;
@@ -23,53 +28,39 @@ import org.eclipse.jface.viewers.ILightweightLabelDecorator;
  * Decorates Groovy Java elements with a GR decorator.
  */
 public class GroovyElementDecorator implements ILightweightLabelDecorator {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang.Object, org.eclipse.jface.viewers.IDecoration)
-	 */
-	public void decorate(Object element, IDecoration decoration) {
-	    if (element instanceof IAdaptable) {
-	        IMember member = ((IAdaptable) element).getAdapter(IMember.class);
-	        if (member != null) {
-	            try {
-	                ICompilationUnit unit = member.getCompilationUnit();
-	                if (unit != null) {
-	                    IResource resource = unit.getResource();
+
+    public void decorate(Object element, IDecoration decoration) {
+        if (element instanceof IAdaptable) {
+            @SuppressWarnings("cast")
+            IMember member = (IMember) ((IAdaptable) element).getAdapter(IMember.class);
+            if (member != null) {
+                try {
+                    ICompilationUnit unit = member.getCompilationUnit();
+                    if (unit != null) {
+                        IResource resource = unit.getResource();
                         if (resource != null &&
-	                            ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
+                                ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
                             decoration.addOverlay(
                                     GroovyPluginImages.DESC_GROOVY_OVERLAY,
                                     IDecoration.BOTTOM_RIGHT);
-	                    }
-	                }
-	            } catch (Exception e) {
-	                // ignore???
-	            }
-	        }
-	    }
-	}
+                        }
+                    }
+                } catch (Exception ignore) {
+                }
+            }
+        }
+    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	public void addListener(ILabelProviderListener listener) {
-	}
+    public void addListener(ILabelProviderListener listener) {
+    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
-	public void dispose() {
-	}
+    public void dispose() {
+    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	public boolean isLabelProperty(Object element, String property) {
-		return false;
-	}
+    public boolean isLabelProperty(Object element, String property) {
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	public void removeListener(ILabelProviderListener listener) {
-	}
+    public void removeListener(ILabelProviderListener listener) {
+    }
 }

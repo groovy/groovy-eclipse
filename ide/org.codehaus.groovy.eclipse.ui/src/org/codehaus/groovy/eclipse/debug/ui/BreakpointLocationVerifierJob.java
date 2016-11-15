@@ -56,83 +56,84 @@ public class BreakpointLocationVerifierJob extends Job {
 
     public final static Object FAMILY = new Object();
 
-	/**
-	 * The temporary breakpoint that has been set. Can be <code>null</code> if the callee was not able
-	 * to check if a breakpoint was already set at this position.
-	 */
-	private IJavaLineBreakpoint fBreakpoint;
+    /**
+     * The temporary breakpoint that has been set. Can be <code>null</code> if the callee was not able
+     * to check if a breakpoint was already set at this position.
+     */
+    private IJavaLineBreakpoint fBreakpoint;
 
-	/**
-	 * The number of the line where the breakpoint has been requested.
-	 */
-	private int fLineNumber;
+    /**
+     * The number of the line where the breakpoint has been requested.
+     */
+    private int fLineNumber;
 
-	/**
-	 * The qualified type name of the class where the temporary breakpoint as been set.
-	 * Can be <code>null</code> if fBreakpoint is null.
-	 */
-	private String fTypeName;
+    /**
+     * The qualified type name of the class where the temporary breakpoint as been set.
+     * Can be <code>null</code> if fBreakpoint is null.
+     */
+    private String fTypeName;
 
-	/**
-	 * The type in which should be set the breakpoint.
-	 */
-	private IType fType;
+    /**
+     * The type in which should be set the breakpoint.
+     */
+    private IType fType;
 
-	/**
-	 * The resource in which should be set the breakpoint.
-	 */
-	private IResource fResource;
+    /**
+     * The resource in which should be set the breakpoint.
+     */
+    private IResource fResource;
 
 
-	/**
-	 * The status line to use to display errors
-	 */
-	private IEditorStatusLine fStatusLine;
+    /**
+     * The status line to use to display errors
+     */
+    private IEditorStatusLine fStatusLine;
 
-	public BreakpointLocationVerifierJob(IJavaLineBreakpoint breakpoint, int lineNumber, String typeName, IType type, IResource resource, IEditorPart editorPart) {
-		super(ActionMessages.BreakpointLocationVerifierJob_breakpoint_location);
-		fBreakpoint= breakpoint;
-		fLineNumber= lineNumber;
-		fTypeName= typeName;
-		fType= type;
-		fResource= resource;
-		fStatusLine= editorPart.getAdapter(IEditorStatusLine.class);
-	}
+    @SuppressWarnings("cast")
+    public BreakpointLocationVerifierJob(IJavaLineBreakpoint breakpoint, int lineNumber, String typeName, IType type, IResource resource, IEditorPart editorPart) {
+        super(ActionMessages.BreakpointLocationVerifierJob_breakpoint_location);
+        fBreakpoint = breakpoint;
+        fLineNumber = lineNumber;
+        fTypeName = typeName;
+        fType = type;
+        fResource = resource;
+        fStatusLine = (IEditorStatusLine) editorPart.getAdapter(IEditorStatusLine.class);
+    }
 
-	@Override
+    @Override
     public IStatus run(IProgressMonitor monitor) {
-		ICompilationUnit cu = JavaCore.createCompilationUnitFrom((IFile) fResource);
-		try {
-		    ModuleNode node = null;
-		    if (cu instanceof GroovyCompilationUnit) {
-		        node = ((GroovyCompilationUnit) cu).getModuleNode();
-		    }
+        ICompilationUnit cu = JavaCore.createCompilationUnitFrom((IFile) fResource);
+        try {
+            ModuleNode node = null;
+            if (cu instanceof GroovyCompilationUnit) {
+                node = ((GroovyCompilationUnit) cu).getModuleNode();
+            }
 
-		    if (node == null) {
-		        return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
-		    }
+            if (node == null) {
+                return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
+            }
 
             if (fBreakpoint != null) {
                 DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(fBreakpoint, true);
             }
-		    ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(fLineNumber);
-		    ASTNode valid = finder.findValidBreakpointLocation(node);
+            ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(fLineNumber);
+            ASTNode valid = finder.findValidBreakpointLocation(node);
             if (valid instanceof MethodNode && ((MethodNode) valid).getNameEnd() > 0) {
                 createNewMethodBreakpoint((MethodNode) valid, fTypeName);
                 return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK,
                         ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null);
             } else if (valid != null) {
                 createNewLineBreakpoint(valid, fTypeName);
-		        return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK, ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null);
-		    }
-		} catch (JavaModelException e) {
-		} catch (CoreException e) {
-		}
-		// Cannot find a valid location
-		report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
-		return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
+                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK, ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null);
+            }
+        } catch (JavaModelException e) {
+        } catch (CoreException e) {
+        }
+        // Cannot find a valid location
+        report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
+        return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
 
-	}
+    }
 
     private void createNewMethodBreakpoint(MethodNode node, String typeName) throws CoreException {
         Map newAttributes = new HashMap(10);
@@ -180,30 +181,30 @@ public class BreakpointLocationVerifierJob extends Job {
         if (JDIDebugModel.lineBreakpointExists(typeName, node.getLineNumber()) != null) {
             return;
         }
-		Map newAttributes = new HashMap(10);
-		int start= node.getStart();
-		int end= node.getEnd();
-		if (fType != null) {
-			BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
-		}
-		JDIDebugModel.createLineBreakpoint(fResource, typeName, node.getLineNumber(), start, end, 0, true, newAttributes);
-	}
+        Map newAttributes = new HashMap(10);
+        int start= node.getStart();
+        int end= node.getEnd();
+        if (fType != null) {
+            BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
+        }
+        JDIDebugModel.createLineBreakpoint(fResource, typeName, node.getLineNumber(), start, end, 0, true, newAttributes);
+    }
 
-	protected void report(final String message) {
-		JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-			public void run() {
-				if (fStatusLine != null) {
-					fStatusLine.setMessage(true, message, null);
-				}
-				if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-					Display.getCurrent().beep();
-				}
-			}
-		});
-	}
+    protected void report(final String message) {
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
+            public void run() {
+                if (fStatusLine != null) {
+                    fStatusLine.setMessage(true, message, null);
+                }
+                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                    Display.getCurrent().beep();
+                }
+            }
+        });
+    }
 
-	@Override
-	public boolean belongsTo(Object family) {
-	    return family == FAMILY;
-	}
+    @Override
+    public boolean belongsTo(Object family) {
+        return family == FAMILY;
+    }
 }

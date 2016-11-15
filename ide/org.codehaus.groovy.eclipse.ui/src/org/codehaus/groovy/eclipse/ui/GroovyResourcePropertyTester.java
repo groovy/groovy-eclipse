@@ -43,18 +43,17 @@ public class GroovyResourcePropertyTester extends PropertyTester {
     public static final String hasMain = "hasMain";
     public static final String isScript = "isScript";
 
-    /* (non-Javadoc)
-     * @see org.eclipse.core.expressions.IPropertyTester#test(Object receiver, String property, Object[] args, Object expectedValue)
-     */
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
         boolean returnValue = false;
 
         if (hasMain.equals(property) || isScript.equals(property)) {
-            if(receiver instanceof IAdaptable) {
+            if (receiver instanceof IAdaptable) {
                 try {
-                    ICompilationUnit unit = ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
+                    @SuppressWarnings("cast")
+                    ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
                     if (unit == null) {
-                        IFile file = ((IAdaptable) receiver).getAdapter(IFile.class);
+                        @SuppressWarnings("cast")
+                        IFile file = (IFile) ((IAdaptable) receiver).getAdapter(IFile.class);
                         if (file != null && Util.isJavaLikeFileName(file.getName())) {
                             unit = JavaCore.createCompilationUnitFrom(file);
                         }

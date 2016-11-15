@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,13 +109,12 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
     }
 
     public static <T> T adapt(Object target, Class<T> clazz) {
-        T result;
         if (target instanceof IAdaptable) {
-            result = ((IAdaptable) target).getAdapter(clazz);
-        } else {
-            result = null;
+            @SuppressWarnings("cast")
+            T result = (T) ((IAdaptable) target).getAdapter(clazz);
+            return result;
         }
-        return result;
+        return null;
     }
 
     private void openJavaRefactoringWizard(IJavaElement element) throws CoreException {

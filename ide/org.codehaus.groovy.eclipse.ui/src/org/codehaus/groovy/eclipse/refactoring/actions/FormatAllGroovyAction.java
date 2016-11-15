@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.lang.reflect.InvocationTargetException;
@@ -135,15 +134,13 @@ public class FormatAllGroovyAction extends FormatAllAction {
         }
     }
 
-    /* (non-Javadoc)
-     * Method declared on SelectionDispatchAction.
-     */
     @Override
     public void run(ITextSelection selection) {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();
             if (part instanceof GroovyEditor) {
-                GroovyCompilationUnit unit = part.getAdapter(GroovyCompilationUnit.class);
+                @SuppressWarnings("cast")
+                GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
                 if (unit != null) {
                     super.run(new StructuredSelection(unit));
                 }
