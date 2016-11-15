@@ -58,7 +58,7 @@
             <requirement>
                <type>eclipse-feature</type>
                <id>org.codehaus.groovy.eclipse.feature</id>
-               <versionRange>2.9.2</versionRange>
+               <versionRange>0.0.0</versionRange>
             </requirement>
          </extraRequirements>
       </dependency-resolution>
