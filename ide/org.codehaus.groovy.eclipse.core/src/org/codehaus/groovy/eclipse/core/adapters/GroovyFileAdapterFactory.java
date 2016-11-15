@@ -27,18 +27,16 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 
 /**
- * This class will take an IFile and adapt it to varios Groovy friends
- * classes / interfaces.
+ * This class will take an IFile and adapt it to varios Groovy friends classes / interfaces.
  *
  * @author David Kerber
  */
 public class GroovyFileAdapterFactory implements IAdapterFactory {
 
-    private static final Class<?>[] classes = new Class[] { ClassNode.class, ClassNode[].class };
+    private static final Class[] classes = new Class[] {ClassNode.class, ClassNode[].class};
 
-    @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Object adaptableObject, Class<T> adapterType) {
-        T returnValue = null;
+    public Object getAdapter(Object adaptableObject, Class adapterType) {
+        Object returnValue = null;
         if (adaptableObject instanceof IFile) {
             IFile file = (IFile) adaptableObject;
             if (ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
@@ -51,9 +49,9 @@ public class GroovyFileAdapterFactory implements IAdapterFactory {
                             List<ClassNode> classNodeList = module.getClasses();
                             if (classNodeList != null && !classNodeList.isEmpty()) {
                                 if (ClassNode.class.equals(adapterType)) {
-                                    returnValue = (T) classNodeList.get(0);
+                                    returnValue = classNodeList.get(0);
                                 } else if (ClassNode[].class.equals(adapterType)) {
-                                    returnValue = (T) classNodeList.toArray(new ClassNode[0]);
+                                    returnValue = classNodeList.toArray(new ClassNode[0]);
                                 }
                             }
                         }
@@ -67,6 +65,6 @@ public class GroovyFileAdapterFactory implements IAdapterFactory {
     }
 
     public Class<?>[] getAdapterList() {
-        return classes ;
+        return classes;
     }
 }
