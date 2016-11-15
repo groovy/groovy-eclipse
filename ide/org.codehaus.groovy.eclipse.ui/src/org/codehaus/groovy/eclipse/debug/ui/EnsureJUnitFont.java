@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.debug.ui;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -33,38 +32,35 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.internal.Workbench;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 7, 2009
- * 
  * This class enables the JUnit results view to show results in a monospace font
  * This is particularly useful for testing frameworks that rely on a formatted output
  * such as the spock framework.
  * <p>
  * Forcing the font to be monospace occurs in 3 locations:
  * <ol>
- * <li>When the org.codehaus.groovy.eclipse.ui plugin starts (only works if the JUnit view is already visible,
- * which it often is not).
+ * <li>When the org.codehaus.groovy.eclipse.ui plugin starts (only works if the JUnit view is already visible, which it often is not).
  * <li>Whenever the JUnit view becomes visible
  * <li>Whenever the force monospace preference changes
  * </ol>
+ *
+ * @author Andrew Eisenberg
+ * @created Aug 7, 2009
  */
 public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener {
-    
+
     private static final String JUNIT_RESULT_VIEW = "org.eclipse.jdt.junit.ResultView";
 
     public void maybeForceMonospaceFont() {
         forceMonospaceFont(isMonospace());
     }
-    
+
     public void forceMonospaceFont(boolean isMonospace) {
         try {
-            IWorkbenchPage page = Workbench.getInstance().getActiveWorkbenchWindow()
-                    .getActivePage();
+            IWorkbenchPage page = Workbench.getInstance().getActiveWorkbenchWindow().getActivePage();
             if (page == null) {
                 // occurred too early---window not open yet
                 return;
             }
-            
             TestRunnerViewPart view = (TestRunnerViewPart) page.findView(JUNIT_RESULT_VIEW);
             if (view == null) {
                 // not open---can ignore
@@ -85,18 +81,16 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
         }
     }
 
-    private void internalSetMonospaceFont(boolean isMonospace,
-            TestRunnerViewPart view) {
+    private void internalSetMonospaceFont(boolean isMonospace, TestRunnerViewPart view) {
         FailureTrace trace = view.getFailureTrace();
         Composite widget = (Composite) ReflectionUtils.getPrivateField(FailureTrace.class, "fTable", trace);
-        
         if (isMonospace) {
             widget.setFont(JFaceResources.getTextFont());
         } else {
             widget.setFont(JFaceResources.getDefaultFont());
         }
     }
-    
+
     private void internalForceMonospaceFont(IWorkbenchPartReference partRef) {
         if (partRef.getId().equals(JUNIT_RESULT_VIEW)) {
             TestRunnerViewPart view = (TestRunnerViewPart) partRef.getPage().findView(JUNIT_RESULT_VIEW);
@@ -106,10 +100,6 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
         }
     }
 
-    
-    /*************
-     * implemented for the listener interfaces
-     */
     public void partActivated(IWorkbenchPartReference partRef) {
         internalForceMonospaceFont(partRef);
     }
@@ -118,7 +108,7 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
         internalForceMonospaceFont(partRef);
     }
 
-    public void partOpened(IWorkbenchPartReference partRef) {        
+    public void partOpened(IWorkbenchPartReference partRef) {
         internalForceMonospaceFont(partRef);
     }
 
