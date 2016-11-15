@@ -48,7 +48,6 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-<!--
 <plugin>
    <groupId>org.eclipse.tycho</groupId>
    <artifactId>target-platform-configuration</artifactId>
@@ -61,11 +60,15 @@
                <id>org.codehaus.groovy.eclipse.feature</id>
                <versionRange>0.0.0</versionRange>
             </requirement>
+            <requirement>
+               <type>eclipse-feature</type>
+               <id>org.codehaus.groovy.alltests.feature</id>
+               <versionRange>0.0.0</versionRange>
+            </requirement>
          </extraRequirements>
       </dependency-resolution>
    </configuration>
 </plugin>
--->
 		</plugins>
 	</build>
 
