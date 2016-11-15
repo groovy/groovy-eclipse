@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.junit.test;singleton:=true
 Bundle-Name: Groovy JUnit Tests
 Bundle-Version: 2.9.2.qualifier

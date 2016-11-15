@@ -50,4 +50,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.5.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.refactoring.Activator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
