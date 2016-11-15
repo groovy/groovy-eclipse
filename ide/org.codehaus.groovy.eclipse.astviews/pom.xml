@@ -17,10 +17,6 @@
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-compiler-plugin</artifactId>
         <version>${tycho-version}</version>
-        <!-- Assuming that tycho compiler is configured same way as regular maven compiler.
-             Then the stuff below should just work.
-             Note: see http://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven
-          -->
         <configuration>
           <compilerId>groovy-eclipse-compiler</compilerId>
           <!-- set verbose to be true if you want lots of uninteresting messages -->
@@ -32,7 +28,6 @@
             <artifactId>groovy-eclipse-compiler</artifactId>
             <version>${groovy-eclipse-compiler-version}</version>
           </dependency>
-          <!-- for 2.8.0-01 and later you must have an explicit dependency -->
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-batch</artifactId>
