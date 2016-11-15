@@ -66,6 +66,7 @@ import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -79,8 +80,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * Method parts are omitted or commented out when they are not relevant for
  * or not supported by groovy completion.
  */
-public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
-        RelevanceConstants {
+public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, RelevanceConstants {
 
     private static final char[][] DEFAULT_GROOVY_IMPORTS = { "java.math.BigDecimal".toCharArray(), "java.math.BigInteger".toCharArray() };
     private static final char[][] DEFAULT_GROOVY_IMPORTS_SIMPLE_NAMES = { "BigDecimal".toCharArray(), "BigInteger".toCharArray() };
@@ -152,8 +152,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
         public char[] qualifiedTypeName = null;
 
-        AcceptedType(char[] packageName, char[] simpleTypeName,
-                char[][] enclosingTypeNames, int modifiers, int accessibility) {
+        AcceptedType(char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, int modifiers, int accessibility) {
             this.packageName = packageName;
             this.simpleTypeName = simpleTypeName;
             this.enclosingTypeNames = enclosingTypeNames;
@@ -163,19 +162,17 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
         @Override
         public String toString() {
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             buffer.append('{');
             buffer.append(this.packageName);
             buffer.append(',');
             buffer.append(this.simpleTypeName);
             buffer.append(',');
-            buffer.append(CharOperation
-                    .concatWith(this.enclosingTypeNames, '.'));
+            buffer.append(CharOperation.concatWith(this.enclosingTypeNames, '.'));
             buffer.append('}');
             return buffer.toString();
         }
     }
-
 
     private final static int CHECK_CANCEL_FREQUENCY = 50;
 
@@ -198,11 +195,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
     private final int actualCompletionPosition;
 
-    private char[][][] imports; // list of imports. simple name, qualified
-                                // name
+    private char[][][] imports; // list of imports. simple name, qualified name
 
-    private char[][] onDemandimports; // list of imports. qualified package
-                                      // name
+    private char[][] onDemandimports; // list of imports. qualified package name
 
     private final boolean isImport;
 
@@ -215,7 +210,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
     private final String completionExpression;
 
-	private GroovyImportRewriteFactory groovyRewriter;
+    private GroovyImportRewriteFactory groovyRewriter;
 
     private boolean shouldAcceptConstructors;
 
@@ -252,9 +247,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         // if contextOnly, then do not insert any text, only show context
         // information
         this.contextOnly = context.location == ContentAssistLocation.METHOD_CONTEXT;
-        this.completionExpression = context.location == ContentAssistLocation.METHOD_CONTEXT ? ((MethodInfoContentAssistContext) context).methodName
-                : context.completionExpression;
-		groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
+        this.completionExpression = context.location == ContentAssistLocation.METHOD_CONTEXT
+            ? ((MethodInfoContentAssistContext) context).methodName : context.completionExpression;
+        groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
         try {
             allTypesInUnit = unit.getAllTypes();
         } catch (JavaModelException e) {
@@ -567,7 +562,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
         javaCompletionProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
         javaCompletionProposal.setRelevance(proposal.getRelevance());
-		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
+        ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
             ReflectionUtils.setPrivateField(
                     LazyJavaTypeCompletionProposal.class, "fImportRewrite",
@@ -785,8 +780,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             }
         }
 
-        GroovyCompletionProposal proposal = createProposal(contextOnly ? CompletionProposal.METHOD_REF
-                : CompletionProposal.CONSTRUCTOR_INVOCATION, offset - 1);
+        GroovyCompletionProposal proposal = createProposal(contextOnly ? CompletionProposal.METHOD_REF : CompletionProposal.CONSTRUCTOR_INVOCATION, offset - 1);
         char[] declarationSignature = CompletionEngine.createNonGenericTypeSignature(packageName, typeName);
         proposal.setDeclarationSignature(declarationSignature);
 
@@ -797,11 +791,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         } else {
             // otherwise this is a normal constructor proposal
             proposal.setCompletion(this.completionExpression.toCharArray());
-            // looks strange, but this is just copying similar code in
-            // CompletionEngine.java
+            // looks strange, but this is just copying similar code in CompletionEngine.java
             proposal.setReplaceRange(this.offset + this.replaceLength, this.offset + this.replaceLength);
             proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-            proposal.setCompletion(new char[] { '(', ')' });
+            char[] completion = new char[] {'(', ')'};
+            try {
+                // try not to insert an extra set of parenthesis when completing the constructor name
+                if (this.javaContext.getDocument().getChar(this.actualCompletionPosition) == '(') {
+                    completion = new char[0];
+                }
+            } catch (BadLocationException ignored) {
+            }
+            proposal.setCompletion(completion);
 
             // provides the import statement
             GroovyCompletionProposal typeProposal = createTypeProposal(packageName, typeModifiers, accessibility, typeName,
@@ -810,8 +811,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         }
 
         if (signature == null) {
-            proposal.setSignature(createConstructorSignature(parameterTypes,
-                    isQualified));
+            proposal.setSignature(createConstructorSignature(parameterTypes, isQualified));
         } else {
             char[] copy = new char[signature.length];
             System.arraycopy(signature, 0, copy, 0, copy.length);
@@ -826,13 +826,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             if (mockEngine == null) {
                 // used for caching types only
                 mockEngine = new CompletionEngine(null,
-                        new CompletionRequestor() {
-
-                            @Override
-                            public void accept(CompletionProposal proposal) {
-
-                            }
-                }, null, this.javaContext.getProject(), null, null);
+                    new CompletionRequestor() {
+                        @Override
+                        public void accept(CompletionProposal proposal) {
+                        }
+                    }, null, this.javaContext.getProject(), null, null);
             }
             proposal.setCompletionEngine(mockEngine);
         }
@@ -869,7 +867,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         } else {
             lazyProposal.setTriggerCharacters(ProposalUtils.METHOD_TRIGGERS);
         }
-		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
+        ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
             ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", lazyProposal, r);
         }

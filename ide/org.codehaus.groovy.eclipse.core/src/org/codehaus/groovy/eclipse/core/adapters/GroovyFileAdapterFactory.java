@@ -31,6 +31,7 @@ import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
  *
  * @author David Kerber
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyFileAdapterFactory implements IAdapterFactory {
 
     private static final Class[] classes = new Class[] {ClassNode.class, ClassNode[].class};
@@ -64,7 +65,7 @@ public class GroovyFileAdapterFactory implements IAdapterFactory {
         return returnValue;
     }
 
-    public Class<?>[] getAdapterList() {
+    public Class[] getAdapterList() {
         return classes;
     }
 }

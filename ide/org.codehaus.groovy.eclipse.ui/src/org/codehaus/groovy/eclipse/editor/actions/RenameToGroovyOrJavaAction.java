@@ -1,13 +1,18 @@
-/**********************************************************************
- * Copyright (c) 2004, 2010  IBM Corporation, SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors: Sian January - initial version
- *               Andrew Eisenberg - conversion to groovy
- **********************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.editor.actions;
 
 import java.util.ArrayList;
@@ -36,11 +41,6 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
         this.javaOrGroovy = javaOrGroovy;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-     */
     public void run(IAction action) {
         if (selection instanceof IStructuredSelection) {
             GroovyResourceUtil.renameFile(javaOrGroovy, getResources((IStructuredSelection) selection));
@@ -48,7 +48,6 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
     }
 
     /**
-     *
      * @return non-null list of resources in the context selection. May be empty
      */
     protected List<IResource> getResources(IStructuredSelection selection) {
@@ -73,15 +72,6 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
         return resources;
     }
 
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action
-     * .IAction,
-     * org.eclipse.jface.viewers.ISelection)
-     */
     public void selectionChanged(IAction action, ISelection selection) {
         this.selection = selection;
     }
@@ -90,6 +80,6 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
         selection = null;
     }
 
-    public void init(IWorkbenchWindow window) {}
-
+    public void init(IWorkbenchWindow window) {
+    }
 }
