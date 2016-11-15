@@ -58,25 +58,8 @@
             <requirement>
                <type>eclipse-feature</type>
                <id>org.codehaus.groovy.eclipse.feature</id>
-               <versionRange>0.0.0</versionRange>
+               <versionRange>2.9.2</versionRange>
             </requirement>
-<!--
-           <requirement>
-               <type>eclipse-feature</type>
-               <id>org.codehaus.groovy.alltests.feature</id>
-               <versionRange>0.0.0</versionRange>
-            </requirement>
-            <requirement>
-               <type>eclipse-plugin</type>
-               <id>org.codehaus.groovy.eclipse.codeassist.completion.test</id>
-               <versionRange>0.0.0</versionRange>
-            </requirement>
-            <requirement>
-               <type>eclipse-plugin</type>
-               <id>org.codehaus.groovy.alltests</id>
-               <versionRange>0.0.0</versionRange>
-            </requirement>
--->
          </extraRequirements>
       </dependency-resolution>
    </configuration>
