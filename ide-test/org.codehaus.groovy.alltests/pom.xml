@@ -72,12 +72,12 @@
           <dependencies>
             <dependency>
               <type>eclipse-feature</type>
-              <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
+              <artifactId>org.eclipse.jdt.feature</artifactId>
               <version>0.0.0</version>
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
-              <artifactId>org.eclipse.jdt.feature</artifactId>
+              <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
               <version>0.0.0</version>
             </dependency>
             <dependency>
