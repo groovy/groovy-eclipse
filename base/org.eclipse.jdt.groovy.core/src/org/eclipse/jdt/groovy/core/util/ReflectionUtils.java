@@ -172,7 +172,7 @@ public class ReflectionUtils {
         Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message, throwable));
     }
 
-    public static final Object[] NO_ARGS = new Object[0];
-    public static final Class<?>[] NO_TYPES = new Class[0];
+    private static final Object[] NO_ARGS = new Object[0];
+    private static final Class<?>[] NO_TYPES = new Class[0];
     private static final Map<String, Field> FIELDS = new HashMap<String, Field>();
 }

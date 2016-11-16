@@ -1164,7 +1164,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
 
     private void myRemoveOccurrenceAnnotations() {
-        ReflectionUtils.executePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", ReflectionUtils.NO_TYPES, this, ReflectionUtils.NO_ARGS);
+        ReflectionUtils.executePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", new Class[] {}, this, new Object[] {});
     }
 
     private void setOccurrenceAnnotations(Annotation[] as) {
@@ -1291,7 +1291,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 if (model instanceof AbstractMarkerAnnotationModel) {
                     // force instantiation of the extension points
                     ReflectionUtils.executePrivateMethod(AbstractMarkerAnnotationModel.class,
-                        "installMarkerUpdaters", ReflectionUtils.NO_TYPES, model, ReflectionUtils.NO_ARGS);
+                        "installMarkerUpdaters", new Class[] {}, model, new Object[] {});
                     @SuppressWarnings("unchecked")
                     List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>) ReflectionUtils.
                         getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model);
