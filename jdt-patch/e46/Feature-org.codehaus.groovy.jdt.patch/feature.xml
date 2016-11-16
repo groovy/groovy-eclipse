@@ -32,8 +32,9 @@
    <requires>
 <!--
       <import feature="org.eclipse.jdt" version="3.12.0.v20160127-0515" patch="true"/>
--->
       <import feature="org.eclipse.jdt" version="3.12.1.v20160829-0950" patch="true"/>
+-->
+      <import feature="org.eclipse.jdt" version="0.0.0" patch="true"/>
    </requires>
 
    <plugin id="org.eclipse.jdt.core" download-size="0" install-size="0" version="0.0.0" unpack="false"/>
