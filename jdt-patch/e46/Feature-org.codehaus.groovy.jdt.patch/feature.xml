@@ -39,7 +39,7 @@
       <import feature="org.eclipse.jdt" version="3.12.1.v20160606-1100" patch="true"/>
 -->
 
-<! -- neon sr1 -->
+<!-- neon sr1 -->
       <import feature="org.eclipse.jdt" version="3.12.1.v20160907-1200" patch="true"/>
    </requires>
 
