@@ -77,11 +77,8 @@
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
-              <artifactId>org.codehaus.jdt.core.feature</artifactId>
-<version>3.12.1.v20160829-0950</version>
-<!--
+              <artifactId>org.eclipse.jdt.feature</artifactId>
               <version>0.0.0</version>
--->
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
@@ -97,26 +94,6 @@
 
         </configuration>
       </plugin>
-
-<!--
-<plugin>
-   <groupId>org.eclipse.tycho</groupId>
-   <artifactId>target-platform-configuration</artifactId>
-   <version>${tycho-version}</version>
-   <configuration>
-      <dependency-resolution>
-         <extraRequirements>
-            <requirement>
-              <type>eclipse-feature</type>
-              <id>org.codehaus.jdt.core.feature</id>
-	      <version>3.12.1.v20160829-0950</version>
-            </requirement>
-         </extraRequirements>
-      </dependency-resolution>
-   </configuration>
-</plugin>
--->
-
     </plugins>
   </build>
 </project>
