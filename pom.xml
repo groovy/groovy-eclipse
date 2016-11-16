@@ -68,24 +68,6 @@
 
 		<!-- SDK and test bits -->
 
-		<!-- parent pom for all the ide-test modules -->
-		<module>ide-test</module>
-
-		<module>ide-test/org.codehaus.groovy.alltests</module>
-
-		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.junit.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.quickfix.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.refactoring.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
-
-		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
-
-		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
-		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
 
 		<!-- 'Real' Bits -->
 
@@ -119,6 +101,27 @@
 		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
 		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
 		<module>ide/org.codehaus.groovy.eclipse.ui</module>
+
+		<!-- parent pom for all the ide-test modules -->
+
+		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
+		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
+
+		<module>ide-test</module>
+
+		<module>ide-test/org.codehaus.groovy.alltests</module>
+
+		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.junit.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.quickfix.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.refactoring.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
+
+		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
+
 
 		<!-- m2e integration -->
 
