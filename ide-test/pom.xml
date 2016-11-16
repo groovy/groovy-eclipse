@@ -54,6 +54,7 @@
    <version>0.26.0</version>
    <configuration>
       <dependency-resolution>
+<!--
          <extraRequirements>
             <requirement>
                <type>eclipse-feature</type>
@@ -61,6 +62,7 @@
                <versionRange>0.0.0</versionRange>
             </requirement>
          </extraRequirements>
+-->
       </dependency-resolution>
    </configuration>
 </plugin>
