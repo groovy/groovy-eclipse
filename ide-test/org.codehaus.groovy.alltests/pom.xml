@@ -78,7 +78,10 @@
             <dependency>
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.jdt.core.feature</artifactId>
+<version>3.12.1.v20160829-0950</version>
+<!--
               <version>0.0.0</version>
+-->
             </dependency>
             <dependency>
               <type>eclipse-feature</type>

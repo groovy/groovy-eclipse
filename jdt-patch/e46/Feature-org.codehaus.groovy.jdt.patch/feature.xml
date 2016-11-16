@@ -36,10 +36,11 @@
       <import feature="org.eclipse.jdt" version="3.12.1.v20160829-0950" patch="true"/>
 -->
       <!-- version of features/org.eclipse.jdt_3.12.1.v20160907-1200/ -->
+      <import feature="org.eclipse.jdt" version="3.12.1.v20160829-0950" patch="true"/>
 <!--
       <import feature="org.eclipse.jdt" version="3.12.1.v20160907-1200" patch="true"/>
--->
       <import feature="org.eclipse.jdt" version="3.12.1.v20160606-1100" patch="true"/>
+-->
    </requires>
 
 <!--
