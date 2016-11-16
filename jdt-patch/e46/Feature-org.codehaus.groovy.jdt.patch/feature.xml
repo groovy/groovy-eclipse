@@ -39,7 +39,7 @@
       <import feature="org.eclipse.jdt" version="3.12.1.v20160907-1200" patch="true"/>
    </requires>
 
-   <plugin id="org.eclipse.jdt.core" download-size="0" install-size="0" version="0.0.0" unpack="false"/>
+   <plugin id="org.eclipse.jdt.core" download-size="0" install-size="0" version="3.12.1.v20160829-0950" unpack="false"/>
 
    <plugin id="org.codehaus.groovy.eclipse" download-size="0" install-size="0" version="0.0.0"/> 
 </feature>
