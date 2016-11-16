@@ -77,6 +77,11 @@
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
+              <artifactId>org.codehaus.jdt.core.feature</artifactId>
+              <version>0.0.0</version>
+            </dependency>
+            <dependency>
+              <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy24.feature</artifactId>
               <version>0.0.0</version>
             </dependency>
