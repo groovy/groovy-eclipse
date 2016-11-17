@@ -95,7 +95,7 @@ build	17-Nov-2016 17:29:46	[ERROR]   Missing requirement: org.eclipse.jdt.featur
 <!--
 <version>0.0.0</version>
 -->
-<version>2.9.2-SNAPSHOT</version>
+<version>${greclipse.build.qualifier}</version>
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
