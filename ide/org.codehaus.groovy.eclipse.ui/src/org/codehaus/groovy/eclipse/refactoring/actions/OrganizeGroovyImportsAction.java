@@ -54,7 +54,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
             if (o1.equals(o2))
                 return 0;
 
-            History<String, String> history = QualifiedTypeNameHistory.getDefault();
+            History history = QualifiedTypeNameHistory.getDefault();
             int pos1 = history.getPosition(o1);
             int pos2 = history.getPosition(o2);
 
