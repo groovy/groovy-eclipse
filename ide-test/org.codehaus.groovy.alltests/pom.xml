@@ -73,7 +73,7 @@
             <dependency>
               <type>eclipse-feature</type>
               <artifactId>org.eclipse.jdt.feature</artifactId>
-              <version>0.0.0</version>
+              <version>3.12.1.v20160907-1200</version>
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
