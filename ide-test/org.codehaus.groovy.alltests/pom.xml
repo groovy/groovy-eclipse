@@ -89,7 +89,7 @@ build	17-Nov-2016 17:29:46	[ERROR]   Software being installed: org.eclipse.jdt.f
 build	17-Nov-2016 17:29:46	[ERROR]   Missing requirement: org.eclipse.jdt.feature.group 3.12.0.v20160606-1100 requires 'org.eclipse.jdt.core [3.12.0.v20160516-2131]' but it could not be found
 build	17-Nov-2016 17:29:46	[ERROR]   Missing requirement: org.eclipse.jdt.feature.group 3.12.1.v20160907-1200 requires 'org.eclipse.jdt.core [3.12.1.v20160829-0950]' but it could not be found
 -->
-<versione>0.0.0</version>
+<version>0.0.0</version>
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
