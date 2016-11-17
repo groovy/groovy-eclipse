@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
  * A view into the Groovy AST. Anyone who needs to manipulate the AST will find
  * this useful for exploring various nodes.
  */
-public class ASTView extends ViewPart { // implements ISelectionListener {
+public class ASTView extends ViewPart {
     private TreeViewer viewer;
 
     private Action doubleClickAction;
@@ -148,7 +148,8 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
             public void partBroughtToTop(IWorkbenchPart part) {
                 try {
                     if (part instanceof IEditorPart) {
-                        IFile file = ((IEditorPart) part).getEditorInput().getAdapter(IFile.class);
+                        @SuppressWarnings("cast")
+                        IFile file = (IFile) ((IEditorPart) part).getEditorInput().getAdapter(IFile.class);
                         if (file != null && ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
                             ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
                             if (unit instanceof GroovyCompilationUnit) {
@@ -205,9 +206,8 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
                     return;
                 }
                 IJavaElementDelta delta = event.getDelta();
-
-                IFile file = editor.getEditorInput().getAdapter(IFile.class);
-
+                @SuppressWarnings("cast")
+                IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
                 final GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
 
                 // determine if the delta contains the ICompUnit under question

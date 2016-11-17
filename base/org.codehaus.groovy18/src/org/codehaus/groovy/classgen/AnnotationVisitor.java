@@ -15,26 +15,13 @@
  */
 package org.codehaus.groovy.classgen;
 
+import java.util.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.List;
-import java.util.Map;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
@@ -94,7 +81,7 @@ public class AnnotationVisitor {
         VMPluginFactory.getPlugin().configureAnnotation(node);
         return this.annotation;
     }
-
+    
     private boolean checkIfValidEnumConstsAreUsed(AnnotationNode node) {
         boolean ok = true;
         Map<String, Expression> attributes = node.getMembers();
@@ -112,7 +99,7 @@ public class AnnotationVisitor {
                 ClassExpression ce = (ClassExpression) pe.getObjectExpression();
                 ClassNode type = ce.getType();
                 if (type.isEnum()) {
-                    boolean ok = false; 
+                    boolean ok = false;
                     try {
                         FieldNode enumField = type.getDeclaredField(name);
                         ok = enumField != null && enumField.getType().equals(type);
@@ -139,21 +126,20 @@ public class AnnotationVisitor {
                     return exp;
 
                 try {
-                    type.getFields();
-                    // GRECLIPSE: start
+                    // GRECLIPSE add
                     if (type.hasClass()) {
                     // end
-	                    Field field = type.getTypeClass().getField(pe.getPropertyAsString());
-	                    if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
-	                        return new ConstantExpression(field.get(null));
-	                    }
-	              // GRECLIPSE: start
+                    Field field = type.getTypeClass().getField(pe.getPropertyAsString());
+                    if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
+                        return new ConstantExpression(field.get(null));
+                    }
+                    // GRECLIPSE: start
                     } else {
-                  	  FieldNode fieldNode = type.getField(pe.getPropertyAsString());
-                  	  if (fieldNode!=null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {
-                  		  Expression e = fieldNode.getInitialExpression();
-                  		  return (ConstantExpression)e;
-                  	  }
+                        FieldNode fieldNode = type.getField(pe.getPropertyAsString());
+                        if (fieldNode != null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {
+                            Expression e = fieldNode.getInitialExpression();
+                            return e;
+                        }
                     }
                     // end
                 } catch(Exception e) {
@@ -166,6 +152,9 @@ public class AnnotationVisitor {
             for (Expression e : le.getExpressions()) {
                 result.addExpression(transformInlineConstants(e));
             }
+            // GRECLIPSE edd
+            result.setSourcePosition(exp);
+            // GRECLIPSE end
             return result;
         }
         return exp;
@@ -173,18 +162,19 @@ public class AnnotationVisitor {
 
     private boolean checkIfMandatoryAnnotationValuesPassed(AnnotationNode node) {
         boolean ok = true;
-        Map attributes = node.getMembers();
-        ClassNode classNode = node.getClassNode();
-        for (MethodNode mn : classNode.getMethods()) {
-            String methodName = mn.getName();
-            // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-            // GRECLIPSE: start: temp hack, cannot rely on getCode()
-//            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
-//                addError("No explicit/default value found for annotation attribute '" + methodName + "' in annotation " + classNode, node);
-//                ok = false;
-//            }
-            // end
-        }
+        // GRECLIPSE edit
+        // temp hack; can't rely on getCode()
+        //Map attributes = node.getMembers();
+        //ClassNode classNode = node.getClassNode();
+        //for (MethodNode mn : classNode.getMethods()) {
+        //    String methodName = mn.getName();
+        //    // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
+        //    if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+        //        addError("No explicit/default value found for annotation attribute '" + methodName + "' in annotation " + classNode, node);
+        //        ok = false;
+        //    }
+        //}
+        // GRECLIPSE end
         return ok;
     }
 
@@ -218,6 +208,9 @@ public class AnnotationVisitor {
                 // treat like a singleton list as per Java
                 ListExpression listExp = new ListExpression();
                 listExp.addExpression(attrExp);
+                // GRECLIPSE add
+                listExp.setSourcePosition(ClassCodeVisitorSupport.getNonInlinedExpression(attrExp));
+                // GRECLIPSE end
                 if (annotation != null) {
                     annotation.setMember(attrName, listExp);
                 }

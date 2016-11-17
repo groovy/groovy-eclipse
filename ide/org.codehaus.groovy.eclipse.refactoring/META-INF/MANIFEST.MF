@@ -31,7 +31,7 @@ Export-Package: org.codehaus.groovy.eclipse.refactoring;
    antlr,
    org.codehaus.groovy.ast",
  org.codehaus.groovy.eclipse.refactoring.ui.extract
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.6",
+Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.core;bundle-version="2.9.2",
  org.eclipse.core.expressions,
@@ -50,4 +50,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.6",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.5.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.refactoring.Activator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

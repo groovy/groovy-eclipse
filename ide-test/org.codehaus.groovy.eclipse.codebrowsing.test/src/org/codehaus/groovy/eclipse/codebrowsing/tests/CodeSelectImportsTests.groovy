@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
 
 final class CodeSelectImportsTests extends BrowsingTestCase {
 

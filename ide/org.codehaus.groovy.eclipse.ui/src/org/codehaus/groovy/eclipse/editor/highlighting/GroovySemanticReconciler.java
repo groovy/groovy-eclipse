@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -22,9 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightedPosition;
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightingStyle;
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -32,13 +32,16 @@ import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
+import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.swt.SWT;
@@ -68,29 +71,52 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private static final String STATIC_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.staticMethodInvocation";
     private static final String METHOD_DECLARATION_HIGHLIGHT_PREFERENCE = "semanticHighlighting.methodDeclarationName";
 
-    private GroovyEditor editor;
+    // these types have package-private visibility
+    private static Method GET_HIGHLIGHTING = null;
+    private static Constructor<?> HIGHLIGHTING_STYLE;
+    private static Constructor<?> HIGHLIGHTED_POSITION;
+    static {
+        try {
+            Class<?> style = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager$Highlighting");
+            HIGHLIGHTING_STYLE = ReflectionUtils.getConstructor(style, TextAttribute.class, boolean.class);
+
+            Class<?> position = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingManager$HighlightedPosition");
+            HIGHLIGHTED_POSITION = ReflectionUtils.getConstructor(position, int.class, int.class, style, Object.class);
+
+            GET_HIGHLIGHTING = position.getDeclaredMethod("getHighlighting");
+            GET_HIGHLIGHTING.setAccessible(true);
+
+        } catch (ClassNotFoundException cnfe) {
+            HIGHLIGHTING_STYLE = null;
+            HIGHLIGHTED_POSITION = null;
+            GroovyPlugin.getDefault().logException("Semantic highlighting disabled", cnfe);
+        } catch (NoSuchMethodException nsme) {
+        }
+    }
+
+    private volatile GroovyEditor editor;
     private final Semaphore lock = new Semaphore(1);
     private SemanticHighlightingPresenter presenter;
 
     // make these configurable
-    private HighlightingStyle mapKeyHighlighting;
-    private HighlightingStyle tagKeyHighlighting;
-    private HighlightingStyle numberRefHighlighting;
-    private HighlightingStyle regexpRefHighlighting;
-    private HighlightingStyle undefinedRefHighlighting;
-    private HighlightingStyle deprecatedRefHighlighting;
+    private Object mapKeyHighlighting;
+    private Object tagKeyHighlighting;
+    private Object numberRefHighlighting;
+    private Object regexpRefHighlighting;
+    private Object undefinedRefHighlighting;
+    private Object deprecatedRefHighlighting;
 
-    private HighlightingStyle localHighlighting;
-    private HighlightingStyle paramHighlighting;
+    private Object localHighlighting;
+    private Object paramHighlighting;
 
-    private HighlightingStyle objectFieldHighlighting;
-    private HighlightingStyle staticFieldHighlighting;
-    private HighlightingStyle staticValueHighlighting;
+    private Object objectFieldHighlighting;
+    private Object staticFieldHighlighting;
+    private Object staticValueHighlighting;
 
-    private HighlightingStyle methodDefHighlighting;
-    private HighlightingStyle methodUseHighlighting;
-    private HighlightingStyle groovyMethodUseHighlighting;
-    private HighlightingStyle staticMethodUseHighlighting;
+    private Object methodDefHighlighting;
+    private Object methodUseHighlighting;
+    private Object groovyMethodUseHighlighting;
+    private Object staticMethodUseHighlighting;
 
 
     public GroovySemanticReconciler() {
@@ -162,12 +188,14 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return style;
     }
 
-    protected HighlightingStyle newHighlightingStyle(Color color, int style) {
-        return new HighlightingStyle(new TextAttribute(color, null, style), true);
+    protected Object newHighlightingStyle(Color color) {
+        //return new HighlightingStyle(new TextAttribute(color), true);
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color), Boolean.TRUE);
     }
 
-    protected HighlightingStyle newHighlightingStyle(Color color) {
-        return new HighlightingStyle(new TextAttribute(color), true);
+    protected Object newHighlightingStyle(Color color, int style) {
+        //return new HighlightingStyle(new TextAttribute(color, null, style), true);
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color, null, style), Boolean.TRUE);
     }
 
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
@@ -190,23 +218,23 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         // ensure that only one thread performs this task
         if (ast != null && lock.tryAcquire())
         try {
+            if (editor == null) return; // uninstalled?
             monitor.beginTask("Groovy semantic highlighting", 10);
             GroovyCompilationUnit unit = editor.getGroovyCompilationUnit();
             if (unit != null) {
-                presenter.setCanceled(monitor.isCanceled()); // TODO: Should this be done in the finally block? Or done after/before beginTask?
+                presenter.setCanceled(monitor.isCanceled());
                 if (update(monitor, 1)) return;
 
                 GatherSemanticReferences finder = new GatherSemanticReferences(unit);
                 Collection<HighlightedTypedPosition> semanticReferences = finder.findSemanticHighlightingReferences();
                 if (update(monitor, 5)) return;
 
-                List<HighlightedPosition> newPositions = new ArrayList<HighlightedPosition>(semanticReferences.size());
-                @SuppressWarnings("unchecked")
-                List<HighlightedPosition> oldPositions = new LinkedList<HighlightedPosition>((List<HighlightedPosition>) presenter.fPositions);
+                List<Position> newPositions = new ArrayList<Position>(semanticReferences.size());
+                List<Position> oldPositions = new LinkedList<Position>(getHighlightedPositions());
                 if (update(monitor, 1)) return;
 
                 for (HighlightedTypedPosition ref : semanticReferences) {
-                    HighlightedPosition pos = createHighlightedPosition(ref);
+                    Position pos = newHighlightedPosition(ref);
                     tryAddPosition(newPositions, oldPositions, pos);
                 }
                 if (update(monitor, 2)) return;
@@ -233,8 +261,14 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return monitor.isCanceled();
     }
 
-    private HighlightedPosition createHighlightedPosition(HighlightedTypedPosition pos) {
-        HighlightingStyle style = null;
+    @SuppressWarnings("unchecked")
+    private List<Position> getHighlightedPositions() {
+        // NOTE: Be very careful with this; fPositions is often accessed synchronously!
+        return (List<Position>) ReflectionUtils.getPrivateField(SemanticHighlightingPresenter.class, "fPositions", presenter);
+    }
+
+    private Position newHighlightedPosition(HighlightedTypedPosition pos) {
+        Object style = null;
         switch (pos.kind) {
             case DEPRECATED:
                 style = deprecatedRefHighlighting;
@@ -285,23 +319,38 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 style = staticMethodUseHighlighting;
                 break;
         }
-
-        return new HighlightedPosition(pos.offset, pos.length, style, this);
+        //return new HighlightedPosition(pos.offset, pos.length, style, this);
+        return (Position) ReflectionUtils.invokeConstructor(HIGHLIGHTED_POSITION, pos.offset, pos.length, style, this);
     }
 
-    private void tryAddPosition(List<HighlightedPosition> newPositions, List<HighlightedPosition> oldPositions, HighlightedPosition maybePosition) {
+    private void tryAddPosition(List<Position> newPositions, List<Position> oldPositions, Position maybePosition) {
         boolean found = false; // TODO: Is there a quicker way to search for matches?  These can be sorted easily.
-        for (Iterator<HighlightedPosition> it = oldPositions.iterator(); it.hasNext();) {
-            HighlightedPosition oldPosition = it.next();
-            if (oldPosition.isEqual(maybePosition.offset, maybePosition.length, maybePosition.getHighlighting())) {
-                it.remove();
+        for (Iterator<Position> it = oldPositions.iterator(); it.hasNext();) {
+            Position oldPosition = it.next();
+            if (!oldPosition.isDeleted() && oldPosition.equals(maybePosition) && isSameStyle(oldPosition, maybePosition)) {
                 found = true;
+                it.remove();
                 break;
             }
         }
         if (!found) {
             newPositions.add(maybePosition);
         }
+    }
+
+    private boolean isSameStyle(Position a, Position b) {
+        if (GET_HIGHLIGHTING != null) {
+            try {
+                return (GET_HIGHLIGHTING.invoke(a) == GET_HIGHLIGHTING.invoke(b));
+            } catch (IllegalAccessException e) {
+                // fall through
+            } catch (IllegalArgumentException e) {
+                // fall through
+            } catch (InvocationTargetException e) {
+                // fall through
+            }
+        }
+        return true;
     }
 
     /**
@@ -311,24 +360,24 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
      * @param addedPositions the added positions
      * @param removedPositions the removed positions
      */
-    private void updatePresentation(TextPresentation textPresentation, List<HighlightedPosition> addedPositions, List<HighlightedPosition> removedPositions) {
-        Runnable runnable= presenter.createUpdateRunnable(textPresentation, addedPositions, removedPositions);
+    private void updatePresentation(TextPresentation textPresentation, List<Position> addedPositions, List<Position> removedPositions) {
+        Runnable runnable = presenter.createUpdateRunnable(textPresentation, addedPositions, removedPositions);
         if (runnable == null)
             return;
 
-        JavaEditor thisEditor= editor;
+        JavaEditor thisEditor = editor;
         if (thisEditor == null)
             return;
 
-        IWorkbenchPartSite site= thisEditor.getSite();
+        IWorkbenchPartSite site = thisEditor.getSite();
         if (site == null)
             return;
 
-        Shell shell= site.getShell();
+        Shell shell = site.getShell();
         if (shell == null || shell.isDisposed())
             return;
 
-        Display display= shell.getDisplay();
+        Display display = shell.getDisplay();
         if (display == null || display.isDisposed())
             return;
 

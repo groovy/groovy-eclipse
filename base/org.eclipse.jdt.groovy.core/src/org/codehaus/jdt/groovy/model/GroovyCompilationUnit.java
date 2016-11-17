@@ -434,13 +434,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
         return op.ast;
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Class<T> adapter) {
+    @Override @SuppressWarnings({"rawtypes", "unchecked"})
+    public Object getAdapter(Class adapter) {
         if (adapter == GroovyCompilationUnit.class) {
-            return (T) this;
+            return this;
         }
         if (adapter == ModuleNode.class) {
-            return (T) getModuleNode();
+            return getModuleNode();
         }
         return super.getAdapter(adapter);
     }
@@ -585,7 +585,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
         // allow a delegate to perform completion if required
         // this is used by the grails plugin when editing in gsp editor
-        ICodeCompletionDelegate delegate = getAdapter(ICodeCompletionDelegate.class);
+        ICodeCompletionDelegate delegate = (ICodeCompletionDelegate) getAdapter(ICodeCompletionDelegate.class);
         if (delegate != null && delegate.shouldCodeComplete(requestor, typeRoot)) {
             delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
         } else {

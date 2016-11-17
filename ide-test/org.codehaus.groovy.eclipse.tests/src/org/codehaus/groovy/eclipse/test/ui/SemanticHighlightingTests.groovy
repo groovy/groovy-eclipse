@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 
-import groovy.transform.TypeChecked
-
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
@@ -31,7 +29,6 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
 
-@TypeChecked
 final class SemanticHighlightingTests extends EclipseTestCase {
 
     boolean semanticHightlightOriginalValue
@@ -177,6 +174,26 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('singletonList'), 'singletonList'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('singletonList'), 'singletonList'.length(), STATIC_CALL))
+    }
+
+    void testStaticMethods4() {
+        String contents = '''\
+            import static java.lang.Integer.valueOf
+            @groovy.transform.CompileStatic
+            class C {
+              String number
+              int getN() {
+                valueOf(number) // needs sloc; see StaticMethodCallExpressionTransformer
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getN'), 'getN'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('number'), 'number'.length(), FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('number'), 'number'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('valueOf'), 'valueOf'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('valueOf'), 'valueOf'.length(), STATIC_CALL))
     }
 
     // GRECLIPSE-1138

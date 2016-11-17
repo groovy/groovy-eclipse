@@ -30,6 +30,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -45,12 +46,14 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class ModuleNodeMapper {
 
     public static class ModuleNodeInfo {
+
         public ModuleNodeInfo(ModuleNode module, JDTResolver resolver) {
             this.module = module;
             this.resolver = resolver;
         }
 
         public final ModuleNode module;
+        public CompilationResult result;
         public final JDTResolver resolver;
     }
 
@@ -64,11 +67,11 @@ public class ModuleNodeMapper {
 
     private final Map<PerWorkingCopyInfo, ModuleNodeInfo> infoToModuleMap = new HashMap<PerWorkingCopyInfo, ModuleNodeInfo>();
 
-    void store(PerWorkingCopyInfo info, ModuleNode module, JDTResolver resolver) {
+    void store(PerWorkingCopyInfo key, ModuleNodeInfo val) {
         lock.lock();
         try {
             sweepAndPurgeModuleNodes();
-            infoToModuleMap.put(info, new ModuleNodeInfo(module, shouldStoreResovler() ? resolver : null));
+            infoToModuleMap.put(key, val);
         } finally {
             lock.unlock();
         }
@@ -131,28 +134,26 @@ public class ModuleNodeMapper {
     }
 
     /**
-     * Cache the module node if this is a working copy
-     *
-     * @param perWorkingCopyInfo
-     * @param compilationUnitDeclaration
+     * Cache the module node if this is a working copy.
      */
-    protected void maybeCacheModuleNode(final JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
-            final GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
+    protected void maybeCacheModuleNode(
+        final JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
+        final GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
 
         if (lock.tryLock()) {
             try {
                 if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
                     ModuleNode module = compilationUnitDeclaration.getModuleNode();
-
-                    // Store it for later
                     if (module != null) {
-                        JDTResolver resolver;
+                        JDTResolver resolver = null;
                         if (shouldStoreResovler()) {
                             resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
-                        } else {
-                            resolver = null;
                         }
-                        store(perWorkingCopyInfo, module, resolver);
+
+                        ModuleNodeInfo info = new ModuleNodeInfo(module, resolver);
+                        info.result = compilationUnitDeclaration.compilationResult();
+
+                        store(perWorkingCopyInfo, info);
                     }
                 }
             } finally {

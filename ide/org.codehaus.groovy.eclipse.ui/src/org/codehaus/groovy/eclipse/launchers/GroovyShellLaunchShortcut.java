@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,8 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor,false);
         IEditorInput input = editor.getEditorInput();
-        IFile file = input.getAdapter(IFile.class);
+        @SuppressWarnings("cast")
+        IFile file = (IFile) input.getAdapter(IFile.class);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit.getJavaProject() != null) {
             launchGroovy(unit.getJavaProject(), mode);

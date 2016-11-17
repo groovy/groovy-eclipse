@@ -16,8 +16,6 @@
 package org.codehaus.groovy.eclipse.junit.test
 
 import groovy.transform.InheritConstructors
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
 
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
@@ -29,7 +27,7 @@ import org.eclipse.jdt.ui.IJavaElementSearchConstants
 /**
  * Tests for {@link org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine}
  */
-@InheritConstructors @TypeChecked
+@InheritConstructors
 final class MainMethodFinderTests extends JUnitTestCase {
 
     private void createGroovyType(CharSequence contents, String file = 'Hello', String pack = 'p2') {
@@ -44,7 +42,6 @@ final class MainMethodFinderTests extends JUnitTestCase {
     /**
      * @param expected fully-qualified type names
      */
-    @TypeChecked(TypeCheckingMode.SKIP)
     private expectTypesWithMain(String... expected) {
         MainMethodSearchEngine engine = new MainMethodSearchEngine()
         IType[] types = engine.searchMainMethods(null as IProgressMonitor,

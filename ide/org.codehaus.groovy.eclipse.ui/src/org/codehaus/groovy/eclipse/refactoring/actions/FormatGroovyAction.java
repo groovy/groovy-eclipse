@@ -44,7 +44,7 @@ public class FormatGroovyAction extends SelectionDispatchAction {
         this.kind = kind;
 
         if (kind == FormatKind.INDENT_ONLY) {
-            setText("Indent");
+            setText("Correct Indentation");
             setToolTipText("Indent Groovy file");
             setDescription("Indent selection in Groovy file");
         } else if (kind == FormatKind.FORMAT) {
@@ -66,7 +66,8 @@ public class FormatGroovyAction extends SelectionDispatchAction {
         }
 
         GroovyEditor groovyEditor = (GroovyEditor) part;
-        GroovyCompilationUnit unit = part.getAdapter(GroovyCompilationUnit.class);
+        @SuppressWarnings("cast")
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
         IDocument doc = groovyEditor.getDocumentProvider().getDocument(groovyEditor.getEditorInput());
 
         if (doc != null && unit != null) {

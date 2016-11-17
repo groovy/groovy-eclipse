@@ -6,35 +6,32 @@
 	<version>2.9.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<!-- To run this build use the following commands (depending on what you 
+	<!-- To run this build use the following commands (depending on what you
 		are trying to do) -->
 	<!-- mvn clean install -Pe43j8 -->
 	<!-- mvn clean deploy -Pe43j8 -->
-	<!-- Running 'deploy' requires s3 accessKey and secretKey to be provided 
-		in a properties file. The properties file must be specified via env variable 
-		'dist_properties'. The existence of this env variable enables the deployment 
+	<!-- Running 'deploy' requires s3 accessKey and secretKey to be provided
+		in a properties file. The properties file must be specified via env variable
+		'dist_properties'. The existence of this env variable enables the deployment
 		profile automatically and will allow the 'deploy' to execute. -->
 
-	<!-- Example commands to build and deploy a milestone or a release 
-	    mvn clean deploy -Pe43j8 -Pmilestone 
-	    mvn clean deploy -Pe43j8 -Prelease 
-	    
+	<!-- Example commands to build and deploy a milestone or a release
+	    mvn clean deploy -Pe43j8 -Pmilestone
+	    mvn clean deploy -Pe43j8 -Prelease
+
 	    Before building a release also check the definition of the release profile
 	    in this pom. It may need some minor edits such as the deploy location
 	    and version number.
 	    -->
 
 	<properties>
-		<tycho-version>0.26.0</tycho-version>
-		<tycho-extras-version>0.26.0</tycho-extras-version>
+		<tycho-version>0.24.0</tycho-version>
+		<tycho-extras-version>0.24.0</tycho-extras-version>
 
-		<!-- Version of greclipse maven compiler to use for building. (Some bundles, 
-			mostly test related, have groovy code that can't be compiled with standard 
-			tycho jdt compiler. These two properties define what compiler will be used 
+		<!-- Version of greclipse maven compiler to use for building. (Some bundles,
+			mostly test related, have groovy code that can't be compiled with standard
+			tycho jdt compiler. These two properties define what compiler will be used
 			for those bundles. -->
-<!--
-		<groovy-eclipse-compiler-version>2.8.0-01</groovy-eclipse-compiler-version>
--->
 		<groovy-eclipse-compiler-version>2.9.2-01</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
@@ -49,25 +46,20 @@
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
-		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' 
-			etc. -->
+		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' etc. -->
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 
-		<!-- signing properties: Note these properties here are only 'documentation'. 
-			The real values are furnished by the 'bamboo-signing' profile. When not running 
+		<!-- signing properties: Note these properties here are only 'documentation'.
+			The real values are furnished by the 'bamboo-signing' profile. When not running
 			on bamboo, singing is disabled by default -->
 		<signing.skip>true</signing.skip>
 		<signing.alias>vmware</signing.alias>
 		<signing.keystore></signing.keystore>
 		<signing.store.password></signing.store.password>
 		<signing.key.password></signing.key.password>
-
 	</properties>
 
 	<modules>
-
-		<!-- SDK and test bits -->
-
 
 		<!-- 'Real' Bits -->
 
@@ -88,25 +80,26 @@
 		<module>base/org.codehaus.groovy20</module>
 		<module>base/org.codehaus.groovy21</module>
 		<module>base/org.codehaus.groovy22</module>
- 		<module>base/org.codehaus.groovy23</module>
- 		<module>base/org.codehaus.groovy24</module>
+		<module>base/org.codehaus.groovy23</module>
+		<module>base/org.codehaus.groovy24</module>
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
 
 		<module>ide/org.codehaus.groovy.eclipse.ant</module>
 		<module>ide/org.codehaus.groovy.eclipse.astviews</module>
-		<module>ide/org.codehaus.groovy.eclipse.core</module>
 		<module>ide/org.codehaus.groovy.eclipse.codeassist.completion</module>
 		<module>ide/org.codehaus.groovy.eclipse.codebrowsing</module>
+		<module>ide/org.codehaus.groovy.eclipse.core</module>
 		<module>ide/org.codehaus.groovy.eclipse.dsl</module>
 		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
 		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
 		<module>ide/org.codehaus.groovy.eclipse.ui</module>
 
-		<!-- parent pom for all the ide-test modules -->
+		<!-- SDK and test bits -->
 
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
 
+		<!-- parent pom for all the ide-test modules -->
 		<module>ide-test</module>
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
@@ -131,44 +124,38 @@
 		<!-- update site -->
 		<module>Site-org.codehaus.groovy.eclipse</module>
 
-		<!-- note: Beware: these are not all the modules. There are are also some profile-specific ones declared below! -->
+		<!-- Beware: these are not all the modules; there are are also some profile-specific ones declared below! -->
 	</modules>
 
 	<profiles>
-	  <profile>
-	    <id>e46</id>
-	    <repositories>
-	       <repository>
-	  	 <id>e46</id>
-		 <layout>p2</layout>
-		 <!-- TODO: after neon release change this: -->
-<!--
-                 <url>http://download.eclipse.org/eclipse/updates/4.6</url> 
--->
-                 <url>http://download.eclipse.org/releases/neon</url> 
-<!--
-                 <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url> 
--->
-	       </repository>
-	  <!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
-					</repository> -->
-				<!-- luna simul release update site doesn't exist yet. Add individual 
-					sites. When 4.4 is released. Replace with luna site -->
-	         <repository>
-		   <id>m2e</id>
-		   <layout>p2</layout>
-		   <url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
-		 </repository>
-               </repositories>
-	       <modules>
-	   	 <module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
-		 <module>jdt-patch/e46/org.eclipse.jdt.core</module>
-	       </modules>
-	       <properties>
-	  	 <dist.target>e4.6</dist.target>
-	 	 <greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e46${dist.qualifier}'</greclipse.build.qualifier>
-	       </properties>
-	     </profile>
+		<profile>
+			<id>e46</id>
+			<repositories>
+				<repository>
+					<id>e46</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.6</url>
+				</repository>
+				<repository>
+					<id>neon</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/neon</url>
+				</repository>
+				<repository>
+					<id>m2e</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e46/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.6</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e46${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+		</profile>
 
 		<profile>
 			<id>e45</id>
@@ -176,16 +163,13 @@
 				<repository>
 					<id>e45</id>
 					<layout>p2</layout>
-					<!-- TODO: after mars release use this: -->
-<url>http://download.eclipse.org/eclipse/updates/4.5</url> 
-<!--
-					<url>http://download.eclipse.org/eclipse/updates/4.5milestones</url>
--->
+					<url>http://download.eclipse.org/eclipse/updates/4.5</url>
 				</repository>
-				<!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
-					</repository> -->
-				<!-- luna simul release update site doesn't exist yet. Add individual 
-					sites. When 4.4 is released. Replace with luna site -->
+				<repository>
+					<id>mars</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/mars</url>
+				</repository>
 				<repository>
 					<id>m2e</id>
 					<layout>p2</layout>
@@ -210,10 +194,11 @@
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/eclipse/updates/4.4</url>
 				</repository>
-				<!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
-					</repository> -->
-				<!-- luna simul release update site doesn't exist yet. Add individual 
-					sites. When 4.4 is released. Replace with luna site -->
+				<repository>
+					<id>luna</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/luna</url>
+				</repository>
 				<repository>
 					<id>m2e</id>
 					<layout>p2</layout>
@@ -244,7 +229,7 @@
 					<url>http://download.eclipse.org/releases/kepler</url>
 				</repository>
 				<repository>
-					<id>eclipse-java8</id>
+					<id>kepler-java8</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/eclipse/updates/4.3-P-builds/</url>
 				</repository>
@@ -316,7 +301,7 @@
 					<url>http://download.eclipse.org/eclipse/updates/3.7</url>
 				</repository>
 				<repository>
-					<id>juno</id>
+					<id>indigo</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/releases/indigo</url>
 				</repository>
@@ -341,8 +326,7 @@
 
 			<build>
 				<plugins>
-					<!-- This will define ${accessKey} and ${secretKey} properties to use 
-						for uploading to s3. -->
+					<!-- This will define ${accessKey} and ${secretKey} properties to use for uploading to s3. -->
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>properties-maven-plugin</artifactId>
@@ -366,8 +350,7 @@
 			</build>
 		</profile>
 
-		<!-- profile to sign jars. Enabled automatically on bamboo when detecting 
-			'bamboo_signing_key_password' env variable is defined -->
+		<!-- profile to sign jars. Enabled automatically on bamboo when detecting 'bamboo_signing_key_password' env variable is defined -->
 		<profile>
 			<activation>
 				<property>
@@ -384,14 +367,14 @@
 			</properties>
 		</profile>
 
-		<!-- snaphshot builds are the default. Enable one of the profiles below 
-			to do a milestone or release build -->
+		<!-- snaphshot builds are the default. Enable one of the profiles below to do a milestone or release build -->
 		<profile>
 			<id>milestone</id>
 			<properties>
 				<dist.type>milestone</dist.type>
 			</properties>
 		</profile>
+
 		<profile>
 			<id>release</id>
 			<properties>
@@ -421,6 +404,7 @@
 			<url>http://repository.springsource.com/maven/bundles/release</url>
 		</repository>
 	</repositories>
+
 	<pluginRepositories>
 		<!-- required for Maven and Ant AWS dependency -->
 		<pluginRepository>
@@ -495,7 +479,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- We'll be doing our own deployment by antrun task uploading to s3. 
+			<!-- We'll be doing our own deployment by antrun task uploading to s3.
 				Disable default behavior: -->
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
@@ -542,8 +526,7 @@
 						<configuration>
 							<excludes>
 								<plugin id="org.codehaus.groovy.eclipse" />
-								<!-- Stuff below is related to j8 patch. Can't find source for these 
-									patched bits. -->
+								<!-- Stuff below is related to j8 patch. Can't find source for these patched bits. -->
 								<plugin id="org.eclipse.jdt.apt.core" />
 								<plugin id="org.eclipse.jdt.apt.ui" />
 								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
@@ -562,6 +545,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-p2-plugin</artifactId>
@@ -576,7 +560,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 
 		</plugins>
 	</build>

@@ -29,244 +29,214 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 /**
- * Test that moving compilaiton units and scripts between packages updates 
- * import statements appropriately
+ * Ensures that moving compilaiton units and scripts between packages updates
+ * import statements appropriately.
  */
 public class MoveCURefactoringTests extends AbstractRefactoringTest {
-    
-    
-    public void testSimpleMove1() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-        }, 
-        new String[] {
-                "Java.java", 
-        }, new String[] {
-                "package p;\npublic class Java { }", 
-        }, new String[] { 
-                "package NEW;\npublic class Java { }", 
-        });
-    }
-    
-    public void testSimpleMove2() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-        }, 
-        new String[] {
-                "Groovy.groovy", 
-        }, new String[] {
-                "package p;\npublic class Groovy { }", 
-        }, new String[] { 
-                "package NEW;\npublic class Groovy { }", 
-        });
-    }
-    
-    public void testSimpleMove3() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-                "p", 
-        }, 
-        new String[] {
-                "Java.java", 
-                "Groovy.groovy", 
-        }, new String[] {
-                "package p;\npublic class Java { }", 
-                "package p;\npublic class Groovy extends Java { }", 
-        }, new String[] { 
-                "package NEW;\npublic class Java { }", 
-                "package p;\n\nimport NEW.Java;\n\npublic class Groovy extends Java { }", 
-        });
-    }
-    
-    public void testQualifiedMove1() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-                "p", 
-        }, 
-        new String[] {
-                "Java.java", 
-                "Groovy.groovy", 
-        }, new String[] {
-                "package p;\npublic class Java { }", 
-                "package p;\npublic class Groovy extends p.Java { }", 
-        }, new String[] { 
-                "package NEW;\npublic class Java { }", 
-                "package p;\npublic class Groovy extends NEW.Java { }", 
-        });
-    }
-    
-    public void testSimpleMove4() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p1", 
-                "p2", 
-        }, 
-        new String[] {
-                "Groovy.groovy", 
-                "Groovy2.groovy", 
-        }, new String[] {
-                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }", 
-        }, new String[] { 
-                "package NEW\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\nimport NEW.Groovy;\npublic class Groovy2 extends Groovy { }", 
-        });
-    }
-    
-    public void testQualifiedMove2() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p1", 
-                "p2", 
-        }, 
-        new String[] {
-                "Groovy.groovy", 
-                "Groovy2.groovy", 
-        }, new String[] {
-                "package p1\npublic class Groovy {\np2.Groovy2 g }", 
-                "package p2\npublic class Groovy2 extends p1.Groovy { }", 
-        }, new String[] { 
-                "package NEW\npublic class Groovy {\np2.Groovy2 g }", 
-                "package p2\npublic class Groovy2 extends NEW.Groovy { }", 
-        });
-    }
-    
-    // reference to non-primary type moved
-    // moved with a reference to non-primary type
 
-    
+    public void testSimpleMove1() throws Exception {
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+        }, new String[] {
+                "Java.java",
+        }, new String[] {
+                "package p;\npublic class Java { }",
+        }, new String[] {
+                "package NEW;\npublic class Java { }",
+        });
+    }
+
+    public void testSimpleMove2() throws Exception {
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+        }, new String[] {
+                "Groovy.groovy",
+        }, new String[] {
+                "package p;\npublic class Groovy { }",
+        }, new String[] {
+                "package NEW;\npublic class Groovy { }",
+        });
+    }
+
+    public void testSimpleMove3() throws Exception {
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+                "p",
+        }, new String[] {
+                "Java.java",
+                "Groovy.groovy",
+        }, new String[] {
+                "package p;\npublic class Java { }",
+                "package p;\npublic class Groovy extends Java { }",
+        }, new String[] {
+                "package NEW;\npublic class Java { }",
+                "package p;\n\nimport NEW.Java\n\npublic class Groovy extends Java { }",
+        });
+    }
+
+    public void testQualifiedMove1() throws Exception {
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+                "p",
+        }, new String[] {
+                "Java.java",
+                "Groovy.groovy",
+        }, new String[] {
+                "package p;\npublic class Java { }",
+                "package p;\npublic class Groovy extends p.Java { }",
+        }, new String[] {
+                "package NEW;\npublic class Java { }",
+                "package p;\npublic class Groovy extends NEW.Java { }",
+        });
+    }
+
+    public void testSimpleMove4() throws Exception {
+        performRefactoringAndUndo("NEW", new String[] {
+                "p1",
+                "p2",
+        }, new String[] {
+                "Groovy.groovy",
+                "Groovy2.groovy",
+        }, new String[] {
+                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }",
+                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }",
+        }, new String[] {
+                "package NEW\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }",
+                "package p2\nimport NEW.Groovy\npublic class Groovy2 extends Groovy { }",
+        });
+    }
+
+    public void testQualifiedMove2() throws Exception {
+        performRefactoringAndUndo("NEW", new String[] {
+                "p1",
+                "p2",
+        }, new String[] {
+                "Groovy.groovy",
+                "Groovy2.groovy",
+        }, new String[] {
+                "package p1\npublic class Groovy {\np2.Groovy2 g }",
+                "package p2\npublic class Groovy2 extends p1.Groovy { }",
+        }, new String[] {
+                "package NEW\npublic class Groovy {\np2.Groovy2 g }",
+                "package p2\npublic class Groovy2 extends NEW.Groovy { }",
+        });
+    }
+
     public void testNonPrimaryMove1() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p1", 
-                "p2", 
-        }, 
-        new String[] {
-                "GroovyFoo.groovy", 
-                "GroovyFoo2.groovy", 
+        // reference to non-primary type moved
+        // moved with a reference to non-primary type
+        performRefactoringAndUndo("NEW", new String[] {
+                "p1",
+                "p2",
         }, new String[] {
-                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }", 
-        }, new String[] { 
-                "package NEW\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\nimport NEW.Groovy;\npublic class Groovy2 extends Groovy { }", 
+                "GroovyFoo.groovy",
+                "GroovyFoo2.groovy",
+        }, new String[] {
+                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }",
+                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }",
+        }, new String[] {
+                "package NEW\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }",
+                "package p2\nimport NEW.Groovy\npublic class Groovy2 extends Groovy { }",
         });
     }
-    
-    
+
     public void testNonPrimaryQualifiedMove1() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p1", 
-                "p2", 
-        }, 
-        new String[] {
-                "GroovyFoo.groovy", 
-                "GroovyFoo2.groovy", 
+        performRefactoringAndUndo("NEW", new String[] {
+                "p1",
+                "p2",
         }, new String[] {
-                "package p1\npublic class Groovy {\np2.Groovy2 g }", 
-                "package p2\npublic class Groovy2 extends p1.Groovy { }", 
-        }, new String[] { 
-                "package NEW\npublic class Groovy {\np2.Groovy2 g }", 
-                "package p2\npublic class Groovy2 extends NEW.Groovy { }", 
+                "GroovyFoo.groovy",
+                "GroovyFoo2.groovy",
+        }, new String[] {
+                "package p1\npublic class Groovy {\np2.Groovy2 g }",
+                "package p2\npublic class Groovy2 extends p1.Groovy { }",
+        }, new String[] {
+                "package NEW\npublic class Groovy {\np2.Groovy2 g }",
+                "package p2\npublic class Groovy2 extends NEW.Groovy { }",
         });
     }
-    
+
     public void testMoveBack1() throws Exception {
-        performRefactoringAndUndo("p2", 
-                new String[] { 
-                "p1", 
-                "p2", 
-        }, 
-        new String[] {
-                "Groovy.groovy", 
-                "Groovy2.groovy", 
+        performRefactoringAndUndo("p2", new String[] {
+                "p1",
+                "p2",
         }, new String[] {
-                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }", 
-        }, new String[] { 
-                "package p2\n\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\n\npublic class Groovy2 extends Groovy { }", 
+                "Groovy.groovy",
+                "Groovy2.groovy",
+        }, new String[] {
+                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }",
+                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }",
+        }, new String[] {
+                "package p2\n\npublic class Groovy {\nGroovy2 g }",
+                "package p2\n\npublic class Groovy2 extends Groovy { }",
         });
     }
 
     // Failing, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     public void _testInnerMove1() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-                "p", 
-        }, 
-        new String[] {
-                "Groovy.groovy", 
-                "Groovy2.groovy", 
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+                "p",
         }, new String[] {
-                "package p;\npublic class Groovy { \n class Inner { } }", 
-                "package p;\npublic class Groovy2 extends Groovy.Inner { }", 
-        }, new String[] { 
-                "package NEW;\npublic class Groovy { \n class Inner { } }", 
-                "package p;\nimport NEW.Groovy;\npublic class Groovy2 extends Groovy.Inner { }", 
+                "Groovy.groovy",
+                "Groovy2.groovy",
+        }, new String[] {
+                "package p;\npublic class Groovy { \n class Inner { } }",
+                "package p;\npublic class Groovy2 extends Groovy.Inner { }",
+        }, new String[] {
+                "package NEW;\npublic class Groovy { \n class Inner { } }",
+                "package p;\nimport NEW.Groovy;\npublic class Groovy2 extends Groovy.Inner { }",
         });
     }
 
     // Failing, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     public void _testInnerMove2() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-                "p", 
-        }, 
-        new String[] {
-                "Groovy2.groovy", 
-                "Groovy.groovy", 
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+                "p",
         }, new String[] {
-                "package p;\npublic class Groovy2 extends Groovy.Inner { }", 
-                "package p;\npublic class Groovy { \n class Inner { } }", 
-        }, new String[] { 
-                "package NEW;\nimport p.Groovy;\npublic class Groovy2 extends Groovy.Inner { }", 
-                "package p;\npublic class Groovy { \n class Inner { } }", 
+                "Groovy2.groovy",
+                "Groovy.groovy",
+        }, new String[] {
+                "package p;\npublic class Groovy2 extends Groovy.Inner { }",
+                "package p;\npublic class Groovy { \n class Inner { } }",
+        }, new String[] {
+                "package NEW;\nimport p.Groovy;\npublic class Groovy2 extends Groovy.Inner { }",
+                "package p;\npublic class Groovy { \n class Inner { } }",
         });
     }
 
     // Failing, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     public void _testInnerMove3() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-                "p", 
-        }, 
-        new String[] {
-                "Groovy.groovy", 
-                "Groovy2.groovy", 
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+                "p",
         }, new String[] {
-                "package p;\npublic class Groovy { \n class Inner { } }", 
-                "package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }", 
-        }, new String[] { 
-                "package NEW;\npublic class Groovy { \n class Inner { } }", 
-                "package p;\nimport NEW.Groovy.Inner;\npublic class Groovy2 extends Inner { }", 
+                "Groovy.groovy",
+                "Groovy2.groovy",
+        }, new String[] {
+                "package p;\npublic class Groovy { \n class Inner { } }",
+                "package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }",
+        }, new String[] {
+                "package NEW;\npublic class Groovy { \n class Inner { } }",
+                "package p;\nimport NEW.Groovy.Inner;\npublic class Groovy2 extends Inner { }",
         });
     }
 
     // Failing, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     public void _testInnerMove4() throws Exception {
-        performRefactoringAndUndo("NEW", 
-                new String[] { 
-                "p", 
-                "p", 
-        }, 
-        new String[] {
-                "Groovy2.groovy", 
-                "Groovy.groovy", 
+        performRefactoringAndUndo("NEW", new String[] {
+                "p",
+                "p",
         }, new String[] {
-                "package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }", 
-                "package p;\npublic class Groovy { \n class Inner { } }", 
-        }, new String[] { 
-                "package NEW;\nimport p.Groovy.Inner;\npublic class Groovy2 extends Inner { }", 
-                "package p;\npublic class Groovy { \n class Inner { } }", 
+                "Groovy2.groovy",
+                "Groovy.groovy",
+        }, new String[] {
+                "package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }",
+                "package p;\npublic class Groovy { \n class Inner { } }",
+        }, new String[] {
+                "package NEW;\nimport p.Groovy.Inner;\npublic class Groovy2 extends Inner { }",
+                "package p;\npublic class Groovy { \n class Inner { } }",
         });
     }
 
@@ -274,53 +244,46 @@ public class MoveCURefactoringTests extends AbstractRefactoringTest {
     private void performRefactoringAndUndo(String newPackageName, String[] packNames, String[] cuNames, String[] initialContents, String[] finalContents) throws Exception {
         IPackageFragment newPackage = testProject.createPackage(newPackageName);
         ICompilationUnit[] units = createUnits(packNames, cuNames, initialContents);
-        
-        MoveDescriptor descriptor = RefactoringSignatureDescriptorFactory
-                .createMoveDescriptor();
+
+        MoveDescriptor descriptor = RefactoringSignatureDescriptorFactory.createMoveDescriptor();
         descriptor.setDestination(newPackage);
         descriptor.setUpdateReferences(true);
         descriptor.setProject(testProject.getProject().getName());
         descriptor.setUpdateQualifiedNames(true);
         descriptor.setMoveResources(new IFile[0], new IFolder[0], new ICompilationUnit[] { units[0] });
-        
+
         Refactoring refactoring = createRefactoring(descriptor);
         RefactoringStatus result = performRefactoring(refactoring, true, true);
-        
+
         result = ignoreKnownErrors(result);
 
         assertTrue("Refactoring produced an error: " + result, result.isOK());
-        
+
         ICompilationUnit newUnit = getNewUnit(newPackageName, cuNames[0]);
         ICompilationUnit origUnit = units[0];
         units[0] = newUnit;
         assertContents(units, finalContents);
-        
-        // undo
-        assertTrue("anythingToUndo", RefactoringCore.getUndoManager()
-                .anythingToUndo());
-        assertTrue("! anythingToRedo", !RefactoringCore.getUndoManager()
-                .anythingToRedo());
 
-        RefactoringCore.getUndoManager().performUndo(null,
-                new NullProgressMonitor());
-        
+        // undo
+        assertTrue("anythingToUndo", RefactoringCore.getUndoManager().anythingToUndo());
+        assertTrue("! anythingToRedo", !RefactoringCore.getUndoManager().anythingToRedo());
+
+        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor());
+
         units[0] = origUnit;
         assertContents(units, initialContents);
 
         // redo
-        assertTrue("! anythingToUndo", !RefactoringCore.getUndoManager()
-                .anythingToUndo());
-        assertTrue("anythingToRedo", RefactoringCore.getUndoManager()
-                .anythingToRedo());
-        RefactoringCore.getUndoManager().performRedo(null,
-                new NullProgressMonitor());
+        assertTrue("! anythingToUndo", !RefactoringCore.getUndoManager().anythingToUndo());
+        assertTrue("anythingToRedo", RefactoringCore.getUndoManager().anythingToRedo());
+        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor());
         units[0] = newUnit;
         assertContents(units, finalContents);
     }
 
     private ICompilationUnit getNewUnit(String newPackName, String name) throws JavaModelException {
         int dotIndex = name.indexOf('.');
-        String typeName = name.substring(0, dotIndex); 
+        String typeName = name.substring(0, dotIndex);
         String qualName = newPackName.length() > 0 ? newPackName + "." + typeName : typeName;
         return testProject.getJavaProject().findType(qualName).getCompilationUnit();
     }

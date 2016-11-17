@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,39 +17,12 @@ package org.codehaus.groovy.control;
 
 import static org.codehaus.groovy.runtime.MetaClassHelper.capitalize;
 
-import java.util.List;
-import java.util.Map;
-
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.DynamicVariable;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.EmptyExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.syntax.Types;
+
+import java.util.*;
 
 /**
  * Visitor to resolve constants and method calls from static Imports
@@ -68,11 +41,11 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private Expression foundArgs;
     private boolean inAnnotation;
     private boolean inLeftExpression;
-    
+
     // GRECLIPSE: GRECLIPSE-1371 and GRECLIPSE-1363 ability to toggle behavior based on reconcile or not
     boolean isReconcile = false;
     // end
-    
+
     public void visitClass(ClassNode node, SourceUnit source) {
         this.currentClass = node;
         this.source = source;
@@ -175,7 +148,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         Expression right = transform(be.getRightExpression());
         be.setRightExpression(right);
         Expression left;
-        if (type == Types.EQUAL) {
+        if (type == Types.EQUAL && be.getLeftExpression() instanceof VariableExpression) {
             oldInLeftExpression = inLeftExpression;
             inLeftExpression = true;
             left = transform(be.getLeftExpression());
@@ -268,6 +241,12 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             if (mce.isImplicitThis()) {
                 Expression ret = findStaticMethodImportFromModule(method, args);
                 if (ret != null) {
+                    // GRECLIPSE add
+                    if (!((StaticMethodCallExpression) ret).getMethod().equals(method.getText())) {
+                        // store the identifier to facilitate organizing static imports
+                        ret.setNodeMetaData("static.import.alias", method.getText());
+                    }
+                    // GRECLIPSE end
                     setSourcePosition(ret, mce);
                     return ret;
                 }
@@ -309,6 +288,8 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         result.setImplicitThis(mce.isImplicitThis());
         result.setSpreadSafe(mce.isSpreadSafe());
         result.setMethodTarget(mce.getMethodTarget());
+        // GROOVY-6757
+        result.setGenericsTypes(mce.getGenericsTypes());
         setSourcePosition(result, mce);
         return result;
     }
@@ -374,7 +355,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         ModuleNode module = currentClass.getModule();
         if (module == null) return null;
         Map<String, ImportNode> importNodes = module.getStaticImports();
-        Expression expression;
+        Expression expression = null;
         String accessorName = getAccessorName(name);
         // look for one of these:
         //   import static MyClass.setProp [as setOtherProp]
@@ -402,19 +383,24 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         //   import static MyClass.prop [as otherProp]
         // when resolving prop or field reference
         if (importNodes.containsKey(name)) {
-            // GRECLIPSE: turn off during reconcile
             ImportNode importNode = importNodes.get(name);
-            /*old{
+            // GRECLIPSE add
+            try {
+            if (!isReconcile) {
+            // GRECLIPSE end
             expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
-            } new:*/
-            if (!isReconcile) {
-                expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
-                if (expression != null) return expression;
+            // GRECLIPSE add
             }
             // end
             expression = findStaticField(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
+            // GRECLIPSE add
+            } finally {
+                // store the identifier to facilitate organizing static imports
+                if (expression != null) expression.setNodeMetaData("static.import.alias", name);
+            }
+            // GRECLIPSE end
         }
         // look for one of these:
         //   import static MyClass.*

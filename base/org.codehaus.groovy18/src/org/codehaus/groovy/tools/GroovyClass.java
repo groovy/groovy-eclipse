@@ -47,13 +47,12 @@ public class GroovyClass
     {
         return this.bytes;
     }
-    
+
     public SourceUnit getSourceUnit() {
-    	return source;
+        return source;
     }
-    
+
     public ClassNode getClassNode() {
-    	return classNode;
+        return classNode;
     }
 }
-

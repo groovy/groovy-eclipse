@@ -15,14 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -44,44 +37,56 @@ public class DSLDStore {
 
     /** Maps pointcuts to their contributors. */
     private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap =
-            Collections.synchronizedMap(new LinkedHashMap<IPointcut, List<IContributionGroup>>());
+        new LinkedHashMap<IPointcut, List<IContributionGroup>>();
     /** Maps keys (such as script names) to the pointcuts they produce. */
     private final Map<IStorage, Set<IPointcut>> keyContextMap =
-            Collections.synchronizedMap(new LinkedHashMap<IStorage, Set<IPointcut>>());
+        new HashMap<IStorage, Set<IPointcut>>();
 
     public void addContributionGroup(IPointcut pointcut, IContributionGroup contribution) {
-        List<IContributionGroup> contributions = pointcutContributionMap.get(pointcut);
-        if (contributions == null) {
-            contributions = new ArrayList<IContributionGroup>();
-            pointcutContributionMap.put(pointcut, contributions);
+        synchronized (pointcutContributionMap) {
+            List<IContributionGroup> contributions = pointcutContributionMap.get(pointcut);
+            if (contributions == null) {
+                contributions = new ArrayList<IContributionGroup>();
+                pointcutContributionMap.put(pointcut, contributions);
+            }
+            contributions.add(contribution);
         }
-        contributions.add(contribution);
 
         IStorage identifier = pointcut.getContainerIdentifier();
-        Set<IPointcut> pointcuts = keyContextMap.get(identifier);
-        if (pointcuts == null) {
-            pointcuts = new HashSet<IPointcut>();
-            keyContextMap.put(identifier, pointcuts);
+        synchronized (keyContextMap) {
+            Set<IPointcut> pointcuts = keyContextMap.get(identifier);
+            if (pointcuts == null) {
+                pointcuts = new HashSet<IPointcut>();
+                keyContextMap.put(identifier, pointcuts);
+            }
+            pointcuts.add(pointcut);
         }
-        pointcuts.add(pointcut);
     }
-
 
     public void purgeIdentifier(IStorage identifier) {
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Purging pointcut for DSL file " + identifier);
         }
-        Set<IPointcut> pointcuts = keyContextMap.remove(identifier);
+        Set<IPointcut> pointcuts;
+        synchronized (keyContextMap) {
+            pointcuts = keyContextMap.remove(identifier);
+        }
         if (pointcuts != null) {
-            for (IPointcut pointcut : pointcuts) {
-                pointcutContributionMap.remove(pointcut);
+            synchronized (pointcutContributionMap) {
+                for (IPointcut pointcut : pointcuts) {
+                    pointcutContributionMap.remove(pointcut);
+                }
             }
         }
     }
 
     public void purgeAll() {
-        keyContextMap.clear();
-        pointcutContributionMap.clear();
+        synchronized (keyContextMap) {
+            keyContextMap.clear();
+        }
+        synchronized (pointcutContributionMap) {
+            pointcutContributionMap.clear();
+        }
     }
 
     /**
@@ -95,22 +100,27 @@ public class DSLDStore {
      */
     public DSLDStore createSubStore(GroovyDSLDContext pattern) {
         DSLDStore subStore = new DSLDStore();
-        for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
-            if (entry.getKey().fastMatch(pattern)) {
-                subStore.addAllContributions(entry.getKey(), entry.getValue());
+        synchronized (pointcutContributionMap) {
+            for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
+                if (entry.getKey().fastMatch(pattern)) {
+                    subStore.addAllContributions(entry.getKey(), entry.getValue());
+                }
             }
         }
         return subStore;
     }
 
     public void addAllContributions(IPointcut pointcut, List<IContributionGroup> contributions) {
-        List<IContributionGroup> existing = pointcutContributionMap.get(pointcut);
-        if (existing == null) {
-            pointcutContributionMap.put(pointcut, contributions);
-        } else {
-            existing.addAll(contributions);
+        synchronized (pointcutContributionMap) {
+            List<IContributionGroup> existing = pointcutContributionMap.get(pointcut);
+            if (existing == null) {
+                pointcutContributionMap.put(pointcut, contributions);
+            } else {
+                existing.addAll(contributions);
+            }
         }
     }
+
     public void addAllContexts(List<IPointcut> pointcuts, IContributionGroup contribution) {
         for (IPointcut pointcut : pointcuts) {
             addContributionGroup(pointcut, contribution);
@@ -118,21 +128,24 @@ public class DSLDStore {
     }
 
     /**
-     * Find all contributions for this pattern and this declaring type
+     * Find all contributions for this pattern and this declaring type.
+     *
      * @param pattern The pattern to match against
      * @param disabledScripts The set of scripts that are disabled and should be ignored
      * @return The set of contributions applicable for the pattern
      */
     public List<IContributionElement> findContributions(GroovyDSLDContext pattern, Set<String> disabledScripts) {
         List<IContributionElement> elts = new ArrayList<IContributionElement>();
-        for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
-            IPointcut pointcut = entry.getKey();
-            if (! disabledScripts.contains(DSLDStore.toUniqueString(pointcut.getContainerIdentifier()))) {
-                pattern.resetBinding();
-                Collection<?> results = pointcut.matches(pattern, pattern.getCurrentType());
-                if (results != null) {
-                    for (IContributionGroup group : entry.getValue()) {
-                        elts.addAll(group.getContributions(pattern, pattern.getCurrentBinding()));
+        synchronized (pointcutContributionMap) {
+            for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
+                IPointcut pointcut = entry.getKey();
+                if (!disabledScripts.contains(DSLDStore.toUniqueString(pointcut.getContainerIdentifier()))) {
+                    pattern.resetBinding();
+                    Collection<?> results = pointcut.matches(pattern, pattern.getCurrentType());
+                    if (results != null) {
+                        for (IContributionGroup group : entry.getValue()) {
+                            elts.addAll(group.getContributions(pattern, pattern.getCurrentBinding()));
+                        }
                     }
                 }
             }
@@ -141,7 +154,9 @@ public class DSLDStore {
     }
 
     public IStorage[] getAllContextKeys() {
-        return keyContextMap.keySet().toArray(new IStorage[0]);
+        synchronized (keyContextMap) {
+            return keyContextMap.keySet().toArray(new IStorage[0]);
+        }
     }
 
     public static String toUniqueString(IStorage storage) {

@@ -34,25 +34,37 @@ public final class CodeSelectStaticImportsTests extends BrowsingTestCase {
     }
 
     public void testCodeSelectOnStaticImport1() {
+        String one = "class Other {\n  public static int FOO\n static boolean BAR() { } }";
+        String two = "import static Other.FOO";
+        assertCodeSelect(asList(one, two), "FOO");
+    }
+
+    public void testCodeSelectOnStaticImport1a() {
         String one = "class Other {\n  static int FOO\n static boolean BAR() { } }";
         String two = "import static Other.FOO";
         assertCodeSelect(asList(one, two), "FOO");
     }
 
     public void testCodeSelectOnStaticImport2() {
-        String one = "class Other {\n  static int FOO\n static boolean BAR() { } }";
+        String one = "class Other {\n  public static int FOO\n static boolean BAR() { } }";
         String two = "import static Other.BAR";
         assertCodeSelect(asList(one, two), "BAR");
     }
 
     public void testCodeSelectOnStaticImport3() {
+        String one = "class Other {\n  public static int FOO\n static boolean BAR() { } }";
+        String two = "import static Other.FOO\nFOO";
+        assertCodeSelect(asList(one, two), "FOO");
+    }
+
+    public void testCodeSelectOnStaticImport3a() {
         String one = "class Other {\n  static int FOO\n static boolean BAR() { } }";
         String two = "import static Other.FOO\nFOO";
         assertCodeSelect(asList(one, two), "FOO");
     }
 
     public void testCodeSelectOnStaticImport4() {
-        String one = "class Other {\n  static int FOO\n static boolean BAR() { } }";
+        String one = "class Other {\n  public static int FOO\n static boolean BAR() { } }";
         String two = "import static Other.BAR\nBAR";
         assertCodeSelect(asList(one, two), "BAR");
     }

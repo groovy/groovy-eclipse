@@ -15,17 +15,12 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.reflection.ReflectionCache;
+import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
-
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.reflection.ReflectionCache;
-import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.
@@ -36,7 +31,7 @@ import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
  * @version $Revision$
  */
 public class BytecodeHelper implements Opcodes {
-
+    
     private static String DTT_CLASSNAME = BytecodeHelper.getClassInternalName(DefaultTypeTransformation.class.getName());
 
     public static String getClassInternalName(ClassNode t) {
@@ -63,7 +58,6 @@ public class BytecodeHelper implements Opcodes {
         }
         return name;
 		// end
-
     }
 
     public static String getClassInternalName(Class t) {
@@ -86,7 +80,7 @@ public class BytecodeHelper implements Opcodes {
         buffer.append(getTypeDescription(returnType));
         return buffer.toString();
     }
-
+    
     /**
      * @return the ASM method type descriptor
      */
@@ -241,7 +235,7 @@ public class BytecodeHelper implements Opcodes {
                 }
         }
     }
-
+    
     /**
      * negate a boolean on stack. true->false, false->true
      */
@@ -462,8 +456,8 @@ public class BytecodeHelper implements Opcodes {
         else {
             ret.append(getTypeDescription(printType, false));
             addSubTypes(ret, printType.getGenericsTypes(), "<", ">");
-        	if (!ClassHelper.isPrimitiveType(printType)) ret.append(";");
-    	  }
+            if (!ClassHelper.isPrimitiveType(printType)) ret.append(";");
+        }
     }
 
     private static void writeGenericsBounds(StringBuffer ret, GenericsType type, boolean writeInterfaceMarker) {
@@ -488,25 +482,25 @@ public class BytecodeHelper implements Opcodes {
                 addSubTypes(ret, new GenericsType[]{new GenericsType(types[i].getType().getComponentType())}, "", "");
             }
             else {
-            if (types[i].isPlaceholder()) {
-                ret.append('T');
+                if (types[i].isPlaceholder()) {
+                    ret.append('T');
                     String name = types[i].getName();
-                ret.append(name);
-                ret.append(';');
-            } else if (types[i].isWildcard()) {
-                if (types[i].getUpperBounds() != null) {
-                    ret.append('+');
-                    writeGenericsBounds(ret, types[i], false);
-                } else if (types[i].getLowerBound() != null) {
-                    ret.append('-');
-                    writeGenericsBounds(ret, types[i], false);
+                    ret.append(name);
+                    ret.append(';');
+                } else if (types[i].isWildcard()) {
+                    if (types[i].getUpperBounds() != null) {
+                        ret.append('+');
+                        writeGenericsBounds(ret, types[i], false);
+                    } else if (types[i].getLowerBound() != null) {
+                        ret.append('-');
+                        writeGenericsBounds(ret, types[i], false);
+                    } else {
+                        ret.append('*');
+                    }
                 } else {
-                    ret.append('*');
+                    writeGenericsBounds(ret, types[i], false);
                 }
-            } else {
-                writeGenericsBounds(ret, types[i], false);
             }
-        }
         }
         ret.append(end);
     }
@@ -529,7 +523,7 @@ public class BytecodeHelper implements Opcodes {
             mv.visitVarInsn(ALOAD, idx);
         }
     }
-
+    
 
     public static void doCast(MethodVisitor mv, ClassNode type) {
         if (type == ClassHelper.OBJECT_TYPE) return;
@@ -538,8 +532,8 @@ public class BytecodeHelper implements Opcodes {
         } else {
             mv.visitTypeInsn(
                     CHECKCAST,
-                    type.isArray() ?
-                            BytecodeHelper.getTypeDescription(type) :
+                    type.isArray() ? 
+                            BytecodeHelper.getTypeDescription(type) : 
                             BytecodeHelper.getClassInternalName(type.getName()));
         }
     }
@@ -568,8 +562,8 @@ public class BytecodeHelper implements Opcodes {
         } else {
             mv.visitTypeInsn(
                     CHECKCAST,
-                    type.isArray() ?
-                            BytecodeHelper.getTypeDescription(type) :
+                    type.isArray() ? 
+                            BytecodeHelper.getTypeDescription(type) : 
                                 BytecodeHelper.getClassInternalName(type.getName()));
         }
     }
@@ -607,7 +601,7 @@ public class BytecodeHelper implements Opcodes {
         return box(mv, type.getTypeClass());
     }
 
-
+    
     /**
      * Generates the bytecode to autobox the current value on the stack
      */

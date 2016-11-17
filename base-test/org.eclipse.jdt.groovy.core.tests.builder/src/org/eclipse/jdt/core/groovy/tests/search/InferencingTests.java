@@ -1833,6 +1833,7 @@ public class InferencingTests extends AbstractInferencingTest {
                 "        println val.trim()\n" +
                 "    }\n" +
                 "}\n";
+
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -1851,6 +1852,7 @@ public class InferencingTests extends AbstractInferencingTest {
                 "        println val.trim()\n" +
                 "    }\n" +
                 "}\n";
+
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -1869,6 +1871,7 @@ public class InferencingTests extends AbstractInferencingTest {
                 "        println val.trim()\n" +
                 "    }\n" +
                 "}\n";
+
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -1890,6 +1893,7 @@ public class InferencingTests extends AbstractInferencingTest {
                 "        println var.intValue()\n" +
                 "    }\n" +
                 "}\n";
+
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -1946,6 +1950,32 @@ public class InferencingTests extends AbstractInferencingTest {
         start = contents.indexOf("this");
         end = start + "this".length();
         assertType(contents, start, end, "A");
+    }
+
+    // GRECLIPSE-1798
+    public void testFieldAndPropertyWithSameName() {
+        createJavaUnit("Wrapper",
+                "public class Wrapper<T> {\n" +
+                "  private final T wrapped;\n" +
+                "  public Wrapper(T wrapped) { this.wrapped = wrapped; }\n" +
+                "  public T getWrapped() { return wrapped; }\n" +
+                "}");
+        createJavaUnit("MyBean",
+                "public class MyBean {\n" +
+                "  private Wrapper<String> foo = new Wrapper<>(\"foo\");\n" +
+                "  public String getFoo() { return foo.getWrapped(); }\n" +
+                "}");
+        String contents =
+                "class GroovyTest {\n" +
+                "  static void main(String[] args) {\n" +
+                "    def b = new MyBean()\n" +
+                "    println b.foo.toUpperCase()\n" +
+                "  }\n" +
+                "}";
+
+        int start = contents.lastIndexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
     }
 
     protected void assertNoUnknowns(String contents) {

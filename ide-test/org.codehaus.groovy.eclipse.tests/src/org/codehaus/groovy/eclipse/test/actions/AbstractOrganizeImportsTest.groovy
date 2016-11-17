@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ISourceRange
@@ -74,9 +73,9 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
 
         def actualContents = unit.contents
-        def children = edit.children as List
+        def children = edit?.children as List
         def newChildren = []
-        children.each {
+        children?.each {
             if (it instanceof DeleteEdit) {
                 // check to see if the edit is whitespace only
                 def del = it as DeleteEdit
@@ -113,22 +112,6 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
     }
 
-    protected void doDeleteImportTest(CharSequence contents, Number numDeletes) {
-        def file = createGroovyType('main', 'Main.groovy', contents)
-        testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        def unit = JavaCore.createCompilationUnitFrom(file) as GroovyCompilationUnit
-        testProject.waitForIndexer()
-
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
-        TextEdit edit = organize.calculateMissingImports()
-        TextEdit[] children = edit.children
-        assertEquals("Wrong number of deleted imports:\n$contents\nand edits:\n$edit", numDeletes, children.length)
-        for (TextEdit child : children) {
-            assertTrue("$child is not a delete edit", child instanceof DeleteEdit)
-        }
-        unit.discardWorkingCopy()
-    }
-
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
         def file = createGroovyType('main', 'Main.groovy', originalContents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
@@ -141,9 +124,9 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         String prefix = "package main;$LINE_SEPARATOR$LINE_SEPARATOR"
 
         Document doc = new Document(prefix + normalizeLineEndings(originalContents))
-        edit.apply(doc)
+        if (edit != null) edit.apply(doc)
 
-        assertEquals(prefix + normalizeLineEndings(expectedContents), doc.get())
+        assertEquals(prefix + normalizeLineEndings(expectedContents), normalizeLineEndings(doc.get()))
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {

@@ -15,12 +15,12 @@
  */
 package org.codehaus.groovy.ast;
 
-import groovyjarjarasm.asm.Opcodes;
-
-import java.util.List;
-
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.lang.reflect.Modifier;
+import java.util.List;
 
 /**
  * Represents a method declaration
@@ -277,7 +277,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         String parms = AstToTextHelper.getParametersText(parameters);
         return AstToTextHelper.getModifiersText(modifiers) + " " + retType + " " + name + "(" + parms + ") " + exceptionTypes + " { ... }";
     }
-    
+
     // GRECLIPSE: start
     /**
      * When default parameters are involved, this field will be

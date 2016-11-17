@@ -1,19 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.text.Collator;
 import java.util.Comparator;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.ISourceRange;
@@ -38,33 +43,28 @@ import org.eclipse.jface.window.Window;
 /**
  * @author Andrew Eisenberg
  * @created Aug 14, 2009
- *
  */
 public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
 
     private static final OrganizeImportComparator ORGANIZE_IMPORT_COMPARATOR = new OrganizeImportComparator();
 
-    private static final class OrganizeImportComparator implements Comparator<Object> {
+    private static final class OrganizeImportComparator implements Comparator<String> {
 
-        public int compare(Object o1, Object o2) {
-            if (((String)o1).equals(o2))
+        public int compare(String o1, String o2) {
+            if (o1.equals(o2))
                 return 0;
 
-            History history= QualifiedTypeNameHistory.getDefault();
-
-            int pos1= history.getPosition(o1);
-            int pos2= history.getPosition(o2);
+            History history = QualifiedTypeNameHistory.getDefault();
+            int pos1 = history.getPosition(o1);
+            int pos2 = history.getPosition(o2);
 
             if (pos1 == pos2)
                 return Collator.getInstance().compare(o1, o2);
-
             if (pos1 > pos2) {
                 return -1;
-            } else {
-                return 1;
             }
+            return 1;
         }
-
     }
 
     private JavaEditor editor;
@@ -78,18 +78,16 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
     public void run(ICompilationUnit cu) {
         if (cu instanceof GroovyCompilationUnit) {
             try {
-                boolean success = new OrganizeGroovyImports((GroovyCompilationUnit) cu, createChooseImportQuery(editor))
-                    .calculateAndApplyMissingImports();
-
+                OrganizeGroovyImports action = new OrganizeGroovyImports((GroovyCompilationUnit) cu, createChooseImportQuery(editor));
+                boolean success = action.calculateAndApplyMissingImports();
                 if (!success) {
                     IStatusLineManager manager = getStatusLineManager();
                     if (manager != null) {
-                        manager.setErrorMessage(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse,
-                                getLocationString(cu)));
+                        manager.setErrorMessage(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse, getLocationString(cu)));
                     }
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("Error with organizing imports for " + cu.getElementName(), e);
+                GroovyPlugin.getDefault().logException("Error organizing imports for " + cu.getElementName(), e);
             }
         } else {
             super.run(cu);

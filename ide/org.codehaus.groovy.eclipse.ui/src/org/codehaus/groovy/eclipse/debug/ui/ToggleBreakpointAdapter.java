@@ -1,12 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2004, 2009  IBM Corporation, SpringSource and others. All rights reserved. This
- * program and the accompanying materials are made available under the terms of
- * the Eclipse Public License v1.0 which accompanies this distribution, and is
- * available at http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors: Sian January - initial version
- *              Andrew Eisenberg - convert for use with Groovy
- ******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.debug.ui;
 
 import java.util.HashMap;
@@ -74,7 +80,8 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     protected void report(final String message, final IWorkbenchPart part) {
         JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
             public void run() {
-                IEditorStatusLine statusLine = part.getAdapter(IEditorStatusLine.class);
+                @SuppressWarnings("cast")
+                IEditorStatusLine statusLine = (IEditorStatusLine) part.getAdapter(IEditorStatusLine.class);
                 if (statusLine != null) {
                     if (message != null) {
                         statusLine.setMessage(true, message, null);
@@ -146,7 +153,8 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                     int offset = textSelection.getOffset();
                     try {
                         if (type == null) {
-                            IClassFile classFile = editorInput.getAdapter(IClassFile.class);
+                            @SuppressWarnings("cast")
+                            IClassFile classFile = (IClassFile) editorInput.getAdapter(IClassFile.class);
                             if (classFile != null) {
                                 type = classFile.getType();
                                 // bug 34856 - if this is an inner type, ensure
@@ -256,9 +264,11 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
         IEditorInput editorInput = editor.getEditorInput();
-        ICompilationUnit unit = editorInput.getAdapter(ICompilationUnit.class);
+        @SuppressWarnings("cast")
+        ICompilationUnit unit = (ICompilationUnit) editorInput.getAdapter(ICompilationUnit.class);
         if (unit == null) {
-            IFile file = editorInput.getAdapter(IFile.class);
+            @SuppressWarnings("cast")
+            IFile file = (IFile) editorInput.getAdapter(IFile.class);
             if (file != null) {
                 unit = JavaCore.createCompilationUnitFrom(file);
             }
@@ -274,7 +284,8 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     protected static IResource getResource(IEditorPart editor) {
         IEditorInput editorInput = editor.getEditorInput();
-        IResource resource = editorInput.getAdapter(IFile.class);
+        @SuppressWarnings("cast")
+        IResource resource = (IFile) editorInput.getAdapter(IFile.class);
         if (resource == null) {
             resource = ResourcesPlugin.getWorkspace().getRoot();
         }

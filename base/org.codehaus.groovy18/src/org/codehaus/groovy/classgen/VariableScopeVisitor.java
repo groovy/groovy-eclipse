@@ -15,45 +15,23 @@
  */
 package org.codehaus.groovy.classgen;
 
-import static java.lang.reflect.Modifier.isFinal;
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.IfStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.syntax.Types;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.DynamicVariable;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.CatchStatement;
-import org.codehaus.groovy.ast.stmt.ForStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.syntax.Types;
+import static java.lang.reflect.Modifier.isFinal;
 
 /**
  * goes through an AST and initializes the scopes
@@ -75,7 +53,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     private class StateStackElement {
         VariableScope scope;
         ClassNode clazz;
-        boolean inConstructor; 
+        boolean inConstructor;
 
         StateStackElement() {
             scope = VariableScopeVisitor.this.currentScope;
@@ -266,7 +244,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     boolean staticMember = member.isInStaticContext();
                     // We don't allow a static context (e.g. a static method) to access
                     // a non-static variable (e.g. a non-static field).
-                    if (! (staticScope && ! staticMember))
+                    if (!(staticScope && !staticMember))
                         var = member;
                 }
                 break;
@@ -345,6 +323,16 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         popState();
     }
 
+    public void visitIfElse(IfStatement ifElse) {
+        ifElse.getBooleanExpression().visit(this);
+        pushState();
+        ifElse.getIfBlock().visit(this);
+        popState();
+        pushState();
+        ifElse.getElseBlock().visit(this);
+        popState();
+    }
+    
     public void visitDeclarationExpression(DeclarationExpression expression) {
         // visit right side first to avoid the usage of a
         // variable before its declaration
@@ -448,13 +436,13 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         super.visitClosureExpression(expression);
         markClosureSharedVariables();
-        
+
         popState();
     }
 
     private void markClosureSharedVariables() {
         VariableScope scope = currentScope;
-        for (Iterator<Variable> it = scope.getReferencedLocalVariablesIterator(); it.hasNext();) {
+        for (Iterator<Variable> it = scope.getReferencedLocalVariablesIterator(); it.hasNext(); ) {
             it.next().setClosureSharedVariable(true);
         }
     }
@@ -486,7 +474,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             InnerClassNode in = (InnerClassNode) node;
             if (in.isAnonymous()) return;
         }
-        
+
         pushState();
 
         currentClass = node;
@@ -510,7 +498,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         declare(node.getParameters(), node);
         visitClassCodeContainer(node.getCode());
-
+        
         popState();
     }
 
@@ -571,7 +559,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         markClosureSharedVariables();
         popState();
     }
-    
+
     public void visitProperty(PropertyNode node) {
         pushState(node.isStatic());
         super.visitProperty(node);
@@ -582,18 +570,5 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState(node.isStatic());
         super.visitField(node);
         popState();
-    }
-
-    public void visitAnnotations(AnnotatedNode node) {
-        List<AnnotationNode> annotations = node.getAnnotations();
-        if (annotations.isEmpty()) return;
-        for (AnnotationNode an : annotations) {
-        	// skip built-in properties
-        	if (an.isBuiltIn()) continue;
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
-                Expression annMemberValue = member.getValue();
-                annMemberValue.visit(this);
-            }
-        }
     }
 }

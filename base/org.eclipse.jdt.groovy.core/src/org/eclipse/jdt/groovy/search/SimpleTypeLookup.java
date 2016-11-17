@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
@@ -56,15 +55,14 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 /**
+ * Looks at the type associated with the ASTNode for the type <br>
+ *
  * @author Andrew Eisenberg
  * @created Aug 29, 2009
- *
- *          Looks at the type associated with the ASTNode for the type <br>
  */
 public class SimpleTypeLookup implements ITypeLookupExtension {
 
@@ -78,15 +76,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return lookupType(node, scope, objectExpressionType, false);
     }
 
-    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType,
-            boolean isStaticObjectExpression) {
+    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         TypeConfidence[] confidence = new TypeConfidence[] { EXACT };
         if (ClassHelper.isPrimitiveType(objectExpressionType)) {
             objectExpressionType = ClassHelper.getWrapper(objectExpressionType);
         }
         ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
-        TypeLookupResult result = findType(node, declaringType, scope, confidence[0], isStaticObjectExpression
-                || (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
+        TypeLookupResult result = findType(node, declaringType, scope, confidence[0],
+            isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
 
         return result;
     }
@@ -326,11 +323,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * look for a name within an object expression. It is either in the hierarchy, it is in the variable scope, or it is unknown.
-     *
-     * @param isPrimaryExpression
-     *
-     * @return
+     * Looks for a name within an object expression. It is either in the hierarchy, it is in the variable scope, or it is unknown.
      */
     private TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType,
             VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
@@ -554,60 +547,65 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     /**
      * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property.
      *
-     * If numOfArgs is >= 0, then look for a method first, otherwise look for a property and then a field
-     *
-     * @param name
-     * @param declaringType
      * @param methodCallArgumentTypes types of arguments to the associated method call (or null if not a method call)
-     * @return
      */
     private ASTNode findDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
         if (declaringType.isArray()) {
-            // only length exists on array type
+            // only length exists on arrays
             if (name.equals("length")) {
                 return createLengthField(declaringType);
-            } else {
-                // otherwise search on object
-                return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, methodCallArgumentTypes);
             }
+            // otherwise search on object
+            return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, methodCallArgumentTypes);
         }
-
-        AnnotatedNode maybe = null;
 
         if (methodCallArgumentTypes != null) {
-            // this expression is part of a method call expression and so, look for methods first
-            maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
-            if (maybe != null) {
-                return maybe;
+            AnnotatedNode method = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
+            if (method != null) {
+                return method;
             }
         }
 
-        LinkedHashSet<ClassNode> allClasses = new LinkedHashSet<ClassNode>();
-        VariableScope.createTypeHierarchy(declaringType, allClasses, true);
+        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<ClassNode>();
+        VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
 
-        maybe = findPropertyInClass(name, allClasses);
-        if (maybe != null) {
-            return maybe;
+        for (ClassNode type : typeHierarchy) {
+            PropertyNode property = type.getProperty(name);
+            if (property != null) {
+                return property;
+            }
         }
 
-        maybe = declaringType.getField(name);
-        if (maybe != null) {
-            return maybe;
+        // TODO: Limit searching to just get/is or set?
+        MethodNode accessor = AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false);
+        if (accessor != null && !accessor.isStatic() && !accessor.isSynthetic()) { // TODO: add conditions?
+            return accessor;
         }
 
-        // look for constants declared in super class
-        FieldNode constantFromSuper = findConstantInClass(name, allClasses);
-        if (constantFromSuper != null) {
-            return constantFromSuper;
+        FieldNode field = declaringType.getField(name);
+        if (field != null) {
+            return field;
         }
 
+        typeHierarchy.clear();
+        VariableScope.findAllInterfaces(declaringType, typeHierarchy, true);
+
+        // look for constant in interfaces
+        for (ClassNode type : typeHierarchy) {
+            if (type == declaringType) continue;
+            field = type.getField(name);
+            if (field != null && field.isFinal() && field.isStatic()) {
+                return field;
+            }
+        }
+
+        if (accessor != null) {
+            return accessor;
+        }
+
+        // reference may be in static import or method pointer; look for method as last resort
         if (methodCallArgumentTypes == null) {
-            // this expression is not part of a method call expression and so, look for methods last
-            maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
-            if (maybe != null) {
-                return maybe;
-            }
-            return null;
+            return findMethodDeclaration(name, declaringType, null, true);
         }
 
         return null;
@@ -617,14 +615,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * Finds a method with the given name in the declaring type. Will prioritize methods with the same number of arguments, but if
      * multiple methods exist with same name, then will return an arbitrary one.
      *
-     * @param name
-     * @param declaringType
-     * @param methodCallArgumentTypes
      * @param checkSuperInterfaces potentially look through super interfaces for a declaration to this method
-     * @return
      */
-    private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes,
-            boolean checkSuperInterfaces) {
+    private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes, boolean checkSuperInterfaces) {
         // if this is an interface, then we also need to check super interfaces
         // super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
         // do this piece first since findAllInterfaces will return the current interface as well and this will avoid running this
@@ -640,9 +633,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     candidate = methodDeclaration;
                 }
 
-                // Figuring out if we should try to find more precise match or stop here
-
-                if (methodDeclaration != null && candidate != null && methodCallArgumentTypes != null) {
+                // should we try to find more precise match or stop here?
+                if (methodDeclaration != null && methodCallArgumentTypes != null) {
                     Parameter[] methodParameters = ((MethodNode) methodDeclaration).getParameters();
                     if (methodCallArgumentTypes.size() == 0 && methodParameters.length == 0) {
                         return methodDeclaration;
@@ -673,60 +665,55 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         List<MethodNode> maybeMethods = declaringType.getMethods(name);
-
-        if (maybeMethods != null && maybeMethods.size() > 0) {
+        if (maybeMethods != null && !maybeMethods.isEmpty()) {
             // Remember first entry in case exact match not found
             MethodNode closestMatch = maybeMethods.get(0);
+            if (methodCallArgumentTypes == null) {
+                return closestMatch;
+            }
+
             // prefer retrieving the method with the same number of args as specified in the parameter.
             // if none exists, or parameter is -1, then arbitrarily choose the first.
-            if (methodCallArgumentTypes != null && methodCallArgumentTypes.size() >= 0) {
-                for (Iterator<MethodNode> iterator = maybeMethods.iterator(); iterator.hasNext();) {
-                    MethodNode maybeMethod = iterator.next();
-                    Parameter[] parameters = maybeMethod.getParameters();
-                    if ((parameters == null || parameters.length == 0) && methodCallArgumentTypes.size() == 0) {
-                        return maybeMethod.getOriginal();
+            for (Iterator<MethodNode> iterator = maybeMethods.iterator(); iterator.hasNext();) {
+                MethodNode maybeMethod = iterator.next();
+                Parameter[] parameters = maybeMethod.getParameters();
+                if ((parameters == null || parameters.length == 0) && methodCallArgumentTypes.isEmpty()) {
+                    return maybeMethod.getOriginal();
+                }
+                if (parameters != null && parameters.length == methodCallArgumentTypes.size()) {
+                    boolean found = true;
+                    boolean exactMatchFound = true;
+                    closestMatch = maybeMethod.getOriginal();
+                    for (int i = 0; i < parameters.length; i++) {
+                        if (!methodCallArgumentTypes.get(i).equals(parameters[i].getType())) {
+                            exactMatchFound = false;
+                        }
+                        if (parameters[i].getType().isInterface()) {
+                            if (!methodCallArgumentTypes.get(i).declaresInterface(parameters[i].getType())) {
+                                found = false;
+                                break;
+                            }
+                        } else {
+                            // TODO 'null' literal argument should be correctly resolved
+                            if (!methodCallArgumentTypes.get(i).isDerivedFrom(parameters[i].getType())) {
+                                found = false;
+                                break;
+                            }
+                        }
                     }
-                    if (parameters != null && parameters.length == methodCallArgumentTypes.size()) {
-                        boolean found = true;
-                        boolean exactMatchFound = true;
-                        closestMatch = maybeMethod.getOriginal();
-                        for (int i = 0; i < parameters.length; i++) {
-                            if (!methodCallArgumentTypes.get(i).equals(parameters[i].getType())) {
-                                exactMatchFound = false;
-                            }
-                            if (parameters[i].getType().isInterface()) {
-                                if (!methodCallArgumentTypes.get(i).declaresInterface(parameters[i].getType())) {
-                                    found = false;
-                                    break;
-                                }
-                            } else {
-                                // TODO 'null' literal argument should be correctly resolved
-                                if (!methodCallArgumentTypes.get(i).isDerivedFrom(parameters[i].getType())) {
-                                    found = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (exactMatchFound) {
-                            return closestMatch;
-                        }
-                        if (!found) {
-                            iterator.remove();
-                        }
-                    } else {
+                    if (exactMatchFound) {
+                        return closestMatch;
+                    }
+                    if (!found) {
                         iterator.remove();
                     }
+                } else {
+                    iterator.remove();
                 }
             }
             return closestMatch;
         }
-
-        if (methodCallArgumentTypes == null) {
-            return AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false);
-        } else {
-            return null;
-        }
-
+        return null;
     }
 
     private ASTNode createLengthField(ClassNode declaringType) {
@@ -734,25 +721,5 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
         lengthField.setDeclaringClass(declaringType);
         return lengthField;
-    }
-
-    private PropertyNode findPropertyInClass(String name, Set<ClassNode> allClasses) {
-        for (ClassNode clazz : allClasses) {
-            PropertyNode prop = clazz.getProperty(name);
-            if (prop != null) {
-                return prop;
-            }
-        }
-        return null;
-    }
-
-    private FieldNode findConstantInClass(String name, Set<ClassNode> allClasses) {
-        for (ClassNode clazz : allClasses) {
-            FieldNode field = clazz.getField(name);
-            if (field != null && Flags.isFinal(field.getModifiers()) && field.isStatic()) {
-                return field;
-            }
-        }
-        return null;
     }
 }

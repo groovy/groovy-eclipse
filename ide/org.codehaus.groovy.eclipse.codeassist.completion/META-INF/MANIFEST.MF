@@ -11,7 +11,7 @@ Export-Package: org.codehaus.groovy.eclipse.codeassist,
  org.codehaus.groovy.eclipse.codeassist.proposals,
  org.codehaus.groovy.eclipse.codeassist.relevance,
  org.codehaus.groovy.eclipse.codeassist.requestor
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.6",
+Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.codehaus.groovy.eclipse.core;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.ui;bundle-version="2.9.2",
  org.eclipse.core.resources,
@@ -26,4 +26,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.6",
  org.eclipse.ui.workbench.texteditor
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

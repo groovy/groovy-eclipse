@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -205,7 +206,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
         // are visited in the same source file. The same grabs are accumulated. There is maybe a
         // better fix but this is easy.  If there are duplicates it will work but we are calling
         // grab with unnecessary dup info.
-        Collection<Map<String,Object>> grabMaps = new HashSet<Map<String,Object>>();
+        Collection<Map<String,Object>> grabMaps = new LinkedHashSet<Map<String,Object>>();
         List<Map<String,Object>> grabMapsInit = new ArrayList<Map<String,Object>>();
         List<Map<String,Object>> grabExcludeMaps = new ArrayList<Map<String,Object>>();
 

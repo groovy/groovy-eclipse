@@ -1,11 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2003 IBM Corporation and others. All rights reserved.
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v1.0 which accompanies this distribution,
- * and is available at http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors: IBM Corporation - initial API and implementation
- ******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.debug.ui;
 
 import java.util.ArrayList;
@@ -42,208 +49,208 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 public class GroovyBreakpointRulerAction extends Action {
 
-	private IVerticalRulerInfo fRuler;
+    private IVerticalRulerInfo fRuler;
 
-	private ITextEditor fTextEditor;
+    private ITextEditor fTextEditor;
 
-	private IEditorStatusLine fStatusLine;
+    private IEditorStatusLine fStatusLine;
 
-	private ToggleBreakpointAdapter fBreakpointAdapter;
+    private ToggleBreakpointAdapter fBreakpointAdapter;
 
-	public GroovyBreakpointRulerAction(IVerticalRulerInfo ruler,
-			ITextEditor editor, IEditorPart editorPart) {
-		super("Toggle &Breakpoint");
-		fRuler = ruler;
-		fTextEditor = editor;
-		fStatusLine = editorPart.getAdapter(IEditorStatusLine.class);
-		fBreakpointAdapter = new ToggleBreakpointAdapter();
-	}
+    @SuppressWarnings("cast")
+    public GroovyBreakpointRulerAction(IVerticalRulerInfo ruler, ITextEditor editor, IEditorPart editorPart) {
+        super("Toggle &Breakpoint");
+        fRuler = ruler;
+        fTextEditor = editor;
+        fStatusLine = (IEditorStatusLine) editorPart.getAdapter(IEditorStatusLine.class);
+        fBreakpointAdapter = new ToggleBreakpointAdapter();
+    }
 
-	/**
-	 * Disposes this action
-	 */
-	public void dispose() {
-		fTextEditor = null;
-		fRuler = null;
-	}
+    /**
+     * Disposes this action
+     */
+    public void dispose() {
+        fTextEditor = null;
+        fRuler = null;
+    }
 
-	/**
-	 * Returns this action's vertical ruler info.
-	 *
-	 * @return this action's vertical ruler
-	 */
-	protected IVerticalRulerInfo getVerticalRulerInfo() {
-		return fRuler;
-	}
+    /**
+     * Returns this action's vertical ruler info.
+     *
+     * @return this action's vertical ruler
+     */
+    protected IVerticalRulerInfo getVerticalRulerInfo() {
+        return fRuler;
+    }
 
-	/**
-	 * Returns this action's editor.
-	 *
-	 * @return this action's editor
-	 */
-	protected ITextEditor getTextEditor() {
-		return fTextEditor;
-	}
+    /**
+     * Returns this action's editor.
+     *
+     * @return this action's editor
+     */
+    protected ITextEditor getTextEditor() {
+        return fTextEditor;
+    }
 
-	/**
-	 * Returns the <code>IDocument</code> of the editor's input.
-	 *
-	 * @return the document of the editor's input
-	 */
-	protected IDocument getDocument() {
-		IDocumentProvider provider = fTextEditor.getDocumentProvider();
-		return provider.getDocument(fTextEditor.getEditorInput());
-	}
+    /**
+     * Returns the <code>IDocument</code> of the editor's input.
+     *
+     * @return the document of the editor's input
+     */
+    protected IDocument getDocument() {
+        IDocumentProvider provider = fTextEditor.getDocumentProvider();
+        return provider.getDocument(fTextEditor.getEditorInput());
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.action.IAction#run()
-	 */
-	public void run() {
-		try {
-			List<IMarker> list = getMarkers();
-			if (list.isEmpty()) {
-				// create new markers
-				IDocument document= getDocument();
-				int lineNumber= getVerticalRulerInfo().getLineOfLastMouseButtonActivity();
-				if (lineNumber >= document.getNumberOfLines()) {
-					return;
-				}
-				try {
-					IRegion line= document.getLineInformation(lineNumber);
-					ITextSelection selection = new TextSelection(document, line.getOffset(), line.getLength());
-					fBreakpointAdapter.toggleLineBreakpoints(fTextEditor, selection);
-				} catch (BadLocationException e) {
-					// likely document is folded so you cannot get the line information of the folded line
-				}
-			} else {
-				// remove existing breakpoints of any type
-				IBreakpointManager manager = DebugPlugin.getDefault().getBreakpointManager();
-				Iterator<IMarker> iterator = list.iterator();
-				while (iterator.hasNext()) {
-					IMarker marker = iterator.next();
-					IBreakpoint breakpoint = manager.getBreakpoint(marker);
-					if (breakpoint != null) {
-						breakpoint.delete();
-					}
-				}
-			}
-		} catch (CoreException e) {
-			JDIDebugUIPlugin.errorDialog("Cannot add breakpoint", e);
-		}
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.eclipse.jface.action.IAction#run()
+     */
+    public void run() {
+        try {
+            List<IMarker> list = getMarkers();
+            if (list.isEmpty()) {
+                // create new markers
+                IDocument document= getDocument();
+                int lineNumber= getVerticalRulerInfo().getLineOfLastMouseButtonActivity();
+                if (lineNumber >= document.getNumberOfLines()) {
+                    return;
+                }
+                try {
+                    IRegion line= document.getLineInformation(lineNumber);
+                    ITextSelection selection = new TextSelection(document, line.getOffset(), line.getLength());
+                    fBreakpointAdapter.toggleLineBreakpoints(fTextEditor, selection);
+                } catch (BadLocationException e) {
+                    // likely document is folded so you cannot get the line information of the folded line
+                }
+            } else {
+                // remove existing breakpoints of any type
+                IBreakpointManager manager = DebugPlugin.getDefault().getBreakpointManager();
+                Iterator<IMarker> iterator = list.iterator();
+                while (iterator.hasNext()) {
+                    IMarker marker = iterator.next();
+                    IBreakpoint breakpoint = manager.getBreakpoint(marker);
+                    if (breakpoint != null) {
+                        breakpoint.delete();
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            JDIDebugUIPlugin.errorDialog("Cannot add breakpoint", e);
+        }
+    }
 
-	protected IResource getResource() {
-		IResource resource = null;
-		IEditorInput editorInput = fTextEditor.getEditorInput();
-		if (editorInput instanceof IFileEditorInput) {
-			resource = ((IFileEditorInput) editorInput).getFile();
-		}
-		return resource;
-	}
+    protected IResource getResource() {
+        IResource resource = null;
+        IEditorInput editorInput = fTextEditor.getEditorInput();
+        if (editorInput instanceof IFileEditorInput) {
+            resource = ((IFileEditorInput) editorInput).getFile();
+        }
+        return resource;
+    }
 
-	/**
-	 * Returns a list of markers that exist at the current ruler location.
-	 *
-	 * @return a list of markers that exist at the current ruler location
-	 */
-	protected List<IMarker> getMarkers() {
+    /**
+     * Returns a list of markers that exist at the current ruler location.
+     *
+     * @return a list of markers that exist at the current ruler location
+     */
+    protected List<IMarker> getMarkers() {
 
-		List<IMarker> breakpoints = new ArrayList<IMarker>();
+        List<IMarker> breakpoints = new ArrayList<IMarker>();
 
-		IResource resource = getResource();
-		IDocument document = getDocument();
-		AbstractMarkerAnnotationModel model = getAnnotationModel();
+        IResource resource = getResource();
+        IDocument document = getDocument();
+        AbstractMarkerAnnotationModel model = getAnnotationModel();
 
-		if (model != null) {
-			try {
+        if (model != null) {
+            try {
 
-				IMarker[] markers = null;
-				if (resource instanceof IFile)
-					markers = resource.findMarkers(
-							IBreakpoint.BREAKPOINT_MARKER, true,
-							IResource.DEPTH_INFINITE);
-				else {
-					IWorkspaceRoot root = ResourcesPlugin.getWorkspace()
-							.getRoot();
-					markers = root.findMarkers(IBreakpoint.BREAKPOINT_MARKER,
-							true, IResource.DEPTH_INFINITE);
-				}
+                IMarker[] markers = null;
+                if (resource instanceof IFile)
+                    markers = resource.findMarkers(
+                            IBreakpoint.BREAKPOINT_MARKER, true,
+                            IResource.DEPTH_INFINITE);
+                else {
+                    IWorkspaceRoot root = ResourcesPlugin.getWorkspace()
+                            .getRoot();
+                    markers = root.findMarkers(IBreakpoint.BREAKPOINT_MARKER,
+                            true, IResource.DEPTH_INFINITE);
+                }
 
-				if (markers != null) {
-					IBreakpointManager breakpointManager = DebugPlugin
-							.getDefault().getBreakpointManager();
-					for (int i = 0; i < markers.length; i++) {
-						IBreakpoint breakpoint = breakpointManager
-								.getBreakpoint(markers[i]);
-						if (breakpoint != null
-								&& breakpointManager.isRegistered(breakpoint)
-								&& includesRulerLine(model
-										.getMarkerPosition(markers[i]),
-										document))
-							breakpoints.add(markers[i]);
-					}
-				}
-			} catch (CoreException x) {
-				JDIDebugUIPlugin.log(x.getStatus());
-			}
-		}
-		return breakpoints;
-	}
+                if (markers != null) {
+                    IBreakpointManager breakpointManager = DebugPlugin
+                            .getDefault().getBreakpointManager();
+                    for (int i = 0; i < markers.length; i++) {
+                        IBreakpoint breakpoint = breakpointManager
+                                .getBreakpoint(markers[i]);
+                        if (breakpoint != null
+                                && breakpointManager.isRegistered(breakpoint)
+                                && includesRulerLine(model
+                                        .getMarkerPosition(markers[i]),
+                                        document))
+                            breakpoints.add(markers[i]);
+                    }
+                }
+            } catch (CoreException x) {
+                JDIDebugUIPlugin.log(x.getStatus());
+            }
+        }
+        return breakpoints;
+    }
 
-	/**
-	 * Returns the <code>AbstractMarkerAnnotationModel</code> of the editor's
-	 * input.
-	 *
-	 * @return the marker annotation model
-	 */
-	protected AbstractMarkerAnnotationModel getAnnotationModel() {
-		IDocumentProvider provider = fTextEditor.getDocumentProvider();
-		IAnnotationModel model = provider.getAnnotationModel(fTextEditor
-				.getEditorInput());
-		if (model instanceof AbstractMarkerAnnotationModel) {
-			return (AbstractMarkerAnnotationModel) model;
-		}
-		return null;
-	}
+    /**
+     * Returns the <code>AbstractMarkerAnnotationModel</code> of the editor's
+     * input.
+     *
+     * @return the marker annotation model
+     */
+    protected AbstractMarkerAnnotationModel getAnnotationModel() {
+        IDocumentProvider provider = fTextEditor.getDocumentProvider();
+        IAnnotationModel model = provider.getAnnotationModel(fTextEditor
+                .getEditorInput());
+        if (model instanceof AbstractMarkerAnnotationModel) {
+            return (AbstractMarkerAnnotationModel) model;
+        }
+        return null;
+    }
 
-	/**
-	 * Checks whether a position includes the ruler's line of activity.
-	 *
-	 * @param position
-	 *            the position to be checked
-	 * @param document
-	 *            the document the position refers to
-	 * @return <code>true</code> if the line is included by the given position
-	 */
-	protected boolean includesRulerLine(Position position, IDocument document) {
+    /**
+     * Checks whether a position includes the ruler's line of activity.
+     *
+     * @param position
+     *            the position to be checked
+     * @param document
+     *            the document the position refers to
+     * @return <code>true</code> if the line is included by the given position
+     */
+    protected boolean includesRulerLine(Position position, IDocument document) {
 
-		if (position != null) {
-			try {
-				int markerLine = document.getLineOfOffset(position.getOffset());
-				int line = fRuler.getLineOfLastMouseButtonActivity();
-				if (line == markerLine) {
-					return true;
-				}
-			} catch (BadLocationException x) {
-			}
-		}
+        if (position != null) {
+            try {
+                int markerLine = document.getLineOfOffset(position.getOffset());
+                int line = fRuler.getLineOfLastMouseButtonActivity();
+                if (line == markerLine) {
+                    return true;
+                }
+            } catch (BadLocationException x) {
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	protected void report(final String message) {
-		JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-			public void run() {
-				if (fStatusLine != null) {
-					fStatusLine.setMessage(true, message, null);
-				}
-				if (message != null
-						&& JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-					Display.getCurrent().beep();
-				}
-			}
-		});
-	}
+    protected void report(final String message) {
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
+            public void run() {
+                if (fStatusLine != null) {
+                    fStatusLine.setMessage(true, message, null);
+                }
+                if (message != null
+                        && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                    Display.getCurrent().beep();
+                }
+            }
+        });
+    }
 }

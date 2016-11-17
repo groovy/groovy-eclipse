@@ -23,7 +23,6 @@ import java.util.Stack;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.actions.ExpandSelectionAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyConvertLocalToFieldAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractConstantAction;
@@ -138,9 +137,9 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 public class GroovyEditor extends CompilationUnitEditor {
-    private static final String INDENT_ON_TAB = "IndentOnTab";
 
     public static final String EDITOR_ID = "org.codehaus.groovy.eclipse.editor.GroovyEditor";
+    private static final String INDENT_ON_TAB = "IndentOnTab";
 
     /**
      * Borrowed from {@link CompilationUnitEditor.ExclusivePositionUpdater}
@@ -307,11 +306,6 @@ public class GroovyEditor extends CompilationUnitEditor {
             fCloseStrings= enabled;
         }
 
-        /**
-         * closing curly braces
-         *
-         * @param enabled
-         */
         public void setCloseBracesEnabled(boolean enabled) {
             fCloseBraces = enabled;
         }
@@ -321,13 +315,13 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
 
         private boolean isAngularIntroducer(String identifier) {
-            return identifier.length() > 0
-                    && (Character.isUpperCase(identifier.charAt(0))
-                            || identifier.startsWith("final") //$NON-NLS-1$
-                            || identifier.startsWith("public") //$NON-NLS-1$
-                            || identifier.startsWith("public") //$NON-NLS-1$
-                            || identifier.startsWith("protected") //$NON-NLS-1$
-                            || identifier.startsWith("private")); //$NON-NLS-1$
+            return identifier.length() > 0 &&
+                (Character.isUpperCase(identifier.charAt(0)) ||
+                    identifier.startsWith("final") ||
+                    identifier.startsWith("public") ||
+                    identifier.startsWith("public") ||
+                    identifier.startsWith("protected") ||
+                    identifier.startsWith("private"));
         }
 
         private boolean isMultilineSelection() {
@@ -392,7 +386,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                     case '<':
                         if (!(fCloseAngularBrackets && fCloseBrackets)
                                 || nextToken == Symbols.TokenLESSTHAN
-                                ||         prevToken != Symbols.TokenLBRACE
+                                || prevToken != Symbols.TokenLBRACE
                                 && prevToken != Symbols.TokenRBRACE
                                 && prevToken != Symbols.TokenSEMICOLON
                                 && prevToken != Symbols.TokenSYNCHRONIZED
@@ -414,9 +408,9 @@ public class GroovyEditor extends CompilationUnitEditor {
                         // GROOVY change, allow quote closing when there are no parens
                         if (!fCloseStrings
                                 || nextToken == Symbols.TokenIDENT
-                                //                                || prevToken == Symbols.TokenIDENT
+//                                || prevToken == Symbols.TokenIDENT
                                 || next != null && next.length() > 1
-                                //                                || previous != null && previous.length() > 1
+//                                || previous != null && previous.length() > 1
                                 )
                             // GROOVY end change
                             return;
@@ -597,7 +591,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                             try {
                                 document.replace(level.fSecondPosition.offset,
                                         level.fSecondPosition.length,
-                                        ""); //$NON-NLS-1$
+                                        "");
                             } catch (BadLocationException e) {
                                 JavaPlugin.log(e);
                             }
@@ -639,8 +633,8 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     public GroovyEditor() {
         super();
-        setRulerContextMenuId("#GroovyCompilationUnitRulerContext"); //$NON-NLS-1$
-        setEditorContextMenuId("#GroovyCompilationUnitEditorContext"); //$NON-NLS-1$
+        setRulerContextMenuId("#GroovyCompilationUnitRulerContext");
+        setEditorContextMenuId("#GroovyCompilationUnitEditorContext");
     }
 
     @Override
@@ -666,7 +660,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                     new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
 
         } catch (SecurityException e) {
-            GroovyCore.logException("Unable to install semantic reconciler for groovy editor", e);
+            GroovyPlugin.getDefault().logException("Unable to install semantic reconciler for groovy editor", e);
         }
     }
 
@@ -678,7 +672,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                         new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
                 semanticReconciler = null;
             } catch (SecurityException e) {
-                GroovyCore.logException("Unable to uninstall semantic reconciler for groovy editor", e);
+                GroovyPlugin.getDefault().logException("Unable to uninstall semantic reconciler for groovy editor", e);
             }
         }
     }
@@ -712,7 +706,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     public Image getTitleImage() {
         Object element = getEditorInput().getAdapter(IFile.class);
         if (element == null) {
-            // will be null if coming from a code repository such as svn or cvs
+            // null if coming from a code repository such as cvs, git, or svn
             element = getEditorInput().getName();
         }
         Image image = decorator.decorateImage(null, element);
@@ -731,7 +725,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 ISourceRange range = reference.getSourceRange();
                 String content= reference.getSource();
                 if (content != null) {
-                    int start = Math.max(content.indexOf("import") + 6, 7); //$NON-NLS-1$
+                    int start = Math.max(content.indexOf("import") + 6, 7);
                     while (start < content.length() && content.charAt(start) == ' ')
                         start++;
 
@@ -769,7 +763,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
             }
         } catch (JavaModelException e) {
-            GroovyCore.logException("Error selecting import statement", e);
+            GroovyPlugin.getDefault().logException("Error selecting import statement", e);
         }
     }
 
@@ -846,25 +840,25 @@ public class GroovyEditor extends CompilationUnitEditor {
         // use our Rename action instead
         GroovyRenameAction renameAction = new GroovyRenameAction(this);
         renameAction.setActionDefinitionId(IGroovyEditorActionDefinitionIds.GROOVY_RENAME_ACTION);
-        setAction("RenameElement", renameAction); //$NON-NLS-1$
+        setAction("RenameElement", renameAction);
         replaceRefactoringAction("fRenameAction", renameAction);
 
         // use our Extract constant action instead
         GroovyExtractConstantAction extractConstantAction = new GroovyExtractConstantAction(this);
         extractConstantAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_CONSTANT);
-        setAction("ExtractConstant", extractConstantAction); //$NON-NLS-1$
+        setAction("ExtractConstant", extractConstantAction);
         replaceRefactoringAction("fExtractConstantAction", extractConstantAction);
 
         // use our Extract method action instead
         GroovyExtractMethodAction extractMethodAction = new GroovyExtractMethodAction(this);
         extractMethodAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_METHOD);
-        setAction("ExtractMethod", extractMethodAction); //$NON-NLS-1$
+        setAction("ExtractMethod", extractMethodAction);
         replaceRefactoringAction("fExtractMethodAction", extractMethodAction);
 
         // use our Extract local instead
         GroovyExtractLocalAction extractLocalAction = new GroovyExtractLocalAction(this);
         extractLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_LOCAL_VARIABLE);
-        setAction("ExtractLocalVariable", extractLocalAction); //$NON-NLS-1$
+        setAction("ExtractLocalVariable", extractLocalAction);
         replaceRefactoringAction("fExtractTempAction", extractLocalAction);
 
         // use our Convert local instead
@@ -878,8 +872,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         //        setAction("org.eclipse.jdt.internal.ui.actions.SurroundWithTemplateMenuAction", null);
 
         // selections
-        ExpandSelectionAction selectionAction= new ExpandSelectionAction(this,
-                (SelectionHistory) ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
+        ExpandSelectionAction selectionAction= new ExpandSelectionAction(this, (SelectionHistory) ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
         selectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING);
         selectionAction.getDescription();
         setAction(StructureSelectionAction.ENCLOSING, selectionAction);
@@ -902,7 +895,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 }
             }
             if (!found) {
-                GroovyCore.logTraceMessage("Oops...surroundWithActionGroup not found in context menus");
+                GroovyPlugin.trace("Oops...surroundWithActionGroup not found in context menus");
             }
 
             found = false;
@@ -915,10 +908,10 @@ public class GroovyEditor extends CompilationUnitEditor {
                 }
             }
             if (!found) {
-                GroovyCore.logTraceMessage("Oops...surroundWithActionGroup not found");
+                GroovyPlugin.trace("Oops...surroundWithActionGroup not found");
             }
         } else {
-            GroovyCore.logTraceMessage("Oops...surroundWithFactory not initialized");
+            GroovyPlugin.trace("Oops...surroundWithFactory not initialized");
         }
     }
 
@@ -928,8 +921,8 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     private void replaceRefactoringAction(String actionFieldName, SelectionDispatchAction newAction) {
         RefactorActionGroup group = getRefactorActionGroup();
-        ISelectionChangedListener action = (ISelectionChangedListener)
-                ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
+        ISelectionChangedListener action = (ISelectionChangedListener) ReflectionUtils.
+            getPrivateField(RefactorActionGroup.class, actionFieldName, group);
         if (action != null) {
             getSite().getSelectionProvider().removeSelectionChangedListener(action);
         }
@@ -967,32 +960,29 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public <T> T getAdapter(Class<T> required) {
+    @Override @SuppressWarnings({"rawtypes", "unchecked"})
+    public Object getAdapter(Class required) {
         if (IResource.class == required || IFile.class == required) {
-            return (T) this.getFile();
+            return this.getFile();
         }
+
         if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
-            return (T) super.getInputJavaElement();
+            return super.getInputJavaElement();
         }
 
         if (ModuleNode.class == required) {
-            return (T) this.getModuleNode();
+            return this.getModuleNode();
         }
         // new variant test in e43 which addresses bug 391253 means groovy doesn't get an outline
         // (it must fail the isCalledByOutline() test but I haven't investigated deeply)
         if (IContentOutlinePage.class.equals(required)) {
             if (fOutlinePage == null && getSourceViewer() != null)
                 fOutlinePage= createOutlinePage();
-            return (T) fOutlinePage;
+            return fOutlinePage;
         }
         return super.getAdapter(required);
     }
 
-    /**
-     * Override this method so that we can get access to the newly initialized
-     * annotation model
-     */
     @Override
     public void createPartControl(Composite parent) {
         super.createPartControl(parent);
@@ -1020,16 +1010,17 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
 
         disableBracketInserter();
-
     }
 
     private void disableBracketInserter() {
         Object fBracketInserterField = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this);
         Class<?> fBracketInserterClass = fBracketInserterField.getClass();
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseBracketsEnabled", new Class[] { boolean.class }, fBracketInserterField, new Object[] { false });
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", new Class[] { boolean.class }, fBracketInserterField, new Object[] { false });
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", new Class[] { boolean.class }, fBracketInserterField, new Object[] { false });
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseAngularBracketsEnabled", new Class[] { boolean.class }, fBracketInserterField, new Object[] { false });
+        Class<?>[] bool = {boolean.class};
+        Object[] disabled = {Boolean.FALSE};
+        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseBracketsEnabled", bool, fBracketInserterField, disabled);
+        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", bool, fBracketInserterField, disabled);
+        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", bool, fBracketInserterField, disabled);
+        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseAngularBracketsEnabled", bool, fBracketInserterField, disabled);
     }
 
     // temporary storage for editor input
@@ -1041,16 +1032,20 @@ public class GroovyEditor extends CompilationUnitEditor {
      */
     @Override
     protected void doSetInput(IEditorInput input) throws CoreException {
-        boolean wasInstalled = semanticHighlightingInstalled();
-        if (wasInstalled) {
-            uninstallGroovySemanticHighlighting();
-        }
-        internalInput = input;
-        super.doSetInput(input);
-        unsetJavaBreakpointUpdater();
-        internalInput = null;
-        if (wasInstalled) {
-            installGroovySemanticHighlighting();
+        try {
+            internalInput = input;
+
+            boolean wasInstalled = semanticHighlightingInstalled();
+            if (wasInstalled) {
+                uninstallGroovySemanticHighlighting();
+            }
+            super.doSetInput(input);
+            unsetJavaBreakpointUpdater();
+            if (wasInstalled) {
+                installGroovySemanticHighlighting();
+            }
+        } finally {
+            internalInput = null;
         }
     }
 
@@ -1091,9 +1086,12 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
 
         private boolean isCanceled(IProgressMonitor progressMonitor) {
-            return fCanceled || progressMonitor.isCanceled() || fPostSelectionValidator != null
-                    && !(fPostSelectionValidator.isValid(fSelection) || getForcedMarkOccurrencesSelection() == fSelection)
-                    || LinkedModeModel.hasInstalledModel(fDocument);
+            return fCanceled ||
+                progressMonitor.isCanceled() ||
+                fPostSelectionValidator != null &&
+                    !(fPostSelectionValidator.isValid(fSelection) ||
+                        getForcedMarkOccurrencesSelection() == fSelection) ||
+                LinkedModeModel.hasInstalledModel(fDocument);
         }
 
         /*
@@ -1132,7 +1130,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 Position position = new Position(location.getOffset(), location.getLength());
 
                 String description = location.getDescription();
-                String annotationType = (location.getFlags() == IOccurrencesFinder.F_WRITE_OCCURRENCE) ? "org.eclipse.jdt.ui.occurrences.write" : "org.eclipse.jdt.ui.occurrences"; //$NON-NLS-1$ //$NON-NLS-2$
+                String annotationType = (location.getFlags() == IOccurrencesFinder.F_WRITE_OCCURRENCE) ? "org.eclipse.jdt.ui.occurrences.write" : "org.eclipse.jdt.ui.occurrences";
 
                 annotationMap.put(new Annotation(annotationType, false, description), position);
             }
@@ -1156,20 +1154,17 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    // create our own since the version in the super class is of a
-    // non-accessible type
+    // create our own since the version in the super class is of a non-accessible type
     private OccurrencesFinderJob groovyOccurrencesFinderJob = null;
 
-    // the following methods are used to get, set, and call private members in
-    // the super class that have to do with mark ocurrences.
+    // the following methods are used to get, set, and call private members in the super class that have to do with mark ocurrences
 
     private Object myGetLockObject(IAnnotationModel model) {
-        return ReflectionUtils.executePrivateMethod(JavaEditor.class, "getLockObject", new Class[] { IAnnotationModel.class },
-                this, new Object[] { model });
+        return ReflectionUtils.executePrivateMethod(JavaEditor.class, "getLockObject", new Class[] {IAnnotationModel.class}, this, new Object[] {model});
     }
 
     private void myRemoveOccurrenceAnnotations() {
-        ReflectionUtils.executePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", new Class[0], this, new Object[0]);
+        ReflectionUtils.executePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", new Class[] {}, this, new Object[] {});
     }
 
     private void setOccurrenceAnnotations(Annotation[] as) {
@@ -1234,8 +1229,8 @@ public class GroovyEditor extends CompilationUnitEditor {
             IRegion markOccurrenceTargetRegion = getMarkOccurrenceTargetRegion();
             hasChanged = currentModificationStamp != getMarkOccurrenceModificationStamp();
             if (markOccurrenceTargetRegion != null && !hasChanged) {
-                if (markOccurrenceTargetRegion.getOffset() <= offset
-                        && offset <= markOccurrenceTargetRegion.getOffset() + markOccurrenceTargetRegion.getLength())
+                if (markOccurrenceTargetRegion.getOffset() <= offset &&
+                        offset <= markOccurrenceTargetRegion.getOffset() + markOccurrenceTargetRegion.getLength())
                     return;
             }
             setMarkOccurrenceTargetRegion(findMarkOccurrencesRegion(document, offset));
@@ -1258,7 +1253,6 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         groovyOccurrencesFinderJob = new OccurrencesFinderJob(document, locations, selection);
         groovyOccurrencesFinderJob.run(new NullProgressMonitor());
-
     }
 
     protected IRegion findMarkOccurrencesRegion(IDocument document, int offset) {
@@ -1276,15 +1270,12 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     @Override
     protected void initializeKeyBindingScopes() {
-        setKeyBindingScopes(new String[] { "org.codehaus.groovy.eclipse.editor.groovyEditorScope" }); //$NON-NLS-1$
+        setKeyBindingScopes(new String[] {"org.codehaus.groovy.eclipse.editor.groovyEditorScope"});
     }
 
-    /**
-     * Make accessible
-     */
     @Override
     public JavaSourceViewerConfiguration createJavaSourceViewerConfiguration() {
-        GroovyTextTools textTools= GroovyPlugin.getDefault().getTextTools();
+        GroovyTextTools textTools = GroovyPlugin.getDefault().getTextTools();
         return new GroovyConfiguration(textTools.getColorManager(), getPreferenceStore(), this);
     }
 
@@ -1292,36 +1283,37 @@ public class GroovyEditor extends CompilationUnitEditor {
      * Ensure that the Java breakpoint updater is removed because we need to use
      * Groovy's breakpoint updater instead
      */
-    @SuppressWarnings("unchecked")
     private void unsetJavaBreakpointUpdater() {
-        ISourceViewer viewer = getSourceViewer();
-        if (viewer != null) {
-            IAnnotationModel model = viewer.getAnnotationModel();
-            if (model instanceof AbstractMarkerAnnotationModel) {
-                // force instantiation of the extension points
-                ReflectionUtils.executePrivateMethod(AbstractMarkerAnnotationModel.class, "installMarkerUpdaters",
-                        new Class<?>[0], model, new Object[0]);
-                // remove the marker updater for Java breakpoints, the groovy one will be used instead
-                List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>)
-                        ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class,
-                                "fMarkerUpdaterSpecifications", model);
-                for (Iterator<IConfigurationElement> specIter = updaterSpecs.iterator(); specIter
-                        .hasNext();) {
-                    IConfigurationElement spec = specIter.next();
-                    if (spec.getAttribute("class").equals(BreakpointMarkerUpdater.class.getCanonicalName())) {
-                        specIter.remove();
-                        break;
+        try {
+            ISourceViewer viewer = getSourceViewer();
+            if (viewer != null) {
+                IAnnotationModel model = viewer.getAnnotationModel();
+                if (model instanceof AbstractMarkerAnnotationModel) {
+                    // force instantiation of the extension points
+                    ReflectionUtils.executePrivateMethod(AbstractMarkerAnnotationModel.class,
+                        "installMarkerUpdaters", new Class[] {}, model, new Object[] {});
+                    @SuppressWarnings("unchecked")
+                    List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>) ReflectionUtils.
+                        getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model);
+                    // remove the marker updater for Java breakpoints; the Groovy one will be used instead
+                    for (Iterator<IConfigurationElement> specIter = updaterSpecs.iterator(); specIter.hasNext();) {
+                        IConfigurationElement spec = specIter.next();
+                        if (spec.getAttribute("class").equals(BreakpointMarkerUpdater.class.getCanonicalName())) {
+                            specIter.remove();
+                            break;
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            GroovyPlugin.getDefault().logException("Failed to unset Java breakpoint updater", e);
         }
     }
 
     /** Preference key for automatically closing strings */
     private final static String CLOSE_STRINGS = PreferenceConstants.EDITOR_CLOSE_STRINGS;
     /** Preference key for automatically closing brackets and parenthesis */
-    private final static String CLOSE_BRACKETS= PreferenceConstants.EDITOR_CLOSE_BRACKETS;
-
+    private final static String CLOSE_BRACKETS = PreferenceConstants.EDITOR_CLOSE_BRACKETS;
     /** Preference key for automatically closing curly braces */
     private final static String CLOSE_BRACES = PreferenceConstants.EDITOR_CLOSE_BRACES;
 
@@ -1422,19 +1414,13 @@ public class GroovyEditor extends CompilationUnitEditor {
      */
     public GroovyOutlinePage getOutlinePage() {
         if (page == null) {
-            IContentOutlinePage outlinePage = getAdapter(IContentOutlinePage.class);
+            IContentOutlinePage outlinePage = (IContentOutlinePage) getAdapter(IContentOutlinePage.class);
             if (outlinePage instanceof GroovyOutlinePage) {
                 page = (GroovyOutlinePage) outlinePage;
             }
         }
         return page;
     }
-
-    // @Override
-    // protected ITypeRoot getInputJavaElement() {
-    // return page != null ? page.getOutlineCompilationUnit() :
-    // super.getInputJavaElement();
-    // }
 
     @Override
     protected void synchronizeOutlinePage(ISourceReference element, boolean checkIfOutlinePageActive) {
@@ -1456,10 +1442,9 @@ public class GroovyEditor extends CompilationUnitEditor {
         GroovyCompilationUnit unit = getGroovyCompilationUnit();
         if (unit != null) {
             try {
-                page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(unit.getJavaProject().getProject(),
-                        fOutlinerContextMenuId, this);
+                page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(unit.getJavaProject().getProject(), fOutlinerContextMenuId, this);
             } catch (CoreException e) {
-                GroovyCore.logException("Error creating Groovy Outline page", e);
+                GroovyPlugin.getDefault().logException("Error creating Groovy Outline page", e);
             }
             if (page != null) {
                 // don't call this since it will grab the GroovyCompilationUnit

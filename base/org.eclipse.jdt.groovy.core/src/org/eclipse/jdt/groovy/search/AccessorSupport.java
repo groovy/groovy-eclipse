@@ -22,7 +22,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 
 /**
- * Determined what kind of accessor a method name may be and then does further processing on a method node if the name matches
+ * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
  *
  * @author andrew
  * @created Jan 23, 2012
@@ -37,37 +37,32 @@ public enum AccessorSupport {
     }
 
     public boolean isAccessor() {
-        return this != NONE;
+        return (this != NONE);
     }
 
     public boolean isAccessorKind(MethodNode node, boolean isCategory) {
         int args = isCategory ? 1 : 0;
         ClassNode returnType = node.getReturnType();
         switch (this) {
-            case GETTER:
-                return (node.getParameters() == null || node.getParameters().length == args)
-                        && !returnType.equals(VariableScope.VOID_CLASS_NODE);
-            case ISSER:
-                return !isCategory
-                        && (node.getParameters() == null || node.getParameters().length == args)
-                        && (returnType.equals(VariableScope.OBJECT_CLASS_NODE)
-                                || returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType
-                                    .equals(ClassHelper.boolean_TYPE));
-            case SETTER:
-                return node.getParameters() != null && node.getParameters().length == args + 1
-                        && (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
-            case NONE:
-            default:
-                return false;
+        case GETTER:
+            return (node.getParameters() == null || node.getParameters().length == args) &&
+                !returnType.equals(VariableScope.VOID_CLASS_NODE);
+        case SETTER:
+            return node.getParameters() != null && node.getParameters().length == args + 1 &&
+            (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
+        case ISSER:
+            return !isCategory && (node.getParameters() == null || node.getParameters().length == args) &&
+                (returnType.equals(VariableScope.OBJECT_CLASS_NODE) || returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType.equals(ClassHelper.boolean_TYPE));
+        default:
+            return false;
         }
     }
 
     public String createAccessorName(String name) {
         if (!name.startsWith(GETTER.prefix) && !name.startsWith(SETTER.prefix) && name.length() > 0) {
             return this.prefix + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
-        } else {
-            return null;
         }
+        return null;
     }
 
     public static AccessorSupport findAccessorKind(MethodNode node, boolean isCategory) {
@@ -75,64 +70,48 @@ public enum AccessorSupport {
         return accessor.isAccessorKind(node, isCategory) ? accessor : NONE;
     }
 
-    /**
-     * If maybeProperty is a property variant of a method in declaringType, then return that method
-     */
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory) {
-        if (name.length() <= 0) {
-            return null;
-        }
+        return findAccessorMethodForPropertyName(name, declaringType, isCategory, GETTER, ISSER, SETTER);
+    }
 
-        String suffix = Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
-        String getterName = "get" + suffix;
-        List<MethodNode> methods = declaringType.getMethods(getterName);
-        if (!methods.isEmpty()) {
-            MethodNode maybeMethod = methods.get(0);
-            if (findAccessorKind(maybeMethod, isCategory) == GETTER) {
-                return maybeMethod;
-            }
-        }
-        String setterName = "set" + suffix;
-        methods = declaringType.getMethods(setterName);
-        if (!methods.isEmpty()) {
-            MethodNode maybeMethod = methods.get(0);
-            if (findAccessorKind(maybeMethod, isCategory) == SETTER) {
-                return maybeMethod;
-            }
-        }
-        String isserName = "is" + suffix;
-        methods = declaringType.getMethods(isserName);
-        if (!methods.isEmpty()) {
-            MethodNode maybeMethod = methods.get(0);
-            if (findAccessorKind(maybeMethod, isCategory) == ISSER) {
-                return maybeMethod;
-            }
-        }
+    public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {
+        if (name != null && name.length() > 0 && kinds != null && kinds.length > 0) {
+            String suffix = Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
 
+            for (AccessorSupport kind : kinds) {
+                if (kind == NONE) continue;
+                String methodName = kind.prefix + suffix;
+                List<MethodNode> methods = declaringType.getMethods(methodName);
+                for (MethodNode maybeMethod : methods) {
+                    if (kind == findAccessorKind(maybeMethod, isCategory)) {
+                        return maybeMethod;
+                    }
+                }
+            }
+        }
         return null;
     }
 
     /**
-     * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void
-     *         return type and taking no parameters
+     * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void return type and taking no parameters
      */
     public static boolean isGetter(MethodNode node) {
-        return node.getReturnType() != VariableScope.VOID_CLASS_NODE
-                && node.getParameters().length == 0
-                && ((node.getName().startsWith("get") && node.getName().length() > 3) || (node.getName().startsWith("is") && node
-                        .getName().length() > 2));
+        return node.getReturnType() != VariableScope.VOID_CLASS_NODE && node.getParameters().length == 0 &&
+            ((node.getName().startsWith("get") && node.getName().length() > 3) ||
+                (node.getName().startsWith("is") && node.getName().length() > 2));
     }
 
     public static AccessorSupport create(String methodName, boolean isCategory) {
         AccessorSupport accessor = AccessorSupport.NONE;
         // is is allowed only for non-category methods
-        if (!isCategory && methodName.length() > 2 && methodName.startsWith("is") && Character.isUpperCase(methodName.charAt(2))) {
+        if (!isCategory && methodName.length() > 2 && methodName.startsWith("is") &&
+                Character.isUpperCase(methodName.charAt(2))) {
             accessor = AccessorSupport.ISSER;
         }
 
         if (!accessor.isAccessor()) {
-            if (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set"))
-                    && Character.isUpperCase(methodName.charAt(3))) {
+            if (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set")) &&
+                    Character.isUpperCase(methodName.charAt(3))) {
                 accessor = methodName.charAt(0) == 'g' ? AccessorSupport.GETTER : AccessorSupport.SETTER;
             }
         }

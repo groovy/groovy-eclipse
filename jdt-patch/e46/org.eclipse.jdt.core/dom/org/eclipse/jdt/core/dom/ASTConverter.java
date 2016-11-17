@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
  *     Stephan Herrmann - Contribution for
  *								bug 393719 - [compiler] inconsistent warnings on iteration variables
  *******************************************************************************/
-
 package org.eclipse.jdt.core.dom;
 
 import java.util.HashSet;
@@ -3652,7 +3651,7 @@ class ASTConverter {
 				if (positions[0] != -1) {
 					simpleName.setSourceRange(positions[0], end - positions[0] + 1);
 				} else {
-					simpleName.setSourceRange(sourceStart, end - sourceStart + 1);					
+					simpleName.setSourceRange(sourceStart, end - sourceStart + 1);
 				}
 
 				switch(this.ast.apiLevel) {
@@ -3687,7 +3686,8 @@ class ASTConverter {
 								((ParameterizedType) type).typeArguments().add(type2);
 								end = type2.getStartPosition() + type2.getLength() - 1;
 							}
-							end = retrieveClosingAngleBracketPosition(end + 1);
+							// GROOVY edit -- end can be -1
+							end = retrieveClosingAngleBracketPosition(/*end + 1*/ sourceStart + simpleName.getLength());
 							type.setSourceRange(sourceStart, end - sourceStart + 1);
 						} else {
 							type.setSourceRange(sourceStart, end - sourceStart + 1);
@@ -3768,7 +3768,7 @@ class ASTConverter {
 								isTypeArgumentBased = false;
 								break;
 							}
-						}						
+						}
 						int start = (int) (positions[0] >>> 32);
 						int end = (int) positions[firstTypeIndex];
 						
@@ -3782,8 +3782,8 @@ class ASTConverter {
 							if (this.resolveBindings) {
 								recordNodes(parameterizedType, typeReference);
 							}
-							Type type2 = null; 
-							for (int i = 0; i < arglen; ++i ) {
+							Type type2 = null;
+							for (int i = 0; i < arglen; ++i) {
 								type2 = convertType(arguments[i]);
 								parameterizedType.typeArguments().add(type2);
 							}

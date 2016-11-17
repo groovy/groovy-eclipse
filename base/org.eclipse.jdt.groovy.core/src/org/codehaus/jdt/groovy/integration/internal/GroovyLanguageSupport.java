@@ -138,19 +138,15 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
-    public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter,
-            CompilationResult compilationResult, int sourceLength) {
+    public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
             CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
-            // groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(new String(compilationResult.getFileName()),
-                    new String(unit.getContents()), groovyCompilerConfig, null, errorCollector);
+            SourceUnit groovySourceUnit = new SourceUnit(
+                    new String(compilationResult.getFileName()), new String(unit.getContents()), groovyCompilerConfig, null, errorCollector);
 
             // FIXASC missing the classloader configuration (eg. to include transformers)
-            org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(
-                    groovyCompilerConfig);
-            // groovyCU.removeOutputPhaseOperation();
+            org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(groovyCompilerConfig);
             JDTResolver resolver = new JDTResolver(groovyCU);
             groovyCU.setResolveVisitor(resolver);
 
@@ -158,10 +154,9 @@ public class GroovyLanguageSupport implements LanguageSupport {
             compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(unit.getContents());
 
             groovyCU.addSource(groovySourceUnit);
-            GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter,
-                    compilationResult, sourceLength, groovyCU, groovySourceUnit, null);
+            GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
+                    problemReporter, compilationResult, sourceLength, groovyCU, groovySourceUnit, null);
 
-            // boolean success =
             gcuDeclaration.processToPhase(Phases.CONVERSION);
 
             if (gcuDeclaration.getModuleNode() != null) {

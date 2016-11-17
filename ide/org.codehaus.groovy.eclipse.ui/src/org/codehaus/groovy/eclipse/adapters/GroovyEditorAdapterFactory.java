@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,19 +26,18 @@ import org.eclipse.jdt.core.JavaCore;
 public class GroovyEditorAdapterFactory implements IAdapterFactory {
     private static final Class<?>[] classes = new Class[] { ModuleNode.class };
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Object getAdapter(Object adaptableObject, Class adapterType) {
         if (!(adaptableObject instanceof GroovyEditor)) {
-            throw new IllegalArgumentException(
-                    "adaptable is not the GroovyEditor");
+            throw new IllegalArgumentException("adaptable is not the GroovyEditor");
         }
 
-        Object adapter = ((GroovyEditor) adaptableObject).getEditorInput()
-                .getAdapter(adapterType);
+        Object adapter = ((GroovyEditor) adaptableObject).getEditorInput().getAdapter(adapterType);
         if (adapter != null)
             return adapter;
 
-        IFile file = ((GroovyEditor) adaptableObject).getEditorInput().getAdapter(IFile.class);
+        @SuppressWarnings("cast")
+        IFile file = (IFile) ((GroovyEditor) adaptableObject).getEditorInput().getAdapter(IFile.class);
         if (file != null) {
             return adaptFromFile(adapterType, file);
         }
@@ -60,7 +59,7 @@ public class GroovyEditorAdapterFactory implements IAdapterFactory {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Class[] getAdapterList() {
         return classes;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartSite;
 
 /**
- *
  * @author andrew
  * @created Aug 29, 2011
  */
@@ -38,10 +37,7 @@ public class AbstractCheckerAction {
     private ISelection selection;
     protected Shell shell;
 
-    public AbstractCheckerAction() {
-        super();
-    }
-
+    @SuppressWarnings("cast")
     protected List<IResource> findSelection() {
         List<IResource> currentSelection;
         if (! (selection instanceof IStructuredSelection)) {
@@ -54,7 +50,7 @@ public class AbstractCheckerAction {
             if (elt instanceof IResource) {
                 candidate = (IResource) elt;
             } else if (elt instanceof IAdaptable) {
-                candidate = ((IAdaptable) elt).getAdapter(IResource.class);
+                candidate = (IResource) ((IAdaptable) elt).getAdapter(IResource.class);
             }
 
             if (candidate != null && GroovyNature.hasGroovyNature(candidate.getProject())) {
@@ -78,10 +74,9 @@ public class AbstractCheckerAction {
                 shell = site.getShell();
                 return;
             }
-        } catch (Exception e) {
-            // must be initializing or de-initializing... can ignore
+        } catch (Exception ignore) {
+            // must be initializing or de-initializing
         }
         shell = null;
     }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.ui.decorators;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
@@ -79,29 +78,27 @@ public class GroovyImageDecorator implements ILabelDecorator {
             return null;
         }
 
-        boolean isApplicable = false;
-        if (element instanceof ICompilationUnit) {
-            IResource r = ((ICompilationUnit) element).getResource();
-            if (ContentTypeUtils.isGroovyLikeFileName(r.getName())) {
-                image = getJavaElementImageDescriptor(image, r);
-                isApplicable = true;
-            }
-        } else if (element instanceof IFile && ContentTypeUtils.isGroovyLikeFileName(((IResource) element).getName())) {
-            // IFile already has correct icon, so there is no need to replace it.
-            // image = getJavaElementImageDescriptor(image, (IResource) element);
-            isApplicable = true;
-        } else if (element instanceof String) {
+        if (element instanceof String) {
             // a request where an IResource cannot be found (probably from opening an svn or cvs file)
             image = getImageLabel(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, JavaElementImageProvider.SMALL_SIZE));
-            isApplicable = true;
+        } else {
+            IResource resource = null;
+            if (element instanceof IResource) {
+                resource = (IResource) element;
+            } else if (element instanceof ICompilationUnit) {
+                resource = ((ICompilationUnit) element).getResource();
+            }
+            if (resource != null && ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
+                image = getJavaElementImageDescriptor(image, resource);
+            }
         }
 
-        if (isApplicable) {
+        if (image != null) {
             preventRecursion = true;
             try {
-                //the Java ProblemsDecorator is not registered in the official
-                //decorator list of eclipse, so we need it to call ourself.
-                //problem: if jdt includes more decorators, we won't know it.
+                // the Java ProblemsDecorator is not registered in the official
+                // decorator list of eclipse, so we need it to call ourself.
+                // problem: if jdt includes more decorators, we won't know it.
                 image = problemsDecorator.decorateImage(image, element);
 
                 //apply standard decorators (eg cvs)
@@ -111,10 +108,11 @@ public class GroovyImageDecorator implements ILabelDecorator {
             }
             return image;
         }
+
         return null;
     }
-    private Image getJavaElementImageDescriptor(Image image, IResource resource) {
 
+    private Image getJavaElementImageDescriptor(Image image, IResource resource) {
         int flags;
         if (image != null) {
             Rectangle rect = image.getBounds();
@@ -139,6 +137,7 @@ public class GroovyImageDecorator implements ILabelDecorator {
         }
         return getImageLabel(new JavaElementImageDescriptor(desc, 0, size));
     }
+
     private static boolean useSmallSize(int flags) {
         return (flags & JavaElementImageProvider.SMALL_ICONS) != 0;
     }

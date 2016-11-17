@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.tests;singleton:=true
 Bundle-Name: Groovy UI Tests
 Bundle-Version: 2.9.2.qualifier
@@ -11,6 +11,7 @@ Export-Package: org.codehaus.groovy.eclipse.test,
  org.codehaus.groovy.eclipse.test.adapters,
  org.codehaus.groovy.eclipse.test.ui
 Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
+ org.eclipse.core.filesystem,
  org.eclipse.debug.core,
  org.eclipse.debug.core.model,
  org.eclipse.debug.internal.ui,

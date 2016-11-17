@@ -86,7 +86,8 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    IProject project = ((IAdaptable)object).getAdapter(IProject.class);
+                    @SuppressWarnings("cast")
+                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);
                     try {
                         if(project != null  && project.hasNature(ConvertLegacyProject.OLD_NATURE)) {
                             newSelected.add(project);

@@ -46,15 +46,8 @@ public class ASTNode {
     private int columnNumber = -1;
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
-    
-    // GRECLIPSE: start set to null initially
-    private ListHashMap metaDataMap = null;
-    /*orig{
-    private ListHashMap metaDataMap = new ListHashMap();
-    }*/ 
-    // GRECLIPSE: end
-    
-    // GRECLIPSE: start
+    // GRECLIPSE edit
+    private ListHashMap metaDataMap = null/*new ListHashMap()*/;
     private int start = 0;
     private int end = 0;
     // end
@@ -98,6 +91,7 @@ public class ASTNode {
     public void setLastColumnNumber(int lastColumnNumber) {
         this.lastColumnNumber = lastColumnNumber;
     }
+    
     // GRECLIPSE: start
     public int getStart() {
         return start;
@@ -121,9 +115,6 @@ public class ASTNode {
      * The sourcePosition consists of a line/column pair for
      * the start and a line/column pair for the end of the
      * expression or statement 
-     // GRECLIPSE: start
-     * as well as the absolute start and end positions in the file
-     // end
      * 
      * @param node - the node used to configure the position information
      */
@@ -187,7 +178,7 @@ public class ASTNode {
         Object old = metaDataMap.put(key,value);
         if (old!=null) throw new GroovyBugError("Tried to overwrite existing meta data "+this+".");
     }
-    
+
     /**
      * Sets the node meta data but allows overwriting values.
      *

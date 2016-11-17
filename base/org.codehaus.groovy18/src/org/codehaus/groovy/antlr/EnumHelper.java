@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.antlr;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -25,6 +23,7 @@ import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MixinNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import groovyjarjarasm.asm.Opcodes;
 
 
 public class EnumHelper {
@@ -52,18 +51,14 @@ public class EnumHelper {
         return enumClass;
     }
 
-
-    // GRECLIPSE: start
-    // modified to return the FieldNode it creates, so that we can fix up the position
-    // GRECLIPSE: end
-    public static FieldNode addEnumConstant(ClassNode enumClassType,ClassNode enumClassOwner, String name, Expression init) {
+    // GRECLIPSE edit -- modified to return the FieldNode it creates, so that we can fix up the position
+    public static FieldNode addEnumConstant(ClassNode enumClassType, ClassNode enumClassOwner, String name, Expression init) {
         int modifiers = PUBLIC_FS | Opcodes.ACC_ENUM;
         if  (init!=null && !(init instanceof ListExpression)) {
             ListExpression list = new ListExpression();
             list.addExpression(init);
             init = list;
         }
-       
         FieldNode fn = new FieldNode(name,modifiers,enumClassType.getPlainNodeReference(),enumClassOwner,init);
         enumClassOwner.addField(fn);
         return fn;

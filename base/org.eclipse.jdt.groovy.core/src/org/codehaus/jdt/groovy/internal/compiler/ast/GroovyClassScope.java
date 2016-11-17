@@ -108,8 +108,7 @@ public class GroovyClassScope extends ClassScope {
         // If we don't then a supertype did and these methods do not have to be added here
         if (implementsGroovyLangObject) {
             if (debugListener != null) {
-                debugListener.record("augment: type " + new String(this.referenceContext.name)
-                        + " having GroovyObject methods added");
+                debugListener.record("augment: type " + new String(referenceContext.name) + " having GroovyObject methods added");
             }
             TypeBinding bindingJLO = getJavaLangObject();
             TypeBinding bindingJLS = getJavaLangString();
@@ -128,15 +127,11 @@ public class GroovyClassScope extends ClassScope {
             // synthetic
 
             // Visibility is public and possibly static/abstract depending on the containing type
-            createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods,
-                    methodBindings, null);
-            createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings,
-                    null);
-            createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods,
-                    methodBindings, null);
+            createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods, methodBindings, null);
+            createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings, null);
+            createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods, methodBindings, null);
             createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings, null);
-            createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods,
-                    methodBindings, null);
+            createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods, methodBindings, null);
         }
         // FIXASC decide what difference this makes - should we not be adding anything at all?
         // will not be an instance of GroovyTypeDeclaration if created through SourceTypeConverter
@@ -349,8 +344,7 @@ public class GroovyClassScope extends ClassScope {
              * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
              * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
              */
-            MethodBinding mb = new MethodBinding(modifiers, methodName, returnType, parameterTypes, null,
-                    this.referenceContext.binding);
+            MethodBinding mb = new MethodBinding(modifiers, methodName, returnType, parameterTypes, null, referenceContext.binding);
             // FIXASC parameter names - what value would it have to set them correctly?
             groovyMethods.add(mb);
         }
@@ -398,8 +392,7 @@ public class GroovyClassScope extends ClassScope {
              * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
              * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
              */
-            MethodBinding mb = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null,
-                    this.referenceContext.binding);
+            MethodBinding mb = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding);
             // FIXASC parameter names - what value would it have to set them correctly?
             groovyMethods.add(mb);
         }
@@ -498,8 +491,7 @@ public class GroovyClassScope extends ClassScope {
             TypeBinding[] parameterTypes = null;
             TypeBinding returnType = compilationUnitScope().environment.getResolvedType(
                     CharOperation.splitAndTrimOn('.', methodNode.getReturnType().getName().toCharArray()), this);
-            newMethods[idx++] = new MethodBinding(methodNode.getModifiers(), selector, returnType, parameterTypes, null,
-                    this.referenceContext.binding);
+            newMethods[idx++] = new MethodBinding(methodNode.getModifiers(), selector, returnType, parameterTypes, null, referenceContext.binding);
         }
         //unitScope.environment.getResolvedType(JAVA_LANG_STRING, this);
         return newMethods;
@@ -523,7 +515,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
         // STS-3930 start
-        for (MethodBinding method : this.referenceContext.binding.methods()) {
+        for (MethodBinding method : referenceContext.binding.methods()) {
             fixupTypeParameters(method);
         }
         // STS-3930 end
@@ -554,11 +546,11 @@ public class GroovyClassScope extends ClassScope {
             if (arguments == null) {
                 continue;
             }
-            for (int i = 0; i < arguments.length; i++) {
+            for (int i = 0, n = arguments.length; i < n; i += 1) {
                 if (arguments[i] instanceof TypeVariableBinding) {
                     String name = new String(arguments[i].sourceName());
                     TypeBinding argument = bindings.get(name);
-                    if (arguments[i].id != argument.id) {
+                    if (argument != null && arguments[i].id != argument.id) {
                         arguments[i] = argument;
                     }
                 }

@@ -188,7 +188,8 @@ public class SyntheticAccessorSearchRequestor {
             return delegate.getParent().isStructureKnown();
         }
 
-        public <T> T getAdapter(Class<T> adapter) {
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        public Object getAdapter(Class adapter) {
             return delegate.getAdapter(adapter);
         }
 

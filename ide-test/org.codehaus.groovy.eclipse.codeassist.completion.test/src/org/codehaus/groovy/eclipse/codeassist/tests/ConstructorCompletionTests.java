@@ -35,12 +35,14 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     boolean orig;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         orig = GroovyPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
     }
+
     @Override
     protected void tearDown() throws Exception {
         try {
@@ -52,6 +54,12 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testConstructorCompletion1() throws Exception {
         String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY\nkkk";
+        String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
+    }
+
+    public void testConstructorCompletion1a() throws Exception {
+        String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY()\nkkk";
         String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
@@ -129,6 +137,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "Flar", 2);
     }
+
     /**
      * no named args since an explicit constructor exists
      * different file and package
@@ -151,7 +160,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "Flar", 2);
     }
-
 
     /**
      * same file
@@ -190,6 +198,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "Flar", 1);
     }
+
     /**
      * different file and package
      * @throws Exception
@@ -289,7 +298,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "Flar", 1);
     }
 
-
     public void testParamGuessing1() throws Exception {
         create("p", "Flar",
                 "package p\n" +
@@ -307,6 +315,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "yyy", "0" };
         checkProposalChoices(contents, "Flar(", "bbb", "bbb: __, ", expectedChoices);
     }
+
     public void testParamGuessing2() throws Exception {
         create("p", "Flar",
                 "package p\n" +
@@ -323,6 +332,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "yyy", "0" };
         checkProposalChoices(contents, "Flar(", "bbb", "bbb: __, ", expectedChoices);
     }
+
     public void testParamGuessing3() throws Exception {
         create("p", "Flar",
                 "package p\n" +
@@ -340,6 +350,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "yyy", "0" };
         checkProposalChoices(contents, "Flar(", "bbb", "bbb: __, ", expectedChoices);
     }
+
     public void testParamGuessing4() throws Exception {
         create("p", "Flar",
                 "package p\n" +
@@ -357,6 +368,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "yyy", "0" };
         checkProposalChoices(contents, "Flar(", "bbb", "bbb: __, ", expectedChoices);
     }
+
     public void testParamGuessing5() throws Exception {
         create("p", "Flar",
                 "package p\n" +

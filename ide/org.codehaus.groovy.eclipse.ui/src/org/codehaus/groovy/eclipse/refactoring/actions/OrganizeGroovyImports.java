@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
@@ -28,8 +27,6 @@ import java.util.regex.Pattern;
 
 import groovy.transform.Field;
 
-import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
-import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -56,20 +53,24 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
-import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.eclipse.text.edits.TextEdit;
 
 /**
@@ -114,6 +115,15 @@ public class OrganizeGroovyImports {
         private ClassNode current;
 
         @Override
+        protected void visitAnnotation(AnnotationNode annotation) {
+            // skip nodes added by an annotation collector transformation
+            if (annotation.getNodeMetaData("AnnotationCollector") == null) {
+                handleType(annotation.getClassNode(), true);
+            }
+            super.visitAnnotation(annotation);
+        }
+
+        @Override
         public void visitCastExpression(CastExpression expression) {
             handleType(expression.getType(), false);
             super.visitCastExpression(expression);
@@ -124,6 +134,17 @@ public class OrganizeGroovyImports {
             if (expression.getEnd() > 0) {
                 handleType(expression.getType(), false);
             }
+        }
+
+        @Override
+        public void visitClosureExpression(ClosureExpression expression) {
+            Parameter[] parameters = expression.getParameters();
+            if (parameters != null) {
+                for (Parameter param : parameters) {
+                    handleType(param.getType(), false);
+                }
+            }
+            super.visitClosureExpression(expression);
         }
 
         @Override
@@ -253,29 +274,19 @@ public class OrganizeGroovyImports {
         }
 
         @Override
-        protected void visitAnnotation(AnnotationNode node) {
-            // skip over nodes added by an annotation collector transformation
-            if (node.getNodeMetaData("AnnotationCollector") == null) {
-                handleType(node.getClassNode(), true);
-            }
-            super.visitAnnotation(node);
-        }
-
-        @Override
         public void visitCatchStatement(CatchStatement node) {
             handleType(node.getVariable().getType(), false);
             super.visitCatchStatement(node);
         }
 
         @Override
-        public void visitClosureExpression(ClosureExpression node) {
-            Parameter[] parameters = node.getParameters();
-            if (parameters != null) {
-                for (Parameter param : parameters) {
-                    handleType(param.getType(), false);
-                }
+        public void visitForLoop(ForStatement node) {
+            // check the type node of "for (Item i in x)" but skip "for (i in x)"
+            Parameter parm = node.getVariable(); ClassNode type = parm.getType();
+            if (type.getStart() > 0 && type.getEnd() < parm.getStart()) {
+                handleType(type, false);
             }
-            super.visitClosureExpression(node);
+            super.visitForLoop(node);
         }
 
         //
@@ -283,38 +294,60 @@ public class OrganizeGroovyImports {
         /**
          * Assume dynamic variables are a candidate for organize imports, but
          * only if name begins with a capital letter and does not match the
-         * canonical static constant naming.  This will hopefully filter out
+         * idiomatic static constant naming.  This will hopefully filter out
          * most false positives, but will miss types that start with lower case.
          */
         private void handleVariable(VariableExpression expr) {
             String name = expr.getName();
-            if (!missingTypes.containsKey(name)) {
-                if (Character.isUpperCase(name.charAt(0)) &&
-                        !STATIC_CONSTANT.matcher(name).matches()) {
-                    missingTypes.put(name, new UnresolvedTypeData(name, false,
-                            new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
-                }
+            if (!missingTypes.containsKey(name) &&
+                    Character.isUpperCase(name.charAt(0)) &&
+                    !STATIC_CONSTANT.matcher(name).matches()) {
+                missingTypes.put(name, new UnresolvedTypeData(name, false,
+                        new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
             }
         }
 
         /**
-         * add the type name to missingTypes if it is not resolved
-         * ensure that we don't remove the import if the type is resolved
+         * Adds the type name to missingTypes if it is not resolved or ensures
+         * that the import will be retained if the type is resolved.
          */
         private void handleType(ClassNode node, boolean isAnnotation) {
-            int start = Math.max(node.getNameStart(), node.getStart()),
-                until = Math.max(node.getNameEnd(), node.getEnd());
+            if (getBaseType(node).isPrimitive()) {
+                return;
+            }
 
-            if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-                for (GenericsType gen : node.getGenericsTypes()) {
-                    if (gen.getStart() > 0) until = gen.getStart() - 1;
-                    if (!gen.isPlaceholder() && !gen.isWildcard()) {
-                        handleType(gen.getType(), false);
+            GenericsType[] generics = node.getGenericsTypes();
+            int start = node.getNameStart(),
+                until = node.getNameEnd();
+            if (until < 1) {
+                start = node.getStart();
+                until = node.getEnd()-1;
+
+                // getEnd() includes generics; try to constrain the range
+                if (generics != null && generics.length > 0) {
+                    if (generics[0].getStart() > 0)
+                        until = generics[0].getStart() - 1;
+                } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
+                    assert start <= getBaseType(node).getStart();
+                    assert until <= 0 || getBaseType(node).getEnd() < until;
+
+                    start = getBaseType(node).getStart();
+                    until = getBaseType(node).getEnd();
+                }
+            }
+            int length = until - start;
+            String name = getTypeName(node);
+
+            // check node's generics types
+            if (node.isUsingGenerics() && generics != null && generics.length > 0) {
+                for (GenericsType gt : generics) {
+                    if (!gt.isPlaceholder() && !gt.isWildcard()) {
+                        handleType(gt.getType(), false);
                     }
-                    if (gen.getLowerBound() != null) {
-                        handleType(gen.getLowerBound(), false);
-                    } else if (gen.getUpperBounds() != null) {
-                        for (ClassNode upper : gen.getUpperBounds()) {
+                    if (gt.getLowerBound() != null) {
+                        handleType(gt.getLowerBound(), false);
+                    } else if (gt.getUpperBounds() != null) {
+                        for (ClassNode upper : gt.getUpperBounds()) {
                             // handle enums where the upper bound is the same as the type
                             if (!upper.getName().equals(node.getName())) {
                                 handleType(upper, false);
@@ -322,20 +355,12 @@ public class OrganizeGroovyImports {
                         }
                     }
                 }
-            } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
-                assert getBaseType(node).getEnd() < until;
-                until = getBaseType(node).getEnd();
             }
-
-            int length = until - start;
-            String name = getTypeName(node);
-
-//System.err.printf("Found referenced type '%s' at %s%n", name, new SourceRange(start, length));
 
             if (!node.isResolved() && node.redirect() != current) {
                 // aliases come through as unresolved types
                 if (ALIASED_IMPORT.matcher(name).find()) {
-                    importsSlatedForRemoval.remove(name);
+                    doNotRemoveImport(name);
                     return;
                 }
                 String[] parts = name.split("\\.");
@@ -343,7 +368,7 @@ public class OrganizeGroovyImports {
                     name = parts[0]; // Map.Entry -> Map
                 } else if (length < name.length()) {
                     // name range too small to include the full name
-                    importsSlatedForRemoval.remove(name); // keep import
+                    doNotRemoveImport(name); // keep import
                     name = ArrayUtils.lastElement(parts); // foo.Bar -> Bar
                 }
                 if (!missingTypes.containsKey(name)) {
@@ -365,6 +390,11 @@ public class OrganizeGroovyImports {
                     innerIndex = name.lastIndexOf('$', innerIndex - 1);
                 }
                 doNotRemoveImport(partialName);
+
+            } else if (length > name.length()) {
+                GroovyPlugin.getDefault().logException(String.format(
+                    "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
+                    name, start, until, node.getLineNumber(), length, name.length()), new Exception());
             }
         }
 
@@ -382,7 +412,7 @@ public class OrganizeGroovyImports {
         }
 
         private boolean checkRetainImport(String name) {
-            if (!importsSlatedForRemoval.isEmpty()) {
+            if (!importsSlatedForRemoval.isEmpty() && !"this".equals(name) && !"super".equals(name)) {
                 String suffix = '.' + name;
                 for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
                     if (entry.getValue().isStatic() && entry.getKey().endsWith(suffix)) {
@@ -425,14 +455,9 @@ public class OrganizeGroovyImports {
     }
 
     public TextEdit calculateMissingImports() {
-        ModuleNode node = unit.getModuleNode();
-        if (node == null || node.encounteredUnrecoverableError()) {
-            // no AST probably a syntax error...do nothing
+        ModuleNodeInfo info = unit.getModuleInfo(true);
+        if (isEmpty(info.module) || isUnclean(info, unit)) {
             return null;
-        }
-
-        if (isEmpty(node)) {
-            return new MultiTextEdit();
         }
 
         missingTypes = new HashMap<String, UnresolvedTypeData>();
@@ -442,7 +467,7 @@ public class OrganizeGroovyImports {
             // Configure the import rewriter to keep all existing imports. This is different from how
             // JDT does organize imports, but this prevents annotations on imports from being removed.
             // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
-            Iterable<ImportNode> allImports = new ImportNodeCompatibilityWrapper(node).getAllImportNodes();
+            Iterable<ImportNode> allImports = new ImportNodeCompatibilityWrapper(info.module).getAllImportNodes();
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
 
             for (ImportNode imp : allImports) {
@@ -477,7 +502,7 @@ public class OrganizeGroovyImports {
             }
 
             // scan for imports that are not referenced
-            for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
+            for (ClassNode clazz : (Iterable<ClassNode>) info.module.getClasses()) {
                 GroovyClassVisitor visitor = new FindUnresolvedReferencesVisitor();
                 visitor.visitClass(clazz); // modifies missingTypes and importsSlatedForRemoval
             }
@@ -520,10 +545,11 @@ public class OrganizeGroovyImports {
                 }
             }
 
-            return rewriter.rewriteImports(null);
+            TextEdit rewrite = rewriter.rewriteImports(null);
+            return rewrite;
 
         } catch (Exception e) {
-            GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
+            GroovyPlugin.getDefault().logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
         } finally {
             importsSlatedForRemoval = null;
             missingTypes = null;
@@ -712,12 +738,12 @@ public class OrganizeGroovyImports {
     }
 
     private static boolean isEmpty(ModuleNode node) {
-        if (node == null || node.getClasses() == null || (node.getClasses().size() == 0 && node.getImports().size() == 0)) {
+        if (node == null || node.getClasses() == null || (node.getClasses().isEmpty() && node.getImports().isEmpty())) {
             return true;
         }
-        if (node.getClasses().size() == 1 && node.getImports().size() == 0 && node.getClasses().get(0).isScript()) {
+        if (node.getClasses().size() == 1 && node.getImports().isEmpty() && node.getClasses().get(0).isScript()) {
             if ((node.getStatementBlock() == null || node.getStatementBlock().isEmpty() || isNullReturn(node.getStatementBlock())) &&
-                    (node.getMethods() == null || node.getMethods().size() == 0)) {
+                    (node.getMethods() == null || node.getMethods().isEmpty())) {
                 return true;
             }
         }
@@ -731,6 +757,29 @@ public class OrganizeGroovyImports {
             if (ret.getExpression() instanceof ConstantExpression) {
                 return ((ConstantExpression) ret.getExpression()).isNullExpression();
             }
+        }
+        return false;
+    }
+
+    /** Determines if organize imports is unsafe due to syntax errors or other conditions. */
+    private static boolean isUnclean(ModuleNodeInfo info, GroovyCompilationUnit unit) {
+        try {
+            if (info.module.encounteredUnrecoverableError() || !unit.isConsistent()) {
+                return true;
+            }
+            CategorizedProblem[] problems = info.result.getProblems();
+            if (problems != null && problems.length > 0) {
+                for (CategorizedProblem problem : problems) {
+                    if (problem.isError() && problem.getCategoryID() == CategorizedProblem.CAT_INTERNAL) {
+                        String message = problem.getMessage();
+                        if (message.contains("unexpected token")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return true;
         }
         return false;
     }
