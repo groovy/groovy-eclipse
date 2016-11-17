@@ -56,20 +56,21 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
-import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
 /**
@@ -391,7 +392,7 @@ public class OrganizeGroovyImports {
                 doNotRemoveImport(partialName);
 
             } else if (length > name.length()) {
-                GroovyCore.logException(String.format(
+                GroovyPlugin.getDefault().logException(String.format(
                     "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
                     name, start, until, node.getLineNumber(), length, name.length()), new Exception());
             }
@@ -454,14 +455,9 @@ public class OrganizeGroovyImports {
     }
 
     public TextEdit calculateMissingImports() {
-        ModuleNode node = unit.getModuleNode();
-        if (node == null || node.encounteredUnrecoverableError()) {
-            // no AST probably a syntax error...do nothing
+        ModuleNodeInfo info = unit.getModuleInfo(true);
+        if (isEmpty(info.module) || isUnclean(info, unit)) {
             return null;
-        }
-
-        if (isEmpty(node)) {
-            return new MultiTextEdit();
         }
 
         missingTypes = new HashMap<String, UnresolvedTypeData>();
@@ -471,7 +467,7 @@ public class OrganizeGroovyImports {
             // Configure the import rewriter to keep all existing imports. This is different from how
             // JDT does organize imports, but this prevents annotations on imports from being removed.
             // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
-            Iterable<ImportNode> allImports = new ImportNodeCompatibilityWrapper(node).getAllImportNodes();
+            Iterable<ImportNode> allImports = new ImportNodeCompatibilityWrapper(info.module).getAllImportNodes();
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
 
             for (ImportNode imp : allImports) {
@@ -506,7 +502,7 @@ public class OrganizeGroovyImports {
             }
 
             // scan for imports that are not referenced
-            for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
+            for (ClassNode clazz : (Iterable<ClassNode>) info.module.getClasses()) {
                 GroovyClassVisitor visitor = new FindUnresolvedReferencesVisitor();
                 visitor.visitClass(clazz); // modifies missingTypes and importsSlatedForRemoval
             }
@@ -549,10 +545,11 @@ public class OrganizeGroovyImports {
                 }
             }
 
-            return rewriter.rewriteImports(null);
+            TextEdit rewrite = rewriter.rewriteImports(null);
+            return rewrite;
 
         } catch (Exception e) {
-            GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
+            GroovyPlugin.getDefault().logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
         } finally {
             importsSlatedForRemoval = null;
             missingTypes = null;
@@ -741,12 +738,12 @@ public class OrganizeGroovyImports {
     }
 
     private static boolean isEmpty(ModuleNode node) {
-        if (node == null || node.getClasses() == null || (node.getClasses().size() == 0 && node.getImports().size() == 0)) {
+        if (node == null || node.getClasses() == null || (node.getClasses().isEmpty() && node.getImports().isEmpty())) {
             return true;
         }
-        if (node.getClasses().size() == 1 && node.getImports().size() == 0 && node.getClasses().get(0).isScript()) {
+        if (node.getClasses().size() == 1 && node.getImports().isEmpty() && node.getClasses().get(0).isScript()) {
             if ((node.getStatementBlock() == null || node.getStatementBlock().isEmpty() || isNullReturn(node.getStatementBlock())) &&
-                    (node.getMethods() == null || node.getMethods().size() == 0)) {
+                    (node.getMethods() == null || node.getMethods().isEmpty())) {
                 return true;
             }
         }
@@ -760,6 +757,29 @@ public class OrganizeGroovyImports {
             if (ret.getExpression() instanceof ConstantExpression) {
                 return ((ConstantExpression) ret.getExpression()).isNullExpression();
             }
+        }
+        return false;
+    }
+
+    /** Determines if organize imports is unsafe due to syntax errors or other conditions. */
+    private static boolean isUnclean(ModuleNodeInfo info, GroovyCompilationUnit unit) {
+        try {
+            if (info.module.encounteredUnrecoverableError() || !unit.isConsistent()) {
+                return true;
+            }
+            CategorizedProblem[] problems = info.result.getProblems();
+            if (problems != null && problems.length > 0) {
+                for (CategorizedProblem problem : problems) {
+                    if (problem.isError() && problem.getCategoryID() == CategorizedProblem.CAT_INTERNAL) {
+                        String message = problem.getMessage();
+                        if (message.contains("unexpected token")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return true;
         }
         return false;
     }

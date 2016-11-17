@@ -1051,5 +1051,22 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
+    void testOrganizeOnInvalidSource() {
+        String contents = '''\
+            import java.util.regex.Matcher
+            import java.util.regex.Pattern
+
+            class C {
+              Pattern pattern = ~/123/
+              Matcher matcher(String string) {
+                def x /*=*/ pattern.matcher(string)
+                return x
+              }
+            }
+            '''
+
+        doContentsCompareTest(contents, contents)
+    }
+
     // TODO: Ensure imports come below header comment for class in the default package.
 }

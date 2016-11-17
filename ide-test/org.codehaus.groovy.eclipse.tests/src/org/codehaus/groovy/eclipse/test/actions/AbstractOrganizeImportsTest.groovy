@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ISourceRange
@@ -74,9 +73,9 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
 
         def actualContents = unit.contents
-        def children = edit.children as List
+        def children = edit?.children as List
         def newChildren = []
-        children.each {
+        children?.each {
             if (it instanceof DeleteEdit) {
                 // check to see if the edit is whitespace only
                 def del = it as DeleteEdit
@@ -125,7 +124,7 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         String prefix = "package main;$LINE_SEPARATOR$LINE_SEPARATOR"
 
         Document doc = new Document(prefix + normalizeLineEndings(originalContents))
-        edit.apply(doc)
+        if (edit != null) edit.apply(doc)
 
         assertEquals(prefix + normalizeLineEndings(expectedContents), normalizeLineEndings(doc.get()))
     }
