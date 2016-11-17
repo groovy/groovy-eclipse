@@ -48,6 +48,7 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+<!--
 <plugin>
    <groupId>org.eclipse.tycho</groupId>
    <artifactId>target-platform-configuration</artifactId>
@@ -69,6 +70,7 @@
       </dependency-resolution>
    </configuration>
 </plugin>
+-->
 		</plugins>
 	</build>
 
