@@ -73,7 +73,15 @@
             <dependency>
               <type>eclipse-feature</type>
               <artifactId>org.eclipse.jdt</artifactId>
+<!--
               <version>3.12.1.v20160907-1200</version>
+gave:
+
+build	17-Nov-2016 16:18:37	[ERROR] Cannot resolve project dependencies:
+build	17-Nov-2016 16:18:37	[ERROR]   Software being installed: org.eclipse.jdt.feature.group 3.12.1.v20160907-1200
+build	17-Nov-2016 16:18:37	[ERROR]   Missing requirement: org.eclipse.jdt.feature.group 3.12.1.v20160907-1200 requires 'org.eclipse.jdt.core [3.12.1.v20160829-0950]' but it could not be found
+-->
+              <version>3.12.0.v20160606-1100</version>
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
