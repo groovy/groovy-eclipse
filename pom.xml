@@ -142,7 +142,10 @@
 	  	 <id>e46</id>
 		 <layout>p2</layout>
 		 <!-- TODO: after neon release change this: -->
+<!--
                  <url>http://download.eclipse.org/eclipse/updates/4.6</url> 
+-->
+                 <url>http://download.eclipse.org/releases/neon</url> 
 <!--
                  <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url> 
 -->
