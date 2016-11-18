@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
 import junit.framework.Test;
@@ -36,7 +41,6 @@ import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 
 public class RenameTypeTests extends RefactoringTest {
 
-    private static final Class<RenameTypeTests> clazz= RenameTypeTests.class;
     private static final String REFACTORING_PATH= "RenameType/";
 
     public RenameTypeTests(String name) {
@@ -44,7 +48,7 @@ public class RenameTypeTests extends RefactoringTest {
     }
 
     public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(clazz));
+        return new RefactoringTestSetup(new TestSuite(RenameTypeTests.class));
     }
 
     public static Test setUpTest(Test someTest) {
@@ -84,8 +88,8 @@ public class RenameTypeTests extends RefactoringTest {
         ICompilationUnit newcu= pack.getCompilationUnit(newCUName + ".groovy");
         assertTrue("cu " + newcu.getElementName()+ " does not exist", newcu.exists());
         assertEqualLines("invalid renaming", getFileContents(getOutputTestFileName(newCUName)), newcu.getSource());
-
-        INameUpdating nameUpdating= (refactoring.getAdapter(INameUpdating.class));
+        @SuppressWarnings("cast")
+        INameUpdating nameUpdating = (INameUpdating) refactoring.getAdapter(INameUpdating.class);
         IType newElement = (IType) nameUpdating.getNewElement();
         assertTrue("new element does not exist:\n" + newElement.toString(), newElement.exists());
 
@@ -283,6 +287,6 @@ public class RenameTypeTests extends RefactoringTest {
     }
 
     public void testJavadoc1() throws Exception {
-    	helperWithTextual("A", "A", "B", "B", true, true);
+        helperWithTextual("A", "A", "B", "B", true, true);
     }
 }

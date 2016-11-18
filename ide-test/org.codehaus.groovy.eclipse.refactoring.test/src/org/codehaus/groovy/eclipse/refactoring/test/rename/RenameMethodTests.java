@@ -40,7 +40,7 @@ public final class RenameMethodTests extends RefactoringTest {
     public static Test setUpTest(Test test) {
         return new RefactoringTestSetup(test);
     }
-    
+
     public RenameMethodTests(String name) {
         super(name);
     }

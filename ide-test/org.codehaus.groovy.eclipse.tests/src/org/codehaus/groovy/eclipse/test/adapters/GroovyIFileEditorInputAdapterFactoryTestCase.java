@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test.adapters;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
 
@@ -29,94 +28,61 @@ import org.eclipse.ui.part.FileEditorInput;
  */
 public class GroovyIFileEditorInputAdapterFactoryTestCase extends EclipseTestCase {
 
-    /**
-     * This is your happy path : )
-     *
-     * @throws Exception
-     */
     public void testIFileEditorInputAdapter() throws Exception {
-       testProject.createGroovyTypeAndPackage( "pack1",
-                "MainClass.groovy",
-                "class MainClass { static void main(String[] args");
+        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy",
+            "class MainClass { static void main(String[] args");
 
         fullProjectBuild();
 
-        final IFile script = (IFile) testProject.getProject().findMember( "src/pack1/MainClass.groovy" );
+        final IFile script = (IFile) testProject.getProject().findMember("src/pack1/MainClass.groovy");
 
         assertNotNull(script);
 
-        IFileEditorInput editor = new FileEditorInput( script );
+        IFileEditorInput editor = new FileEditorInput(script);
+        @SuppressWarnings("cast")
+        ClassNode node = (ClassNode) editor.getAdapter(ClassNode.class);
 
-        ClassNode node = editor.getAdapter(ClassNode.class);
-
-        assertEquals( "pack1.MainClass", node.getName() ) ;
-        assertFalse( node.isInterface() ) ;
-        assertNotNull( node.getMethods("main") ) ;
+        assertEquals("pack1.MainClass", node.getName());
+        assertFalse(node.isInterface());
+        assertNotNull(node.getMethods("main"));
     }
 
-    /**
-     * If there is a compile error we will still find it
-     *
-     * @throws Exception
-     */
     public void testIFileEditorInputAdapterCompileError() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            // compiler recovery not imoplemented on 1.7 and earlier
-            return;
-        }
-        testProject.createGroovyTypeAndPackage( "pack1",
-                "OtherClass.groovy",
-                "class OtherClass { static void main(String[] args");
+        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy",
+            "class OtherClass { static void main(String[] args");
 
-        fullProjectBuild() ;
+        fullProjectBuild();
 
-        final IFile script = (IFile) testProject.getProject().findMember( "src/pack1/OtherClass.groovy" );
+        final IFile script = (IFile) testProject.getProject().findMember("src/pack1/OtherClass.groovy");
         assertNotNull(script);
-        IFileEditorInput editor = new FileEditorInput( script );
-        ClassNode node = editor.getAdapter(ClassNode.class);
+        IFileEditorInput editor = new FileEditorInput(script);
+        @SuppressWarnings("cast")
+        ClassNode node = (ClassNode) editor.getAdapter(ClassNode.class);
 
-        assertEquals( "pack1.OtherClass", node.getName() ) ;
-        assertFalse( node.isInterface() ) ;
-        assertNotNull( node.getMethods("main") ) ;
+        assertEquals("pack1.OtherClass", node.getName());
+        assertFalse(node.isInterface());
+        assertNotNull(node.getMethods("main"));
     }
 
-    /**
-     * If it is not a groovy file you wont' find it.
-     *
-     * @throws Exception
-     */
     public void testIFileEditorInputAdapterHorendousCompileError() throws Exception {
-        /*this one is not a script file*/
-        testProject.createGroovyTypeAndPackage( "pack1",
-                "NotGroovy.file",
-                "class C {\n" +
-                "   abstract def foo() {}\n" +
-                "}");
+        testProject.createGroovyTypeAndPackage("pack1", "NotGroovy.file", "class C {\n abstract def foo() {}\n" + "}");
 
-        fullProjectBuild() ;
+        fullProjectBuild();
 
-        final IFile notScript = (IFile) testProject.getProject().findMember( "src/pack1/NotGroovy.file" );
+        final IFile notScript = (IFile) testProject.getProject().findMember("src/pack1/NotGroovy.file");
         assertNotNull(notScript);
-        IFileEditorInput editor = new FileEditorInput( notScript );
-        assertNull( editor.getAdapter(ClassNode.class) );
+        IFileEditorInput editor = new FileEditorInput(notScript);
+        assertNull(editor.getAdapter(ClassNode.class));
     }
 
-    /**
-     * If it is not a groovy file you wont' find it.
-     *
-     * @throws Exception
-     */
     public void testIFileEditorInputAdapterNotGroovyFile() throws Exception {
-        /*this one is not a script file*/
-        testProject.createGroovyTypeAndPackage( "pack1",
-                "NotGroovy.file",
-                "this is not a groovy file");
+        testProject.createGroovyTypeAndPackage("pack1", "NotGroovy.file", "this is not a groovy file");
 
-        fullProjectBuild() ;
+        fullProjectBuild();
 
-        final IFile notScript = (IFile) testProject.getProject().findMember( "src/pack1/NotGroovy.file" );
+        final IFile notScript = (IFile) testProject.getProject().findMember("src/pack1/NotGroovy.file");
         assertNotNull(notScript);
-        IFileEditorInput editor = new FileEditorInput( notScript );
-        assertNull( editor.getAdapter(ClassNode.class) );
+        IFileEditorInput editor = new FileEditorInput(notScript);
+        assertNull(editor.getAdapter(ClassNode.class));
     }
 }

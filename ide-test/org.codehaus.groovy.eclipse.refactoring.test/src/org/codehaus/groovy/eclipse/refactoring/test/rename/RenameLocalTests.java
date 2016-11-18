@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
 import junit.framework.Test;
@@ -15,7 +30,6 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 
 public class RenameLocalTests extends RefactoringTest {
-    private static final Class<RenameLocalTests> clazz = RenameLocalTests.class;
 
     private static final String REFACTORING_PATH = "RenameLocal/";
 
@@ -24,7 +38,7 @@ public class RenameLocalTests extends RefactoringTest {
     }
 
     public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(clazz));
+        return new RefactoringTestSetup(new TestSuite(RenameLocalTests.class));
     }
 
     public static Test setUpTest(Test test) {
@@ -48,12 +62,12 @@ public class RenameLocalTests extends RefactoringTest {
         RefactoringStatus result = helper("A", initial, expected, "NEW", initial.indexOf("XXX"), false);
         assertTrue("Result is not OK: " + result, result.isOK());
     }
-    
+
     private void helperExpectWarning(String initial, String expected) throws Exception {
         RefactoringStatus result = helper("A", initial, expected, "NEW", initial.indexOf("XXX"), true);
         assertTrue("Expected warning, but got " + result, result.hasWarning() && !result.hasError());
     }
-    
+
 
     private RefactoringStatus helper(String unitNameNoExtension, String initial,
             String expected, String newVariableName, int refactorLocation, boolean expectingWarning)
@@ -90,14 +104,14 @@ public class RenameLocalTests extends RefactoringTest {
                     new NullProgressMonitor());
             assertEqualLines("invalid redo",
                     expected, cu.getSource());
-            
+
             return result != null ? result : new RefactoringStatus();
         } finally {
             performDummySearch();
             cu.delete(true, null);
         }
     }
-    
+
     public void test0() throws Exception {
         helper("def XXX = 9", "def NEW = 9");
     }
@@ -134,7 +148,7 @@ public class RenameLocalTests extends RefactoringTest {
     public void test9() throws Exception {
         helper("class A { def x(XXX) { XXX\nthis.XXX } \nint XXX}", "class A { def x(NEW) { NEW\nthis.XXX } \nint XXX}");
     }
-    
+
     public void testWarning0() throws Exception {
         helperExpectWarning("def XXX\nwhile(XXX) { XXX\n def NEW \n NEW }", "def NEW\nwhile(NEW) { NEW\n def NEW \n NEW }");
     }
@@ -147,6 +161,4 @@ public class RenameLocalTests extends RefactoringTest {
     public void testWarning3() throws Exception {
         helperExpectWarning("def NEW\nwhile(NEW) { NEW\n def XXX \n XXX\nNEW }", "def NEW\nwhile(NEW) { NEW\n def NEW \n NEW\nNEW }");
     }
-    
-    
 }
