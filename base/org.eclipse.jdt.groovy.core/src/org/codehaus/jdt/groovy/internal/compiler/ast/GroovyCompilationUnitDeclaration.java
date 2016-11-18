@@ -1605,7 +1605,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (expr instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) expr;
                 assert prop.getProperty() instanceof ConstantExpression;
-                if (prop.getPropertyAsString().equals("class")) {
+                String name = prop.getPropertyAsString();
+                if (name.equals("class") || !NON_TYPE_NAME.matcher(name).matches()) {
                     return new ClassLiteralAccess(expr.getEnd(), createTypeReferenceForClassLiteral(prop));
                 }
                 char[][] tokens = CharOperation.splitOn('.',  prop.getText().toCharArray());
@@ -1622,8 +1623,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             } else if (expr instanceof VariableExpression) {
                 String name = ((VariableExpression) expr).getName();
-                // TODO: Look up name to determine if it is a class or a constant
-                if (name.matches("[a-z_]\\w*|[A-Z][A-Z_0-9]*")) {
+                if (NON_TYPE_NAME.matcher(name).matches()) {
                     // could be a class field or statically imported constant also...
                     return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
                 }
@@ -1641,6 +1641,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // must be non-null or there will be NPEs in MVP
             return new NullLiteral(expr.getStart(), expr.getEnd());
         }
+
+        // TODO: Look up name to determine if it is a class or a constant
+        private static final Pattern NON_TYPE_NAME = Pattern.compile("[a-z_]\\w*|[A-Z][A-Z_0-9]*");
 
         private org.eclipse.jdt.internal.compiler.ast.MemberValuePair[] createAnnotationMemberValuePairs(Map<String, Expression> memberValuePairs) {
             List<org.eclipse.jdt.internal.compiler.ast.MemberValuePair> mvps =
@@ -1804,9 +1807,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private TypeReference createTypeReferenceForClassLiteral(PropertyExpression expression) {
-            // should be a class literal node
-            assert expression.getPropertyAsString().equals("class");
-
             // FIXASC ignore type parameters for now
             Expression candidate = expression.getObjectExpression();
             List<char[]> nameParts = new LinkedList<char[]>();
@@ -1817,9 +1817,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (candidate instanceof VariableExpression) {
                 nameParts.add(0, ((VariableExpression) candidate).getName().toCharArray());
             }
-
             char[][] namePartsArr = nameParts.toArray(new char[nameParts.size()][]);
             long[] poss = positionsFor(namePartsArr, expression.getObjectExpression().getStart(), expression.getObjectExpression().getEnd());
+
             TypeReference ref;
             if (namePartsArr.length > 1) {
                 ref = new QualifiedTypeReference(namePartsArr, poss);
@@ -1829,7 +1829,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // should not happen
                 ref = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get("void"), 0);
             }
-
             return ref;
         }
 

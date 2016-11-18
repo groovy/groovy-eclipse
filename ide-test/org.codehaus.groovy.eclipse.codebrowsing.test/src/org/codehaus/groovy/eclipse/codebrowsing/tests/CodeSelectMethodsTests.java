@@ -280,8 +280,7 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
 
     private IMethod assertConstructor(String packName, String className, String toSearch, String contents) throws Exception {
         ICompilationUnit unit = addGroovySource(contents, className, packName);
-        waitUntilIndexesReady();
-        unit.becomeWorkingCopy(null);
+        prepareForCodeSelect(unit);
 
         IJavaElement[] elt = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length());
         assertEquals("Should have found a selection", 1, elt.length);

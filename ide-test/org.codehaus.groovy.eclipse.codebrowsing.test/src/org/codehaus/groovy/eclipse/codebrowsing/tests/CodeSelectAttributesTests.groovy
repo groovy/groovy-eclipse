@@ -38,17 +38,17 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeName2() {
-        // TypeChecked extensions was added in 2.1
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        BrowsingTestSetup.addJUnit4()
 
         String source = '''\
-            import groovy.transform.*
-            @TypeChecked(extensions=['something','whatever'])
             class C {
+              @org.junit.Test(timeout=1234L)
+              void testSomething() {
+              }
             }
             '''.stripIndent()
 
-        def elem = assertCodeSelect([source], 'extensions')
+        def elem = assertCodeSelect([source], 'timeout')
         assert elem.inferredElement instanceof MethodNode
     }
 

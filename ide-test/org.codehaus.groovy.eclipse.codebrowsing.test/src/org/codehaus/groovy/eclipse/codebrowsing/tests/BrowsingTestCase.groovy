@@ -21,6 +21,7 @@ import junit.framework.TestSuite
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.CoreException
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.SourceRange
 import org.eclipse.jdt.core.search.IJavaSearchConstants
@@ -67,9 +68,7 @@ abstract class BrowsingTestCase extends TestCase {
             unit = addGroovySource(it.toString(), nextFileName())
         }
         GroovyCompilationUnit gunit = unit as GroovyCompilationUnit
-
-        waitUntilIndexesReady()
-        gunit.becomeWorkingCopy(null)
+        prepareForCodeSelect(gunit)
 
         int offset = gunit.source.lastIndexOf(target), length = target.length()
         assert offset >= 0 && length > 0 && offset + length <= gunit.source.length()
@@ -78,8 +77,8 @@ abstract class BrowsingTestCase extends TestCase {
         if (!elementName) {
             assertEquals(0, elems.length)
         } else {
-            assertEquals("Should have found a selection", 1, elems.length)
-            assertEquals("Should have found reference to: " + elementName, elementName, elems[0].elementName)
+            assertEquals('Should have found a selection', 1, elems.length)
+            assertEquals('Should have found reference to: ' + elementName, elementName, elems[0].elementName)
             assertTrue(elems[0].exists())
             return elems[0]
         }
@@ -87,14 +86,14 @@ abstract class BrowsingTestCase extends TestCase {
 
     protected IJavaElement assertCodeSelect(CharSequence source, SourceRange targetRange, String elementName) {
         GroovyCompilationUnit gunit = addGroovySource(source, nextFileName())
-        gunit.becomeWorkingCopy(null)
+        prepareForCodeSelect(gunit)
 
         IJavaElement[] elems = gunit.codeSelect(targetRange.getOffset(), targetRange.getLength())
         if (!elementName) {
             assertEquals(0, elems.length)
         } else {
-            assertEquals("Should have found a selection", 1, elems.length)
-            assertEquals("Should have found reference to: " + elementName, elementName, elems[0].elementName)
+            assertEquals('Should have found a selection', 1, elems.length)
+            assertEquals('Should have found reference to: ' + elementName, elementName, elems[0].elementName)
             assertTrue(elems[0].exists())
             return elems[0]
         }
@@ -106,7 +105,7 @@ abstract class BrowsingTestCase extends TestCase {
         "Pogo${salt.nextInt(999999)}"
     }
 
-    protected static void waitUntilIndexesReady() {
+    protected static void prepareForCodeSelect(ICompilationUnit unit) {
         // dummy query for waiting until the indexes are ready
         SearchEngine engine = new SearchEngine();
         IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
@@ -131,5 +130,13 @@ abstract class BrowsingTestCase extends TestCase {
                 null);
         } catch (CoreException e) {
         }
+
+        if (unit instanceof GroovyCompilationUnit) {
+            def problems = unit.getModuleInfo(true).result.problems
+            problems?.findAll { it.error }?.each { println it }
+        }
+
+        unit.becomeWorkingCopy(null)
+        unit.makeConsistent(null)
     }
 }
