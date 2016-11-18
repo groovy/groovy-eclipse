@@ -319,7 +319,14 @@ public class CompilerUtils {
 		IProject iproject = baseProject.getWorkspace().getRoot().getProject(otherProject);
 		IJavaProject ijp = JavaCore.create(iproject);
 		accumulatedPathEntries.add(pathToString(ijp.getOutputLocation(),iproject));
-	        
+	    
+	    // add all output folders from dependent source projects, need to handle variables or such things?
+	    for (IClasspathEntry cpe : ijp.getRawClasspath()) {
+			if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE && cpe.getOutputLocation() != null) {
+				accumulatedPathEntries.add(pathToString(cpe.getOutputLocation(),iproject));
+			}
+		}
+		    
         // Look for exported entries from otherProject
         IClasspathEntry[] cpes = ijp.getResolvedClasspath(true);
         if (cpes!=null) {
