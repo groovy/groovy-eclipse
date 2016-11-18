@@ -1,10 +1,24 @@
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.eclipse.jdt.core.util;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
@@ -22,30 +36,29 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
- * Utility class, contains helpers for configuring the compiler options based on the project.  If the project is a groovy project it
- * will set the right options, and will also set the groovy classpath.
- * 
+ * Utility class, contains helpers for configuring the compiler options based on the project.
+ * If the project is a groovy project it will set the right options, and will also set the groovy classpath.
+ *
  * @author Andy Clement
  */
 public class CompilerUtils {
 
 	public static final int IsGrails = 0x0001;
 
-	
 	/**
 	 * Configure a real compiler options object based on the project.  If anything goes wrong it will configure the options to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(CompilerOptions compilerOptions, IJavaProject javaProject) {
-		if (javaProject==null) {
-			compilerOptions.buildGroovyFiles=1;
+		if (javaProject == null) {
+			compilerOptions.buildGroovyFiles = 1;
 			compilerOptions.groovyFlags = 0;
 			return;
 		}
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
-				compilerOptions.storeAnnotations=true;
-				compilerOptions.buildGroovyFiles=2;
+				compilerOptions.storeAnnotations = true;
+				compilerOptions.buildGroovyFiles = 2;
 				setGroovyClasspath(compilerOptions, javaProject);
 				if (isProbablyGrailsProject(project)) {
 					compilerOptions.groovyFlags = IsGrails;
@@ -53,20 +66,20 @@ public class CompilerUtils {
 					compilerOptions.groovyFlags = 0;
 				}
 			} else {
-				compilerOptions.buildGroovyFiles=1;
+				compilerOptions.buildGroovyFiles = 1;
 				compilerOptions.groovyFlags = 0;
 			}
 		} catch (CoreException e) {
-			compilerOptions.buildGroovyFiles=1;
+			compilerOptions.buildGroovyFiles = 1;
 			compilerOptions.groovyFlags = 0;
 		}
 	}
-	
+
 	/**
-	 * Configure an options map (usually retrieved from a CompilerOptions object) based on the project. 
+	 * Configure an options map (usually retrieved from a CompilerOptions object) based on the project.
 	 * If anything goes wrong it will configure the options to just build java.
 	 */
-	public static void configureOptionsBasedOnNature(Map optionMap, IJavaProject javaProject) {
+	public static void configureOptionsBasedOnNature(Map<String, String> optionMap, IJavaProject javaProject) {
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
@@ -76,27 +89,26 @@ public class CompilerUtils {
 					// will need bit manipulation here when another flag added
 					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(IsGrails));
 				} else {
-					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0"); //$NON-NLS-1$
+					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
 				}
 			} else {
 				optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
-				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0"); //$NON-NLS-1$
+				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
 			}
 		} catch (CoreException e) {
 			e.printStackTrace();
 			optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
-			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"0"); //$NON-NLS-1$
+			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
 		}
 	}
-	
-	
+
 	/**
 	 * Crude way to determine it... basically check for a folder called 'grails-app'.  The reason we need to know is because of the extra
 	 * transform that will run if it is a grails-app (tagging domain classes).
 	 */
 	private static boolean isProbablyGrailsProject(IProject project) {
-	    try {
-	    	IFolder folder = project.getFolder("grails-app"); //$NON-NLS-1$
+		try {
+			IFolder folder = project.getFolder("grails-app"); //$NON-NLS-1$
 			return folder.exists();
 		} catch (Exception e) {
 			return false;
@@ -106,35 +118,33 @@ public class CompilerUtils {
 	/**
 	 * There are currently two points of configuration here.  The first is the java project which will have its own classpath.
 	 * The second is the groovy.properties file.  Due to the 'power' of just going with the java project, because it will cause
-	 * us to pick up all sorts of stuff, I am going to make it necessary for groovy.properties to be set in a particular way 
+	 * us to pick up all sorts of stuff, I am going to make it necessary for groovy.properties to be set in a particular way
 	 * if the user wants that power.
-	 * 
+	 *
 	 * @param compilerOptions the compiler options on which to set groovy options
 	 * @param javaProject the project involved right now (may have the groovy nature)
 	 */
 	public static void setGroovyClasspath(CompilerOptions compilerOptions, IJavaProject javaProject) {
-		Map newOptions = new HashMap();
+		Map<String, String> newOptions = new HashMap<String, String>();
 		setGroovyClasspath(newOptions, javaProject);
 		compilerOptions.groovyProjectName = javaProject.getProject().getName();
 		if (!newOptions.isEmpty()) {
 			compilerOptions.set(newOptions);
 		}
 	}
-	
-	public static void setGroovyClasspath(Map optionMap, IJavaProject javaProject) {
+
+	public static void setGroovyClasspath(Map<String, String> optionMap, IJavaProject javaProject) {
 		IFile file = javaProject.getProject().getFile("groovy.properties"); //$NON-NLS-1$
 		if (file.exists()) {
 			try {
 				PropertyResourceBundle prb = new PropertyResourceBundle(file.getContents());
-				Enumeration e = prb.getKeys();
-				// System.err.println("Loading groovy settings for project '"+project.getName()+"'");
+				Enumeration<String> e = prb.getKeys();
 				while (e.hasMoreElements()) {
-					String k = (String)e.nextElement();
-					String v = (String)prb.getObject(k);
-					v = fixup(v,javaProject);
-					// System.out.println(k+"="+v);
+					String k = e.nextElement();
+					String v = (String) prb.getObject(k);
+					v = fixup(v, javaProject);
 					if (k.equals(CompilerOptions.OPTIONG_GroovyClassLoaderPath)) {
-						optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath,v);
+						optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, v);
 					}
 				}
 			} catch (IOException ioe) {
@@ -150,10 +160,10 @@ public class CompilerUtils {
 		} else {
 			try {
 				String classpath = calculateClasspath(javaProject);
-				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath,classpath);
+				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, classpath);
 			} catch (Throwable t) {
 				System.err.println("Problem configuring groovy classloader classpath (not using groovy.properties)"); //$NON-NLS-1$
-				t.printStackTrace();				
+				t.printStackTrace();
 			}
 		}
 		IProject project = javaProject.getProject();
@@ -163,12 +173,11 @@ public class CompilerUtils {
 			optionMap.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, defaultOutputLocation);
 		} catch (Throwable t) {
 			System.err.println("Problem configuring serviceScanExclude"); //$NON-NLS-1$
-			t.printStackTrace();				
+			t.printStackTrace();
 		}
 		optionMap.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getName());
 	}
 
-		
 	private static String fixup(String someString, IJavaProject javaProject) {
 		if (someString.startsWith("%projhome%")) { //$NON-NLS-1$
 			someString = javaProject.getProject().getLocation().toOSString()+File.separator+someString.substring("%projhome%".length()); //$NON-NLS-1$
@@ -185,24 +194,24 @@ public class CompilerUtils {
 	private static boolean isGroovyNaturedProject(IProject project) throws CoreException {
 		return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature"); //$NON-NLS-1$
 	}
-	
+
 	private static String pathToString(IPath path, IProject project) {
 		String realLocation = null;
-		if (path!=null) {
+		if (path != null) {
 			String prefix = path.segment(0);
 			if (prefix.equals(project.getName())) {
-				if (path.segmentCount()==1) {		
+				if (path.segmentCount() == 1) {
 					// the path is actually to the project root
 					IPath rawPath = project.getRawLocation();
-					if (rawPath==null) {
-						System.err.println("Failed on call to getRawLocation() against the project: "+project); //$NON-NLS-1$
+					if (rawPath == null) {
+						System.err.println("Failed on call to getRawLocation() against the project: " + project); //$NON-NLS-1$
 					} else {
-					realLocation =  project.getRawLocation().toOSString();
+						realLocation = project.getRawLocation().toOSString();
 					}
 				} else {
 					IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();
 					if (rawLocation != null) {
-						realLocation =  rawLocation.toOSString();
+						realLocation = rawLocation.toOSString();
 					}
 				}
 			} else {
@@ -211,20 +220,19 @@ public class CompilerUtils {
 		}
 		return realLocation;
 	}
-	
-	// public for testing
+
+	// visible for testing
 	public static String calculateClasspath(IJavaProject javaProject) {
 		try {
-			Set accumulatedPathEntries = new LinkedHashSet();
+			Set<String> accumulatedPathEntries = new LinkedHashSet<String>();
 			IProject project = javaProject.getProject();
 			String projectName = project.getName();
 			IPath defaultOutputPath = javaProject.getOutputLocation();
-			String defaultOutputLocation = pathToString(defaultOutputPath,project);
+			String defaultOutputLocation = pathToString(defaultOutputPath, project);
 
 			IClasspathEntry[] cpes = javaProject.getResolvedClasspath(true);
-			if (cpes!=null) {
-				for (int i=0,max=cpes.length;i<max;i++) {
-					IClasspathEntry cpe = cpes[i];
+			if (cpes != null) {
+				for (IClasspathEntry cpe : cpes) {
 					if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 						continue;
 					}
@@ -238,15 +246,14 @@ public class CompilerUtils {
 					if (segmentZero.equals(projectName)) {
 						pathElement = project.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
 					} else {
-						
-						// for GRECLIPSE-917.  Entry is something like /SomeOtherProject/foo/bar/doodah.jar
-						if (cpe.getEntryKind()==IClasspathEntry.CPE_LIBRARY) {
+						// GRECLIPSE-917: Entry is something like /SomeOtherProject/foo/bar/doodah.jar
+						if (cpe.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
 							try {
 								IProject iproject = project.getWorkspace().getRoot().getProject(segmentZero);
-								if (iproject!=null) {
+								if (iproject != null) {
 									IFile ifile = iproject.getFile(cpePath.removeFirstSegments(1));
-									IPath ipath = (ifile==null?null:ifile.getRawLocation());
-									pathElement = (ipath==null?null:ipath.toOSString());
+									IPath ipath = (ifile == null ? null : ifile.getRawLocation());
+									pathElement = (ipath == null ? null : ipath.toOSString());
 								}
 							} catch (Throwable t) {
 								t.printStackTrace();
@@ -254,85 +261,92 @@ public class CompilerUtils {
 						}
 						if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
 							// the classpath entry is a dependency on another project
-							computeDependenciesFromProject(project,segmentZero,accumulatedPathEntries);
-                            // FIXASC this ought to also allow for separate output folders in the project we depend upon *sigh*
+							computeDependenciesFromProject(project, segmentZero, accumulatedPathEntries);
 							// FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
-						} else {
-							if (pathElement==null) {
-								pathElement = cpe.getPath().toOSString();
-							}
+						} else if (pathElement == null) {
+							pathElement = cpe.getPath().toOSString();
 						}
 					}
-					if (pathElement!=null) {
+					if (pathElement != null) {
 						accumulatedPathEntries.add(pathElement);
 					}
 				}
 				accumulatedPathEntries.add(defaultOutputLocation);
-				StringBuilder sb = new StringBuilder();
-				Iterator iter = accumulatedPathEntries.iterator();
-				while (iter.hasNext()) {
-					sb.append((String)iter.next());
-					sb.append(File.pathSeparator);
+
+				// Add output locations which are not default
+				try {
+					if (isGroovyNaturedProject(project)) {
+						for (IClasspathEntry entry : javaProject.getRawClasspath()) {
+							if (entry.getOutputLocation() != null) {
+								String location = pathToString(entry.getOutputLocation(), project);
+								if (!defaultOutputLocation.equals(location)) {
+									accumulatedPathEntries.add(location);
+								}
+							}
+						}
+					}
+				} catch (CoreException e) {
+					System.err.println("Unexpected error on checking Groovy Nature"); //$NON-NLS-1$
 				}
-				String classpath = sb.toString();
-//				System.out.println("Project classpath for '"+projectName+"' is "+classpath);
-				return classpath;
+
+				StringBuilder sb = new StringBuilder();
+				for (String entry : accumulatedPathEntries) {
+					sb.append(entry).append(File.pathSeparator);
+				}
+				return sb.toString();
 			}
 		} catch (JavaModelException jme) {
-			System.err.println("Problem trying to determine classpath of project "+javaProject.getProject().getName()+":"); //$NON-NLS-1$ //$NON-NLS-2$
+			System.err.println("Problem trying to determine classpath of project " + javaProject.getProject().getName() + ':'); //$NON-NLS-1$
 			jme.printStackTrace();
 		}
 		return ""; //$NON-NLS-1$
 	}
 
 	/**
-	 * Determine the exposed (exported) dependencies from the project named 'otherProject' and add them to the accumulatedPathEntries String Set.
-	 * This will include the output location of the project plus other kinds of entry that are re-exported.  If dependent on another project
-	 * and that project is re-exported, the method will recurse.
-	 * 
+	 * Determine the exposed (exported) dependencies from the project named
+	 * 'otherProject' and add them to the accumulatedPathEntries String Set.
+	 * This will include the output location of the project plus other kinds
+	 * of entry that are re-exported.  If dependent on another project and
+	 * that project is re-exported, the method will recurse.
+	 *
 	 * @param baseProject the original project for which the classpath is being computed
 	 * @param otherProject a project something in the dependency chain for the original project
 	 * @param accumulatedPathEntries a String set of classpath entries, into which new entries should be added
 	 */
-	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set accumulatedPathEntries) throws JavaModelException {
-		 
-		// First the output location for the project:
-		IProject iproject = baseProject.getWorkspace().getRoot().getProject(otherProject);
-		IJavaProject ijp = JavaCore.create(iproject);
-		accumulatedPathEntries.add(pathToString(ijp.getOutputLocation(),iproject));
-	        
-        // Look for exported entries from otherProject
-        IClasspathEntry[] cpes = ijp.getResolvedClasspath(true);
-        if (cpes!=null) {
-        	for (int j=0;j<cpes.length;j++) {
-        		IClasspathEntry cpe = cpes[j];
-				if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-					continue;
-				}
-                if (cpe.isExported()) {
-                	// TODO should quickly dismiss source entries? others?
-                    IPath cpePath = cpes[j].getPath();
-                    String segmentZero = cpePath.segment(0);
-                    if (segmentZero!=null && segmentZero.equals(otherProject)) {
-						accumulatedPathEntries.add(iproject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString());
-					} else {
-	                    if (cpe.getEntryKind()==IClasspathEntry.CPE_PROJECT) {
-	                    	// segmentZero is a project name
-	    					computeDependenciesFromProject(baseProject, segmentZero, accumulatedPathEntries);
-	                    } else {
-	                        String otherPathElement = null;
-		                    if (segmentZero!=null && segmentZero.equals(iproject.getName())) {
-		                        otherPathElement = iproject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
-		                    } else {
-		                        otherPathElement = cpePath.toOSString();
-		                    }
-		                    accumulatedPathEntries.add(otherPathElement);
-	                    } 
-					}
-                }
-            }
-        }
-	}
-	
+	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set<String> accumulatedPathEntries)
+			throws JavaModelException {
 
+		IProject iproject = baseProject.getWorkspace().getRoot().getProject(otherProject);
+		IJavaProject iJavaProject = JavaCore.create(iproject);
+
+		// add the project's output location
+		accumulatedPathEntries.add(pathToString(iJavaProject.getOutputLocation(), iproject));
+
+		IClasspathEntry[] cpes = iJavaProject.getResolvedClasspath(true);
+		if (cpes != null) {
+			for (IClasspathEntry cpe : cpes) {
+				if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE && cpe.getOutputLocation() != null) {
+					// add the source folder's output location (if different from the project's)
+					accumulatedPathEntries.add(pathToString(cpe.getOutputLocation(), iproject));
+				} else if (cpe.isExported()) {
+					IPath cpePath = cpe.getPath();
+					String segmentZero = cpePath.segment(0);
+					if (segmentZero != null && segmentZero.equals(otherProject)) {
+						accumulatedPathEntries.add(iproject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString());
+					} else if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+						// segmentZero is a project name
+						computeDependenciesFromProject(baseProject, segmentZero, accumulatedPathEntries);
+					} else {
+						String otherPathElement = null;
+						if (segmentZero != null && segmentZero.equals(iproject.getName())) {
+							otherPathElement = iproject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
+						} else {
+							otherPathElement = cpePath.toOSString();
+						}
+						accumulatedPathEntries.add(otherPathElement);
+					}
+				}
+			}
+		}
+	}
 }
