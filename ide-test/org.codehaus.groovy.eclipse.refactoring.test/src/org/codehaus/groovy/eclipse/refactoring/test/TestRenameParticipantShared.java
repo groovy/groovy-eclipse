@@ -51,7 +51,7 @@ public class TestRenameParticipantShared extends RenameParticipant implements IS
 		else
 			fHandles.add(((IResource)element).getFullPath().toString());
 
-		IJavaElementMapper updating= getProcessor().getAdapter(IJavaElementMapper.class);
+		IJavaElementMapper updating= (IJavaElementMapper) getProcessor().getAdapter(IJavaElementMapper.class);
 		if ((updating != null) && getArguments() instanceof RenameTypeArguments) {
 			RenameTypeArguments arguments= (RenameTypeArguments)getArguments();
 			if (arguments.getUpdateSimilarDeclarations()) {
