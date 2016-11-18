@@ -35,7 +35,7 @@
 		<groovy-eclipse-compiler-version>2.9.2-01</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
-		<groovy-eclipse-batch-version>2.1.8-01</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.4.3-01</groovy-eclipse-batch-version>
 
 		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
 		<dist.bucket>dist.springsource.org</dist.bucket>
@@ -63,7 +63,7 @@
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
 
 		<module>ide-test</module><!-- parent for ide-test/* -->
-<!--
+
 		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
@@ -75,7 +75,6 @@
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
 		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
--->
 
 		<!-- 'Real' Bits -->
 
