@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
+   <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
       <proposalFilter
             name="Mock Filter 1"
             proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter1">
@@ -21,8 +20,7 @@
          </appliesTo>
       </proposalFilter>
    </extension>
-   <extension
-         point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
+   <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
       <proposalProvider
             proposalProvider="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1">
          <appliesTo
@@ -39,5 +37,4 @@
          </appliesTo>
       </proposalProvider>
    </extension>
-
 </plugin>

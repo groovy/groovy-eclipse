@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.eclipse.ant.core.antTasks">
+   <extension point="org.eclipse.ant.core.antTasks">
       <antTask
             class="org.codehaus.groovy.eclipse.ant.GroovyJDTCompileTask"
             eclipseRuntime="true"
@@ -11,12 +10,9 @@
             name="groovy.jdtcompile">
       </antTask>
    </extension>
-   
-	<extension 
-		point="org.eclipse.ant.core.extraClasspathEntries">
-		<extraClasspathEntry
-			library="groovyAntEclipse.jar">
-		</extraClasspathEntry>
-	</extension> 
-
+   <extension point="org.eclipse.ant.core.extraClasspathEntries">
+      <extraClasspathEntry
+            library="groovyAntEclipse.jar">
+      </extraClasspathEntry>
+   </extension>
 </plugin>

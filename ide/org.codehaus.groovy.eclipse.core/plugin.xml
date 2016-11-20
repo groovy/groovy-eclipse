@@ -1,24 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?><!--
-    Copyright 2003-2009 the original author or authors.
-   
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-   
-        http://www.apache.org/licenses/LICENSE-2.0
-   
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
- -->
-
+<?eclipse version="3.4"?>
 <plugin>
-   <extension
-         id="org.codehaus.groovy.eclipse.groovy.launcher"
-         point="org.eclipse.debug.core.launchConfigurationTypes">
+   <extension point="org.eclipse.debug.core.launchConfigurationTypes"
+         id="org.codehaus.groovy.eclipse.groovy.launcher">
       <launchConfigurationType
             delegate="org.codehaus.groovy.eclipse.core.launchers.GroovyShellLaunchDelegate"
             delegateDescription="Launches a Groovy shell using the current project as its classpath"
@@ -51,10 +35,10 @@
       </launchConfigurationType>
    </extension>
    <extension point="org.eclipse.core.runtime.adapters">
-	  <factory class= "org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory"
-			 adaptableType="org.eclipse.core.resources.IFile" >
-			<adapter type= "org.codehaus.groovy.ast.ClassNode" />
-			<adapter type="[Lorg.codehaus.groovy.ast.ClassNode;"/>
+      <factory class= "org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory"
+            adaptableType="org.eclipse.core.resources.IFile" >
+         <adapter type= "org.codehaus.groovy.ast.ClassNode" />
+         <adapter type="[Lorg.codehaus.groovy.ast.ClassNode;"/>
       </factory>
    </extension>
    <extension point="org.eclipse.jdt.core.classpathContainerInitializer">
@@ -62,18 +46,16 @@
           id="GROOVY_SUPPORT"
           class="org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer"/>
    </extension>
-   <extension
-         point="org.eclipse.jdt.core.compilationParticipant">
+   <extension point="org.eclipse.jdt.core.compilationParticipant">
       <compilationParticipant
             class="org.codehaus.groovy.eclipse.core.compiler.CompilerCheckerParticipant"
             createsProblems="true"
             id="org.codehaus.groovy.eclipse.core.compilerCheckerParticipant">
       </compilationParticipant>
    </extension>
-   <extension
+   <extension point="org.eclipse.core.resources.markers"
          id="compilerMismatch"
-         name="Groovy compiler mismatch problem"
-         point="org.eclipse.core.resources.markers">
+         name="Groovy compiler mismatch problem">
       <super
             type="org.eclipse.jdt.core.buildpath_problem">
       </super>
@@ -81,8 +63,7 @@
             value="true">
       </persistent>
    </extension>
-   <extension
-         point="org.eclipse.jdt.groovy.core.typeLookup">
+   <extension point="org.eclipse.jdt.groovy.core.typeLookup">
       <lookup
             lookup="org.codehaus.groovy.eclipse.core.inference.STCTypeLookup">
          <appliesTo

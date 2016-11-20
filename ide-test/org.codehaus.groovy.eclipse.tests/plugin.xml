@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.codehaus.groovy.eclipse.ui.syntaxHighlightingExtension">
+   <extension point="org.codehaus.groovy.eclipse.ui.syntaxHighlightingExtension">
       <highlightingExtender
             extender="org.codehaus.groovy.eclipse.test.ui.Extender1"
             natureID="org.codehaus.groovy.eclipse.tests.testNature1">
@@ -12,8 +11,7 @@
             natureID="org.codehaus.groovy.eclipse.tests.testNature2">
       </highlightingExtender>
    </extension>
-   <extension
-         point="org.codehaus.groovy.eclipse.ui.outlineExtension">
+   <extension point="org.codehaus.groovy.eclipse.ui.outlineExtension">
       <outlineExtender
             extender="org.codehaus.groovy.eclipse.test.ui.OutlineExtender1"
             natureID="org.codehaus.groovy.eclipse.tests.testNature1">
@@ -23,45 +21,37 @@
             natureID="org.codehaus.groovy.eclipse.tests.testNature2">
       </outlineExtender>
    </extension>
-   <extension
+   <extension point="org.eclipse.core.resources.natures"
          id="testNature1"
-         name="Test1"
-         point="org.eclipse.core.resources.natures">
+         name="Test1">
       <runtime>
-         <run
-               class="org.codehaus.groovy.eclipse.test.ui.Extender1">
-         </run>
+         <run class="org.codehaus.groovy.eclipse.test.ui.Extender1"/>
       </runtime>
    </extension>
-   <extension
-       id="testNature2"
-       name="Test2"
-       point="org.eclipse.core.resources.natures">
-    <runtime>
-       <run
-             class="org.codehaus.groovy.eclipse.test.ui.Extender2">
-       </run>
-    </runtime>
- </extension>
- <extension id="testLookup"
-       point="org.eclipse.jdt.groovy.core.typeLookup">
-    <lookup
-          lookup="org.codehaus.groovy.eclipse.tests.TestTypeLookup">
-       <appliesTo
-             projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
-       </appliesTo>
-       <appliesTo
-             projectNature="org.codehaus.groovy.eclipse.tests.testNature2">
-       </appliesTo>
-    </lookup>
- </extension>
-   <extension
-         point="org.eclipse.debug.ui.consoleLineTrackers">
+   <extension point="org.eclipse.core.resources.natures"
+         id="testNature2"
+         name="Test2">
+      <runtime>
+         <run class="org.codehaus.groovy.eclipse.test.ui.Extender2"/>
+      </runtime>
+   </extension>
+   <extension point="org.eclipse.jdt.groovy.core.typeLookup"
+         id="testLookup">
+      <lookup
+            lookup="org.codehaus.groovy.eclipse.tests.TestTypeLookup">
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
+         </appliesTo>
+         <appliesTo
+               projectNature="org.codehaus.groovy.eclipse.tests.testNature2">
+         </appliesTo>
+      </lookup>
+   </extension>
+   <extension point="org.eclipse.debug.ui.consoleLineTrackers">
       <consoleLineTracker
             class="org.codehaus.groovy.eclipse.test.debug.ConsoleLineTracker"
             processType="java"
             id="org.eclipse.jdt.debug.tests.ConsoleLineTracker">
       </consoleLineTracker>
    </extension>
-
 </plugin>

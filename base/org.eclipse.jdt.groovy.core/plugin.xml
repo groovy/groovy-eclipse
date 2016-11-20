@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension-point id="codeSelectHelper" name="Code Selection Helper (Internal)" schema="schema/codeSelectHelper.exsd"/>
-   <extension-point id="typeLookup" name="Type Lookup" schema="schema/typeLookup.exsd"/>
-	 <extension point="org.eclipse.core.contenttype.contentTypes">
-	    <content-type
+   <extension-point
+         id="codeSelectHelper"
+         name="Code Selection Helper (Internal)"
+         schema="schema/codeSelectHelper.exsd"
+   />
+   <extension-point
+         id="typeLookup"
+         name="Type Lookup"
+         schema="schema/typeLookup.exsd"
+   />
+   <extension point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
            base-type="org.eclipse.jdt.core.javaSource"
            file-extensions="groovy,gradle,gpp,grunit"
            id="org.eclipse.jdt.groovy.core.groovySource"
            name="Groovy Source File (for Groovy projects)"
            priority="high"/>
    </extension>
-   
    <extension
          id="groovyNature"
          name="Groovy Nature"
@@ -24,25 +31,22 @@
             id="org.eclipse.jdt.groovy.core.groovySource">
       </content-type>
    </extension>
-   <extension
-         point="org.eclipse.jdt.core.compilationParticipant">
+   <extension point="org.eclipse.jdt.core.compilationParticipant">
       <compilationParticipant
             class="org.codehaus.jdt.groovy.internal.compiler.ScriptFolderCompilationParticipant"
-            createsProblems="false"
             id="org.eclipse.jdt.groovy.core.compilationParticipant1"
+            createsProblems="false"
             modifiesEnvironment="false">
          <managedMarker
                markerType="org.eclipse.jdt.groovy.core.">
          </managedMarker>
       </compilationParticipant>
    </extension>
-   <extension
+   <extension point="org.eclipse.core.resources.markers"
          id="invalidBuilder"
-         name="Invalid Builder Marker"
-         point="org.eclipse.core.resources.markers">
+         name="Invalid Builder Marker">
       <super
             type="org.eclipse.jdt.core.buildpath_problem">
       </super>
    </extension>
-   
 </plugin>

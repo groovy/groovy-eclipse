@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-     <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
+   <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
       <renameParticipant
             class="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantShared"
             name="org.codehaus.groovy.eclipse.refactoring.test.TestRenameParticipantShared"
@@ -39,5 +39,4 @@
          </enablement>
       </renameParticipant>
    </extension>
-
 </plugin>

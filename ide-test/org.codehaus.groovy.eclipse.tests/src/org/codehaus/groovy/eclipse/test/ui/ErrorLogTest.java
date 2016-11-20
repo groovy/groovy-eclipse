@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
-
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.IViewPart;
@@ -52,7 +51,6 @@ public class ErrorLogTest extends TestCase {
         "org.eclipse.test.performance.win32.translated_host_properties",
         "Listener failed",
         "org.eclipse.mylyn.tasks.core",
-        "Duplicate template id:",
         "Unable to run embedded server",
         "Test.groovy"
     };

@@ -1,59 +1,195 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
-/*******************************************************************************
- * Copyright (c) 2013 VMware Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
+   Copyright 2009-2016 the original author or authors.
+   
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+   
+       http://www.apache.org/licenses/LICENSE-2.0
+   
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 -->
 
 <templates>
-<template name="closure" description="Surround with Closure" id="org.codehaus.groovy.eclipse.templates.closure" context="groovy" enabled="true" autoinsert="false">{ ${vars} ->
+
+<template name="ase"
+	description="assert equals"
+	id="org.codehaus.groovy.eclipse.templates.assert"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>assert ${actual:var(java.lang.Object)} == ${expect:var(java.lang.Object)}</template>
+
+<template name="asn"
+	description="assert non-null"
+	id="org.codehaus.groovy.eclipse.templates.asn"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>assert ${actual:var(java.lang.Object)} != null</template>
+
+<template name="closure"
+	description="Surround with Closure"
+	id="org.codehaus.groovy.eclipse.templates.closure"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>{ ${vars} ->
 	${line_selection}${cursor}
 }</template>
-<template name="while" description="While loop (Groovy)" id="org.codehaus.groovy.eclipse.templates.while_condition" context="groovy" enabled="true" autoinsert="false">while (${condition}) {
+
+<template name="for_in"
+	description="For..in loop (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.for_in"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>for (${var} in ${collection}) {
 	${line_selection}${cursor}
 }</template>
-<template name="for_in" description="For..in loop (Groovy)" id="org.codehaus.groovy.eclipse.templates.for_in" context="groovy" enabled="true" autoinsert="false">for (${var} in ${collection}) {
+
+<template name="if"
+	description="if statement (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.if"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>if (${condition}) {
 	${line_selection}${cursor}
 }</template>
-<template name="if" description="if statement (Groovy)" id="org.codehaus.groovy.eclipse.templates.if" context="groovy" enabled="true" autoinsert="false">if (${condition}) {
+
+<template name="println"
+	description="print to standard out (Groovy)"
+	id="org.eclipse.jdt.ui.templates.println"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>println ${word_selection}${}${cursor}</template>
+
+<template name="sysout"
+	description="print to standard out (Groovy)"
+	id="org.eclipse.jdt.ui.templates.sysout"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>println ${word_selection}${}${cursor}</template>
+
+<template name="synchronized"
+	description="synchronized block (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.synchronized"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>synchronized (${lock}) {
 	${line_selection}${cursor}
 }</template>
-<template name="synchronized" description="synchronized block (Groovy)" id="org.codehaus.groovy.eclipse.templates.synchronized" context="groovy" enabled="true" autoinsert="false">synchronized (${lock}) {
-	${line_selection}${cursor}
-}</template>
-<template name="use" description="use block" id="org.codehaus.groovy.eclipse.templates.synchronized" context="groovy" enabled="true" autoinsert="false">use (${category}) {
-	${line_selection}${cursor}
-}</template>
-<template autoinsert="false" context="groovy" deleted="false" description="try catch block (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.try" name="try">try {
+
+<template name="try"
+	description="try catch block (Groovy)"
+	id="org.eclipse.jdt.ui.templates.try"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>try {
 	${line_selection}${cursor}
 } catch (${Exception} ${e}) {
 	${e}.printStackTrace()
 }</template>
-<template autoinsert="false" context="groovy" deleted="false" description="test method (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.test" name="test">void test${name}() {
-	${cursor} 
+
+<template name="use"
+	description="use block"
+	id="org.codehaus.groovy.eclipse.templates.use"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>use (${category}) {
+	${line_selection}${cursor}
 }</template>
-<template autoinsert="false" context="groovy" deleted="false" description="test method (JUnit 4) (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.test_junit4" name="Test">@${testType:newType(org.junit.Test)}
+
+<template name="while"
+	description="While loop (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.while_condition"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>while (${condition}) {
+	${line_selection}${cursor}
+}</template>
+
+<!-- GContracts -->
+
+<template name="Ensures"
+	description="GContracts postcondition(s)"
+	id="org.eclipse.jdt.ui.templates.ensures"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${enclosing_type:newType(org.gcontracts.annotations.Ensures)}({ ${predicate} })</template>
+
+<template name="Invariant"
+	description="GContracts invariant(s)"
+	id="org.eclipse.jdt.ui.templates.invariant"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${enclosing_type:newType(org.gcontracts.annotations.Invariant)}({ ${predicate} })</template>
+
+<template name="Requires"
+	description="GContracts precondition(s)"
+	id="org.eclipse.jdt.ui.templates.requires"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${enclosing_type:newType(org.gcontracts.annotations.Requires)}({ ${predicate} })</template>
+
+<!-- JUnit -->
+
+<template name="test"
+	description="test method (Groovy)"
+	id="org.eclipse.jdt.ui.templates.test_junit3"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>void test${name}() {
+	${staticImport:importStatic('org.junit.Assert.*')}${cursor}
+}</template>
+
+<template name="Test"
+	description="test method (JUnit 4) (Groovy)"
+	id="org.eclipse.jdt.ui.templates.test_junit4"
+	autoinsert="false"
+	context="groovy"
+	enabled="true"
+>@${testType:newType(org.junit.Test)}
 void ${testName}() {
-	${staticImport:importStatic('org.junit.Assert.*')}${cursor} 
+	${cursor}
 }</template>
-<template autoinsert="true" context="groovy" deleted="false" description="before method (JUnit 4) (Groovy)" enabled="true" id="org.codehaus.groovy.eclipse.templates.before"  name="Before">@${testType:newType(org.junit.Before)}
+
+<template name="Before"
+	description="before method (JUnit 4) (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.before"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>@${testType:newType(org.junit.Before)}
 void before() {
 	${cursor}
 }</template>
-<template autoinsert="true" context="groovy" deleted="false" description="after method (JUnit 4) (Groovy)" enabled="true" id="org.codehaus.groovy.eclipse.templates.after" name="After">@${testType:newType(org.junit.After)}
+
+<template name="After"
+	description="after method (JUnit 4) (Groovy)"
+	id="org.codehaus.groovy.eclipse.templates.after"
+	autoinsert="true"
+	context="groovy"
+	enabled="true"
+>@${testType:newType(org.junit.After)}
 void after() {
 	${cursor}
 }</template>
-<template autoinsert="true" context="groovy" deleted="false" description="assert equals" enabled="true" id="org.codehaus.groovy.eclipse.templates.assert" name="ase">assert ${actual:var(java.lang.Object)} == ${expect:var(java.lang.Object)}</template>
-<template autoinsert="true" context="groovy" deleted="false" description="assert non null" enabled="true" id="org.codehaus.groovy.eclipse.templates.asn" name="asn">assert ${actual:var(java.lang.Object)} != null</template>
-<template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.sysout" name="sysout">println ${word_selection}${}${cursor}</template>
-<template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.println" name="println">println ${word_selection}${}${cursor}</template>
+
 </templates>

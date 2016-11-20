@@ -1,35 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.eclipse.jdt.ui.quickFixProcessors">
+   <extension point="org.eclipse.jdt.ui.quickFixProcessors">
       <quickFixProcessor
             name="Groovy Quick Fix Processor"
             class="org.codehaus.groovy.eclipse.quickfix.processors.GroovyQuickFixProcessor"
             id="org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor">
       </quickFixProcessor>
     </extension>
-   <extension
-         point="org.eclipse.jdt.ui.quickAssistProcessors">
+   <extension point="org.eclipse.jdt.ui.quickAssistProcessors">
       <quickAssistProcessor
             class="org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssist"
             id="org.codehaus.groovy.eclipse.quickassist.groovy"
             name="Groovy Quick Assist">
       </quickAssistProcessor>
    </extension>
-   
-   <!-- Templates -->
    <extension point="org.eclipse.ui.editors.templates">
-			<contextType
-				name="Groovy"
-				class="org.codehaus.groovy.eclipse.quickfix.templates.GroovyContextType"
-				id="groovy" />
-				
-			<include
-				file="templates/groovy-templates.xml" />
-		</extension>
-   <extension
-         point="org.eclipse.ui.preferencePages">
+      <contextType
+            name="Groovy"
+            class="org.codehaus.groovy.eclipse.quickfix.templates.GroovyContextType"
+            id="groovy" />
+      <include
+            file="templates/groovy-templates.xml" />
+   </extension>
+   <extension point="org.eclipse.ui.preferencePages">
       <page
             category="org.codehaus.groovy.eclipse.preferences.editor"
             class="org.codehaus.groovy.eclipse.quickfix.templates.GroovyTemplatesPreferencesPage"
@@ -40,8 +34,7 @@
          </keywordReference>
       </page>
    </extension>
-   <extension
-         point="org.eclipse.core.runtime.adapters">
+   <extension point="org.eclipse.core.runtime.adapters">
       <factory
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             class="org.codehaus.groovy.eclipse.quickfix.templates.SurroundWithAdapterFactory">
@@ -50,8 +43,7 @@
          </adapter>
       </factory>
    </extension>
-   <extension
-         point="org.eclipse.ui.actionSets">
+   <extension point="org.eclipse.ui.actionSets">
       <actionSet
             id="org.codehaus.groovy.eclipse.quickfix.actionSet"
             label="Groovy Surround with actions"
@@ -65,21 +57,19 @@
          </action>
       </actionSet>
    </extension>
-   <extension
-         point="org.eclipse.ui.commands">
+   <extension point="org.eclipse.ui.commands">
       <command
             categoryId="org.codehaus.groovy.eclipse.editor.category.source"
             id="org.codehaus.groovy.quickfix.surround.with.quickMenu"
             name="Groovy code templates">
       </command>
    </extension>
-   <extension
-         point="org.eclipse.ui.bindings">
+   <extension point="org.eclipse.ui.bindings">
        <key
             commandId="org.codehaus.groovy.quickfix.surround.with.quickMenu"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+Z"/>        
+            sequence="M2+M3+Z"/>
        <key
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             platform="carbon"
@@ -92,22 +82,20 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="COMMAND+ALT+Z"/>
    </extension>
-   <extension
-         id="templates"
-         point="org.eclipse.ui.keywords">
+   <extension point="org.eclipse.ui.keywords"
+         id="templates">
       <keyword
             id="org.codehaus.groovy.eclipse.quickfix.templates"
             label="templates editor content assist groovy">
       </keyword>
    </extension>
-   <extension
-   			 id="org.codehaus.groovy.eclipse.quickfix.templates.proposals"
-         point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+   <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
+         id="org.codehaus.groovy.eclipse.quickfix.templates.proposals">
       <javaCompletionProposalComputer
-            activate="true"
-            categoryId="org.eclipse.jdt.ui.defaultProposalCategory"
             class="org.codehaus.groovy.eclipse.quickfix.templates.TemplateProposalComputer"
-            needsSortingAfterFiltering="false">
+            categoryId="org.codehaus.groovy.eclipse.codeassist.templates.category"
+            needsSortingAfterFiltering="false"
+            activate="true">
       </javaCompletionProposalComputer>
    </extension>
 </plugin>
