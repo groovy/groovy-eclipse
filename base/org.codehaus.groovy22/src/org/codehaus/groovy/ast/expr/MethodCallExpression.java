@@ -207,4 +207,21 @@ public class MethodCallExpression extends Expression implements MethodCall {
     public MethodNode getMethodTarget() {
         return target;
     }
+
+    // GRECLIPSE add -- GROOVY-8002
+    public void setSourcePosition(ASTNode node) {
+        super.setSourcePosition(node);
+        if (node instanceof MethodCall) {
+            if (node instanceof MethodCallExpression) {
+                method.setSourcePosition(((MethodCallExpression) node).getMethod());
+            } else {
+                method.setSourcePosition(node);
+                method.setEnd(method.getStart() + getMethodAsString().length());
+            }
+            if (arguments != null) {
+                arguments.setSourcePosition(((MethodCall) node).getArguments());
+            }
+        }
+    }
+    // GRECLIPSE end
 }

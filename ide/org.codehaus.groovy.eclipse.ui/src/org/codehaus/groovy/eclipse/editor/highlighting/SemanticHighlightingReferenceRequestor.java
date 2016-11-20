@@ -211,6 +211,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         int offset = node.getNameStart(),
             length = node.getNameEnd() - node.getNameStart() + 1;
 
+        // special case: string literal method names
+        if (length > node.getName().length()) return null;
         return new HighlightedTypedPosition(offset, length, kind);
     }
 

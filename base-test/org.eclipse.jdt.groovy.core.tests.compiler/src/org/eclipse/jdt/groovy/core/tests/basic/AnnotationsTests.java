@@ -692,6 +692,8 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testAnnotationCollector() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+
         String[] sources = {
             "Type.groovy",
             "@Alias(includes='id')\n"+
@@ -716,6 +718,8 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testAnnotationCollector2() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+
         String[] sources = {
             "Type.groovy",
             "@Alias(includes='id')\n"+

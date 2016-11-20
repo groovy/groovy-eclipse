@@ -177,13 +177,15 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     }
 
     void testStaticMethods4() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
+
         String contents = '''\
             import static java.lang.Integer.valueOf
             @groovy.transform.CompileStatic
             class C {
               String number
               int getN() {
-                valueOf(number) // needs sloc; see StaticMethodCallExpressionTransformer
+                valueOf(number) // needs sloc; see MethodCallExpression.setSourcePosition
               }
             }
             '''.stripIndent()
@@ -353,6 +355,126 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     assertHighlighting(contents,
         new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
         new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE))
+    }
+
+    void testChainAssign() {
+        String contents = '''\
+            class C {
+              String fld
+              C() {
+                String var
+                fld = var = ''
+              }
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('fld'),     3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('var'),     3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('fld'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
+    }
+
+    void testChainAssign2() {
+        String contents = '''\
+            class C {
+              String one, two
+              C() {
+                one = two = ''
+              }
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('one'),     3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'),     3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD))
+    }
+
+    void testChainAssign3() {
+        String contents = '''\
+            class C {
+              String one, two
+            }
+            def c = new C()
+            c.one = c.two = ''
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('one'),     3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'),     3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('c ='),     1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('c.'),      1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('c.'),  1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD))
+    }
+
+    void testChainAssign4() {
+        // property notation that maps to setter; this kind of chain assignment does work
+        String contents = '''\
+            class B {
+              private String z
+              void setZero(String zero) { z = zero }
+            }
+
+            class C {
+              String x
+              B b
+              C() {
+                x = b.zero = 'X'
+              }
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('z'),        1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('setZero'),  7, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('zero'),     4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('z ='),      1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('zero }'),   4, PARAMETER),
+
+            new HighlightedTypedPosition(contents.indexOf('x'),        1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('b'),        1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'),    1, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'),    1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('b'),    1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('zero'), 4, METHOD_CALL))
+    }
+
+    void testChainAssign4a() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
+
+        // property notation that maps to setter; this kind of chain assignment does work
+        // static compilation produces list of expressions (temp,call) for "_ = b.zero ="
+        String contents = '''\
+            class B {
+              private String z
+              void setZero(String zero) { z = zero }
+            }
+
+            @groovy.transform.CompileStatic
+            class C {
+              String x
+              B b
+              C() {
+                x = b.zero = 'X'
+              }
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('z'),        1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('setZero'),  7, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('zero'),     4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('z ='),      1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('zero }'),   4, PARAMETER),
+
+            new HighlightedTypedPosition(contents.indexOf('x'),        1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('b'),        1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'),    1, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'),    1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('b'),    1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('zero'), 4, METHOD_CALL))
     }
 
     void testCatchParam() {
@@ -933,7 +1055,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
 
-    void _testTailCallMethods() {
+    void testTailCallMethods() {
         String contents = '''\
             import groovy.transform.*
             class X {
@@ -967,6 +1089,8 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     }
 
     void testTypeCheckedMethods() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
+
         String contents = '''\
             import groovy.transform.*
             class X {
@@ -991,6 +1115,8 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     }
 
     void testStaticCompiledMethods() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
+
         String contents = '''\
             import groovy.transform.*
             @CompileStatic
@@ -1011,6 +1137,39 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             new HighlightedTypedPosition(contents.indexOf('staticMethod'), 'staticMethod'.length(), STATIC_METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('param'), 'param'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE))
+    }
+
+    void testSpockStyleMethods() {
+        // make sure these retain string highlighting
+        assertHighlighting('class X { def "test case name"() {} }')
+        assertHighlighting('class X { def \'test case name\'() {} }')
+        assertHighlighting('class X { def """test case name"""() {} }')
+        assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }')
+        assertHighlighting('class X { def /test case name/() {} }')
+        assertHighlighting('class X { def $/test case name/$() {} }')
+    }
+
+    void testTraits() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) return
+
+        String contents = '''\
+            trait Whatever {
+              String property
+              private String field
+              def method() {
+                field + property + getProperty() + Math.PI
+              }
+            }
+            '''
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('getProperty'), 11, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
     }
 
     //

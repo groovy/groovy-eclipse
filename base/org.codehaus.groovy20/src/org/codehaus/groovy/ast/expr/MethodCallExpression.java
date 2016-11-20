@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.ast.expr;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
@@ -206,4 +207,22 @@ public class MethodCallExpression extends Expression {
     public MethodNode getMethodTarget() {
         return target;
     }
+
+    // GRECLIPSE add -- GROOVY-8002
+    public void setSourcePosition(ASTNode node) {
+        super.setSourcePosition(node);
+        if (node instanceof MethodCallExpression) {
+            method.setSourcePosition(((MethodCallExpression) node).getMethod());
+            if (arguments != null) {
+                arguments.setSourcePosition(((MethodCallExpression) node).getArguments());
+            }
+        } else if (node instanceof StaticMethodCallExpression) {
+            method.setSourcePosition(node);
+            method.setEnd(method.getStart() + getMethodAsString().length());
+            if (arguments != null) {
+                arguments.setSourcePosition(((StaticMethodCallExpression) node).getArguments());
+            }
+        }
+    }
+    // GRECLIPSE end
 }

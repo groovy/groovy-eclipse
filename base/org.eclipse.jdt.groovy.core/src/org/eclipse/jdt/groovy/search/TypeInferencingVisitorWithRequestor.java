@@ -67,6 +67,7 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
+import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
@@ -91,6 +92,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -1878,13 +1880,22 @@ assert primaryExprType != null && dependentExprType != null;
         handleCompleteExpression(node, exprType, null);
     }
 
-    // Do not treat tuple expressions like a list since
-    // they are only created as LHS of a multi assignment statement
+    /**
+     * <ul>
+     * <li> argument list (named or positional)
+     * <li> chained assignment, as in: {@code a = b = 1}
+     * <li> multi-assignment, as in: {@code def (a, b) = [1, 2]}
+     * </ul>
+     */
     @Override
     public void visitTupleExpression(TupleExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
-        if (shouldContinue) {
-            super.visitTupleExpression(node);
+        if (shouldContinue && isNotEmpty(node.getExpressions())) {
+            // prevent revisit of statically-compiled chained assignment nodes
+            if (node instanceof ArgumentListExpression ||
+                    node.getExpression(0) instanceof NamedArgumentListExpression) {
+                super.visitTupleExpression(node);
+            }
         }
     }
 
@@ -2387,54 +2398,71 @@ assert primaryExprType != null && dependentExprType != null;
         if (!completeExpressionStack.isEmpty()) {
             ASTNode complete = completeExpressionStack.peek();
             if (complete instanceof PropertyExpression) {
-                PropertyExpression prop = (PropertyExpression) complete;
-                return prop.getObjectExpression() == node;
+                return ((PropertyExpression) complete).getObjectExpression() == node;
+
             } else if (complete instanceof MethodCallExpression) {
-                MethodCallExpression prop = (MethodCallExpression) complete;
-                return prop.getObjectExpression() == node;
+                return ((MethodCallExpression) complete).getObjectExpression() == node;
+
             } else if (complete instanceof BinaryExpression) {
-                BinaryExpression prop = (BinaryExpression) complete;
+                BinaryExpression expr = (BinaryExpression) complete;
                 // both sides of the binary expression are primary since we need
                 // access to both of them when inferring binary expression types
-                return prop.getRightExpression() == node || prop.getLeftExpression() == node;
+                if (expr.getLeftExpression() == node || expr.getRightExpression() == node) {
+                    return true;
+                }
+                // statically-compiled assignment chains need a little help
+                if (!(node instanceof TupleExpression) &&
+                        expr.getRightExpression() instanceof ListOfExpressionsExpression) {
+                    @SuppressWarnings("unchecked")
+                    List<Expression> list = (List<Expression>) ReflectionUtils.getPrivateField(
+                        ListOfExpressionsExpression.class, "expressions", expr.getRightExpression());
+                    // list.get(0) should be TemporaryVariableExpression
+                    return (node != list.get(1) && list.get(1) instanceof MethodCallExpression);
+                }
+
             } else if (complete instanceof AttributeExpression) {
-                AttributeExpression prop = (AttributeExpression) complete;
-                return prop.getObjectExpression() == node;
+                return ((AttributeExpression) complete).getObjectExpression() == node;
+
             } else if (complete instanceof TernaryExpression) {
-                TernaryExpression prop = (TernaryExpression) complete;
-                return prop.getTrueExpression() == node;
+                return ((TernaryExpression) complete).getTrueExpression() == node;
+
             } else if (complete instanceof ForStatement) {
                 // this check is used to store the type of the collection expression
                 // so that it can be assigned to the for loop variable
-                ForStatement prop = (ForStatement) complete;
-                return prop.getCollectionExpression() == node;
+                return ((ForStatement) complete).getCollectionExpression() == node;
+
             } else if (complete instanceof ListExpression) {
-                return ((ListExpression) complete).getExpressions().size() > 0
-                        && ((ListExpression) complete).getExpression(0) == node;
+                return isNotEmpty(((ListExpression) complete).getExpressions()) &&
+                        ((ListExpression) complete).getExpression(0) == node;
+
             } else if (complete instanceof RangeExpression) {
                 return ((RangeExpression) complete).getFrom() == node;
+
             } else if (complete instanceof MapEntryExpression) {
-                return ((MapEntryExpression) complete).getKeyExpression() == node
-                        || ((MapEntryExpression) complete).getValueExpression() == node;
+                return ((MapEntryExpression) complete).getKeyExpression() == node ||
+                        ((MapEntryExpression) complete).getValueExpression() == node;
+
             } else if (complete instanceof MapExpression) {
-                return ((MapExpression) complete).getMapEntryExpressions().size() > 0
-                        && ((MapExpression) complete).getMapEntryExpressions().get(0) == node;
+                return isNotEmpty(((MapExpression) complete).getMapEntryExpressions()) &&
+                        ((MapExpression) complete).getMapEntryExpressions().get(0) == node;
+
             } else if (complete instanceof PrefixExpression) {
                 return ((PrefixExpression) complete).getExpression() == node;
+
             } else if (complete instanceof PostfixExpression) {
                 return ((PostfixExpression) complete).getExpression() == node;
+
             } else if (complete instanceof UnaryPlusExpression) {
                 return ((UnaryPlusExpression) complete).getExpression() == node;
+
             } else if (complete instanceof UnaryMinusExpression) {
                 return ((UnaryMinusExpression) complete).getExpression() == node;
+
             } else if (complete instanceof BitwiseNegationExpression) {
                 return ((BitwiseNegationExpression) complete).getExpression() == node;
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -2596,6 +2624,10 @@ assert primaryExprType != null && dependentExprType != null;
             }
         }
         return null;
+    }
+
+    private static boolean isNotEmpty(List<?> list) {
+        return list != null && !list.isEmpty();
     }
 
     /**
