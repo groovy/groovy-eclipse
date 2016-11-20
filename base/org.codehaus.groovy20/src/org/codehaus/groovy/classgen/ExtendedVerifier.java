@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
@@ -110,11 +111,14 @@ public class ExtendedVerifier implements GroovyClassVisitor {
             if (node.getExceptions().length > 0) {
                 addError("Annotation members may not have a throws clause.", node.getExceptions()[0]);
             }
-            ReturnStatement code = (ReturnStatement) node.getCode();
-            if (code != null) {
-                visitor.visitExpression(node.getName(), code.getExpression(), node.getReturnType());
-                visitor.checkCircularReference(currentClass, node.getReturnType(), code.getExpression());
+            // GRECLIPSE edit
+            //ReturnStatement code = (ReturnStatement) node.getCode();
+            Statement code = node.getCode();
+            if (code != null && code instanceof ReturnStatement) {
+                visitor.visitExpression(node.getName(), ((ReturnStatement) code).getExpression(), node.getReturnType());
+                visitor.checkCircularReference(currentClass, node.getReturnType(), ((ReturnStatement) code).getExpression());
             }
+            // GRECLIPSE end
             this.source.getErrorCollector().addCollectorContents(errorCollector);
         }
     }

@@ -692,7 +692,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testAnnotationCollector() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         String[] sources = {
             "Type.groovy",
@@ -718,7 +718,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testAnnotationCollector2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         String[] sources = {
             "Type.groovy",
