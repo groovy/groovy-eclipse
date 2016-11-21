@@ -409,7 +409,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     maybeRequested = type;
                 }
             }
-
         }
         return maybeRequested;
     }
@@ -607,27 +606,27 @@ public class CodeSelectRequestor implements ITypeRequestor {
             text = type.getElementName();
         }
 
-        // check for methods first, then fields, and then getter/setter variants of the name
-        // these values might be null
-        String setMethod = AccessorSupport.SETTER.createAccessorName(text);
-        String getMethod = AccessorSupport.GETTER.createAccessorName(text);
-        String isMethod = AccessorSupport.ISSER.createAccessorName(text);
+        // check for methods first, then fields, and finally accessor variants of the name
 
         IMethod closestMatch = null;
-        methodsIteration : for (IMethod method : type.getMethods()) {
+        methodsIteration: for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
-                // prefer methods with the same parameter types
                 closestMatch = method;
-                String[] maybeMethodParameters = method.getParameterTypes();
-                if (maybeMethodParameters.length == parameters.length) {
-                    for (int i = 0; i < maybeMethodParameters.length; i++) {
-                        String maybeMethodParameterSignature = removeGenerics(maybeMethodParameters[i]);
-                        String originalMethodSignature = Signature.createTypeSignature(parameters[i].getType().getNameWithoutPackage(), type.isBinary());
-                        if (!originalMethodSignature.equals(maybeMethodParameterSignature)) {
-                            continue methodsIteration;
+                if (parameters != null) {
+                    // prefer methods with the same parameter list
+                    String[] params = method.getParameterTypes();
+                    final int n = params.length;
+                    if (n == parameters.length) {
+                        for (int i = 0; i < n; i += 1) {
+                            String maybeMethodParameterSignature = removeGenerics(params[i]);
+                            String originalMethodSignature = Signature.createTypeSignature(
+                                parameters[i].getType().getNameWithoutPackage(), type.isBinary());
+                            if (!originalMethodSignature.equals(maybeMethodParameterSignature)) {
+                                continue methodsIteration;
+                            }
                         }
+                        return method;
                     }
-                    return method;
                 }
             }
         }
@@ -639,20 +638,24 @@ public class CodeSelectRequestor implements ITypeRequestor {
         String prefix;
         if (!field.exists() && (prefix = extractPrefix(text)) != null) {
             // this is a property
-            String newName = Character.toLowerCase(text.charAt(prefix.length())) + text.substring(prefix.length()+1);
+            String newName = Character.toLowerCase(text.charAt(prefix.length())) + text.substring(prefix.length() + 1);
             field = type.getField(newName);
         }
         if (field.exists()) {
             return field;
         }
 
+        String setMethod = AccessorSupport.SETTER.createAccessorName(text);
+        String getMethod = AccessorSupport.GETTER.createAccessorName(text);
+        String isMethod = AccessorSupport.ISSER.createAccessorName(text);
+
         for (IMethod method : type.getMethods()) {
-            if (method.getElementName().equals(setMethod) ||
-                    method.getElementName().equals(getMethod) ||
-                    method.getElementName().equals(isMethod)) {
+            String methodName = method.getElementName();
+            if (methodName.equals(setMethod) || methodName.equals(getMethod) || methodName.equals(isMethod)) {
                 return method;
             }
         }
+
         return null;
     }
 

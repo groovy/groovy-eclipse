@@ -128,10 +128,8 @@ public class VariableScope {
         }
     }
     // not available on all platforms
-    // public static final ClassNode PLUGIN5_GM_CLASS_NODE = ClassHelper
-    // .make(org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods.class);
-    // public static final ClassNode PLUGIN6_GM_CLASS_NODE = ClassHelper
-    // .make(org.codehaus.groovy.vmplugin.v6.PluginDefaultGroovyMethods.class);
+    // public static final ClassNode PLUGIN5_GM_CLASS_NODE = ClassHelper.make(org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods.class);
+    // public static final ClassNode PLUGIN6_GM_CLASS_NODE = ClassHelper.make(org.codehaus.groovy.vmplugin.v6.PluginDefaultGroovyMethods.class);
 
     // only exists on 2.1 and later
     public static ClassNode DELEGATES_TO;
@@ -184,6 +182,11 @@ public class VariableScope {
     public static final ClassNode BYTE_CLASS_NODE = ClassHelper.Byte_TYPE;
     public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.Boolean_TYPE;
     public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.Character_TYPE;
+
+    public static ClassNode NO_CATEGORY = null;
+    public static final GenericsType[] NO_GENERICS = new GenericsType[0];
+
+    //--------------------------------------------------------------------------
 
     public static class VariableInfo {
         public ASTNode scopeNode;
@@ -274,8 +277,6 @@ public class VariableScope {
          */
         boolean isRunMethod;
     }
-
-    public static ClassNode NO_CATEGORY = null;
 
     /**
      * Null for the top level scope
@@ -438,8 +439,8 @@ public class VariableScope {
     }
 
     /**
-     * @return the current delegate type if exists, or this type if exists, or Object. Returns null if in top level scope (ie- in
-     *         import statement)
+     * @return the current delegate type if exists, or this type if exists, or
+     * Object.  Returns null if in top level scope (i.e. in import statement).
      */
     public VariableInfo getDelegateOrThisInfo() {
         VariableInfo info = lookupName("delegate");
@@ -535,18 +536,14 @@ public class VariableScope {
     }
 
     public static boolean isVoidOrObject(ClassNode maybeVoid) {
-        return maybeVoid != null
-                && (maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
-                        || maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) || maybeVoid.getName().equals(
-                                OBJECT_CLASS_NODE.getName()));
+        return maybeVoid != null &&
+            (maybeVoid.getName().equals(VOID_CLASS_NODE.getName()) ||
+                maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) ||
+                maybeVoid.getName().equals(OBJECT_CLASS_NODE.getName()));
     }
 
     /**
      * Updates the type info of this variable if it already exists in scope, or just adds it if it doesn't
-     *
-     * @param name
-     * @param objectExpressionType
-     * @param declaringType
      */
     public void updateOrAddVariable(String name, ClassNode type, ClassNode declaringType) {
         if (!internalUpdateVariable(name, type, declaringType)) {
@@ -568,11 +565,6 @@ public class VariableScope {
 
     /**
      * Return true if the type has been udpated, false otherwise
-     *
-     * @param name
-     * @param objectExpressionType
-     * @param declaringType
-     * @return
      */
     private boolean internalUpdateVariable(String name, ClassNode type, ClassNode declaringType) {
         VariableInfo info = lookupNameInCurrentScope(name);
@@ -631,13 +623,6 @@ public class VariableScope {
         return typeToParameterize;
     }
 
-    static final public GenericsType[] NO_GENERICS = new GenericsType[0];
-
-    /**
-     * @param type
-     * @param toParameterizeName
-     * @return
-     */
     private static boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
         ClassNode redirect = type.redirect();
         GenericsType[] genericsTypes = redirect.getGenericsTypes();
@@ -678,9 +663,6 @@ public class VariableScope {
     }
 
     public static ClassNode clonedTuple() {
-        // ClassNode clone = clone(TUPLE_CLASS_NODE);
-        // cleanGenerics(clone.getGenericsTypes()[0]);
-        // return clone;
         // the typle class is not parameterized in Groovy 1.7, so just return list.
         return clonedList();
     }
@@ -700,7 +682,6 @@ public class VariableScope {
      *
      * @param type class to clone
      * @param depth prevent recursion
-     * @return
      */
     private static ClassNode cloneInternal(ClassNode type, int depth) {
         if (type == null) {
@@ -793,15 +774,14 @@ public class VariableScope {
     }
 
     /**
-     * @return the enclosing method call expression if one exists, or null otherwise. For example, when visiting the following
-     *         closure, the enclosing method call is 'run'
-     *
-     *         <pre>
-     * def runner = new Runner()
-     * runner.run {
-     *   print "hello!"
-     * }
-     * </pre>
+     * @return the enclosing method call expression if one exists, or null otherwise.
+     *     For example, when visiting the following closure, the enclosing method call is 'run'
+     *     <pre>
+     *     def runner = new Runner()
+     *     runner.run {
+     *       print "hello!"
+     *     }
+     *     </pre>
      */
     public List<CallAndType> getAllEnclosingMethodCallExpressions() {
         return shared.enclosingCallStack;
@@ -830,7 +810,6 @@ public class VariableScope {
     /**
      * Does the following name exist in this scope (does not recur up to parent scopes).
      *
-     * @param name
      * @return true iff in the {@link #nameVariableMap}
      */
     public boolean containsInThisScope(String name) {
@@ -838,17 +817,12 @@ public class VariableScope {
     }
 
     /**
-     * If visiting the identifier of a method call expression, this field will be equal to the number of arguments to the method
-     * call.
+     * If visiting the identifier of a method call expression, this field will
+     * be equal to the number of arguments to the method call.
      */
     int getMethodCallNumberOfArguments() {
         return methodCallArgumentTypes != null ? methodCallArgumentTypes.size() : 0;
     }
-
-    /*
-     * void setMethodCallNumberOfArguments(int methodCallNumberOfArguments) { this.methodCallNumberOfArguments =
-     * methodCallNumberOfArguments; }
-     */
 
     void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
         this.methodCallArgumentTypes = methodCallArgumentTypes;
@@ -926,13 +900,10 @@ public class VariableScope {
     }
 
     /**
-     * Creates a type hierarchy for the <code>clazz</code>>, including self. Classes come first and then interfaces. FIXADE The
-     * ordering of super interfaces will not be the same as in
-     * {@link VariableScope#findAllInterfaces(ClassNode, LinkedHashSet, boolean)}. Should we make it the same?
-     *
-     * @param type
-     * @param allClasses
-     * @param useResolved
+     * Creates a type hierarchy for the <code>clazz</code>>, including self.
+     * Classes come first and then interfaces.
+     * <p>
+     * FIXADE: The ordering of super interfaces will not be the same as in {@link VariableScope#findAllInterfaces(ClassNode, LinkedHashSet, boolean)}. Should we make it the same?
      */
     public static void createTypeHierarchy(ClassNode type, LinkedHashSet<ClassNode> allClasses, boolean useResolved) {
         if (!useResolved) {
@@ -966,10 +937,8 @@ public class VariableScope {
      * Extracts an element type from a collection
      *
      * @param collectionType a collection object, or an object that is iterable
-     * @return
      */
     public static ClassNode extractElementType(ClassNode collectionType) {
-
         // if array, then use the component type
         if (collectionType.isArray()) {
             return collectionType.getComponentType();

@@ -27,93 +27,106 @@ public final class CodeSelectFieldsTests extends BrowsingTestCase {
         return newTestSuite(CodeSelectFieldsTests.class);
     }
 
-    public void testCodeSelectFieldInClass() throws Exception {
+    public void testCodeSelectFieldInClass() {
         assertCodeSelect(asList("class Foo {\n def x = 9\ndef y() { x++ }\n }"), "x");
     }
 
-    public void testCodeSelectFieldInOtherClass() throws Exception {
+    public void testCodeSelectFieldInOtherClass() {
         assertCodeSelect(asList("class Foo { def x = 9\n }", "class Bar { def y() { new Foo().x++\n }\n }"), "x");
     }
 
-    public void testCodeSelectFieldInSuperClass() throws Exception {
+    public void testCodeSelectFieldInSuperClass() {
         assertCodeSelect(asList("class Foo { def x = 9\n }", "class Bar extends Foo { def y() { x++\n }\n }"), "x");
     }
 
-    public void testCodeSelectStaticFieldInClass() throws Exception {
+    public void testCodeSelectStaticFieldInClass() {
         assertCodeSelect(asList("class Foo {\n static def x = 9\ndef y() { Foo.x++ }\n }"), "x");
     }
 
-    public void testCodeSelectStaticFieldInOtherClass() throws Exception {
+    public void testCodeSelectStaticFieldInOtherClass() {
         assertCodeSelect(asList("class Foo { static def x = 9\n }", "class Bar { def y() { Foo.x++\n }\n }"), "x");
     }
 
-    public void testCodeSelectLazyFieldInClass() throws Exception {
+    public void testCodeSelectLazyFieldInClass() {
         assertCodeSelect(asList("class Foo {\n  @Lazy def x = 9\n}"), "x");
     }
 
-    public void testCodeSelectInClosure() throws Exception {
+    public void testCodeSelectLoggerFieldInClass() {
+        // field added by @Log transform is not fully selectable
+        assertCodeSelect(asList(
+            "@groovy.util.logging.Log\n" +
+            "class Foo {\n" +
+            "  String str\n" +
+            "  def meth() {\n" +
+            "    log.info \"$str msg\"\n" +
+            "  }\n" +
+            "}"
+        ), "log", "Foo"); // TODO: Want this to be "log", but field is not in Java model.
+    }
+
+    public void testCodeSelectInClosure() {
         assertCodeSelect(asList("def x = {\nt -> print t\n}\nx(\"hello\")"), "t");
     }
 
-    public void testCodeSelectInClosure2Params() throws Exception {
+    public void testCodeSelectInClosure2Params() {
         assertCodeSelect(asList("def x = {\ns, t -> print t\n}\nx(\"hello\")"), "t");
     }
 
-    public void testCodeSelectLocalVarInClosure() throws Exception {
+    public void testCodeSelectLocalVarInClosure() {
         assertCodeSelect(asList("def y = 9\ndef x = {\nt -> print y\n}"), "y");
     }
 
-    public void testCodeSelectFieldInClosure() throws Exception {
+    public void testCodeSelectFieldInClosure() {
         assertCodeSelect(asList("class X { \n def y=9\n } \ndef x = {\nt -> print new X().y\n}"), "y");
     }
 
-    public void testCodeSelectFieldFromSuperInClosure() throws Exception {
+    public void testCodeSelectFieldFromSuperInClosure() {
         assertCodeSelect(asList("class X { \n def y=9\n } \nclass Y extends X { }\ndef x = {\nt -> print new Y().y\n}"), "y");
     }
 
-    public void testCodeSelectStaticFieldInClosure() throws Exception {
+    public void testCodeSelectStaticFieldInClosure() {
         assertCodeSelect(asList("class X { \n static def y=9\n \ndef z() {\ndef x = {\nt -> print X.y\n}\n}\n}"), "y");
     }
 
-    public void testCodeSelectStaticFieldFromOtherInClosure() throws Exception {
+    public void testCodeSelectStaticFieldFromOtherInClosure() {
         assertCodeSelect(asList("class X { \n static def y=9\n } \ndef x = {\nt -> print X.y\n}"), "y");
     }
 
-    public void testCodeSelectInFieldInitializer() throws Exception {
+    public void testCodeSelectInFieldInitializer() {
         assertCodeSelect(asList("class X { \n def y= { z() }\ndef z() { } }"), "z");
     }
 
-    public void testCodeSelectInStaticFieldInitializer() throws Exception {
+    public void testCodeSelectInStaticFieldInitializer() {
         assertCodeSelect(asList("class X { \n static y= { z() }\nstatic z() { } }"), "z");
     }
 
     // GRECLIPSE-516
-    public void testCodeSelectOfGeneratedGetter() throws Exception {
+    public void testCodeSelectOfGeneratedGetter() {
         assertCodeSelect(asList("class C { \n int num\ndef foo() {\n getNum() } }"), "getNum", "num");
     }
 
     // GRECLIPSE-516
-    public void testCodeSelectOfGeneratedSetter() throws Exception {
+    public void testCodeSelectOfGeneratedSetter() {
         assertCodeSelect(asList("class C { \n int num\ndef foo() {\n setNum() } }"), "setNum", "num");
     }
 
-    public void testCodeSelectInsideGString1() throws Exception {
+    public void testCodeSelectInsideGString1() {
         assertCodeSelect(asList("def foo\n\"${foo}\""), "foo");
     }
 
-    public void testCodeSelectInsideGString2() throws Exception {
+    public void testCodeSelectInsideGString2() {
         assertCodeSelect(asList("def foo\n\"${foo.toString()}\""), "foo");
     }
 
-    public void testCodeSelectInsideGString3() throws Exception {
+    public void testCodeSelectInsideGString3() {
         assertCodeSelect(asList("def foo\n\"${foo.toString()}\""), "toString");
     }
 
-    public void testCodeSelectInsideGString4() throws Exception {
+    public void testCodeSelectInsideGString4() {
         assertCodeSelect(asList("def foo\n\"${foo}\""), "o", "foo");
     }
 
-    public void testCodeSelectInsideGString5() throws Exception {
+    public void testCodeSelectInsideGString5() {
         assertCodeSelect(asList("def foo\n\"${toString()}\""), "toString");
     }
 }

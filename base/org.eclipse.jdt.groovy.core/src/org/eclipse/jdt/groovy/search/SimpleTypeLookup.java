@@ -208,24 +208,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return VariableScope.OBJECT_CLASS_NODE;
     }
 
-    private TypeLookupResult findType(Expression node, ClassNode declaringType, VariableScope scope, TypeConfidence confidence,
-            boolean isStaticObjectExpression, boolean isPrimaryExpression) {
+    private TypeLookupResult findType(Expression node, ClassNode declaringType, VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 
         // check first to see if we have this type inferred
         if (node instanceof VariableExpression) {
             return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
         }
 
-        // if the object type is not null, then we base the
-        // type of this node on the object type
+        // if the object type is not null, then we base the type of this node on the object type
         ClassNode nodeType = node.getType();
         if (!isPrimaryExpression || scope.isMethodCall()) {
             // lookup the type based on the object's expression type
             // assume it is a method/property/field in the object expression type's hierarchy
 
             if (node instanceof ConstantExpression) {
-                return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
-                        isStaticObjectExpression, isPrimaryExpression);
+                return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence, isStaticObjectExpression, isPrimaryExpression);
             }
         }
 
@@ -413,51 +410,45 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
     }
 
-    private TypeLookupResult findTypeForVariable(VariableExpression var, VariableScope scope, TypeConfidence confidence,
-            ClassNode declaringType) {
-        ASTNode declaration = var;
+    private TypeLookupResult findTypeForVariable(VariableExpression var, VariableScope scope, TypeConfidence confidence, ClassNode declaringType) {
+        ASTNode decl = var;
+        ClassNode type = var.getType();
+        TypeConfidence newConfidence = confidence;
         Variable accessedVar = var.getAccessedVariable();
+        VariableInfo variableInfo = scope.lookupName(var.getName());
+
         if (accessedVar instanceof ASTNode) {
-            // not a DynamicVariable
-            declaration = (ASTNode) accessedVar;
-        }
-
-        VariableInfo info = scope.lookupName(var.getName());
-        TypeConfidence origConfidence = confidence;
-        if (accessedVar instanceof DynamicVariable) {
-            // this is likely a reference to a field or method in a type in the hierarchy
-            // find the declaration
-            ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, info),
-                    scope.getMethodCallArgumentTypes());
-            if (maybeDeclaration != null) {
-                declaration = maybeDeclaration;
-                // declaring type may have changed
-                declaringType = declaringTypeFromDeclaration(declaration, info != null ? info.declaringType
-                        : VariableScope.OBJECT_CLASS_NODE);
-            } else {
-                confidence = UNKNOWN;
+            decl = (ASTNode) accessedVar;
+            if (decl instanceof FieldNode ||
+                decl instanceof MethodNode ||
+                decl instanceof PropertyNode) {
+                // use field/method/property type info
+                variableInfo = null;
             }
-        }
-
-        ClassNode type;
-        if (info != null) {
-            confidence = TypeConfidence.findLessPrecise(origConfidence, INFERRED);
-            type = info.type;
-            declaringType = getMorePreciseType(declaringType, info);
-            if (scope.isThisOrSuper(var)) {
-                declaration = type;
+        } else if (accessedVar instanceof DynamicVariable) {
+            // this is likely a reference to a field or method in a type in the hierarchy find the declaration
+            ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo), scope.getMethodCallArgumentTypes());
+            if (maybeDeclaration != null) {
+                decl = maybeDeclaration;
+                // declaring type may have changed
+                declaringType = declaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
+            } else {
+                newConfidence = UNKNOWN;
             }
         } else {
-
-            // we have a variable expression, but it is not
-            // declared anywhere in the scope. It is probably a DynamicVariable
-            if (accessedVar instanceof DynamicVariable) {
-                type = typeFromDeclaration(declaration, declaringType);
-            } else {
-                type = var.getType();
-            }
+            assert accessedVar == null;
         }
-        return new TypeLookupResult(type, declaringType, declaration, confidence, scope);
+
+        if (variableInfo != null) {
+            type = variableInfo.type;
+            if (scope.isThisOrSuper(var)) decl = type;
+            declaringType = getMorePreciseType(declaringType, variableInfo);
+            newConfidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
+        } else if (accessedVar instanceof DynamicVariable) {
+            type = typeFromDeclaration(decl, declaringType);
+        }
+
+        return new TypeLookupResult(type, declaringType, decl, newConfidence, scope);
     }
 
     private ClassNode getMorePreciseType(ClassNode declaringType, VariableInfo info) {
