@@ -292,48 +292,36 @@ public class VariableScope {
      */
     private ASTNode scopeNode;
 
-    private Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
+    /**
+     * number of parameters of current method call or -1 if not a method call
+     */
+    private boolean isPrimaryNode;
 
-    private boolean isStaticScope;
-
-    private final ClosureExpression enclosingClosure;
+    private final boolean isStaticScope;
 
     /**
      * Category that will be declared in the next scope
      */
     private ClassNode categoryBeingDeclared;
 
-    /**
-     * number of parameters of current method call or -1 if not a method call
-     */
-    // private int methodCallNumberOfArguments = -1; // commented this out due to introducing methodCallArgumentTypes field
-    private boolean isPrimaryNode;
     private List<ClassNode> methodCallArgumentTypes;
+
+    private final Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
+
+    //--------------------------------------------------------------------------
 
     public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
         this.parent = parent;
         this.scopeNode = enclosingNode;
-        if (parent != null) {
-            this.shared = parent.shared;
-        } else {
-            this.shared = new SharedState();
-        }
+        this.shared = parent != null ? parent.shared : new SharedState();
+        this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope)) &&
+            (getEnclosingClosure() == null); // if in a closure, items may be found on delegate or owner
 
-        // keep track of whether or not in a script body
-        // also, try not to recalculate each time.
+        // keep track of whether or not in a script body; also, try not to recalculate each time
         if (enclosingNode instanceof MethodNode) {
             this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
         } else if (enclosingNode instanceof FieldNode || enclosingNode instanceof ClassNode) {
             this.shared.isRunMethod = false;
-        }
-
-        // this scope is considered static if in a static method, or
-        // its parent is static
-        this.isStaticScope = isStatic || (parent != null && parent.isStaticScope);
-        if (enclosingNode instanceof ClosureExpression) {
-            this.enclosingClosure = (ClosureExpression) enclosingNode;
-        } else {
-            this.enclosingClosure = null;
         }
     }
 
@@ -381,8 +369,6 @@ public class VariableScope {
 
     /**
      * The name of all categories in scope.
-     *
-     * @return
      */
     public Set<ClassNode> getCategoryNames() {
         if (parent != null) {
@@ -797,10 +783,13 @@ public class VariableScope {
     }
 
     public ClosureExpression getEnclosingClosure() {
-        if (enclosingClosure == null && parent != null) {
+        if (scopeNode instanceof ClosureExpression) {
+            return (ClosureExpression) scopeNode;
+        }
+        if (parent != null) {
             return parent.getEnclosingClosure();
         }
-        return enclosingClosure;
+        return null;
     }
 
     /**

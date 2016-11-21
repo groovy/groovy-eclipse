@@ -914,6 +914,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     // GRECLIPSE-878
     void testMapKey1() {
         String contents = 'def map = [key: "value"]'
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY))
@@ -923,12 +924,68 @@ final class SemanticHighlightingTests extends EclipseTestCase {
         String contents = '''\
             def key = "key1"
             def map = [(key): "1", key2: "2", \'key3\': "3", "key4": "4"]
-            '''
+            '''.stripIndent()
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('key)'), 'key'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('key2'), 'key2'.length(), MAP_KEY))
+    }
+
+    void testUseBlock() {
+        String contents = '''\
+            use (groovy.time.TimeCategory) {
+              new Date().getDaylightSavingsOffset()
+              1.minute.from.now
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('use'),                      3, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Date'),                     4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 24, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1'),                        1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('minute'),                   6, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('from'),                     4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('now'),                      3, METHOD_CALL))
+    }
+
+    void testWithBlock1() {
+        String contents = '''\
+            new Date().with {
+              setTime(1234L)
+              hours
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+    }
+
+    void testWithBlock2() {
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class X {
+              static {
+                new Date().with {
+                  setTime(1234L)
+                  hours
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 
     void testLazyInitExpr() {
@@ -1056,6 +1113,8 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     }
 
     void testTailCallMethods() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) return
+
         String contents = '''\
             import groovy.transform.*
             class X {

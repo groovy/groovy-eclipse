@@ -321,7 +321,7 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
     }
 
     public void testGRECLIPSE1777() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         ICompilationUnit unit = createGroovyTypeInTestPackage("D.groovy",
                 "import groovy.transform.CompileStatic\n" +

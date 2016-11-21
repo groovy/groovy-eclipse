@@ -2510,26 +2510,27 @@ assert primaryExprType != null && dependentExprType != null;
      * @return true iff the object expression associated with node is a static reference to a class declaration
      */
     private boolean hasStaticObjectExpression(Expression node) {
+        boolean staticObjectExpression = false;
         if (!completeExpressionStack.isEmpty()) {
             ASTNode maybeProperty = completeExpressionStack.peek();
+            // need to call getObjectExpression and isImplicitThis w/o common interface
             if (maybeProperty instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) maybeProperty;
-                return prop.getObjectExpression() instanceof ClassExpression ||
-                // check to see if in a static scope
-                        (prop.isImplicitThis() && scopes.peek().isStatic());
+                if (prop.getObjectExpression() instanceof ClassExpression) {
+                    staticObjectExpression = true;
+                } else if (prop.isImplicitThis()) {
+                    staticObjectExpression = scopes.peek().isStatic();
+                }
             } else if (maybeProperty instanceof MethodCallExpression) {
                 MethodCallExpression prop = (MethodCallExpression) maybeProperty;
-                return prop.getObjectExpression() instanceof ClassExpression ||
-                        // check to see if in a static scope
-                        (prop.isImplicitThis() && scopes.peek().isStatic());
-            } else if (maybeProperty instanceof AttributeExpression) {
-                AttributeExpression prop = (AttributeExpression) maybeProperty;
-                return prop.getObjectExpression() instanceof ClassExpression ||
-                        // check to see if in a static scope
-                        (prop.isImplicitThis() && scopes.peek().isStatic());
+                if (prop.getObjectExpression() instanceof ClassExpression) {
+                    staticObjectExpression = true;
+                } else if (prop.isImplicitThis()) {
+                    staticObjectExpression = scopes.peek().isStatic();
+                }
             }
         }
-        return false;
+        return staticObjectExpression;
     }
 
     /**
