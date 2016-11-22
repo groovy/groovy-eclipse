@@ -17,9 +17,11 @@ package org.eclipse.jdt.groovy.core.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
@@ -28,105 +30,90 @@ import org.eclipse.core.runtime.content.IContentTypeManager.ContentTypeChangeEve
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
+ * Utility methods for dealing with Groovy content types
+ *
  * @author Andrew Eisenberg
  * @created Jun 23, 2009
- *
- *          Utility methods for dealing with Groovy content types
  */
 public class ContentTypeUtils {
-
-    static class ChangeListener implements IContentTypeManager.IContentTypeChangeListener {
-        public void contentTypeChanged(ContentTypeChangeEvent event) {
-            // we can be more specific here, but content types change so rarely, that
-            // I am not concerned about being overly eager to invalidate the cache
-            GROOVY_LIKE_EXTENSIONS = null;
-            JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = null;
-        }
-    }
-
-    static {
-        IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
-        if (contentTypeManager != null) {
-            contentTypeManager.addContentTypeChangeListener(new ChangeListener());
-        }
-    }
 
     private ContentTypeUtils() {
         // uninstantiable
     }
 
-    private static char[][] GROOVY_LIKE_EXTENSIONS;
+    static {
+        IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
+        if (contentTypeManager != null) {
+            contentTypeManager.addContentTypeChangeListener(new IContentTypeManager.IContentTypeChangeListener() {
+                public void contentTypeChanged(ContentTypeChangeEvent event) {
+                    // we can be more specific here, but content types change so rarely, that
+                    // I am not concerned about being overly eager to invalidate the cache
+                    GROOVY_FILE_NAMES = null;
+                    GROOVY_LIKE_EXTENSIONS = null;
+                    JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = null;
+                }
+            });
+        }
+    }
 
+    private static Set<String> GROOVY_FILE_NAMES;
+    private static char[][] GROOVY_LIKE_EXTENSIONS;
     private static char[][] JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS;
 
-    public static String GROOVY_SOURCE_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.groovySource";
+    public static final String GROOVY_SOURCE_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.groovySource";
 
     private static boolean noGroovyContentTypesErrorLogged = false; // To avoid spamming error into the log repeatedly.
 
     /**
-     * Uses the Eclipse content type extension point to determine if a file is a groovy file. Taken from
-     * org.eclipse.jdt.internal.core.util.Util.isJavaLikeExtension
+     * Uses the Eclipse content type extension point to determine if a file is a groovy file.
      *
-     * @param file name (absolute path or simple name is fine)
-     * @return true iff the file name is Groovy-like.
+     * @param fileName (absolute path or simple name is fine)
+     * @return {@code true} iff the file name is Groovy-like
      */
-    public static boolean isGroovyLikeFileName(String name) {
-        if (name == null)
-            return false;
-        return indexOfGroovyLikeExtension(name) != -1;
-    }
-
-    /**
-     * Uses the Eclipse content type extension point to determine if a file is a groovy file. Taken from
-     * org.eclipse.jdt.internal.core.util.Util.isJavaLikeExtension
-     *
-     * @param file name (absolute path or simple name is fine)
-     * @return true iff the file name is Groovy-like.
-     */
-    public final static boolean isGroovyLikeFileName(char[] fileName) {
-        if (fileName == null)
-            return false;
-        int fileNameLength = fileName.length;
-        char[][] javaLikeExtensions = getGroovyLikeExtensions();
-        extensions: for (int i = 0, length = javaLikeExtensions.length; i < length; i++) {
-            char[] extension = javaLikeExtensions[i];
-            int extensionLength = extension.length;
-            int extensionStart = fileNameLength - extensionLength;
-            if (extensionStart - 1 < 0)
-                continue;
-            if (fileName[extensionStart - 1] != '.')
-                continue;
-            for (int j = 0; j < extensionLength; j++) {
-                if (fileName[extensionStart + j] != extension[j])
-                    continue extensions;
-            }
-            return true;
+    public static boolean isGroovyLikeFileName(char[] fileName) {
+        if (fileName != null && fileName.length > 0) {
+            return isGroovyLikeFileName(String.valueOf(fileName));
         }
         return false;
     }
 
-    /*
+    /**
+     * Uses the Eclipse content type extension point to determine if a file is a groovy file.
+     *
+     * @param fileName (absolute path or simple name is fine)
+     * @return {@code true} iff the file name is Groovy-like
+     */
+    public static boolean isGroovyLikeFileName(String fileName) {
+        if (fileName != null && fileName.length() > 0 && !fileName.endsWith(".java")) {
+            if (indexOfGroovyLikeExtension(fileName) != -1) {
+                return true;
+            }
+            if (GROOVY_FILE_NAMES == null) {
+                GROOVY_FILE_NAMES = loadGroovyFileNames();
+            }
+            fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
+            return GROOVY_FILE_NAMES.contains(fileName);
+        }
+        return false;
+    }
+
+    /**
      * Returns the index of the Groovy like extension of the given file name or -1 if it doesn't end with a known Java like
-     * extension. Note this is the index of the '.' even if it is not considered part of the extension. Taken from
-     * org.eclipse.jdt.internal.core.util.Util.indexOfJavaLikeExtension
+     * extension. Note this is the index of the '.' even if it is not considered part of the extension. Adapted from
+     * {@link org.eclipse.jdt.internal.core.util.Util#indexOfJavaLikeExtension}.
      */
     public static int indexOfGroovyLikeExtension(String fileName) {
-        int fileNameLength = fileName.length();
-        char[][] groovyLikeExtensions = getGroovyLikeExtensions();
-        extensions: for (int i = 0, length = groovyLikeExtensions.length; i < length; i++) {
-            char[] extension = groovyLikeExtensions[i];
-            int extensionLength = extension.length;
-            int extensionStart = fileNameLength - extensionLength;
-            int dotIndex = extensionStart - 1;
-            if (dotIndex < 0)
-                continue;
-            if (fileName.charAt(dotIndex) != '.')
-                continue;
-            for (int j = 0; j < extensionLength; j++) {
-                if (fileName.charAt(extensionStart + j) != extension[j])
-                    continue extensions;
+        if (fileName != null) {
+            int fileNameLength = fileName.length();
+            if (fileNameLength > 0) {
+                for (char[] extension : getGroovyLikeExtensions()) {
+                    int offset = (fileNameLength - extension.length);
+                    if (offset < 1 || fileName.charAt(offset - 1) != '.')
+                        continue;
+                    if (Arrays.equals(extension, fileName.substring(offset).toCharArray()))
+                        return (offset - 1);
+                }
             }
-            return dotIndex;
         }
         return -1;
     }
@@ -136,27 +123,8 @@ public class ContentTypeUtils {
      */
     public static char[][] getGroovyLikeExtensions() {
         if (GROOVY_LIKE_EXTENSIONS == null) {
-            IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
-            if (contentTypeManager == null) {
-                // batch
-                GROOVY_LIKE_EXTENSIONS = new char[][] { "groovy".toCharArray() };
-                return GROOVY_LIKE_EXTENSIONS;
-            }
-            IContentType groovyContentType = contentTypeManager.getContentType(GROOVY_SOURCE_CONTENT_TYPE);
-            HashSet<String> fileExtensions = new HashSet<String>();
-            // content types derived from groovy content type should be included
-            // (https://bugs.eclipse.org/bugs/show_bug.cgi?id=121715)
-            IContentType[] contentTypes = contentTypeManager.getAllContentTypes();
-            for (int i = 0, length = contentTypes.length; i < length; i++) {
-                if (contentTypes[i].isKindOf(groovyContentType)) { // note that javaContentType.isKindOf(javaContentType) == true
-                    String[] fileExtension = contentTypes[i].getFileSpecs(IContentType.FILE_EXTENSION_SPEC);
-                    for (int j = 0, length2 = fileExtension.length; j < length2; j++) {
-                        fileExtensions.add(fileExtension[j]);
-                    }
-                }
-            }
-            int length = fileExtensions.size();
-            if (length == 0) {
+            Set<String> fileExtensions = loadGroovyFileExtensions();
+            if (fileExtensions.isEmpty()) {
                 // Shouldn't happen, but it seems it does.
                 // See: STS-3936
                 // Probably means user's workspace is already severely broken...
@@ -169,12 +137,11 @@ public class ContentTypeUtils {
                 // Don't cache it. Maybe its only looking funky because we are looking 'too early'.
                 return new char[][] { "groovy".toCharArray() };
             } else {
+                int length = fileExtensions.size();
                 char[][] extensions = new char[length][];
                 extensions[0] = "groovy".toCharArray(); // ensure that "groovy" is first
                 int index = 1;
-                Iterator<String> iterator = fileExtensions.iterator();
-                while (iterator.hasNext()) {
-                    String fileExtension = iterator.next();
+                for (String fileExtension : fileExtensions) {
                     if ("groovy".equals(fileExtension))
                         continue;
                     extensions[index++] = fileExtension.toCharArray();
@@ -183,6 +150,43 @@ public class ContentTypeUtils {
             }
         }
         return GROOVY_LIKE_EXTENSIONS;
+    }
+
+    private static Set<String> loadGroovyFileExtensions() {
+        IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
+        if (contentTypeManager != null) {
+            IContentType groovyContentType = contentTypeManager.getContentType(GROOVY_SOURCE_CONTENT_TYPE);
+            Set<String> extensions = new HashSet<String>();
+            // https://bugs.eclipse.org/bugs/show_bug.cgi?id=121715
+            // content types derived from groovy content type should be included
+            for (IContentType contentType : contentTypeManager.getAllContentTypes()) {
+                if (contentType.isKindOf(groovyContentType)) { // note that contentType.isKindOf(javaContentType) == true
+                    for (String fileExtension : contentType.getFileSpecs(IContentType.FILE_EXTENSION_SPEC)) {
+                        extensions.add(fileExtension);
+                    }
+                }
+            }
+            return extensions;
+        }
+        return Collections.singleton("groovy");
+    }
+
+    private static Set<String> loadGroovyFileNames() {
+        IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
+        if (contentTypeManager != null) {
+            Set<String> names = null;
+            IContentType groovyContentType = contentTypeManager.getContentType(GROOVY_SOURCE_CONTENT_TYPE);
+            for (IContentType contentType : contentTypeManager.getAllContentTypes()) {
+                if (contentType.isKindOf(groovyContentType)) {
+                    for (String fileName : contentType.getFileSpecs(IContentType.FILE_NAME_SPEC)) {
+                        if (names == null) names = new TreeSet<String>();
+                        names.add(fileName);
+                    }
+                }
+            }
+            if (names != null) return names;
+        }
+        return Collections.emptySet();
     }
 
     public static boolean isJavaLikeButNotGroovyLikeExtension(String fileName) {
