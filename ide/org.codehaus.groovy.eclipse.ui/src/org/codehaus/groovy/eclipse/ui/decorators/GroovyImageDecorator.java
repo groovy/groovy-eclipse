@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.ui.decorators;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
@@ -30,14 +31,14 @@ import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
 import org.eclipse.jdt.ui.JavaElementImageDescriptor;
 import org.eclipse.jdt.ui.ProblemsLabelDecorator;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.ILabelDecorator;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.internal.WorkbenchPlugin;
 
-public class GroovyImageDecorator implements ILabelDecorator {
+public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDecorator {
 
     protected ILabelDecorator problemsDecorator = new ProblemsLabelDecorator();
     protected ScriptFolderSelector scriptFolderSelector = new ScriptFolderSelector(null);
@@ -60,22 +61,23 @@ public class GroovyImageDecorator implements ILabelDecorator {
             return null;
         }
 
-        if (element instanceof String) {
+        boolean isGroovyFile = false;
+        if (element instanceof String && (isGroovyFile = ContentTypeUtils.isGroovyLikeFileName((String) element))) {
             // a request where an IResource cannot be found (probably opening from source control)
-            image = getImageLabel(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, JavaElementImageProvider.SMALL_SIZE));
+            image = getImage(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, JavaElementImageProvider.SMALL_SIZE));
         } else {
             IResource resource = null;
-            if (element instanceof IResource) {
+            if (element instanceof IFile) {
                 resource = (IResource) element;
             } else if (element instanceof ICompilationUnit) {
                 resource = ((ICompilationUnit) element).getResource();
             }
-            if (resource != null && ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
+            if (resource != null && (isGroovyFile = ContentTypeUtils.isGroovyLikeFileName(resource.getName()))) {
                 image = getJavaElementImageDescriptor(image, resource);
             }
         }
 
-        if (image != null) {
+        if (image != null && isGroovyFile) {
             preventRecursion = true;
             try {
                 // the Java ProblemsDecorator is not registered in the official
@@ -123,16 +125,17 @@ public class GroovyImageDecorator implements ILabelDecorator {
         } catch (CoreException e) {
             desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
         }
-        return getImageLabel(new JavaElementImageDescriptor(desc, 0, size));
+        return getImage(new JavaElementImageDescriptor(desc, 0, size));
     }
 
     private static boolean useSmallSize(int flags) {
         return (flags & JavaElementImageProvider.SMALL_ICONS) != 0;
     }
 
-    private Image getImageLabel(ImageDescriptor descriptor) {
-        if (descriptor == null)
+    private Image getImage(ImageDescriptor descriptor) {
+        if (descriptor == null) {
             return null;
+        }
         if (registry == null) {
             registry = JavaPlugin.getImageDescriptorRegistry();
         }
@@ -140,17 +143,8 @@ public class GroovyImageDecorator implements ILabelDecorator {
     }
     private ImageDescriptorRegistry registry;
 
-    public void addListener(ILabelProviderListener listener) {
-    }
-
-    public void dispose() {
-    }
-
     public boolean isLabelProperty(Object element, String property) {
         return false;
-    }
-
-    public void removeListener(ILabelProviderListener listener) {
     }
 
     public String decorateText(String text, Object element) {
