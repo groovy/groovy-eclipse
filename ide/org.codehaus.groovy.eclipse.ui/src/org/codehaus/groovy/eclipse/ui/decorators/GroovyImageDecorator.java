@@ -27,8 +27,8 @@ import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
-import org.eclipse.jdt.internal.ui.viewsupport.TreeHierarchyLayoutProblemsDecorator;
 import org.eclipse.jdt.ui.JavaElementImageDescriptor;
+import org.eclipse.jdt.ui.ProblemsLabelDecorator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
@@ -36,41 +36,23 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.internal.WorkbenchPlugin;
-import org.eclipse.ui.internal.decorators.DecoratorManager;
 
 public class GroovyImageDecorator implements ILabelDecorator {
 
-    class PreferenceChangeListener implements IPreferenceChangeListener {
-
-        public void preferenceChange(PreferenceChangeEvent event) {
-            // preference has changed. Ensure that from now on, the new
-            // preferece is used
-            // we should automatically do a refresh of all places where this is
-            // used, but we are not doing that now.
-            scriptFolderSelector = new ScriptFolderSelector(null);
-        }
-    }
-
-    private ImageDescriptorRegistry fRegistry;
-    private TreeHierarchyLayoutProblemsDecorator problemsDecorator;
-    private DecoratorManager decman;
-    private boolean preventRecursion = false;
-
-    private PreferenceChangeListener listener;
-
-    // declare locally, so as not to accidentally load GroovyNature class
-    private static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature"; //$NON-NLS-1$
-    private ScriptFolderSelector scriptFolderSelector;
-
+    protected ILabelDecorator problemsDecorator = new ProblemsLabelDecorator();
+    protected ScriptFolderSelector scriptFolderSelector = new ScriptFolderSelector(null);
+    // declare locally to prevent accidentally loading the GroovyNature class or its bundle
+    protected static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature";
 
     public GroovyImageDecorator() {
-        problemsDecorator = new TreeHierarchyLayoutProblemsDecorator();
-        decman = WorkbenchPlugin.getDefault().getDecoratorManager();
-
         // receive notification when script folders change
-        listener = new PreferenceChangeListener();
-        new InstanceScope().getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(listener);
-        scriptFolderSelector = new ScriptFolderSelector(null);
+        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(new IPreferenceChangeListener() {
+            public void preferenceChange(PreferenceChangeEvent event) {
+                // preference has changed; ensure that the new preferece is used
+                scriptFolderSelector = new ScriptFolderSelector(null);
+                // TODO: we should automatically do a refresh of all places where this is used, but we are not doing that now
+            }
+        });
     }
 
     public Image decorateImage(Image image, Object element) {
@@ -79,7 +61,7 @@ public class GroovyImageDecorator implements ILabelDecorator {
         }
 
         if (element instanceof String) {
-            // a request where an IResource cannot be found (probably from opening an svn or cvs file)
+            // a request where an IResource cannot be found (probably opening from source control)
             image = getImageLabel(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, JavaElementImageProvider.SMALL_SIZE));
         } else {
             IResource resource = null;
@@ -101,8 +83,12 @@ public class GroovyImageDecorator implements ILabelDecorator {
                 // problem: if jdt includes more decorators, we won't know it.
                 image = problemsDecorator.decorateImage(image, element);
 
-                //apply standard decorators (eg cvs)
-                image = decman.decorateImage(image, element);
+                if (element instanceof ICompilationUnit) {
+                    if (defaultDecorator == null) {
+                        defaultDecorator = WorkbenchPlugin.getDefault().getDecoratorManager();
+                    }
+                    image = defaultDecorator.decorateImage(image, element);
+                }
             } finally {
                 preventRecursion = false;
             }
@@ -111,6 +97,8 @@ public class GroovyImageDecorator implements ILabelDecorator {
 
         return null;
     }
+    private boolean preventRecursion;
+    private ILabelDecorator defaultDecorator;
 
     private Image getJavaElementImageDescriptor(Image image, IResource resource) {
         int flags;
@@ -120,7 +108,7 @@ public class GroovyImageDecorator implements ILabelDecorator {
         } else {
             flags = JavaElementImageProvider.SMALL_ICONS;
         }
-        Point size= useSmallSize(flags) ? JavaElementImageProvider.SMALL_SIZE : JavaElementImageProvider.BIG_SIZE;
+        Point size = useSmallSize(flags) ? JavaElementImageProvider.SMALL_SIZE : JavaElementImageProvider.BIG_SIZE;
         ImageDescriptor desc;
         try {
             if (resource.getProject().hasNature(GROOVY_NATURE)) {
@@ -142,31 +130,27 @@ public class GroovyImageDecorator implements ILabelDecorator {
         return (flags & JavaElementImageProvider.SMALL_ICONS) != 0;
     }
 
-    private Image getImageLabel(ImageDescriptor descriptor){
+    private Image getImageLabel(ImageDescriptor descriptor) {
         if (descriptor == null)
             return null;
-        return getRegistry().get(descriptor);
-    }
-
-    private ImageDescriptorRegistry getRegistry() {
-        if (fRegistry == null) {
-            fRegistry= JavaPlugin.getImageDescriptorRegistry();
+        if (registry == null) {
+            registry = JavaPlugin.getImageDescriptorRegistry();
         }
-        return fRegistry;
+        return registry.get(descriptor);
     }
-
+    private ImageDescriptorRegistry registry;
 
     public void addListener(ILabelProviderListener listener) {
     }
 
-    public void dispose()  {
+    public void dispose() {
     }
 
-    public boolean isLabelProperty(Object element, String property)  {
+    public boolean isLabelProperty(Object element, String property) {
         return false;
     }
 
-    public void removeListener(ILabelProviderListener listener)  {
+    public void removeListener(ILabelProviderListener listener) {
     }
 
     public String decorateText(String text, Object element) {
