@@ -50,8 +50,10 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
@@ -115,58 +117,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         visitAnnotations(node);
         if (node.getNameEnd() > 0) {
             checkNameRange(node); // also checks generics
-
-            // supers can only appear after the name
-            if (sloc.getEnd() > node.getNameEnd()) {
-                // set offset beyond the class name and any generics
-                GenericsType type = ArrayUtils.lastElement(node.getGenericsTypes());
-                int offset = (type != null ? type.getEnd() : node.getNameEnd()) + 1;
-                String source = readClassDeclaration(node).substring(offset - node.getStart());
-
-                ClassNode superClass = node.getUnresolvedSuperClass();
-                if (superClass != null) {
-                    // only check types that appear in the source code
-                    String name = GroovyUtils.splitName(superClass)[1];
-                    if (source.indexOf(name) > 0) {
-                        int a = endIndexOf(source, EXTENDS_),
-                            b = indexOf(source, _IMPLEMENTS);
-                        if (b < 0) b = source.length();
-                        check(superClass, offset + a, offset + b);
-                    }
-                }
-
-                ClassNode[] superTypes = node.getUnresolvedInterfaces();
-                if (superTypes != null && superTypes.length > 0) {
-                    for (int i = 0, n = superTypes.length; i < n; i += 1) {
-                        // only check types that appear in the source code
-                        String name = GroovyUtils.splitName(superTypes[i])[1];
-                        if (source.indexOf(name) > 0) {
-                            int a = endIndexOf(source, IMPLEMENTS_),
-                                b = source.length(); // TODO: Set to source.indexOf(name) + name.length()?
-                            char c;
-                            // use prev and next to further constrain
-                            for (int j = i - 1; j >= 0; j -= 1) {
-                                if (superTypes[j].getEnd() > 0) {
-                                    a = (superTypes[j].getEnd()) - offset;
-                                    while ((c = source.charAt(a)) == ',' ||
-                                            Character.isWhitespace(c)) a += 1;
-                                    break;
-                                }
-                            }
-                            for (int j = i + 1; j < n; j += 1) {
-                                if (superTypes[j].getStart() > 0) {
-                                    b = (superTypes[j].getStart() - 1) - offset;
-                                    while ((c = source.charAt(b - 1)) == ',' ||
-                                            Character.isWhitespace(c)) b -= 1;
-                                    break;
-                                }
-                            }
-
-                            check(superTypes[i], offset + a, offset + b);
-                        }
-                    }
-                }
-            }
+            checkSupers(node); // extends and implements
         }
 
         if (node.getObjectInitializerStatements() != null) {
@@ -476,6 +427,72 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
         if (node instanceof ClassNode) {
             checkGenerics((ClassNode) node);
+        }
+    }
+
+    /**
+     * Checks if the extends or implements clause covers the selection.
+     */
+    private void checkSupers(ClassNode node) {
+        // supers can only appear after the name
+        if (!(sloc.getOffset() > node.getNameEnd())) {
+            return;
+        }
+        // set offset beyond the class name and any generics
+        GenericsType type = ArrayUtils.lastElement(node.getGenericsTypes());
+        int offset = (type != null ? type.getEnd() : node.getNameEnd()) + 1;
+        String source, src = null;
+        try {
+        source = (src = readClassDeclaration(node)).substring(offset - node.getStart());
+        } catch (Exception err) {
+            GroovyCore.logException(String.format(
+                "Error checking super-types at offset %d in file / index %d of:%n%s%n%s",
+                offset, offset - node.getStart(), src, DefaultGroovyMethods.dump(node)), err);
+            return;
+        }
+
+        ClassNode superClass = node.getUnresolvedSuperClass();
+        if (superClass != null) {
+            // only check types that appear in the source code
+            String name = GroovyUtils.splitName(superClass)[1];
+            if (source.indexOf(name) > 0) {
+                int a = endIndexOf(source, EXTENDS_),
+                    b = indexOf(source, _IMPLEMENTS);
+                if (b < 0) b = source.length();
+                check(superClass, offset + a, offset + b);
+            }
+        }
+
+        ClassNode[] superTypes = node.getUnresolvedInterfaces();
+        if (superTypes != null && superTypes.length > 0) {
+            for (int i = 0, n = superTypes.length; i < n; i += 1) {
+                // only check types that appear in the source code
+                String name = GroovyUtils.splitName(superTypes[i])[1];
+                if (source.indexOf(name) > 0) {
+                    int a = endIndexOf(source, IMPLEMENTS_),
+                        b = source.length(); // TODO: Set to source.indexOf(name) + name.length()?
+                    char c;
+                    // use prev and next to further constrain
+                    for (int j = i - 1; j >= 0; j -= 1) {
+                        if (superTypes[j].getEnd() > 0) {
+                            a = (superTypes[j].getEnd()) - offset;
+                            while ((c = source.charAt(a)) == ',' ||
+                                    Character.isWhitespace(c)) a += 1;
+                            break;
+                        }
+                    }
+                    for (int j = i + 1; j < n; j += 1) {
+                        if (superTypes[j].getStart() > 0) {
+                            b = (superTypes[j].getStart() - 1) - offset;
+                            while ((c = source.charAt(b - 1)) == ',' ||
+                                    Character.isWhitespace(c)) b -= 1;
+                            break;
+                        }
+                    }
+
+                    check(superTypes[i], offset + a, offset + b);
+                }
+            }
         }
     }
 
