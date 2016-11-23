@@ -18,18 +18,20 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import junit.extensions.TestSetup
 import junit.framework.Test
 
+import org.codehaus.groovy.eclipse.GroovyPlugin
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.groovy.eclipse.test.TestProject
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
-import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 
 class BrowsingTestSetup extends TestSetup {
 
@@ -41,21 +43,21 @@ class BrowsingTestSetup extends TestSetup {
     }
 
     protected void setUp() {
-        savedPreferences = JavaCore.getOptions()
+        savedPreferences = JavaCore.options
         testProject = new TestProject()
         testProject.autoBuilding = false
     }
 
     protected void tearDown() {
-        JavaCore.setOptions(savedPreferences)
+        JavaCore.options = savedPreferences
         testProject.dispose()
         testProject = null
     }
 
     static void setJavaPreference(String name, String value) {
-        def opts = JavaCore.getOptions()
+        def opts = JavaCore.options
         opts.put(name, value)
-        JavaCore.setOptions(opts)
+        JavaCore.options = opts
     }
 
     static void addJUnit4() {
@@ -65,34 +67,37 @@ class BrowsingTestSetup extends TestSetup {
 
     static CompilationUnit addJavaSource(CharSequence contents, String name = 'Pojo', String pack = '') {
         def type = testProject.createJavaTypeAndPackage(pack, name + '.java', contents.toString())
-        return type.compilationUnit as CompilationUnit
+        return type.compilationUnit
     }
 
     static GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Pogo', String pack = '') {
         def file = testProject.createGroovyTypeAndPackage(pack, name + '.groovy', contents.toString())
-        return JavaCore.createCompilationUnitFrom(file) as GroovyCompilationUnit
+        return JavaCore.createCompilationUnitFrom(file)
+    }
+
+    static void openInEditor(ICompilationUnit unit) {
+        unit.becomeWorkingCopy(null)
+        unit.makeConsistent(null)
+
+        EditorUtility.openInEditor(unit)
+        SynchronizationUtils.joinBackgroudActivities()
+    }
+
+    static void waitForIndex() {
+        testProject.waitForIndexer()
     }
 
     static void removeSources() {
+        GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
+
         testProject.deleteWorkingCopies()
         IResource sourceFolder = testProject.sourceFolder.resource
-        (sourceFolder as IContainer).members().each { IResource item -> Util.delete(item) }
+        sourceFolder.members().each { IResource item -> Util.delete(item) }
 
         SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean");
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
         spm.waitForCompletion()
 
-        // TODO: Something in the project is not reset in the case of code select on package fragment...
-
-        ((JavaProject) testProject.javaProject).resetCaches()
-
-        /*spm = new SimpleProgressMonitor("$testProject.project.name refresh");
-        testProject.javaProject.children.each {
-            if (it instanceof IOpenable && !it.isConsistent()) {
-                println "refreshing $it"
-                it.makeConsistent(spm)
-            }
-        }
-        spm.waitForCompletion()*/
+        testProject.javaProject.resetCaches()
     }
 }

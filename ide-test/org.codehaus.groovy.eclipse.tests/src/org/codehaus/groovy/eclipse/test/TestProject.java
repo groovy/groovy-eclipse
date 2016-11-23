@@ -16,11 +16,6 @@
 package org.codehaus.groovy.eclipse.test;
 
 import static org.codehaus.groovy.eclipse.core.model.GroovyRuntime.ensureGroovyClasspathContainer;
-import static org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS;
-import static org.eclipse.jdt.core.search.IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH;
-import static org.eclipse.jdt.core.search.SearchEngine.createJavaSearchScope;
-import static org.eclipse.jdt.core.search.SearchPattern.R_CASE_SENSITIVE;
-import static org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
@@ -52,7 +47,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -61,8 +55,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
@@ -384,13 +376,8 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
     }
 
-    @SuppressWarnings("deprecation")
     public void waitForIndexer() throws JavaModelException {
-        final TypeNameRequestor requestor = new TypeNameRequestor() {};
-        new SearchEngine().searchAllTypeNames(null, null, R_EXACT_MATCH
-                | R_CASE_SENSITIVE, CLASS,
-                createJavaSearchScope(new IJavaElement[0]), requestor,
-                WAIT_UNTIL_READY_TO_SEARCH, null);
+        SynchronizationUtils.waitForIndexingToComplete();
     }
 
     public void fullBuild() throws CoreException {

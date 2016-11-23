@@ -20,16 +20,9 @@ import junit.framework.TestCase
 import junit.framework.TestSuite
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.SourceRange
-import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.core.search.IJavaSearchScope
-import org.eclipse.jdt.core.search.SearchEngine
-import org.eclipse.jdt.core.search.SearchPattern
-import org.eclipse.jdt.core.search.TypeNameRequestor
-import org.eclipse.jdt.internal.core.CompilationUnit
 
 abstract class BrowsingTestCase extends TestCase {
 
@@ -50,15 +43,15 @@ abstract class BrowsingTestCase extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        println '------------------------------'
-        println "Starting: ${getName()}"
+        println '----------------------------------------'
+        println 'Starting: ' + getName()
     }
 
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = nextFileName(), String pack = '') {
         BrowsingTestSetup.addGroovySource(contents, name, pack)
     }
 
-    protected CompilationUnit addJavaSource(CharSequence contents, String name = nextFileName(), String pack = '') {
+    protected void addJavaSource(CharSequence contents, String name = nextFileName(), String pack = '') {
         BrowsingTestSetup.addJavaSource(contents, name, pack)
     }
 
@@ -67,19 +60,18 @@ abstract class BrowsingTestCase extends TestCase {
         sources.each {
             unit = addGroovySource(it.toString(), nextFileName())
         }
-        GroovyCompilationUnit gunit = unit as GroovyCompilationUnit
-        prepareForCodeSelect(gunit)
+        prepareForCodeSelect(unit)
 
-        int offset = gunit.source.lastIndexOf(target), length = target.length()
-        assert offset >= 0 && length > 0 && offset + length <= gunit.source.length()
+        int offset = unit.source.lastIndexOf(target), length = target.length()
+        assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
 
-        IJavaElement[] elems = gunit.codeSelect(offset, length)
+        IJavaElement[] elems = unit.codeSelect(offset, length)
         if (!elementName) {
             assertEquals(0, elems.length)
         } else {
             assertEquals('Should have found a selection', 1, elems.length)
             assertEquals('Should have found reference to: ' + elementName, elementName, elems[0].elementName)
-            assertTrue(elems[0].exists())
+            assertTrue('Element should have existed in the model', elems[0].exists())
             return elems[0]
         }
     }
@@ -102,41 +94,16 @@ abstract class BrowsingTestCase extends TestCase {
     private static Random salt = new Random(System.currentTimeMillis())
 
     protected static String nextFileName() {
-        "Pogo${salt.nextInt(999999)}"
+        "File${salt.nextInt(999999)}"
     }
 
     protected static void prepareForCodeSelect(ICompilationUnit unit) {
-        // dummy query for waiting until the indexes are ready
-        SearchEngine engine = new SearchEngine();
-        IJavaSearchScope scope = SearchEngine.createWorkspaceScope();
-        try {
-            engine.searchAllTypeNames(
-                null,
-                SearchPattern.R_EXACT_MATCH,
-                '!@$#!@'.toCharArray(),
-                SearchPattern.R_PATTERN_MATCH | SearchPattern.R_CASE_SENSITIVE,
-                IJavaSearchConstants.CLASS,
-                scope,
-                new TypeNameRequestor() {
-                    @Override
-                    public void acceptType(
-                        int modifiers,
-                        char[] packageName,
-                        char[] simpleTypeName,
-                        char[][] enclosingTypeNames,
-                        String path) {}
-                },
-                IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-                null);
-        } catch (CoreException e) {
-        }
-
         if (unit instanceof GroovyCompilationUnit) {
             def problems = unit.getModuleInfo(true).result.problems
             problems?.findAll { it.error }?.each { println it }
         }
 
-        unit.becomeWorkingCopy(null)
-        unit.makeConsistent(null)
+        BrowsingTestSetup.waitForIndex()
+        BrowsingTestSetup.openInEditor(unit)
     }
 }

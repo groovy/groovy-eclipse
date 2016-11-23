@@ -116,7 +116,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         return ResourcesPlugin.getWorkspace().getRoot().getFile(projectPath.append(fileName));
     }
 
-    protected IFolder getolder(IPath projectPath, String folderName) {
+    protected IFolder getFolder(IPath projectPath, String folderName) {
         return ResourcesPlugin.getWorkspace().getRoot().getFolder(projectPath.append(folderName));
     }
 
