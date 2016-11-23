@@ -711,7 +711,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
         Image image = decorator.decorateImage(null, element);
         // cannot return null GRECLIPSE-257
-        return image != null? image : super.getTitleImage();
+        return image != null ? image : super.getTitleImage();
     }
 
     @Override

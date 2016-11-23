@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.ui.decorators;
 
+import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isGroovyLikeFileName;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -23,7 +25,6 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChange
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.Activator;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
@@ -61,9 +62,9 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
             return null;
         }
 
-        boolean isGroovyFile = false;
-        if (element instanceof String && (isGroovyFile = ContentTypeUtils.isGroovyLikeFileName((String) element))) {
-            // a request where an IResource cannot be found (probably opening from source control)
+        boolean isGroovyFile = false, noBaseImage = (image == null);
+        if (element instanceof String && (isGroovyFile = isGroovyLikeFileName((String) element))) {
+            // a request where an IResource cannot be located (probably opening from source control)
             image = getImage(new JavaElementImageDescriptor(GroovyPluginImages.DESC_GROOVY_FILE, 0, JavaElementImageProvider.SMALL_SIZE));
         } else {
             IResource resource = null;
@@ -72,7 +73,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
             } else if (element instanceof ICompilationUnit) {
                 resource = ((ICompilationUnit) element).getResource();
             }
-            if (resource != null && (isGroovyFile = ContentTypeUtils.isGroovyLikeFileName(resource.getName()))) {
+            if (resource != null && (isGroovyFile = isGroovyLikeFileName(resource.getName()))) {
                 image = getJavaElementImageDescriptor(image, resource);
             }
         }
@@ -85,7 +86,8 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
                 // problem: if jdt includes more decorators, we won't know it.
                 image = problemsDecorator.decorateImage(image, element);
 
-                if (element instanceof ICompilationUnit) {
+                // add non-problem decor, like type indicator and version control status, only if not for editor title
+                if (!noBaseImage) {
                     if (defaultDecorator == null) {
                         defaultDecorator = WorkbenchPlugin.getDefault().getDecoratorManager();
                     }
