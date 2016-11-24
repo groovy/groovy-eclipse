@@ -18,17 +18,22 @@ package org.codehaus.groovy.eclipse.quickfix.test;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.codehaus.groovy.eclipse.quickfix.test.resolvers.GroovyProjectGroovyQuickFixTest;
-import org.codehaus.groovy.eclipse.quickfix.test.resolvers.GroovyProjectJavaQuickFixTest;
-import org.codehaus.groovy.eclipse.quickfix.test.resolvers.NonGroovyProjectQuickFixTest;
+import org.codehaus.groovy.eclipse.quickfix.test.resolvers.*;
+import org.codehaus.groovy.eclipse.quickfix.test.templates.*;
 
 public class AllQuickFixTests {
     public static Test suite() throws Exception {
         final TestSuite suite = new TestSuite(AllQuickFixTests.class.getName());
+        suite.addTestSuite(QuickAssistTests.class);
+
+        // resolvers
         suite.addTestSuite(GroovyProjectGroovyQuickFixTest.class);
         suite.addTestSuite(GroovyProjectJavaQuickFixTest.class);
         suite.addTestSuite(NonGroovyProjectQuickFixTest.class);
-        suite.addTestSuite(QuickAssistTests.class);
+
+        // templates
+        suite.addTest(GroovyTemplatesCompletionTests.suite());
+
         return suite;
     }
 }
