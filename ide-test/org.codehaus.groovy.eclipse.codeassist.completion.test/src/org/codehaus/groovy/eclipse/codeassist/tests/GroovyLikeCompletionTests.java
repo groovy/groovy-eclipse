@@ -376,7 +376,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     public void testNamedArguments3() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
-        performDummySearch(unit);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "clone()", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);

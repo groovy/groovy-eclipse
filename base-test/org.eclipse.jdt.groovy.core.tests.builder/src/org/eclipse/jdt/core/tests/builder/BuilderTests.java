@@ -512,7 +512,7 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void setUp() throws Exception {
 		super.setUp();
-        System.out.println("------------------------------");
+        System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
 
 		debugRequestor = new EfficiencyCompilerRequestor();

@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.test.ui;
 
 import junit.framework.TestCase;
-
 import org.codehaus.groovy.eclipse.editor.GroovyPartitionScanner;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jface.text.Document;
@@ -35,7 +34,7 @@ public class GroovyPartitionScannerTests extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        System.out.println("------------------------------");
+        System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
         super.setUp();
         scanner = new GroovyPartitionScanner();
@@ -71,16 +70,16 @@ public class GroovyPartitionScannerTests extends TestCase {
     }
 
     public void testComment() throws Exception {
-        tryString("/* blah\n" + 
-                  " * blah\n" + 
-                  " */", 
+        tryString("/* blah\n" +
+                  " * blah\n" +
+                  " */",
                   0, IJavaPartitions.JAVA_MULTI_LINE_COMMENT);
     }
-    
+
     public void testJavaDoc() throws Exception {
-        tryString("/** blah\n" + 
-                  " * blah\n" + 
-                  " */", 
+        tryString("/** blah\n" +
+                  " * blah\n" +
+                  " */",
                 0, IJavaPartitions.JAVA_DOC);
     }
 

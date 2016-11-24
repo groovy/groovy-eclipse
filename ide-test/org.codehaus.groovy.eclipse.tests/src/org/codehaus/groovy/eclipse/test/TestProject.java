@@ -376,8 +376,8 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
     }
 
-    public void waitForIndexer() throws JavaModelException {
-        SynchronizationUtils.waitForIndexingToComplete();
+    public void waitForIndexer() {
+        SynchronizationUtils.waitForIndexingToComplete(getJavaProject());
     }
 
     public void fullBuild() throws CoreException {

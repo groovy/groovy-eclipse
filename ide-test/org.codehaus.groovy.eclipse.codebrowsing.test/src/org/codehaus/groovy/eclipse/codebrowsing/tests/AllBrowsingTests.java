@@ -18,9 +18,11 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
+
 public final class AllBrowsingTests {
     public static Test suite() throws Exception {
-        // share a BrowsingTestSetup
+        // share one test setup
         TestSuite suite = new TestSuite();
         suite.addTestSuite(ASTFragmentTests.class);
         suite.addTestSuite(CodeSelectAttributesTests.class);
@@ -37,7 +39,7 @@ public final class AllBrowsingTests {
         suite.addTestSuite(FindSurroundingNodeTests.class);
         suite.addTestSuite(JDTAstPositionTests.class);
         suite.addTestSuite(PartialVisitTests.class);
-        Test codeSelectTests = new BrowsingTestSetup(suite);
+        Test codeSelectTests = new EclipseTestSetup(suite);
 
         suite = new TestSuite(AllBrowsingTests.class.getName());
         suite.addTest(codeSelectTests);

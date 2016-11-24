@@ -1,5 +1,5 @@
 /*
- * Copyright 2000-2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,8 +102,8 @@ public abstract class RefactoringTest extends TestCase {
 		fPackageP= RefactoringTestSetup.getPackageP();
 		fIsPreDeltaTest= false;
 
-		System.out.println("\n---------------------------------------------");
-		System.out.println("\nTest:" + getClass() + "." + getName());
+		System.out.println("----------------------------------------");
+		System.out.println("Test:" + getClass() + "." + getName());
 		RefactoringCore.getUndoManager().flush();
 		ForcePreviewParticipant.mute();
 	}

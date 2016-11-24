@@ -9,5 +9,6 @@ Import-Package: org.eclipse.core.filebuffers,
  org.eclipse.core.filesystem
 Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2",
+ org.eclipse.ui.editors,
  org.eclipse.ui.ide,
  org.eclipse.ui

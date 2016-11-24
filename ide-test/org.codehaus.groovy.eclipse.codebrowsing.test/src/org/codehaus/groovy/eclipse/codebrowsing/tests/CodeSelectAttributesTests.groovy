@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
-import org.eclipse.jdt.core.tests.util.GroovyUtils
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 
 final class CodeSelectAttributesTests extends BrowsingTestCase {
 
@@ -38,7 +38,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeName2() {
-        BrowsingTestSetup.addJUnit4()
+        EclipseTestSetup.addJUnit4()
 
         String source = '''\
             class C {
@@ -63,7 +63,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeValue2() {
-        BrowsingTestSetup.addJUnit4()
+        EclipseTestSetup.addJUnit4()
 
         String source = '''\
             import org.junit.Test
@@ -79,7 +79,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeValue2a() {
-        BrowsingTestSetup.addJUnit4()
+        EclipseTestSetup.addJUnit4()
 
         String source = '''\
             import org.junit.Test
@@ -95,7 +95,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeValue2b() {
-        BrowsingTestSetup.addJUnit4()
+        EclipseTestSetup.addJUnit4()
 
         String source = '''\
             import org.junit.Test

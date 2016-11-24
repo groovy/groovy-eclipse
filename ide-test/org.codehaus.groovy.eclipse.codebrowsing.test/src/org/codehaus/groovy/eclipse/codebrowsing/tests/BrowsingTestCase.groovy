@@ -19,6 +19,7 @@ import junit.framework.Test
 import junit.framework.TestCase
 import junit.framework.TestSuite
 
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
@@ -33,12 +34,12 @@ abstract class BrowsingTestCase extends TestCase {
      * }</pre>
      */
     protected static Test newTestSuite(Class test) {
-        new BrowsingTestSetup(new TestSuite(test))
+        new EclipseTestSetup(new TestSuite(test))
     }
 
     @Override
     protected void tearDown() throws Exception {
-        BrowsingTestSetup.removeSources()
+        EclipseTestSetup.removeSources()
     }
 
     @Override
@@ -48,11 +49,11 @@ abstract class BrowsingTestCase extends TestCase {
     }
 
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = nextFileName(), String pack = '') {
-        BrowsingTestSetup.addGroovySource(contents, name, pack)
+        EclipseTestSetup.addGroovySource(contents, name, pack)
     }
 
     protected void addJavaSource(CharSequence contents, String name = nextFileName(), String pack = '') {
-        BrowsingTestSetup.addJavaSource(contents, name, pack)
+        EclipseTestSetup.addJavaSource(contents, name, pack)
     }
 
     protected IJavaElement assertCodeSelect(Iterable<? extends CharSequence> sources, String target, String elementName = target) {
@@ -103,7 +104,7 @@ abstract class BrowsingTestCase extends TestCase {
             problems?.findAll { it.error }?.each { println it }
         }
 
-        BrowsingTestSetup.waitForIndex()
-        BrowsingTestSetup.openInEditor(unit)
+        EclipseTestSetup.waitForIndex()
+        EclipseTestSetup.openInEditor(unit)
     }
 }

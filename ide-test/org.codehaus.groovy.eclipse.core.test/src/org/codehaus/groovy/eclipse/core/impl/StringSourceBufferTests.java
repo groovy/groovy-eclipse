@@ -23,7 +23,7 @@ public class StringSourceBufferTests extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        System.out.println("------------------------------");
+        System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
         super.setUp();
         buffer = new StringSourceBuffer(testString);

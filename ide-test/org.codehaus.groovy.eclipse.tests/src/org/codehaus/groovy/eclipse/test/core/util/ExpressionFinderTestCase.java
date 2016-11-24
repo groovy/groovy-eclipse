@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.test.core.util;
 
 import junit.framework.TestCase;
-
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
@@ -28,7 +27,7 @@ public class ExpressionFinderTestCase extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        System.out.println("------------------------------");
+        System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
         super.setUp();
     }

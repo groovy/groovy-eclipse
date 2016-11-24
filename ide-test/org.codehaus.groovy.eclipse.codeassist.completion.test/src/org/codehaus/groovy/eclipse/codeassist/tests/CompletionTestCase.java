@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal;
@@ -39,10 +40,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
@@ -51,7 +48,6 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
@@ -63,8 +59,6 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.internal.UIPlugin;
 
 /**
  * @author Andrew Eisenberg
@@ -81,14 +75,8 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
 
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
     protected void tearDown() throws Exception {
-        // close all editors
-        UIPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
+        GroovyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
         super.tearDown();
     }
 
@@ -141,10 +129,6 @@ public abstract class CompletionTestCase extends BuilderTests {
 
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass)
             throws Exception {
-        // ensure opens with Groovy editor
-        if (unit instanceof GroovyCompilationUnit) {
-            unit.getResource().setPersistentProperty(IDE.EDITOR_KEY, "org.codehaus.groovy.eclipse.editor.GroovyEditor");
-        }
         JavaEditor editor = (JavaEditor) EditorUtility.openInEditor(unit);
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer();
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor);
@@ -247,7 +231,7 @@ public abstract class CompletionTestCase extends BuilderTests {
 
     protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
         // reconciler runs asynchronously; give it a chance to get caught up before creating edits
-        try { Thread.sleep(500); } catch (InterruptedException e) {}
+        SynchronizationUtils.sleep(500);
 
         proposal.apply(document);
         String actual = document.get();
@@ -368,17 +352,12 @@ public abstract class CompletionTestCase extends BuilderTests {
         ICompletionProposal[] proposals;
         System.err.println("Attempting createProposalsAtOffset(unit="+unit.getElementName()+",completionOffset="+completionOffset+")");
         do {
-            // intermittent failures on the build server
             if (count > 0) {
-                System.err.println("In createProposalsAtOffset() count="+count);
-                performDummySearch(unit.getJavaProject());
-
                 SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
                 unit.reconcile(JavaConstants.AST_LEVEL, true, null, spm);
                 spm.waitForCompletion();
-                env.fullBuild();
-                SynchronizationUtils.joinBackgroudActivities();
-                SynchronizationUtils.waitForIndexingToComplete();
+
+                SynchronizationUtils.waitForIndexingToComplete(unit);
             }
 
             System.err.println("Content assist for " + unit.getElementName());
@@ -598,22 +577,4 @@ public abstract class CompletionTestCase extends BuilderTests {
             }
         }
     }
-
-    public void performDummySearch(IJavaElement element) throws Exception{
-        JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("dummy search");
-        new SearchEngine().searchAllTypeNames(
-            null,
-            SearchPattern.R_EXACT_MATCH,
-            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
-            SearchPattern.R_EXACT_MATCH,
-            IJavaSearchConstants.CLASS,
-            SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
-            new Requestor(),
-            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            spm);
-        spm.waitForCompletion();
-    }
-
-    private static class Requestor extends TypeNameRequestor {}
 }

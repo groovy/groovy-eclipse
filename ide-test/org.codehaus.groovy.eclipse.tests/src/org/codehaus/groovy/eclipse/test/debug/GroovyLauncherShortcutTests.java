@@ -20,7 +20,6 @@ import java.net.URL;
 import java.util.Map;
 
 import junit.framework.AssertionFailedError;
-
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
@@ -77,10 +76,6 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         super.setUp();
         DebugUIPlugin.getDefault().getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD, MessageDialogWithToggle.NEVER);
         DebugUIPlugin.getDefault().getPreferenceStore().setValue(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT, false);
-    }
-
-    public GroovyLauncherShortcutTests() {
-        super(GroovyLauncherShortcutTests.class.getCanonicalName());
     }
 
     // single script
@@ -209,7 +204,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         p1.addProjectReference(p4.getJavaProject());
         p1.addProjectReference(p3.getJavaProject());
         p1.addProjectReference(p2.getJavaProject());
-        
+
         String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
         assertEquals("Invalid classpath generated", createClassPathString1(), classpath);
         p1.dispose();
@@ -217,42 +212,42 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         p3.dispose();
         p4.dispose();
     }
-    
-    
+
+
     public void testClasspathGeneration2() throws Exception {
         TestProject p1 = new TestProject("P1a");
         URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
         IPath runtimeJarPath = new Path(groovyURL.getPath());
         p1.addJarFileToClasspath(runtimeJarPath);
-        
+
         IFile f1 = p1.createFile("empty.jar", "");
         p1.addJarFileToClasspath(f1.getFullPath());
-        
+
         TestProject p2 = new TestProject("P2a");
         IFile f2 = p2.createFile("empty2.jar", "");
         p1.addJarFileToClasspath(f2.getFullPath());
-        
+
         String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
-        
+
         String createClassPathString2 = createClassPathString2(runtimeJarPath.toPortableString());
 		assertEquals("Wrong classpath", createClassPathString2, classpath);
-        
+
         p1.dispose();
         p2.dispose();
     }
 
     private String createClassPathString1() {
-        String classpath = "\"${workspace_loc:" + File.separator + "P1}" + File.separator + "src" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P2}" + File.separator + "src" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "src" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "src2" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "src" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "src2" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P1}" + File.separator + "bin" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P2}" + File.separator + "bin" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "bin" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "bin2" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "bin" + File.pathSeparator + 
+        String classpath = "\"${workspace_loc:" + File.separator + "P1}" + File.separator + "src" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P2}" + File.separator + "src" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "src" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "src2" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "src" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "src2" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P1}" + File.separator + "bin" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P2}" + File.separator + "bin" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "bin" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "bin2" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "bin" + File.pathSeparator +
         		"${workspace_loc:" + File.separator + "P4}" + File.separator + "bin2\"";
         return classpath;
     }
@@ -260,10 +255,10 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     	if (File.separatorChar == '\\') {
     		groovyRuntimePath = groovyRuntimePath.replace('/', File.separatorChar);
     	}
-        String classpath = "\"${workspace_loc:" + File.separator + "P1a}" + File.separator + "empty.jar" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P1a}" + File.separator + "src" + File.pathSeparator + 
-        		"${workspace_loc:" + File.separator + "P2a}" + File.separator + "empty2.jar" + File.pathSeparator + 
-        		groovyRuntimePath + File.pathSeparator +        		
+        String classpath = "\"${workspace_loc:" + File.separator + "P1a}" + File.separator + "empty.jar" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P1a}" + File.separator + "src" + File.pathSeparator +
+        		"${workspace_loc:" + File.separator + "P2a}" + File.separator + "empty2.jar" + File.pathSeparator +
+        		groovyRuntimePath + File.pathSeparator +
         		"${workspace_loc:" + File.separator + "P1a}" + File.separator + "bin\"";
         return classpath;
     }
@@ -293,7 +288,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     private ICompilationUnit createGroovyCompilationUnit(String unitName, String contents) throws CoreException {
         return createGroovyCompilationUnit("", unitName, contents);
     }
-    
+
     private ICompilationUnit createGroovyCompilationUnit(String packageName, String unitName, String contents) throws CoreException {
         IFile file = testProject.createGroovyTypeAndPackage(packageName, unitName, contents);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
@@ -313,7 +308,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     protected void launchScriptAndAssertExitValue(IType launchType) throws InterruptedException, CoreException {
         launchScriptAndAssertExitValue(launchType, 20);
     }
-    
+
     protected void launchScriptAndAssertExitValue(final IType launchType, final int timeoutSeconds) throws InterruptedException, CoreException {
 
         String problems = testProject.getProblems();
@@ -327,16 +322,16 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                     MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut();
                     ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType,
                             launchType.getJavaProject()), launchType.getFullyQualifiedName());
-                    assertTrue(launchType.exists());                    
+                    assertTrue(launchType.exists());
                     ILaunch launch = config.launch("run", new NullProgressMonitor());
                     final StringBuilder stdout = new StringBuilder();
                     final StringBuilder stderr = new StringBuilder();
-                    launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().addListener(new IStreamListener() {						
+                    launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().addListener(new IStreamListener() {
 						public void streamAppended(String text, IStreamMonitor monitor) {
 							stdout.append(text);
 						}
 					});
-                    launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().addListener(new IStreamListener() {						
+                    launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().addListener(new IStreamListener() {
 						public void streamAppended(String text, IStreamMonitor monitor) {
 							stderr.append(text);
 						}

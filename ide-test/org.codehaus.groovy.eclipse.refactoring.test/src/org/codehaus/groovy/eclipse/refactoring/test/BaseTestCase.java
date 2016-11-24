@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
@@ -41,7 +37,6 @@ import org.eclipse.jface.text.TextSelection;
 /**
  * @autor Michael Klenk mklenk@hsr.ch
  */
-
 public abstract class BaseTestCase extends TestCase {
 
     protected File file;
@@ -74,7 +69,7 @@ public abstract class BaseTestCase extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        System.out.println("------------------------------");
+        System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
 
         selection = getUserSelection();

@@ -175,7 +175,7 @@ public final class JDTAstPositionTests extends BrowsingTestCase {
             public void preVisit(ASTNode node) {
                 System.out.println("--- "+node.getClass());
                 System.out.println(getText(node, contents));
-                System.out.println("------------------------------");
+                System.out.println("----------------------------------------");
             }
         });
     }

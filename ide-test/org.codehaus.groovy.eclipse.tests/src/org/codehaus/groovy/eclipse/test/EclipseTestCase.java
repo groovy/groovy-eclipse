@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
-
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,17 +25,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
- * Base for all Groovy-Eclipse plugin test cases.
+ * Provides a fresh Groovy project to each test method.
  */
 public abstract class EclipseTestCase extends TestCase {
-
-    public EclipseTestCase() {
-        super();
-    }
-
-    public EclipseTestCase(String name) {
-        super(name);
-    }
 
     protected TestProject testProject;
 
@@ -44,9 +35,10 @@ public abstract class EclipseTestCase extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
-        System.out.println("------------------------------");
+        System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
+
+        super.setUp();
         testProject = new TestProject();
         savedPreferences = JavaCore.getOptions();
     }
@@ -80,7 +72,7 @@ public abstract class EclipseTestCase extends TestCase {
         ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
     }
 
-    public static void waitForIndexes() {
-        SynchronizationUtils.waitForIndexingToComplete();
+    public void waitForIndexes() {
+        testProject.waitForIndexer();
     }
 }

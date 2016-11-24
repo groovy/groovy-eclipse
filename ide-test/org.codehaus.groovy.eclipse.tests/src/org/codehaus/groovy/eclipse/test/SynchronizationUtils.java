@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -34,15 +35,15 @@ import org.eclipse.ui.PlatformUI;
 // Adapted from org.eclipse.jdt.ui.tests.performance.JdtPerformanceTestCase
 public class SynchronizationUtils {
 
-    public static void joinBackgroudActivities()  {
+    public static void joinBackgroudActivities() {
         // Join Building
-        boolean interrupted= true;
+        boolean interrupted = true;
         while (interrupted) {
             try {
                 Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
-                interrupted= false;
+                interrupted = false;
             } catch (InterruptedException e) {
-                interrupted= true;
+                interrupted = true;
             }
         }
         boolean wasInterrupted = false;
@@ -61,13 +62,13 @@ public class SynchronizationUtils {
 
 
     private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
-        long startTime= System.currentTimeMillis() + minTime;
+        long startTime = System.currentTimeMillis() + minTime;
         runEventQueue();
         while (System.currentTimeMillis() < startTime)
             runEventQueue(intervalTime);
 
-        long endTime= maxTime > 0  && maxTime < Long.MAX_VALUE ? System.currentTimeMillis() + maxTime : Long.MAX_VALUE;
-        boolean calm= allJobsQuiet();
+        long endTime = maxTime > 0 && maxTime < Long.MAX_VALUE ? System.currentTimeMillis() + maxTime : Long.MAX_VALUE;
+        boolean calm = allJobsQuiet();
         while (!calm && System.currentTimeMillis() < endTime) {
             runEventQueue(intervalTime);
             //printJobs();
@@ -84,11 +85,11 @@ public class SynchronizationUtils {
     }
 
     private static boolean allJobsQuiet() {
-        IJobManager jobManager= Job.getJobManager();
-        Job[] jobs= jobManager.find(null);
-        for (int i= 0; i < jobs.length; i++) {
-            Job job= jobs[i];
-            int state= job.getState();
+        IJobManager jobManager = Job.getJobManager();
+        Job[] jobs = jobManager.find(null);
+        for (int i = 0; i < jobs.length; i++) {
+            Job job = jobs[i];
+            int state = job.getState();
             //ignore jobs we don't care about
             if (!job.getName().equals("Flush Cache Job") &&
                     !job.getName().equals("Usage Data Event consumer") &&
@@ -100,7 +101,7 @@ public class SynchronizationUtils {
     }
 
     private static void runEventQueue() {
-        IWorkbenchWindow window= PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (window != null)
             runEventQueue(window.getShell());
     }
@@ -116,7 +117,7 @@ public class SynchronizationUtils {
     }
 
     private static void runEventQueue(long minTime) {
-        long nextCheck= System.currentTimeMillis() + minTime;
+        long nextCheck = System.currentTimeMillis() + minTime;
         while (System.currentTimeMillis() < nextCheck) {
             runEventQueue();
             sleep(1);
@@ -124,7 +125,7 @@ public class SynchronizationUtils {
     }
 
     public static void printJobs() {
-       IJobManager jobManager = Job.getJobManager();
+        IJobManager jobManager = Job.getJobManager();
         Job[] jobs = jobManager.find(null);
         System.out.println("=====Printing Jobs========");
         for (int i = 0; i < jobs.length; i++) {
@@ -140,12 +141,30 @@ public class SynchronizationUtils {
         System.out.println("==========================");
     }
 
-    public static void waitForIndexingToComplete() {
+//    public static void waitForIndexingToComplete() {
+//        IJavaElement element = JavaModelManager.getJavaModelManager().getJavaModel();
+//        waitForIndexingToComplete(element);
+//    }
+
+    public static void waitForIndexingToComplete(IJavaElement element) {
         try {
-            performDummySearch(JavaModelManager.getJavaModelManager().getJavaModel());
-        } catch (CoreException e1) {
-            e1.printStackTrace();
+            JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
+            SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search to trigger indexing");
+            new SearchEngine().searchAllTypeNames(
+                null,
+                SearchPattern.R_EXACT_MATCH,
+                "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
+                SearchPattern.R_EXACT_MATCH,
+                IJavaSearchConstants.CLASS,
+                SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
+                new TypeNameRequestor() {},
+                IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+                monitor);
+            monitor.waitForCompletion();
+        } catch (CoreException e) {
+            e.printStackTrace();
         }
+
         SynchronizationUtils.joinBackgroudActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
@@ -161,21 +180,6 @@ public class SynchronizationUtils {
                 }
             }
         }
-    }
-
-    protected static class Requestor extends TypeNameRequestor { }
-
-    private static void performDummySearch(IJavaElement element) throws CoreException {
-        new SearchEngine().searchAllTypeNames(
-            null,
-            SearchPattern.R_EXACT_MATCH,
-            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
-            SearchPattern.R_EXACT_MATCH,
-            IJavaSearchConstants.CLASS,
-            SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
-            new Requestor(),
-            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            null);
     }
 
     public static void waitForRefactoringToComplete() {

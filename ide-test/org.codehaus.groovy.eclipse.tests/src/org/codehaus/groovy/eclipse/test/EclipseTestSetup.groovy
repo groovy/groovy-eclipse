@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codebrowsing.tests
+package org.codehaus.groovy.eclipse.test
 
 import junit.extensions.TestSetup
 import junit.framework.Test
-
 import org.codehaus.groovy.eclipse.GroovyPlugin
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils
-import org.codehaus.groovy.eclipse.test.TestProject
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
@@ -32,13 +29,19 @@ import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
-class BrowsingTestSetup extends TestSetup {
+/**
+ * Provides a fresh Groovy project to each the supplied test.
+ * <p>
+ * NOTE: removeSources() can be called in tearDown() to prep for next test case.
+ */
+class EclipseTestSetup extends TestSetup {
 
     private static Hashtable<String, String> savedPreferences
     private static TestProject testProject
 
-    BrowsingTestSetup(Test test) {
+    EclipseTestSetup(Test test) {
         super(test)
     }
 
@@ -75,12 +78,14 @@ class BrowsingTestSetup extends TestSetup {
         return JavaCore.createCompilationUnitFrom(file)
     }
 
-    static void openInEditor(ICompilationUnit unit) {
+    static JavaEditor openInEditor(ICompilationUnit unit) {
         unit.becomeWorkingCopy(null)
         unit.makeConsistent(null)
-
-        EditorUtility.openInEditor(unit)
-        SynchronizationUtils.joinBackgroudActivities()
+        try {
+            EditorUtility.openInEditor(unit)
+        } finally {
+            SynchronizationUtils.joinBackgroudActivities()
+        }
     }
 
     static void waitForIndex() {

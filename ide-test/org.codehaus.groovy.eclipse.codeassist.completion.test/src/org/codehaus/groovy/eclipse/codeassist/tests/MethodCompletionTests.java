@@ -281,7 +281,7 @@ public class MethodCompletionTests extends CompletionTestCase {
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) throws Exception {
         // for some reason, need to wait for indices to be built before this can work
-        SynchronizationUtils.waitForIndexingToComplete();
+        SynchronizationUtils.waitForIndexingToComplete(unit);
         ClassNode clazz = extract(unit);
         List<MethodNode> methods = clazz.getMethods("m");
         for (MethodNode method : methods) {

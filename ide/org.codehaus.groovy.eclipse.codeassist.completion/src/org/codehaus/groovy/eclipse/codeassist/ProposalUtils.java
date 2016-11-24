@@ -62,11 +62,9 @@ public class ProposalUtils {
     public final static char[] METHOD_WITH_ARGUMENTS_TRIGGERS = new char[] { '(', '-', ' ' };
 
     /** Triggers for types. Do not modify. */
-    // public final static char[] TYPE_TRIGGERS = new char[] { '.', '\t', '[',
-    // '(', ' ' };
-    // In groovy, types are valid expression, so add all the var triggers as
-    // well
-    public final static char[] TYPE_TRIGGERS = new char[] { '.', '\t', '[', '(', ' ', '\t', ' ', ';' };
+    // public final static char[] TYPE_TRIGGERS = new char[] { '.', '\t', '[', '(', ' ' };
+    // In groovy, types are valid expression, so add all the var triggers as well
+    public final static char[] TYPE_TRIGGERS = new char[] { '.', '[', '(', ' ', '\t', '=', ';' };
 
     /** Triggers for variables. Do not modify. */
     public final static char[] VAR_TRIGGER = new char[] { '\t', ' ', '=', ';', '.' };

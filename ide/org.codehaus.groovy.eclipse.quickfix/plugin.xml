@@ -7,7 +7,7 @@
             class="org.codehaus.groovy.eclipse.quickfix.processors.GroovyQuickFixProcessor"
             id="org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor">
       </quickFixProcessor>
-    </extension>
+   </extension>
    <extension point="org.eclipse.jdt.ui.quickAssistProcessors">
       <quickAssistProcessor
             class="org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssist"
