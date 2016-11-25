@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
@@ -23,19 +25,19 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.Document;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created Jul 15, 2011
  */
-public class ContentAssistLocationTests extends CompletionTestCase {
+public final class ContentAssistLocationTests extends CompletionTestCase {
 
-    public ContentAssistLocationTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(ContentAssistLocationTests.class);
     }
 
     public void testStatement1() throws Exception {
         assertLocation("", 0, ContentAssistLocation.SCRIPT);
     }
+
     public void testStatement2() throws Exception {
         // This is technically a bug, but I actually want this to be
         // the expected behaviour since having the extra completions
@@ -85,6 +87,7 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         String contents = "class Blar { def x = { } }";
         assertLocation(contents, contents.indexOf("}"), ContentAssistLocation.STATEMENT);
     }
+
     public void testStatement11() throws Exception {
         String contents = "def x = { a.g(    c,b) }";
         assertLocation(contents, contents.indexOf("c")+1, ContentAssistLocation.STATEMENT);
@@ -119,7 +122,6 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         String contents = "new ArrayList(a,b)";
         assertLocation(contents, contents.indexOf(")")+1, ContentAssistLocation.STATEMENT);
     }
-
 
     public void testExpression() throws Exception {
         String contents = "a.g a, a.b";
@@ -219,7 +221,6 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         assertLocation(contents, contents.indexOf(", ")+1, ContentAssistLocation.METHOD_CONTEXT);
     }
 
-
     public void testExpression1() throws Exception {
         assertLocation("a.a", 3, ContentAssistLocation.EXPRESSION);
     }
@@ -252,7 +253,6 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         assertLocation(contents, contents.indexOf("b")+1, ContentAssistLocation.EXPRESSION);
     }
 
-
     // not working because parser is broken
     public void _testImport1() throws Exception {
         String contents = "import ";
@@ -278,7 +278,6 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         int loc = contents.indexOf("package T") +"package T".length();
         assertLocation(contents, loc, ContentAssistLocation.PACKAGE);
     }
-
 
     public void testClassBody1() throws Exception {
         String contents = "class A { }";
@@ -413,49 +412,58 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         int loc = contents.indexOf("@") +1;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     public void testAnnotation2() throws Exception {
         String contents = "@A class A { void t(v y = hh) {} }";
         int loc = contents.indexOf("@A") +2;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     public void testAnnotation2a() throws Exception {
         String contents = "@B @A class A { void t(v y = hh) {} }";
         int loc = contents.indexOf("@A") +2;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     public void testAnnotation2b() throws Exception {
         String contents = "@B @A @C class A { void t(v y = hh) {} }";
         int loc = contents.indexOf("@A") +2;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     // parser broken, commented out
     public void _testAnnotation2d() throws Exception {
         String contents = "@B @ @C class A { void t(v y = hh) {} }";
         int loc = contents.indexOf("@") +1;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     // parser broken, commented out
     public void _testAnnotation3() throws Exception {
         String contents = " class A { @ void t(v y = hh) {} }";
         int loc = contents.indexOf("@") +1;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     public void testAnnotation4() throws Exception {
         String contents = " class A { @A void t(v y = hh) {} }";
         int loc = contents.indexOf("@A") +2;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     // parser broken, commented out
     public void _testAnnotation5() throws Exception {
         String contents = " class A { @ def t }";
         int loc = contents.indexOf("@") +1;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     public void testAnnotation6() throws Exception {
         String contents = " class A { @A void t }";
         int loc = contents.indexOf("@A") +2;
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
     }
+
     public void testAnnotation7() throws Exception {
         String contents = "@A import java.util.List\n class A { }";
         int loc = contents.indexOf("@A") +2;

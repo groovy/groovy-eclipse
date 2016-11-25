@@ -676,7 +676,7 @@ public class QuickAssistTests extends EclipseTestCase {
     private void assertProposalNotOffered(String original, int offset, int length,
             Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception {
 
-        ICompilationUnit unit = testProject.createUnit("", "QuickFix.groovy", original);
+        ICompilationUnit unit = testProject.createGroovyTypeAndPackage("", "QuickFix.groovy", original);
 
         IInvocationContext context = new AssistContext(unit, offset, length);
         AbstractGroovyCompletionProposal proposal = proposalClass.getConstructor(IInvocationContext.class).newInstance(context);
@@ -686,7 +686,7 @@ public class QuickAssistTests extends EclipseTestCase {
     private void assertConversion(String original, String expected, int offset, int length,
             Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception {
 
-        ICompilationUnit unit = testProject.createUnit("", "QuickFix.groovy", original);
+        ICompilationUnit unit = testProject.createGroovyTypeAndPackage("", "QuickFix.groovy", original);
 
         IInvocationContext context = new AssistContext(unit, offset, length);
         AbstractGroovyCompletionProposal proposal = proposalClass.getConstructor(IInvocationContext.class).newInstance(context);
@@ -699,7 +699,7 @@ public class QuickAssistTests extends EclipseTestCase {
     private void assertConversionAllOccurrences(String original, String expected, int offset, int length,
             Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception {
 
-        ICompilationUnit unit = testProject.createUnit("", "QuickFix.groovy", original);
+        ICompilationUnit unit = testProject.createGroovyTypeAndPackage("", "QuickFix.groovy", original);
 
         IInvocationContext context = new AssistContext(unit, offset, length);
         AbstractGroovyCompletionProposal proposal = proposalClass.getConstructor(IInvocationContext.class, boolean.class).newInstance(context, true);

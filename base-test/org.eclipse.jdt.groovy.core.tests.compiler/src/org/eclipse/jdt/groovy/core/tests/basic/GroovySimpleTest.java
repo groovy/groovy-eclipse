@@ -111,9 +111,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
      }
 
     public void testGreclipse719() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "int anInt = 10;\n"+
@@ -129,9 +126,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testGreclipse719_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "int anInt = 10;\n"+
@@ -338,27 +332,18 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testStaticOuter_GRE944() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            runConformTest(new String[] {
-                "A.groovy",
-                "static class A {\n"+
-                "  public static void main(String[]argv) {print 'abc';}\n"+
-                "}\n",
-            },"abc");
-        } else {
-            runNegativeTest(new String[] {
-                "A.groovy",
-                "static class A {\n"+
-                "  public static void main(String[]argv) {print 'abc';}\n"+
-                "}\n",
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\tstatic class A {\n" +
-            "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
-            "----------\n");
-        }
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "static class A {\n"+
+            "  public static void main(String[]argv) {print 'abc';}\n"+
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\tstatic class A {\n" +
+        "\t             ^\n" +
+        "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+        "----------\n");
     }
 
     public void testCrashRatherThanError_GRE986() {

@@ -1001,18 +1001,14 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testCompileStaticAndMapStyleConstructor() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return
 
-        createGroovyType 'example2', 'Bar', '''
-            package example2
-
+        createGroovyType 'example2', 'Bar.groovy', '''
             class Bar {
                 String name
             }'''
 
         String contents = '''
-            package example
-
-            import groovy.transform.CompileStatic
             import example2.Bar
+            import groovy.transform.CompileStatic
 
             @CompileStatic
             class Foo {

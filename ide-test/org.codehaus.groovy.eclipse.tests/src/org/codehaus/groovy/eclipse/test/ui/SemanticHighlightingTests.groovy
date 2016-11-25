@@ -23,14 +23,13 @@ import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
 
 final class SemanticHighlightingTests extends EclipseTestCase {
 
+    int counter
     boolean semanticHightlightOriginalValue
 
     @Override
@@ -1234,13 +1233,8 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     //
 
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
-        GroovyCompilationUnit unit = openFile(contents)
+        GroovyCompilationUnit unit = testProject.createGroovyTypeAndPackage('', "Highlighting${++counter}.groovy", contents)
         checkStyles(unit, expectedPositions as List)
-    }
-
-    private GroovyCompilationUnit openFile(String contents) {
-        IFile file = testProject.createGroovyTypeAndPackage('', 'Highlighting.groovy', contents)
-        JavaCore.create(file) as GroovyCompilationUnit
     }
 
     private void checkStyles(GroovyCompilationUnit unit, List<HighlightedTypedPosition> expectedPositions) {

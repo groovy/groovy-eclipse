@@ -18,12 +18,13 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
+
 /**
  * @author Andrew Eisenberg
  * @created Jun 3, 2009
  */
 public class AllCompletionTests {
-
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite(AllCompletionTests.class.getName());
         suite.addTestSuite(CommandChainCompletionTests.class);
@@ -49,6 +50,6 @@ public class AllCompletionTests {
         suite.addTestSuite(StaticImportsCompletionTests.class);
         suite.addTestSuite(TypeCompletionTests.class);
         suite.addTestSuite(TypeCompletionTests2.class);
-        return suite;
+        return new EclipseTestSetup(suite);
     }
 }

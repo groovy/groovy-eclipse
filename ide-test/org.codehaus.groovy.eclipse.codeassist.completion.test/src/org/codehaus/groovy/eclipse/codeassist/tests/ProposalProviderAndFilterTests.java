@@ -15,11 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter1;
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter2;
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1;
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider2;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.codehaus.groovy.eclipse.test.ui.Extender1;
 import org.codehaus.groovy.eclipse.test.ui.Extender2;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -29,16 +32,10 @@ import org.eclipse.jdt.core.ICompilationUnit;
  * @author Andrew Eisenberg
  * @created Aug 31, 2010
  */
-public class ProposalProviderAndFilterTests extends CompletionTestCase {
-    public ProposalProviderAndFilterTests(String name) {
-        super(name);
-    }
+public final class ProposalProviderAndFilterTests extends CompletionTestCase {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        createGenericProject();
-        env.addNature("Project", Extender2.NATURE2);
+    public static Test suite() {
+        return newTestSuite(ProposalProviderAndFilterTests.class);
     }
 
     @Override
@@ -51,9 +48,10 @@ public class ProposalProviderAndFilterTests extends CompletionTestCase {
     }
 
     public void testProvidersAndFilters1() throws Exception {
+        EclipseTestSetup.addNature(Extender2.NATURE2);
+
         String contents = "println th";
         ICompilationUnit unit = create(contents);
-        fullBuild();
         // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
 
@@ -64,11 +62,11 @@ public class ProposalProviderAndFilterTests extends CompletionTestCase {
         assertTrue("MockProposalFilter2 should have been called", MockProposalFilter2.wasFilterCalled());
     }
     public void testProvidersAndFilters2() throws Exception {
-        env.addNature("Project", Extender1.NATURE1);
+        EclipseTestSetup.addNature(Extender1.NATURE1);
+        EclipseTestSetup.addNature(Extender2.NATURE2);
 
         String contents = "println th";
         ICompilationUnit unit = create(contents);
-        fullBuild();
         // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
 

@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import junit.framework.ComparisonFailure;
+import junit.framework.Test;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
@@ -28,15 +29,15 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
+ * Tests specific bug reports
+ *
  * @author Andrew Eisenberg
  * @created Sept 29, 2009
- *
- * Tests specific bug reports
  */
-public class OtherCompletionTests extends CompletionTestCase {
+public final class OtherCompletionTests extends CompletionTestCase {
 
-    public OtherCompletionTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(OtherCompletionTests.class);
     }
 
     boolean orig;
@@ -69,7 +70,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     "}\n" +
 "}";
         ICompilationUnit unit = create(contents);
-        fullBuild();
         // ensure that there is no ArrayIndexOutOfBoundsException thrown.
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "this."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "i", 1);
@@ -84,6 +84,7 @@ public class OtherCompletionTests extends CompletionTestCase {
                      "return self;\n" +
                  "}\n" +
              "}\n";
+        addJavaSource(javaClass, "StringExtension", "");
 
         String groovyClass =
              "public class MyClass {\n" +
@@ -97,8 +98,6 @@ public class OtherCompletionTests extends CompletionTestCase {
              "}";
 
         ICompilationUnit groovyUnit = create(groovyClass);
-        env.addClass(groovyUnit.getParent().getResource().getFullPath(), "StringExtension", javaClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "bar", 1);
         assertEquals ("bar() : String - StringExtension (Category: StringExtension)", proposals[0].getDisplayString());
@@ -109,8 +108,8 @@ public class OtherCompletionTests extends CompletionTestCase {
                 return - o1.getDisplayString().compareTo(o2.getDisplayString());
             }
         });
-        proposalExists(proposals, "collect", GroovyUtils.GROOVY_LEVEL < 18 ? 2 : 3);
-        assertEquals(printProposals(proposals), "collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
+        proposalExists(proposals, "collect", 3);
+        assertEquals(printProposals(proposals), "collect(Collection collector, Closure transform) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
         try {
         } catch (ComparisonFailure e) {
         }
@@ -130,7 +129,6 @@ public class OtherCompletionTests extends CompletionTestCase {
 "}\n" +
 "new C().th\n";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GroovyCompletionProposalComputer.class);
 
         proposalExists(proposals, "theB", 1);
@@ -142,7 +140,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "\"${new String().c}\"";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "center", 2);
     }
@@ -152,7 +149,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { { aa }\n def aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "aa"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aaaa", 1);
     }
@@ -161,7 +157,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { {  }\n def aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ { "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aaaa", 1);
     }
@@ -170,7 +165,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { static { aa }\n static aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "aa"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aaaa", 1);
     }
@@ -179,7 +173,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { static {  }\n static aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "static { "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aaaa", 1);
     }
@@ -189,7 +182,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { def \"ff f\"()  { ff } }";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ ff"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "\"ff f\"()", 1);
     }
@@ -198,7 +190,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { def \"fff\"()  { fff } }";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ fff"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "fff()", 1);
     }
@@ -208,7 +199,6 @@ public class OtherCompletionTests extends CompletionTestCase {
         String groovyClass =
             "class A { static xxx(x) { }\n def something() {\nxxx oth }\ndef other}";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "oth"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "other", 1);
     }
@@ -216,7 +206,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testArrayCompletion1() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].x";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "x"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "xx", 1);
     }
@@ -224,7 +213,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testArrayCompletion2() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].getX";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "getX"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "getXx()", 1);
     }
@@ -232,7 +220,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testArrayCompletion3() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].setX";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "setX"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "setXx(value)", 1);
     }
@@ -240,7 +227,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testArrayCompletion4() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().getXx()[0].x";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "x"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "xx", 1);
     }
@@ -248,7 +234,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testListCompletion1() throws Exception {
         String groovyClass = "[].";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, new String[]{"removeAll(arg0)","removeAll(c)"}, 1);
     }
@@ -256,7 +241,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testListCompletion2() throws Exception {
         String groovyClass = "[].re";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".re"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, new String[]{"removeAll(arg0)","removeAll(c)"}, 1);
     }
@@ -265,7 +249,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion1() throws Exception {
         String groovyClass = "[1,2,3]*.intValue()[0].value";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
@@ -273,7 +256,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion2() throws Exception {
         String groovyClass = "[1,2,3]*.intValue()[0].value";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".va"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
@@ -281,7 +263,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion3() throws Exception {
         String groovyClass = "[x:1,y:2,z:3]*.getKey()";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "getKey()", 1);
     }
@@ -289,7 +270,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion4() throws Exception {
         String groovyClass = "[x:1,y:2,z:3]*.getKey()";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".get"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "getKey()", 1);
     }
@@ -297,7 +277,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion5() throws Exception {
         String groovyClass = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "toLowerCase()", 1);
     }
@@ -305,7 +284,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion6() throws Exception {
         String groovyClass = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".to"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "toLowerCase()", 1);
     }
@@ -313,7 +291,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion7() throws Exception {
         String groovyClass = "[x:1,y:2,z:3]*.value[0].intValue()";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "intValue()", 1);
     }
@@ -321,7 +298,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion8() throws Exception {
         String groovyClass = "[x:1,y:2,z:3]*.value[0].intValue()";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".int"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "intValue()", 1);
     }
@@ -329,7 +305,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion9() throws Exception {
         String groovyClass = "[1,2,3]*.value[0].value";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
@@ -337,7 +312,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion10() throws Exception {
         String groovyClass = "[1,2,3]*.value[0].value";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".val"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
@@ -345,7 +319,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion11() throws Exception {
         String groovyClass = "[1,2,3]*.value";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
@@ -353,7 +326,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testSpreadCompletion12() throws Exception {
         String groovyClass = "[1,2,3]*.value";
         ICompilationUnit groovyUnit = create(groovyClass);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".val"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
@@ -362,7 +334,6 @@ public class OtherCompletionTests extends CompletionTestCase {
     public void testBeforeScript() throws Exception {
         String script = "\n\ndef x = 9";
         ICompilationUnit groovyUnit = create(script);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(script, "\n"), GroovyCompletionProposalComputer.class);
         assertProposalOrdering(proposals, "binding");
     }

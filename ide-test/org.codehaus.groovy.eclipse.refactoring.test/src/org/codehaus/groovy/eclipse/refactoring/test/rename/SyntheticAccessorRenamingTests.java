@@ -411,7 +411,7 @@ public class SyntheticAccessorRenamingTests extends AbstractRefactoringTest {
 
     // assume we are renaming the first memebr of the first type to the new name
     private void performRefactoringAndUndo(String newName, boolean updateReferences, boolean performOnError, String[] packNames, String[] cuNames, String[] initialContents, String[] finalContents) throws Exception {
-        ICompilationUnit[] units = createUnits(packNames, cuNames, initialContents);
+        ICompilationUnit[] units = testProject.createUnits(packNames, cuNames, initialContents);
 
         IMember toRename = (IMember) units[0].getTypes()[0].getChildren()[0];
         String id = toRename instanceof IField ? IJavaRefactorings.RENAME_FIELD

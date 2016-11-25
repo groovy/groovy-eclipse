@@ -17,10 +17,9 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery
 import org.eclipse.jface.text.Document
@@ -63,7 +62,7 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected void doAddImportTest(String pkgName, String resourceName, CharSequence contents, List<String> expectedImports) {
-        def unit = testProject.createUnit(pkgName, resourceName + '.groovy', contents)
+        def unit = testProject.createGroovyTypeAndPackage(pkgName, resourceName + '.groovy', contents)
         testProject.waitForIndexer()
         IChooseImportQuery query = new NoChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
@@ -113,9 +112,8 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
-        def file = createGroovyType('main', 'Main.groovy', originalContents)
+        def unit = createGroovyType('main', 'Main.groovy', originalContents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        def unit = JavaCore.createCompilationUnitFrom(file)
         testProject.waitForIndexer()
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
@@ -130,11 +128,10 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
-        def file = createGroovyType('main', 'Main.groovy', contents)
-        testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        def unit = JavaCore.createCompilationUnitFrom(file)
-        def query = new ChoiceQuery()
+        def unit = createGroovyType('main', 'Main.groovy', contents)
+        testProject.fullBuild()
 
+        def query = new ChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
         organize.calculateMissingImports()
         for (choice in expectedChoices) {
@@ -143,7 +140,7 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
         assertEquals("Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$query.choices", query.choices.size(), expectedChoices.size())
     }
 
-    protected IFile createGroovyType(String pack, String name, CharSequence contents) {
+    protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
         testProject.createGroovyTypeAndPackage(pack, name, normalizeLineEndings(contents))
     }
 

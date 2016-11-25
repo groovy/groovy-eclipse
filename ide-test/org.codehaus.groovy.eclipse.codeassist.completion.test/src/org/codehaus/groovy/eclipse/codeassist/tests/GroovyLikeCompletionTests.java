@@ -15,12 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.internal.resources.PreferenceInitializer;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -30,7 +29,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  *
  * Tests that completion proposals are sufficiently groovy-like in their output
  */
-public class GroovyLikeCompletionTests extends CompletionTestCase {
+public final class GroovyLikeCompletionTests extends CompletionTestCase {
 
     private static final String SCRIPTCONTENTS =
             "any\n" +
@@ -46,15 +45,15 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
             "}\n" +
             "new Foo()";
 
-    public GroovyLikeCompletionTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(GroovyLikeCompletionTests.class);
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         // ensure that the correct properties are set
-        new PreferenceInitializer().initializeDefaultPreferences();
+        new org.eclipse.core.internal.resources.PreferenceInitializer().initializeDefaultPreferences();
         new org.codehaus.groovy.eclipse.preferences.PreferenceInitializer().initializeDefaultPreferences();
         // ensure that the correct properties are set
         new org.codehaus.groovy.eclipse.preferences.PreferenceInitializer().reset();
@@ -85,7 +84,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf(arg1) {  }", 1);
+        checkReplacementString(proposals, "findIndexOf(startIndex) {  }", 1);
     }
 
     public void testMethodWithClosureNotGroovyLike() throws Exception {
@@ -93,7 +92,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "any(arg1)", 1);
+        checkReplacementString(proposals, "any(closure)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
     }
@@ -103,7 +102,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf(arg1, arg2)", 1);
+        checkReplacementString(proposals, "findIndexOf(startIndex, closure)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
     }
@@ -223,7 +222,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     public void _testNamedArguments1() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
-        doWait();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "(first:first, second:second)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
@@ -236,7 +234,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     public void _testNamedArguments2() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
-        doWait();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "(third:third)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
@@ -277,10 +274,10 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
             "        }\n" +
             "    }\n" +
             "}";
+
     // accessing members of super types in closures
     public void testClosureCompletion1() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " substring"), GroovyCompletionProposalComputer.class);
         checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 1);
         //checkReplacementString(proposals, "substring(arg0)", 1);
@@ -288,21 +285,18 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     // accessing members of super types in closures
     public void testClosureCompletion2() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion3() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " second2"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "second2()", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion4() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"), GroovyCompletionProposalComputer.class);
         checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 1);
         //checkReplacementString(proposals, "substring(arg0)", 1);
@@ -310,21 +304,18 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     // accessing members of super types in closures
     public void testClosureCompletion5() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 0);
     }
     // accessing members of super types in closures
     public void testClosureCompletion6() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "second2", 0);
     }
     // accessing members of super types in closures
     public void testClosureCompletion7() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"), GroovyCompletionProposalComputer.class);
         checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 0);
         //checkReplacementString(proposals, "substring", 0);
@@ -332,45 +323,26 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     // accessing members of super types in closures
     public void testClosureCompletion8() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion9() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "second2()", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion10() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "wait"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "wait()", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion11() throws Exception {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS2);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS2, "first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 1);
-    }
-
-
-    protected void doWait() {
-        // it seems like
-        int x = 0;
-        while (! Job.getJobManager().isIdle() && x < 20) {
-            synchronized (this) {
-                try {
-                    wait(1000);
-                } catch (InterruptedException e) {
-                }
-                x++;
-            }
-        }
     }
 
     public void testNamedArguments3() throws Exception {
@@ -385,7 +357,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     // disabled because groovy will parse the following as an empty constant expression
     public void _testGString1() throws Exception {
         ICompilationUnit unit = create("\"\"\"\"\"\"");
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
@@ -393,7 +364,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     // GRECLIPSE-268
     public void testGString2() throws Exception {
         ICompilationUnit unit = create("\"\"\"${this}\"\"\"");
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
@@ -401,7 +371,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     // GRECLIPSE-268
     public void testGString3() throws Exception {
         ICompilationUnit unit = create("\"\"\"this\"\"\"");
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"this".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
@@ -410,7 +379,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     public void testGString4() throws Exception {
         String contents = "def flarb;\n\"\"\"${flarb}\"\"\"";
         ICompilationUnit unit = create(contents);
-        fullBuild();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "${flarb"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "flarb", 1);
     }
@@ -420,11 +388,6 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     }
 
     private ICompilationUnit createGroovy(String cuName, String cuContents) throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, cuName, cuContents);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return addGroovySource(cuContents, cuName, "");
     }
 }

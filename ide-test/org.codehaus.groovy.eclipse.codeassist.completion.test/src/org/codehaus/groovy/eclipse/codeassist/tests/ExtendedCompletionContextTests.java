@@ -15,17 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  *
  * @author Andrew Eisenberg
  * @created May 4, 2011
  */
-public class ExtendedCompletionContextTests extends CompletionTestCase {
+public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     private static final String STRING_SIG = "Ljava.lang.String;";
     private static final String STRING_ARR_SIG = "[Ljava.lang.String;";
@@ -34,23 +34,8 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
     private static final String LIST_SIG = "Ljava.util.List;";
     private static final String LIST_ARR_SIG = "[Ljava.util.List;";
 
-    public ExtendedCompletionContextTests(String name) {
-        super(name);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        ICompilationUnit[] workingCopies = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
-        if (workingCopies != null) {
-            for (ICompilationUnit unit : workingCopies) {
-                try {
-                    unit.discardWorkingCopy();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    public static Test suite() {
+        return newTestSuite(ExtendedCompletionContextTests.class);
     }
 
     public void testExtendedContextInScript1() throws Exception {

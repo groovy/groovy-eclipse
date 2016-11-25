@@ -256,7 +256,7 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
     public void testAddGroovyRuntime() throws Exception {
         assumeTrue("Project lacks Groovy nature", hasGroovyNature());
         removeGroovyClasspathContainer(testProject.getJavaProject());
-        fullProjectBuild();
+        buildAll();
 
         IMarker[] markers = getProjectJDTFailureMarkers();
         assumeTrue("Should have found problems in this project", markers != null && markers.length > 0);
@@ -300,8 +300,7 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
     public void testAddImportGRECLIPSE1612() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
-        testProject.createJavaType(testProject.createPackage("other"), "FooJava.java",
-                "package other;\n" +
+        testProject.createJavaTypeAndPackage("other", "FooJava.java",
                 "public class FooJava {\n" +
                 "    public static String getProperty() {\n" +
                 "        return \"sad\";\n" +

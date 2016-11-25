@@ -15,15 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
 
 /**
  * @author Andrew Eisenberg
  * @created Sep 9, 2011
  */
-public class GuessingCompletionTests extends CompletionTestCase {
+public final class GuessingCompletionTests extends CompletionTestCase {
 
-    public GuessingCompletionTests() {
-        super("Parameter guessing test cases");
+    public static Test suite() {
+        return newTestSuite(GuessingCompletionTests.class);
     }
 
     public void testParamGuessing1() throws Exception {

@@ -15,18 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
+ * Tests that default methods are properly handled in content assist
+ *
  * @author Andrew Eisenberg
  * @created Nov 13, 2011
- *
- * Tests that default methods are properly handled in content assist
  */
-public class DefaultMethodContentAssistTests extends CompletionTestCase {
+public final class DefaultMethodContentAssistTests extends CompletionTestCase {
 
-    public DefaultMethodContentAssistTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(DefaultMethodContentAssistTests.class);
     }
 
     public void testDefaultMethods1() throws Exception {
@@ -38,6 +40,7 @@ public class DefaultMethodContentAssistTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'));
         proposalExists(proposals, "meth", 3);
     }
+
     public void testDefaultMethods2() throws Exception {
         create(
                 "Default", "class Default {\n" +

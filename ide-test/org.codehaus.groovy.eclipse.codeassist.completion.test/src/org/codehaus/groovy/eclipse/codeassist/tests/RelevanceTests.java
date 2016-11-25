@@ -15,16 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * tests to ensure proper ordering of completion proposals
+ *
  * @author Andrew Eisenberg
  * @created Aug 11, 2010
  */
-public class RelevanceTests extends CompletionTestCase {
-    public RelevanceTests(String name) {
-        super(name);
+public final class RelevanceTests extends CompletionTestCase {
+
+    public static Test suite() {
+        return newTestSuite(RelevanceTests.class);
     }
 
     private static String NEWLINE = "\n  ";

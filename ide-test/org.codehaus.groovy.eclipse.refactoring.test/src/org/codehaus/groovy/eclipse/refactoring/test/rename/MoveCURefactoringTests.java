@@ -243,7 +243,7 @@ public class MoveCURefactoringTests extends AbstractRefactoringTest {
     // assume we are moving the first CU to the new specified package
     private void performRefactoringAndUndo(String newPackageName, String[] packNames, String[] cuNames, String[] initialContents, String[] finalContents) throws Exception {
         IPackageFragment newPackage = testProject.createPackage(newPackageName);
-        ICompilationUnit[] units = createUnits(packNames, cuNames, initialContents);
+        ICompilationUnit[] units = testProject.createUnits(packNames, cuNames, initialContents);
 
         MoveDescriptor descriptor = RefactoringSignatureDescriptorFactory.createMoveDescriptor();
         descriptor.setDestination(newPackage);

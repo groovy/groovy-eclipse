@@ -49,8 +49,6 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testDelegate() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) return;
-
         String[] sources = {
             "Bar.groovy",
             "class Foo { @Delegate URL myUrl }\n" +
@@ -459,9 +457,6 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testBuiltInTransforms_PackageScope() {
-        // in a different place on 1.7
-        if (GroovyUtils.GROOVY_LEVEL < 18) return;
-
         // http://groovy.codehaus.org/PackageScope+transformation
         // Adjust the visibility of a property so instead of private it is package default
         String[] sources = {

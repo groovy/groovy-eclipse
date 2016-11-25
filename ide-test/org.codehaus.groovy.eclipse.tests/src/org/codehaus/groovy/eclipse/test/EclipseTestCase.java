@@ -68,11 +68,11 @@ public abstract class EclipseTestCase extends TestCase {
     /**
      * Performs a full build on the test workspace.
      */
-    protected void fullProjectBuild() throws Exception {
+    protected void buildAll() throws CoreException {
         ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
     }
 
-    public void waitForIndexes() {
+    public void waitForIndex() {
         testProject.waitForIndexer();
     }
 }

@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -31,14 +33,14 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
+ * Tests that Method completions are working properly
+ *
  * @author Andrew Eisenberg
  * @created Dec 8, 2009
- *
- * Tests that Method completions are working properly
  */
-public class MethodCompletionTests extends CompletionTestCase {
+public final class MethodCompletionTests extends CompletionTestCase {
 
-    private class MockGroovyMethodProposal extends GroovyMethodProposal {
+    private static class MockGroovyMethodProposal extends GroovyMethodProposal {
         public MockGroovyMethodProposal(MethodNode method) {
             super(method);
         }
@@ -48,14 +50,8 @@ public class MethodCompletionTests extends CompletionTestCase {
         }
     }
 
-    public MethodCompletionTests(String name) {
-        super(name);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        env.setAutoBuilding(true);
+    public static Test suite() {
+        return newTestSuite(MethodCompletionTests.class);
     }
 
     public void testAfterParens1() throws Exception {
@@ -100,7 +96,6 @@ public class MethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "cause", 1);
     }
 
-
     public void testParameterNames1() throws Exception {
         String contents = "import org.codehaus.groovy.runtime.DefaultGroovyMethods\nnew DefaultGroovyMethods()";
         ICompilationUnit unit = create(contents);
@@ -141,13 +136,9 @@ public class MethodCompletionTests extends CompletionTestCase {
     }
 
     public void testParameterNames3() throws Exception {
-        // failing inermitewntly on build server, so run in a loop
-        env.setAutoBuilding(false);
         String contents = "class MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
         create(contents);
         GroovyCompilationUnit unit = (GroovyCompilationUnit) create("Other", "new MyClass()");
-        env.fullBuild();
-        expectingNoProblems();
         List<MethodNode> methods = null;
         for (int i = 0; i < 5; i++) {
             methods = delegateTestParameterNames(unit);
@@ -160,12 +151,8 @@ public class MethodCompletionTests extends CompletionTestCase {
     }
 
     public void testParameterNames4() throws Exception {
-        // failing inermitewntly on build server, so run in a loop
-        env.setAutoBuilding(false);
+        addJavaSource("public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}", "MyJavaClass", "");
         ICompilationUnit unit = create("Other", "new MyJavaClass()");
-        String contents = "public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}";
-        createJava("MyJavaClass", contents);
-        env.fullBuild();
         List<MethodNode> methods = null;
         for (int i = 0; i < 5; i++) {
             methods = delegateTestParameterNames((GroovyCompilationUnit) unit);

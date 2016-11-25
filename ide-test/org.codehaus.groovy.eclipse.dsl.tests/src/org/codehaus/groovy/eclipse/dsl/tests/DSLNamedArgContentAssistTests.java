@@ -15,36 +15,45 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import groovy.lang.Closure;
+
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created Jul 27, 2011
  */
 public class DSLNamedArgContentAssistTests extends CompletionTestCase {
 
-    public DSLNamedArgContentAssistTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(DSLNamedArgContentAssistTests.class);
     }
 
-    @Override
+    @Override @SuppressWarnings({"serial", "unused"})
     protected void setUp() throws Exception {
         super.setUp();
-        createGenericProject();
-        IProject project = env.getProject("Project");
-        GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
-        env.fullBuild();
-        new RefreshDSLDJob(project).run(null);
-        GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
+        EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
+        EclipseTestSetup.withProject(new Closure<IProject>(null) {
+            public Void doCall(IProject project) {
+                new RefreshDSLDJob(project).run(null);
+                GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
+                return null;
+            }
+        });
     }
 
+    private void createDSL(String dsldContents) throws Exception {
+        EclipseTestSetup.addPlainText(dsldContents, "MyDsld.dsld");
+    }
+
+    //
 
     public void testNamedArgs1() throws Exception {
         createDSL("currentType().accept {\n" +
@@ -277,13 +286,5 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
     public void testClostureOp0() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "0(\"\", {  }, \"\", first:\"\") {", closureContents.length(), "test0");
-    }
-
-    private void createDSL(String dsldContents) throws Exception {
-        defaultFileExtension = "dsld";
-        create("MyDsld", dsldContents);
-        defaultFileExtension = "groovy";
-        env.fullBuild();
-        expectingNoProblems();
     }
 }

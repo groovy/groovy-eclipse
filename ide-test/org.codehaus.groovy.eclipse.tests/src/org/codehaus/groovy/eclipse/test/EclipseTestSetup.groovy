@@ -19,10 +19,13 @@ import junit.extensions.TestSetup
 import junit.framework.Test
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
@@ -63,28 +66,40 @@ class EclipseTestSetup extends TestSetup {
         JavaCore.options = opts
     }
 
-    static void addJUnit4() {
-        IClasspathEntry entry = JavaCore.newContainerEntry(new Path('org.eclipse.jdt.junit.JUNIT_CONTAINER/4'))
-        testProject.addEntry(testProject.project, entry)
+    static GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Pogo', String pack = '') {
+        testProject.createGroovyTypeAndPackage(pack, name + '.groovy', contents.toString())
     }
 
     static CompilationUnit addJavaSource(CharSequence contents, String name = 'Pojo', String pack = '') {
-        def type = testProject.createJavaTypeAndPackage(pack, name + '.java', contents.toString())
-        return type.compilationUnit
+        testProject.createJavaTypeAndPackage(pack, name + '.java', contents.toString())
     }
 
-    static GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Pogo', String pack = '') {
-        def file = testProject.createGroovyTypeAndPackage(pack, name + '.groovy', contents.toString())
-        return JavaCore.createCompilationUnitFrom(file)
+    static IFile addPlainText(CharSequence contents, String name) {
+        testProject.createFile(name, contents)
+    }
+
+    static void addJUnit4() {
+        addClasspathContainer(new Path('org.eclipse.jdt.junit.JUNIT_CONTAINER/4'))
+    }
+
+    static void addClasspathContainer(IPath path) {
+        testProject.addEntry(testProject.project, JavaCore.newContainerEntry(path))
+    }
+
+    static void addNature(String natureId) {
+        testProject.addNature(natureId);
+    }
+
+    static void buildProject() {
+        testProject.fullBuild();
     }
 
     static JavaEditor openInEditor(ICompilationUnit unit) {
-        unit.becomeWorkingCopy(null)
         unit.makeConsistent(null)
         try {
             EditorUtility.openInEditor(unit)
         } finally {
-            SynchronizationUtils.joinBackgroudActivities()
+            SynchronizationUtils.runEventQueue()
         }
     }
 
@@ -92,11 +107,15 @@ class EclipseTestSetup extends TestSetup {
         testProject.waitForIndexer()
     }
 
+    static void withProject(Closure<IProject> closure) {
+        closure(testProject.project)
+    }
+
     static void removeSources() {
         GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
 
         testProject.deleteWorkingCopies()
-        IResource sourceFolder = testProject.sourceFolder.resource
+        IFolder sourceFolder = testProject.sourceFolder.resource
         sourceFolder.members().each { IResource item -> Util.delete(item) }
 
         SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean");

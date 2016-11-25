@@ -15,20 +15,22 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
+ * Tests that new fields are created properly
+ *
  * @author Andrew Eisenberg
  * @created May 2, 2011
- *
- * Tests that new fields are created properly
  */
-public class NewFieldCompletionTests extends CompletionTestCase {
+public final class NewFieldCompletionTests extends CompletionTestCase {
 
-    public NewFieldCompletionTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(NewFieldCompletionTests.class);
     }
 
     public void testNewFieldSimple() throws Exception {

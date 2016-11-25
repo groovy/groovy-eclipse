@@ -20,35 +20,31 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
@@ -66,75 +62,58 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  *
  * Includes utilities to help with all Content assist tests
  */
-public abstract class CompletionTestCase extends BuilderTests {
+public abstract class CompletionTestCase extends TestCase {
 
-    protected String defaultFileExtension;
-
-    public CompletionTestCase(String name) {
-        super(name);
+    /**
+     * Parent class should define:<pre>
+     * public static Test suite() {
+     *   return newTestSuite(Whatever.class);
+     * }</pre>
+     */
+    protected static Test newTestSuite(Class<? extends Test> test) {
+        return new EclipseTestSetup(new TestSuite(test));
     }
 
     @Override
     protected void tearDown() throws Exception {
-        GroovyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
-        super.tearDown();
+        EclipseTestSetup.removeSources();
     }
 
-    protected IPath createGenericProject() throws Exception {
-        if (genericProjectExists()) {
-            return env.getProject("Project").getFullPath();
-        }
-        IPath projectPath = env.addProject("Project", "1.5");
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyNature("Project");
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-        env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-        return projectPath;
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println("----------------------------------------");
+        System.out.println("Starting: " + getName());
     }
 
-    protected boolean genericProjectExists() {
-        return env.getProject("Project") != null && env.getProject("Project").exists();
+    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name, String pack) {
+        return EclipseTestSetup.addGroovySource(contents, name, pack);
     }
 
-    protected IFile getFile(IPath projectPath, String fileName) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFile(projectPath.append(fileName));
+    protected CompilationUnit addJavaSource(CharSequence contents, String name, String pack) {
+        return EclipseTestSetup.addJavaSource(contents, name, pack);
     }
 
-    protected IFolder getFolder(IPath projectPath, String folderName) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFolder(projectPath.append(folderName));
+    @Deprecated
+    protected ICompilationUnit create(String contents) throws Exception {
+        return addGroovySource(contents, "GroovyClass", "");
     }
 
-    protected IProject getProject(IPath projectPath) {
-        return ResourcesPlugin.getWorkspace().getRoot().getProject(projectPath.segment(0));
+    @Deprecated
+    protected ICompilationUnit create(String cuName, String contents) throws Exception {
+        return addGroovySource(contents, cuName, "");
     }
 
-    public ICompilationUnit getJavaCompilationUnit(IPath sourceRootPath, String qualifiedNameWithSlashesDotJava) {
-        IFile file = getFile(sourceRootPath, qualifiedNameWithSlashesDotJava);
-        return JavaCore.createCompilationUnitFrom(file);
+    @Deprecated
+    protected ICompilationUnit create(String pkg, String cuName, String contents) throws Exception {
+        return addGroovySource(contents, cuName, pkg);
     }
 
-    public ICompilationUnit getCompilationUnit(IPath fullPathName) {
-        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(fullPathName);
-        return JavaCore.createCompilationUnitFrom(file);
-    }
-
-    public GroovyCompilationUnit getGroovyCompilationUnit(IPath sourceRootPath, String qualifiedNameWithSlashesDotGroovy) {
-        IFile file = getFile(sourceRootPath, qualifiedNameWithSlashesDotGroovy);
-        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-    }
-
-    protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass)
-            throws Exception {
-        JavaEditor editor = (JavaEditor) EditorUtility.openInEditor(unit);
+    protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) throws Exception {
+        EclipseTestSetup.buildProject();
+        JavaEditor editor = EclipseTestSetup.openInEditor(unit);
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer();
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor);
-
-        IJavaCompletionProposalComputer computer = computerClass.newInstance();
-        List<ICompletionProposal> proposals = computer.computeCompletionProposals(context, null);
+        List<ICompletionProposal> proposals = computerClass.newInstance().computeCompletionProposals(context, null);
 
         return proposals.toArray(new ICompletionProposal[proposals.size()]);
     }
@@ -151,15 +130,15 @@ public abstract class CompletionTestCase extends BuilderTests {
             // if a field
             String propName = proposal.getDisplayString();
             if (propName.startsWith(name + " ")) {
-                foundCount ++;
+                foundCount += 1;
             } else
             // if a method
             if (propName.startsWith(name + "(")) {
-                foundCount ++;
+                foundCount += 1;
             } else
             // if a type
             if (isType && propName.startsWith(name)) {
-                foundCount ++;
+                foundCount += 1;
             }
         }
 
@@ -183,7 +162,6 @@ public abstract class CompletionTestCase extends BuilderTests {
     protected int findProposal(ICompletionProposal[] proposals, String name, boolean isType, int startFrom) {
         for (int i = startFrom; i < proposals.length; i++) {
             ICompletionProposal proposal = proposals[i];
-
             // if a field
             String propName = proposal.getDisplayString();
             if (propName.startsWith(name + " ")) {
@@ -210,7 +188,6 @@ public abstract class CompletionTestCase extends BuilderTests {
      */
     protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType) {
         for (ICompletionProposal proposal : proposals) {
-
             // if a field
             String propName = proposal.getDisplayString();
             if (propName.startsWith(name + " ") &&
@@ -231,7 +208,7 @@ public abstract class CompletionTestCase extends BuilderTests {
 
     protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
         // reconciler runs asynchronously; give it a chance to get caught up before creating edits
-        SynchronizationUtils.sleep(500);
+        SynchronizationUtils.joinBackgroudActivities();
 
         proposal.apply(document);
         String actual = document.get();
@@ -322,28 +299,19 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
 
     protected ICompletionProposal[] createProposalsAtOffset(String contents, String javaContents, int completionOffset) throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath pack = projectPath.append("src");
         if (javaContents != null) {
-            IPath pathToJavaClass = env.addClass(pack, "JavaClass", "public class JavaClass { }\n" + javaContents);
-            ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-            unit.becomeWorkingCopy(null);
+            addJavaSource("public class JavaClass { }\n" + javaContents, "JavaClass", "");
         }
 
         String groovyClassName = "CompletionTest"; // TODO: Create a more dynamic name?
-        IPath pathToGroovyClass = env.addGroovyClass(pack, groovyClassName, contents);
-        System.err.println("--- "+groovyClassName+".groovy ---");
+        ICompilationUnit gunit = addGroovySource(contents, groovyClassName, "");
+        EclipseTestSetup.buildProject();
+
+        System.err.println("--- " + groovyClassName + ".groovy ---");
         System.err.println(contents);
-        System.err.println("--- "+groovyClassName+".groovy ---");
-        fullBuild();
-        // don't do this here since many completion tests intentionally have errors
-      //expectingNoProblems();
+        System.err.println("--- " + groovyClassName + ".groovy ---");
 
-        ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
-        unit.becomeWorkingCopy(null);
-
-        // intermittent failures on build server; proposals not found, so perform this part in a loop
-        return createProposalsAtOffset(unit, completionOffset);
+        return createProposalsAtOffset(gunit, completionOffset);
     }
 
     protected ICompletionProposal[] createProposalsAtOffset(ICompilationUnit unit, int completionOffset) throws Exception {
@@ -377,57 +345,18 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
 
     protected ICompletionProposal[] orderByRelevance(ICompletionProposal[] proposals) {
-
-        Arrays.sort(proposals, 0, proposals.length,
-                new Comparator<ICompletionProposal>() {
-                    public int compare(ICompletionProposal left,
-                            ICompletionProposal right) {
-                        int initial = ((IJavaCompletionProposal) right).getRelevance() - ((IJavaCompletionProposal) left).getRelevance();
-                        if (initial != 0 ) {
-                            return initial;
-                        } else {
-                            // sort lexically
-                            return left.toString().compareTo(right.toString());
-                        }
-                    }
-                });
+        Arrays.sort(proposals, 0, proposals.length, new Comparator<ICompletionProposal>() {
+            public int compare(ICompletionProposal left, ICompletionProposal right) {
+                int initial = ((IJavaCompletionProposal) right).getRelevance() - ((IJavaCompletionProposal) left).getRelevance();
+                if (initial != 0) {
+                    return initial;
+                } else {
+                    // sort lexically
+                    return left.toString().compareTo(right.toString());
+                }
+            }
+        });
         return proposals;
-    }
-
-    protected ICompilationUnit create(String contents) throws Exception {
-        return create("GroovyClass", contents);
-    }
-
-    protected ICompilationUnit create(String cuName, String contents) throws Exception {
-        return create(null, cuName, contents);
-    }
-
-    protected ICompilationUnit create(String pkg, String cuName, String contents) throws Exception {
-        IPath projectPath;
-        if (genericProjectExists()) {
-            projectPath = env.getProject("Project").getFullPath();
-        } else {
-            projectPath = createGenericProject();
-        }
-        IPath pkgPath = projectPath.append("src");
-        if (pkg != null) {
-            pkgPath = env.addPackage(pkgPath, pkg);
-        }
-        IPath pathToJavaClass = env.addGroovyClassExtension(pkgPath, cuName, contents, defaultFileExtension);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
-    }
-
-    protected void createJava(String cuName, String contents) throws Exception {
-        IPath projectPath;
-        if (genericProjectExists()) {
-            projectPath = env.getProject("Project").getFullPath();
-        } else {
-            projectPath = createGenericProject();
-        }
-        IPath src = projectPath.append("src");
-        env.addClass(src, cuName, contents);
     }
 
     protected String printProposals(ICompletionProposal[] proposals) {
@@ -506,8 +435,6 @@ public abstract class CompletionTestCase extends BuilderTests {
 
     protected GroovyExtendedCompletionContext getExtendedCoreContext(ICompilationUnit unit, int invocationOffset) throws JavaModelException {
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
-        gunit.becomeWorkingCopy(null);
-
         GroovyCompletionProposalComputer computer = new GroovyCompletionProposalComputer();
         ContentAssistContext context = computer.createContentAssistContext(gunit, invocationOffset, new Document(String.valueOf(gunit.getContents())));
 
@@ -518,7 +445,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         return new GroovyExtendedCompletionContext(context, requestor.currentScope);
     }
 
-    public class SearchRequestor implements ITypeRequestor {
+    public static class SearchRequestor implements ITypeRequestor {
 
         public VariableScope currentScope;
         public ASTNode node;
@@ -527,9 +454,7 @@ public abstract class CompletionTestCase extends BuilderTests {
             this.node = node;
         }
 
-        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult,
-                IJavaElement enclosingElement) {
-
+        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             if (node == visitorNode) {
                 this.currentScope = visitorResult.scope;
                 return VisitStatus.STOP_VISIT;
@@ -538,8 +463,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
     }
 
-    protected void checkProposalChoices(String contents, String toFind, String lookFor, String replacementString,
-            String[] expectedChoices) throws Exception {
+    protected void checkProposalChoices(String contents, String toFind, String lookFor, String replacementString, String[] expectedChoices) throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, toFind));
         checkReplacementString(proposals, replacementString, 1);
         ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false);
@@ -551,8 +475,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
     }
 
-    protected void checkProposalChoices(String contents, String lookFor, String replacementString,
-            String[][] expectedChoices) throws Exception {
+    protected void checkProposalChoices(String contents, String lookFor, String replacementString, String[][] expectedChoices) throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, lookFor));
         checkReplacementString(proposals, replacementString, 1);
         ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false);
@@ -565,8 +488,7 @@ public abstract class CompletionTestCase extends BuilderTests {
 
             // proposal ordering is arbitrary
             Comparator<ICompletionProposal> c = new Comparator<ICompletionProposal>() {
-                 public int compare(ICompletionProposal c1,
-                        ICompletionProposal c2) {
+                public int compare(ICompletionProposal c1, ICompletionProposal c2) {
                     return c1.getDisplayString().compareTo(c2.getDisplayString());
                 }
             };

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
@@ -28,12 +30,12 @@ import org.eclipse.jface.preference.IPreferenceStore;
  */
 public final class TypeCompletionTests2 extends CompletionTestCase {
 
+    public static Test suite() {
+        return newTestSuite(TypeCompletionTests2.class);
+    }
+
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
     private static final String HTMLTableCaptionElement_PROPOSAL = "HTMLTableCaptionElement - org.w3c.dom.html";
-
-    public TypeCompletionTests2(String name) {
-        super(name);
-    }
 
     private void checkProposal(String source, String target, String proposalSite, String proposalName) {
         try {
@@ -173,10 +175,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     }
 
     public void testTypeCompletionInBrokenScript2() {
-        // disabled on 17 and earlier since parser recovery not implemented
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         String contents = "package f\n\ndef x(HTML";
         String expected = "package f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
 
@@ -184,10 +182,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     }
 
     public void testTypeCompletionInBrokenScript3() {
-        // disabled on 17 and earlier since parser recovery not implemented
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
 
@@ -196,10 +190,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
     public void testTypeCompletionInBrokenScript4() {
-        // disabled on 17 and earlier since parser recovery not implemented
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI\n\ndef x(HTML";
         String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
 
@@ -208,10 +198,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
     public void testTypeCompletionInBrokenScript5() {
-        // disabled on 17 and earlier since parser recovery not implemented
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
 
@@ -235,10 +221,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     }
 
     public void testTypeCompletionInBrokenScript7() {
-        // disabled on 17 and earlier since parser recovery not implemented
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         String contents =
                 "/**some stuff*/\n" +
                 "package f\n" +
@@ -326,10 +308,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     // GRECLIPSE-926
     public void testTypeCompletionInBrokenScript11() {
-        // disabled on 17 and earlier since parser recovery not implemented
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         String contents =
                 "package f\n" +
                 "\n" +

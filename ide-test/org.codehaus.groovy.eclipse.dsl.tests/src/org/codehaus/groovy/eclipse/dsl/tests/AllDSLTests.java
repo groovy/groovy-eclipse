@@ -25,15 +25,15 @@ import junit.framework.TestSuite;
 public class AllDSLTests {
     public static Test suite() {
         TestSuite suite = new TestSuite(AllDSLTests.class.getName());
+        suite.addTest(BuiltInDSLInferencingTests.suite());
+        suite.addTest(DSLContentAssistTests.suite());
+        suite.addTest(DSLInferencingTests.suite());
+        suite.addTest(DSLNamedArgContentAssistTests.suite());
+        suite.addTest(DSLStoreTests.suite());
+        suite.addTest(MetaDSLInferencingTests.suite());
         suite.addTest(PointcutCreationTests.suite());
         suite.addTest(PointcutEvaluationTests.suite());
-        suite.addTest(MetaDSLInferencingTests.suite());
-        suite.addTest(DSLInferencingTests.suite());
-        suite.addTest(BuiltInDSLInferencingTests.suite());
-        suite.addTest(DSLStoreTests.suite());
         suite.addTestSuite(StringObjectVectorTests.class);
-        suite.addTestSuite(DSLContentAssistTests.class);
-        suite.addTestSuite(DSLNamedArgContentAssistTests.class);
         return suite;
     }
 }

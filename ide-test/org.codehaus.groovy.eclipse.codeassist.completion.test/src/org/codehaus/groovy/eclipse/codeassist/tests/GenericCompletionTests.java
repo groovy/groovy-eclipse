@@ -15,16 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 /**
  * @author Andrew Eisenberg
  * @created Dec 20, 2010
  *
  * Tests completions of generic lists, maps, etc.
  */
-public class GenericCompletionTests extends CompletionTestCase {
+public final class GenericCompletionTests extends CompletionTestCase {
 
-    public GenericCompletionTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(FieldCompletionTests.class);
     }
 
     public void testAfterArrayAccesses1() throws Exception {

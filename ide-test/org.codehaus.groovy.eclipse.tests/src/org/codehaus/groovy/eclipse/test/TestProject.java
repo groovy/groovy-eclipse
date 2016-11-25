@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
@@ -42,16 +41,13 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
@@ -140,60 +136,55 @@ public class TestProject {
     }
 
     public IPackageFragment createPackage(String name) throws CoreException {
-        return sourceFolder.createPackageFragment(name, false, null);
+        return sourceFolder.createPackageFragment(name, true, null);
     }
 
     public void deletePackage(String name) throws CoreException {
         sourceFolder.getPackageFragment(name).delete(true, null);
     }
 
-    public IType createJavaType(IPackageFragment pack, String cuName, String source) throws JavaModelException {
-        StringBuffer buf = new StringBuffer();
-        if (!pack.isDefaultPackage()) {
-            buf.append("package " + pack.getElementName() + ";" + System.getProperty("line.separator"));
-        }
-        buf.append(System.getProperty("line.separator"));
-        buf.append(source);
-        ICompilationUnit cu = pack.createCompilationUnit(cuName,
-                buf.toString(), false, null);
-        return cu.getTypes()[0];
-    }
-
-    public IType createJavaTypeAndPackage(String packageName, String fileName, String source) throws CoreException {
-        return createJavaType(createPackage(packageName), fileName, source);
-    }
-
-    public IFile createGroovyTypeAndPackage(String packageName, String fileName, InputStream source) throws CoreException, IOException {
-        return createGroovyType(createPackage(packageName), fileName, IOUtils.toString(source));
-    }
-
-    public IFile createGroovyTypeAndPackage(String packageName, String fileName, String source) throws CoreException {
-        return createGroovyType(createPackage(packageName), fileName, source);
-    }
-
-    public IFile createGroovyType(IPackageFragment pack, String cuName, String source) throws CoreException {
+    public ICompilationUnit createJavaType(IPackageFragment packageFrag, String fileName, CharSequence source) throws JavaModelException {
         StringBuilder buf = new StringBuilder();
-        if (!pack.getElementName().equals("")) {
+        if (!packageFrag.isDefaultPackage()) {
             buf.append("package ");
-            buf.append(pack.getElementName());
+            buf.append(packageFrag.getElementName());
             buf.append(";");
             buf.append(System.getProperty("line.separator"));
             buf.append(System.getProperty("line.separator"));
         }
         buf.append(source);
 
-        IContainer folder = (IContainer) pack.getResource();
-        String encoding = javaProject.getOption(JavaCore.CORE_ENCODING, true);
-        InputStream stream;
-        try {
-            stream = new ByteArrayInputStream(
-                encoding == null ? buf.toString().getBytes() : buf.toString().getBytes(encoding));
-        } catch (UnsupportedEncodingException e) {
-            throw new CoreException(new Status(IStatus.ERROR,
-                "org.codehaus.groovy.eclipse.tests", IStatus.ERROR, "failed to create a groovy type", e));
-        }
+        ICompilationUnit unit = packageFrag.createCompilationUnit(fileName, buf.toString(), false, null);
+        unit.becomeWorkingCopy(null);
+        return unit;
+    }
 
-        return createFile(folder, cuName, stream);
+    public ICompilationUnit createJavaTypeAndPackage(String packageName, String fileName, CharSequence source) throws CoreException {
+        return createJavaType(createPackage(packageName), fileName, source);
+    }
+
+    public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, InputStream source) throws CoreException, IOException {
+        return createGroovyType(createPackage(packageName), fileName, IOUtils.toString(source));
+    }
+
+    public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, CharSequence source) throws CoreException {
+        return createGroovyType(createPackage(packageName), fileName, source);
+    }
+
+    public ICompilationUnit createGroovyType(IPackageFragment packageFrag, String fileName, CharSequence source) throws CoreException {
+        StringBuilder buf = new StringBuilder();
+        if (!packageFrag.isDefaultPackage()) {
+            buf.append("package ");
+            buf.append(packageFrag.getElementName());
+            buf.append(";");
+            buf.append(System.getProperty("line.separator"));
+            buf.append(System.getProperty("line.separator"));
+        }
+        buf.append(source);
+
+        ICompilationUnit unit = packageFrag.createCompilationUnit(fileName, buf.toString(), false, null);
+        unit.becomeWorkingCopy(null);
+        return unit;
     }
 
     public void addBuilder(String newBuilder) throws CoreException {
@@ -242,19 +233,6 @@ public class TestProject {
         return newIds;
     }
 
-    private IFile createFile(IContainer folder, String name, InputStream contents) throws JavaModelException {
-        IFile file = folder.getFile(new Path(name));
-        try {
-            if (file.exists()) {
-                file.delete(true, null);
-            }
-            file.create(contents, IResource.FORCE, null);
-        } catch (CoreException e) {
-            throw new JavaModelException(e);
-        }
-        return file;
-    }
-
     public void dispose() throws CoreException {
         deleteWorkingCopies();
         Util.delete(project);
@@ -271,17 +249,17 @@ public class TestProject {
     }
 
     private void deleteWorkingCopies() throws JavaModelException {
-        waitForIndexer();
-        // delete all working copies
-        ICompilationUnit[] workingCopies = JavaModelManager.getJavaModelManager()
-            .getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
-        if (workingCopies != null) {
+        SynchronizationUtils.joinBackgroudActivities();
+
+        ICompilationUnit[] workingCopies = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
+        if (workingCopies != null && workingCopies.length > 0) {
             for (ICompilationUnit workingCopy : workingCopies) {
                 if (workingCopy.isWorkingCopy()) {
                     workingCopy.discardWorkingCopy();
                 }
             }
         }
+
         System.gc();
     }
 
@@ -333,10 +311,8 @@ public class TestProject {
             ensureExists(folder);
         }
 
-        final IClasspathEntry[] entries = javaProject
-            .getResolvedClasspath(false);
-        final IPackageFragmentRoot root = javaProject
-            .getPackageFragmentRoot(folder);
+        final IClasspathEntry[] entries = javaProject.getResolvedClasspath(false);
+        final IPackageFragmentRoot root = javaProject.getPackageFragmentRoot(folder);
         for (int i = 0; i < entries.length; i++) {
             final IClasspathEntry entry = entries[i];
             if (entry.getPath().equals(folder.getFullPath())) {
@@ -409,9 +385,6 @@ public class TestProject {
         return errorFound ? sb.toString() : null;
     }
 
-    /**
-     * Creates a file at the project root.
-     */
     public IFile createFile(String name, String contents) throws Exception {
         String encoding = null;
         try {
@@ -420,7 +393,7 @@ public class TestProject {
             // use no encoding
         }
         InputStream stream = new ByteArrayInputStream(encoding == null ? contents.getBytes() : contents.getBytes(encoding));
-        IFile file= project.getFile(new Path(name));
+        IFile file = project.getFolder("src").getFile(new Path(name));
         if (!file.getParent().exists()) {
             createFolder(file.getParent());
         }
@@ -436,16 +409,10 @@ public class TestProject {
         ((IFolder) parent).create(true, true, null);
     }
 
-    public ICompilationUnit createUnit(String pkg, String cuName, String cuContents) throws CoreException {
-        ICompilationUnit unit = createPackage(pkg).createCompilationUnit(cuName, cuContents, false, null);
-        //unit.open(null);
-        return unit;
-    }
-
     public ICompilationUnit[] createUnits(String[] packages, String[] cuNames, String[] cuContents) throws CoreException {
         ICompilationUnit[] units = new ICompilationUnit[packages.length];
         for (int i = 0, n = cuContents.length; i < n; i += 1) {
-            units[i] = createUnit(packages[i], cuNames[i], cuContents[i]);
+            units[i] = createPackage(packages[i]).createCompilationUnit(cuNames[i], cuContents[i], false, null);
         }
         return units;
     }

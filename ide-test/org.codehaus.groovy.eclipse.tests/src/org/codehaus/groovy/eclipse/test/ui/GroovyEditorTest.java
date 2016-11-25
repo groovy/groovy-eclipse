@@ -22,9 +22,9 @@ import java.io.File;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.eclipse.core.resources.IFile;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
@@ -77,8 +77,8 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
             cursor = contents.indexOf(CARET);
             contents = contents.replace(CARET, "");
         }
-        IFile file = testProject.createGroovyTypeAndPackage("", "Test.groovy", contents);
-        editor = (GroovyEditor) EditorUtility.openInEditor(file);
+        ICompilationUnit unit = testProject.createGroovyTypeAndPackage("", "Test.groovy", contents);
+        editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit);
         editor.setHighlightRange(cursor, 0, true);
         editor.setFocus();
     }

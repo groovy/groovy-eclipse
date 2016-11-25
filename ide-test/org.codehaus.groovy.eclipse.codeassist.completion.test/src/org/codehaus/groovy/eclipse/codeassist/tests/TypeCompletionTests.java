@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -24,7 +26,11 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * @author Andrew Eisenberg
  * @created Jun 5, 2009
  */
-public class TypeCompletionTests extends CompletionTestCase {
+public final class TypeCompletionTests extends CompletionTestCase {
+
+    public static Test suite() {
+        return newTestSuite(TypeCompletionTests.class);
+    }
 
     private static final String A_TEST = "ATest";
     private static final String RUN_WITH = "RunWith";
@@ -32,10 +38,6 @@ public class TypeCompletionTests extends CompletionTestCase {
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
     private static final String HTML_ANCHOR = "HTMLAnchorElement";
     private static final String HTML_ANCHOR_PROPOSAL = "HTMLAnchorElement - org.w3c.dom.html";
-
-    public TypeCompletionTests(String name) {
-        super(name);
-    }
 
     public void testCompletionTypesInScript() throws Exception {
         String contents = HTML;

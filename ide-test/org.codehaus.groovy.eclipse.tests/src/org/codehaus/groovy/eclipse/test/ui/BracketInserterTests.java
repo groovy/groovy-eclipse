@@ -18,8 +18,8 @@ package org.codehaus.groovy.eclipse.test.ui;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.widgets.Event;
 
@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Event;
  * @created Jan 25, 2010
  */
 public class BracketInserterTests extends EclipseTestCase {
-    
+
     public void testInsertDQuote1() throws Exception {
         assertClosing("", "\"\"", '\"', 0);
     }
@@ -52,8 +52,8 @@ public class BracketInserterTests extends EclipseTestCase {
         assertClosing("''", "'\"'", '\"', 1);
     }
 
-    
-    
+
+
     public void testInsertSQuote1() throws Exception {
         assertClosing("", "\'\'", '\'', 0);
     }
@@ -66,7 +66,7 @@ public class BracketInserterTests extends EclipseTestCase {
     public void testInsertSQuote4() throws Exception {
         assertClosing("\'\'\'", "\'\'\'\'\'\'", '\'', 3);
     }
-    
+
     public void testInsertParen() throws Exception {
         assertClosing("", "()", '(', 0);
     }
@@ -88,15 +88,13 @@ public class BracketInserterTests extends EclipseTestCase {
     public void testInsertBraces4() throws Exception {
         assertClosing("\"\"\"\n$\"\"\"", "\"\"\"\n${}\"\"\"", '{', 5);
     }
-    
-    
-    
+
     private void assertClosing(String initialDoc, String expectedDoc, char inserted, int location) throws Exception {
         // add extra spaces since the String rule fails for end of file.
         initialDoc += "\n";
         expectedDoc += "\n ";
-        IFile file = testProject.createGroovyTypeAndPackage("", "BracketTesting.groovy", initialDoc + " ");
-        GroovyEditor editor = (GroovyEditor) EditorUtility.openInEditor(file);
+        ICompilationUnit unit = testProject.createGroovyTypeAndPackage("", "BracketTesting.groovy", initialDoc + " ");
+        GroovyEditor editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit);
         try {
             Event e = new Event();
             e.character = inserted;

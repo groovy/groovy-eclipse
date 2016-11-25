@@ -53,7 +53,7 @@ public class TestFormatterPreferences extends EclipseTestCase {
     public void setUp() throws Exception {
         super.setUp();
 
-        gunit = (GroovyCompilationUnit) testProject.createUnit("nice.pkg", "Test.groovy", "public class Test { }");
+        gunit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("nice.pkg", "Test.groovy", "public class Test { }");
 
         // ensure tests start with default values
         new FormatterPreferenceInitializer().initializeDefaultPreferences();

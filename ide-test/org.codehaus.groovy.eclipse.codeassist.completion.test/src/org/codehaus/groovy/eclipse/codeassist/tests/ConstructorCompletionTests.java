@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
@@ -28,13 +30,13 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * resulting document has the correct text in it.
  *
  */
-public class ConstructorCompletionTests extends CompletionTestCase {
+public final class ConstructorCompletionTests extends CompletionTestCase {
 
-    public ConstructorCompletionTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(ConstructorCompletionTests.class);
     }
 
-    boolean orig;
+    private boolean orig;
 
     @Override
     protected void setUp() throws Exception {
@@ -53,26 +55,26 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testConstructorCompletion1() throws Exception {
-        String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY\nkkk";
-        String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
+        String contents = "class YYY { YYY() { } }\nnew YY\nkkk";
+        String expected = "class YYY { YYY() { } }\nnew YYY()\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
 
     public void testConstructorCompletion1a() throws Exception {
-        String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY()\nkkk";
-        String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
+        String contents = "class YYY { YYY() { } }\nnew YY()\nkkk";
+        String expected = "class YYY { YYY() { } }\nnew YYY()\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
 
     public void testConstructorCompletion2() throws Exception {
-        String contents = "package f\n\nclass YYY { YYY(x) { } }\nnew YY\nkkk";
-        String expected = "package f\n\nclass YYY { YYY(x) { } }\nnew YYY(x)\nkkk";
+        String contents = "class YYY { YYY(x) { } }\nnew YY\nkkk";
+        String expected = "class YYY { YYY(x) { } }\nnew YYY(x)\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
 
     public void testConstructorCompletion3() throws Exception {
-        String contents = "package f\n\nclass YYY { YYY(x, y) { } }\nnew YY\nkkk";
-        String expected = "package f\n\nclass YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk";
+        String contents = "class YYY { YYY(x, y) { } }\nnew YY\nkkk";
+        String expected = "class YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
 
@@ -80,17 +82,17 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
         }
-        String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+        String contents = "class YYY { YYY() { } }\nenum F {\n"
                 + "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
-        String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+        String expected = "class YYY { YYY() { } }\nenum F {\n"
                 + "	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
 
     public void testContructorCompletionWithinEnumDeclaration2() throws Exception {
-        String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+        String contents = "class YYY { YYY() { } }\nenum F {\n"
                 + "	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
-        String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+        String expected = "class YYY { YYY() { } }\nenum F {\n"
                 + "	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
@@ -119,7 +121,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     /**
      * no named args since an explicit constructor exists
      * Same package different file
-     * @throws Exception
      */
     public void testNoNamedArgs2() throws Exception {
         create("Flar",
@@ -141,11 +142,9 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     /**
      * no named args since an explicit constructor exists
      * different file and package
-     * @throws Exception
      */
     public void testNoNamedArgs3() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  Flar() { }\n" +
                 "  Flar(a,b,c) { }\n" +
@@ -163,7 +162,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     /**
      * same file
-     * @throws Exception
      */
     public void testNamedArgs1() throws Exception {
         String contents =
@@ -182,7 +180,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     /**
      * Same package different file
-     * @throws Exception
      */
     public void testNamedArgs2() throws Exception {
         create("Flar",
@@ -201,11 +198,9 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     /**
      * different file and package
-     * @throws Exception
      */
     public void testNamedArgs3() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
@@ -222,7 +217,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     /**
      * Same package different file
      * Some args filled in
-     * @throws Exception
      */
     public void testNamedArgs4() throws Exception {
         create("Flar",
@@ -242,7 +236,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     /**
      * Same package different file
      * Some args filled in
-     * @throws Exception
      */
     public void testNamedArgs5() throws Exception {
         create("Flar",
@@ -262,7 +255,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     /**
      * Same package different file
      * Some args filled in
-     * @throws Exception
      */
     public void testNamedArgs6() throws Exception {
         create("Flar",
@@ -300,7 +292,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing1() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
@@ -318,7 +309,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing2() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
@@ -335,7 +325,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing3() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
@@ -353,7 +342,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing4() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  Integer bbb\n" +
@@ -371,7 +359,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing5() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  Integer bbb\n" +
@@ -389,7 +376,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing6() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  Integer bbb\n" +
@@ -407,7 +393,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
 
     public void testParamGuessing7() throws Exception {
         create("p", "Flar",
-                "package p\n" +
                 "class Flar {\n" +
                 "  Closure aaa\n" +
                 "  Integer bbb\n" +

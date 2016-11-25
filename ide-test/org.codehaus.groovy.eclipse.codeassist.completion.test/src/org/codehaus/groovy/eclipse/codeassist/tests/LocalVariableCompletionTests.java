@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -27,17 +28,16 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * Tests that Local variable completions are working properly
  * They should only be active when inside a script or in a closure
  */
-public class LocalVariableCompletionTests extends CompletionTestCase {
+public final class LocalVariableCompletionTests extends CompletionTestCase {
+
+    public static Test suite() {
+        return newTestSuite(LocalVariableCompletionTests.class);
+    }
 
     private static final String CONTENTS = "class LocalsClass { public LocalsClass() {\n }\n void doNothing(int x) { def xxx\n def xx\n def y = { t -> print t\n }\n } }";
     private static final String SCRIPTCONTENTS = "def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n";
     private static final String SCRIPTCONTENTS2 = "def xx = 9\ndef xxx\ndef y = { t -> print t\n.toString() }\n";
     private static final String SELFREFERENCINGSCRIPT = "def xx = 9\nxx = xx\nxx.abs()";
-
-    public LocalVariableCompletionTests(String name) {
-        super(name);
-    }
-
 
     // should not find local vars here
     public void testLocalVarsInJavaFile() throws Exception {
@@ -128,12 +128,14 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         String expected = "def x = { getDelegate() }";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ getD"), "getDelegate");
     }
+
     // GRECLIPSE=1387
     public void testClsoureVar4a() throws Exception {
         String contents = "def x = { thisO }";
         String expected = "def x = { thisObject }";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ thisO"), "thisObject");
     }
+
     // GRECLIPSE=1267
     public void testClsoureVar5() throws Exception {
         String contents = "o\nd\nge";
@@ -147,46 +149,23 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "getOwner", 0);
     }
 
-
     private ICompilationUnit createJava() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addClass(src, "LocalsClass", CONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return addJavaSource(CONTENTS, "LocalsClass", "");
     }
 
     private ICompilationUnit createGroovy() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "LocalsClass", CONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return addGroovySource(CONTENTS, "LocalsClass", "");
     }
+
     private ICompilationUnit createGroovyForScript() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "LocalsScript", SCRIPTCONTENTS);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return addGroovySource(SCRIPTCONTENTS, "LocalsScript", "");
     }
+
     private ICompilationUnit createGroovyForScript2() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "LocalsScript2", SCRIPTCONTENTS2);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return addGroovySource(SCRIPTCONTENTS2, "LocalsScript2", "");
     }
+
     private ICompilationUnit createGroovyForSelfReferencingScript() throws Exception {
-        IPath projectPath = createGenericProject();
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "SelfRefScripr", SELFREFERENCINGSCRIPT);
-        incrementalBuild();
-        ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
-        return unit;
+        return addGroovySource(SELFREFERENCINGSCRIPT, "SelfRefScripr", "");
     }
 }

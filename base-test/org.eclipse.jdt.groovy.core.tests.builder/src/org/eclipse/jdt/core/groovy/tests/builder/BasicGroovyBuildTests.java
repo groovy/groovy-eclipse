@@ -311,36 +311,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         IPath pathToSecond = env.addGroovyClass(root, "", "A",
                 "@Anno(Const.instance)\n" + "class A {}\n");
         incrementalBuild(projectPath);
-
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            Problem[] probs = env.getProblemsFor(pathToSecond);
-            boolean p1found = false;
-            boolean p2found = false;
-            for (int i = 0; i < probs.length; i++) {
-                if (probs[i]
-                        .getMessage()
-                        .equals("Groovy:expected 'Const.instance' to be an inline constant of type java.lang.String not a property expression in @Anno")) {
-                    p1found = true;
-                }
-                if (probs[i]
-                        .getMessage()
-                        .startsWith(
-                                "Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @Anno")) {
-                    p2found = true;
-                }
-            }
-            if (!p1found) {
-                printProblemsFor(pathToSecond);
-                fail("Didn't get expected message 'Groovy:expected 'Const.instance' to be an inline constant of type java.lang.String not a property expression in @Anno'\n");
-            }
-            if (!p2found) {
-                printProblemsFor(pathToSecond);
-                fail("Didn't get expected message 'Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @Anno'\n");
-            }
-        } else {
-            expectingNoProblems();
-            expectingCompiledClassesV("A");
-        }
+        expectingNoProblems();
+        expectingCompiledClassesV("A");
     }
 
     public void testCompileStatic_1505() throws Exception {

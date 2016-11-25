@@ -48,24 +48,24 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        gType = testProject.createUnit("p", "G.groovy",
-                "package p\n" +
-                        "class G {\n" +
-                        "  def prop\n" +
-                        "  public def notProp\n" +
-                        "  def getExplicitGetter() { }\n" +
-                        "  void getExplicitSetter(def toSet) { }\n" +
-                        "  def getExplicitIsser() { }\n" +
-                "}").getType("G");
+        gType = testProject.createGroovyTypeAndPackage("p", "G.groovy",
+                "class G {\n" +
+                "  def prop\n" +
+                "  public def notProp\n" +
+                "  def getExplicitGetter() { }\n" +
+                "  void getExplicitSetter(def toSet) { }\n" +
+                "  def getExplicitIsser() { }\n" +
+                "}"
+            ).getType("G");
     }
 
     public void testSearchInGroovy1() throws Exception {
         String contents =
                 "new p.G().prop\n" +
-                        "new p.G().setProp()\n" +
-                        "new p.G().isProp()\n" +
-                        "new p.G().getProp()\n";
-        testProject.createUnit("", "Script.groovy", contents);
+                "new p.G().setProp()\n" +
+                "new p.G().isProp()\n" +
+                "new p.G().getProp()\n";
+        testProject.createGroovyTypeAndPackage("", "Script.groovy", contents);
         // expecting 3 matches since the explicit property reference will not be found since it is not synthetic
         List<SearchMatch> matches = performSearch("prop");
         assertNumMatch(3, matches);
@@ -78,10 +78,10 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInGroovy2() throws Exception {
         String contents =
                 "new p.G().explicitGetter\n" +
-                        "new p.G().getExplicitGetter()\n" +
-                        "new p.G().isExplicitGetter()\n" +
-                        "new p.G().setExplicitGetter()\n";
-        testProject.createUnit("", "Script.groovy", contents);
+                "new p.G().getExplicitGetter()\n" +
+                "new p.G().isExplicitGetter()\n" +
+                "new p.G().setExplicitGetter()\n";
+        testProject.createGroovyTypeAndPackage("", "Script.groovy", contents);
         List<SearchMatch> matches = performSearch("getExplicitGetter");
         assertNumMatch(1, matches);
         assertMatch("run", "explicitGetter", contents, matches);
@@ -93,10 +93,10 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInGroovy3() throws Exception {
         String contents =
                 "new p.G().explicitSetter\n" +
-                        "new p.G().getExplicitSetter()\n" +
-                        "new p.G().isExplicitSetter()\n" +
-                        "new p.G().setExplicitSetter()\n";
-        testProject.createUnit("", "Script.groovy", contents);
+                "new p.G().getExplicitSetter()\n" +
+                "new p.G().isExplicitSetter()\n" +
+                "new p.G().setExplicitSetter()\n";
+        testProject.createGroovyTypeAndPackage("", "Script.groovy", contents);
         List<SearchMatch> matches = performSearch("getExplicitSetter");
         assertNumMatch(1, matches);
         assertMatch("run", "explicitSetter", contents, matches);
@@ -108,10 +108,10 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInGroovy4() throws Exception {
         String contents =
                 "new p.G().explicitIsser\n" +
-                        "new p.G().getExplicitIsser()\n" +
-                        "new p.G().isExplicitIsser()\n" +
-                        "new p.G().setExplicitIsser()\n";
-        testProject.createUnit("", "Script.groovy", contents);
+                "new p.G().getExplicitIsser()\n" +
+                "new p.G().isExplicitIsser()\n" +
+                "new p.G().setExplicitIsser()\n";
+        testProject.createGroovyTypeAndPackage("", "Script.groovy", contents);
         List<SearchMatch> matches = performSearch("getExplicitIsser");
         assertNumMatch(1, matches);
         assertMatch("run", "explicitIsser", contents, matches);
@@ -123,13 +123,14 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInJava1() throws Exception {
         String contents =
                 "class AClass {\n" +
-                        "  void run() {\n" +
-                        "    new p.G().prop = null;\n" +
-                        "    new p.G().setProp(null);\n" +
-                        "    new p.G().isProp();\n" +
-                        "    new p.G().getProp();\n" +
-                        "} }\n";
-        testProject.createUnit("", "AClass.java", contents);
+                "  void run() {\n" +
+                "    new p.G().prop = null;\n" +
+                "    new p.G().setProp(null);\n" +
+                "    new p.G().isProp();\n" +
+                "    new p.G().getProp();\n" +
+                "  }\n" +
+                "}";
+        testProject.createJavaTypeAndPackage("", "AClass.java", contents);
         // expecting 3 matches since the explicit property reference will not be found since it is not synthetic
         List<SearchMatch> matches = performSearch("prop");
         assertNumMatch(3, matches);
@@ -143,13 +144,14 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInJava2() throws Exception {
         String contents =
                 "class AClass {\n" +
-                        "  void run() {\n" +
-                        "    new p.G().explicitGetter = null;\n" +
-                        "    new p.G().setExplicitGetter(null);\n" +
-                        "    new p.G().getExplicitGetter();\n" +
-                        "    new p.G().isExplicitGetter();\n" +
-                        "} }\n";
-        testProject.createUnit("", "AClass.java", contents);
+                "  void run() {\n" +
+                "    new p.G().explicitGetter = null;\n" +
+                "    new p.G().setExplicitGetter(null);\n" +
+                "    new p.G().getExplicitGetter();\n" +
+                "    new p.G().isExplicitGetter();\n" +
+                "  }\n" +
+                "}";
+        testProject.createJavaTypeAndPackage("", "AClass.java", contents);
         List<SearchMatch> matches = performSearch("getExplicitGetter");
         assertNumMatch(1, matches);
         assertNoMatch("run", "getExplicitGetter", contents, matches);
@@ -162,13 +164,14 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInJava3() throws Exception {
         String contents =
                 "class AClass {\n" +
-                        "  void run() {\n" +
-                        "    new p.G().explicitSetter = null;\n" +
-                        "    new p.G().setExplicitSetter(null);\n" +
-                        "    new p.G().getExplicitSetter();\n" +
-                        "    new p.G().isExplicitSetter();\n" +
-                        "} }\n";
-        testProject.createUnit("", "AClass.java", contents);
+                "  void run() {\n" +
+                "    new p.G().explicitSetter = null;\n" +
+                "    new p.G().setExplicitSetter(null);\n" +
+                "    new p.G().getExplicitSetter();\n" +
+                "    new p.G().isExplicitSetter();\n" +
+                "  }\n" +
+                "}";
+        testProject.createJavaTypeAndPackage("", "AClass.java", contents);
         List<SearchMatch> matches = performSearch("getExplicitSetter");
         assertNumMatch(1, matches);
         assertNoMatch("run", "getExplicitSetter", contents, matches);
@@ -181,13 +184,14 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInJava4() throws Exception {
         String contents =
                 "class AClass {\n" +
-                        "  void run() {\n" +
-                        "    new p.G().explicitIsser = null;\n" +
-                        "    new p.G().setExplicitIsser(null);\n" +
-                        "    new p.G().getExplicitIsser();\n" +
-                        "    new p.G().isExplicitIsser();\n" +
-                        "} }\n";
-        testProject.createUnit("", "AClass.java", contents);
+                "  void run() {\n" +
+                "    new p.G().explicitIsser = null;\n" +
+                "    new p.G().setExplicitIsser(null);\n" +
+                "    new p.G().getExplicitIsser();\n" +
+                "    new p.G().isExplicitIsser();\n" +
+                "  }\n" +
+                "}";
+        testProject.createJavaTypeAndPackage("", "AClass.java", contents);
         List<SearchMatch> matches = performSearch("getExplicitIsser");
         assertNumMatch(1, matches);
         assertNoMatch("run", "getExplicitIsser", contents, matches);
@@ -200,17 +204,17 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     public void testSearchInJava5() throws Exception {
         String contents =
                 "class AClass {\n" +
-                        "  int hhh;\n" +
-                        "  public int getHhh() {" +
-                        "    return hhh;" +
-                        "  }\n" +
-                        "  public void setHhh(int other) {" +
-                        "    this.hhh = other;\n" +
-                        "    this.getHhh();\n" +
-                        "    this.setHhh(0);\n" +
-                        "  }\n" +
-                        "}";
-        IType type = testProject.createUnit("", "AClass.java", contents).getType("AClass");
+                "  int hhh;\n" +
+                "  public int getHhh() {" +
+                "    return hhh;" +
+                "  }\n" +
+                "  public void setHhh(int other) {" +
+                "    this.hhh = other;\n" +
+                "    this.getHhh();\n" +
+                "    this.setHhh(0);\n" +
+                "  }\n" +
+                "}";
+        IType type = testProject.createJavaTypeAndPackage("", "AClass.java", contents).getType("AClass");
         IField toSearch = type.getField("hhh");
         SyntheticAccessorSearchRequestor synthRequestor = new SyntheticAccessorSearchRequestor();
         TestSearchRequestor requestor = new TestSearchRequestor();
@@ -220,7 +224,6 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
         // the actual references are found by the real search engine
         assertNumMatch(0, matches);
     }
-
 
     private IJavaElement findSearchTarget(String name) throws JavaModelException {
         for (IJavaElement child : gType.getChildren()) {
@@ -251,10 +254,6 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
 
     /**
      * asserts that the given match exists at least once in the list
-     *
-     * @param matchName
-     * @param contents
-     * @param matches
      */
     private void assertMatch(String enclosingName, String matchName, String contents, List<SearchMatch> matches) {
 
@@ -299,5 +298,4 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
             fail("Match name " + matchName + " was found, but should not have been.\n" + printMatches(matches));
         }
     }
-
 }

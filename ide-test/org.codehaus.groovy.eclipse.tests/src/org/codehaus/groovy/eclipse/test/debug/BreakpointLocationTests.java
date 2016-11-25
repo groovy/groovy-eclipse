@@ -23,9 +23,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.debug.ui.ValidBreakpointLocationFinder;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
@@ -37,11 +35,11 @@ import org.eclipse.jface.text.IDocument;
  */
 public class BreakpointLocationTests extends EclipseTestCase {
     private static final String BREAKPOINT_SCRIPT_NAME = "BreakpointTesting.groovy";
-    
+
     private GroovyCompilationUnit unit;
-    
+
     private IDocument document;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -51,10 +49,7 @@ public class BreakpointLocationTests extends EclipseTestCase {
                  .getEntry("/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
          try {
              input = url.openStream();
-             IFile file = testProject.createGroovyTypeAndPackage("",
-                     BREAKPOINT_SCRIPT_NAME, input);
-             
-             unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+             unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", BREAKPOINT_SCRIPT_NAME, input);
          } finally {
              IOUtils.closeQuietly(input);
          }
@@ -66,22 +61,22 @@ public class BreakpointLocationTests extends EclipseTestCase {
              IOUtils.closeQuietly(input);
          }
          document = new Document(text);
-         
+
          unit.becomeWorkingCopy(null);
          unit.makeConsistent(null);
     }
-    
-    
+
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         unit.discardWorkingCopy();
     }
-    
+
     public void testBreakpointInScript1() throws Exception {
         doBreakpointTest(1);
     }
-    
+
     public void testBreakpointInScript2() throws Exception {
         doBreakpointTest(2);
     }
@@ -129,50 +124,50 @@ public class BreakpointLocationTests extends EclipseTestCase {
     public void testBreakpointInScript13() throws Exception {
         doBreakpointTest(13);
     }
-    
+
     public void testBreakpointInScript14() throws Exception {
         doBreakpointTest(14);
     }
-    
+
     public void testBreakpointInScript15() throws Exception {
         doBreakpointTest(15);
     }
-    
+
     public void testBreakpointInScript16() throws Exception {
         doBreakpointTest(16);
     }
-    
+
     public void testBreakpointInScript17() throws Exception {
         doBreakpointTest(17);
     }
-    
+
     public void testBreakpointInScript18() throws Exception {
         doBreakpointTest(18);
     }
-    
+
     public void testBreakpointInScript19() throws Exception {
         doBreakpointTest(19);
     }
-    
+
     public void testBreakpointInScript20() throws Exception {
         doBreakpointTest(20);
     }
-    
+
     public void testBreakpointInScript21() throws Exception {
         doBreakpointTest(21);
     }
-    
+
     public void testBreakpointInScript22() throws Exception {
         doBreakpointTest(22);
     }
-    
+
     public void testBreakpointInScript23() throws Exception {
         doBreakpointTest(23);
     }
-    
+
     private void doBreakpointTest(int i) throws Exception {
         int location = document.get().indexOf("// " + i)-3;
-        int line = document.getLineOfOffset(location)+1;  
+        int line = document.getLineOfOffset(location)+1;
         ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(line);
         ASTNode node = finder.findValidBreakpointLocation(unit.getModuleNode());
         assertNotNull("Could not find a breakpoint for line " + line, node);

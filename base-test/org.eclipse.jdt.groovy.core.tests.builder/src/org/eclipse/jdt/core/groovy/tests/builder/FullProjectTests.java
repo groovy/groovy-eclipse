@@ -170,9 +170,6 @@ public class FullProjectTests extends GroovierBuilderTests {
     }
 
     public void testReconcilingWithTransforms_multipleButOnlyOneAllowed() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -210,9 +207,6 @@ public class FullProjectTests extends GroovierBuilderTests {
     }
 
     public void testReconcilingWithTransforms_multipleAndBothAllowed() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -342,9 +336,6 @@ public class FullProjectTests extends GroovierBuilderTests {
     }
 
     public void testReconcilingWithTransforms_multipleAndWildcard() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);

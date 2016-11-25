@@ -32,7 +32,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
@@ -58,12 +57,9 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     public void preAction() throws FileNotFoundException, IOException {
         try {
             testProject = new TestProject();
-            unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(
-                    testProject.createGroovyTypeAndPackage("", "File.groovy", getOrigin().get()));
-            unit.becomeWorkingCopy(null);
+            unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", "File.groovy", getOrigin().get());
             RefactoringStatus status = new RefactoringStatus();
-            refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(),
-                    status);
+            refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(), status);
             refactoring.setPreferences(TestPrefInitializer.initializePreferences(getFileProperties(), testProject.getJavaProject()));
             if (status.getSeverity() != RefactoringStatus.OK) {
                 fail("Bad refactoring status on init: " + status);

@@ -47,15 +47,6 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        testProject.createPackage("p");
-    }
-
-    protected ICompilationUnit[] createUnits(String[] packages, String[] cuNames, String[] cuContents) throws CoreException {
-        return testProject.createUnits(packages, cuNames, cuContents);
-    }
-
-    protected ICompilationUnit createUnit(String pkg, String cuName, String cuContents) throws CoreException {
-        return testProject.createUnit(pkg, cuName, cuContents);
     }
 
     protected void assertContents(ICompilationUnit[] existingUnits, String[] expectedContents) throws JavaModelException {
@@ -85,8 +76,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
         }
     }
 
-    public char[] extractContents(ICompilationUnit unit)
-            throws JavaModelException {
+    public char[] extractContents(ICompilationUnit unit) throws JavaModelException {
         return ((CompilationUnit) unit).getContents();
     }
 
@@ -108,7 +98,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
 
     protected RefactoringStatus performRefactoring(Refactoring ref, boolean providesUndo, boolean performOnFail) throws Exception {
         // force updating of indexes
-        super.fullProjectBuild();
+        super.buildAll();
         performDummySearch();
         IUndoManager undoManager= getUndoManager();
         final CreateChangeOperation create= new CreateChangeOperation(

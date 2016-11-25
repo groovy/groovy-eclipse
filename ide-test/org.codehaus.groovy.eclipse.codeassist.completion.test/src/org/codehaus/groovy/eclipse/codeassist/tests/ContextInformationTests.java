@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.Document;
@@ -30,21 +32,15 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * @author Andrew Eisenberg
  * @created Jul 15, 2011
  */
-public class ContextInformationTests extends CompletionTestCase {
+public final class ContextInformationTests extends CompletionTestCase {
 
-    public ContextInformationTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(ContextInformationTests.class);
     }
 
     protected void runTest(ICompilationUnit unit, String target, String which, int count) throws Exception {
-        unit.becomeWorkingCopy(null);
         String source = unit.getSource();
         int offset = getIndexOf(source, target);
-
-        //env.fullBuild();
-        //SynchronizationUtils.joinBackgroudActivities();
-        //SynchronizationUtils.waitForIndexingToComplete();
-
         assertContextInformation(which, count, performContentAssist(unit, offset, GroovyCompletionProposalComputer.class), source);
     }
 
@@ -130,31 +126,31 @@ public class ContextInformationTests extends CompletionTestCase {
     }
 
     public void testConstructorContext1() throws Exception {
-        ICompilationUnit unit = create("Other", "class Other {\n" +
+        create("Other", "class Other {\n" +
                         "  Other(a) { }\n" +
                         "  Other(int a, int b) { }\n" +
                         "}");
-        unit = create("new Other()");
+        ICompilationUnit unit = create("new Other()");
 
         runTest(unit, "Other(", "Other", 2);
     }
 
     public void testConstructorContext1a() throws Exception {
-        ICompilationUnit unit = create("p", "Other", "package p\nclass Other {\n" +
+        create("p", "Other", "package p\nclass Other {\n" +
                 "  Other(a) { }\n" +
                 "  Other(int a, int b) { }\n" +
                 "}");
-        unit = create("new p.Other()");
+        ICompilationUnit unit = create("new p.Other()");
 
         runTest(unit, "Other(", "Other", 2);
     }
 
     public void testConstructorContext1b() throws Exception {
-        ICompilationUnit unit = create("p", "Other", "package p\nclass Other {\n" +
+        create("p", "Other", "package p\nclass Other {\n" +
                 "  Other(a) { }\n" +
                 "  Other(int a, int b) { }\n" +
                 "}");
-        unit = create("import p.Other\nnew Other()");
+        ICompilationUnit unit = create("import p.Other\nnew Other()");
 
         runTest(unit, "Other(", "Other", 2);
     }

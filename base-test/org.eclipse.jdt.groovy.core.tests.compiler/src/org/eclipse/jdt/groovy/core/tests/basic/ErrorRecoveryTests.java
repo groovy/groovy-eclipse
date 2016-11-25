@@ -167,9 +167,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1085_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "package foo\n"+
@@ -198,9 +195,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1085_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "package foo\n"+
@@ -229,9 +223,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1085_3() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "package foo\n"+
@@ -259,9 +250,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1192_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "class Script {\n"+
@@ -290,9 +278,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1046_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         // this file is missing the 'then' block.  We should cope and still offer assists
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -314,9 +299,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1046_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         // trickier than above, this is also missing the closing paren
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -333,9 +315,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1213_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         // missing close paren
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -358,9 +337,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1213_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         // missing close paren
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -383,9 +359,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1107_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "package foo\n"+
@@ -422,9 +395,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE1107_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "package foo\n"+
@@ -463,9 +433,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void testParsingRecovery_GRE468_1() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "class T {\n"+

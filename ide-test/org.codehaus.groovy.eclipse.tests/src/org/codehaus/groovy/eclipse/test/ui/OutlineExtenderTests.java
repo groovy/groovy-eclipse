@@ -22,19 +22,16 @@ import org.codehaus.groovy.eclipse.editor.outline.OMethod;
 import org.codehaus.groovy.eclipse.editor.outline.OType;
 import org.codehaus.groovy.eclipse.editor.outline.OutlineExtenderRegistry;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TCompilationUnit;
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TGroovyOutlinePage;
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TType;
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender2.TCompilationUnit2;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.internal.Workbench;
 
 /**
@@ -174,12 +171,12 @@ public class OutlineExtenderTests extends EclipseTestCase {
         assertIsField(tx.getChildren()[1], "field2", "QString;");
 
         // update content
-        GroovyEditor editor = getGroovyEditor(tu);
+        GroovyEditor editor = (GroovyEditor) EclipseTestSetup.openInEditor(tu);
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer();
         viewer.getTextWidget().setSelection(0);
         viewer.getTextWidget().insert("Long field3 = 100 \n");
-        fullProjectBuild();
-        waitForIndexes();
+        buildAll();
+        waitForIndex();
         tu.refresh();
 
         // check consistency
@@ -257,12 +254,9 @@ public class OutlineExtenderTests extends EclipseTestCase {
     }
 
     private GroovyOutlinePage openFile(String className, String contents) throws Exception {
-        IFile file = testProject.createGroovyTypeAndPackage("", className + ".groovy", contents);
-
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-        unit.becomeWorkingCopy(null);
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", className + ".groovy", contents);
         unit.reconcile(true, null);
-        GroovyEditor editor = getGroovyEditor(unit);
+        GroovyEditor editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit);
 
         GroovyOutlinePage outline = editor.getOutlinePage();
         if (!unit.isWorkingCopy()) {
@@ -276,15 +270,6 @@ public class OutlineExtenderTests extends EclipseTestCase {
             return outline;
         }
         return null;
-    }
-
-    /**
-     * get the groovy editor
-     * @return
-     * @throws PartInitException
-     */
-    private GroovyEditor getGroovyEditor(GroovyCompilationUnit unit) throws PartInitException {
-        return (GroovyEditor) EditorUtility.openInEditor(unit);
     }
 
     /**

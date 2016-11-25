@@ -136,18 +136,15 @@ public final class PartialVisitTests extends BrowsingTestCase {
 
     private void assertCodeSelectWithSkippedNames(String contents, Region region, String expectedElementName, String... skippedElementNames) throws Exception {
         GroovyCompilationUnit unit = addGroovySource(contents, "Hello");
-        unit.becomeWorkingCopy(null);
 
         IJavaElement[] elems = helper.select(unit, region.getOffset(), region.getLength());
         assertEquals("Should have found a single selection: " + Arrays.toString(elems), 1, elems.length);
         assertEquals("Wrong element selected", expectedElementName, elems[0].getElementName());
 
         for (String skipped : skippedElementNames) {
-            assertTrue("Element " + skipped + " should have been skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements,
-                    helper.skippedElements.contains(skipped));
+            assertTrue("Element " + skipped + " should have been skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements, helper.skippedElements.contains(skipped));
         }
 
-        assertEquals("Wrong number of elements skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements,
-                skippedElementNames.length, helper.skippedElements.size());
+        assertEquals("Wrong number of elements skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements, skippedElementNames.length, helper.skippedElements.size());
     }
 }

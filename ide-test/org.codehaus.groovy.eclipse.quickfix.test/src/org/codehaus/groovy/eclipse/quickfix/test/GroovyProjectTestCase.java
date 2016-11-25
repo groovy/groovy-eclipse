@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Base test harness for creating Groovy and Java types in a Groovy project and
@@ -58,30 +57,20 @@ public class GroovyProjectTestCase extends EclipseTestCase {
 
     /**
      * Create a Groovy type in the specified package
-     *
-     * @param pack
-     * @param unitName
-     * @param contents
-     * @return
-     * @throws Exception
      */
-    protected ICompilationUnit createGroovyType(IPackageFragment pack,
-            String fileName, String contents) throws Exception {
-        IFile file = testProject.createGroovyType(pack, fileName, contents);
-        assertTrue(file.getName() + " should exist", file.exists());
-        fullProjectBuild();
-        waitForIndexes();
-        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+    protected ICompilationUnit createGroovyType(IPackageFragment pack, String fileName, String contents) throws Exception {
+        ICompilationUnit unit = testProject.createGroovyType(pack, fileName, contents);
+        assertTrue(unit.getResource().getName() + " should exist", unit.getResource().exists());
+        buildAll();
+        waitForIndex();
         return unit;
     }
 
-    protected ICompilationUnit createJavaTypeInTestPackage(String fileName,
-            String contents) throws Exception {
-        ICompilationUnit unit = testProject.createJavaType(packageFrag,
-                fileName, contents).getCompilationUnit();
+    protected ICompilationUnit createJavaTypeInTestPackage(String fileName, String contents) throws Exception {
+        ICompilationUnit unit = testProject.createJavaType(packageFrag, fileName, contents);
 
-        fullProjectBuild();
-        waitForIndexes();
+        buildAll();
+        waitForIndex();
         IFile file = (IFile) unit.getResource();
         assertTrue(file.getName() + " should exist", file.exists());
         return unit;

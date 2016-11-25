@@ -15,20 +15,22 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * @author Andrew Eisenberg
  * @created Jul 23, 2009
- *
  */
-public class InferencingCompletionTests extends CompletionTestCase {
+public final class InferencingCompletionTests extends CompletionTestCase {
 
-    public InferencingCompletionTests() {
-        super("Inferencing Completion Test Cases");
+    public static Test suite() {
+        return newTestSuite(InferencingCompletionTests.class);
     }
 
     private static final String CONTENTS = "class TransformerTest {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}";
+
     private static final String CONTENTS_SCRIPT =
         "def s = \"string\"\n" +
         "s.st\n" +
@@ -59,6 +61,7 @@ public class InferencingCompletionTests extends CompletionTestCase {
         "g[0].star";
 
     private static final String CONTENTS_CLOSURE = "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
+
     public void testInferenceOfLocalStringInMethod() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS, getIndexOf(CONTENTS, "s.st"));
         proposalExists(proposals, "startsWith", 2);
@@ -68,6 +71,7 @@ public class InferencingCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_SCRIPT, getIndexOf(CONTENTS_SCRIPT, "s.st"));
         proposalExists(proposals, "startsWith", 2);
     }
+
     public void testInferenceOfLocalString2() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_SCRIPT, getIndexOf(CONTENTS_SCRIPT, "0).sub"));
         proposalExists(proposals, "substring", 2);
@@ -77,6 +81,7 @@ public class InferencingCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_SCRIPT, getIndexOf(CONTENTS_SCRIPT, "t.st"));
         proposalExists(proposals, "startsWith", 2);
     }
+
     public void testInferenceInClosure() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_CLOSURE, getIndexOf(CONTENTS_CLOSURE, "writer.clos"));
         proposalExists(proposals, "close", 1);
@@ -86,17 +91,19 @@ public class InferencingCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT1, getIndexOf(CONTENTS_GETAT1, ")[0].star"));
         proposalExists(proposals, "startsWith", 2);
     }
+
     public void testGetAt2() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT1, getIndexOf(CONTENTS_GETAT1, "g[0].star"));
         proposalExists(proposals, "startsWith", 2);
     }
+
     public void testGetAt3() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT2, getIndexOf(CONTENTS_GETAT2, ")[0].star"));
         proposalExists(proposals, "startsWith", 0);
     }
+
     public void testGetAt4() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS_GETAT2, getIndexOf(CONTENTS_GETAT2, "g[0].star"));
         proposalExists(proposals, "startsWith", 0);
     }
-
 }

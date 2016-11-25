@@ -17,14 +17,14 @@ package org.codehaus.groovy.eclipse.test.adapters;
 
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester;
-import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 
 /**
  * @author Andrew Eisenberg
  * @created Jul 10, 2009
  *
  * This class tests GroovyResourcePropertyTester
- * 
+ *
  * Tests to see if a groovy file has a runnable main method
  */
 public class IsMainTesterTests extends EclipseTestCase {
@@ -75,7 +75,7 @@ public class IsMainTesterTests extends EclipseTestCase {
     }
 
     private void doTest(String text, boolean expected) throws Exception {
-        IFile file = testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", text);
+        IResource file = testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", text).getResource();
         GroovyResourcePropertyTester tester = new GroovyResourcePropertyTester();
         boolean result = tester.test(file, "hasMain", null, null);
         assertEquals("Should have " + (expected ? "" : "*not*") + " found a main method in class:\n" + text, expected, result);

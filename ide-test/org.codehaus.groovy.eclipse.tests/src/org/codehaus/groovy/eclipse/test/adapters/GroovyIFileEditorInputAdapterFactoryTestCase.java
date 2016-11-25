@@ -32,7 +32,7 @@ public class GroovyIFileEditorInputAdapterFactoryTestCase extends EclipseTestCas
         testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy",
             "class MainClass { static void main(String[] args");
 
-        fullProjectBuild();
+        buildAll();
 
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/MainClass.groovy");
 
@@ -51,7 +51,7 @@ public class GroovyIFileEditorInputAdapterFactoryTestCase extends EclipseTestCas
         testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy",
             "class OtherClass { static void main(String[] args");
 
-        fullProjectBuild();
+        buildAll();
 
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/OtherClass.groovy");
         assertNotNull(script);
@@ -65,22 +65,22 @@ public class GroovyIFileEditorInputAdapterFactoryTestCase extends EclipseTestCas
     }
 
     public void testIFileEditorInputAdapterHorendousCompileError() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "NotGroovy.file", "class C {\n abstract def foo() {}\n" + "}");
+        testProject.createFile("NotGroovy.file", "class C {\n abstract def foo() {}\n" + "}");
 
-        fullProjectBuild();
+        buildAll();
 
-        final IFile notScript = (IFile) testProject.getProject().findMember("src/pack1/NotGroovy.file");
+        final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file");
         assertNotNull(notScript);
         IFileEditorInput editor = new FileEditorInput(notScript);
         assertNull(editor.getAdapter(ClassNode.class));
     }
 
     public void testIFileEditorInputAdapterNotGroovyFile() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "NotGroovy.file", "this is not a groovy file");
+        testProject.createFile("NotGroovy.file", "this is not a groovy file");
 
-        fullProjectBuild();
+        buildAll();
 
-        final IFile notScript = (IFile) testProject.getProject().findMember("src/pack1/NotGroovy.file");
+        final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file");
         assertNotNull(notScript);
         IFileEditorInput editor = new FileEditorInput(notScript);
         assertNull(editor.getAdapter(ClassNode.class));

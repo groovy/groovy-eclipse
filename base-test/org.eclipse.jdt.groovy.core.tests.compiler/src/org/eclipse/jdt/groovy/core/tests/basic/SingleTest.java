@@ -17,16 +17,11 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import junit.framework.Test;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public final class SingleTest extends AbstractGroovyRegressionTest {
 
     public void testGreclipse719_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            return;
-        }
-
         this.runNegativeTest(new String[] {
             "MyDomainClass.groovy",
             "int anInt = 10;\n"+

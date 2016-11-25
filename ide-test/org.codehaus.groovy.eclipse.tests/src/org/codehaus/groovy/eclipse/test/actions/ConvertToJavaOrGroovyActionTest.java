@@ -24,15 +24,15 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IActionDelegate;
 
 /**
  * Tests the commands RenameToGroovy and RenameToJava
+ *
  * @author Andrew Eisenberg
  * @created Aug 26, 2009
- *
  */
 public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
 
@@ -43,8 +43,8 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
     }
 
     public void testRenameToGroovy() throws Exception {
-        IType type = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
-        IResource file = type.getCompilationUnit().getResource();
+        ICompilationUnit unit = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
+        IResource file = unit.getResource();
         assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToGroovyAction();
@@ -58,7 +58,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
     }
 
     public void testRenameToJava() throws Exception {
-        IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }");
+        IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }").getResource();
         assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToJavaAction();
@@ -72,8 +72,8 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
     }
 
     public void testRenameToGroovyAndBack() throws Exception {
-        IType type = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
-        IResource file = type.getCompilationUnit().getResource();
+        ICompilationUnit unit = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
+        IResource file = unit.getResource();
         assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToGroovyAction();
@@ -98,7 +98,7 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
     }
 
     public void testRenameToJavaAndBack() throws Exception {
-        IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.roovy", "class Bar { }");
+        IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }").getResource();
         assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToJavaAction();

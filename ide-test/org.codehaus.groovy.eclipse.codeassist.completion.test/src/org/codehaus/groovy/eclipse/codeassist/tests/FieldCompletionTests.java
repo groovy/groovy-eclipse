@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -25,10 +27,10 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  *
  * Tests that Field completions are working properly
  */
-public class FieldCompletionTests extends CompletionTestCase {
+public final class FieldCompletionTests extends CompletionTestCase {
 
-    public FieldCompletionTests(String name) {
-        super(name);
+    public static Test suite() {
+        return newTestSuite(FieldCompletionTests.class);
     }
 
     // test that safe dereferencing works
@@ -39,25 +41,27 @@ public class FieldCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "?."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
+
     public void testSpaces1() throws Exception {
         String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}";
         ICompilationUnit unit = create(contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "someProperty", 1);
     }
+
     public void testSpaces2() throws Exception {
         String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}";
         ICompilationUnit unit = create(contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, ". "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "someProperty", 1);
     }
+
     public void testSpaces3() throws Exception {
         String contents = "public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}";
         ICompilationUnit unit = create(contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, ". "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "someProperty", 1);
     }
-
 
     // test some variations on properties
     // GRECLIPSE-616
@@ -98,17 +102,15 @@ public class FieldCompletionTests extends CompletionTestCase {
     }
 
     public void testProperties5() throws Exception {
+        addJavaSource("class Other { int x = 9; }", "Other", "");
+
         String contents = "new Other().x";
         ICompilationUnit unit = create(contents);
-        env.addClass(env.getProject("Project").getFolder("src").getFullPath(), "Other", "class Other { int x = 9; }");
-        fullBuild();
-
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getX", 0);
         proposalExists(proposals, "setX", 0);
         proposalExists(proposals, "x", 1);
     }
-
 
     // now repeat the tests above. but with content assist on method calls instead of constructor calls
     public void testProperties1a() throws Exception {
@@ -148,12 +150,11 @@ public class FieldCompletionTests extends CompletionTestCase {
     }
 
     public void testProperties5a() throws Exception {
+        // java class...no properties
+        addJavaSource("class Other { int x = 9; }", "Other", "");
+
         String contents = "def o = new Other()\no.x";
         ICompilationUnit unit = create(contents);
-
-        // java class...no properties
-        env.addClass(env.getProject("Project").getFolder("src").getFullPath(), "Other", "class Other { int x = 9; }");
-        fullBuild();
 
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getX", 0);
@@ -270,6 +271,7 @@ public class FieldCompletionTests extends CompletionTestCase {
         // the method
         proposalExists(proposals, "xxx(Object a, Object b)", 1);
     }
+
     public void testClosure2() throws Exception {
         String contents = "class Other { def xxx = { int a, int b -> }  } \n def o = new Other()\no.x";
         ICompilationUnit unit = create(contents);
@@ -279,6 +281,7 @@ public class FieldCompletionTests extends CompletionTestCase {
         // the method
         proposalExists(proposals, "xxx(int a, int b)", 1);
     }
+
     public void testClosure3() throws Exception {
         String contents = "class Other { def xxx = { }  } \n def o = new Other()\no.x";
         ICompilationUnit unit = create(contents);
