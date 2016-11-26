@@ -44,7 +44,6 @@ public class GroovyTagScannerTests extends TestCase {
         System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
 
-        super.setUp();
         new PreferenceInitializer().initializeDefaultPreferences();
         IColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
 

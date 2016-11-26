@@ -35,42 +35,42 @@ public final class StaticImportsCompletionTests extends CompletionTestCase {
 
     public void testStaticImportField() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\nNULL_ATTRIBUTE_VALUE";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "NULL_ATTRIBUTE_VALUE"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "NULL_ATTRIBUTE_VALUE", 1);
     }
     public void testStaticImportMethod() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.getAttributeKey\ngetAttributeKey";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "getAttributeKey"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getAttributeKey", 1);
     }
     public void testStaticStarImportField() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.*\nNULL_ATTRIBUTE_VALUE";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "NULL_ATTRIBUTE_VALUE"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "NULL_ATTRIBUTE_VALUE", 1);
     }
     public void testStaticStarImportMethod() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.*\ngetAttributeKey";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "getAttributeKey"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getAttributeKey", 1);
     }
     public void testStaticFieldImport() throws Exception {
         String contents = "import static java.lang.Boolean.FA";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "FA"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "FALSE", 1);
     }
     public void testStaticMethodImport() throws Exception {
         String contents = "import static java.lang.Boolean.co";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "co"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "compare", 1);

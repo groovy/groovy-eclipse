@@ -32,21 +32,21 @@ public final class DefaultMethodContentAssistTests extends CompletionTestCase {
     }
 
     public void testDefaultMethods1() throws Exception {
-        create(
-                "Default", "class Default {\n" +
+        addGroovySource(
+                "class Default {\n" +
                 "  def meth(int a, b = 9, c = 10) { }\n" +
-                "}");
+                "}", "Default", "");
         String contents = "new Default().me";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'));
         proposalExists(proposals, "meth", 3);
     }
 
     public void testDefaultMethods2() throws Exception {
-        create(
-                "Default", "class Default {\n" +
-                        "  def meth(int a, b = 9, c = 10) { }\n" +
+        addGroovySource(
+                "class Default {\n" +
+                "  def meth(int a, b = 9, c = 10) { }\n" +
                 "  def meth(String other) { }\n" +
-                "}");
+                "}", "Default", "");
         String contents = "new Default().me";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'));
         proposalExists(proposals, "meth", 4);

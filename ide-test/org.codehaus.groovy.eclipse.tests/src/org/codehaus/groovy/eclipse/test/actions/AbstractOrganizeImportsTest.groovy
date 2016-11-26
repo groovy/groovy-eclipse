@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import junit.framework.Test
+import junit.framework.TestCase
+import junit.framework.TestSuite
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
 import org.eclipse.jdt.core.search.TypeNameMatch
@@ -27,18 +29,26 @@ import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.InsertEdit
 import org.eclipse.text.edits.TextEdit
 
-abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
+abstract class AbstractOrganizeImportsTest extends TestCase {
 
     protected static final String LINE_SEPARATOR = System.getProperty('line.separator')
 
+    protected static Test newTestSuite(Class<? extends Test> test) {
+        new EclipseTestSetup(new TestSuite(test))
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        EclipseTestSetup.removeSources()
+    }
+
     @Override
     protected void setUp() {
-        super.setUp()
-        testProject.createGroovyTypeAndPackage('other', 'Other.groovy', CONTENTS_SUPPORTING)
-        testProject.createGroovyTypeAndPackage('other2', 'Other.groovy', CONTENTS_SUPPORTING2)
-        testProject.createGroovyTypeAndPackage('other3', 'Other.groovy', CONTENTS_SUPPORTING2)
-        testProject.createGroovyTypeAndPackage('other4', 'Other.groovy', CONTENTS_SUPPORTING2)
-        testProject.createJavaTypeAndPackage('other', 'Outer.java', CONTENTS_JAVA_SUPPORTING)
+        EclipseTestSetup.addJavaSource(CONTENTS_JAVA_SUPPORTING, 'Outer', 'other')
+        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING,    'Other', 'other')
+        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other2')
+        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other3')
+        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other4')
     }
 
     private static final String CONTENTS_SUPPORTING = '''
@@ -62,8 +72,8 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected void doAddImportTest(String pkgName, String resourceName, CharSequence contents, List<String> expectedImports) {
-        def unit = testProject.createGroovyTypeAndPackage(pkgName, resourceName + '.groovy', contents)
-        testProject.waitForIndexer()
+        def unit = EclipseTestSetup.addGroovySource(contents, resourceName, pkgName)
+        EclipseTestSetup.waitForIndex()
         IChooseImportQuery query = new NoChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
         TextEdit edit = organize.calculateMissingImports()
@@ -112,9 +122,9 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
-        def unit = createGroovyType('main', 'Main.groovy', originalContents)
-        testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        testProject.waitForIndexer()
+        def unit = createGroovyType('main', 'Main', originalContents)
+        EclipseTestSetup.buildProject()
+        EclipseTestSetup.waitForIndex()
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
@@ -128,8 +138,8 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
-        def unit = createGroovyType('main', 'Main.groovy', contents)
-        testProject.fullBuild()
+        def unit = createGroovyType('main', 'Main', contents)
+        EclipseTestSetup.buildProject()
 
         def query = new ChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
@@ -141,7 +151,7 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
     }
 
     protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
-        testProject.createGroovyTypeAndPackage(pack, name, normalizeLineEndings(contents))
+        EclipseTestSetup.addGroovySource(normalizeLineEndings(contents), name, pack)
     }
 
     protected String normalizeLineEndings(CharSequence contents) {
@@ -151,7 +161,7 @@ abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
 
 class NoChoiceQuery implements IChooseImportQuery {
     public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
-        EclipseTestCase.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+        TestCase.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
     }
 }
 

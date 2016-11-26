@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
@@ -34,41 +30,30 @@ import org.eclipse.core.runtime.Platform;
 
 public class BaseTestSuite extends TestSuite {
 
-	private static class PatternFilter implements FilenameFilter {
+    public static List<File> getFileList(final String search) {
+        return createFileList(search, "");
+    }
 
-		public PatternFilter(final String findPattern) {
-			this.findPattern = "^" + findPattern + ".*";
-		}
+    public static List<File> getFileList(final String subFolder,final String search) {
+        return createFileList(search, subFolder);
+    }
 
-		private String findPattern;
-
-		public boolean accept(final File dir, final String name) {
-			return name.matches(findPattern);
-		}
-	}
-
-	public static List<File> getFileList(final String search) {
-		return createFileList(search, "");
-	}
-
-	public static List<File> getFileList(final String subFolder,final String search) {
-		return createFileList(search, subFolder);
-	}
-
-	private static List<File> createFileList(final String search, final String subFolder){
-		final String TEST_FILES = getPathToTestFiles();
-		final File dir = new File(TEST_FILES + subFolder);
-		if(!dir.isDirectory()) {
-			throw new RuntimeException("The path: " + dir.getAbsolutePath() + " is invalid");
-		}
-		final ArrayList<File> fl = new ArrayList<File>();
-
-		for (final File f : dir.listFiles(new PatternFilter(search))) {
-			fl.add(f);
-		}
-
-		return fl;
-	}
+    private static List<File> createFileList(final String search, final String subFolder) {
+        final String TEST_FILES = getPathToTestFiles();
+        final File dir = new File(TEST_FILES + subFolder);
+        if (!dir.isDirectory()) {
+            throw new RuntimeException("The path: " + dir.getAbsolutePath() + " is invalid");
+        }
+        final ArrayList<File> fl = new ArrayList<File>();
+        for (final File f : dir.listFiles(new FilenameFilter() {
+            public boolean accept(final File dir, final String name) {
+                return name.matches("^" + search + ".*");
+            }
+        })) {
+            fl.add(f);
+        }
+        return fl;
+    }
 
     private static String getPluginDirectoryPath() {
         try {

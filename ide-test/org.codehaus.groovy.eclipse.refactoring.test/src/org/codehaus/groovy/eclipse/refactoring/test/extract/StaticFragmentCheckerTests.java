@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.extract.StaticExpressionChec
 import org.eclipse.core.runtime.CoreException;
 
 /**
- *
  * @author andrew
  * @created May 12, 2010
  */
@@ -78,6 +77,5 @@ public class StaticFragmentCheckerTests extends CheckerTestCase {
         StaticExpressionChecker checker = new StaticExpressionChecker();
         boolean result = checker.doVisit(getLastExpression(module));
         assertFalse("Last expression in:\n" + text + "\nshould not have been static, but was.", result);
-
     }
 }

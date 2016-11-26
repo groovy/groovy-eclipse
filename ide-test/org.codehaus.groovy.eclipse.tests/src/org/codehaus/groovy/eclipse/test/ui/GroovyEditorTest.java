@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.ui;
 
+// use from DefaultGroovyMethods not StringGroovyMethods for backwards compatability
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.stripIndent;
 
 import java.io.File;
@@ -159,6 +160,7 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
      * the CURSOR marker, then the cursor position of the editor will be
      * verified to be in that position as well.
      */
+    @SuppressWarnings("deprecation")
     protected void assertEditorContents(String expected) {
         String actual = getText();
         if (expected.contains(CARET)) {

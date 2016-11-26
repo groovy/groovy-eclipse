@@ -51,7 +51,7 @@ public final class ProposalProviderAndFilterTests extends CompletionTestCase {
         EclipseTestSetup.addNature(Extender2.NATURE2);
 
         String contents = "println th";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
 
@@ -66,7 +66,7 @@ public final class ProposalProviderAndFilterTests extends CompletionTestCase {
         EclipseTestSetup.addNature(Extender2.NATURE2);
 
         String contents = "println th";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
 

@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.test.actions.AliasingOrganizeImportsTest;
 import org.codehaus.groovy.eclipse.test.actions.ConvertToJavaOrGroovyActionTest;
 import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTestCase;
@@ -51,10 +50,10 @@ public class AllUITests {
         suite.addTestSuite(ErrorLogTest.class); //This must be first or it will pick up garbage left in log by other tests.
 
         // actions
-        suite.addTestSuite(AliasingOrganizeImportsTest.class);
+        suite.addTest(new EclipseTestSetup(newTestSuite("Organize Imports",
+                OrganizeImportsTest.class, AliasingOrganizeImportsTest.class)));
         suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
         suite.addTestSuite(GroovyNatureActionTestCase.class);
-        suite.addTestSuite(OrganizeImportsTest.class);
         suite.addTestSuite(SaveParticipantRegistryTest.class);
 
         // adapters
@@ -66,9 +65,9 @@ public class AllUITests {
         suite.addTestSuite(ExpressionFinderTestCase.class);
 
         // debug
-        suite.addTestSuite(BreakpointLocationTests.class);
+        suite.addTest(new EclipseTestSetup(newTestSuite("Debug Breakpoints",
+                BreakpointLocationTests.class, DebugBreakpointsTests.class)));
         suite.addTestSuite(ConsoleLineTrackerTests.class);
-        suite.addTestSuite(DebugBreakpointsTests.class);
         suite.addTestSuite(GroovyLauncherShortcutTests.class);
 
         // ui (except ErrorLogTest)
@@ -88,6 +87,12 @@ public class AllUITests {
         // ..ui.search
         suite.addTest(FindOccurrencesTests.suite());
 
+        return suite;
+    }
+
+    private static Test newTestSuite(String name, Class<?>... tests) {
+        TestSuite suite = new TestSuite(tests);
+        suite.setName(name);
         return suite;
     }
 }

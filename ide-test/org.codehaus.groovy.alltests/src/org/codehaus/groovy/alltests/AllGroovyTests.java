@@ -48,14 +48,14 @@ public class AllGroovyTests {
 
         TestSuite suite = new TestSuite(AllGroovyTests.class.getName());
         suite.addTestSuite(SanityTest.class);
-        suite.addTest(AllUITests.suite()); //This must be first because of 'ErrorLogTest' inside of it.
-        suite.addTest(AllCoreTests.suite());
-        suite.addTest(AllJUnitTests.suite());
-        suite.addTest(AllCompletionTests.suite());
+        suite.addTest(AllUITests.suite()); // must be first because of 'ErrorLogTest'
         suite.addTest(AllBrowsingTests.suite());
-        suite.addTest(AllRefactoringTests.suite());
-        suite.addTest(AllQuickFixTests.suite());
+        suite.addTest(AllCompletionTests.suite());
+        suite.addTest(AllCoreTests.suite());
         suite.addTest(AllDSLTests.suite());
+        suite.addTest(AllJUnitTests.suite());
+        suite.addTest(AllQuickFixTests.suite());
+        suite.addTest(AllRefactoringTests.suite());
         return suite;
     }
 }

@@ -18,13 +18,14 @@ package org.codehaus.groovy.eclipse.test.debug;
 import java.io.InputStream;
 import java.net.URL;
 
-import junit.framework.AssertionFailedError;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.eclipse.debug.ui.ToggleBreakpointAdapter;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.IBreakpointManager;
@@ -32,7 +33,6 @@ import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.actions.ActionDelegateHelper;
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
@@ -41,54 +41,36 @@ import org.eclipse.jface.text.TextSelection;
  * @author Andrew Eisenberg
  * @created Jul 24, 2009
  */
-public class DebugBreakpointsTests extends EclipseTestCase {
-    private static final String BREAKPOINT_SCRIPT_NAME = "BreakpointTesting.groovy";
+public final class DebugBreakpointsTests extends TestCase {
 
-    private ToggleBreakpointAdapter adapter;
+    public static Test suite() {
+        return new EclipseTestSetup(new TestSuite(DebugBreakpointsTests.class));
+    }
 
-    private ICompilationUnit unit;
-
-    private GroovyEditor editor;
-
-    private String text;
+    @Override
+    protected void tearDown() throws Exception {
+        EclipseTestSetup.removeSources();
+    }
 
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
-
-         InputStream input = null;
-         URL url = Platform.getBundle("org.codehaus.groovy.eclipse.tests")
-                 .getEntry("/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
-         try {
-             input = url.openStream();
-             unit = testProject.createGroovyTypeAndPackage("", BREAKPOINT_SCRIPT_NAME, input);
-         } finally {
-             IOUtils.closeQuietly(input);
-         }
-
-         try {
-             input = url.openStream();
-             text = IOUtils.toString(input);
-         } finally {
-             IOUtils.closeQuietly(input);
-         }
-         adapter = new ToggleBreakpointAdapter();
-
-         editor = (GroovyEditor) EditorUtility.openInEditor(unit);
-
-         ReflectionUtils.setPrivateField(ActionDelegateHelper.class, "fTextEditor", ActionDelegateHelper.getDefault(), editor);
-
-         unit.becomeWorkingCopy(null);
-         unit.makeConsistent(null);
-         SynchronizationUtils.joinBackgroudActivities();
+        InputStream input = null;
+        URL url = Platform.getBundle("org.codehaus.groovy.eclipse.tests").getEntry("/testData/groovyfiles/BreakpointTesting.groovy");
+        try {
+            input = url.openStream();
+            unit = EclipseTestSetup.addGroovySource((text = IOUtils.toString(input)), "BreakpointTesting");
+        } finally {
+            IOUtils.closeQuietly(input);
+        }
+        adapter = new ToggleBreakpointAdapter();
+        editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit);
+        ReflectionUtils.setPrivateField(ActionDelegateHelper.class, "fTextEditor", ActionDelegateHelper.getDefault(), editor);
     }
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        unit.discardWorkingCopy();
-        editor.close(false);
-        SynchronizationUtils.joinBackgroudActivities();
-    }
+
+    private ToggleBreakpointAdapter adapter;
+    private ICompilationUnit unit;
+    private GroovyEditor editor;
+    private String text;
 
     public void testBreakpointInScript1() throws Exception {
         doBreakpointTest(1);
@@ -183,23 +165,7 @@ public class DebugBreakpointsTests extends EclipseTestCase {
     }
 
     private void doBreakpointTest(int i) throws Exception {
-        // occasional failures on build server...perform in a loop
-        int count = 0;
-        int maxCount = 5;
-        while (count <= maxCount) {
-            count++;
-            try {
-                innerDoBreakpointTest(i);
-            } catch (AssertionFailedError err) {
-                if (count >= maxCount) {
-                    throw err;
-                }
-            }
-        }
-    }
-
-    private void innerDoBreakpointTest(int i) throws CoreException {
-        ITextSelection selection = new TextSelection(new Document(text), text.indexOf("// " + i)-3, 3);
+        ITextSelection selection = new TextSelection(new Document(text), text.indexOf("// " + i) - 3, 3);
         boolean canToggle = adapter.canToggleLineBreakpoints(editor, selection);
         assertTrue("Should be able to toggle breakpoint at section " + i, canToggle);
 
@@ -210,10 +176,9 @@ public class DebugBreakpointsTests extends EclipseTestCase {
         try {
             adapter.toggleLineBreakpoints(editor, selection);
             SynchronizationUtils.joinBackgroudActivities();
-
         } finally {
             IBreakpoint[] newBreakpoints = breakpointManager.getBreakpoints();
-            assertEquals("Unexpected number of breakpoints", initialNumBreakpoints+1, newBreakpoints.length);
+            assertEquals("Unexpected number of breakpoints", initialNumBreakpoints + 1, newBreakpoints.length);
             for (IBreakpoint breakpoint : newBreakpoints) {
                 breakpointManager.removeBreakpoint(breakpoint, true);
             }

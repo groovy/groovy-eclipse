@@ -29,7 +29,6 @@ public class ExpressionFinderTestCase extends TestCase {
     protected void setUp() throws Exception {
         System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
-        super.setUp();
     }
 
     public void testIdentifierExpression() throws Exception {

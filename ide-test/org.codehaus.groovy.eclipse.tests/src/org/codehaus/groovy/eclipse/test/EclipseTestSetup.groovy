@@ -121,7 +121,5 @@ class EclipseTestSetup extends TestSetup {
         SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean");
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
         spm.waitForCompletion()
-
-        testProject.javaProject.resetCaches()
     }
 }

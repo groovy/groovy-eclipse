@@ -15,10 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import junit.framework.Test
+
 /**
  * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}
  */
 final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
+
+    static Test suite() {
+        return newTestSuite(AliasingOrganizeImportsTest)
+    }
 
     void testRetainTypeAlias() {
         String contents = '''\
@@ -155,7 +161,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainStaticAlias6() {
-        createGroovyType 'other', 'Wrapper.groovy', '''
+        createGroovyType 'other', 'Wrapper', '''
         class Wrapper {
           enum Feature {
             TopRanking,

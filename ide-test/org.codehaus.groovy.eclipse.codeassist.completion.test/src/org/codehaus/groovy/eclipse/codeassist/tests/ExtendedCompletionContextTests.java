@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompleti
 import org.eclipse.jdt.core.IJavaElement;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created May 4, 2011
  */
@@ -40,7 +39,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInScript1() throws Exception {
         String contents = "def x = 9\ndef y = ''\ndef z = []\nint a\nString b\nList c\nz";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, INTEGER_SIG, "x", "a");
@@ -50,7 +49,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInScript2() throws Exception {
         String contents = "int[] x\nString[] y\nList[] z\nint a\nString b\nList c\nz";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, INTEGER_ARR_SIG, "x");
@@ -60,7 +59,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInScript3() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super { }\ndef x = new Super()\ndef y = new Sub()\ndef z\nz";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, "LSuper;", "x", "y");
@@ -69,7 +68,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInScript4() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super { }\ndef x = new Super[0]\ndef y = new Sub[0]\ndef z\nz";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, "[LSuper;", "x", "y");
@@ -80,7 +79,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInClass1() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super {\n def foo() { \ndef x = new Super[0]\ndef y = new Sub[0]\ndef z\nz } }";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("foo", enclosing.getElementName());
         assertExtendedContextElements(context, "[LSuper;", "x", "y");
@@ -91,7 +90,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInClass2() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super { \nSuper x\nSub y\ndef z\n def foo() { \nz } }";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("foo", enclosing.getElementName());
         assertExtendedContextElements(context, "LSuper;", "x", "y");
@@ -100,7 +99,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
 
     public void testExtendedContextInClass3() throws Exception {
         String contents = "class Super{ \nSuper a\nSub b\ndef c }\nclass Sub extends Super { \nSuper x\nSub y\ndef z\n def foo() { \nSuper z } }";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("foo", enclosing.getElementName());
         assertExtendedContextElements(context, "LSub;", "y", "b");
@@ -113,7 +112,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
             "Map<Integer, Class> x\n" +
             "HashMap<Class, Integer> y\n" +
             "z";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, "Ljava.util.Map;", "y", "x");
@@ -128,7 +127,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
             "boolean a\n" +
             "Boolean b\n" +
             "z";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, "Ljava.lang.Integer;", "y", "x");
@@ -152,7 +151,7 @@ public final class ExtendedCompletionContextTests extends CompletionTestCase {
             "boolean[][] a2\n" +
             "Boolean[][] b2\n" +
             "z";
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
+        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
         assertExtendedContextElements(context, "Ljava.lang.Integer;", "y", "x");

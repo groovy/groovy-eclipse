@@ -197,7 +197,7 @@ public final class NewFieldCompletionTests extends CompletionTestCase {
             "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent HTMLFrameHyperlinkEvent\nht  }";
 
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "\nht"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent", 0);
     }
@@ -207,7 +207,7 @@ public final class NewFieldCompletionTests extends CompletionTestCase {
             "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent HTMLFrameHyperlinkEvent\n      }";
 
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "\n    "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent", 0);
     }

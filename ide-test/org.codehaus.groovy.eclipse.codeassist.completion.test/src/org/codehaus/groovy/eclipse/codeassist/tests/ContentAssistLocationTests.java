@@ -471,7 +471,7 @@ public final class ContentAssistLocationTests extends CompletionTestCase {
     }
 
     void assertLocation(String contents, int offset, ContentAssistLocation location) throws Exception {
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
 
         GroovyCompletionProposalComputer computer = new GroovyCompletionProposalComputer();
         ContentAssistContext context = computer.createContentAssistContext((GroovyCompilationUnit) unit, offset, new Document(unit.getBuffer().getContents()));

@@ -85,31 +85,16 @@ public abstract class CompletionTestCase extends TestCase {
         System.out.println("Starting: " + getName());
     }
 
-    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name, String pack) {
-        return EclipseTestSetup.addGroovySource(contents, name, pack);
-    }
-
     protected CompilationUnit addJavaSource(CharSequence contents, String name, String pack) {
         return EclipseTestSetup.addJavaSource(contents, name, pack);
     }
 
-    @Deprecated
-    protected ICompilationUnit create(String contents) throws Exception {
-        return addGroovySource(contents, "GroovyClass", "");
-    }
-
-    @Deprecated
-    protected ICompilationUnit create(String cuName, String contents) throws Exception {
-        return addGroovySource(contents, cuName, "");
-    }
-
-    @Deprecated
-    protected ICompilationUnit create(String pkg, String cuName, String contents) throws Exception {
-        return addGroovySource(contents, cuName, pkg);
+    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name, String pack) {
+        return EclipseTestSetup.addGroovySource(contents, name, pack);
     }
 
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) throws Exception {
-        EclipseTestSetup.buildProject();
+        EclipseTestSetup.waitForIndex();
         JavaEditor editor = EclipseTestSetup.openInEditor(unit);
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer();
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor);

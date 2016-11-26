@@ -29,8 +29,8 @@ public final class InferencingCompletionTests extends CompletionTestCase {
         return newTestSuite(InferencingCompletionTests.class);
     }
 
-    private static final String CONTENTS = "class TransformerTest {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}";
-
+    private static final String CONTENTS =
+        "class TransformerTest {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}";
     private static final String CONTENTS_SCRIPT =
         "def s = \"string\"\n" +
         "s.st\n" +
@@ -42,16 +42,14 @@ public final class InferencingCompletionTests extends CompletionTestCase {
         "    t.st\n" +
         "  }" +
         "}";
-
     private static final String CONTENTS_GETAT1 =
-            "class GetAt {\n" +
-            "  String getAt(foo) { }\n" +
-            "}\n" +
-            "\n" +
-            "new GetAt()[0].star\n" +
-            "GetAt g\n" +
-            "g[0].star";
-
+        "class GetAt {\n" +
+        "  String getAt(foo) { }\n" +
+        "}\n" +
+        "\n" +
+        "new GetAt()[0].star\n" +
+        "GetAt g\n" +
+        "g[0].star";
     private static final String CONTENTS_GETAT2 =
         "class GetAt {\n" +
         "}\n" +
@@ -59,8 +57,8 @@ public final class InferencingCompletionTests extends CompletionTestCase {
         "new GetAt()[0].star\n" +
         "GetAt g\n" +
         "g[0].star";
-
-    private static final String CONTENTS_CLOSURE = "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
+    private static final String CONTENTS_CLOSURE =
+        "def file = new File(\"/tmp/some-file.txt\")\ndef writer = file.newWriter()\nnew URL(url).eachLine { line ->\nwriter.close()\n}";
 
     public void testInferenceOfLocalStringInMethod() throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(CONTENTS, getIndexOf(CONTENTS, "s.st"));

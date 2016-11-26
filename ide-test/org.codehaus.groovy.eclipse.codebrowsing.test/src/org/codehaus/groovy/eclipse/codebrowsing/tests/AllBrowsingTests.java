@@ -22,8 +22,7 @@ import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 
 public final class AllBrowsingTests {
     public static Test suite() throws Exception {
-        // share one test setup
-        TestSuite suite = new TestSuite();
+        TestSuite suite = new TestSuite("Code Selection and related");
         suite.addTestSuite(ASTFragmentTests.class);
         suite.addTestSuite(CodeSelectAttributesTests.class);
         suite.addTestSuite(CodeSelectCategoriesTests.class);

@@ -123,14 +123,14 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * Same package different file
      */
     public void testNoNamedArgs2() throws Exception {
-        create("Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  Flar() { }\n" +
                 "  Flar(a,b,c) { }\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "");
         String contents = "new Flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 0);
@@ -144,14 +144,14 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * different file and package
      */
     public void testNoNamedArgs3() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  Flar() { }\n" +
                 "  Flar(a,b,c) { }\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar","p");
         String contents = "new Flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 0);
@@ -182,12 +182,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * Same package different file
      */
     public void testNamedArgs2() throws Exception {
-        create("Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "");
         String contents = "new Flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 1);
@@ -200,12 +200,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * different file and package
      */
     public void testNamedArgs3() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents = "new Flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 1);
@@ -219,12 +219,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * Some args filled in
      */
     public void testNamedArgs4() throws Exception {
-        create("Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "");
         String contents = "new Flar(aaa:9)";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 0);
@@ -238,12 +238,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * Some args filled in
      */
     public void testNamedArgs5() throws Exception {
-        create("Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "");
         String contents = "new Flar(bbb: 7,aaa:9)";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 0);
@@ -257,12 +257,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * Some args filled in
      */
     public void testNamedArgs6() throws Exception {
-        create("Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "");
         String contents = "new Flar(bbb: 7,ccc:8, aaa:9)";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 0);
@@ -276,12 +276,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
      * ensure no double adding of named properties for booleans
      */
     public void testNamedArgs7() throws Exception {
-        create("Flar",
+        addGroovySource(
                 "class Flar {\n" +
-                        "  boolean aaa\n" +
-                        "  boolean bbb\n" +
-                        "  boolean ccc\n" +
-                "}\n");
+                "  boolean aaa\n" +
+                "  boolean bbb\n" +
+                "  boolean ccc\n" +
+                "}", "Flar", "");
         String contents = "new Flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 1);
@@ -291,12 +291,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing1() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
@@ -308,12 +308,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing2() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "String xxx\n" +
                 "int yyy\n" +
@@ -324,12 +324,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing3() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  int bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
@@ -341,12 +341,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing4() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
@@ -358,12 +358,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing5() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
@@ -375,12 +375,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing6() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  String aaa\n" +
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "import p.Flar\n" +
                 "String xxx\n" +
@@ -392,12 +392,12 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     }
 
     public void testParamGuessing7() throws Exception {
-        create("p", "Flar",
+        addGroovySource(
                 "class Flar {\n" +
                 "  Closure aaa\n" +
                 "  Integer bbb\n" +
                 "  Date ccc\n" +
-                "}\n");
+                "}", "Flar", "p");
         String contents =
                 "import p.Flar\n" +
                 "Closure xxx\n" +

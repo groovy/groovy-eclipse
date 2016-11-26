@@ -24,10 +24,10 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
+ * Tests that completion proposals are sufficiently groovy-like in their output
+ *
  * @author Andrew Eisenberg
  * @created Jun 5, 2009
- *
- * Tests that completion proposals are sufficiently groovy-like in their output
  */
 public final class GroovyLikeCompletionTests extends CompletionTestCase {
 
@@ -277,70 +277,70 @@ public final class GroovyLikeCompletionTests extends CompletionTestCase {
 
     // accessing members of super types in closures
     public void testClosureCompletion1() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " substring"), GroovyCompletionProposalComputer.class);
         checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 1);
         //checkReplacementString(proposals, "substring(arg0)", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion2() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion3() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " second2"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "second2()", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion4() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"), GroovyCompletionProposalComputer.class);
         checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 1);
         //checkReplacementString(proposals, "substring(arg0)", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion5() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 0);
     }
     // accessing members of super types in closures
     public void testClosureCompletion6() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "second2", 0);
     }
     // accessing members of super types in closures
     public void testClosureCompletion7() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"), GroovyCompletionProposalComputer.class);
         checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 0);
         //checkReplacementString(proposals, "substring", 0);
     }
     // accessing members of super types in closures
     public void testClosureCompletion8() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion9() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "second2()", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion10() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "wait"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "wait()", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion11() throws Exception {
-        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS2);
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS2, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS2, "first"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "first", 1);
     }
@@ -356,21 +356,21 @@ public final class GroovyLikeCompletionTests extends CompletionTestCase {
     // GRECLIPSE-268
     // disabled because groovy will parse the following as an empty constant expression
     public void _testGString1() throws Exception {
-        ICompilationUnit unit = create("\"\"\"\"\"\"");
+        ICompilationUnit unit = addGroovySource("\"\"\"\"\"\"", "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
 
     // GRECLIPSE-268
     public void testGString2() throws Exception {
-        ICompilationUnit unit = create("\"\"\"${this}\"\"\"");
+        ICompilationUnit unit = addGroovySource("\"\"\"${this}\"\"\"", "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
 
     // GRECLIPSE-268
     public void testGString3() throws Exception {
-        ICompilationUnit unit = create("\"\"\"this\"\"\"");
+        ICompilationUnit unit = addGroovySource("\"\"\"this\"\"\"", "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"this".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
@@ -378,7 +378,7 @@ public final class GroovyLikeCompletionTests extends CompletionTestCase {
     // GRECLIPSE-268
     public void testGString4() throws Exception {
         String contents = "def flarb;\n\"\"\"${flarb}\"\"\"";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "${flarb"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "flarb", 1);
     }

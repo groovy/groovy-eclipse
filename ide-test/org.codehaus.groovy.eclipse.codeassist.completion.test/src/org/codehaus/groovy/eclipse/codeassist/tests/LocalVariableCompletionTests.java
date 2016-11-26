@@ -139,7 +139,7 @@ public final class LocalVariableCompletionTests extends CompletionTestCase {
     // GRECLIPSE=1267
     public void testClsoureVar5() throws Exception {
         String contents = "o\nd\nge";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "o"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "owner", 0);
         proposals = performContentAssist(unit, getIndexOf(contents, "d"), GroovyCompletionProposalComputer.class);

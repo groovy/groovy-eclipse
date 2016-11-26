@@ -18,10 +18,13 @@ package org.codehaus.groovy.eclipse.test.debug;
 import java.io.InputStream;
 import java.net.URL;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.debug.ui.ValidBreakpointLocationFinder;
-import org.codehaus.groovy.eclipse.test.EclipseTestCase;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.text.Document;
@@ -33,45 +36,34 @@ import org.eclipse.jface.text.IDocument;
  * @author Andrew Eisenberg
  * @created Jul 24, 2009
  */
-public class BreakpointLocationTests extends EclipseTestCase {
-    private static final String BREAKPOINT_SCRIPT_NAME = "BreakpointTesting.groovy";
+public class BreakpointLocationTests extends TestCase {
 
-    private GroovyCompilationUnit unit;
-
-    private IDocument document;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-         InputStream input = null;
-         URL url = Platform.getBundle("org.codehaus.groovy.eclipse.tests")
-                 .getEntry("/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
-         try {
-             input = url.openStream();
-             unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", BREAKPOINT_SCRIPT_NAME, input);
-         } finally {
-             IOUtils.closeQuietly(input);
-         }
-         String text;
-         try {
-             input = url.openStream();
-             text = IOUtils.toString(input);
-         } finally {
-             IOUtils.closeQuietly(input);
-         }
-         document = new Document(text);
-
-         unit.becomeWorkingCopy(null);
-         unit.makeConsistent(null);
+    public static Test suite() {
+        return new EclipseTestSetup(new TestSuite(BreakpointLocationTests.class));
     }
-
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
-        unit.discardWorkingCopy();
+        EclipseTestSetup.removeSources();
     }
+
+    @Override
+    protected void setUp() throws Exception {
+        String text;
+        InputStream input = null;
+        URL url = Platform.getBundle("org.codehaus.groovy.eclipse.tests").getEntry("/testData/groovyfiles/BreakpointTesting.groovy");
+        try {
+            input = url.openStream();
+            unit = EclipseTestSetup.addGroovySource((text = IOUtils.toString(input)), "BreakpointTesting");
+        } finally {
+            IOUtils.closeQuietly(input);
+        }
+        unit.makeConsistent(null);
+        document = new Document(text);
+    }
+
+    private GroovyCompilationUnit unit;
+    private IDocument document;
 
     public void testBreakpointInScript1() throws Exception {
         doBreakpointTest(1);
@@ -166,8 +158,8 @@ public class BreakpointLocationTests extends EclipseTestCase {
     }
 
     private void doBreakpointTest(int i) throws Exception {
-        int location = document.get().indexOf("// " + i)-3;
-        int line = document.getLineOfOffset(location)+1;
+        int location = document.get().indexOf("// " + i) - 3;
+        int line = document.getLineOfOffset(location) + 1;
         ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(line);
         ASTNode node = finder.findValidBreakpointLocation(unit.getModuleNode());
         assertNotNull("Could not find a breakpoint for line " + line, node);

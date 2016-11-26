@@ -44,70 +44,70 @@ public final class CommandChainCompletionTests extends CompletionTestCase {
 
     public void testCommandChain1() throws Exception {
         String contents = INITIAL_CONTENTS + "start.first 'foo' sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 1);
     }
 
     public void testCommandChain2() throws Exception {
         String contents = INITIAL_CONTENTS + "start.first 'foo' third 'foo' sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 1);
     }
 
     public void testCommandChain3() throws Exception {
         String contents = INITIAL_CONTENTS + "start.first 'foo' third 'foo' aFi";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "aFi"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aField", 1);
     }
 
     public void testCommandChain4() throws Exception {
         String contents = INITIAL_CONTENTS + "start.first 'foo' third 'foo','bar' sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 1);
     }
 
     public void testCommandChain5() throws Exception {
         String contents = INITIAL_CONTENTS + "start.first 'foo' sec 'foo' third";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 1);
     }
 
     public void testCommandChain6() throws Exception {
         String contents = INITIAL_CONTENTS + "start.first 'foo' third foo.bar(nuthin) sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 1);
     }
 
     public void testNoCommandChain1() throws Exception {
         String contents = INITIAL_CONTENTS + "first 'foo' third 'foo' sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 0);
     }
 
     public void testNoCommandChain2() throws Exception {
         String contents = INITIAL_CONTENTS + "first 'foo' third foo.bar(nuthin)\nsec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 0);
     }
 
     public void testNoCommandChain3() throws Exception {
         String contents = INITIAL_CONTENTS + "first 'foo' third foo.bar(nuthin).sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 0);
     }
 
     public void testNoCommandChain4() throws Exception {
         String contents = INITIAL_CONTENTS + "first 'foo' third sec";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "second", 0);
     }

@@ -56,49 +56,49 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testAfterParens1() throws Exception {
         String contents = "HttpRetryException f() {\nnull\n}\nf().";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "f()."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "cause", 1);
     }
 
     public void testAfterParens2() throws Exception {
         String contents = "HttpRetryException f() {\nnull\n}\nthis.f().";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "f()."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "cause", 1);
     }
 
     public void testAfterParens3() throws Exception {
         String contents = "class Super {HttpRetryException f() {\nnull\n}}\nnew Super().f().";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "f()."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "cause", 1);
     }
 
     public void testAfterParens4() throws Exception {
         String contents = "class Super {HttpRetryException f() {\nnull\n}}\nclass Sub extends Super { }\nnew Sub().f().";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "f()."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "cause", 1);
     }
 
     public void testAfterParens5() throws Exception {
         String contents = "class Super {HttpRetryException f(arg) {\nnull\n}}\ndef s = new Super()\ns.f(null).";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "f(null)."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "cause", 1);
     }
 
     public void testAfterParens6() throws Exception {
         String contents = "class Super {HttpRetryException f() {\nnull\n}}\ndef s = new Super()\ns.f().";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "f()."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "cause", 1);
     }
 
     public void testParameterNames1() throws Exception {
         String contents = "import org.codehaus.groovy.runtime.DefaultGroovyMethods\nnew DefaultGroovyMethods()";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ClassNode clazz = extract((GroovyCompilationUnit) unit);
         List<MethodNode> methods = clazz.getMethods("is");
         for (MethodNode method : methods) {
@@ -115,7 +115,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testParameterNames2() throws Exception {
         String contents = "MyClass\nclass MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ClassNode clazz = extract((GroovyCompilationUnit) unit);
         List<MethodNode> methods = clazz.getMethods("m");
         for (MethodNode method : methods) {
@@ -137,8 +137,8 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testParameterNames3() throws Exception {
         String contents = "class MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
-        create(contents);
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) create("Other", "new MyClass()");
+        addGroovySource(contents, "File", "");
+        GroovyCompilationUnit unit = addGroovySource("new MyClass()", "Other", "");
         List<MethodNode> methods = null;
         for (int i = 0; i < 5; i++) {
             methods = delegateTestParameterNames(unit);
@@ -152,10 +152,10 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testParameterNames4() throws Exception {
         addJavaSource("public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}", "MyJavaClass", "");
-        ICompilationUnit unit = create("Other", "new MyJavaClass()");
+        GroovyCompilationUnit unit = addGroovySource("new MyJavaClass()", "Other", "");
         List<MethodNode> methods = null;
         for (int i = 0; i < 5; i++) {
-            methods = delegateTestParameterNames((GroovyCompilationUnit) unit);
+            methods = delegateTestParameterNames(unit);
             if (methods.size() == 2) {
                 // expected
                 return;
@@ -167,21 +167,21 @@ public final class MethodCompletionTests extends CompletionTestCase {
     // GRECLIPSE-1374
     public void testParensExprs1() throws Exception {
         String contents = "(1).\ndef u";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(1)."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
     // GRECLIPSE-1374
     public void testParensExprs2() throws Exception {
         String contents = "(((1))).\ndef u";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(((1)))."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
     // GRECLIPSE-1374
     public void testParensExprs3() throws Exception {
         String contents = "(((1))).abs()";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(((1))).a"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
@@ -189,7 +189,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
     // GRECLIPSE-1528
     public void testGetterSetter1() throws Exception {
         String contents = "class A {\n private int value\n }";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getValue", 1);
         proposalExists(proposals, "setValue", 1);
@@ -197,7 +197,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testGetterSetter2() throws Exception {
         String contents = "class A {\n private final int value\n }";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getValue", 1);
         proposalExists(proposals, "setValue", 0);
@@ -205,7 +205,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testGetterSetter3() throws Exception {
         String contents = "class A {\n private boolean value\n }";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "\n"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "isValue", 1);
         proposalExists(proposals, "setValue", 1);
@@ -220,7 +220,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
                 "        A.\n" +
                 "    }\n" +
                 "}";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "util", 1);
     }
@@ -234,7 +234,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
                 "        A.\n" +
                 "    }\n" +
                 "}";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "util", 1);
     }
@@ -247,7 +247,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
                 "        A.class.\n" +
                 "    }\n" +
                 "}";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A.class."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "util", 1);
     }
@@ -261,7 +261,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
                 "        A.class.\n" +
                 "    }\n" +
                 "}";
-        ICompilationUnit unit = create(contents);
+        ICompilationUnit unit = addGroovySource(contents, "File", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A.class."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "util", 1);
     }

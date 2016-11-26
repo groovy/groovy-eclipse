@@ -65,7 +65,6 @@ public final class RelevanceTests extends CompletionTestCase {
         assertProposalOrdering(proposals, "pub", "public");
     }
 
-
     // now test that fields and methods of the assigned type are above other methods
     // this one should do alphabetical ordering
     public void testFieldOfAssignedType1() throws Exception {

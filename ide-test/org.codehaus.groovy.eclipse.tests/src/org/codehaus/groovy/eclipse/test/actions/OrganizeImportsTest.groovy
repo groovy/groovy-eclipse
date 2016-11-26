@@ -15,12 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import junit.framework.Test
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 
 /**
  * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}
  */
 final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
+
+    static Test suite() {
+        return newTestSuite(OrganizeImportsTest)
+    }
 
     void testAddImport1() {
         String contents = '''
@@ -204,7 +209,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             '''
         doAddImportTest('p1', 'Foo', contents, [])
 
-        createGroovyType 'p2', 'GroovyBar.groovy', '''
+        createGroovyType 'p2', 'GroovyBar', '''
             class GroovyBar {
             }
             '''
@@ -511,7 +516,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-600
     void testNestedAnnotations1() {
-        createGroovyType 'anns', 'Annotations.groovy', '''
+        createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
               NamedQuery value();
             }
@@ -530,7 +535,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-600
     void testNestedAnnotations2() {
-        createGroovyType 'anns', 'Annotations.groovy', '''
+        createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
               NamedQuery value();
             }
@@ -551,7 +556,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-600
     void testNestedAnnotations3() {
-        createGroovyType 'anns', 'Annotations.groovy', '''
+        createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
               NamedQuery[] value();
             }
@@ -570,7 +575,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLIPSE-600
     void testNestedAnnotations4() {
-        createGroovyType 'anns', 'Annotations.groovy', '''
+        createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
               NamedQuery[] value();
             }
@@ -590,7 +595,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testInnerClass1() {
-        createGroovyType 'inner', 'HasInner.groovy', '''
+        createGroovyType 'inner', 'HasInner', '''
             class HasInner {
               class InnerInner { }
             }
@@ -602,7 +607,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testInnerClass2() {
-        createGroovyType 'inner', 'HasInner.groovy', '''
+        createGroovyType 'inner', 'HasInner', '''
             class HasInner {
               class InnerInner { }
             }
@@ -615,7 +620,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testInnerClass3() {
-        createGroovyType 'inner', 'HasInner.groovy', '''
+        createGroovyType 'inner', 'HasInner', '''
             class HasInner {
               class InnerInner { }
             }
@@ -627,7 +632,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testInnerClass4() {
-        createGroovyType 'inner', 'HasInner.groovy', '''
+        createGroovyType 'inner', 'HasInner', '''
             class HasInner {
               class InnerInner { }
             }
@@ -1001,7 +1006,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testCompileStaticAndMapStyleConstructor() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return
 
-        createGroovyType 'example2', 'Bar.groovy', '''
+        createGroovyType 'example2', 'Bar', '''
             class Bar {
                 String name
             }'''

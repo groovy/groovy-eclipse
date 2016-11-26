@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +16,20 @@
 package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.List;
-
-import org.codehaus.groovy.eclipse.refactoring.test.BaseTestSuite;
 
 import junit.framework.TestSuite;
 
-public class ExtractMethodTestSuite extends BaseTestSuite {
+import org.codehaus.groovy.eclipse.refactoring.test.BaseTestSuite;
 
-    public static TestSuite suite() throws FileNotFoundException, IOException {
-        TestSuite ts = new TestSuite("Extract Method Suite");
+public class ExtractMethodTestSuite extends BaseTestSuite {
+    public static TestSuite suite() throws Exception {
+        TestSuite suite = new ExtractMethodTestSuite();
         List<File> files = getFileList("/ExtractMethod", "ExtractMethod_Test_");
+        assert !files.isEmpty();
         for (File file : files) {
-//            if (file.getName().contains("Closure_with_implicit"))
-            ts.addTest(new ExtractMethodTestCase(file.getName(),file));
+            suite.addTest(new ExtractMethodTestCase(file.getName(), file));
         }
-        return ts;
+        return suite;
     }
 }
