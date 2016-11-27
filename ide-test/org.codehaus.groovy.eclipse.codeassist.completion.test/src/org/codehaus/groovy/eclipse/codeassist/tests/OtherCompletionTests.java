@@ -40,22 +40,11 @@ public final class OtherCompletionTests extends CompletionTestCase {
         return newTestSuite(OtherCompletionTests.class);
     }
 
-    boolean orig;
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        orig = GroovyPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false);
-    }
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            super.tearDown();
-        } finally {
-            GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, orig);
-            GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);
-        }
     }
 
     public void testGreclipse414() throws Exception {

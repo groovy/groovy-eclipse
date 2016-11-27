@@ -19,7 +19,6 @@ import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction;
 import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyOrJavaAction;
 import org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
@@ -39,7 +38,6 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        testProject.addNature(GroovyNature.GROOVY_NATURE);
     }
 
     public void testRenameToGroovy() throws Exception {

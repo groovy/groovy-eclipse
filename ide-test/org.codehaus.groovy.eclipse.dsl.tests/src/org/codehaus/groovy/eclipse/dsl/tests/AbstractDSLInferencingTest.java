@@ -34,7 +34,6 @@ import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.internal.resources.Folder;
@@ -50,12 +49,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created Feb 19, 2011
  */
@@ -91,7 +88,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
             refreshExternalFoldersProject();
             GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
             env.fullBuild();
-            new RefreshDSLDJob(project).run(null);
+            GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
         }
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
     }
@@ -182,14 +179,10 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         // ensure this classpath container is gone
         GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
         env.fullBuild();
-        RefreshDSLDJob job = new RefreshDSLDJob(project);
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("refreshing DSLDs");
-        job.run(spm);
-        spm.waitForCompletion();
+        DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
+        manager.initialize(project, true);
         System.out.println("Finished RefreshDSLDJob");
 
-
-        DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
         DSLDStore store = manager.getDSLDStore(project);
         Set<String> disabledScripts = DSLPreferences.getDisabledScriptsAsSet();
 

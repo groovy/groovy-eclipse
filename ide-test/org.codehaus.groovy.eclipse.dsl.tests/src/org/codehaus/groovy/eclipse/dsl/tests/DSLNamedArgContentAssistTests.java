@@ -21,7 +21,6 @@ import junit.framework.Test;
 
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -42,7 +41,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
         EclipseTestSetup.withProject(new Closure<IProject>(null) {
             public Void doCall(IProject project) {
-                new RefreshDSLDJob(project).run(null);
+                GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
                 GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
                 return null;
             }

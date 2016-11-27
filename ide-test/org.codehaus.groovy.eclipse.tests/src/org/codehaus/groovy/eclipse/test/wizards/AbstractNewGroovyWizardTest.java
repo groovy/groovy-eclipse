@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test.wizards;
 import java.util.Hashtable;
 
 import junit.framework.TestCase;
-
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -29,7 +28,6 @@ import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
- *
  * @author ns
  * @created May 18, 2010
  */
@@ -63,7 +61,7 @@ public abstract class AbstractNewGroovyWizardTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
+        JavaCore.setOptions(JavaCore.getDefaultOptions());
         fProject.dispose();
     }
-
 }

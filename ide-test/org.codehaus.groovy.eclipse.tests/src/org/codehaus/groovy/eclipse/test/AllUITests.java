@@ -43,7 +43,7 @@ import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTest;
 import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTest;
 import org.codehaus.groovy.eclipse.ui.search.FindOccurrencesTests;
 
-public class AllUITests {
+public final class AllUITests {
     public static Test suite() {
         TestSuite suite = new TestSuite(AllUITests.class.getName());
 
@@ -71,14 +71,14 @@ public class AllUITests {
         suite.addTestSuite(GroovyLauncherShortcutTests.class);
 
         // ui (except ErrorLogTest)
-        suite.addTestSuite(BracketInserterTests.class);
+        suite.addTest(new EclipseTestSetup(newTestSuite("Editor Extensions",
+                BracketInserterTests.class, SemanticHighlightingTests.class)));
         suite.addTestSuite(GroovyAutoIndenterTests.class);
         suite.addTestSuite(GroovyAutoIndenterTests2.class);
         suite.addTestSuite(GroovyPartitionScannerTests.class);
         suite.addTestSuite(GroovyTagScannerTests.class);
         suite.addTestSuite(HighlightingExtenderTests.class);
         suite.addTestSuite(OutlineExtenderTests.class);
-        suite.addTestSuite(SemanticHighlightingTests.class);
 
         // wizards
         suite.addTestSuite(NewGroovyTestCaseWizardTest.class);

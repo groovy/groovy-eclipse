@@ -17,39 +17,39 @@ package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 
+import junit.framework.Test
+import junit.framework.TestCase
+import junit.framework.TestSuite
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
 
-final class SemanticHighlightingTests extends EclipseTestCase {
+final class SemanticHighlightingTests extends TestCase {
 
-    int counter
-    boolean semanticHightlightOriginalValue
+    static Test suite() {
+        new EclipseTestSetup(new TestSuite(SemanticHighlightingTests))
+    }
 
     @Override
     protected void setUp() {
-        super.setUp()
+        println '----------------------------------------'
+        println 'Starting: ' + getName()
 
-        testProject.createJavaTypeAndPackage('other', 'Java.java',
-            'public @Deprecated class Java {\n  @Deprecated public static final String CONST = "";\n}')
+        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
 
-        GroovyPlugin.getDefault().getPreferenceStore().with {
-            semanticHightlightOriginalValue = getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING)
-            setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
-        }
+        EclipseTestSetup.addJavaSource(
+            'public @Deprecated class Java {\n  @Deprecated public static final String CONST = "";\n}', 'Java', 'other')
     }
 
     @Override
     protected void tearDown() {
-      GroovyPlugin.getDefault().getPreferenceStore().setValue(
-          PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, semanticHightlightOriginalValue)
-      super.tearDown()
+        EclipseTestSetup.removeSources()
     }
 
     void testFields() {
@@ -228,11 +228,12 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             // expanded form:
             ManagementFactory.getRuntimeMXBean().getInputArguments()
             '''.stripIndent()
-            assertHighlighting(contents,
-                new HighlightedTypedPosition(contents.indexOf('runtimeMXBean'), 'runtimeMXBean'.length(), STATIC_CALL),
-                new HighlightedTypedPosition(contents.indexOf('inputArguments'), 'inputArguments'.length(), METHOD_CALL),
-                new HighlightedTypedPosition(contents.indexOf('getRuntimeMXBean'), 'getRuntimeMXBean'.length(), STATIC_CALL),
-                new HighlightedTypedPosition(contents.indexOf('getInputArguments'), 'getInputArguments'.length(), METHOD_CALL))
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('runtimeMXBean'), 'runtimeMXBean'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('inputArguments'), 'inputArguments'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getRuntimeMXBean'), 'getRuntimeMXBean'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getInputArguments'), 'getInputArguments'.length(), METHOD_CALL))
     }
 
     void testDefaultGroovyMethods() {
@@ -278,16 +279,16 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             }
             '''.stripIndent()
 
-    assertHighlighting(contents,
-        new HighlightedTypedPosition(contents.indexOf('one'), 3, METHOD),
-        new HighlightedTypedPosition(contents.indexOf('i;'), 1, VARIABLE),
-        new HighlightedTypedPosition(contents.indexOf('two'), 3, METHOD),
-        new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
-        new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE),
-        new HighlightedTypedPosition(contents.indexOf('three'), 5, METHOD),
-        new HighlightedTypedPosition(contents.indexOf('x'), 1, PARAMETER),
-        new HighlightedTypedPosition(contents.indexOf('y'), 1, PARAMETER),
-        new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('i;'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
 
     void testParamsAndLocals() {
@@ -351,9 +352,9 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             def (a, b) = ['one', 'two']
             '''.stripIndent()
 
-    assertHighlighting(contents,
-        new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
-        new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE))
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE))
     }
 
     void testChainAssign() {
@@ -366,6 +367,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
               }
             }
             '''.stripIndent()
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR),
             new HighlightedTypedPosition(contents.indexOf('fld'),     3, FIELD),
@@ -383,6 +385,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
               }
             }
             '''.stripIndent()
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR),
             new HighlightedTypedPosition(contents.indexOf('one'),     3, FIELD),
@@ -399,6 +402,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             def c = new C()
             c.one = c.two = ''
             '''.stripIndent()
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('one'),     3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('two'),     3, FIELD),
@@ -426,6 +430,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
               }
             }
             '''.stripIndent()
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('z'),        1, FIELD),
             new HighlightedTypedPosition(contents.indexOf('setZero'),  7, METHOD),
@@ -461,6 +466,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
               }
             }
             '''.stripIndent()
+
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('z'),        1, FIELD),
             new HighlightedTypedPosition(contents.indexOf('setZero'),  7, METHOD),
@@ -576,14 +582,14 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             def x = new X();
             '''.stripIndent()
 
-    assertHighlighting(contents,
-        new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
-        //new HighlightedTypedPosition(contents.indexOf('super'), 5, CTOR_CALL),
-        new HighlightedTypedPosition(contents.indexOf('X(S'), 1, CTOR),
-        new HighlightedTypedPosition(contents.indexOf('s)'), 1, PARAMETER),
-        //new HighlightedTypedPosition(contents.indexOf('this'), 4, CTOR_CALL),
-        new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
-        new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CTOR_CALL))
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
+            //new HighlightedTypedPosition(contents.indexOf('super'), 5, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('X(S'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('s)'), 1, PARAMETER),
+            //new HighlightedTypedPosition(contents.indexOf('this'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CTOR_CALL))
     }
 
     void testEnumDefs() {
@@ -1007,11 +1013,11 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             list << 'three'
             '''.stripIndent()
 
-    assertHighlighting(contents,
-        new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
-        new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
-        new HighlightedTypedPosition(contents.indexOf('list'), 4, FIELD),
-        new HighlightedTypedPosition(contents.lastIndexOf('list'), 4, FIELD));
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('list'), 4, FIELD));
     }
 
     void testMethodPointer() {
@@ -1161,7 +1167,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
                 int j;
               }
             }
-            '''
+            '''.stripIndent()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('objectMethod'), 'objectMethod'.length(), METHOD),
@@ -1186,7 +1192,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
                 int j;
               }
             }
-            '''
+            '''.stripIndent()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('objectMethod'), 'objectMethod'.length(), METHOD),
@@ -1203,8 +1209,6 @@ final class SemanticHighlightingTests extends EclipseTestCase {
         assertHighlighting('class X { def \'test case name\'() {} }')
         assertHighlighting('class X { def """test case name"""() {} }')
         assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }')
-        assertHighlighting('class X { def /test case name/() {} }')
-        assertHighlighting('class X { def $/test case name/$() {} }')
     }
 
     void testTraits() {
@@ -1218,7 +1222,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
                 field + property + getProperty() + Math.PI
               }
             }
-            '''
+            '''.stripIndent()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
@@ -1231,14 +1235,10 @@ final class SemanticHighlightingTests extends EclipseTestCase {
     }
 
     //
+    private int counter
 
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
-        GroovyCompilationUnit unit = testProject.createGroovyTypeAndPackage('', "Highlighting${++counter}.groovy", contents)
-        checkStyles(unit, expectedPositions as List)
-    }
-
-    private void checkStyles(GroovyCompilationUnit unit, List<HighlightedTypedPosition> expectedPositions) {
-        GatherSemanticReferences references = new GatherSemanticReferences(unit)
+        def references = new GatherSemanticReferences(EclipseTestSetup.addGroovySource(contents, "Highlighting${++counter}"))
         references.factory = new TypeInferencingVisitorFactory() {
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)
@@ -1248,13 +1248,13 @@ final class SemanticHighlightingTests extends EclipseTestCase {
         }
         List<HighlightedTypedPosition> actualPositions = references.findSemanticHighlightingReferences().toList()
 
-        actualPositions.sort { HighlightedTypedPosition h1, HighlightedTypedPosition h2 ->
+        String actual = actualPositions.sort { HighlightedTypedPosition h1, HighlightedTypedPosition h2 ->
             h1.offset <=> h2.offset ?: h1.kind.ordinal() <=> h2.kind.ordinal()
-        }
-        expectedPositions.sort { HighlightedTypedPosition h1, HighlightedTypedPosition h2 ->
+        }.join('\n')
+        String expect = expectedPositions.sort { HighlightedTypedPosition h1, HighlightedTypedPosition h2 ->
             h1.offset <=> h2.offset ?: h1.kind.ordinal() <=> h2.kind.ordinal()
-        }
+        }.join('\n')
 
-        assertEquals(expectedPositions.join('\n'), actualPositions.join('\n'))
+        assertEquals(expect, actual)
     }
 }

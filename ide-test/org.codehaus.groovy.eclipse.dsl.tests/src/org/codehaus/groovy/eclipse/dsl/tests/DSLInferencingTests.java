@@ -20,9 +20,8 @@ import java.io.IOException;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.NullProgressMonitor;
 
 /**
  * Tests type inferencing that involve dsls
@@ -838,8 +837,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         env.fullBuild("Other");
         env.addRequiredProject(project.getFullPath(), otherPath);
 
-        RefreshDSLDJob job = new RefreshDSLDJob(project);
-        job.run(new NullProgressMonitor());
+        GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
 
         String contents = "''.other";
         int start = contents.lastIndexOf("other");

@@ -29,7 +29,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created Feb 18, 2011
  */

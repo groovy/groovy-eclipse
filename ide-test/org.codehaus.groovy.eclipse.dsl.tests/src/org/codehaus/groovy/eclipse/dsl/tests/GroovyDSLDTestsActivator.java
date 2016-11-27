@@ -32,43 +32,22 @@ import org.osgi.framework.BundleContext;
  */
 public class GroovyDSLDTestsActivator extends AbstractUIPlugin {
 
-    // The plug-in ID
     public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.dsl.tests";
 
-    // The shared instance
     private static GroovyDSLDTestsActivator plugin;
 
-    /**
-     * The constructor
-     */
-    public GroovyDSLDTestsActivator() {
+    public static GroovyDSLDTestsActivator getDefault() {
+        return plugin;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-     */
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-     */
     public void stop(BundleContext context) throws Exception {
         plugin = null;
         super.stop(context);
-    }
-
-    /**
-     * Returns the shared instance
-     *
-     * @return the shared instance
-     */
-    public static GroovyDSLDTestsActivator getDefault() {
-        return plugin;
     }
 
     public InputStream getTestResourceStream(String fileName) throws IOException {
@@ -81,24 +60,20 @@ public class GroovyDSLDTestsActivator extends AbstractUIPlugin {
     }
 
     public URL getTestResourceURL(String fileName) throws MalformedURLException {
-        IPath path= new Path("testResources").append(fileName);
+        IPath path = new Path("testResources").append(fileName);
         return new URL(getBundle().getEntry("/"), path.toString());
     }
 
     public String getContents(InputStream in) throws IOException {
-        BufferedReader br= new BufferedReader(new InputStreamReader(in));
-
-        StringBuffer sb= new StringBuffer(300);
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        StringBuffer sb = new StringBuffer(300);
         try {
-            int read= 0;
-            while ((read= br.read()) != -1)
+            int read = 0;
+            while ((read = br.read()) != -1)
                 sb.append((char) read);
         } finally {
             br.close();
         }
         return sb.toString();
     }
-
-
-
 }

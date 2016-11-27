@@ -22,6 +22,8 @@ import junit.framework.TestSuite
 import org.codehaus.groovy.eclipse.quickfix.templates.TemplateProposalComputer
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 
@@ -41,8 +43,9 @@ final class GroovyTemplatesCompletionTests extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        EclipseTestSetup.setJavaPreference('org.eclipse.jdt.core.formatter.tabulation.char', 'space')
-        EclipseTestSetup.setJavaPreference('org.eclipse.jdt.core.formatter.tabulation.size', '2')
+        EclipseTestSetup.setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
+        EclipseTestSetup.setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
+
         println '----------------------------------------'
         println 'Starting: ' + getName()
     }

@@ -66,8 +66,6 @@ public final class GuessingCompletionTests extends CompletionTestCase {
                 "def xxx(Closure c) { }\n" +
                 "xxx";
         String[][] expectedChoices = new String[][] { new String[] { "zzz", "yyy", "{  }" } };
-
-
         try {
             checkProposalChoices(contents, "xxx", "xxx {", expectedChoices);
         } catch (AssertionError e) {

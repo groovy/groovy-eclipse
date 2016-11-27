@@ -36,22 +36,10 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
         return newTestSuite(ConstructorCompletionTests.class);
     }
 
-    private boolean orig;
-
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        orig = GroovyPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            super.tearDown();
-        } finally {
-            GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, orig);
-        }
     }
 
     public void testConstructorCompletion1() throws Exception {

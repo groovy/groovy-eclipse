@@ -31,17 +31,17 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
 /**
- * Provides a fresh Groovy project to each the supplied test.
+ * Provides a fresh Groovy project to the supplied test.
  * <p>
  * NOTE: removeSources() can be called in tearDown() to prep for next test case.
  */
 class EclipseTestSetup extends TestSetup {
 
-    private static Hashtable<String, String> savedPreferences
     private static TestProject testProject
 
     EclipseTestSetup(Test test) {
@@ -49,14 +49,25 @@ class EclipseTestSetup extends TestSetup {
     }
 
     protected void setUp() {
-        savedPreferences = JavaCore.options
         testProject = new TestProject()
         testProject.autoBuilding = false
     }
 
     protected void tearDown() {
-        JavaCore.options = savedPreferences
-        testProject.dispose()
+        def defaults = {
+            storePreferences.@properties.keys().each { k ->
+                if (!isDefault(k)) {
+                    println "Resetting '$k' to its default"
+                    setToDefault(k)
+                }
+            }
+        }
+
+        GroovyPlugin.default.preferenceStore.with(defaults)
+        JavaPlugin.default.preferenceStore.with(defaults)
+        JavaCore.options = JavaCore.defaultOptions
+
+        testProject?.dispose()
         testProject = null
     }
 
