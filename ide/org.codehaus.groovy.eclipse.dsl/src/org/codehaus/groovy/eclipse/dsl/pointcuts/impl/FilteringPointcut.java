@@ -1,19 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -25,18 +29,18 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * An abstract pointcut that filters the value of {@link GroovyDSLDContext#getOuterPointcutBinding()}.
- * 
- * You can think of the filter pointcut as taking a set of things from the outer pointcut, and 
+ *
+ * You can think of the filter pointcut as taking a set of things from the outer pointcut, and
  * either sending it to the inner pointcut, which will do its own filter, or performing a filter
  * using its argument.
- * 
+ *
  * @author andrew
  * @created Feb 11, 2011
  */
 public abstract class FilteringPointcut<T> extends AbstractPointcut {
 
     private final Class<T> filterBy;
-    
+
     public FilteringPointcut(IStorage containerIdentifier, String pointcutName, Class<T> filterBy) {
         super(containerIdentifier, pointcutName);
         this.filterBy = filterBy;
@@ -44,26 +48,22 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
 
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        
         Collection<T> explodedList = explodeObject(toMatch);
-        if (explodedList == null || explodedList.size() == 0) {
-            // nothing to match on, return failure
-            return null;
-        }
-        
-        Object first = getFirstArgument();
-        if (first instanceof IPointcut) {
-            // pass the exploded list to the inner pointcut and match on each element of the list
-            return matchOnPointcutArgument((IPointcut) first, pattern, explodedList);
-        } else {
-            Collection<?> filtered = filterResult(explodedList, pattern);
-            if (filtered != null) {
-                return filtered;
+        if (explodedList != null && !explodedList.isEmpty()) {
+            Object first = getFirstArgument();
+            if (first instanceof IPointcut) {
+                // pass the exploded list to the inner pointcut and match on each element of the list
+                return matchOnPointcutArgument((IPointcut) first, pattern, explodedList);
+            } else {
+                Collection<?> filtered = filterResult(explodedList, pattern);
+                if (filtered != null) {
+                    return filtered;
+                }
             }
-            return null;
         }
+        return null;
     }
-    
+
     protected Collection<?> filterResult(Collection<T> results, GroovyDSLDContext context) {
         Object o = getFirstArgument();
         String firstArg = asString(o);
@@ -77,10 +77,6 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
         return reduce(filtered);
     }
 
-    /**
-     * @param o
-     * @return
-     */
     protected String asString(Object o) {
         if (o instanceof String) {
             return (String) o;
@@ -104,25 +100,22 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
 
     /**
      * Filters an individual object based on some criteria in the concrete query
-     * @param result
-     * @return
      */
     protected abstract T filterObject(T result, GroovyDSLDContext context, String firstArgAsString);
 
-
     /**
-     * Converts element to a collection of the {@link #filterBy} type.
-     * or returns null if no match
+     * Converts element to a collection of the {@link #filterBy} type or returns null if no match.
      */
+    @SuppressWarnings("unchecked")
     protected Collection<T> explodeObject(Object toMatch) {
-        if (toMatch instanceof  Collection<?>) {
-            List<T> objs = new ArrayList<T>();
-            for (Object elt : (Collection<?>) toMatch) {
-                if (filterBy.isInstance(elt)) {
-                    objs.add((T) elt);
+        if (toMatch instanceof Collection) {
+            Collection<T> objs = new ArrayList<T>();
+            for (Object obj : (Collection<?>) toMatch) {
+                if (filterBy.isInstance(obj)) {
+                    objs.add((T) obj);
                 }
             }
-            if (objs.size() > 0) {
+            if (!objs.isEmpty()) {
                 return objs;
             }
         } else if (filterBy.isInstance(toMatch)) {
@@ -143,7 +136,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
             String hasNoArgs = hasNoArgs();
             if (hasNoArgs != null) {
                 throw new PointcutVerificationException(
-                        "This pointcut expects either no arguments or 1 String or 1 pointcut argument", this);
+                    "This pointcut expects either no arguments or 1 String or 1 pointcut argument", this);
             }
         }
     }

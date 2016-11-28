@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches based on the declaring type of a declaration
+ * Matches based on the declaring type of a declaration.
+ *
  * @author andrew
  * @created Jul 22, 2011
  */
@@ -34,10 +35,9 @@ public class DeclaringTypePointcut extends FilteringPointcut<ClassNode>  {
         super(containerIdentifier, pointcutName, ClassNode.class);
     }
 
-
     /**
-     * Grabs the explicit declaring type of the {@link AnnotatedNode}.  This will not return
-     *  the expected value for {@link MethodCallExpression}s.
+     * Grabs the explicit declaring type of the {@link AnnotatedNode}.
+     * This will not return the expected value for {@link MethodCallExpression}s.
      */
     @Override
     protected Collection<ClassNode> explodeObject(Object toMatch) {

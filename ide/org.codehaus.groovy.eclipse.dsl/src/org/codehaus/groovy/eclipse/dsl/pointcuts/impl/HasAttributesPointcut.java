@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,7 @@ public class HasAttributesPointcut extends FilteringPointcut<Expression>  {
     public HasAttributesPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, Expression.class);
     }
-    
-    
+
     /**
      * Converts the method call arguments to expressions
      */
@@ -57,7 +56,7 @@ public class HasAttributesPointcut extends FilteringPointcut<Expression>  {
     }
 
     /**
-     * by default, matches on the names of named arguments (if a named expression), otherwise passes the arguments to contained pointcuts 
+     * by default, matches on the names of named arguments (if a named expression), otherwise passes the arguments to contained pointcuts
      */
     @Override
     protected Expression filterObject(Expression result, GroovyDSLDContext context, String firstArgAsString) {
@@ -68,7 +67,7 @@ public class HasAttributesPointcut extends FilteringPointcut<Expression>  {
             } else {
                 return result;
             }
-        } 
+        }
         if (result instanceof MapEntryExpression) {
             MapEntryExpression entry = (MapEntryExpression) result;
             if (entry.getKeyExpression() instanceof ConstantExpression) {

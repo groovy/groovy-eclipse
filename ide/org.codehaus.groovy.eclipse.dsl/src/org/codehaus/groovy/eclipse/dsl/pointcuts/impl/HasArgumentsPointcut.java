@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -44,8 +43,7 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
     public HasArgumentsPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, AnnotatedNode.class);
     }
-    
-    
+
     /**
      * Converts the method call arguments to expressions
      */
@@ -54,8 +52,8 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
         if (toMatch instanceof MethodCallExpression) {
             Expression arguments = ((MethodCallExpression) toMatch).getArguments();
             if (arguments instanceof TupleExpression) {
-                List<Expression> innerArgs = ((TupleExpression) arguments).getExpressions();
-                List<AnnotatedNode> actualArgs = new ArrayList<AnnotatedNode>(innerArgs.size());
+                Collection<Expression> innerArgs = ((TupleExpression) arguments).getExpressions();
+                Collection<AnnotatedNode> actualArgs = new ArrayList<AnnotatedNode>(innerArgs.size());
                 for (Expression innerArg : innerArgs) {
                     if (innerArg instanceof MapExpression) {
                         actualArgs.addAll(((MapExpression) innerArg).getMapEntryExpressions());
@@ -67,24 +65,21 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
             } else if (arguments instanceof ListExpression) {
                 return new ArrayList<AnnotatedNode>(((ListExpression) arguments).getExpressions());
             } else if (arguments instanceof MapExpression) {
-                List<MapEntryExpression> mapEntryExpressions = ((MapExpression) arguments).getMapEntryExpressions();
-                List<AnnotatedNode> result = new ArrayList<AnnotatedNode>(mapEntryExpressions);
-                result.addAll(mapEntryExpressions);
-                return result;
+                return new ArrayList<AnnotatedNode>(((MapExpression) arguments).getMapEntryExpressions());
             } else {
                 return Collections.<AnnotatedNode>singleton(arguments);
             }
         } else if (toMatch instanceof MethodNode) {
-        	Parameter[] parameters = ((MethodNode) toMatch).getParameters();
-        	if (parameters != null) {
-        		return Arrays.<AnnotatedNode>asList(parameters);
-        	}
+            Parameter[] parameters = ((MethodNode) toMatch).getParameters();
+            if (parameters != null) {
+                return new ArrayList<AnnotatedNode>(Arrays.asList(parameters));
+            }
         }
         return null;
     }
 
     /**
-     * by default, matches on the names of named arguments (if a named expression), otherwise passes the arguments to contained pointcuts 
+     * by default, matches on the names of named arguments (if a named expression), otherwise passes the arguments to contained pointcuts
      */
     @Override
     protected AnnotatedNode filterObject(AnnotatedNode result, GroovyDSLDContext context, String firstArgAsString) {
@@ -106,7 +101,7 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
         } else if (result instanceof Parameter) {
             String name = ((Parameter) result).getName();
             if (name.equals(firstArgAsString)) {
-            	return result;
+                return result;
             }
         }
         return null;
