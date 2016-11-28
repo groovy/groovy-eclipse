@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test.ui;
 
-// use from DefaultGroovyMethods not StringGroovyMethods for backwards compatability
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.stripIndent;
-
 import java.io.File;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -50,8 +47,7 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
     protected static final String CARET = "<***>";
 
     /**
-     * The editor used for testing. Create this editor with
-     * makeEditor.
+     * The editor used for testing. Create this editor with makeEditor().
      */
     protected GroovyEditor editor;
 
@@ -69,8 +65,6 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
      * character sequence is removed from the string before initializing the
      * editor. The position of the caret in the Editor is placed at the
      * position of the "<***>" sequence.
-     *
-     * @throws CoreException
      */
     protected void makeEditor(String contents) throws CoreException {
         int cursor = 0;
@@ -160,16 +154,15 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
      * the CURSOR marker, then the cursor position of the editor will be
      * verified to be in that position as well.
      */
-    @SuppressWarnings("deprecation")
     protected void assertEditorContents(String expected) {
         String actual = getText();
         if (expected.contains(CARET)) {
             int cursor = getCaret();
             actual = actual.substring(0, cursor) + CARET + actual.substring(cursor);
         }
-        if (File.separatorChar == '\\') { // Windows
+        if (File.separatorChar == '\\') {
             actual = actual.replace("\r\n", "\n");
         }
-        assertEquals(stripIndent((CharSequence) expected), actual);
+        assertEquals(expected, actual);
     }
 }

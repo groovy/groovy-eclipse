@@ -25,37 +25,26 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
-import org.codehaus.groovy.eclipse.test.TestProject;
-import org.eclipse.jdt.core.tests.junit.extension.TestCase;
+import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 
 /**
  * @author Andrew Eisenberg
  * @created May 13, 2010
  */
-public abstract class CheckerTestCase extends TestCase {
+public abstract class CheckerTestCase extends EclipseTestCase {
 
-    private TestProject testProject;
     private GroovySnippetCompiler compiler;
-
-    public CheckerTestCase(String name) {
-        super(name);
-    }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        System.out.println("----------------------------------------");
-        System.out.println("Starting: " + getName());
-        testProject = new TestProject();
-        compiler = new GroovySnippetCompiler(
-                testProject.getGroovyProjectFacade());
+        compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
     }
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
         compiler.cleanup();
-        testProject.dispose();
+        super.tearDown();
     }
 
     protected IASTFragment getLastFragment(ModuleNode module) {

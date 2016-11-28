@@ -22,8 +22,14 @@ import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 
 public final class AllBrowsingTests {
     public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite("Code Selection and related");
+        TestSuite suite = new TestSuite("AST Visitation");
         suite.addTestSuite(ASTFragmentTests.class);
+        suite.addTestSuite(FindSurroundingNodeTests.class);
+        suite.addTestSuite(JDTAstPositionTests.class);
+        suite.addTestSuite(PartialVisitTests.class);
+        Test astVisitorTests = new EclipseTestSetup(suite);
+
+        suite = new TestSuite("Code Selection");
         suite.addTestSuite(CodeSelectAttributesTests.class);
         suite.addTestSuite(CodeSelectCategoriesTests.class);
         suite.addTestSuite(CodeSelectFieldsTests.class);
@@ -35,12 +41,10 @@ public final class AllBrowsingTests {
         suite.addTestSuite(CodeSelectPropertiesTests.class);
         suite.addTestSuite(CodeSelectStaticImportsTests.class);
         suite.addTestSuite(CodeSelectTypesTests.class);
-        suite.addTestSuite(FindSurroundingNodeTests.class);
-        suite.addTestSuite(JDTAstPositionTests.class);
-        suite.addTestSuite(PartialVisitTests.class);
         Test codeSelectTests = new EclipseTestSetup(suite);
 
         suite = new TestSuite(AllBrowsingTests.class.getName());
+        suite.addTest(astVisitorTests);
         suite.addTest(codeSelectTests);
         suite.addTestSuite(IsSameExpressionTests.class);
         suite.addTestSuite(FindAllOccurrencesVisitorTests.class);

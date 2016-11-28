@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
+import junit.framework.Test;
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IProblemRequestor;
@@ -33,7 +34,7 @@ import org.eclipse.jdt.groovy.core.util.JavaConstants;
  */
 public final class JDTAstPositionTests extends BrowsingTestCase {
 
-    public static junit.framework.Test suite() {
+    public static Test suite() {
         return newTestSuite(JDTAstPositionTests.class);
     }
 
@@ -192,9 +193,7 @@ public final class JDTAstPositionTests extends BrowsingTestCase {
 
     private CompilationUnit getAST(String contents) throws Exception {
         GroovyCompilationUnit unit = addGroovySource(contents);
-        IProgressMonitor monitor = new NullProgressMonitor();
-        unit.becomeWorkingCopy(monitor);
-        CompilationUnit ast = unit.reconcile(JavaConstants.AST_LEVEL, true, workingCopyOwner, monitor);
+        CompilationUnit ast = unit.reconcile(JavaConstants.AST_LEVEL, true, workingCopyOwner, new NullProgressMonitor());
         return ast;
     }
 }

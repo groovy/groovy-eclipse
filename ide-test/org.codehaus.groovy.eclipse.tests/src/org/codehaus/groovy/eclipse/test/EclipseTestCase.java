@@ -23,6 +23,9 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * Provides a fresh Groovy project to each test method.
@@ -31,29 +34,38 @@ public abstract class EclipseTestCase extends TestCase {
 
     protected TestProject testProject;
 
-    private Hashtable<String, String> savedPreferences;
-
     @Override
     protected void setUp() throws Exception {
         System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
 
-        super.setUp();
         testProject = new TestProject();
-        savedPreferences = JavaCore.getOptions();
+        TestProject.setAutoBuilding(false);
     }
 
     @Override
     protected void tearDown() throws Exception {
-        JavaCore.setOptions(savedPreferences);
-        testProject.dispose();
-        super.tearDown();
+        try {
+            testProject.dispose();
+            testProject = null;
+        } finally {
+            JavaCore.setOptions(JavaCore.getDefaultOptions());
+        }
     }
 
-    protected void setJavaPreference(String name, String value) {
-        Hashtable<String, String> options = JavaCore.getOptions();
-        options.put(name, value);
-        JavaCore.setOptions(options);
+    protected final void setJavaPreference(String key, String val) {
+        if (key.startsWith(JavaCore.PLUGIN_ID)) {
+            Hashtable<String, String> options = JavaCore.getOptions();
+            options.put(key, val);
+            JavaCore.setOptions(options);
+
+        } else if (key.startsWith(JavaPlugin.getPluginId())) {
+            IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore();
+            prefs.setValue(key, val);
+
+        } else {
+            System.err.println("Unexpected preference for Java: " + key);
+        }
     }
 
     /**
@@ -61,18 +73,20 @@ public abstract class EclipseTestCase extends TestCase {
      *
      * @return {@code true} if the project has the Groovy nature
      */
-    protected boolean hasGroovyNature() throws CoreException {
+    protected final boolean hasGroovyNature() throws CoreException {
         return testProject.getProject().hasNature(GroovyNature.GROOVY_NATURE);
     }
 
     /**
      * Performs a full build on the test workspace.
      */
-    protected void buildAll() throws CoreException {
-        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
+    protected final void buildAll() throws CoreException {
+        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Plug-in test workspace build");
+        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, monitor);
+        monitor.waitForCompletion();
     }
 
-    public void waitForIndex() {
+    protected final void waitForIndex() {
         testProject.waitForIndexer();
     }
 }

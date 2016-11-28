@@ -23,61 +23,49 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
 /**
- *
  * @author ns
  * @created May 18, 2010
  */
-public class NewGroovyTestCaseWizardTest extends AbstractNewGroovyWizardTest {
+public final class NewGroovyTestCaseWizardTest extends AbstractNewGroovyWizardTest {
 
     private static final String PACKAGE_NAME = "testPackage";
-
-    protected IPackageFragment frag = null;
-
-    public NewGroovyTestCaseWizardTest(String name) {
-        super(name);
-    }
+    private IPackageFragment frag;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        frag = fSourceFolder.getPackageFragment(PACKAGE_NAME);
+        frag = testProject.getSourceFolder().getPackageFragment(PACKAGE_NAME);
         if (frag == null) {
-            frag = fSourceFolder.createPackageFragment(PACKAGE_NAME, false, null);
+            frag = testProject.getSourceFolder().createPackageFragment(PACKAGE_NAME, false, null);
         }
     }
 
     public void testAddGroovyTestCaseNonGroovyProject() throws Exception {
-        GroovyRuntime.removeGroovyNature(fJProject.getProject());
+        GroovyRuntime.removeGroovyNature(testProject.getProject());
         NewGroovyTestTypeWizardPage page = createdGroovyTestTypeWizardPage();
         String testCaseName = "NonGroovyProjectTestCase";
         page.setEnclosingTypeSelection(false, true);
         page.setTypeName(testCaseName, true);
         page.createType(new NullProgressMonitor());
-
         IType type = page.getCreatedType();
-
         assertNull(type);
     }
 
     public void testAddGroovyTestCaseGroovyProject() throws Exception {
-        GroovyRuntime.addGroovyNature(fJProject.getProject());
+        GroovyRuntime.addGroovyNature(testProject.getProject());
         NewGroovyTestTypeWizardPage page = createdGroovyTestTypeWizardPage();
         String testCaseName = "GroovyProjectTestCase";
         page.setEnclosingTypeSelection(false, true);
         page.setTypeName(testCaseName, true);
-
         page.createType(new NullProgressMonitor());
-
         IType type = page.getCreatedType();
-
         assertEquals(testCaseName, type.getElementName());
-
     }
 
     protected NewGroovyTestTypeWizardPage createdGroovyTestTypeWizardPage() {
         NewTestCaseWizardPageTwo pageTwo = new NewTestCaseWizardPageTwo();
         NewGroovyTestTypeWizardPage wizardPage = new NewGroovyTestTypeWizardPage(pageTwo);
-        wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true);
         wizardPage.setPackageFragment(frag, true);
         return wizardPage;
     }

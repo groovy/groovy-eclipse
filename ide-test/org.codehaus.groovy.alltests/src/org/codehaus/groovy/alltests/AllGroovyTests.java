@@ -47,7 +47,7 @@ public class AllGroovyTests {
         suite.addTestSuite(SanityTest.class);
         suite.addTest(AllUITests.suite()); // first for 'ErrorLogTest'
         suite.addTest(AllCompletionTests.suite());
-        suite.addTest(AllBrowsingTests.suite()); // impacting a DSL test
+        suite.addTest(AllBrowsingTests.suite());
         suite.addTest(AllCoreTests.suite());
         suite.addTest(AllDSLTests.suite());
         suite.addTest(AllJUnitTests.suite());

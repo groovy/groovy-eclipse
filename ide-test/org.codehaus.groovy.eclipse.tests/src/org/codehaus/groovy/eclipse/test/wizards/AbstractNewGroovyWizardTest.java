@@ -15,53 +15,22 @@
  */
 package org.codehaus.groovy.eclipse.test.wizards;
 
-import java.util.Hashtable;
-
-import junit.framework.TestCase;
-import org.codehaus.groovy.eclipse.test.TestProject;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
-import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * @author ns
  * @created May 18, 2010
  */
-public abstract class AbstractNewGroovyWizardTest extends TestCase {
-
-    protected TestProject fProject;
-
-    protected IJavaProject fJProject;
-
-    protected IPackageFragmentRoot fSourceFolder;
-
-    protected AbstractNewGroovyWizardTest(String name) {
-        super(name);
-    }
-
+public abstract class AbstractNewGroovyWizardTest extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
-        Hashtable<String, String> options = JavaCore.getDefaultOptions();
-        options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE);
-        options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "4");
-        JavaCore.setOptions(options);
-
-        IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
-        store.setValue(PreferenceConstants.CODEGEN_ADD_COMMENTS, false);
-        store.setValue(PreferenceConstants.CODEGEN_USE_OVERRIDE_ANNOTATION, true);
-
-        fProject = new TestProject("testWizards");
-        fJProject = fProject.getJavaProject();
-        fSourceFolder = fProject.getSourceFolder();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        JavaCore.setOptions(JavaCore.getDefaultOptions());
-        fProject.dispose();
+        super.setUp();
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE);
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "4");
+        setJavaPreference(PreferenceConstants.CODEGEN_ADD_COMMENTS, "false");
+        setJavaPreference(PreferenceConstants.CODEGEN_USE_OVERRIDE_ANNOTATION, "true");
     }
 }

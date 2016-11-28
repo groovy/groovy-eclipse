@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
-import org.eclipse.core.resources.ProjectScope
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 
@@ -36,11 +35,6 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
         // tests are sensitive to tab/space settings so ensure they are set to predictable default values
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
-
-        // ensure that project specific settings on the test project are turned off
-        // (or they will override our test settings on the plugin instance scope level)
-        ProjectScope projectPrefScope = new ProjectScope(testProject.project)
-        projectPrefScope.getNode(JavaCore.PLUGIN_ID).clear()
     }
 
     // GRECLIPSE-786
@@ -205,20 +199,20 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-744
     void testGRE744_3() {
-        makeEditor("""\
+        makeEditor('''\
             class Bagaga {
                 static final String RESULTS = "results"<***>
             }
-            """.stripIndent())
+            '''.stripIndent())
         send("\n\n\n")
-        assertEditorContents("""\
-class Bagaga {
-    static final String RESULTS = "results"
-    
-    
-    <***>
-}
-""")
+        assertEditorContents('''\
+            class Bagaga {
+                static final String RESULTS = "results"
+                |
+                |
+                <***>
+            }
+            '''.stripIndent().replaceAll('\\|', ''))
     }
 
     void testGRE757() {
@@ -390,14 +384,14 @@ def foo() {
         makeEditor('''\
 /*
  * A longer comment
- * got started <***>
+ * got started<***>
 ''')
         send('\n')
 
         assertEditorContents('''\
 /*
  * A longer comment
- * got started 
+ * got started
  * <***>
 ''')
     }
@@ -451,29 +445,30 @@ def doit() {
     }
 
     void testSmartPaste() {
-        makeEditor("""
+        makeEditor("""\
 def doit() {
 <***>
 }
 """)
-        sendPaste ("""
+
+        sendPaste ("""\
 def foo(int x) {
-   if (x>0)
-       println "pos"
-   else
-       println "neg"
+  if (x>0)
+    println "pos"
+  else
+    println "neg"
 }
 """)
-        assertEditorContents """
+
+        assertEditorContents """\
 def doit() {
-    
     def foo(int x) {
-       if (x>0)
-           println "pos"
-       else
-           println "neg"
-    }
-    <***>
+        if (x>0)
+          println "pos"
+        else
+          println "neg"
+      }
+      <***>
 }
 """
     }

@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -33,7 +35,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.PropertyExpressionFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.SimpleExpressionASTFragment;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Tests to see that ASTFragments are created correctly
@@ -43,7 +44,7 @@ import org.eclipse.jdt.core.JavaCore;
  */
 public final class ASTFragmentTests extends BrowsingTestCase {
 
-    public static junit.framework.Test suite() {
+    public static Test suite() {
         return newTestSuite(ASTFragmentTests.class);
     }
 
@@ -104,8 +105,35 @@ public final class ASTFragmentTests extends BrowsingTestCase {
             }
             return super.visit(fragment);
         }
-
     }
+
+    private void assertIsEmptyFragment(IASTFragment fragment) {
+        assertEquals("Fragment should be empty:\n" + fragment, ASTFragmentKind.EMPTY, fragment.kind());
+    }
+
+    private void assertFragmentSame(IASTFragment first, IASTFragment second) {
+        assertTrue("ASTFragments should match:\n" + first + "\n" + second, first.matches(second));
+    }
+
+    private void assertFragmentDifferent(IASTFragment first, IASTFragment second) {
+        assertFalse("ASTFragments should not match:\n" + first + "\n" + second, first.matches(second));
+    }
+
+    private IASTFragment createFragmentFromText(String contents) throws Exception {
+        GroovyCompilationUnit unit = addGroovySource(contents);
+        Statement statement = unit.getModuleNode().getStatementBlock().getStatements().get(0);
+        Expression expr = statement instanceof ReturnStatement ? ((ReturnStatement) statement).getExpression() : ((ExpressionStatement) statement).getExpression();
+        IASTFragment fragment = new ASTFragmentFactory().createFragment(expr);
+        unit.discardWorkingCopy();
+        return fragment;
+    }
+
+    private IASTFragment createFragmentFromText(String contents, int start, int end) throws Exception {
+        GroovyCompilationUnit unit = addGroovySource(contents);
+        return new ASTFragmentFactory().createFragment(((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression(), start, end);
+    }
+
+    //
 
     public void testASTFragment1() throws Exception {
         IASTFragment first = createFragmentFromText("a");
@@ -144,8 +172,7 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText("a .    b(f).j");
         assertEquals("Wrong number of fragments: " + first, 3, first.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTFragment6() throws Exception {
@@ -153,19 +180,15 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText("a.j.b(f)");
         assertEquals("Wrong number of fragments: " + first, 3, first.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.METHOD_CALL);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL);
     }
 
     public void testASTFragment7() throws Exception {
         IASTFragment first = createFragmentFromText("b(f).j.a");
         IASTFragment second = createFragmentFromText("b(f).j.a");
-        assertEquals("Wrong number of fragments: " + first, 4, first.fragmentLength()); // implicit
-                                                                                        // this
+        assertEquals("Wrong number of fragments: " + first, 4, first.fragmentLength()); // implicit this
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL,
-                ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTFragment8() throws Exception {
@@ -185,8 +208,8 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         assertEquals("Wrong number of fragments: " + first, 8, first.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL,
-                ASTFragmentKind.METHOD_CALL, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION);
+            ASTFragmentKind.METHOD_CALL, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY,
+            ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTFragment10() throws Exception {
@@ -196,8 +219,8 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         assertEquals("Wrong number of fragments: " + first, 8, first.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL,
-                ASTFragmentKind.METHOD_CALL, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION);
+            ASTFragmentKind.METHOD_CALL, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.PROPERTY,
+            ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment1a() throws Exception {
@@ -206,14 +229,11 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf(".d"));
         assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment1b() throws Exception {
-        System.out.println(JavaCore.getWorkingCopies(null));
         IASTFragment first = createFragmentFromText("a.b.c");
         String contents = "z.a.b.c.d";
         IASTFragment second = createFragmentFromText(contents, 2, contents.indexOf(".d"));
@@ -221,10 +241,8 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         // fragments should not match because property-based fragments only
         // match from the beginning
         assertFragmentDifferent(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment2a() throws Exception {
@@ -233,10 +251,8 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf("da"));
         assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment2b() throws Exception {
@@ -247,10 +263,8 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         // fragments should not match because property-based fragments only
         // match from the beginning
         assertFragmentDifferent(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment3() throws Exception {
@@ -259,8 +273,7 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText(contents, 4, contents.indexOf(" >>"));
         assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment4() throws Exception {
@@ -269,8 +282,7 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText(contents, 4, contents.indexOf(" >>") + 2);
         assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testASTSubFragment5() throws Exception {
@@ -288,8 +300,7 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment second = createFragmentFromText(contents, contents.indexOf("c"), contents.length());
         assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
-        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY,
-                ASTFragmentKind.SIMPLE_EXPRESSION);
+        new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY, ASTFragmentKind.SIMPLE_EXPRESSION);
     }
 
     public void testMatchSubFragment1() throws Exception {
@@ -416,37 +427,5 @@ public final class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment toMatch = createFragmentFromText("a = b - c * d /e");
         IASTFragment matched = fragment.findMatchingSubFragment(toMatch);
         assertFragmentSame(toMatch, matched);
-    }
-
-    private void assertIsEmptyFragment(IASTFragment fragment) {
-        assertEquals("Fragment should be empty:\n" + fragment, ASTFragmentKind.EMPTY, fragment.kind());
-    }
-
-    private void assertFragmentSame(IASTFragment first, IASTFragment second) {
-        if (!first.matches(second)) {
-            fail("ASTFragments should match:\n" + first + "\n" + second);
-        }
-    }
-
-    private void assertFragmentDifferent(IASTFragment first, IASTFragment second) {
-        if (first.matches(second)) {
-            fail("ASTFragments should not match:\n" + first + "\n" + second);
-        }
-    }
-
-    private IASTFragment createFragmentFromText(String contents) throws Exception {
-        GroovyCompilationUnit unit = addGroovySource(contents);
-        Statement statement = unit.getModuleNode().getStatementBlock().getStatements().get(0);
-        Expression expr = statement instanceof ReturnStatement
-                ? ((ReturnStatement) statement).getExpression() : ((ExpressionStatement) statement).getExpression();
-        IASTFragment fragment = new ASTFragmentFactory().createFragment(expr);
-        unit.discardWorkingCopy();
-        return fragment;
-    }
-
-    private IASTFragment createFragmentFromText(String contents, int start, int end) throws Exception {
-        GroovyCompilationUnit unit = addGroovySource(contents);
-        return new ASTFragmentFactory().createFragment(
-                ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression(), start, end);
     }
 }

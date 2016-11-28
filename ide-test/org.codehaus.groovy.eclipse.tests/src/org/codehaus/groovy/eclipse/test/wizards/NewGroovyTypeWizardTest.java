@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.test.wizards;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.wizards.NewClassWizardPage;
 import org.eclipse.core.runtime.IPath;
@@ -34,25 +32,11 @@ import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType;
 //Based on a copy of the NewTypeWizardTest from org.eclipse.jdt.ui.tests plugin.
 //Original source code:
 //http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.ui.tests/ui/org/eclipse/jdt/ui/tests/wizardapi/NewTypeWizardTest.java?revision=1.8
-public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
+public final class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
 
     // FIXKDV: the wizard has some options/controls that probably shouldn't be there
     //  For example a button to make a class public or default
     //  Other such things to clean up?
-
-    private static final Class<NewGroovyTypeWizardTest> THIS= NewGroovyTypeWizardTest.class;
-
-    public NewGroovyTypeWizardTest(String name) {
-        super(name);
-    }
-
-    public static Test allTests() {
-        return new TestSuite(THIS);
-    }
-
-    public static Test suite() {
-        return allTests();
-    }
 
     /**
      * Helper method to compare two strings for equality, while avoiding
@@ -64,9 +48,7 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
 
     @Override
     protected void setUp() throws Exception {
-
         super.setUp();
-
         String newFileTemplate= "${filecomment}\n${package_declaration}\n\n${typecomment}\n${type_declaration}";
         StubUtility.setCodeTemplate(CodeTemplateContextType.NEWTYPE_ID, newFileTemplate, null);
         StubUtility.setCodeTemplate(CodeTemplateContextType.TYPECOMMENT_ID, "/**\n * Type\n */", null);
@@ -83,16 +65,16 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
     }
 
     public void testNotGroovyProject() throws Exception {
-        GroovyRuntime.removeGroovyNature(fJProject.getProject());
-        IPackageFragment frag = fProject.createPackage("test1");
+        GroovyRuntime.removeGroovyNature(testProject.getProject());
+        IPackageFragment frag = testProject.createPackage("test1");
         NewClassWizardPage wizardPage= new NewClassWizardPage();
-        wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true);
         wizardPage.setPackageFragment(frag, true);
         assertStatus(IStatus.WARNING, "is not a groovy project.  Groovy Nature will be added to project upon completion.", wizardPage.getStatus());
     }
 
     public void testExclusionFilters() throws Exception {
-        IPackageFragmentRoot root = fProject.createSourceFolder("other", null, new IPath[] { new Path("**/*.groovy")});
+        IPackageFragmentRoot root = testProject.createSourceFolder("other", null, new IPath[] { new Path("**/*.groovy")});
         IPackageFragment frag = root.createPackageFragment("p", true, null);
         NewClassWizardPage wizardPage= new NewClassWizardPage();
         wizardPage.setPackageFragmentRoot(root, true);
@@ -102,9 +84,9 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
     }
 
     public void testDiscouraedDefaultPackage() throws Exception {
-        GroovyRuntime.removeGroovyNature(fJProject.getProject());
+        GroovyRuntime.removeGroovyNature(testProject.getProject());
         NewClassWizardPage wizardPage= new NewClassWizardPage();
-        wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true);
         assertStatus(IStatus.WARNING, "The use of the default package is discouraged.", wizardPage.getStatus());
     }
 
@@ -115,9 +97,9 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
     }
 
     public void testCreateGroovyClass1() throws Exception {
-        IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+        IPackageFragment pack1= testProject.getSourceFolder().createPackageFragment("test1", false, null);
         NewClassWizardPage wizardPage= new NewClassWizardPage();
-        wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true);
         wizardPage.setPackageFragment(pack1, true);
         wizardPage.setEnclosingTypeSelection(false, true);
         wizardPage.setTypeName("E", true);
@@ -155,10 +137,10 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
     public void _testCreateGroovyClass2GenericSuper() throws Exception {
         //FIXKDV: this test fails/crashes in Groovy.
         //      cause: problems resolving generic types?
-        IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+        IPackageFragment pack1= testProject.getSourceFolder().createPackageFragment("test1", false, null);
 
         NewClassWizardPage wizardPage= new NewClassWizardPage();
-        wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true);
         wizardPage.setPackageFragment(pack1, true);
         wizardPage.setEnclosingTypeSelection(false, true);
         wizardPage.setTypeName("E", true);
@@ -196,10 +178,10 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
     }
 
     public void testCreateGroovyClass2() throws Exception {
-        IPackageFragment pack1= fSourceFolder.createPackageFragment("test1", false, null);
+        IPackageFragment pack1= testProject.getSourceFolder().createPackageFragment("test1", false, null);
 
         NewClassWizardPage wizardPage= new NewClassWizardPage();
-        wizardPage.setPackageFragmentRoot(fSourceFolder, true);
+        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true);
         wizardPage.setPackageFragment(pack1, true);
         wizardPage.setEnclosingTypeSelection(false, true);
         wizardPage.setTypeName("E", true);

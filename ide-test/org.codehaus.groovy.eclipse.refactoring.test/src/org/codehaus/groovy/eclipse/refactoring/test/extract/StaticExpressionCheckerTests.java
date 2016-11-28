@@ -18,17 +18,12 @@ package org.codehaus.groovy.eclipse.refactoring.test.extract;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codebrowsing.tests.CheckerTestCase;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.StaticFragmentChecker;
-import org.eclipse.core.runtime.CoreException;
 
 /**
  * @author andrew
  * @created May 12, 2010
  */
-public class StaticExpressionCheckerTests extends CheckerTestCase {
-
-    public StaticExpressionCheckerTests() {
-        super(StaticExpressionCheckerTests.class.getName());
-    }
+public final class StaticExpressionCheckerTests extends CheckerTestCase {
 
     public void testStaticExpressionChecker1() throws Exception {
         checkIsStatic("666");
@@ -63,7 +58,7 @@ public class StaticExpressionCheckerTests extends CheckerTestCase {
     }
 
     // the expression to check is always the last expression in the module
-    private void checkIsStatic(String text) throws CoreException {
+    private void checkIsStatic(String text) throws Exception {
         ModuleNode module = createModuleFromText(text);
         StaticFragmentChecker checker = new StaticFragmentChecker();
         boolean result = checker.mayNotBeStatic(getLastFragment(module));
@@ -71,7 +66,7 @@ public class StaticExpressionCheckerTests extends CheckerTestCase {
     }
 
     // the expression to check is always the last expression in the module
-    private void checkIsNotStatic(String text) throws CoreException {
+    private void checkIsNotStatic(String text) throws Exception {
         ModuleNode module = createModuleFromText(text);
         StaticFragmentChecker checker = new StaticFragmentChecker();
         boolean result = checker.mayNotBeStatic(getLastFragment(module));

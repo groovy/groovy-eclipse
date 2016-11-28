@@ -36,10 +36,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisi
  */
 public final class FindAllOccurrencesVisitorTests extends CheckerTestCase {
 
-    public FindAllOccurrencesVisitorTests() {
-        super(FindAllOccurrencesVisitorTests.class.getName());
-    }
-
     public void testFindAllOccurrences1() throws Exception {
         String moduleText = "FOO + BAR // FOO + BAR";
         String exprText = "FOO + BAR";

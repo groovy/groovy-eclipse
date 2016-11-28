@@ -29,10 +29,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
  */
 public final class IsSameExpressionTests extends CheckerTestCase {
 
-    public IsSameExpressionTests() {
-        super(IsSameExpressionTests.class.getName());
-    }
-
     public void testIsSame1() throws Exception {
         checkTwoExpressions("foo(666, FOO)", "foo(666, FOO)", true);
     }

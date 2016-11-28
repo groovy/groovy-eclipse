@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,25 @@
  */
 package org.codehaus.groovy.eclipse.test.ui;
 
-import java.util.Hashtable;
-
-import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 
 /**
- *
  * @author kdvolder
  * @created 2010-05-20
  */
-public class GroovyAutoIndenterTests extends GroovyEditorTest {
+public final class GroovyAutoIndenterTests extends GroovyEditorTest {
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        //Our tests are sensitive to tab/space settings so ensure they are
-        //set to predictable default values.
+        // tests are sensitive to tab/space settings so ensure they are set to predictable default values
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB);
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "4");
-
-        //Also ensure that project specific settings on the test project are turned off
-        // (or they will override our test settings on the plugin instance scope level)
-        ProjectScope projectPrefScope = new ProjectScope(testProject.getProject());
-        projectPrefScope.getNode(JavaCore.PLUGIN_ID).clear();
     }
 
     /**
-     * A simple test just to see whether our scaffolding for testing the
-     * editor works.
-     *
-     * @throws Exception
+     * A simple test just to see whether our scaffolding for testing the editor works.
      */
     public void testScaffolding() throws Exception {
         makeEditor("<***>");
@@ -102,8 +89,7 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "\tdef foo () {\n" +
                 "\t\tdef foo = [\"\"]<***>\n" +
                 "\t}\n" +
-                "}"
-        );
+                "}");
         send("\n");
         assertEditorContents(
                 "class Foo {\n" +
@@ -119,8 +105,7 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "\t\treturn []\n" +
                 "\t\t<***>\n" +
                 "\t}\n" +
-                "}"
-        );
+                "}");
     }
 
     /**
@@ -132,14 +117,14 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
         makeEditor(
                 "class Foo {\n" +
                 "\tdef foo() {<***>\n" +
-                "}\n\n");
+                "}");
         send("\n");
         assertEditorContents(
                 "class Foo {\n" +
                 "\tdef foo() {\n" +
                 "        <***>\n" +
                 "    }\n" +
-                "}\n\n");
+                "}");
     }
 
     /**
@@ -148,8 +133,8 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
      */
     public void testPasteInMultiLineString() throws Exception {
         String initial = "class Foo {\n" +
-        "\tdef command = \"\"\"<***>\"\"\"\n" +
-        "}\n\n";
+                "\tdef command = \"\"\"<***>\"\"\"\n" +
+                "}";
         makeEditor(initial);
         String pasteString = "A bunch of \n \t\tmore here. Not\t\t\nand done!";
         sendPaste(pasteString);
@@ -157,14 +142,14 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
     }
 
     /**
-     * Check whether we are also picking up on changed tab/space preferences \\
+     * Check whether we are also picking up on changed tab/space preferences
      * even if they are change happens after the editor was already opened.
      */
     public void testSpacesOptionSetAfterOpen() throws Exception {
         makeEditor(
                 "class Foo {\n" +
                 "\tdef foo() {<***>\n" +
-                "}\n\n");
+                "}");
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE);
         send("\n");
         assertEditorContents(
@@ -172,9 +157,9 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "\tdef foo() {\n" +
                 "        <***>\n" +
                 "    }\n" +
-                "}\n\n");
+                "}");
     }
-    
+
     /**
      * Check whether autoindentor works correct for mixed tab/spaces mode.
      */
@@ -185,7 +170,7 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "        def bar {<***>\n" +
                 "        }\n" +
                 "    }\n"+
-                "}\n\n");
+                "}");
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, DefaultCodeFormatterConstants.MIXED);
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "8");
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, "4");
@@ -197,9 +182,9 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "\t    <***>\n" +
                 "        }\n" +
                 "    }\n"+
-                "}\n\n");
+                "}");
     }
-    
+
     /**
      * Similar to above, but also check whether it counts the tabs on previous lines correctly.
      */
@@ -210,7 +195,7 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "\tdef bar {<***>\n" +
                 "\t}\n" +
                 "    }\n"+
-                "}\n\n");
+                "}");
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, DefaultCodeFormatterConstants.MIXED);
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "8");
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, "4");
@@ -222,13 +207,6 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "\t    <***>\n" +
                 "\t}\n" +
                 "    }\n"+
-                "}\n\n");
+                "}");
     }
-
-    protected void setJavaPreference(String name, String value) {
-        Hashtable<String, String> options = JavaCore.getOptions();
-        options.put(name, value);
-        JavaCore.setOptions(options);
-    }
-
 }

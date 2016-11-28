@@ -32,6 +32,8 @@ import org.codehaus.groovy.eclipse.test.debug.DebugBreakpointsTests;
 import org.codehaus.groovy.eclipse.test.debug.GroovyLauncherShortcutTests;
 import org.codehaus.groovy.eclipse.test.ui.BracketInserterTests;
 import org.codehaus.groovy.eclipse.test.ui.ErrorLogTest;
+import org.codehaus.groovy.eclipse.test.ui.GroovyAutoIndenterTests;
+import org.codehaus.groovy.eclipse.test.ui.GroovyAutoIndenterTests2;
 import org.codehaus.groovy.eclipse.test.ui.GroovyPartitionScannerTests;
 import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
@@ -71,8 +73,8 @@ public final class AllUITests {
         // ui (except ErrorLogTest)
         suite.addTest(new EclipseTestSetup(newTestSuite("Editor Enhancements",
                 BracketInserterTests.class, SemanticHighlightingTests.class)));
-//      suite.addTestSuite(GroovyAutoIndenterTests.class);
-//      suite.addTestSuite(GroovyAutoIndenterTests2.class);
+        suite.addTestSuite(GroovyAutoIndenterTests.class);
+        suite.addTestSuite(GroovyAutoIndenterTests2.class);
         suite.addTestSuite(GroovyPartitionScannerTests.class);
         suite.addTestSuite(GroovyTagScannerTests.class);
         suite.addTestSuite(HighlightingExtenderTests.class);
