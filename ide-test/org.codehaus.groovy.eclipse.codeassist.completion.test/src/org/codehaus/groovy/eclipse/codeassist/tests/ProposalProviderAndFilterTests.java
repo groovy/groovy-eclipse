@@ -28,7 +28,8 @@ import org.codehaus.groovy.eclipse.test.ui.Extender2;
 import org.eclipse.jdt.core.ICompilationUnit;
 
 /**
- * Tests for {@link IProposalFilter} and {@link IProposalProvider}
+ * Tests for {@link IProposalFilter} and {@link IProposalProvider}.
+ *
  * @author Andrew Eisenberg
  * @created Aug 31, 2010
  */
@@ -39,12 +40,18 @@ public final class ProposalProviderAndFilterTests extends CompletionTestCase {
     }
 
     @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    protected void setUp() throws Exception {
+        super.setUp();
         MockProposalFilter1.reset();
         MockProposalFilter2.reset();
         MockProposalProvider1.reset();
         MockProposalProvider2.reset();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        EclipseTestSetup.removeNature(Extender1.NATURE1, Extender2.NATURE2);
+        super.tearDown();
     }
 
     public void testProvidersAndFilters1() throws Exception {
@@ -52,28 +59,24 @@ public final class ProposalProviderAndFilterTests extends CompletionTestCase {
 
         String contents = "println th";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
-        // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
 
-        // now see which proposals and filters have been accessed
         assertFalse("MockProposalProvider1 should not have been called", MockProposalProvider1.wasProviderCalled());
-        assertFalse("MockProposalFilter1 should not have been called", MockProposalFilter1.wasFilterCalled());
-        assertTrue("MockProposalProvider2 should have been called", MockProposalProvider2.wasProviderCalled());
-        assertTrue("MockProposalFilter2 should have been called", MockProposalFilter2.wasFilterCalled());
+        assertFalse("MockProposalFilter1 should not have been called",   MockProposalFilter1.wasFilterCalled());
+        assertTrue("MockProposalProvider2 should have been called",      MockProposalProvider2.wasProviderCalled());
+        assertTrue("MockProposalFilter2 should have been called",        MockProposalFilter2.wasFilterCalled());
     }
+
     public void testProvidersAndFilters2() throws Exception {
-        EclipseTestSetup.addNature(Extender1.NATURE1);
-        EclipseTestSetup.addNature(Extender2.NATURE2);
+        EclipseTestSetup.addNature(Extender1.NATURE1, Extender2.NATURE2);
 
         String contents = "println th";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
-        // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
 
-        // now see which proposals and filters have been accessed
         assertTrue("MockProposalProvider1 should have been called", MockProposalProvider1.wasProviderCalled());
-        assertTrue("MockProposalFilter1 should have been called", MockProposalFilter1.wasFilterCalled());
+        assertTrue("MockProposalFilter1 should have been called",   MockProposalFilter1.wasFilterCalled());
         assertTrue("MockProposalProvider2 should have been called", MockProposalProvider2.wasProviderCalled());
-        assertTrue("MockProposalFilter2 should have been called", MockProposalFilter2.wasFilterCalled());
+        assertTrue("MockProposalFilter2 should have been called",   MockProposalFilter2.wasFilterCalled());
     }
 }

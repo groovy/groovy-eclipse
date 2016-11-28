@@ -22,14 +22,12 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker;
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker.AmbiguousFileLink;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.debug.core.model.IStreamMonitor;
 import org.eclipse.debug.core.model.IStreamsProxy;
 import org.eclipse.debug.ui.console.FileLink;
 import org.eclipse.debug.ui.console.IConsole;
-import org.eclipse.debug.ui.console.IConsoleHyperlink;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -45,11 +43,12 @@ import org.eclipse.ui.console.IPatternMatchListener;
  * Tests that breakpoint locations are as expected
  *
  */
-@SuppressWarnings("deprecation")
 public class ConsoleLineTrackerTests extends EclipseTestCase {
-    MockConsole console;
+
     GroovyConsoleLineTracker lineTracker;
+    MockConsole console;
     IDocument doc;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -57,9 +56,8 @@ public class ConsoleLineTrackerTests extends EclipseTestCase {
         console = new MockConsole(doc);
         lineTracker = new GroovyConsoleLineTracker();
         lineTracker.init(console);
-        testProject.addNature(GroovyNature.GROOVY_NATURE);
     }
-    
+
     public void testNoLink() throws Exception {
         testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "");
         String contents = "ahdhjkfsfds";
@@ -67,6 +65,7 @@ public class ConsoleLineTrackerTests extends EclipseTestCase {
         lineTracker.lineAppended(new Region(0, contents.length()));
         assertNull("Should not have found any hyperlinks", console.getLastLink());
     }
+
     public void testLink() throws Exception {
         testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "");
         String contents = "at f.Bar.run(Bar.groovy:2)";
@@ -78,12 +77,13 @@ public class ConsoleLineTrackerTests extends EclipseTestCase {
         assertTrue("File should exist", file.isAccessible());
         assertEquals("File name is wrong", "Bar.groovy", file.getName());
     }
+
     public void testAmbiguousLink() throws Exception {
         testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "");
         testProject.createOtherSourceFolder();
         testProject.getProject().getFolder("other/f").create(true, true, null);
         testProject.getProject().getFile("other/f/Bar.groovy").create(new ByteArrayInputStream(new byte[0]), true, null);
-        
+
         String contents = "at f.Bar.run(Bar.groovy:2)";
         doc.set(contents);
         lineTracker.lineAppended(new Region(0, contents.length()));
@@ -91,28 +91,28 @@ public class ConsoleLineTrackerTests extends EclipseTestCase {
         FileLink link = (FileLink) console.getLastLink();
         Object file = ReflectionUtils.getPrivateField(FileLink.class, "fFile", link);
         assertNull("File should be null since the selection is ambiguous", file);
-        
+
         IFile[] files = (IFile[]) ReflectionUtils.getPrivateField(AmbiguousFileLink.class, "files", link);
-        
+
         assertEquals("Should have found 2 files", 2, files.length);
         assertEquals("File name is wrong", "Bar.groovy", files[0].getName());
         assertEquals("File name is wrong", "Bar.groovy", files[1].getName());
     }
-    
 }
 
+@SuppressWarnings("deprecation")
 class MockConsole implements IConsole {
 
     private Map<IHyperlink, IRegion> regionLinkMap = new HashMap<IHyperlink, IRegion>();
     private IHyperlink lastLink = null;
 
     private IDocument doc;
-    
+
     public MockConsole(IDocument doc) {
         this.doc = doc;
     }
-    
-    public void addLink(@SuppressWarnings("deprecation") IConsoleHyperlink link, int offset, int length) {
+
+    public void addLink(org.eclipse.debug.ui.console.IConsoleHyperlink link, int offset, int length) {
     }
 
     public void connect(IStreamsProxy streamsProxy) {
@@ -129,7 +129,7 @@ class MockConsole implements IConsole {
         return null;
     }
 
-    public IRegion getRegion(@SuppressWarnings("deprecation") IConsoleHyperlink link) {
+    public IRegion getRegion(org.eclipse.debug.ui.console.IConsoleHyperlink link) {
         return null;
     }
 
@@ -139,13 +139,12 @@ class MockConsole implements IConsole {
     }
 
     public void addPatternMatchListener(IPatternMatchListener matchListener) {
-        
     }
 
     public IRegion getRegion(IHyperlink link) {
         return regionLinkMap.get(link);
     }
-    
+
     public IHyperlink getLastLink() {
         return lastLink;
     }
@@ -155,7 +154,5 @@ class MockConsole implements IConsole {
     }
 
     public void removePatternMatchListener(IPatternMatchListener matchListener) {
-        
     }
-    
 }

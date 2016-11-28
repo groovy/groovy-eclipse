@@ -21,7 +21,6 @@ import junit.framework.TestCase;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.GroovyTagScanner;
-import org.codehaus.groovy.eclipse.preferences.PreferenceInitializer;
 import org.eclipse.jdt.ui.text.IColorManager;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.Document;
@@ -44,9 +43,7 @@ public class GroovyTagScannerTests extends TestCase {
         System.out.println("----------------------------------------");
         System.out.println("Starting: " + getName());
 
-        new PreferenceInitializer().initializeDefaultPreferences();
         IColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-
         scanner = new GroovyTagScanner(colorManager, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     }
 

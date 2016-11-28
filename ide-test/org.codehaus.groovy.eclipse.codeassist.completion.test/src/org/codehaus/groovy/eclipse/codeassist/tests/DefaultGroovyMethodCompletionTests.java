@@ -23,7 +23,6 @@ import junit.framework.Test;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -171,12 +170,7 @@ public final class DefaultGroovyMethodCompletionTests extends CompletionTestCase
                 "p.get";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "get"), GroovyCompletionProposalComputer.class);
-        if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            proposalExists(proposals, "getIn", 1);
-        } else {
-            // groovy 1.7
-            proposalExists(proposals, "getIn", 2);
-        }
+        proposalExists(proposals, "getIn", 1);
     }
 
     // tests GRECLIPSE-1158
@@ -185,12 +179,7 @@ public final class DefaultGroovyMethodCompletionTests extends CompletionTestCase
                 "p.encodeBase64";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "encodeBase64"), GroovyCompletionProposalComputer.class);
-        if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            proposalExists(proposals, "encodeBase64", 2);
-        } else {
-            // groovy 1.7
-            proposalExists(proposals, "encodeBase64", 4);
-        }
+        proposalExists(proposals, "encodeBase64", 2);
     }
 
     // tests GRECLIPSE-1158
@@ -199,14 +188,8 @@ public final class DefaultGroovyMethodCompletionTests extends CompletionTestCase
                 "p.iterator";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "iterator"), GroovyCompletionProposalComputer.class);
-        if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            proposalExists(proposals, "iterator", 1);
-        } else {
-            // groovy 1.7
-            proposalExists(proposals, "iterator", 2);
-        }
+        proposalExists(proposals, "iterator", 1);
     }
-
 
     // GRECLIPSE-1182
     public void testDGMFilter1() throws Exception {

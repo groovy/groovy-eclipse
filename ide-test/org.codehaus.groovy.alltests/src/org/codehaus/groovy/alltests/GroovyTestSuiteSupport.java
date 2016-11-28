@@ -15,16 +15,18 @@
  */
 package org.codehaus.groovy.alltests;
 
+import org.codehaus.groovy.frameworkadapter.util.CompilerChooser;
 import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
 
 public class GroovyTestSuiteSupport {
 
     private static boolean initialized = false;
 
-    public static void initializeCompilerChooser() {
+    public static CompilerChooser initializeCompilerChooser() {
         if (!initialized) {
             ResolverActivator.getDefault().initializeChooser();
             initialized = true;
         }
+        return ResolverActivator.getDefault().getChooser();
     }
 }

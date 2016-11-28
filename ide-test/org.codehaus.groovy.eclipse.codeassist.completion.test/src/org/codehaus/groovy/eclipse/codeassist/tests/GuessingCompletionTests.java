@@ -65,15 +65,14 @@ public final class GuessingCompletionTests extends CompletionTestCase {
                 "def zzz = { }\n" +
                 "def xxx(Closure c) { }\n" +
                 "xxx";
-        String[][] expectedChoices = new String[][] { new String[] { "zzz", "yyy", "{  }" } };
+        String[][] expectedChoices = {{"zzz", "yyy", "{  }"}};
         try {
             checkProposalChoices(contents, "xxx", "xxx {", expectedChoices);
         } catch (AssertionError e) {
             try {
-                checkProposalChoices(contents, "xxx", "xxx zzz", expectedChoices);
-            } catch (AssertionError e2) {
-                // this version is also a correct result
                 checkProposalChoices(contents, "xxx", "xxx yyy", expectedChoices);
+            } catch (AssertionError e2) {
+                checkProposalChoices(contents, "xxx", "xxx zzz", expectedChoices);
             }
         }
     }

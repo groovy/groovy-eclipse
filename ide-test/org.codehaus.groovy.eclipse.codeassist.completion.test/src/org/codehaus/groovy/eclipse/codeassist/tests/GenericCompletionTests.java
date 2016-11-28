@@ -18,10 +18,10 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import junit.framework.Test;
 
 /**
+ * Tests completions of generic lists, maps, etc.
+ *
  * @author Andrew Eisenberg
  * @created Dec 20, 2010
- *
- * Tests completions of generic lists, maps, etc.
  */
 public final class GenericCompletionTests extends CompletionTestCase {
 
@@ -34,6 +34,7 @@ public final class GenericCompletionTests extends CompletionTestCase {
         String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'].clear()\nj";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "['foo'].c"), "clear()");
     }
+
     public void testAfterArrayAccesses2() throws Exception {
         String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'].";
         String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'].clear()";
@@ -45,6 +46,7 @@ public final class GenericCompletionTests extends CompletionTestCase {
         String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2].time";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "['foo'][5][2].t"), "time");
     }
+
     public void testAfterMultipleArrayAccesses2() throws Exception {
         String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2].";
         String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2].time";

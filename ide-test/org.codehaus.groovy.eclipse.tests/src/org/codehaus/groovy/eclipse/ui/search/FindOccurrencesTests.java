@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.ui.search;
 import java.util.Arrays;
 
 import junit.framework.Test;
-
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
@@ -34,12 +33,12 @@ import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
  */
 public class FindOccurrencesTests extends AbstractGroovySearchTest {
 
-    public FindOccurrencesTests(String name) {
-        super(name);
-    }
-
     public static Test suite() {
         return buildTestSuite(FindOccurrencesTests.class);
+    }
+
+    public FindOccurrencesTests(String name) {
+        super(name);
     }
 
     public void testFindLocalOccurrences1() throws Exception {

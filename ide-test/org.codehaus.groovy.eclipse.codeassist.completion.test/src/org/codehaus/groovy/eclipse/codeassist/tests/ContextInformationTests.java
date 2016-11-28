@@ -38,30 +38,23 @@ public final class ContextInformationTests extends CompletionTestCase {
         return newTestSuite(ContextInformationTests.class);
     }
 
-    protected void runTest(ICompilationUnit unit, String target, String which, int count) throws Exception {
+    protected void runTest(ICompilationUnit unit, String target, String proposalName, int proposalCount) throws Exception {
         String source = unit.getSource();
         int offset = getIndexOf(source, target);
-        assertContextInformation(which, count, performContentAssist(unit, offset, GroovyCompletionProposalComputer.class), source);
-    }
+        ICompletionProposal[] proposals = performContentAssist(unit, offset, GroovyCompletionProposalComputer.class);
 
-    private void assertContextInformation(String proposalName, int proposalCount, ICompletionProposal[] proposals, String source) {
         if (proposalCount != proposals.length) {
             fail("Expected " + proposalCount + " proposals, but found " + proposals.length + "\nin:\n" + printProposals(proposals));
         }
-
         IDocument doc = new Document(source);
-
-        for (int i = 0; i < proposals.length; i++) {
-            if (!proposals[i].getDisplayString().startsWith(proposalName)) {
-                fail("Unexpected disoplay string for proposal " +
-                    proposalCount +
-                    ".  All proposals:\n" +
-                    printProposals(proposals));
+        for (ICompletionProposal proposal : proposals) {
+            if (!proposal.getDisplayString().startsWith(proposalName)) {
+                fail("Unexpected disoplay string for proposal " + proposalCount + ".  All proposals:\n" + printProposals(proposals));
             }
-            if (proposals[i].getContextInformation() == null) {
+            if (proposal.getContextInformation() == null) {
                 fail("No context information for proposal " + proposalCount + ".  All proposals:\n" + printProposals(proposals));
             }
-            proposals[i].apply(doc);
+            proposal.apply(doc);
             assertEquals("Invalid proposal application.  Should have no changes.", source, doc.get());
         }
     }

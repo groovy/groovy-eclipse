@@ -36,6 +36,7 @@ public final class BracketInserterTests extends TestCase {
         return new EclipseTestSetup(new TestSuite(BracketInserterTests.class));
     }
 
+    @Override
     protected void tearDown() {
         EclipseTestSetup.removeSources();
     }

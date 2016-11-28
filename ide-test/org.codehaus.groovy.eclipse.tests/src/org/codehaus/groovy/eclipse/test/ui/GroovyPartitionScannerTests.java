@@ -39,13 +39,14 @@ public class GroovyPartitionScannerTests extends TestCase {
         scanner = new GroovyPartitionScanner();
     }
 
-
     public void testSingleQuotes() throws Exception {
         tryString("''''''", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
+
     public void testSingleQuotes2() throws Exception {
         tryString("'''\n'''", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
+
     public void testSingleQuotes3() throws Exception {
         tryString("'''dsfasddsfds\n'''", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
@@ -57,6 +58,7 @@ public class GroovyPartitionScannerTests extends TestCase {
     public void testDoubleQuotes2() throws Exception {
         tryString("\"\"\"\n\"\"\"", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
+
     public void testDoubleQuotes3() throws Exception {
         tryString("\"\"\"dsafasdfasdds\n\"\"\"", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
@@ -64,6 +66,7 @@ public class GroovyPartitionScannerTests extends TestCase {
     public void testNone() throws Exception {
         tryString("\"\n\"\"\"", 0, IJavaPartitions.JAVA_STRING);
     }
+
     public void testNone2() throws Exception {
         tryString("''\n'''", 0, IJavaPartitions.JAVA_STRING);
     }
@@ -87,6 +90,5 @@ public class GroovyPartitionScannerTests extends TestCase {
         scanner.setRange(doc, start, string.length());
         IToken token = scanner.nextToken();
         assertEquals("Incorrect content type for '" + string + "'", expectedContentType, token.getData());
-
     }
 }

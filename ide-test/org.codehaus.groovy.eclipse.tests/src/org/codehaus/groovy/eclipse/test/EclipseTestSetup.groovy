@@ -97,8 +97,12 @@ class EclipseTestSetup extends TestSetup {
         testProject.addEntry(testProject.project, JavaCore.newContainerEntry(path))
     }
 
-    static void addNature(String natureId) {
-        testProject.addNature(natureId);
+    static void addNature(String... natures) {
+        natures.each(testProject.&addNature)
+    }
+
+    static void removeNature(String... natures) {
+        natures.each(testProject.&removeNature)
     }
 
     static void buildProject() {

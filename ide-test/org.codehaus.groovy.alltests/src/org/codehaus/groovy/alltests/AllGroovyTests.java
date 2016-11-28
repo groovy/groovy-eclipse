@@ -26,31 +26,28 @@ import org.codehaus.groovy.eclipse.junit.test.AllJUnitTests;
 import org.codehaus.groovy.eclipse.quickfix.test.AllQuickFixTests;
 import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests;
 import org.codehaus.groovy.eclipse.test.AllUITests;
-import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
+import org.codehaus.groovy.frameworkadapter.util.CompilerChooser;
 
 /**
  * @author Andrew Eisenberg
  * @created Jun 3, 2009
- *
- * Groovy plugin tests
  */
 public class AllGroovyTests {
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
-        GroovyTestSuiteSupport.initializeCompilerChooser();
+        CompilerChooser compiler = GroovyTestSuiteSupport.initializeCompilerChooser();
 
-        //Must use sys err if you wanna see the messages in the build log. sysout seems to disapear without a trace on
-        // the build server.
-        System.err.println("=========== AllGroovyTests ===============");
-        System.err.println("active Groovy version             = "+ResolverActivator.getDefault().getChooser().getActiveVersion());
-        System.err.println("active Groovy version (specified) = "+ResolverActivator.getDefault().getChooser().getActiveSpecifiedVersion());
-        System.err.println("------------------------------------------");
+        // use syserr to see the messages in the build log; sysout seems to disapear without a trace on build server
+        System.err.println("------------ AllGroovyTests ------------");
+        System.err.println("active Groovy version = " + compiler.getActiveVersion());
+        System.err.println("active Groovy version (specified) = " + compiler.getActiveSpecifiedVersion());
+        System.err.println("----------------------------------------");
 
         TestSuite suite = new TestSuite(AllGroovyTests.class.getName());
         suite.addTestSuite(SanityTest.class);
-        suite.addTest(AllUITests.suite()); // must be first because of 'ErrorLogTest'
-        suite.addTest(AllBrowsingTests.suite());
+        suite.addTest(AllUITests.suite()); // first for 'ErrorLogTest'
         suite.addTest(AllCompletionTests.suite());
+        suite.addTest(AllBrowsingTests.suite()); // impacting a DSL test
         suite.addTest(AllCoreTests.suite());
         suite.addTest(AllDSLTests.suite());
         suite.addTest(AllJUnitTests.suite());

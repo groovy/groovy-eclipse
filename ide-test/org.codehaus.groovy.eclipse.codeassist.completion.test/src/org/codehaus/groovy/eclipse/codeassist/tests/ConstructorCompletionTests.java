@@ -88,7 +88,6 @@ public final class ConstructorCompletionTests extends CompletionTestCase {
     /**
      * no named args since an explicit constructor exists
      * same file
-     * @throws Exception
      */
     public void testNoNamedArgs1() throws Exception {
         String contents =

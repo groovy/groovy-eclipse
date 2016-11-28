@@ -18,14 +18,12 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import junit.framework.ComparisonFailure;
 import junit.framework.Test;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -49,15 +47,15 @@ public final class OtherCompletionTests extends CompletionTestCase {
 
     public void testGreclipse414() throws Exception {
         String contents =
-"public class Test {\n" +
-    "int i\n" +
-    "Test() {\n" +
-        "this.i = 42\n" +
-    "}\n" +
-"Test(Test other) {\n" +
-        "this.i = other.i\n" +
-    "}\n" +
-"}";
+            "public class Test {\n" +
+                "int i\n" +
+                "Test() {\n" +
+                    "this.i = 42\n" +
+                "}\n" +
+            "Test(Test other) {\n" +
+                    "this.i = other.i\n" +
+                "}\n" +
+            "}";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
         // ensure that there is no ArrayIndexOutOfBoundsException thrown.
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "this."), GroovyCompletionProposalComputer.class);
@@ -68,11 +66,11 @@ public final class OtherCompletionTests extends CompletionTestCase {
     // ensure this doesn't happen
     public void testGreclipse422() throws Exception {
         String javaClass =
-         "public class StringExtension {\n" +
-         "public static String bar(String self) {\n" +
-                     "return self;\n" +
-                 "}\n" +
-             "}\n";
+            "public class StringExtension {\n" +
+                "public static String bar(String self) {\n" +
+                    "return self;\n" +
+                "}\n" +
+            "}\n";
         addJavaSource(javaClass, "StringExtension", "");
 
         String groovyClass =
@@ -99,24 +97,17 @@ public final class OtherCompletionTests extends CompletionTestCase {
         });
         proposalExists(proposals, "collect", 3);
         assertEquals(printProposals(proposals), "collect(Collection collector, Closure transform) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
-        try {
-        } catch (ComparisonFailure e) {
-        }
-        if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
-            assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
-        } else {
-            assertEquals(printProposals(proposals), "collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
-        }
+        assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
+        assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
     }
 
     public void testVisibility() throws Exception {
         String groovyClass =
-"class B { }\n" +
-"class C {\n" +
-    "B theB\n" +
-"}\n" +
-"new C().th\n";
+            "class B { }\n" +
+            "class C {\n" +
+                "B theB\n" +
+            "}\n" +
+            "new C().th\n";
         ICompilationUnit groovyUnit = addGroovySource(groovyClass, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GroovyCompletionProposalComputer.class);
 

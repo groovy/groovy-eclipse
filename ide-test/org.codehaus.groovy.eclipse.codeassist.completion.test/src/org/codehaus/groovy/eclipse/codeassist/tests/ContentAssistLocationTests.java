@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.Document;
 
 /**
@@ -471,11 +470,9 @@ public final class ContentAssistLocationTests extends CompletionTestCase {
     }
 
     void assertLocation(String contents, int offset, ContentAssistLocation location) throws Exception {
-        ICompilationUnit unit = addGroovySource(contents, "File", "");
-
-        GroovyCompletionProposalComputer computer = new GroovyCompletionProposalComputer();
-        ContentAssistContext context = computer.createContentAssistContext((GroovyCompilationUnit) unit, offset, new Document(unit.getBuffer().getContents()));
-
+        GroovyCompilationUnit unit = addGroovySource(contents, "File", "");
+        ContentAssistContext context = new GroovyCompletionProposalComputer()
+            .createContentAssistContext(unit, offset, new Document(unit.getBuffer().getContents()));
         assertEquals("Invalid location at index " + offset + " in text:\n" + contents, location, context.location);
     }
 }

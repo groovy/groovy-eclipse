@@ -19,12 +19,11 @@ import junit.framework.Test;
 
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-
 /**
+ * Tests that content assist works as expected in inner classes.
+ *
  * @author Andrew Eisenberg
  * @created Dec 18, 2009
- *
- * Tests that content assist works as expected in inner classes
  */
 public final class InnerTypeCompletionTests extends CompletionTestCase {
 

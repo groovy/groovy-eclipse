@@ -74,8 +74,15 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        DebugUIPlugin.getDefault().getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD, MessageDialogWithToggle.NEVER);
         DebugUIPlugin.getDefault().getPreferenceStore().setValue(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT, false);
+        DebugUIPlugin.getDefault().getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD, MessageDialogWithToggle.NEVER);
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        DebugUIPlugin.getDefault().getPreferenceStore().setToDefault(IDebugPreferenceConstants.CONSOLE_OPEN_ON_OUT);
+        DebugUIPlugin.getDefault().getPreferenceStore().setToDefault(IInternalDebugUIConstants.PREF_WAIT_FOR_BUILD);
+        super.tearDown();
     }
 
     // single script

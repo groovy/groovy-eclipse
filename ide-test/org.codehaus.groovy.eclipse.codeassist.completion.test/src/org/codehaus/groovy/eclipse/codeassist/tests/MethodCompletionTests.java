@@ -105,7 +105,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
             if (method.getParameters().length == 2) {
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
                 char[][] names = proposal.createAllParameterNames(unit);
-                checkNames(new char[][] {"self".toCharArray(), "other".toCharArray() }, names);
+                checkNames(new char[][] {"self".toCharArray(), "other".toCharArray()}, names);
             }
         }
         if (methods.size() != 1) {
@@ -115,8 +115,8 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     public void testParameterNames2() throws Exception {
         String contents = "MyClass\nclass MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
-        ICompilationUnit unit = addGroovySource(contents, "File", "");
-        ClassNode clazz = extract((GroovyCompilationUnit) unit);
+        GroovyCompilationUnit unit = addGroovySource(contents, "File", "");
+        ClassNode clazz = extract(unit);
         List<MethodNode> methods = clazz.getMethods("m");
         for (MethodNode method : methods) {
             if (method.getParameters().length == 1) {
@@ -171,6 +171,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(1)."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
+
     // GRECLIPSE-1374
     public void testParensExprs2() throws Exception {
         String contents = "(((1))).\ndef u";
@@ -178,6 +179,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(((1)))."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "abs", 1);
     }
+
     // GRECLIPSE-1374
     public void testParensExprs3() throws Exception {
         String contents = "(((1))).abs()";
@@ -288,10 +290,10 @@ public final class MethodCompletionTests extends CompletionTestCase {
 
     private void checkNames(char[][] expected, char[][] names) {
         if (!CharOperation.equals(expected, names)) {
-            fail("Wrong number of parameter names.  Expecting:\n" +
-                    CharOperation.toString(expected) + "\n\nbut found:\n" + CharOperation.toString(names));
+            fail("Wrong number of parameter names.  Expecting:\n" + CharOperation.toString(expected) + "\n\nbut found:\n" + CharOperation.toString(names));
         }
     }
+
     private ClassNode extract(GroovyCompilationUnit unit) {
         Statement state = unit.getModuleNode().getStatementBlock().getStatements().get(0);
         if (state instanceof ReturnStatement) {
@@ -301,7 +303,7 @@ public final class MethodCompletionTests extends CompletionTestCase {
             ExpressionStatement expr = (ExpressionStatement) state;
             return expr.getExpression().getType();
         } else {
-            fail ("Invalid statement kind for " + state + "\nExpecting return statement or expression statement");
+            fail("Invalid statement kind for " + state + "\nExpecting return statement or expression statement");
             return null;
         }
     }

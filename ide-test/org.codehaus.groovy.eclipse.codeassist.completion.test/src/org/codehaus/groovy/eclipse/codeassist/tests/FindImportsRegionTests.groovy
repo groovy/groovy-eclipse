@@ -15,13 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import junit.framework.TestCase
+
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyImportRewriteFactory
 
 /**
  * @author Andrew Eisenberg
  * @created Jul 29, 2010
  */
-final class FindImportsRegionTests extends GroovyTestCase {
+final class FindImportsRegionTests extends TestCase {
 
     void testFindImportsRegion0() {
         checkRegion('', '')
