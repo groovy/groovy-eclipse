@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ import org.eclipse.jface.text.TextUtilities;
  * indentation of Groovy Documents. It can be used by different "clients"
  * that require indentation services. At present there are three different
  * situations under which this logic is used:
- *<ul>
+ * <ul>
  * <li>when pressing newline to compute indentation for the next line
  *
  * <li>when pressing tab to do smart tab indentation.
@@ -78,20 +78,37 @@ import org.eclipse.jface.text.TextUtilities;
 public class GroovyIndentationService {
 
     /**
-     * Get an Indentation service that uses the right preferences for a given
-     * IJavaProject.
-     * The same object will be returned if the javaProject is the same as the
-     * one from the
-     * last request, but a new instance will be created if the project has
-     * changed.
-     *
-     * @return
+     * Caches a single instance for reuse, as long as we are working on the same project.
+     */
+    private static GroovyIndentationService lastIndenter;
+
+    /**
+     * Returns an indentation service that uses the right preferences for a given IJavaProject.
+     * The same object will be returned if the javaProject is the same as the one from the
+     * last request, but a new instance will be created if the project has changed.
      */
     public static synchronized GroovyIndentationService get(IJavaProject javaProject) {
-        if (lastIndentor == null || lastIndentor.getJavaProject() != javaProject) {
-            lastIndentor = new GroovyIndentationService(javaProject);
+        if (lastIndenter != null && lastIndenter.getJavaProject() != javaProject) {
+            disposeLastImpl();
         }
-        return lastIndentor;
+        if (lastIndenter == null) {
+            lastIndenter = new GroovyIndentationService(javaProject);
+        }
+        return lastIndenter;
+    }
+
+    public static synchronized void disposeLast() {
+        disposeLastImpl();
+    }
+
+    private static void disposeLastImpl() {
+        if (lastIndenter != null) {
+            try {
+                lastIndenter.dispose();
+            } finally {
+                lastIndenter = null;
+            }
+        }
     }
 
     /**
@@ -99,17 +116,17 @@ public class GroovyIndentationService {
      */
     public static String getLeadingWhiteSpace(String text) {
         int i = 0;
-        while (i < text.length() && Character.isWhitespace(text.charAt(i)))
-            i++;
+        while (i < text.length() && Character.isWhitespace(text.charAt(i))) {
+            i += 1;
+        }
         return text.substring(0, i);
     }
 
     /**
-     * Retrieve the text of a line at a given line number in a document.
+     * Retrieves the text of a line at a given line number in a document.
      *
      * @param d The document
      * @param lineNum The line number.
-     * @return
      */
     public static String getLine(IDocument d, int lineNum) {
         try {
@@ -121,6 +138,7 @@ public class GroovyIndentationService {
             return "";
         }
     }
+
     /**
      * Gets the leading white space on a given line in the document.
      */
@@ -140,6 +158,19 @@ public class GroovyIndentationService {
     }
 
     /**
+     * A map relating the closer of a pair of braces/brackets/parens to its corresponding opener.
+     */
+    private static Map<Integer, Integer> closer2opener = new HashMap<Integer, Integer>();
+    private static Set<Integer> jumpIn = new HashSet<Integer>();
+    private static Set<Integer> jumpOut = new HashSet<Integer>();
+    static {
+        openClosePair(LCURLY, RCURLY);
+        openClosePair(LBRACK, RBRACK);
+        openClosePair(LPAREN, RPAREN);
+        openClosePair(STRING_CTOR_START, STRING_CTOR_END);
+    }
+
+    /**
      * Register an association between a pair of opening/closing braces or
      * parenthesis.
      * This is used for scanning backwards and determining the indentation level
@@ -154,9 +185,6 @@ public class GroovyIndentationService {
         jumpIn.add(opener);
         jumpOut.add(closer);
     }
-    private IJavaProject project;
-
-    private IFormatterPreferences prefs;
 
     /**
      * A cached {@link GroovyDocumentScanner} instance. This will
@@ -164,30 +192,8 @@ public class GroovyIndentationService {
      * from the last time. Otherwise we will reuse the cached scanner.
      */
     private GroovyDocumentScanner cachedScanner;
-
-    private static Set<Integer> jumpIn = new HashSet<Integer>();
-
-    private static Set<Integer> jumpOut = new HashSet<Integer>();
-
-    /**
-     * A map relating the closer of a pair of braces/brackets/parens to its
-     * corresponding opener.
-     */
-    private static Map<Integer, Integer> closer2opener = new HashMap<Integer, Integer>();
-
-
-    /**
-     * Caches a single instance for reuse, as long as we are working on the same
-     * project.
-     */
-    private static GroovyIndentationService lastIndentor;
-
-    static {
-        openClosePair(LCURLY, RCURLY);
-        openClosePair(LBRACK, RBRACK);
-        openClosePair(LPAREN, RPAREN);
-        openClosePair(STRING_CTOR_START, STRING_CTOR_END);
-    }
+    private IFormatterPreferences prefs;
+    private IJavaProject project;
 
     public GroovyIndentationService(IJavaProject project) {
         this.project = project;
@@ -198,8 +204,7 @@ public class GroovyIndentationService {
      * at a given offset.
      */
     public int computeIndentAfterNewline(IDocument d, int offset) throws BadLocationException {
-        // To ensure we are basing this on a line that has actual tokens on
-        // it...
+        // To ensure we are basing this on a line that has actual tokens on it...
         Token token = getTokenBefore(d, offset);
         int line = token == null ? 0 : getLine(token);
         int orgIndentLevel = token == null ? 0 : getLineIndentLevel(d, line);
@@ -264,11 +269,8 @@ public class GroovyIndentationService {
 
     public void dispose() {
         this.project = null;
-        if (this.cachedScanner != null) {
-            this.cachedScanner.dispose();
-            this.cachedScanner = null;
-        }
-        this.prefs = null;
+        disposeScanner();
+        disposePrefs();
     }
 
     /**
@@ -278,6 +280,16 @@ public class GroovyIndentationService {
      */
     public void disposePrefs() {
         this.prefs = null;
+    }
+
+    private void disposeScanner() {
+        if (this.cachedScanner != null) {
+            try {
+                this.cachedScanner.dispose();
+            } finally {
+                this.cachedScanner = null;
+            }
+        }
     }
 
     @Override
@@ -300,13 +312,8 @@ public class GroovyIndentationService {
     private GroovyDocumentScanner getGroovyDocumentScanner(IDocument d) {
         if (cachedScanner != null && cachedScanner.getDocument() == d)
             return cachedScanner;
-        // Either we have no scanner, or it is invalid (wrong document)
-        if (cachedScanner != null) {
-            cachedScanner.dispose();
-            cachedScanner = null;
-        }
-        cachedScanner = new GroovyDocumentScanner(d);
-        return cachedScanner;
+        disposeScanner();
+        return (cachedScanner = new GroovyDocumentScanner(d));
     }
 
     /**
@@ -555,7 +562,7 @@ public class GroovyIndentationService {
                 gap.append(' ');
             }
         }
-    	return gap.toString();
+        return gap.toString();
     }
 
     public boolean moreOpenThanCloseBefore(IDocument d, int offset) {

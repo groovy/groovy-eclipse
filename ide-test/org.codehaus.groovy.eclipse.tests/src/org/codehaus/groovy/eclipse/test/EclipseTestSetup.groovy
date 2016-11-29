@@ -71,10 +71,19 @@ class EclipseTestSetup extends TestSetup {
         testProject = null
     }
 
-    static void setJavaPreference(String name, String value) {
-        def opts = JavaCore.options
-        opts.put(name, value)
-        JavaCore.options = opts
+    static void setJavaPreference(String key, String val) {
+        if (key.startsWith(JavaCore.PLUGIN_ID)) {
+            def options = JavaCore.options
+            options.put(key, val)
+            JavaCore.options = options
+
+        } else if (key.startsWith(JavaPlugin.pluginId)) {
+            def prefs = JavaPlugin.default.preferenceStore
+            prefs.setValue(key, val)
+
+        } else {
+            System.err.println('Unexpected preference: ' + key)
+        }
     }
 
     static GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Pogo', String pack = '') {
@@ -110,7 +119,6 @@ class EclipseTestSetup extends TestSetup {
     }
 
     static JavaEditor openInEditor(ICompilationUnit unit) {
-        unit.makeConsistent(null)
         try {
             EditorUtility.openInEditor(unit)
         } finally {

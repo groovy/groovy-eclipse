@@ -180,7 +180,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         IAutoEditStrategy[] strats = super.getAutoEditStrategies(sourceViewer, contentType);
         for (int i = 0; i < strats.length; i++) {
             if (strats[i] instanceof JavaAutoIndentStrategy) {
-                strats[i] = new GroovyAutoIndentStrategy(contentType, (JavaAutoIndentStrategy) strats[i]);
+                strats[i] = new GroovyAutoIndentStrategy((JavaAutoIndentStrategy) strats[i]);
             }
         }
         return strats;

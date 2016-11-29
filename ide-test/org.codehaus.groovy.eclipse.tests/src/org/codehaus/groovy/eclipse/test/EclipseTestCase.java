@@ -64,7 +64,7 @@ public abstract class EclipseTestCase extends TestCase {
             prefs.setValue(key, val);
 
         } else {
-            System.err.println("Unexpected preference for Java: " + key);
+            System.err.println("Unexpected preference: " + key);
         }
     }
 

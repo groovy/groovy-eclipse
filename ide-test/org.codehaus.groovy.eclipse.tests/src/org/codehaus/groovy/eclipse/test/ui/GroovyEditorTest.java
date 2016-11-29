@@ -19,6 +19,7 @@ import java.io.File;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
+import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.runtime.CoreException;
@@ -53,9 +54,13 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        GroovyPlugin.getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
-        editor = null;
-        super.tearDown();
+        try {
+            GroovyIndentationService.disposeLast(); // clear the cached reference
+            GroovyPlugin.getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
+        } finally {
+            editor = null;
+            super.tearDown();
+        }
     }
 
     /**
@@ -119,13 +124,15 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
      * Send a string of characters all at once, as if pasted into the editor by
      * a paste command.
      */
-    protected void sendPaste(String pasted) {
+    protected void sendPaste(CharSequence pasted) {
         StyledText widget = editor.getViewer().getTextWidget();
-        Clipboard clipboard = new Clipboard(editor.getViewer().getTextWidget().getDisplay());
-        TextTransfer plainTextTransfer = TextTransfer.getInstance();
-        clipboard.setContents(new Object[] { pasted }, new Transfer[] { plainTextTransfer });
-        widget.paste();
+
+        // transfer the characters to the system clipboard
+        Clipboard clipboard = new Clipboard(widget.getDisplay());
+        clipboard.setContents(new Object[] {pasted.toString()}, new Transfer[] {TextTransfer.getInstance()});
         clipboard.dispose();
+
+        widget.paste();
     }
 
     /**

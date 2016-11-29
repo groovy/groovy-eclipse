@@ -11,6 +11,7 @@ Export-Package: org.codehaus.groovy.eclipse.test,
  org.codehaus.groovy.eclipse.test.adapters,
  org.codehaus.groovy.eclipse.test.ui
 Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
+ org.codehaus.groovy.eclipse.refactoring.formatter,
  org.eclipse.core.filesystem,
  org.eclipse.debug.core,
  org.eclipse.debug.core.model,

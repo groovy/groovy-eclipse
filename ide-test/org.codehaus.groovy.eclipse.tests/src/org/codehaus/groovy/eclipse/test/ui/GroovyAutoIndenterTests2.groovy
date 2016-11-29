@@ -39,7 +39,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-786
     void testGSPAutoIndenting() {
-        String initText = '''\
+        String text = '''\
             <html>
               <head>
                 <title>Grails Runtime Exception</title>
@@ -96,10 +96,11 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             </html>
             '''.stripIndent()
 
-        makeEditor(initText)
+        makeEditor(text)
+
         send('\n')
 
-        String resultText = initText.replace('''\
+        assertEditorContents(text.replace('''\
             <%
               if (a < b>) {<***>
             %>'''.stripIndent(10), '''\
@@ -107,32 +108,29 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
               if (a < b>) {
                   <***>
               }
-            %>'''.stripIndent(10))
-
-        assertEditorContents(resultText)
+            %>'''.stripIndent(10)))
     }
 
     // GRECLIPSE-771
     void testIndentAfterMultilineString() {
-        makeEditor("""\
-                static foo = '''
+        makeEditor('''\
+                static foo = """
             Some perfectly
-            formatted text'''<***>""".stripIndent())
+            formatted text"""<***>'''.stripIndent())
 
         send('\n')
 
-        assertEditorContents("""\
-                static foo = '''
+        assertEditorContents('''\
+                static foo = """
             Some perfectly
-            formatted text'''
-                <***>""".stripIndent())
+            formatted text"""
+                <***>'''.stripIndent())
     }
 
     /**
      * When MLS contain escaped code, they actually result in multiple tokens.
-     * This case is handled differently (much like the beg and end token
-     * of the MLS are like opening and closing braces. So we test this
-     * case separately.
+     * This case is handled differently (much like the begin and end token of
+     * the MLS are like opening and closing braces. So test this separately.
      */
     void testIndentAfterMultilineStringWithTokens() {
         makeEditor('''\
@@ -150,19 +148,19 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
     }
 
     // GRECLIPSE-744
-    void testGRE744_1() {
-        makeEditor("""\
+    void testIndentAfterBuilderProperty() {
+        makeEditor('''\
             class Foo {
                 def show() {
                     swing.actions() {
                         echoAction= swing.action(name: 'Echo back',
                                                  enabled: bind(source: model, sourceProperty: 'loggedin'),
                                                  closure: { controller.setEchoBack(it.source.selected) })<***>
-            """.stripIndent())
+            '''.stripIndent())
 
-        send("\n")
+        send('\n')
 
-        assertEditorContents("""\
+        assertEditorContents('''\
             class Foo {
                 def show() {
                     swing.actions() {
@@ -170,23 +168,23 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                                                  enabled: bind(source: model, sourceProperty: 'loggedin'),
                                                  closure: { controller.setEchoBack(it.source.selected) })
                         <***>
-            """.stripIndent())
+            '''.stripIndent())
     }
 
     // GRECLIPSE-744
-    void testGRE744_2() {
-        makeEditor("""\
+    void testIndentAfterMultilineMapLiteral() {
+        makeEditor('''\
             class Foo {
                 def model = ["view": g.render("template": "/editor/main", "model": ["currentLocale": currentLocale]),
                     "initialStyle": new File(design.obtainCSSFilePath()).getText(),
                     "generalStyle": new File("\${org.codehaus.groovy.grails.commons.ConfigurationHolder.config.commonCssPath}customization.css").getText(),
                     "fonts": FontFamily.obtainFontsMap(), "notLogged": ! (session.MemberId as Boolean),
                     "noLogout": ! member.loginRequired, "sessionId": session.id, "basicMode": design.basicMode ]<***>
-            """.stripIndent())
+            '''.stripIndent())
 
-        send("\n")
+        send('\n')
 
-        assertEditorContents("""\
+        assertEditorContents('''\
             class Foo {
                 def model = ["view": g.render("template": "/editor/main", "model": ["currentLocale": currentLocale]),
                     "initialStyle": new File(design.obtainCSSFilePath()).getText(),
@@ -194,17 +192,19 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                     "fonts": FontFamily.obtainFontsMap(), "notLogged": ! (session.MemberId as Boolean),
                     "noLogout": ! member.loginRequired, "sessionId": session.id, "basicMode": design.basicMode ]
                 <***>
-            """.stripIndent())
+            '''.stripIndent())
     }
 
     // GRECLIPSE-744
-    void testGRE744_3() {
+    void testIndentAfterStaticProperty() {
         makeEditor('''\
             class Bagaga {
                 static final String RESULTS = "results"<***>
             }
             '''.stripIndent())
-        send("\n\n\n")
+
+        send('\n\n\n')
+
         assertEditorContents('''\
             class Bagaga {
                 static final String RESULTS = "results"
@@ -216,725 +216,757 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
     }
 
     void testGRE757() {
-        makeEditor("""
-class Bagaga {
+        makeEditor('''\
+            class Bagaga {
+                def foo(def a, def b) {<***>
+                }
+            }
+            '''.stripIndent())
 
-    def foo(def a, def b) {<***>
-    }
-}
-""")
-        send("\nif (a < b)\n")
-        send("\t")
-        assertEditorContents("""
-class Bagaga {
+        send('\nif (a < b)\n\t')
 
-    def foo(def a, def b) {
-        if (a < b)
-            <***>
-    }
-}
-""")
-        send("foo()\n")
-        assertEditorContents("""
-class Bagaga {
+        assertEditorContents('''\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a < b)
+                        <***>
+                }
+            }
+            '''.stripIndent())
 
-    def foo(def a, def b) {
-        if (a < b)
-            foo()
-            <***>
-    }
-}
-""")
+        send('foo()\n')
+
+        assertEditorContents('''\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a < b)
+                        foo()
+                        <***>
+                }
+            }
+            '''.stripIndent())
+
         sendBackTab()
-        assertEditorContents("""
-class Bagaga {
 
-    def foo(def a, def b) {
-        if (a < b)
-            foo()
-        <***>
-    }
-}
-""")
-        send("else\n")
-        assertEditorContents("""
-class Bagaga {
+        assertEditorContents('''\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a < b)
+                        foo()
+                    <***>
+                }
+            }
+            '''.stripIndent())
 
-    def foo(def a, def b) {
-        if (a < b)
-            foo()
-        else
-        <***>
-    }
-}
-""" )
+        send('else\n')
+
+        assertEditorContents('''\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a < b)
+                        foo()
+                    else
+                    <***>
+                }
+            }
+            '''.stripIndent())
     }
 
     void testGRE620() {
-        makeEditor("""
-class Bagaga {
-<***>
-}
-""")
+        makeEditor('''\
+            class Bagaga {
+            <***>
+            }
+            '''.stripIndent())
+
         sendPaste('\tstatic final String RESULTS = "results"\n')
         sendPaste('\tstatic final String RESULTS = "results"\n')
         sendPaste('\tstatic final String RESULTS = "results"\n')
 
-        assertEditorContents("""
-class Bagaga {
-    static final String RESULTS = "results"
-    static final String RESULTS = "results"
-    static final String RESULTS = "results"
-    <***>
-}
-""")
+        assertEditorContents('''\
+            class Bagaga {
+                static final String RESULTS = "results"
+                static final String RESULTS = "results"
+                static final String RESULTS = "results"
+                <***>
+            }
+            '''.stripIndent())
     }
 
     void testGRE295() {
-        makeEditor("""
-class BracketBug {
-    String name
-    static constratins = {
-        date(validator: {<***>)
-    }
-}
-""")
-        send("\n")
+        makeEditor('''\
+            class BracketBug {
+                String name
+                static constratins = {
+                    date(validator: {<***>)
+                }
+            }
+            ''')
 
-        assertEditorContents("""
-class BracketBug {
-    String name
-    static constratins = {
-        date(validator: {
-            <***>)
-    }
-}
-""")
+        send('\n')
+
+        assertEditorContents('''\
+            class BracketBug {
+                String name
+                static constratins = {
+                    date(validator: {
+                        <***>)
+                }
+            }
+            ''')
     }
 
     void testGRE761() {
-        makeEditor("""
-def dodo()
-{
-    def x "abx"
-    x.each<***>{
-""")
-        send("\n")
+        makeEditor('''\
+            def dodo()
+            {
+                def x "abx"
+                x.each<***>{
+            '''.stripIndent())
 
-        assertEditorContents("""
-def dodo()
-{
-    def x "abx"
-    x.each
-    <***>{
-""")
+        send('\n')
+
+        assertEditorContents('''\
+            def dodo()
+            {
+                def x "abx"
+                x.each
+                <***>{
+            '''.stripIndent())
     }
 
     void testEnterPressedAtEndOfFile() {
-        makeEditor("""
-def dodo()
-{
-    def x "abx"
-    x.each<***>""")
-        send("\n")
+        makeEditor('''\
+            def dodo()
+            {
+                def x "abx"
+                x.each<***>'''.stripIndent())
 
-        assertEditorContents("""
-def dodo()
-{
-    def x "abx"
-    x.each
-    <***>""")
+        send('\n')
+
+        assertEditorContents('''\
+            def dodo()
+            {
+                def x "abx"
+                x.each
+                <***>'''.stripIndent())
     }
 
     void testEnterPressedInEmptyFile() {
-        makeEditor("""""")
-        send("\n")
+        makeEditor('')
 
-        assertEditorContents("""
-<***>""")
+        send('\n')
+
+        assertEditorContents('\n<***>')
     }
 
     void testEnterPressedAtBeginningOfFile() {
-        makeEditor("""<***>
-def foo() {
-}""")
-        send("\n")
+        makeEditor('''<***>
+            def foo() {
+            }'''.stripIndent(12))
 
-        assertEditorContents("""
-<***>
-def foo() {
-}""")
+        send('\n')
+
+        assertEditorContents('''
+            <***>
+            def foo() {
+            }'''.stripIndent(12))
     }
 
     void testEnterPressedAfterLongCommentAtBeginningOfFile() {
-        makeEditor("""/*
- * A longer comment
- * spanning several
- * lines */<***>""")
-        send("\n")
+        makeEditor('''\
+            /*
+             * A longer comment
+             * spanning several
+             * lines */<***>'''.stripIndent())
 
-        assertEditorContents("""/*
- * A longer comment
- * spanning several
- * lines */
-<***>""")
+        send('\n')
+
+        assertEditorContents('''\
+            /*
+             * A longer comment
+             * spanning several
+             * lines */
+            <***>'''.stripIndent())
     }
 
     void testEnterAfterHalfAComment() {
         makeEditor('''\
-/*
- * A longer comment
- * got started<***>
-''')
+            /*
+             * A longer comment
+             * got started<***>
+            '''.stripIndent())
+
         send('\n')
 
         assertEditorContents('''\
-/*
- * A longer comment
- * got started
- * <***>
-''')
+            /*
+             * A longer comment
+             * got started
+             * <***>
+            '''.stripIndent())
     }
 
     void testEnterInWhiteSpaceFile() {
-        makeEditor """
+        makeEditor('''
 
 
 
-<***>"""
-        send("\n")
+<***>''')
 
-        assertEditorContents("""
+        send('\n')
+
+        assertEditorContents('''
 
 
 
 
-<***>""")
+<***>''')
     }
 
     void testEnterPressedInsideToken() {
-        makeEditor("""
-def dodo() {
-    def x = ab<***>cde
-}
-""")
-        send("\n")
+        makeEditor('''\
+            def dodo() {
+                def x = ab<***>cde
+            }
+            '''.stripIndent())
 
-        assertEditorContents("""
-def dodo() {
-    def x = ab
-    <***>cde
-}
-""")
+        send('\n')
+
+        assertEditorContents('''\
+            def dodo() {
+                def x = ab
+                <***>cde
+            }
+            '''.stripIndent())
     }
 
-    void testGRE763SmartPaste() {
-        makeEditor("""
-def doit() {
-    <***>
-}
-""")
-        sendPaste """    def x = 10
-    def y = 20"""
-        assertEditorContents """
-def doit() {
-    def x = 10
-    def y = 20<***>
-}
-"""
+    // GRECLIPSE-763
+    void testSmartPaste1() {
+        makeEditor('''\
+            def doit() {
+                <***>
+            }
+            '''.stripIndent())
+
+        sendPaste('''\
+            def x = 10
+            def y = 20'''.stripIndent(8))
+
+        assertEditorContents('''\
+            def doit() {
+                def x = 10
+                def y = 20<***>
+            }
+            '''.stripIndent())
     }
 
-    void testSmartPaste() {
-        makeEditor("""\
-def doit() {
-<***>
-}
-""")
+    void testSmartPaste2() {
+        makeEditor('''\
+            def doit() {
+            <***>
+            }
+            '''.stripIndent())
 
-        sendPaste ("""\
-def foo(int x) {
-  if (x>0)
-    println "pos"
-  else
-    println "neg"
-}
-""")
+        sendPaste('''\
+            def foo(int x) {
+              if (x>0)
+                println "pos"
+              else
+                println "neg"
+            }
+            '''.stripIndent())
 
-        assertEditorContents """\
-def doit() {
-    def foo(int x) {
-        if (x>0)
-          println "pos"
-        else
-          println "neg"
-      }
-      <***>
-}
-"""
+        assertEditorContents('''\
+            def doit() {
+                def foo(int x) {
+                    if (x>0)
+                      println "pos"
+                    else
+                      println "neg"
+                  }
+                  <***>
+            }
+            '''.stripIndent())
     }
 
     void testSmartPasteWrongFirstLine() {
-        makeEditor("""
-def doit() {
-<***>
-}
-""")
-        sendPaste ("""def foo(int x) {
-             if (x>0)
-                 println "pos"
-             else
-                 println "neg"
-         }
-         """)
-        assertEditorContents """
-def doit() {
-    def foo(int x) {
-        if (x>0)
-            println "pos"
-        else
-            println "neg"
-    }
-    <***>
-}
-"""
+        makeEditor('''\
+            def doit() {
+            <***>
+            }
+            '''.stripIndent())
+
+        sendPaste('''\
+            def foo(int x) {
+                 if (x>0)
+                     println "pos"
+                 else
+                     println "neg"
+            }
+            '''.stripIndent())
+
+        assertEditorContents('''\
+            def doit() {
+                def foo(int x) {
+                    if (x>0)
+                        println "pos"
+                    else
+                        println "neg"
+               }
+               <***>
+            }
+            '''.stripIndent())
+        // Indent is only 3 on caret line and previous; is this a bug?
     }
 
-    void testGRE767SmartTab() {
-        makeEditor("""package com.kameleoon.pixel
+    // GRECLIPSE-767
+    void testSmartTab() {
+        makeEditor('''\
+            package com.kameleoon.pixel
+            public class InlineTest extends BaseTest {
+                public Map setupInlineTest() {
+                    def inlineDivDecoration = createDecoration()
+                    inlineDivDecoration.properties = ["cssId": "inlineDiv", "backgroundColor": java.lang.Integer.parseInt("55dad8", 16)]
+            <***>        inlineDivDecoration.tagName = HTMLElement.DIV
+                }
+            }
+            '''.stripIndent())
 
-public class InlineTest extends BaseTest
-{
-    public Map setupInlineTest()
-    {
-        def inlineDivDecoration = createDecoration()
-        inlineDivDecoration.properties = ["cssId": "inlineDiv", "backgroundColor": java.lang.Integer.parseInt("55dad8", 16)]
-<***>        inlineDivDecoration.tagName = HTMLElement.DIV
-    }
-}
-""")
         send('\t')
-        assertEditorContents """package com.kameleoon.pixel
 
-public class InlineTest extends BaseTest
-{
-    public Map setupInlineTest()
-    {
-        def inlineDivDecoration = createDecoration()
-        inlineDivDecoration.properties = ["cssId": "inlineDiv", "backgroundColor": java.lang.Integer.parseInt("55dad8", 16)]
-        <***>inlineDivDecoration.tagName = HTMLElement.DIV
-    }
-}
-"""
+        assertEditorContents('''\
+            package com.kameleoon.pixel
+            public class InlineTest extends BaseTest {
+                public Map setupInlineTest() {
+                    def inlineDivDecoration = createDecoration()
+                    inlineDivDecoration.properties = ["cssId": "inlineDiv", "backgroundColor": java.lang.Integer.parseInt("55dad8", 16)]
+                    <***>inlineDivDecoration.tagName = HTMLElement.DIV
+                }
+            }
+            '''.stripIndent())
     }
 
     void testSmartTabMiddleOfWhiteSpace() {
-        makeEditor("""
-public class Blah {
+        makeEditor('''\
+            public class Blah {
+                def foo() {
+               <***>       blah()
+            '''.stripIndent())
 
-    def foo() {
-   <***>       blah()
-""")
         send('\t')
-        assertEditorContents """
-public class Blah {
 
-    def foo() {
-        <***>blah()
-"""
+        assertEditorContents('''\
+            public class Blah {
+                def foo() {
+                    <***>blah()
+            '''.stripIndent())
     }
 
     void testSmartTabEndOfWhiteSpace() {
-        makeEditor("""
-public class Blah {
+        makeEditor('''\
+            public class Blah {
+                def foo() {
+                      <***>blah()
+            '''.stripIndent())
 
-    def foo() {
-          <***>blah()
-""")
         send('\t')
-        assertEditorContents """
-public class Blah {
 
-    def foo() {
-              <***>blah()
-"""
+        assertEditorContents('''\
+            public class Blah {
+                def foo() {
+                          <***>blah()
+            '''.stripIndent())
     }
 
     void testSmartTabOnCloseBrace() {
-        makeEditor("""
-public class Blah {
+        makeEditor('''\
+            public class Blah {
+                def foo() {
+              <***>                 }
+            '''.stripIndent())
 
-    def foo() {
-   <***>                 }
-""")
         send('\t')
-        assertEditorContents """
-public class Blah {
 
-    def foo() {
-    <***>}
-"""
+        assertEditorContents('''\
+            public class Blah {
+                def foo() {
+                <***>}
+            '''.stripIndent())
     }
 
-    void testAutoCloseBracesInString() {
-        makeEditor("""
-public class Blah {
+    void testAutoCloseBracesInGString1() {
+        makeEditor('''\
+            public class Blah {
+                void echo(msg) {
+                    println "Echoing: <***>"
+                }
+            }
+            '''.stripIndent())
 
-    void echo(msg) {
-        println "Echoing: <***>"
-    }
-}
-""")
         send('${')
-        assertEditorContents '''
-public class Blah {
 
-    void echo(msg) {
-        println "Echoing: ${<***>}"
-    }
-}
-'''
+        assertEditorContents('''\
+            public class Blah {
+                void echo(msg) {
+                    println "Echoing: ${<***>}"
+                }
+            }
+            '''.stripIndent())
     }
 
-    void testAutoCloseBracesInMultiString() {
-        makeEditor('''
-public class Blah {
+    void testAutoCloseBracesInGString2() {
+        makeEditor('''\
+            public class Blah {
+            \tvoid echo(msg) {
+            \t\tprintln "Echoing: <***>}"
+            \t}
+            }
+            '''.stripIndent())
 
-    void echo(msg) {
-        println """Echoing:
-        <***>
-        """
-    }
-}
-''')
         send('${')
-        assertEditorContents '''
-public class Blah {
 
-    void echo(msg) {
-        println """Echoing:
-        ${<***>}
-        """
-    }
-}
-'''
+        assertEditorContents('''\
+            public class Blah {
+            \tvoid echo(msg) {
+            \t\tprintln "Echoing: ${<***>}"
+            \t}
+            }
+            '''.stripIndent())
     }
 
-    void testAutoCloseBracesInString2() {
-        makeEditor("""
-public class Blah {
+    void testAutoCloseBracesInGString3() {
+        makeEditor('''\
+            public class Blah {
+            \tvoid echo(msg) {
+            \t\tprintln "Echoing: <***>boohoo}"
+            \t}
+            }
+            '''.stripIndent())
 
-	void echo(msg) {
-		println "Echoing: <***>}"
-	}
-}
-""")
         send('${')
-        assertEditorContents '''
-public class Blah {
 
-	void echo(msg) {
-		println "Echoing: ${<***>}"
-	}
-}
-'''
+        assertEditorContents('''\
+            public class Blah {
+            \tvoid echo(msg) {
+            \t\tprintln "Echoing: ${<***>boohoo}"
+            \t}
+            }
+            '''.stripIndent())
     }
 
-    void testAutoCloseBracesInString3() {
-        makeEditor("""
-public class Blah {
+    void testAutoCloseBracesInGString4() {
+        makeEditor('''\
+            public class Blah {
+            \tvoid echo(msg) {
+            \t\tprintln "Echoing: <***>"
+            \t}
+            }
+            '''.stripIndent())
 
-	void echo(msg) {
-		println "Echoing: <***>boohoo}"
-	}
-}
-""")
+        send('{')
+
+        assertEditorContents('''\
+            public class Blah {
+            \tvoid echo(msg) {
+            \t\tprintln "Echoing: {"
+            \t}
+            }
+            '''.stripIndent())
+    }
+
+    void testAutoCloseBracesInMultilineGString() {
+        makeEditor('''\
+            public class Blah {
+                void echo(msg) {
+                    println """Echoing:
+                    <***>
+                    """
+                }
+            }
+            '''.stripIndent())
+
         send('${')
-        assertEditorContents '''
-public class Blah {
 
-	void echo(msg) {
-		println "Echoing: ${<***>boohoo}"
-	}
-}
-'''
+        assertEditorContents('''\
+            public class Blah {
+                void echo(msg) {
+                    println """Echoing:
+                    ${<***>}
+                    """
+                }
+            }
+            '''.stripIndent())
     }
-
-    void testAutoCloseBracesInString4() {
-        makeEditor("""
-public class Blah {
-
-	void echo(msg) {
-		println "Echoing: <***>"
-	}
-}
-""")
-		send('{')
-		assertEditorContents '''
-public class Blah {
-
-	void echo(msg) {
-		println "Echoing: {"
-	}
-}
-'''
-}
 
     // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs1() {
-        def initText =
-"""
-def x = { yyy -><***>
-"""
-       makeEditor(initText)
+       makeEditor('''\
+            def x = { yyy -><***>
+            '''.stripIndent())
+
        send('\n')
-       assertEditorContents """
-def x = { yyy ->
-    <***>
-}
-"""
+
+       assertEditorContents('''\
+            def x = { yyy ->
+                <***>
+            }
+            '''.stripIndent())
     }
 
     // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs2() {
-        def initText =
-"""
-def xxx() {
-    def x = { yyy -><***>
-}
-"""
-       makeEditor(initText)
+       makeEditor('''\
+            def xxx() {
+                def x = { yyy -><***>
+            }
+            '''.stripIndent())
+
        send('\n')
-       assertEditorContents """
-def xxx() {
-    def x = { yyy ->
-        <***>
-    }
-}
-"""
+
+       assertEditorContents('''\
+            def xxx() {
+                def x = { yyy ->
+                    <***>
+                }
+            }
+            '''.stripIndent())
     }
 
     // GRECLIPSE-1475
     void testAutoIndentCurly1() {
-        def initText =
-        """
-def xxx() {
-    def x = { yyy -><***>}
-}
-"""
-               makeEditor(initText)
-               send('\n')
-               assertEditorContents """
-def xxx() {
-    def x = { yyy ->
-        <***>
-    }
-}
-"""
+       makeEditor('''\
+            def xxx() {
+                def x = { yyy -><***>}
+            }
+            '''.stripIndent())
+
+       send('\n')
+
+       assertEditorContents('''\
+            def xxx() {
+                def x = { yyy ->
+                    <***>
+                }
+            }
+            '''.stripIndent())
     }
 
     // GRECLIPSE-1475
     void testAutoIndentCurly2() {
-        def initText =
-        """
-def xxx() {
-    def x = { yyy -><***>  }
-}
-"""
-               makeEditor(initText)
-               send('\n')
-               assertEditorContents """
-def xxx() {
-    def x = { yyy ->
-        <***>
-    }
-}
-"""
+       makeEditor('''\
+            def xxx() {
+                def x = { yyy -><***>  }
+            }
+            '''.stripIndent())
+
+       send('\n')
+
+       assertEditorContents('''\
+            def xxx() {
+                def x = { yyy ->
+                    <***>
+                }
+            }
+            '''.stripIndent())
     }
 
     // GRECLIPSE-1475
     void testAutoIndentCurly3() {
-        def initText =
-        """
-def xxx() {
-    def x = { yyy -><***>  } def foo
-}
-"""
-               makeEditor(initText)
-               send('\n')
-               assertEditorContents """
-def xxx() {
-    def x = { yyy ->
-        <***>
-    } def foo
-}
-"""
+       makeEditor('''\
+            def xxx() {
+                def x = { yyy -><***>  } def foo
+            }
+            '''.stripIndent())
+
+       send('\n')
+
+       assertEditorContents('''\
+            def xxx() {
+                def x = { yyy ->
+                    <***>
+                } def foo
+            }
+            '''.stripIndent())
     }
 
     // GRECLIPSE-1475
     void testAutoIndentCurly4() {
-        def initText =
-        """
-def xxx() {
-    def x = { yyy -><***>  )
-}
-"""
-               makeEditor(initText)
-               send('\n')
-               assertEditorContents """
-def xxx() {
-    def x = { yyy ->
-        <***>  )
-}
-"""
+       makeEditor('''\
+            def xxx() {
+                def x = { yyy -><***>  )
+            }
+            '''.stripIndent())
+
+       send('\n')
+
+       assertEditorContents('''\
+            def xxx() {
+                def x = { yyy ->
+                    <***>  )
+            }
+            '''.stripIndent())
     }
 
     void testMuliLineCommentPaste1() {
-        makeEditor("""
+        makeEditor('''
 <***>
-""")
-        sendPaste("""
+''')
+        sendPaste('''
 /*
  * A longer comment
  * spanning several
- * lines */""")
-        assertEditorContents("""
+ * lines */''')
+
+        assertEditorContents('''
 
 /*
  * A longer comment
  * spanning several
  * lines */<***>
-""")
+''')
     }
 
     void testMuliLineCommentPaste2() {
-        makeEditor("""if (0){
+        makeEditor('''if (0){
     <***>
-}""")
-        sendPaste("""/*
+}''')
+
+        sendPaste('''/*
  * comment
- */""")
-        assertEditorContents("""if (0){
+ */''')
+
+        assertEditorContents('''if (0){
     /*
      * comment
      */<***>
-}""")
-
+}''')
     }
 
     void testMuliLineCommentPaste3() {
-        makeEditor("""if (0){
+        makeEditor('''if (0){
     <***>
-}""")
-        sendPaste("""/*
- * comment
- */""")
+}''')
 
-        assertEditorContents("""if (0){
+        sendPaste('''/*
+ * comment
+ */''')
+
+        assertEditorContents('''if (0){
     /*
      * comment
      */<***>
-}""")
+}''')
     }
 
     void testMuliLineCommentPaste4() {
-        makeEditor("""""")
-        sendPaste("""/*
- * comment
- */""")
+        makeEditor('')
 
-        assertEditorContents("""/*
+        sendPaste('''/*
  * comment
- */<***>""")
+ */''')
+
+        assertEditorContents('''/*
+ * comment
+ */<***>''')
     }
 
     void testMuliLineCommentPaste5() {
-        makeEditor("""
-<***>""")
-        sendPaste("""
+        makeEditor('\n<***>')
+
+        sendPaste('''
 /*
  * A longer comment
  * spanning several
  * lines
- */""")
-        assertEditorContents("""
+ */''')
+
+        assertEditorContents('''
 
 /*
  * A longer comment
  * spanning several
  * lines
- */<***>""")
+ */<***>''')
     }
 
     void testMuliLineStringPaste1() {
-        makeEditor("""if (0){
-    <***>
-}""")
-        sendPaste(
-                '''"""This is a line.
-Here is another one.
-And one more line."""'''
-                )
+        makeEditor('''\
+            if (0){
+                <***>
+            }'''.stripIndent())
 
-        assertEditorContents('''if (0){
-    """This is a line.
-Here is another one.
-And one more line."""<***>
-}''')
+        sendPaste('''\
+            """This is a line.
+            Here is another one.
+            And one more line."""'''.stripIndent())
+
+        assertEditorContents('''\
+            if (0){
+                """This is a line.
+            Here is another one.
+            And one more line."""<***>
+            }'''.stripIndent())
     }
 
     void testMuliLineStringPaste2() {
-        makeEditor("""\
-if (0){
-    a = <***>
-}""")
+        makeEditor('''\
+            if (0){
+                a = <***>
+            }'''.stripIndent())
+
         sendPaste('''\
-"""This is a line.
-Here is another one.
-And one more line."""''')
+            """This is a line.
+            Here is another one.
+            And one more line."""'''.stripIndent())
 
         assertEditorContents('''\
-if (0){
-    a = """This is a line.
-Here is another one.
-And one more line."""<***>
-}''')
+            if (0){
+                a = """This is a line.
+            Here is another one.
+            And one more line."""<***>
+            }'''.stripIndent())
     }
 
     void testMuliLineStringPaste3() {
-        makeEditor("""if (0){
-    a = <***>
-}""")
+        makeEditor('''\
+            if (0){
+                a = <***>
+            }'''.stripIndent())
+
         sendPaste('''\
-"""This is a line.
-        Here is another one.
-        And one more line."""''')
+            """This is a line.
+                    Here is another one.
+                    And one more line."""'''.stripIndent())
 
         assertEditorContents('''\
-if (0){
-    a = """This is a line.
-        Here is another one.
-        And one more line."""<***>
-}''')
+            if (0){
+                a = """This is a line.
+                    Here is another one.
+                    And one more line."""<***>
+            }'''.stripIndent())
     }
 
     void testMuliLineStringPaste4() {
-        makeEditor('''if (i ==0){
-    <***>
-}''')
-        sendPaste('''\
-if (i == 0){
-    a = """This is a line.
-Here is another one.
-And one more line."""
-}''')
+        makeEditor('''\
+            if (i ==0){
+                <***>
+            }'''.stripIndent())
 
-        assertEditorContents '''\
-if (i ==0){
-    if (i == 0){
-        a = """This is a line.
-Here is another one.
-And one more line."""
-    }<***>
-}'''
+        sendPaste('''\
+            if (i == 0){
+                a = """This is a line.
+            Here is another one.
+            And one more line."""
+            }'''.stripIndent())
+
+        assertEditorContents('''\
+            if (i ==0){
+                if (i == 0){
+                    a = """This is a line.
+            Here is another one.
+            And one more line."""
+                }<***>
+            }'''.stripIndent())
     }
 }
