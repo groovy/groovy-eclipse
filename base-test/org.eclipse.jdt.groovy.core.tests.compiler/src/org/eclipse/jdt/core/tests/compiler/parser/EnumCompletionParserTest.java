@@ -116,7 +116,7 @@ public void test0002(){
 	expectedCompletionNodeToString = "<CompleteOnName:FOO>";
 	expectedParentNodeToString =
 		"switch (c) {\n" +
-		"case <CompleteOnName:FOO> : ;\n" +
+		"case <CompleteOnName:FOO> :\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -127,7 +127,7 @@ public void test0002(){
 		"  void foo() {\n" +
 		"    {\n" +
 		"      switch (c) {\n" +
-		"      case <CompleteOnName:FOO> : ;\n" +
+		"      case <CompleteOnName:FOO> :\n" +
 		"      }\n" +
 		"    }\n" +
 		"  }\n" +
@@ -183,8 +183,8 @@ public void test0003(){
 	expectedCompletionNodeToString = "<CompleteOnName:FOO>";
 	expectedParentNodeToString =
 		"switch (c) {\n" +
-		"case BAR : ;\n" +
-		"case <CompleteOnName:FOO> : ;\n" +
+		"case BAR :\n" +
+		"case <CompleteOnName:FOO> :\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -195,8 +195,8 @@ public void test0003(){
 		"  void foo() {\n" +
 		"    {\n" +
 		"      switch (c) {\n" +
-		"      case BAR : ;\n" +
-		"      case <CompleteOnName:FOO> : ;\n" +
+		"      case BAR :\n" +
+		"      case <CompleteOnName:FOO> :\n" +
 		"      }\n" +
 		"    }\n" +
 		"  }\n" +
@@ -253,9 +253,9 @@ public void test0004(){
 	expectedCompletionNodeToString = "<CompleteOnName:FOO>";
 	expectedParentNodeToString =
 		"switch (c) {\n" +
-		"case BAR : ;\n" +
-		"    break ;\n" +
-		"case <CompleteOnName:FOO> : ;\n" +
+		"case BAR :\n" +
+		"    break;\n" +
+		"case <CompleteOnName:FOO> :\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -266,9 +266,9 @@ public void test0004(){
 		"  void foo() {\n" +
 		"    {\n" +
 		"      switch (c) {\n" +
-		"      case BAR : ;\n" +
-		"          break ;\n" +
-		"      case <CompleteOnName:FOO> : ;\n" +
+		"      case BAR :\n" +
+		"          break;\n" +
+		"      case <CompleteOnName:FOO> :\n" +
 		"      }\n" +
 		"    }\n" +
 		"  }\n" +
@@ -324,9 +324,9 @@ public void test0005(){
 	expectedCompletionNodeToString = "<CompleteOnName:FOO>";
 	expectedParentNodeToString =
 		"switch (c) {\n" +
-		"case BAR : ;\n" +
-		"    break ;\n" +
-		"case <CompleteOnName:FOO> : ;\n" +
+		"case BAR :\n" +
+		"    break;\n" +
+		"case <CompleteOnName:FOO> :\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -337,9 +337,9 @@ public void test0005(){
 		"  void foo() {\n" +
 		"    {\n" +
 		"      switch (c) {\n" +
-		"      case BAR : ;\n" +
-		"          break ;\n" +
-		"      case <CompleteOnName:FOO> : ;\n" +
+		"      case BAR :\n" +
+		"          break;\n" +
+		"      case <CompleteOnName:FOO> :\n" +
 		"      }\n" +
 		"    }\n" +
 		"  }\n" +
@@ -395,9 +395,9 @@ public void test0006(){
 	expectedCompletionNodeToString = "<CompleteOnName:FOO>";
 	expectedParentNodeToString =
 		"switch (c) {\n" +
-		"case BAR : ;\n" +
-		"    break ;\n" +
-		"case <CompleteOnName:FOO> : ;\n" +
+		"case BAR :\n" +
+		"    break;\n" +
+		"case <CompleteOnName:FOO> :\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -408,9 +408,9 @@ public void test0006(){
 		"  void foo() {\n" +
 		"    {\n" +
 		"      switch (c) {\n" +
-		"      case BAR : ;\n" +
-		"          break ;\n" +
-		"      case <CompleteOnName:FOO> : ;\n" +
+		"      case BAR :\n" +
+		"          break;\n" +
+		"      case <CompleteOnName:FOO> :\n" +
 		"      }\n" +
 		"    }\n" +
 		"  }\n" +
@@ -472,9 +472,9 @@ public void test0007(){
 	expectedCompletionNodeToString = "<CompleteOnName:FOO>";
 	expectedParentNodeToString =
 		"switch (c) {\n" +
-		"case BAR : ;\n" +
-		"    break ;\n" +
-		"case <CompleteOnName:FOO> : ;\n" +
+		"case BAR :\n" +
+		"    break;\n" +
+		"case <CompleteOnName:FOO> :\n" +
 		"}";
 	completionIdentifier = "FOO";
 	expectedReplacedSource = "FOO";
@@ -486,9 +486,9 @@ public void test0007(){
 		"    {\n" +
 		"      {\n" +
 		"        switch (c) {\n" +
-		"        case BAR : ;\n" +
-		"            break ;\n" +
-		"        case <CompleteOnName:FOO> : ;\n" +
+		"        case BAR :\n" +
+		"            break;\n" +
+		"        case <CompleteOnName:FOO> :\n" +
 		"        }\n" +
 		"      }\n" +
 		"    }\n" +

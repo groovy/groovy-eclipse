@@ -1113,13 +1113,14 @@ public void testForStatementExpression() {
 		// expectedCompletionNodeToString:
 		"<CompleteOnMemberAccess:fred().x>",
 		// expectedUnitDisplayString:
-		"class Bar {\n" + 
-		"  Bar() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"    int i;\n" + 
-		"    <CompleteOnMemberAccess:fred().x>;\n" + 
-		"  }\n" + 
+		"class Bar {\n" +
+		"  Bar() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    int i;\n" +
+		"    for (; <CompleteOnMemberAccess:fred().x>; ) \n" +
+		"      ;\n" +
+		"  }\n" +
 		"}\n",
 		// expectedCompletionIdentifier:
 		"x",
@@ -2094,7 +2095,7 @@ public void testSwitchLabel() {
 		"    int i;\n" + 
 		"    {\n" + 
 		"      switch (i) {\n" + 
-		"      case <CompleteOnMemberAccess:fred().x> : ;\n" + 
+		"      case <CompleteOnMemberAccess:fred().x> :\n" + 
 		"      }\n" + 
 		"    }\n" + 
 		"  }\n" + 

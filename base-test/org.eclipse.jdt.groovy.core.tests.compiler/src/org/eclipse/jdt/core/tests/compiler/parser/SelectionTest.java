@@ -786,16 +786,16 @@ public void test19() {
 		
 	String selectionStartBehind = "return (";
 	String selectionEndBehind = "return (Object";
-	
-	String expectedCompletionNodeToString = "<SelectOnName:Object>";
+
+	String expectedCompletionNodeToString = "<SelectOnType:Object>";
 	String completionIdentifier = "Object";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  Object foo() {\n" + 
-		"    <SelectOnName:Object>;\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  Object foo() {\n" +
+		"    return (<SelectOnType:Object>) this;\n" +
+		"  }\n" +
 		"}\n";
 		
 	String expectedReplacedSource = "Object";
@@ -1060,12 +1060,12 @@ public void test25() {
 	
 	String completionIdentifier = "super";
 	String expectedUnitDisplayString =
-		"public class G {\n" + 
-		"  public G() {\n" + 
-		"  }\n" + 
-		"  Object foo() {\n" + 
-		"    <SelectOnSuper:super>;\n" + 
-		"  }\n" + 
+		"public class G {\n" +
+		"  public G() {\n" +
+		"  }\n" +
+		"  Object foo() {\n" +
+		"    return <SelectOnSuper:super>;\n" +
+		"  }\n" +
 		"}\n";
 		
 	String expectedReplacedSource = "super";
@@ -1107,17 +1107,17 @@ public void test26() {
 	
 	String completionIdentifier = "super";
 	String expectedUnitDisplayString =
-		"public class G {\n" + 
-		"  public G() {\n" + 
-		"  }\n" + 
-		"  Object foo() {\n" + 
-		"    new X() {\n" + 
-		"      Object bar() {\n" + 
-		"        <SelectOnQualifiedSuper:G.super>;\n" + 
-		"      }\n" + 
-		"    };\n" + 
-		"  }\n" + 
-		"}\n";	
+		"public class G {\n" +
+		"  public G() {\n" +
+		"  }\n" +
+		"  Object foo() {\n" +
+		"    new X() {\n" +
+		"      Object bar() {\n" +
+		"        return <SelectOnQualifiedSuper:G.super>;\n" +
+		"      }\n" +
+		"    };\n" +
+		"  }\n" +
+		"}\n";
 	String expectedReplacedSource = "G.super";
 	String testName = "<select qualified super>";
 

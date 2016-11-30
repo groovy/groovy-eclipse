@@ -1572,18 +1572,19 @@ public void testEA_1() {
 	String completionIdentifier = "E";
 	String expectedReplacedSource = "Exception";
 	String expectedUnitDisplayString =
-		"package p;\n" + 
-		"public class EA {\n" + 
-		"  public EA() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"    try \n" + 
-		"      {\n" + 
-		"        throw new Error();\n" + 
-		"      }\n" + 
-		"    catch (<CompleteOnException:E>  )       {\n" + 
-		"      }\n" + 
-		"  }\n" + 
+		"package p;\n" +
+		"public class EA {\n" +
+		"  public EA() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    try\n" +
+		"      {\n" +
+		"        throw new Error();\n" +
+		"      }\n" +
+		"    catch (<CompleteOnException:E>  )\n" +
+		"      {\n" +
+		"      }\n" +
+		"  }\n" +
 		"}\n";
 
 	int cursorLocation = str.indexOf("Exception eeee") + completeBehind.length() - 1;

@@ -3619,15 +3619,18 @@ public void test0044() {
 		"  public void doSomething() throws FileNotFoundException, EOFException, SAXException {\n" +
 		"  }\n" +
 		"  public void doSomethingElse() {\n" +
-		"    try \n" +
+		"    try\n" +
 		"      {\n" +
 		"        doSomething();\n" +
 		"      }\n" +
-		"    catch (SAXException exception)       {\n" +
+		"    catch (SAXException exception)\n" +
+		"      {\n" +
 		"      }\n" +
-		"    catch (FileNotFoundException exception)       {\n" +
+		"    catch (FileNotFoundException exception)\n" +
+		"      {\n" +
 		"      }\n" +
-		"    catch ($missing$ $missing$)       {\n" +
+		"    catch ($missing$ $missing$)\n" +
+		"      {\n" +
 		"      }\n" +
 		"  }\n" +
 		"}\n";

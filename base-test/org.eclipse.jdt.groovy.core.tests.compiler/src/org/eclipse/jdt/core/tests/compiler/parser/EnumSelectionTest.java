@@ -33,16 +33,16 @@ public void test0001() {
 	String expectedCompletionNodeToString = "<SelectOnName:A>";
 	String completionIdentifier = "A";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"    {\n" + 
-		"      switch (e) {\n" + 
-		"      case <SelectOnName:A> : ;\n" + 
-		"      }\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    {\n" +
+		"      switch (e) {\n" +
+		"      case <SelectOnName:A> :\n" +
+		"      }\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 	String expectedReplacedSource = "A";
 	String testName = "<select test>";

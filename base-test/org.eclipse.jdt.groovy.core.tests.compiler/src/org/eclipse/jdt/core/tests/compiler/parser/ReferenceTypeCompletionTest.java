@@ -152,11 +152,12 @@ public void testCatchClause1() {
 		"  Bar() {\n" + 
 		"  }\n" + 
 		"  void foo() {\n" + 
-		"    try \n" + 
+		"    try\n" + 
 		"      {\n" + 
 		"        fred();\n" + 
 		"      }\n" + 
-		"    catch (<CompleteOnException:X>  )       {\n" + 
+		"    catch (<CompleteOnException:X>  )\n" +
+		"      {\n" + 
 		"      }\n" + 
 		"  }\n" + 
 		"}\n",
@@ -191,11 +192,12 @@ public void testCatchClause2() {
 		"  Bar() {\n" + 
 		"  }\n" + 
 		"  void foo() {\n" + 
-		"    try \n" + 
+		"    try\n" + 
 		"      {\n" + 
 		"        fred();\n" + 
 		"      }\n" + 
-		"    catch (<CompleteOnException:X>  )       {\n" + 
+		"    catch (<CompleteOnException:X>  )\n" +
+		"      {\n" + 
 		"      }\n" + 
 		"  }\n" + 
 		"}\n",
@@ -230,11 +232,12 @@ public void testCatchClause3() {
 		"  Bar() {\n" + 
 		"  }\n" + 
 		"  void foo() {\n" + 
-		"    try \n" + 
+		"    try\n" + 
 		"      {\n" + 
 		"        fred();\n" + 
 		"      }\n" + 
-		"    catch (<CompleteOnException:x.y.X>  )       {\n" + 
+		"    catch (<CompleteOnException:x.y.X>  )\n" +
+		"      {\n" + 
 		"      }\n" + 
 		"  }\n" + 
 		"}\n",

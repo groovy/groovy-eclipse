@@ -75,7 +75,12 @@ public void test003() {
 		"2. ERROR in X.java (at line 3)\n" +
 		"	throws new X\n" +
 		"	           ^\n" +
-		"Syntax error, unexpected end of method\n" +
+		"Syntax error, insert \"( )\" to complete Expression\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 3)\n" +
+		"	throws new X\n" +
+		"	           ^\n" +
+		"Syntax error, insert \";\" to complete BlockStatements\n" +
 		"----------\n"
 	);
 }
@@ -134,7 +139,12 @@ public void test006() {
 		"2. ERROR in X.java (at line 3)\n" +
 		"	throws new X\n" +
 		"	           ^\n" +
-		"Syntax error, unexpected end of initializer\n" +
+		"Syntax error, insert \"( )\" to complete Expression\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 3)\n" +
+		"	throws new X\n" +
+		"	           ^\n" +
+		"Syntax error, insert \";\" to complete BlockStatements\n" +
 		"----------\n"
 	);
 }
@@ -236,8 +246,8 @@ public void test011() {
 		"----------\n" +
 		"1. ERROR in X.java (at line 2)\n" +
 		"	public void foo(X, Object o, String s) {\n" +
-		"	                 ^\n" +
-		"Syntax error on token \",\", . expected\n" +
+		"	                ^\n" +
+		"Syntax error, insert \"... VariableDeclaratorId\" to complete FormalParameterList\n" +
 		"----------\n"
 	);
 }
@@ -682,12 +692,7 @@ public void test026() {
 		"	                       ^^\n" +
 		"Empty block should be documented\n" +
 		"----------\n" +
-		"2. ERROR in X.java (at line 8)\n" +
-		"	A() {}\n" +
-		"	    ^^\n" +
-		"Empty block should be documented\n" +
-		"----------\n" +
-		"3. ERROR in X.java (at line 9)\n" +
+		"2. ERROR in X.java (at line 9)\n" +
 		"	public void bar() {}\n" +
 		"	                  ^^\n" +
 		"Empty block should be documented\n" +

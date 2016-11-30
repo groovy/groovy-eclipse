@@ -42,21 +42,21 @@ public void testNameSuper() {
 		// expectedSelectionNodeToString:
 		"<SelectOnMessageSend:fred()>",
 		// expectedUnitDisplayString:
-		"class Bar {\n" + 
-		"  public class InnerBar {\n" + 
-		"    InnerBar(Bar x) {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  public class SubInnerBar extends InnerBar {\n" + 
-		"    SubInnerBar() {\n" + 
-		"      super(<SelectOnMessageSend:fred()>);\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  static Bar x;\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  Bar() {\n" + 
-		"  }\n" + 
+		"class Bar {\n" +
+		"  public class InnerBar {\n" +
+		"    InnerBar(Bar x) {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  public class SubInnerBar extends InnerBar {\n" +
+		"    SubInnerBar() {\n" +
+		"      Bar.super(<SelectOnMessageSend:fred()>);\n" +
+		"    }\n" +
+		"  }\n" +
+		"  static Bar x;\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  Bar() {\n" +
+		"  }\n" +
 		"}\n",
 		// expectedSelectionIdentifier:
 		"fred",
@@ -91,21 +91,21 @@ public void testNameThis() {
 		// expectedSelectionNodeToString:
 		"<SelectOnMessageSend:fred()>",
 		// expectedUnitDisplayString:
-		"class Bar {\n" + 
-		"  public class InnerBar {\n" + 
-		"    InnerBar(Bar x) {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  public class SubInnerBar extends InnerBar {\n" + 
-		"    SubInnerBar() {\n" + 
-		"      this(<SelectOnMessageSend:fred()>);\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  static Bar x;\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  Bar() {\n" + 
-		"  }\n" + 
+		"class Bar {\n" +
+		"  public class InnerBar {\n" +
+		"    InnerBar(Bar x) {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  public class SubInnerBar extends InnerBar {\n" +
+		"    SubInnerBar() {\n" +
+		"      Bar.this(<SelectOnMessageSend:fred()>);\n" +
+		"    }\n" +
+		"  }\n" +
+		"  static Bar x;\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  Bar() {\n" +
+		"  }\n" +
 		"}\n",
 		// expectedSelectionIdentifier:
 		"fred",
@@ -140,21 +140,21 @@ public void testPrimarySuper() {
 		// expectedSelectionNodeToString:
 		"<SelectOnMessageSend:fred()>",
 		// expectedUnitDisplayString:
-		"class Bar {\n" + 
-		"  public class InnerBar {\n" + 
-		"    InnerBar(Bar x) {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  public class SubInnerBar extends InnerBar {\n" + 
-		"    SubInnerBar(Bar x) {\n" + 
-		"      super(<SelectOnMessageSend:fred()>);\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  static Bar x;\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  Bar() {\n" + 
-		"  }\n" + 
+		"class Bar {\n" +
+		"  public class InnerBar {\n" +
+		"    InnerBar(Bar x) {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  public class SubInnerBar extends InnerBar {\n" +
+		"    SubInnerBar(Bar x) {\n" +
+		"      primary().super(<SelectOnMessageSend:fred()>);\n" +
+		"    }\n" +
+		"  }\n" +
+		"  static Bar x;\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  Bar() {\n" +
+		"  }\n" +
 		"}\n",
 		// expectedSelectionIdentifier:
 		"fred",
