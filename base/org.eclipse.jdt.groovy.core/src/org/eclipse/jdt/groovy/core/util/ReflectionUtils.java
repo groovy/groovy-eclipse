@@ -120,7 +120,7 @@ public class ReflectionUtils {
         return method.invoke(target, args);
     }
 
-    public static <T> Object throwableGetPrivateField(Class<T> clazz, String fieldName, T target) throws Exception {
+    public static <T> Object throwableGetPrivateField(Class<? extends T> clazz, String fieldName, T target) throws Exception {
         String key = clazz.getCanonicalName() + fieldName;
         Field field = FIELDS.get(key);
         if (field == null) {

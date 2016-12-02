@@ -16,9 +16,7 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -55,8 +53,6 @@ import org.eclipse.jdt.internal.core.builder.NameEnvironment;
  */
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
-    private Map<String, ClassNode> typenameToClassNodeCache = new HashMap<String, ClassNode>();
-
     private static final char[][] javaLang;
     // Matches ResolveVisitor - these are the additional automatic imports for groovy files
     private static final char[][] javaIo;
@@ -86,11 +82,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     private boolean isScript = false;
 
-    public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration,
-            LookupEnvironment lookupEnvironment) {
+    public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
         super(compilationUnitDeclaration, lookupEnvironment);
-        // GRECLIPSE 1594
-        // lookupEnvironment.nameEnvironment.getClass() = class org.eclipse.jdt.internal.core.builder.NameEnvironment
         INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
         if (nameEnvironment instanceof NameEnvironment) {
             ((NameEnvironment) nameEnvironment).avoidAdditionalGroovyAnswers = true;
@@ -250,22 +243,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         super.buildTypeBindings(accessRestriction);
     }
 
-    /**
-     * Look in the local cache, if we don't find it then ask JDT. If JDT responds with a SourceTypeBinding then it has been found.
-     * If JDT responds with some other kind of binding, we consider that 'not found as source' and return null.
-     *
-     * Not quite the right name for this method, because on an incremental build it will find BinaryTypeBindings for types that were
-     * SourceTypeBindings during the full build
+    /*
+     * Not quite the right name for this method, because on an incremental build
+     * it will find BinaryTypeBindings for types that were SourceTypeBindings
+     * during the full build
      */
-    // FIXASC (optimization) cache any non SourceTypeBinding found and use that information in the lookupClassNodeForBinary
     public ClassNode lookupClassNodeForSource(String typename, JDTResolver jdtResolver) {
-        ClassNode node = typenameToClassNodeCache.get(typename);
-        if (node != null) {
-            return node;
-        }
-
         char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
-
         TypeBinding jdtBinding = null;
         try {
             jdtBinding = getType(compoundName, compoundName.length);
@@ -277,68 +261,44 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             }
         }
 
-        if (jdtBinding != null) {
-            if (jdtBinding instanceof SourceTypeBinding) {
-                ClassNode classNode = jdtResolver.convertToClassNode(jdtBinding);
-                if (classNode != null) {
-                    typenameToClassNodeCache.put(typename, classNode);
-                }
-                return classNode;
-            } else if (jdtBinding instanceof BinaryTypeBinding) {
-                ClassNode newNode = jdtResolver.convertToClassNode(jdtBinding);
-                if (newNode != null) {
-                    typenameToClassNodeCache.put(typename, newNode);
-                }
-                return newNode;
-            }
+        if (jdtBinding instanceof SourceTypeBinding || jdtBinding instanceof BinaryTypeBinding) {
+            return jdtResolver.convertToClassNode(jdtBinding);
         }
 
         // FIXASC better to look it up properly as a member type rather than catch the problem and unwrap!
-        if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
+        if (jdtBinding instanceof ProblemReferenceBinding) {
             ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
             if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
                 jdtBinding = prBinding.closestMatch();
-                // FIXASC caching for this too?
-                if (jdtBinding != null && (jdtBinding instanceof SourceTypeBinding)) {
-                    return jdtResolver.convertToClassNode(jdtBinding);
-                }
-                if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
+                if (jdtBinding instanceof SourceTypeBinding || jdtBinding instanceof BinaryTypeBinding) {
                     return jdtResolver.convertToClassNode(jdtBinding);
                 }
             }
         }
+
         return null;
     }
 
-    // FIXASC worth a cache for binary bindings or would it just not get hit due to the binary binding support in the other
-    // lookup method?
     public ClassNode lookupClassNodeForBinary(String typename, JDTResolver jdtResolver) {
         char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
         TypeBinding jdtBinding = getType(compoundName, compoundName.length);
 
-        if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
-            // log("GCUScope.lookupClassNodeForBinary(): JDTBinding for '" + typename + "' found to be "
-            // + jdtBinding.getClass().getSimpleName());
-            ClassNode classNode = jdtResolver.convertToClassNode(jdtBinding);
-            return classNode;
+        if (jdtBinding instanceof BinaryTypeBinding) {
+            return jdtResolver.convertToClassNode(jdtBinding);
         }
 
-        if (jdtBinding != null && (jdtBinding instanceof ProblemReferenceBinding)) {
+        if (jdtBinding instanceof ProblemReferenceBinding) {
             ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
             if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
                 jdtBinding = prBinding.closestMatch();
-                if (jdtBinding != null && (jdtBinding instanceof BinaryTypeBinding)) {
+                if (jdtBinding instanceof BinaryTypeBinding) {
                     return jdtResolver.convertToClassNode(jdtBinding);
                 }
             }
         }
+
         return null;
     }
-
-    // let it run to create synthetic methods
-    // @Override
-    // public void verifyMethods(MethodVerifier verifier) {
-    // }
 
     @Override
     protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {

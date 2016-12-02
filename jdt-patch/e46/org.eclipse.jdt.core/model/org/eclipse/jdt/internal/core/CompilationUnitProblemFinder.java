@@ -11,10 +11,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -31,6 +31,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+//import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -177,19 +178,20 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
-		// GROOVY
-		//boolean reset = true; 
+		// GROOVY add
+		boolean reset = true;
+		// GROOVY end
 		try {
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
 			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
 			boolean ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
-			// GROOVY start
+			// GROOVY add
 			// options fetched prior to building problem finder then configured based on project
 			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
 			if (compilerOptions.buildGroovyFiles == 2) {
-			//	reset = false;
+				reset = false;
 			}
 			// GROOVY end
 			problemFinder = new CompilationUnitProblemFinder(
@@ -265,7 +267,10 @@ public class CompilationUnitProblemFinder extends Compiler {
 			if (problemFactory != null)
 				problemFactory.monitor = null; // don't hold a reference to this external object
 			// NB: unit.cleanUp() is done by caller
-			if (problemFinder != null && !creatingAST)
+			// GROOVY edit - reset() can cause OOB exceptions in TypeSystem
+			//if (problemFinder != null && !creatingAST)
+			if (problemFinder != null && !creatingAST && reset)
+			// GROOVY end
 				problemFinder.lookupEnvironment.reset();
 		}
 		return unit;
@@ -288,12 +293,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 	 * @see org.eclipse.jdt.internal.compiler.Compiler#initializeParser()
 	 */
 	public void initializeParser() {
-		// GROOVY start
-        /* old {
-		this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-        } new */
+		// GROOVY edit
+		//this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
         this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
         // GROOVY end
 	}
 }
-

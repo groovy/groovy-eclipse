@@ -147,7 +147,7 @@ public class TypeSystem {
 		}
 	}	
 	
-	private int typeid;
+	private int typeid = TypeIds.T_LastWellKnownTypeId;
 	private TypeBinding [][] types; 
 	protected HashedParameterizedTypes parameterizedTypes;  // auxiliary fast lookup table for parameterized types.
 	private SimpleLookupTable annotationTypes; // cannot store in types, since AnnotationBinding is not a TypeBinding and we don't want types to operate at Binding level.
@@ -155,15 +155,10 @@ public class TypeSystem {
 	
 	public TypeSystem(LookupEnvironment environment) {
 		this.environment = environment;
-		reset();
-	}
-
-	public void reset() {
 		this.annotationTypes = new SimpleLookupTable(16);
-		this.parameterizedTypes = new HashedParameterizedTypes();
-
 		this.typeid = TypeIds.T_LastWellKnownTypeId;
-		this.types = new TypeBinding[TypeIds.T_LastWellKnownTypeId * 4][];
+		this.types = new TypeBinding[TypeIds.T_LastWellKnownTypeId * 2][]; 
+		this.parameterizedTypes = new HashedParameterizedTypes();
 	}
 
 	// Given a type, answer its unannotated aka naked prototype. This is also a convenient way to "register" a type with TypeSystem and have it id stamped.
@@ -173,7 +168,7 @@ public class TypeSystem {
 			urb = (UnresolvedReferenceBinding) type;
 			ReferenceBinding resolvedType = urb.resolvedType;
 			if (resolvedType != null) {
-				type = this.environment.convertToRawType(resolvedType, false);
+				type = resolvedType;
 			} else if (CharOperation.indexOf('$', type.sourceName()) > 0) {
 				boolean mayTolerateMissingType = this.environment.mayTolerateMissingType;
 				this.environment.mayTolerateMissingType = true;
@@ -185,22 +180,19 @@ public class TypeSystem {
 			}
 		}
 		try {
-			int typesLength = this.types.length;
 			if (type.id == TypeIds.NoId) {
 				if (type.hasTypeAnnotations())
 					throw new IllegalStateException();
+				int typesLength = this.types.length;
 				if (this.typeid == typesLength)
 					System.arraycopy(this.types, 0, this.types = new TypeBinding[typesLength * 2][], 0, typesLength);
 				this.types[type.id = this.typeid++] = new TypeBinding[4];
 			} else {
-				TypeBinding nakedType = (type.id >= typesLength || this.types[type.id] == null) ? null : this.types[type.id][0];
+				TypeBinding nakedType = this.types[type.id] == null ? null : this.types[type.id][0];
+				if (type.hasTypeAnnotations() && nakedType == null)
+					throw new IllegalStateException();
 				if (nakedType != null)
 					return nakedType;
-				if (type.hasTypeAnnotations())
-					throw new IllegalStateException();
-				// avoid ArrayIndexOutOfBoundsException
-				if (type.id >= typesLength) return type;
-
 				this.types[type.id] = new TypeBinding[4];  // well known type, assigned id elsewhere.
 			}
 		} finally {
@@ -312,9 +304,9 @@ public class TypeSystem {
 	   they may and we need to materialize the unannotated versions and work on them.
 	*/ 
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType) {
-		ReferenceBinding unannotatedGenericType = getUnannotatedReferenceType(genericType);
-		ReferenceBinding unannotatedEnclosingType = enclosingType == null ? null : getUnannotatedReferenceType(enclosingType);
-
+		ReferenceBinding unannotatedGenericType = (ReferenceBinding) getUnannotatedType(genericType);
+		ReferenceBinding unannotatedEnclosingType = enclosingType == null ? null : (ReferenceBinding) getUnannotatedType(enclosingType);
+	
 		TypeBinding[] derivedTypes = this.types[unannotatedGenericType.id];
 		int i, length = derivedTypes.length;
 		for (i = 0; i < length; i++) {
@@ -342,17 +334,6 @@ public class TypeSystem {
 	
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType, AnnotationBinding[] annotations) {
 		return getRawType(genericType, enclosingType);
-	}
-
-	protected ReferenceBinding getUnannotatedReferenceType(ReferenceBinding originalType) {
-		TypeBinding unannotatedType = getUnannotatedType(originalType);
-		if (unannotatedType != null && !(unannotatedType instanceof ReferenceBinding)) {
-			System.err.println("Expected an instance of ReferenceBinding but got: " + unannotatedType.getClass().getName()); //$NON-NLS-1$
-			// reset and try one more time
-			this.types[unannotatedType.id] = null;
-			unannotatedType = getUnannotatedType(originalType);
-		}
-		return (ReferenceBinding) unannotatedType;
 	}
 
 	/* Parameters will not have type type annotations if lookup environment directly uses TypeSystem. When AnnotatableTypeSystem is in use,
@@ -522,9 +503,16 @@ public class TypeSystem {
 		return false;
 	}
 
+	public void reset() {
+		this.annotationTypes = new SimpleLookupTable(16);
+		this.typeid = TypeIds.T_LastWellKnownTypeId;
+		this.types = new TypeBinding[TypeIds.T_LastWellKnownTypeId * 2][];
+		this.parameterizedTypes = new HashedParameterizedTypes();
+	}
+	
 	public void updateCaches(UnresolvedReferenceBinding unresolvedType, ReferenceBinding resolvedType) {
 		final int unresolvedTypeId = unresolvedType.id;
-		if (unresolvedTypeId != TypeIds.NoId && unresolvedTypeId < this.types.length) {
+		if (unresolvedTypeId != TypeIds.NoId) {
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=432977
 			TypeBinding[] derivedTypes = this.types[unresolvedTypeId];
 			for (int i = 0, length = derivedTypes == null ? 0 : derivedTypes.length; i < length; i++) {

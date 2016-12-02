@@ -21,11 +21,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 
 import groovy.lang.GroovyClassLoader;
@@ -72,17 +71,18 @@ import org.eclipse.jdt.internal.core.builder.BuildNotifier;
  */
 public class GroovyParser {
 
-    // LookupEnvironment lookupEnvironment;
+    public static IGroovyDebugRequestor debugRequestor;
+    public Object requestor;
     public ProblemReporter problemReporter;
-    CompilationUnit groovyCompilationUnit;
     private JDTResolver resolver;
     private String projectName;
     private String gclClasspath;
-    public static IGroovyDebugRequestor debugRequestor;
+    private CompilationUnit compilationUnit;
     private CompilerOptions compilerOptions;
-    public Object requestor;
-    private boolean allowTransforms;
-    private boolean isReconcile;
+
+    public CompilerOptions getCompilerOptions() {
+        return compilerOptions;
+    }
 
     /*
      * Each project is allowed a GroovyClassLoader that will be used to load transform definitions and supporting classes. A cache
@@ -92,10 +92,8 @@ public class GroovyParser {
      * instances associated with the project.
      */
 
-    private static Map<String, PathLoaderPair> projectToLoaderCache = Collections
-            .synchronizedMap(new HashMap<String, PathLoaderPair>());
-    private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = Collections
-            .synchronizedMap(new HashMap<String, ScriptFolderSelector>());
+    private static Map<String, PathLoaderPair> projectToLoaderCache = new ConcurrentHashMap<String, PathLoaderPair>();
+    private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<String, ScriptFolderSelector>();
 
     static class PathLoaderPair {
         String classpath;
@@ -111,7 +109,6 @@ public class GroovyParser {
      * Close the jar files that have been kept open by the URLClassLoader
      */
     public static void close(GroovyClassLoader groovyClassLoader) {
-        // System.out.println("Running close for GCL " + groovyClassLoader);
         try {
             Class<?> clazz = java.net.URLClassLoader.class;
             Field field_urlClasspath = clazz.getDeclaredField("ucp");
@@ -120,7 +117,6 @@ public class GroovyParser {
             Field field_loaders = urlClasspath.getClass().getDeclaredField("loaders");
             field_loaders.setAccessible(true);
             Object[] jarLoaders = ((java.util.Collection<?>) field_loaders.get(urlClasspath)).toArray();
-            // int count = 0;
             for (Object jarLoader : jarLoaders) {
                 try {
                     Field field_jarFile = jarLoader.getClass().getDeclaredField("jar");
@@ -128,19 +124,14 @@ public class GroovyParser {
                     JarFile jarFile = (JarFile) field_jarFile.get(jarLoader);
                     String jarFileName = jarFile.getName();
                     if (jarFileName.indexOf("cache") != -1 || jarFileName.indexOf("plugins") != -1) {
-                        // System.out.println("Closing " + jarFile.getName());
-                        // count++;
                         jarFile.close();
                     }
                 } catch (Throwable t) {
-                    // t.printStackTrace();
                     // Probably not a JarLoader
                 }
             }
-            // System.out.println("Closed " + count + " jars");
         } catch (Throwable t) {
             // Not the kind of VM we thought it was...
-            // t.printStackTrace();
         }
     }
 
@@ -166,18 +157,6 @@ public class GroovyParser {
     static void tidyCache() {
         projectToLoaderCache.clear();
     }
-
-    // public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
-    // this(null, options, problemReporter);
-    // }
-
-    public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
-        this(null, options, problemReporter, allowTransforms, isReconcile);
-    }
-
-    // public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter) {
-    // this(requestor, options, problemReporter, true);
-    // }
 
     private GroovyClassLoader gclForBatch = null;
 
@@ -246,23 +225,24 @@ public class GroovyParser {
         return gcl;
     }
 
-    // FIXASC review callers who pass null for options
-    public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms,
-            boolean isReconcile) {
-        String path = (options == null ? null : options.groovyClassLoaderPath);
-        this.requestor = requestor;
+    public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
+        this(null, options, problemReporter, allowTransforms, isReconcile);
+    }
+
+    public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
+        // FIXASC review callers who pass null for options
         // FIXASC set parent of the loader to system or context class loader?
 
         // record any paths we use for a project so that when the project is cleared,
         // the paths (which point to cached classloaders) can be cleared
 
-        this.allowTransforms = allowTransforms;
-        this.isReconcile = isReconcile;
-        this.gclClasspath = path;
+        this.requestor = requestor;
         this.compilerOptions = options;
+        this.problemReporter = problemReporter;
         this.projectName = options.groovyProjectName;
-        GroovyClassLoader gcl = getLoaderFor(path);
+        this.gclClasspath = (options == null ? null : options.groovyClassLoaderPath);
 
+        GroovyClassLoader gcl = getLoaderFor(this.gclClasspath);
         // ---
         // Status of transforms and reconciling: Oct-18-2011
         // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
@@ -272,31 +252,23 @@ public class GroovyParser {
         // This means the transformLoader is setup for the compilation unit but the cu is also told the
         // allowTransforms setting so it can decide what should be allowed through.
         // ---
-
         // Basic grab support: the design here is that a special classloader is created that will be augmented
         // with URLs when grab processing is running. This classloader is used as a last resort when resolving
         // types and is *only* called if a grab has occurred somewhere during compilation.
         // Currently it is not cached but created each time - we'll have to decide if there is a need to cache
         GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
-        this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
-        this.groovyCompilationUnit.tweak(isReconcile);
-        this.groovyCompilationUnit.removeOutputPhaseOperation();
+        this.compilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
+        this.compilationUnit.removeOutputPhaseOperation();
+    }
 
-        if ((options.groovyFlags & CompilerUtils.IsGrails) != 0) {
-            // its probably grails!
-            // nothing up my sleeve, abracadabra!
-            this.groovyCompilationUnit.addPhaseOperation(new GrailsInjector(gcl), Phases.CANONICALIZATION);
-            new Grails20TestSupport(options, gcl).addGrailsTestCompilerCustomizers(groovyCompilationUnit);
-            if (allowTransforms && gcl != null) {
-                this.groovyCompilationUnit.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(gcl),
-                        Phases.CANONICALIZATION);
-            }
-        }
-        // this.lookupEnvironment = lookupEnvironment;
-        this.problemReporter = problemReporter;
-        this.resolver = new JDTResolver(groovyCompilationUnit);
-        // groovyCompilationUnit.setClassLoader(gcl);
-        groovyCompilationUnit.setResolveVisitor(resolver);
+    public void reset() {
+        //GroovyClassLoader gcl = getLoaderFor(gclClasspath);
+        //GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
+        this.compilationUnit = makeCompilationUnit(
+            /*grabbyLoader*/this.compilationUnit.getClassLoader(),
+            /*gcl*/this.compilationUnit.getTransformLoader(),
+            this.compilationUnit.isReconcile,
+            this.compilationUnit.allowTransforms);
     }
 
     static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
@@ -316,30 +288,6 @@ public class GroovyParser {
             super.addURL(url);
         }
     }
-
-    // // FIXASC perf ok?
-    // private static void configureClasspath(URLClassLoader gcl, String path) {
-    // if (path != null) {
-    // if (path.indexOf(File.pathSeparator) != -1) {
-    // int pos = 0;
-    // while (pos != -1) {
-    // int nextSep = path.indexOf(File.pathSeparator, pos);
-    // if (nextSep == -1) {
-    // // last piece
-    // String p = path.substring(pos);
-    // gcl.addClasspath(p);
-    // pos = -1;
-    // } else {
-    // String p = path.substring(pos, nextSep);
-    // gcl.addClasspath(p);
-    // pos = nextSep + 1;
-    // }
-    // }
-    // } else {
-    // gcl.addClasspath(path);
-    // }
-    // }
-    // }
 
     private static boolean NONLOCKING = false;
 
@@ -412,7 +360,7 @@ public class GroovyParser {
             sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
         }
 
-        ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilationUnit.getConfiguration());
+        ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration());
         String filepath = null;
 
         // This check is necessary because the filename is short (as in the last part, eg. Foo.groovy) for types coming in
@@ -440,13 +388,13 @@ public class GroovyParser {
         }
 
         SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode),
-                groovyCompilationUnit.getConfiguration(), groovyCompilationUnit.getClassLoader(), errorCollector, this.resolver);
-        groovySourceUnit.isReconcile = isReconcile;
+                compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), errorCollector, this.resolver);
+        groovySourceUnit.isReconcile = compilationUnit.isReconcile;
         GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
-                sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
+                sourceCode.length, compilationUnit, groovySourceUnit, compilerOptions);
         // FIXASC get this from the Antlr parser
         compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode);
-        groovyCompilationUnit.addSource(groovySourceUnit);
+        compilationUnit.addSource(groovySourceUnit);
 
         // Check if it is worth plugging in a callback listener for parse/generation
         if (requestor instanceof org.eclipse.jdt.internal.compiler.Compiler) {
@@ -454,7 +402,7 @@ public class GroovyParser {
             if (compiler.requestor instanceof BatchImageBuilder) {
                 BuildNotifier notifier = ((BatchImageBuilder) compiler.requestor).notifier;
                 if (notifier != null) {
-                    groovyCompilationUnit.setProgressListener(new ProgressListenerImpl(notifier));
+                    compilationUnit.setProgressListener(new ProgressListenerImpl(notifier));
                 }
             }
         }
@@ -537,18 +485,7 @@ public class GroovyParser {
         }
     }
 
-    public void reset() {
-        GroovyClassLoader gcl = getLoaderFor(gclClasspath);
-        GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
-        boolean allowTransforms = this.groovyCompilationUnit.allowTransforms;
-        boolean isReconcile = this.groovyCompilationUnit.isReconcile;
-        this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
-        this.resolver = new JDTResolver(groovyCompilationUnit);
-        this.groovyCompilationUnit.setResolveVisitor(resolver);
-    }
-
-    private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile,
-            boolean allowTransforms) {
+    private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile, boolean allowTransforms) {
 
         // FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
@@ -576,50 +513,42 @@ public class GroovyParser {
             }
         }
 
-        CompilationUnit it = new CompilationUnit(compilerConfiguration, null, loader, transformLoader, allowTransforms,
-                compilerOptions.groovyTransformsToRunOnReconcile, compilerOptions.groovyExcludeGlobalASTScan);
-        // Grails: start
-        // This code makes Grails 1.4.M1 AST transforms work.
-        if (allowTransforms && transformLoader != null && compilerOptions != null && ((compilerOptions.groovyFlags & 0x01) != 0)) {
+        CompilationUnit cu = new CompilationUnit(
+            compilerConfiguration,
+            null, // CodeSource
+            loader,
+            transformLoader,
+            allowTransforms,
+            compilerOptions.groovyTransformsToRunOnReconcile,
+            compilerOptions.groovyExcludeGlobalASTScan);
+        this.resolver = new JDTResolver(cu);
+        cu.setResolveVisitor(resolver);
+        cu.tweak(isReconcile);
+
+        // Grails add
+        if (allowTransforms && transformLoader != null && compilerOptions != null && (compilerOptions.groovyFlags & CompilerUtils.IsGrails) != 0) {
+            cu.addPhaseOperation(new GrailsInjector(transformLoader), Phases.CANONICALIZATION);
+            new Grails20TestSupport(compilerOptions, transformLoader).addGrailsTestCompilerCustomizers(cu);
+            cu.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(transformLoader), Phases.CANONICALIZATION);
+            // This code makes Grails 1.4.M1 AST transforms work.
             try {
-                Class<?> klass = Class.forName("org.codehaus.groovy.grails.compiler.injection.GrailsAwareInjectionOperation", true,
-                        transformLoader);
+                Class<?> klass = Class.forName("org.codehaus.groovy.grails.compiler.injection.GrailsAwareInjectionOperation", true, transformLoader);
                 if (klass != null) {
                     ClassLoader savedLoader = Thread.currentThread().getContextClassLoader();
                     try {
                         Thread.currentThread().setContextClassLoader(transformLoader);
                         PrimaryClassNodeOperation op = (PrimaryClassNodeOperation) klass.newInstance();
-                        it.addPhaseOperation(op, Phases.CANONICALIZATION);
+                        cu.addPhaseOperation(op, Phases.CANONICALIZATION);
                     } finally {
                         Thread.currentThread().setContextClassLoader(savedLoader);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 // Ignore... probably means its not grails 1.4 project
             }
         }
-        // Grails: end
-        it.tweak(isReconcile);
-        return it;
-    }
+        // Grails end
 
-    public CompilerOptions getCompilerOptions() {
-        return compilerOptions;
-    }
-
-    public boolean getAllowTranforms() {
-        return allowTransforms;
-    }
-
-    public boolean getIsReconcile() {
-        return isReconcile;
-    }
-
-    public CompilationUnit getGroovyCompilationUnit() {
-        return groovyCompilationUnit;
-    }
-
-    public String getProjectName() {
-        return projectName;
+        return cu;
     }
 }
