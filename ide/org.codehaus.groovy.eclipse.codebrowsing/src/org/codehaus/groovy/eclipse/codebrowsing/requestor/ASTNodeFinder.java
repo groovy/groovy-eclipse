@@ -563,7 +563,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         String code = (String) node.getNodeMetaData("groovy.source");
         if (code == null) {
             code = String.valueOf(GroovyUtils.readSourceRange(module.getContext(), node.getStart(), node.getLength()));
-            node.setNodeMetaData("groovy.source", code);
+            node.putNodeMetaData("groovy.source", code);
         }
         return code.substring(0, code.indexOf('{'));
     }
