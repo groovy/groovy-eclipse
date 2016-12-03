@@ -77,6 +77,58 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    public void testBigIntegerLiteral() {
+        String[] sources = {
+            "Min.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Min {\n" +
+            "  long value();\n" +
+            "}",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Min(0G)\n" +
+            "  Integer index\n" +
+            "}"
+        };
+
+        // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\t@Min(0G)\n" +
+            "\t     ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^" : "") + "\n" +
+            "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'java.math.BigInteger' in @Min\n" +
+            "----------\n");
+    }
+
+    public void testBigDecimalLiteral() {
+        String[] sources = {
+            "Min.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Min {\n" +
+            "  double value();\n" +
+            "}",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Min(1.1G)\n" +
+            "  BigDecimal index\n" +
+            "}"
+        };
+
+        // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\t@Min(1.1G)\n" +
+            "\t     ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^^" : "") + "\n" +
+            "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @Min\n" +
+            "----------\n");
+    }
+
     public void testClassAnnotationValue() {
         String[] sources = {
             "Anno.java",
@@ -172,16 +224,18 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
 
             "AnnotationDoubleTest.groovy",
             "class AnnotationDoubleTest {\n" +
-            "class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" +
-            "def test = new AnnotationDoubleTest()\n" +
+            "  class FooWithAnnotation {\n" +
+            "    @AnnotationDouble(value='test', width=1.0) double value\n" +
+            "  }\n" +
+            "  def test = new AnnotationDoubleTest()\n" +
             "}"
         };
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in AnnotationDoubleTest.groovy (at line 2)\n" +
-            "\tclass FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" +
-            "\t                                                                ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^" : "") + "\n" +
+            "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
+            "\t@AnnotationDouble(value='test', width=1.0) double value\n" +
+            "\t                                      ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^" : "") + "\n" +
             "Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble\n" +
             "----------\n");
     }

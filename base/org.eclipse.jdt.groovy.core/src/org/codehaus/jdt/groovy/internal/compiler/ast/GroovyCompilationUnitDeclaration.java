@@ -565,10 +565,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 eoffset = sourceEnd;
             }
 
-            char[] filename = getFileName();
-            p = new DefaultProblemFactory().createProblem(filename, 0, new String[] { msg }, 0, new String[] { msg }, sev, soffset,
-                    eoffset, line, scol);
-            this.problemReporter.record(p, compilationResult, this, false);
+            p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] {msg}, 0, new String[] {msg}, sev, soffset, eoffset, line, scol);
+            problemReporter.record(p, compilationResult, this, false);
             errorsRecorded.add(message);
             log(String.valueOf(compilationResult.getFileName()) + ": " + line + " " + msg);
         }
@@ -1605,10 +1603,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (expr instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) expr;
                 assert prop.getProperty() instanceof ConstantExpression;
-                String name = prop.getPropertyAsString();
-                if (name.equals("class") || !NON_TYPE_NAME.matcher(name).matches()) {
+                if (prop.getPropertyAsString().equals("class")) {
                     return new ClassLiteralAccess(expr.getEnd(), createTypeReferenceForClassLiteral(prop));
                 }
+                // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
                 char[][] tokens = CharOperation.splitOn('.',  prop.getText().toCharArray());
                 // guess the intermediate positions based on start offset and token lengths
                 int n = tokens.length, s = prop.getObjectExpression().getStart();
@@ -1623,12 +1621,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             } else if (expr instanceof VariableExpression) {
                 String name = ((VariableExpression) expr).getName();
-                if (NON_TYPE_NAME.matcher(name).matches()) {
-                    // could be a class field or statically imported constant also...
-                    return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
-                }
-                // likely a class literal; Groovy does not require ".class"
-                return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1)));
+                // could be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
+                return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
 
             } else if (expr instanceof ClosureExpression) {
                 // annotation is something like "@Tag(value = { some computation })" return "Closure.class" to appease JDT
@@ -1642,9 +1636,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return new NullLiteral(expr.getStart(), expr.getEnd());
         }
 
-        // TODO: Look up name to determine if it is a class or a constant
-        private static final Pattern NON_TYPE_NAME = Pattern.compile("[a-z_]\\w*|[A-Z][A-Z_0-9]*");
-
         private org.eclipse.jdt.internal.compiler.ast.MemberValuePair[] createAnnotationMemberValuePairs(Map<String, Expression> memberValuePairs) {
             List<org.eclipse.jdt.internal.compiler.ast.MemberValuePair> mvps =
                 new ArrayList<org.eclipse.jdt.internal.compiler.ast.MemberValuePair>(memberValuePairs.size());
@@ -1653,7 +1644,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 char[] name = memberValuePair.getKey().toCharArray();
                 int start = memberValuePair.getValue().getStart() - name.length - 1, until = memberValuePair.getValue().getEnd();
                 org.eclipse.jdt.internal.compiler.ast.Expression value = createAnnotationMemberExpression(memberValuePair.getValue());
-                mvps.add(new org.eclipse.jdt.internal.compiler.ast.MemberValuePair(name, start, until, value)); // TODO: set binding?
+                mvps.add(new org.eclipse.jdt.internal.compiler.ast.MemberValuePair(name, start, until, value));
             }
 
             return mvps.toArray(new org.eclipse.jdt.internal.compiler.ast.MemberValuePair[mvps.size()]);
@@ -1678,10 +1669,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (type.equals("int") || type.equals("java.lang.Integer")) {
                 char[] chars = value.toString().toCharArray();
                 return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            } else if (type.equals("long") || type.equals("java.lang.Long")) {
+            } else if (type.equals("long") || type.equals("java.lang.Long") || type.equals("java.math.BigInteger")) {
                 char[] chars = (value.toString() + 'L').toCharArray();
                 return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
-            } else if (type.equals("double") || type.equals("java.lang.Double")) {
+            } else if (type.equals("double") || type.equals("java.lang.Double") || type.equals("java.math.BigDecimal")) {
                 return new DoubleLiteral(value.toString().toCharArray(), start, until);
             } else if (type.equals("float") || type.equals("java.lang.Float")) {
                 return new FloatLiteral(value.toString().toCharArray(), start, until);
@@ -1691,9 +1682,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
             } else if (type.equals("char") || type.equals("java.lang.Character")) {
                 return new CharLiteral(value.toString().toCharArray(), start, until);
-            } else if (type.equals("java.math.BigDecimal")) {
-                // TODO: Return something else for BigDecimal? This is a bit of a cheat...
-                return new DoubleLiteral(value.toString().toCharArray(), start, until);
             } else {
                 Util.log(IStatus.WARNING, "Unhandled annotation constant type: " + expr.getType().getName());
                 return null;
@@ -1993,7 +1981,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         // move past T
                         offset += length;
                         source = source.substring(length);
-                        //if (source != null) {
                         // move past "extends" and w.spaces
                         Matcher m = EXTENDS.matcher(source);
                         if (m.find()) {
@@ -2001,33 +1988,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             offset += length;
                             source = source.substring(length);
                         }
-                        //else {
-                        //	while (Character.isWhitespace(source.charAt(0))) {
-                        //		offset += 1;
-                        //		source = source.substring(1);
-                        //	}
-                        //	if (source.startsWith("extends")) {
-                        //		offset += 7;
-                        //		source = source.substring(7);
-                        //	}
-                        //	while (Character.isWhitespace(source.charAt(0))) {
-                        //		offset += 1;
-                        //		source = source.substring(1);
-                        //	}
-                        //}
-                        //} else { offset += 9; } // ballpark it
 
                         length = upperBounds[0].getName().length();
                         // TODO: Is this correct for qualified and unqualified occurrences?
                         String name = GroovyUtils.splitName(upperBounds[0])[1];
                         assert length == source.indexOf(name) + name.length();
-                        //// check source for name to regain some accuracy
-                        //int idx = source.indexOf(name);
-                        //if (idx != -1) {
-                        //	length = idx + name.length();
-                        //}
 
-                        // ???: Would a ClassNode with its own generics ever be missing sloc?
+                        // Would a ClassNode with its own generics ever be missing sloc?
                         assert source.length() == length || source.charAt(length) != '<';
                     }
 
@@ -2043,35 +2010,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             offset = _start;
                         } else { // it appears only MetaClass or GeneratedClosure could get here...
                             offset += length;
-                            //if (source != null) {
-                                // move past bounds type
+                            // move past bounds type
+                            source = source.substring(length);
+                            // move past "&" and w.spaces
+                            Matcher m = AND.matcher(source);
+                            if (m.find()) {
+                                length = m.group().length();
+                                offset += length;
                                 source = source.substring(length);
-                                // move past "&" and w.spaces
-                                Matcher m = AND.matcher(source);
-                                if (m.find()) {
-                                    length = m.group().length();
-                                    offset += length;
-                                    source = source.substring(length);
-                                }
-                                //else {
-                                //	char c;
-                                //	while ((c = source.charAt(0)) == '&' || Character.isWhitespace(c)) {
-                                //		offset += 1;
-                                //		source = source.substring(1);
-                                //	}
-                                //}
-                            //} else { offset += 3; } // ballpark it
+                            }
 
                             length = upperBounds[0].getName().length();
-                            // TODO: Is this correct for qualified and unqualified occurrences?
-                            //String name = GroovyUtils.splitName(upperBounds[j])[1];
-                            //assert length == source.indexOf(name) + name.length();
-                            //int idx = source.indexOf(name);
-                            //if (idx != -1) {
-                            //	length = idx + name.length();
-                            //}
-                            // ???: Would a ClassNode with its own generics ever be missing sloc?
-                            //assert source.length() == length || source.charAt(length) != '<';
                         }
 
                         typeParameter.bounds[j - 1] = createTypeReferenceForClassNode(upperBounds[j], offset, offset + length);
@@ -2521,9 +2470,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         boolean argsTheSame = true;
                         for (int i = 0; i < mdArgsLen; i++) {
                             // FIXASC this comparison can fail if some are fully qualified and some not - in fact it
-                            // suggests that default param variants should be built by augmentMethod() in a similar way to
-                            // the GroovyObject methods, rather than during type declaration construction - but not super urgent right
-                            // now
+                            // suggests that default param variants should be built by augmentMethod() in a similar
+                            // way to the GroovyObject methods, rather than during type declaration construction
                             if (!CharOperation.equals(mdArgs[i].type.getTypeName(), vmdArgs[i].type.getTypeName())) {
                                 argsTheSame = false;
                                 break;

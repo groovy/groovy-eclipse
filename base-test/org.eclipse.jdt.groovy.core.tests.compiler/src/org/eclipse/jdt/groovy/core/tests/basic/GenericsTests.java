@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.osgi.framework.Version;
 
 public final class GenericsTests extends AbstractGroovyRegressionTest {
 
@@ -1609,14 +1610,20 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     public void testHalfFinishedGenericsProgramWithMultipleSuppressionValues() {
         String[] sources = {
             "Demo.groovy",
-            "public class Demo {\n"+
-            "\n"+
-            "@SuppressWarnings([\"rawtypes\",\"cast\"])\n"+
-            "List myList;\n"+
+            "class Demo {\n"+
+            "  @SuppressWarnings(['rawtypes','cast'])\n"+
+            "  List list\n"+
             "}"
         };
 
-        runNegativeTest(sources, "");
+        // Eclipse Oxygen (i.e. JDT Core 3.13) added warning for mixed mode
+        Version v = Platform.getBundle("org.eclipse.jdt.core").getVersion();
+        runNegativeTest(sources, (v.getMajor() == 3 && v.getMinor() < 13) ? "" : "----------\n" +
+            "1. WARNING in Demo.groovy (at line 2)\n" +
+            "\t@SuppressWarnings(['rawtypes','cast'])\n" +
+            "\t                              ^^^^^^\n" +
+            "At least one of the problems in category 'cast' is not analysed due to a compiler option being ignored\n" +
+            "----------\n");
     }
 
     public void testHalfFinishedGenericsProgramWithMultipleSuppressionValuesWithOneSpeltWrong() {
@@ -1638,12 +1645,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    private boolean isEclipse36() {
-        return Platform.getBundle("org.eclipse.jdt.core").getVersion().toString().startsWith("3.6");
-    }
-
     public void testJava7() {
-        if (isEclipse36() || complianceLevel < ClassFileConstants.JDK1_7) return;
+        if (complianceLevel < ClassFileConstants.JDK1_7) return;
 
         String[] sources = {
             "A.java",
@@ -1668,8 +1671,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testJava7_2() {
-        if (isEclipse36() || complianceLevel >= ClassFileConstants.JDK1_7) return;
-        // should fail if compliance level < 1.7
+        if (complianceLevel >= ClassFileConstants.JDK1_7) return;
 
         String[] sources = {
             "A.java",
@@ -1702,8 +1704,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testJava7_3() {
-        if (isEclipse36() || complianceLevel >= ClassFileConstants.JDK1_7) return;
-        // should fail if compliance level < 1.7
+        if (complianceLevel >= ClassFileConstants.JDK1_7) return;
 
         String[] sources = {
             "A.java",
