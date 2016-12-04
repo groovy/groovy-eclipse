@@ -1,8 +1,24 @@
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,82 +62,102 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 
 public class GroovyCompletionProposalComputer implements IJavaCompletionProposalComputer {
 
-    private static Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> locationFactoryMap;
+    private static final Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> LOCATION_FACTORIES;
     static {
-        locationFactoryMap = new HashMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>();
+        Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> locationFactories =
+            new EnumMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>(ContentAssistLocation.class);
 
-        List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
+        locationFactories.put(ContentAssistLocation.ANNOTATION, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(7);
-        factories.add(new ModifiersCompletionProcessorFactory());
-        factories.add(new NewMethodCompletionProcessorFactory());
-        factories.add(new GetSetMethodCompletionProcessorFactory());
-        factories.add(new NewFieldCompletionProcessorFactory());
-        factories.add(new TypeCompletionProcessorFactory());
-        factories.add(new PackageCompletionProcessorFactory());
-        factories.add(new NewVariableCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.CLASS_BODY, factories);
+        locationFactories.put(ContentAssistLocation.CLASS_BODY, Collections.unmodifiableList(Arrays.asList(
+            new ModifiersCompletionProcessorFactory(),
+            new NewMethodCompletionProcessorFactory(),
+            new GetSetMethodCompletionProcessorFactory(),
+            new NewFieldCompletionProcessorFactory(),
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new NewVariableCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
-        factories.add(new TypeCompletionProcessorFactory());
-        factories.add(new PackageCompletionProcessorFactory());
-        factories.add(new ConstructorCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.EXCEPTIONS, factories);
-        locationFactoryMap.put(ContentAssistLocation.EXTENDS, factories);
-        locationFactoryMap.put(ContentAssistLocation.IMPLEMENTS, factories);
-        locationFactoryMap.put(ContentAssistLocation.ANNOTATION, factories);
-        locationFactoryMap.put(ContentAssistLocation.IMPORT, factories);
-        locationFactoryMap.put(ContentAssistLocation.CONSTRUCTOR, factories);
-        locationFactoryMap.put(ContentAssistLocation.PARAMETER, factories);
+        locationFactories.put(ContentAssistLocation.CONSTRUCTOR, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
-        factories.add(new TypeCompletionProcessorFactory());
-        factories.add(new PackageCompletionProcessorFactory());
-        factories.add(new ConstructorCompletionProcessorFactory());
-        factories.add(new ExpressionCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.IMPORT, factories);
+        locationFactories.put(ContentAssistLocation.EXCEPTIONS, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
-        factories.add(new PackageCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.PACKAGE, factories);
+        locationFactories.put(ContentAssistLocation.EXPRESSION, Collections.unmodifiableList(Arrays.asList(
+            new ExpressionCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(2);
-        factories.add(new ExpressionCompletionProcessorFactory());
-        factories.add(new PackageCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.EXPRESSION, factories);
+        locationFactories.put(ContentAssistLocation.EXTENDS, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
-        factories.add(new TypeCompletionProcessorFactory());
-        factories.add(new ExpressionCompletionProcessorFactory());
-        factories.add(new LocalVariableCompletionProcessorFactory());
-        factories.add(new PackageCompletionProcessorFactory());
-        factories.add(new NewVariableCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.STATEMENT, factories);
+        locationFactories.put(ContentAssistLocation.IMPLEMENTS, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(9);
-        factories.add(new ModifiersCompletionProcessorFactory());
-        factories.add(new NewMethodCompletionProcessorFactory());
-        factories.add(new GetSetMethodCompletionProcessorFactory());
-        factories.add(new NewFieldCompletionProcessorFactory());
-        factories.add(new TypeCompletionProcessorFactory());
-        factories.add(new ExpressionCompletionProcessorFactory());
-        factories.add(new LocalVariableCompletionProcessorFactory());
-        factories.add(new PackageCompletionProcessorFactory());
-        factories.add(new NewVariableCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.SCRIPT, factories);
+        locationFactories.put(ContentAssistLocation.IMPORT, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory(),
+            new ExpressionCompletionProcessorFactory()
+        )));
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(2);
-        factories.add(new ExpressionCompletionProcessorFactory());
-        factories.add(new ConstructorCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.METHOD_CONTEXT, factories);
+        locationFactories.put(ContentAssistLocation.METHOD_CONTEXT, Collections.unmodifiableList(Arrays.asList(
+            new ExpressionCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
+
+        locationFactories.put(ContentAssistLocation.PACKAGE, Collections.<IGroovyCompletionProcessorFactory>singletonList(
+            new PackageCompletionProcessorFactory()
+        ));
+
+        locationFactories.put(ContentAssistLocation.PARAMETER, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory()
+        )));
+
+        locationFactories.put(ContentAssistLocation.SCRIPT, Collections.unmodifiableList(Arrays.asList(
+            new ModifiersCompletionProcessorFactory(),
+            new NewMethodCompletionProcessorFactory(),
+            new GetSetMethodCompletionProcessorFactory(),
+            new NewFieldCompletionProcessorFactory(),
+            new TypeCompletionProcessorFactory(),
+            new ExpressionCompletionProcessorFactory(),
+            new LocalVariableCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new NewVariableCompletionProcessorFactory()
+        )));
+
+        locationFactories.put(ContentAssistLocation.STATEMENT, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new ExpressionCompletionProcessorFactory(),
+            new LocalVariableCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new NewVariableCompletionProcessorFactory()
+        )));
+
+        LOCATION_FACTORIES = Collections.unmodifiableMap(locationFactories);
     }
 
-
-    public GroovyCompletionProposalComputer() {
-    }
-
-    public List<ICompletionProposal> computeCompletionProposals(
-            ContentAssistInvocationContext context, IProgressMonitor monitor) {
+    public List<ICompletionProposal> computeCompletionProposals(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
@@ -145,8 +181,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         ModuleNodeInfo moduleInfo = gunit.getModuleInfo(true);
         if (moduleInfo == null) {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
-                        "Null module node for " + gunit.getElementName());
+                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Null module node for " + gunit.getElementName());
             }
             return Collections.EMPTY_LIST;
         }
@@ -155,10 +190,9 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         ContentAssistContext assistContext = createContentAssistContext(gunit, context.getInvocationOffset(), document);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
-            List<IGroovyCompletionProcessorFactory> factories = locationFactoryMap.get(assistContext.location);
+            List<IGroovyCompletionProcessorFactory> factories = LOCATION_FACTORIES.get(assistContext.location);
             if (factories != null) {
                 SearchableEnvironment nameEnvironment = createSearchableEnvironment(javaContext);
-
                 try {
                     for (IGroovyCompletionProcessorFactory factory : factories) {
                         IGroovyCompletionProcessor processor =
@@ -202,67 +236,42 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         return proposals;
     }
 
-    /**
-     * Make public to allow for testing
-     *
-     * @param gunit
-     * @param invocationOffset
-     * @param document
-     * @return
-     */
+    // visible for testing
     public ContentAssistContext createContentAssistContext(GroovyCompilationUnit gunit, int invocationOffset, IDocument document) {
         String fullCompletionText = findCompletionText(document, invocationOffset);
         String[] completionExpressions = findCompletionExpression(fullCompletionText);
         if (completionExpressions == null) {
             completionExpressions = new String[] { "", "" };
         }
-        String completionExpression = completionExpressions[1] == null ? completionExpressions[0]
-                : completionExpressions[1];
+        String completionExpression = completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1];
         int supportingNodeEnd = findSupportingNodeEnd(invocationOffset, fullCompletionText);
-        int completionEnd = findCompletionEnd(document,
-                invocationOffset);
-        CompletionNodeFinder finder = new CompletionNodeFinder(
-                invocationOffset, completionEnd,
-                supportingNodeEnd, completionExpression, fullCompletionText);
+        int completionEnd = findCompletionEnd(document, invocationOffset);
+        CompletionNodeFinder finder = new CompletionNodeFinder(invocationOffset, completionEnd, supportingNodeEnd, completionExpression, fullCompletionText);
         ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
         return assistContext;
     }
 
-    private int findSupportingNodeEnd(int invocationOffset,
-            String fullCompletionText) {
+    private int findSupportingNodeEnd(int invocationOffset, String fullCompletionText) {
         String[] completionExpressions = new ExpressionFinder().splitForCompletionNoTrim(fullCompletionText);
         // if second part of completion expression is null, then there is no supporting node (ie- no '.')
-        return completionExpressions[1] == null ? -1 :
-            invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
+        return completionExpressions[1] == null ? -1 : invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
     }
 
-
-    /**
-     * @param assistContext
-     * @return
-     */
-    private SearchableEnvironment createSearchableEnvironment(
-            JavaContentAssistInvocationContext javaContext) {
+    private SearchableEnvironment createSearchableEnvironment(JavaContentAssistInvocationContext javaContext) {
         try {
-            return ((JavaProject) javaContext
-                    .getProject()).newSearchableNameEnvironment(javaContext
-                            .getCompilationUnit().getOwner());
+            return ((JavaProject) javaContext.getProject()).newSearchableNameEnvironment(javaContext.getCompilationUnit().getOwner());
         } catch (JavaModelException e) {
             GroovyCore.logException("Exception creating searchable environment for " + javaContext.getCompilationUnit(), e);
             return null;
         }
     }
 
-    /**
-     * @param completionText
-     * @return
-     */
     private String[] findCompletionExpression(String completionText) {
         return new ExpressionFinder().splitForCompletion(completionText);
     }
 
     protected String findCompletionText(IDocument doc, int offset) {
-        try{
+        try {
             if (offset > 0) {
                 ISourceBuffer buffer = new DocumentSourceBuffer(doc);
                 return new ExpressionFinder().findForCompletions(buffer, offset - 1);
@@ -279,8 +288,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         return new ExpressionFinder().findTokenEnd(buffer, offset);
     }
 
-    public List<IContextInformation> computeContextInformation(
-            ContentAssistInvocationContext context, IProgressMonitor monitor) {
+    public List<IContextInformation> computeContextInformation(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         List<ICompletionProposal> proposals = computeCompletionProposals(context, monitor);
         ArrayList<IContextInformation> contexts = new ArrayList<IContextInformation>(proposals.size());
         for (ICompletionProposal proposal : proposals) {
@@ -295,9 +303,9 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         return "";
     }
 
-    public void sessionEnded() {
+    public void sessionStarted() {
     }
 
-    public void sessionStarted() {
+    public void sessionEnded() {
     }
 }
