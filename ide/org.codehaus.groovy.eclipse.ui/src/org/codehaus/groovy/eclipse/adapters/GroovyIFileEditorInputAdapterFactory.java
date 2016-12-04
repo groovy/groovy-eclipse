@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,42 +21,30 @@ import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.IFileEditorInput;
 
 /**
- * This class will take an FileEditorInput and adapt it to varios Groovy friendly 
+ * This class will take an FileEditorInput and adapt it to varios Groovy friendly
  * classes / interfaces.
- * 
+ *
  * @author David Kerber
  */
 public class GroovyIFileEditorInputAdapterFactory implements IAdapterFactory {
-	
-	private static final Class< ? >[] classes = new Class[] { ClassNode.class }  ;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
-	@SuppressWarnings("unchecked")
+    private static final Class<?>[] classes = new Class[] {ClassNode.class};
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Object getAdapter(Object adaptableObject, Class adapterType) {
-		
-		Object returnValue = null ; 
-		
-		if( (ClassNode.class.equals(adapterType) || ClassNode[].class.equals(adapterType) ) && adaptableObject instanceof IFileEditorInput) {
-			try {
-				IFileEditorInput fileEditor = (IFileEditorInput) adaptableObject ;
-				returnValue = fileEditor.getFile().getAdapter(adapterType);
-			} catch (Exception ex) {
-				GroovyCore.logException("error adapting file to ClassNode", ex);
-			}
-		}
-		
-		
-		return returnValue ;
-	}
+        Object returnValue = null;
+        if ((ClassNode.class.equals(adapterType) || ClassNode[].class.equals(adapterType)) && adaptableObject instanceof IFileEditorInput) {
+            try {
+                IFileEditorInput fileEditor = (IFileEditorInput) adaptableObject;
+                returnValue = fileEditor.getFile().getAdapter(adapterType);
+            } catch (Exception ex) {
+                GroovyCore.logException("error adapting file to ClassNode", ex);
+            }
+        }
+        return returnValue;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
-	@SuppressWarnings("unchecked")
-    public Class[] getAdapterList() {
-		return classes ; 
-	}
-
+    public Class<?>[] getAdapterList() {
+        return classes;
+    }
 }

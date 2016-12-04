@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import org.eclipse.core.filebuffers.IDocumentSetupParticipant;
-import org.eclipse.jdt.internal.ui.text.JavaPartitionScanner;
+import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IDocumentPartitioner;
@@ -24,16 +24,13 @@ import org.eclipse.jface.text.rules.FastPartitioner;
 
 public class GroovyDocumentSetupParticipant  implements IDocumentSetupParticipant {
 
-    public GroovyDocumentSetupParticipant() {
-	}
+    /*
+     * @see org.eclipse.core.filebuffers.IDocumentSetupParticipant#setup(org.eclipse.jface.text.IDocument)
+     */
+    public void setup(IDocument document) {
+        setupJavaDocumentPartitioner(document, IJavaPartitions.JAVA_PARTITIONING);
+    }
 
-	/*
-	 * @see org.eclipse.core.filebuffers.IDocumentSetupParticipant#setup(org.eclipse.jface.text.IDocument)
-	 */
-	public void setup(IDocument document) {
-	    setupJavaDocumentPartitioner(document, JavaPartitionScanner.JAVA_PARTITIONING);
-	}
-	
     /**
      * Sets up the Java document partitioner for the given document for the given partitioning.
      *
@@ -55,5 +52,4 @@ public class GroovyDocumentSetupParticipant  implements IDocumentSetupParticipan
     private IDocumentPartitioner createDocumentPartitioner() {
         return new FastPartitioner(new GroovyPartitionScanner(), GroovyPartitionScanner.LEGAL_CONTENT_TYPES);
     }
-
 }

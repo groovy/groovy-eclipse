@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.util.ArrayList;
@@ -27,65 +32,65 @@ import org.junit.Assert;
 
 public class TestRenameParticipantSingle extends RenameParticipant {
 
-	private static List fgInstances= new ArrayList();
+    private static List<RenameParticipant> fgInstances= new ArrayList<RenameParticipant>();
 
-	private Object fElement;
-	private String fHandle;
+    private Object fElement;
+    private String fHandle;
 
-	public boolean initialize(Object element) {
-		fgInstances.add(this);
-		fElement= element;
-		ref(fElement);
-		if (fElement instanceof IJavaElement) {
-			fHandle= ((IJavaElement)fElement).getHandleIdentifier();
-		} else {
-			fHandle= ((IResource)fElement).getFullPath().toString();
-		}
-		return true;
-	}
+    public boolean initialize(Object element) {
+        fgInstances.add(this);
+        fElement= element;
+        ref(fElement);
+        if (fElement instanceof IJavaElement) {
+            fHandle= ((IJavaElement)fElement).getHandleIdentifier();
+        } else {
+            fHandle= ((IResource)fElement).getFullPath().toString();
+        }
+        return true;
+    }
 
-	public String getName() {
-		return getClass().getName();
-	}
+    public String getName() {
+        return getClass().getName();
+    }
 
-	public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
-		return new RefactoringStatus();
-	}
+    public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
+        return new RefactoringStatus();
+    }
 
-	public Change createChange(IProgressMonitor pm) throws CoreException {
-		return null;
-	}
+    public Change createChange(IProgressMonitor pm) throws CoreException {
+        return null;
+    }
 
-	public static void testNumberOfInstances(int instances) {
-		Assert.assertEquals(instances, fgInstances.size());
-	}
+    public static void testNumberOfInstances(int instances) {
+        Assert.assertEquals(instances, fgInstances.size());
+    }
 
-	public static void testElements(String[] handles) {
-		testNumberOfInstances(handles.length);
-		List l1= new ArrayList(Arrays.asList(handles));
-		for (int i= 0; i < l1.size(); i++) {
-			Assert.assertTrue(l1.contains(getInstance(i).fHandle));
-		}
-	}
+    public static void testElements(String[] handles) {
+        testNumberOfInstances(handles.length);
+        List<String> l1= Arrays.asList(handles);
+        for (int i= 0; i < l1.size(); i++) {
+            Assert.assertTrue(l1.contains(getInstance(i).fHandle));
+        }
+    }
 
-	public static void testArguments(RenameArguments[] args) {
-		testNumberOfInstances(args.length);
-		for (int i= 0; i < args.length; i++) {
-			RenameArguments expected= args[i];
-			RenameArguments actual= getInstance(i).getArguments();
-			Assert.assertEquals(expected.getNewName(), actual.getNewName());
-			Assert.assertEquals(expected.getUpdateReferences(), actual.getUpdateReferences());
-		}
-	}
+    public static void testArguments(RenameArguments[] args) {
+        testNumberOfInstances(args.length);
+        for (int i= 0; i < args.length; i++) {
+            RenameArguments expected= args[i];
+            RenameArguments actual= getInstance(i).getArguments();
+            Assert.assertEquals(expected.getNewName(), actual.getNewName());
+            Assert.assertEquals(expected.getUpdateReferences(), actual.getUpdateReferences());
+        }
+    }
 
-	public static void reset() {
-		fgInstances= new ArrayList();
-	}
+    public static void reset() {
+        fgInstances= new ArrayList<RenameParticipant>();
+    }
 
-	private static TestRenameParticipantSingle getInstance(int i) {
-		return ((TestRenameParticipantSingle)fgInstances.get(i));
-	}
+    private static TestRenameParticipantSingle getInstance(int i) {
+        return ((TestRenameParticipantSingle)fgInstances.get(i));
+    }
 
-	/* package */ void ref(Object element) {
-	}
+    /* package */ void ref(Object element) {
+    }
 }

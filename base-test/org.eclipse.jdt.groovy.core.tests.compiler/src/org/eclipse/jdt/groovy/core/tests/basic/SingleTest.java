@@ -21,30 +21,27 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 public final class SingleTest extends AbstractGroovyRegressionTest {
 
-    public void testGreclipse719_2() {
-        this.runNegativeTest(new String[] {
-            "MyDomainClass.groovy",
-            "int anInt = 10;\n"+
-            "def Method[][] methodMethodArray = anInt.class.methods;\n"+
-            "println methodArray.name;"},
-            "----------\n" +
-            "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
-            "	def Method[][] methodMethodArray = anInt.class.methods;\n" +
-            "	    ^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class Method[][] \n" +
-            "----------\n");
+    public static Test suite() {
+        return buildUniqueComplianceTestSuite(SingleTest.class, ClassFileConstants.JDK1_5);
     }
 
     public SingleTest(String name) {
         super(name);
     }
 
-    public static Test suite() {
-        return buildUniqueComplianceTestSuite(SingleTest.class, ClassFileConstants.JDK1_5);
-    }
-
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
-        complianceLevel = ClassFileConstants.JDK1_5;
+    }
+
+    public void testSomething() {
+        String[] sources = {
+            "Main.groovy",
+            "@Mixin([Object,String])\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
     }
 }

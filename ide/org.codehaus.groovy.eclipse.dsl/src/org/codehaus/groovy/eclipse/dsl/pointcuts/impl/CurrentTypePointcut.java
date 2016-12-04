@@ -55,7 +55,7 @@ public class CurrentTypePointcut extends AbstractPointcut {
             } else {
                 return null;
             }
-        } else if (firstArgument instanceof Class<?>) {
+        } else if (firstArgument instanceof Class) {
             if (currentType.getName().equals(((Class<?>) firstArgument).getName())) {
                 return Collections.singleton(currentType);
             } else {

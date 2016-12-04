@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.JavaElement;
 
 /**
- *
  * @author andrew
  * @created Apr 13, 2011
  */
@@ -111,7 +110,7 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
             for (IJavaElement elt : children) {
                 if (elt.getElementName().equals(scriptName)) {
                     candidate = (IType) elt;
-                } else if (elt instanceof IJavaElement) {
+                } else {
                     fakeChildren.add(elt);
                 }
             }

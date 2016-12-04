@@ -125,7 +125,7 @@ public class ASTView extends ViewPart {
         DrillDownAdapter drillDownAdapter = new DrillDownAdapter(viewer);
         viewer.setContentProvider(new ViewContentProvider());
         viewer.setLabelProvider(new ViewLabelProvider());
-        viewer.setSorter(null);
+        viewer.setComparator(null);
         viewer.setInput(null);
         makeActions();
         //hookContextMenu();

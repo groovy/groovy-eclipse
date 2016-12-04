@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,7 +136,7 @@ public class BreakpointLocationVerifierJob extends Job {
     }
 
     private void createNewMethodBreakpoint(MethodNode node, String typeName) throws CoreException {
-        Map newAttributes = new HashMap(10);
+        Map<String, Object> newAttributes = new HashMap<String, Object>(10);
         int start = node.getNameStart();
         int end = node.getNameEnd();
         if (fType != null) {
@@ -145,8 +145,7 @@ public class BreakpointLocationVerifierJob extends Job {
                 IMethod method = (IMethod) elt;
                 BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
                 BreakpointUtils.addJavaBreakpointAttributes(newAttributes, method);
-                JDIDebugModel.createMethodBreakpoint(fResource, typeName, node.getName(), createMethodSignature(node), true, false,
-                        false, node.getLineNumber(), start, end, 0, true, newAttributes);
+                JDIDebugModel.createMethodBreakpoint(fResource, typeName, node.getName(), createMethodSignature(node), true, false, false, node.getLineNumber(), start, end, 0, true, newAttributes);
             }
         }
     }
@@ -181,7 +180,7 @@ public class BreakpointLocationVerifierJob extends Job {
         if (JDIDebugModel.lineBreakpointExists(typeName, node.getLineNumber()) != null) {
             return;
         }
-        Map newAttributes = new HashMap(10);
+        Map<String, Object> newAttributes = new HashMap<String, Object>(10);
         int start= node.getStart();
         int end= node.getEnd();
         if (fType != null) {

@@ -1,20 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.script;
-
-import groovy.lang.Binding;
-import groovy.lang.Closure;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.MissingMethodException;
-import groovy.lang.Script;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,7 +24,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
+
+import groovy.lang.Binding;
+import groovy.lang.Closure;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.MissingMethodException;
+import groovy.lang.Script;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -41,48 +45,45 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 /**
- * Executes a DSLD script and collects the results
+ * Executes a DSLD script and collects the results.
+ *
  * @author andrew
  * @created Nov 17, 2010
  */
 public class DSLDScriptExecutor {
-    
-    private final class UnsupportedDSLVersion extends RuntimeException {
 
+    private final class UnsupportedDSLVersion extends RuntimeException {
         private static final long serialVersionUID = 1L;
 
         public UnsupportedDSLVersion(String why) {
             super(scriptFile.getName() + " is not supported because:\n" + why);
         }
-        
     }
-    
-    private final class RegisterClosure extends Closure {
+
+    private final class RegisterClosure extends Closure<Object> {
         private static final long serialVersionUID = 1162731585734041055L;
 
         public RegisterClosure(Object owner) {
             super(owner);
         }
-        
+
         @Override
         public Object call(Object arguments) {
             return tryRegister(arguments);
         }
-        
+
         @Override
-        public Object call(Object[] arguments) {
+        public Object call(Object... arguments) {
             return tryRegister(arguments);
         }
     }
 
-    
     private final class DSLDScriptBinding extends Binding {
         private final Script dsldScript;
 
         public DSLDScriptBinding(Script dsldScript) {
             this.dsldScript = dsldScript;
         }
-
 
         @Override
         public Object invokeMethod(String name, Object args) {
@@ -109,7 +110,7 @@ public class DSLDScriptExecutor {
                 }
                 return args;
             }
-            
+
             IPointcut pc = factory.createPointcut(name);
             if (pc != null) {
                 configure(pc, args);
@@ -124,21 +125,21 @@ public class DSLDScriptExecutor {
             if ("registerPointcut".equals(name)) {
                 return new RegisterClosure(this);
             } else if ("supportsVersion".equals(name)) {
-                return new Closure(this) {
+                return new Closure<Object>(this) {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                	public Object call(Object[] args) {
+                    public Object call(Object... args) {
                         String result = (String) checkVersion(args);
                         return result == null;
-                	}
+                    }
                 };
             } else if ("assertVersion".equals(name)) {
-                return new Closure(this) {
+                return new Closure<Object>(this) {
                     private static final long serialVersionUID = 1L;
-                    
+
                     @Override
-                    public Object call(Object[] args) {
+                    public Object call(Object... args) {
                         String result = (String) checkVersion(args);
                         if (result != null) {
                             throw new UnsupportedDSLVersion(result);
@@ -147,10 +148,10 @@ public class DSLDScriptExecutor {
                     }
                 };
             } else if ("contribute".equals(name)) {
-                return new Closure(this) {
+                return new Closure<Object>(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
-                    public Object call(Object[] args) {
+                    public Object call(Object... args) {
                         Object result = contribution(args);
                         if (result == null) {
                             throw new MissingMethodException("contribute", dsldScript.getClass(), new Object[] { args });
@@ -159,10 +160,10 @@ public class DSLDScriptExecutor {
                     }
                 };
             } else if ("log".equals(name)) {
-                return new Closure(this) {
+                return new Closure<Object>(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
-                    public Object call(Object[] args) {
+                    public Object call(Object... args) {
                         if (GroovyLogManager.manager.hasLoggers()) {
                             String msg;
                             if (args == null) {
@@ -178,7 +179,7 @@ public class DSLDScriptExecutor {
                     }
                 };
             }
-            
+
             IPointcut pc = factory.createPointcut(name);
             if (pc != null) {
                 return new PointcutClosure(this, pc);
@@ -187,13 +188,14 @@ public class DSLDScriptExecutor {
             }
         }
 
+        @SuppressWarnings("unchecked")
         private void configure(IPointcut pointcut, Object arguments) {
-            if (arguments instanceof Map<?, ?>) {
-                for (Entry<Object, Object> entry : ((Map<Object, Object>) arguments).entrySet()) {
+            if (arguments instanceof Map) {
+                for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) arguments).entrySet()) {
                     Object key = entry.getKey();
                     pointcut.addArgument(key == null ? null : key.toString(), entry.getValue());
                 }
-            } else if (arguments instanceof Collection<?>) {
+            } else if (arguments instanceof Collection) {
                 for (Object arg : (Collection<Object>) arguments) {
                     pointcut.addArgument(arg);
                 }
@@ -206,12 +208,12 @@ public class DSLDScriptExecutor {
             }
         }
     }
-    
+
     private final GroovyClassLoader gcl;
     private final IJavaProject project;
     private PointcutFactory factory;
     private IStorage scriptFile;
-    
+
     public DSLDScriptExecutor(IJavaProject project) {
         // FIXADE Should have one classloader per project
         gcl = new GroovyClassLoader(GroovyDSLCoreActivator.class.getClassLoader());
@@ -243,8 +245,8 @@ public class DSLDScriptExecutor {
                     }
                     return result;
                 }
-                
-                
+
+
                 if (!Script.class.isAssignableFrom(clazz)) {
                     // might be some strange compile error
                     // or a class is accidentally defined
@@ -299,54 +301,56 @@ public class DSLDScriptExecutor {
     protected Object tryRegister(Object args) {
         Object[] nameAndClosure = extractArgsForRegister(args);
         if (nameAndClosure != null) {
-            factory.registerLocalPointcut((String) nameAndClosure[0], (Closure) nameAndClosure[1]);
+            factory.registerLocalPointcut((String) nameAndClosure[0], (Closure<?>) nameAndClosure[1]);
             return nameAndClosure[1];
         } else {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot register custom pointcut for " + 
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot register custom pointcut for " +
                         (args instanceof Object[] ? Arrays.toString((Object[]) args) : args));
             }
             return null;
         }
     }
-    
+
+    @SuppressWarnings("unchecked")
     protected Object[] extractArgsContribution(Object args) {
         if (args instanceof Object[]) {
             Object[] arr = (Object[]) args;
             if (arr.length == 2 && arr[0] instanceof IPointcut && arr[1] instanceof Closure) {
                 return arr;
-            } 
-        } else if (args instanceof Collection<?>) {
+            }
+        } else if (args instanceof Collection) {
             Collection<Object> coll = (Collection<Object>) args;
             Object[] arr = new Object[2];
             Iterator<Object> iter = coll.iterator();
-            if (iter.hasNext() && (arr[0] = iter.next()) instanceof IPointcut && 
-                iter.hasNext() && (arr[1] = iter.next()) instanceof Closure &&
-                !iter.hasNext()) {
+            if (iter.hasNext() && (arr[0] = iter.next()) instanceof IPointcut &&
+                    iter.hasNext() && (arr[1] = iter.next()) instanceof Closure &&
+                    !iter.hasNext()) {
                 return arr;
             }
-        } else if (args instanceof Map<?, ?>) {
+        } else if (args instanceof Map) {
             return extractArgsContribution(((Map<Object, Object>) args).values());
         }
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     protected Object[] extractArgsForRegister(Object args) {
         if (args instanceof Object[]) {
             Object[] arr = (Object[]) args;
             if (arr.length == 2 && arr[0] instanceof String && arr[1] instanceof Closure) {
                 return arr;
             }
-        } else if (args instanceof Collection<?>) {
+        } else if (args instanceof Collection) {
             Collection<Object> coll = (Collection<Object>) args;
             Object[] arr = new Object[2];
             Iterator<Object> iter = coll.iterator();
-            if (iter.hasNext() && (arr[0] = iter.next()) instanceof String && 
-                iter.hasNext() && (arr[1] = iter.next()) instanceof Closure &&
-                !iter.hasNext()) {
+            if (iter.hasNext() && (arr[0] = iter.next()) instanceof String &&
+                    iter.hasNext() && (arr[1] = iter.next()) instanceof Closure &&
+                    !iter.hasNext()) {
                 return arr;
             }
-        } else if (args instanceof Map<?, ?>) {
+        } else if (args instanceof Map) {
             return extractArgsForRegister(((Map<Object, Object>) args).values());
         }
         return null;
@@ -373,9 +377,7 @@ public class DSLDScriptExecutor {
     }
 
     /**
-     * a synonym for IPointcut.accept()
-     * @param args
-     * @return
+     * synonym for IPointcut.accept()
      */
     public Object contribution(Object args) {
         Object[] contributionArgs = extractArgsContribution(args);
@@ -383,29 +385,28 @@ public class DSLDScriptExecutor {
             return null;
         }
         IPointcut p = (IPointcut) contributionArgs[0];
-        p.accept((Closure) contributionArgs[1]);
+        p.accept((Closure<?>) contributionArgs[1]);
         return Boolean.TRUE;
     }
 
-    
     public Object checkVersion(Object[] array) {
-    	if (array == null || array.length != 1) {
-    		return createInvalidVersionString(array);
-    	}
-    	Object args = array[0];
-    	
+        if (array == null || array.length != 1) {
+            return createInvalidVersionString(array);
+        }
+        Object args = array[0];
+
         synchronized(versionLock) {
             if (groovyEclipseVersion == null) {
                 initializeVersions();
             }
         }
-        
-        if (! (args instanceof Map<?,?>)) {
+
+        if (! (args instanceof Map)) {
             return createInvalidVersionString(args);
         }
-        
+
         Map<?,?> versions = (Map<?,?>) args;
-        for (Entry<?,?> entry : versions.entrySet()) {
+        for (Map.Entry<?,?> entry : versions.entrySet()) {
             if (! (entry.getValue() instanceof String)) {
                 return createInvalidVersionString(args);
             }
@@ -437,14 +438,14 @@ public class DSLDScriptExecutor {
                 return createInvalidVersionString(args);
             }
         }
-        
+
         return null;
     }
 
     protected String createInvalidVersionString(Object args) {
         return args + " is not a valid version identifier, must be a Map<String, String>.  " +
-        		"Each value must be a version number X.Y.Z.  " +
-        		"Supported version checking is: 'groovy', 'grailsTooling', 'groovyEclipse'.";
+                "Each value must be a version number X.Y.Z.  " +
+                "Supported version checking is: 'groovy', 'grailsTooling', 'groovyEclipse'.";
     }
 
 }

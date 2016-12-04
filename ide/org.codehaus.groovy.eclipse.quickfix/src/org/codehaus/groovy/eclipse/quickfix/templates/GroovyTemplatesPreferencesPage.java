@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- *
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,60 +52,50 @@ public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
         setContextTypeRegistry(quickFixPlugin.getTemplateContextRegistry());
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.jface.preference.IPreferencePage#performOk()
-     */
     public boolean performOk() {
         boolean ok = super.performOk();
         GroovyQuickFixPlugin.getDefault().savePreferences();
         return ok;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.ui.texteditor.templates.TemplatePreferencePage#isShowFormatterSetting()
-     */
     protected boolean isShowFormatterSetting() {
         // template formatting has not been implemented
         return false;
     }
 
-    /*
-     * @see org.eclipse.ui.texteditor.templates.TemplatePreferencePage#createTemplateEditDialog2(org.eclipse.jface.text.templates.Template, boolean, boolean)
-     */
     @Override
     protected Template editTemplate(Template template, boolean edit, boolean isNameModifiable) {
-        org.eclipse.jdt.internal.ui.preferences.EditTemplateDialog dialog= new org.eclipse.jdt.internal.ui.preferences.EditTemplateDialog(getShell(), template, edit, isNameModifiable, getContextTypeRegistry());
+        org.eclipse.jdt.internal.ui.preferences.EditTemplateDialog dialog =
+            new org.eclipse.jdt.internal.ui.preferences.EditTemplateDialog(getShell(), template, edit, isNameModifiable,
+                getContextTypeRegistry());
         if (dialog.open() == Window.OK) {
             return dialog.getTemplate();
         }
         return null;
     }
 
-    /*
-     * @see org.eclipse.ui.texteditor.templates.TemplatePreferencePage#createViewer(org.eclipse.swt.widgets.Composite)
-     */
-    @Override
+    @Override 
     protected SourceViewer createViewer(Composite parent) {
-        IDocument document= new Document();
-        JavaTextTools tools= JavaPlugin.getDefault().getJavaTextTools();
+        IDocument document = new Document();
+        JavaTextTools tools = JavaPlugin.getDefault().getJavaTextTools();
         tools.setupJavaDocumentPartitioner(document, IJavaPartitions.JAVA_PARTITIONING);
-        IPreferenceStore store= JavaPlugin.getDefault().getCombinedPreferenceStore();
-        SourceViewer viewer= new JavaSourceViewer(parent, null, null, false, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL, store);
-        SimpleJavaSourceViewerConfiguration configuration= new SimpleJavaSourceViewerConfiguration(tools.getColorManager(), store, null, IJavaPartitions.JAVA_PARTITIONING, false);
+        IPreferenceStore store = JavaPlugin.getDefault().getCombinedPreferenceStore();
+        SourceViewer viewer =
+            new JavaSourceViewer(parent, null, null, false, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL, store);
+        SimpleJavaSourceViewerConfiguration configuration = new SimpleJavaSourceViewerConfiguration(
+            tools.getColorManager(), store, null, IJavaPartitions.JAVA_PARTITIONING, false);
         viewer.configure(configuration);
         viewer.setEditable(false);
         viewer.setDocument(document);
 
-        Font font= JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT);
+        Font font = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT);
         viewer.getTextWidget().setFont(font);
-        new JavaSourcePreviewerUpdater(viewer, configuration, store);
 
-        Control control= viewer.getControl();
-        GridData data= new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_VERTICAL);
+        @SuppressWarnings("unused")
+        JavaSourcePreviewerUpdater jspu = new JavaSourcePreviewerUpdater(viewer, configuration, store);
+
+        Control control = viewer.getControl();
+        GridData data = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_VERTICAL);
         control.setLayoutData(data);
 
         return viewer;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,17 +36,16 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IHyperlink;
 import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 /**
- * 
  * @author Scott Hickey
  */
 public class GroovyConsoleLineTracker implements IConsoleLineTracker {
@@ -54,7 +53,6 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
     /**
      * @author Andrew Eisenberg
      * @created Sep 21, 2009
-     *
      */
     public class AmbiguousFileLink extends FileLink implements IHyperlink {
         IFile[] files;
@@ -84,7 +82,6 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
     /**
      * @author Andrew Eisenberg
      * @created Sep 21, 2009
-     *
      */
     public class FileContentProvider implements IStructuredContentProvider {
 
@@ -98,13 +95,10 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
         }
 
         public void dispose() {
-
         }
 
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-
         }
-
     }
 
     private IConsole console;
@@ -224,7 +218,7 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
                 dialog.setMessage("Select a file:");
                 dialog.setBlockOnOpen(true);
                 int dialogResult = dialog.open();
-                if (dialogResult == Dialog.OK && dialog.getResult().length > 0) {
+                if (dialogResult == Window.OK && dialog.getResult().length > 0) {
                     result[0] = (IFile) dialog.getResult()[0];
                 }
             }
@@ -238,5 +232,4 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
     public void dispose() {
         console = null;
     }
-
 }

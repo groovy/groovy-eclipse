@@ -138,7 +138,9 @@ public class GroovyPlugin extends AbstractUIPlugin {
         junitMono = new EnsureJUnitFont();
         try {
             if (PlatformUI.isWorkbenchRunning()) {
-                IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+                IWorkbench bench = PlatformUI.getWorkbench();
+                IWorkbenchWindow window = bench.getActiveWorkbenchWindow();
+                IWorkbenchPage page = window.getActivePage();
                 page.addPartListener(junitMono);
             }
             getPreferenceStore().addPropertyChangeListener(junitMono);

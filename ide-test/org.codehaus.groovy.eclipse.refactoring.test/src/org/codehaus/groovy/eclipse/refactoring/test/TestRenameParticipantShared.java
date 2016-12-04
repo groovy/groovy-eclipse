@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.util.ArrayList;
@@ -35,111 +40,111 @@ import org.junit.Assert;
 
 public class TestRenameParticipantShared extends RenameParticipant implements ISharableParticipant {
 
-	static TestRenameParticipantShared fgInstance;
-	List fElements= new ArrayList(3);
-	List fHandles= new ArrayList(3);
-	List fArguments= new ArrayList(3);
-	Map fSimilarToHandle= new HashMap();
-	Map fSimilarToNewName= new HashMap();
+    static TestRenameParticipantShared fgInstance;
+    List<Object> fElements = new ArrayList<Object>(3);
+    List<String> fHandles = new ArrayList<String>(3);
+    List<RenameArguments> fArguments = new ArrayList<RenameArguments>(3);
+    Map<String, String> fSimilarToHandle = new HashMap<String, String>();
+    Map<String, String> fSimilarToNewName = new HashMap<String, String>();
 
-	public boolean initialize(Object element) {
-		fgInstance= this;
-		fElements.add(element);
-		fArguments.add(getArguments());
-		if (element instanceof IJavaElement)
-			fHandles.add(((IJavaElement)element).getHandleIdentifier());
-		else
-			fHandles.add(((IResource)element).getFullPath().toString());
+    public boolean initialize(Object element) {
+        fgInstance = this;
+        fElements.add(element);
+        fArguments.add(getArguments());
+        if (element instanceof IJavaElement)
+            fHandles.add(((IJavaElement) element).getHandleIdentifier());
+        else
+            fHandles.add(((IResource) element).getFullPath().toString());
 
-		IJavaElementMapper updating= (IJavaElementMapper) getProcessor().getAdapter(IJavaElementMapper.class);
-		if ((updating != null) && getArguments() instanceof RenameTypeArguments) {
-			RenameTypeArguments arguments= (RenameTypeArguments)getArguments();
-			if (arguments.getUpdateSimilarDeclarations()) {
-				IJavaElement[] elements= arguments.getSimilarDeclarations();
-				for (int i= 0; i < elements.length; i++) {
-					IJavaElement updated= updating.getRefactoredJavaElement(elements[i]);
-					if (updated!=null) {
-						fSimilarToHandle.put(elements[i].getHandleIdentifier(), getKey(updated));
-						fSimilarToNewName.put(elements[i].getHandleIdentifier(), updated.getElementName());
-					}
-				}
-			}
-		}
+        IJavaElementMapper updating = getProcessor().getAdapter(IJavaElementMapper.class);
+        if ((updating != null) && getArguments() instanceof RenameTypeArguments) {
+            RenameTypeArguments arguments = (RenameTypeArguments) getArguments();
+            if (arguments.getUpdateSimilarDeclarations()) {
+                IJavaElement[] elements = arguments.getSimilarDeclarations();
+                for (int i = 0; i < elements.length; i++) {
+                    IJavaElement updated = updating.getRefactoredJavaElement(elements[i]);
+                    if (updated != null) {
+                        fSimilarToHandle.put(elements[i].getHandleIdentifier(), getKey(updated));
+                        fSimilarToNewName.put(elements[i].getHandleIdentifier(), updated.getElementName());
+                    }
+                }
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	private String getKey(IJavaElement updated) {
-		if (updated instanceof IType)
-			return ((IType)updated).getKey();
-		else if (updated instanceof IMethod)
-			return ((IMethod)updated).getKey();
-		else if (updated instanceof IField)
-			return ((IField)updated).getKey();
-		return "";
-	}
+    private String getKey(IJavaElement updated) {
+        if (updated instanceof IType)
+            return ((IType) updated).getKey();
+        else if (updated instanceof IMethod)
+            return ((IMethod) updated).getKey();
+        else if (updated instanceof IField)
+            return ((IField) updated).getKey();
+        return "";
+    }
 
-	public void addElement(Object element, RefactoringArguments args) {
-		fElements.add(element);
-		fArguments.add(args);
-		if (element instanceof IJavaElement)
-			fHandles.add(((IJavaElement)element).getHandleIdentifier());
-		else
-			fHandles.add(((IResource)element).getFullPath().toString());
-	}
+    public void addElement(Object element, RefactoringArguments args) {
+        fElements.add(element);
+        fArguments.add((RenameArguments) args);
+        if (element instanceof IJavaElement)
+            fHandles.add(((IJavaElement) element).getHandleIdentifier());
+        else
+            fHandles.add(((IResource) element).getFullPath().toString());
+    }
 
-	public String getName() {
-		return getClass().getName();
-	}
+    public String getName() {
+        return getClass().getName();
+    }
 
-	public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
-		return new RefactoringStatus();
-	}
+    public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
+        return new RefactoringStatus();
+    }
 
-	public Change createChange(IProgressMonitor pm) throws CoreException {
-		return null;
-	}
+    public Change createChange(IProgressMonitor pm) throws CoreException {
+        return null;
+    }
 
-	public static void testNumberOfElements(int expected) {
-		if (expected == 0) {
-			Assert.assertTrue(fgInstance == null);
-		} else {
-			Assert.assertEquals(expected, fgInstance.fElements.size());
-			Assert.assertEquals(expected, fgInstance.fArguments.size());
-		}
-	}
+    public static void testNumberOfElements(int expected) {
+        if (expected == 0) {
+            Assert.assertTrue(fgInstance == null);
+        } else {
+            Assert.assertEquals(expected, fgInstance.fElements.size());
+            Assert.assertEquals(expected, fgInstance.fArguments.size());
+        }
+    }
 
-	public static void testArguments(RenameArguments[] args) {
-		testNumberOfElements(args.length);
-		for (int i= 0; i < args.length; i++) {
-			RenameArguments expected= args[i];
-			RenameArguments actual= (RenameArguments)fgInstance.fArguments.get(i);
-			Assert.assertEquals(expected.getNewName(), actual.getNewName());
-			Assert.assertEquals(expected.getUpdateReferences(), actual.getUpdateReferences());
-		}
-	}
+    public static void testArguments(RenameArguments[] args) {
+        testNumberOfElements(args.length);
+        for (int i = 0; i < args.length; i++) {
+            RenameArguments expected = args[i];
+            RenameArguments actual = fgInstance.fArguments.get(i);
+            Assert.assertEquals(expected.getNewName(), actual.getNewName());
+            Assert.assertEquals(expected.getUpdateReferences(), actual.getUpdateReferences());
+        }
+    }
 
-	public static void reset() {
-		fgInstance= null;
-	}
+    public static void reset() {
+        fgInstance = null;
+    }
 
-	public static void testNumberOfSimilarElements(int expected) {
-		if (expected == 0)
-			Assert.assertTrue(fgInstance == null);
-		else
-			Assert.assertEquals(expected, fgInstance.fSimilarToHandle.size());
-	}
+    public static void testNumberOfSimilarElements(int expected) {
+        if (expected == 0)
+            Assert.assertTrue(fgInstance == null);
+        else
+            Assert.assertEquals(expected, fgInstance.fSimilarToHandle.size());
+    }
 
-	public static void testSimilarElements(List<String> similarList, List<String> similarNewNameList, List<String> similarNewHandleList) {
-		for (int i=0; i< similarList.size(); i++) {
-			String handle= similarList.get(i);
-			String newHandle= similarNewHandleList.get(i);
-			String newName= similarNewNameList.get(i);
-			String actualNewHandle= (String)fgInstance.fSimilarToHandle.get(handle);
-			String actualNewName= (String)fgInstance.fSimilarToNewName.get(handle);
-			Assert.assertEquals("New element handle not as expected", newHandle, actualNewHandle);
-			Assert.assertEquals("New element name not as expected", newName, actualNewName);
-		}
-		Assert.assertEquals(similarList.size(), fgInstance.fSimilarToHandle.size());
-	}
+    public static void testSimilarElements(List<String> similarList, List<String> similarNewNameList, List<String> similarNewHandleList) {
+        for (int i = 0; i < similarList.size(); i++) {
+            String handle = similarList.get(i);
+            String newHandle = similarNewHandleList.get(i);
+            String newName = similarNewNameList.get(i);
+            String actualNewHandle = fgInstance.fSimilarToHandle.get(handle);
+            String actualNewName = fgInstance.fSimilarToNewName.get(handle);
+            Assert.assertEquals("New element handle not as expected", newHandle, actualNewHandle);
+            Assert.assertEquals("New element name not as expected", newName, actualNewName);
+        }
+        Assert.assertEquals(similarList.size(), fgInstance.fSimilarToHandle.size());
+    }
 }

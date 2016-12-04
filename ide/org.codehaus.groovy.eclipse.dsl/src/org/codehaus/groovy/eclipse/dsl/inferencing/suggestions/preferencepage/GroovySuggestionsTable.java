@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -67,7 +67,6 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
 /**
- * 
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
@@ -107,7 +106,6 @@ public class GroovySuggestionsTable {
         public String getLabel() {
             return label;
         }
-
     }
 
     enum ColumnTypes implements ITreeViewerColumn {
@@ -129,7 +127,6 @@ public class GroovySuggestionsTable {
         public int getWidth() {
             return weight;
         }
-
     }
 
     public GroovySuggestionsTable(List<IProject> projects) {
@@ -146,12 +143,10 @@ public class GroovySuggestionsTable {
     }
 
     protected void createProjectArea(Composite parent) {
-
         Composite subparent = new Composite(parent, SWT.NONE);
         GridLayoutFactory.fillDefaults().numColumns(1).equalWidth(false).applyTo(subparent);
         GridDataFactory.fillDefaults().grab(false, false).applyTo(parent);
         ISelectionHandler handler = new ISelectionHandler() {
-
             public void selectionChanged(IProject project) {
                 setViewerInput(project);
             }
@@ -159,16 +154,12 @@ public class GroovySuggestionsTable {
         selector = ProjectDropDownControl.getProjectSelectionControl(projects, parent.getShell(), subparent, handler);
         if (selector != null) {
             selector.createControls();
-
-            // Check if there is a project that was previously edited. Set that
-            // as
-            // the selection
+            // Check if there is a project that was previously edited. Set that as the selection
             IProject previouslyModifiedProject = InferencingSuggestionsManager.getInstance().getlastModifiedProject();
             if (previouslyModifiedProject != null) {
                 selector.setProject(previouslyModifiedProject);
             }
         }
-
     }
 
     protected String getViewerLabel() {
@@ -244,7 +235,6 @@ public class GroovySuggestionsTable {
         final CheckboxTreeViewer treeViewer = viewer.getTreeViewer();
 
         treeViewer.addCheckStateListener(new ICheckStateListener() {
-
             public void checkStateChanged(CheckStateChangedEvent event) {
                 Object obj = event.getElement();
                 setActiveState(obj, event.getChecked());
@@ -252,7 +242,6 @@ public class GroovySuggestionsTable {
         });
 
         treeViewer.addTreeListener(new ITreeViewerListener() {
-
             public void treeExpanded(TreeExpansionEvent event) {
                 setCheckState(event.getElement());
             }
@@ -267,18 +256,15 @@ public class GroovySuggestionsTable {
         treeViewer.setComparator(new SuggestionViewerSorter());
         setViewerListeners(treeViewer);
         setViewerInput(getSelectedProject());
-
     }
 
     protected void setActiveState(Object viewerElement, boolean checkState) {
         if (viewerElement instanceof GroovySuggestionDeclaringType) {
             GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) viewerElement;
             List<IGroovySuggestion> suggestions = declaringType.getSuggestions();
-
             for (IGroovySuggestion suggestion : suggestions) {
                 suggestion.changeActiveState(checkState);
             }
-
         } else if (viewerElement instanceof IGroovySuggestion) {
             IGroovySuggestion suggestion = (IGroovySuggestion) viewerElement;
             suggestion.changeActiveState(checkState);
@@ -287,10 +273,7 @@ public class GroovySuggestionsTable {
 
     /**
      * Sets check state in the viewer for all visible elements. Collapsed
-     * elements will get the
-     * state set when expanded.
-     * 
-     * @param viewerElement
+     * elements will get the state set when expanded.
      */
     protected void setCheckState(Object viewerElement) {
         // Only set the child state as the parent state is derived from the
@@ -302,13 +285,11 @@ public class GroovySuggestionsTable {
         if (viewerElement instanceof GroovySuggestionDeclaringType) {
             GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) viewerElement;
             List<IGroovySuggestion> suggestions = declaringType.getSuggestions();
-
             for (Iterator<IGroovySuggestion> it = suggestions.iterator(); it.hasNext();) {
                 IGroovySuggestion suggestion = it.next();
                 boolean isSuggestionActive = suggestion.isActive();
                 viewer.getTreeViewer().setChecked(suggestion, isSuggestionActive);
             }
-
         } else if (viewerElement instanceof IGroovySuggestion) {
             IGroovySuggestion suggestion = (IGroovySuggestion) viewerElement;
             viewer.getTreeViewer().setChecked(suggestion, suggestion.isActive());
@@ -317,7 +298,6 @@ public class GroovySuggestionsTable {
 
     protected void setViewerListeners(TreeViewer tree) {
         tree.addSelectionChangedListener(new ISelectionChangedListener() {
-
             public void selectionChanged(SelectionChangedEvent event) {
                 if (event.getSelection() instanceof IStructuredSelection) {
                     IStructuredSelection selection = (IStructuredSelection) event.getSelection();
@@ -347,7 +327,6 @@ public class GroovySuggestionsTable {
                 selectionButtons.get(ButtonTypes.EDIT).setEnabled(true);
                 selectionButtons.get(ButtonTypes.REMOVE).setEnabled(true);
             }
-
         } else {
             selectionButtons.get(ButtonTypes.ADD).setEnabled(false);
             selectionButtons.get(ButtonTypes.EDIT).setEnabled(false);
@@ -360,19 +339,16 @@ public class GroovySuggestionsTable {
      * not be opened on multiple selections.
      */
     protected void editSuggestion() {
-
         if (getSelections().size() > 1) {
             return;
         } else {
-
             if (getSelections().size() == 1) {
                 Object selectedObj = getSelections().get(0);
                 if (selectedObj instanceof IBaseGroovySuggestion) {
                     // This edits an existing suggestion. Retain active state.
                     IBaseGroovySuggestion existingSuggestion = (IBaseGroovySuggestion) selectedObj;
-                    IGroovySuggestion editedSuggestion = new OperationManager().editGroovySuggestion(getSelectedProject(),
-                            existingSuggestion, getShell());
-
+                    IGroovySuggestion editedSuggestion = new OperationManager()
+                        .editGroovySuggestion(getSelectedProject(), existingSuggestion, getShell());
                     if (editedSuggestion != null) {
                         // Refresh first before setting the check state of the
                         // new
@@ -394,10 +370,10 @@ public class GroovySuggestionsTable {
     protected void addSuggestion() {
         Object selectedObj = getSelections().size() == 1 ? getSelections().get(0) : null;
 
-        IBaseGroovySuggestion contextSuggestion = selectedObj instanceof IBaseGroovySuggestion ? (IBaseGroovySuggestion) selectedObj
-                : null;
-        IGroovySuggestion suggestion = new OperationManager().addGroovySuggestion(getSelectedProject(), contextSuggestion,
-                getShell());
+        IBaseGroovySuggestion contextSuggestion =
+            selectedObj instanceof IBaseGroovySuggestion ? (IBaseGroovySuggestion) selectedObj : null;
+        IGroovySuggestion suggestion =
+            new OperationManager().addGroovySuggestion(getSelectedProject(), contextSuggestion, getShell());
 
         if (suggestion != null) {
             // Refresh first before setting the check state of the
@@ -408,33 +384,32 @@ public class GroovySuggestionsTable {
             // Update the check state of the new element
             setCheckState(suggestion);
         }
-
     }
 
     protected void handleButtonSelection(ButtonTypes button) {
         if (button != null) {
             switch (button) {
-                case ADD:
-                    addSuggestion();
-                    break;
-                case EDIT:
-                    editSuggestion();
-                    break;
-                case COLLAPSE_ALL:
-                    collapseAll();
-                    break;
-                case DESELECT_ALL:
-                    uncheckAll();
-                    break;
-                case REMOVE:
-                    handleRemove();
-                    break;
-                case SELECT_ALL:
-                    checkAll();
-                    break;
-                case EXPAND_ALL:
-                    expandAll();
-                    break;
+            case ADD:
+                addSuggestion();
+                break;
+            case EDIT:
+                editSuggestion();
+                break;
+            case COLLAPSE_ALL:
+                collapseAll();
+                break;
+            case DESELECT_ALL:
+                uncheckAll();
+                break;
+            case REMOVE:
+                handleRemove();
+                break;
+            case SELECT_ALL:
+                checkAll();
+                break;
+            case EXPAND_ALL:
+                expandAll();
+                break;
             }
         }
     }
@@ -455,8 +430,6 @@ public class GroovySuggestionsTable {
      * Resets the viewer input with all the suggestions for the given project in
      * expanded form. Should only be called when changing projects or displaying
      * a list of suggestions for an initial selected project
-     * 
-     * @param project
      */
     protected void setViewerInput(IProject project) {
         if (isViewerDisposed() || project == null) {
@@ -495,7 +468,7 @@ public class GroovySuggestionsTable {
 
     protected static class ViewerContentProvider implements ITreePathContentProvider {
         public Object[] getElements(Object inputElement) {
-            if (inputElement instanceof Collection<?>) {
+            if (inputElement instanceof Collection) {
                 List<Object> suggestedTypes = new ArrayList<Object>();
                 Collection<?> topLevel = (Collection<?>) inputElement;
                 for (Object possibleTypeSuggestion : topLevel) {
@@ -542,21 +515,16 @@ public class GroovySuggestionsTable {
     /**
      * Always returns a non-null selection list. May be empty if no selections
      * are present.
-     * 
-     * @return
      */
     protected List<Object> getSelections() {
         if (viewer.getTreeViewer().getSelection() instanceof IStructuredSelection) {
             return ((IStructuredSelection) viewer.getTreeViewer().getSelection()).toList();
-
         }
         return Collections.EMPTY_LIST;
     }
 
     protected static class ViewerLabelProvider extends ColumnLabelProvider {
-
         public void update(ViewerCell cell) {
-
             Object element = cell.getElement();
             int index = cell.getColumnIndex();
 
@@ -574,20 +542,18 @@ public class GroovySuggestionsTable {
         }
 
         public String getColumnText(Object element, int index) {
-
             ColumnTypes[] values = ColumnTypes.values();
             if (index < values.length) {
                 ColumnTypes colType = values[index];
 
                 String text = null;
                 switch (colType) {
-                    case SUGGESTIONS:
-                        text = getDisplayString(element);
-                        break;
+                case SUGGESTIONS:
+                    text = getDisplayString(element);
+                    break;
                 }
                 return text;
             }
-
             return null;
         }
     }
@@ -597,7 +563,8 @@ public class GroovySuggestionsTable {
         if (element instanceof GroovySuggestionDeclaringType) {
             return ((GroovySuggestionDeclaringType) element).getName();
         } else if (element instanceof IGroovySuggestion) {
-            ISuggestionLabel suggestionLabel = new SuggestionLabelFactory().getSuggestionLabel((IGroovySuggestion) element);
+            ISuggestionLabel suggestionLabel =
+                new SuggestionLabelFactory().getSuggestionLabel((IGroovySuggestion) element);
             if (suggestionLabel != null) {
                 text = suggestionLabel.getLabel();
             }
@@ -606,7 +573,6 @@ public class GroovySuggestionsTable {
     }
 
     protected void createOperationButtonArea(Composite parent) {
-
         Composite buttons = new Composite(parent, SWT.NONE);
         GridDataFactory.fillDefaults().align(GridData.CENTER, GridData.BEGINNING).applyTo(buttons);
 
@@ -640,9 +606,7 @@ public class GroovySuggestionsTable {
         GridDataFactory.fillDefaults().hint(Math.max(widthHint, minSize.x), SWT.DEFAULT).applyTo(button);
 
         button.addSelectionListener(new SelectionAdapter() {
-
             public void widgetSelected(SelectionEvent e) {
-
                 super.widgetSelected(e);
                 Object item = e.getSource();
                 if (item instanceof Button) {
@@ -653,58 +617,51 @@ public class GroovySuggestionsTable {
                 }
             }
         });
-
         return button;
     }
 
     public static class SuggestionViewerSorter extends TreeViewerSorter {
-
         protected String getCompareString(TreeColumn column, Object rowItem) {
             ColumnTypes type = getColumnType(column);
             String text = null;
             if (type != null) {
                 switch (type) {
-                    case SUGGESTIONS:
-                        text = getDisplayString(rowItem);
-                        break;
+                case SUGGESTIONS:
+                    text = getDisplayString(rowItem);
+                    break;
                 }
             }
             return text;
         }
 
         public int compare(Viewer viewer, Object e1, Object e2) {
-
             Tree tree = ((TreeViewer) viewer).getTree();
-
             TreeColumn sortColumn = tree.getSortColumn();
-
             ColumnTypes type = getColumnType(sortColumn);
             int sortDirection = 1;
             if (type != null) {
                 switch (type) {
-                    case SUGGESTIONS:
-
-                        if (e1 instanceof GroovyPropertySuggestion) {
-                            if (e2 instanceof GroovyPropertySuggestion) {
-                                sortDirection = super.compare(viewer, e1, e2);
-                            } else {
-                                // Groovy Properties have higher sort order
-                                sortDirection = sortDirection == SWT.UP ? -1 : 1;
-                            }
-                        } else if (e1 instanceof GroovyMethodSuggestion) {
-                            if (e2 instanceof GroovyMethodSuggestion) {
-                                sortDirection = super.compare(viewer, e1, e2);
-                            } else {
-                                // Groovy Methods have lower sort order
-                                sortDirection = sortDirection == SWT.UP ? 1 : -1;
-                            }
-                        } else {
+                case SUGGESTIONS:
+                    if (e1 instanceof GroovyPropertySuggestion) {
+                        if (e2 instanceof GroovyPropertySuggestion) {
                             sortDirection = super.compare(viewer, e1, e2);
+                        } else {
+                            // Groovy Properties have higher sort order
+                            sortDirection = sortDirection == SWT.UP ? -1 : 1;
                         }
-                        return sortDirection;
+                    } else if (e1 instanceof GroovyMethodSuggestion) {
+                        if (e2 instanceof GroovyMethodSuggestion) {
+                            sortDirection = super.compare(viewer, e1, e2);
+                        } else {
+                            // Groovy Methods have lower sort order
+                            sortDirection = sortDirection == SWT.UP ? 1 : -1;
+                        }
+                    } else {
+                        sortDirection = super.compare(viewer, e1, e2);
+                    }
+                    return sortDirection;
                 }
             }
-
             return super.compare(viewer, e1, e2);
         }
 
@@ -717,11 +674,9 @@ public class GroovySuggestionsTable {
             }
             return null;
         }
-
     }
 
-    public abstract static class TreeViewerSorter extends ViewerSorter {
-
+    public abstract static class TreeViewerSorter extends ViewerComparator {
         public int compare(Viewer viewer, Object e1, Object e2) {
             if (viewer instanceof TreeViewer) {
                 Tree tree = ((TreeViewer) viewer).getTree();
@@ -733,8 +688,8 @@ public class GroovySuggestionsTable {
                     String compareText2 = getCompareString(sortColumn, e2);
                     if (compareText1 != null) {
                         if (compareText2 != null) {
-                            return sortDirection == SWT.UP ? compareText1.compareToIgnoreCase(compareText2) : compareText2
-                                    .compareToIgnoreCase(compareText1);
+                            return sortDirection == SWT.UP ? compareText1.compareToIgnoreCase(compareText2)
+                                : compareText2.compareToIgnoreCase(compareText1);
                         } else {
                             return sortDirection == SWT.UP ? -1 : 1;
                         }
@@ -748,7 +703,5 @@ public class GroovySuggestionsTable {
         }
 
         abstract protected String getCompareString(TreeColumn column, Object rowItem);
-
     }
-
 }

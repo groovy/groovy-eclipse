@@ -64,7 +64,7 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
             }
             return null;
         }
-        if (firstArgument instanceof Class<?>) {
+        if (firstArgument instanceof Class) {
             firstArgument = ((Class<?>) firstArgument).getName();
         }
         if (firstArgument instanceof String) {

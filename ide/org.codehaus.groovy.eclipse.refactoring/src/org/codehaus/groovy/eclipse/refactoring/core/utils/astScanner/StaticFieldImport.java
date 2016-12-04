@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +30,7 @@ public class StaticFieldImport extends RefactoringImportNode {
     private String newAlias;
 
     public StaticFieldImport(ClassNode type, String alias, String field) {
-        super(type,alias);
+        super(type, alias);
         this.field = field;
         this.newClassName = type.getName();
         this.newField = field;
@@ -63,20 +60,24 @@ public class StaticFieldImport extends RefactoringImportNode {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof StaticFieldImport){
+        if (obj instanceof StaticFieldImport) {
             StaticFieldImport other = (StaticFieldImport) obj;
             return (this.getType().equals(other.getType()) &&
-                    this.field.equals(other.getField()) &&
-                    this.getAlias().equals(other.getAlias()));
+                this.field.equals(other.getField()) &&
+                this.getAlias().equals(other.getAlias()));
         }
         return false;
     }
 
     @Override
+    public int hashCode() {
+        return this.field.hashCode();
+    }
+
+    @Override
     public void visit(GroovyCodeVisitor visitor) {
-        if(visitor instanceof AbstractRefactoringCodeVisitor){
+        if (visitor instanceof AbstractRefactoringCodeVisitor) {
             ((AbstractRefactoringCodeVisitor) visitor).visitStaticFieldImport(this);
         }
     }
 }
-

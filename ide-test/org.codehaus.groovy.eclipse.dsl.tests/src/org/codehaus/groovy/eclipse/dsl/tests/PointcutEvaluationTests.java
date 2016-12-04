@@ -639,7 +639,7 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
             return ((MethodCallExpression) defaultBinding).getMethodAsString() + "()";
         } else if (defaultBinding instanceof VariableExpression) {
             return "Var: " + ((VariableExpression) defaultBinding).getName();
-        } else if (defaultBinding instanceof Collection<?>) {
+        } else if (defaultBinding instanceof Collection) {
             StringBuilder sb = new StringBuilder();
             for (Object item : ((Collection<?>) defaultBinding)) {
                 sb.append(extractName(item));

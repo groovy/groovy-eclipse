@@ -1,7 +1,21 @@
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.preferences;
 
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -28,14 +42,12 @@ import org.eclipse.ui.dialogs.PreferenceLinkArea;
 import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
 import org.eclipse.ui.progress.UIJob;
 
-public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
-        IWorkbenchPreferencePage {
-    final static Pattern packagePattern = Pattern.compile("");
+public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
     private class PackagePrefixValidator implements IInputValidator {
         public String isValid(String newText) {
             if (newText.trim().length() == 0)
-                return ""; //$NON-NLS-1$
+                return "";
             IStatus s = JavaConventions.validatePackageName(newText, CompilerOptions.VERSION_1_3,CompilerOptions.VERSION_1_3);
             if (s.getSeverity() > IStatus.OK) {
                 return s.getMessage();
@@ -109,8 +121,8 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
 
     @Override
     protected void createFieldEditors() {
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK, "Gray-out internal Groovy stack frames while debugging.",
-                getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK,
+                "Gray-out internal Groovy stack frames while debugging.", getFieldEditorParent()));
 
         addField(new PackageChooserListEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST,
                 "Configure prefixes of the packages to filter out", getFieldEditorParent()));
@@ -126,12 +138,11 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
                 (IWorkbenchPreferenceContainer) getContainer(), null);
         GridData data = new GridData(SWT.FILL, SWT.CENTER, false, false);
         area.getControl().setLayoutData(data);
-        new Composite(getFieldEditorParent(), 0);
-
+        @SuppressWarnings("unused")
+        Composite c1 = new Composite(getFieldEditorParent(), 0);
         Button forceDebugOptions = new Button(getFieldEditorParent(), SWT.PUSH);
         forceDebugOptions.setText("Automatically configure common Groovy step filtering");
         forceDebugOptions.addSelectionListener(new SelectionListener() {
-
             public void widgetSelected(SelectionEvent arg0) {
                 doForceOptions = true;
                 new GroovyDebugOptionsEnforcer().force();
@@ -142,7 +153,8 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
                 new GroovyDebugOptionsEnforcer().force();
             }
         });
-        new Composite(getFieldEditorParent(), 0);
+        @SuppressWarnings("unused")
+        Composite c2 = new Composite(getFieldEditorParent(), 0);
     }
 
     public void init(IWorkbench workbench) {}

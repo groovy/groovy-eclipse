@@ -54,7 +54,7 @@ public class EnclosingScriptPointcut extends AbstractPointcut {
             } else {
                 return null;
             }
-        } else if (firstArgument instanceof Class<?>) {
+        } else if (firstArgument instanceof Class) {
             if (enclosing.getName().equals(((Class<?>) firstArgument).getName())) {
                 return enclosingCollection;
             } else {

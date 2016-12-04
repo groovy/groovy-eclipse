@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.ui;
 
 import java.io.File;
@@ -77,7 +82,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.progress.UIJob;
 
 public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPreferencePage {
-    
+
     private static final IWorkspaceRoot ROOT = ResourcesPlugin.getWorkspace().getRoot();
 
     private final String[] LABELS = { "Edit...", "Recompile Scripts", "Refresh List", "Check All", "Uncheck All" };
@@ -86,9 +91,8 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     private final int IDX_REFRESH = 2;
     private final int IDX_CHECK_ALL = 3;
     private final int IDX_UNCHECK_ALL= 4;
-    
-    private final class CheckStateListener implements ICheckStateListener {
 
+    private final class CheckStateListener implements ICheckStateListener {
         public void checkStateChanged(CheckStateChangedEvent event) {
             Object element = event.getElement();
             if (element instanceof ProjectContextKey) {
@@ -101,31 +105,26 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 }
             }
         }
-        
     }
-    
+
     /**
-     * A {@link TreeListDialogField} that uses check boxes
-     * @author andrew
-     * @created Feb 26, 2011
+     * A {@link TreeListDialogField} that uses check boxes.
      */
-    @SuppressWarnings("rawtypes")
-    private final class CheckedTreeListDialogField extends TreeListDialogField {
+    private final class CheckedTreeListDialogField extends TreeListDialogField<String> {
         private ContainerCheckedTreeViewer checkboxViewer;
-        
-        private CheckedTreeListDialogField(ITreeListAdapter adapter,
-                String[] buttonLabels, ILabelProvider lprovider) {
+
+        private CheckedTreeListDialogField(ITreeListAdapter<String> adapter, String[] buttonLabels, ILabelProvider lprovider) {
             super(adapter, buttonLabels, lprovider);
         }
 
         protected TreeViewer createTreeViewer(Composite parent) {
-            Tree tree= new Tree(parent, getTreeStyle() | SWT.CHECK);
+            Tree tree = new Tree(parent, getTreeStyle() | SWT.CHECK);
             tree.setFont(parent.getFont());
             checkboxViewer = new ContainerCheckedTreeViewer(tree);
             checkboxViewer.addCheckStateListener(new CheckStateListener());
             return checkboxViewer;
         }
-        
+
         void setChecked(Object child, boolean newState) {
             checkboxViewer.setChecked(child, newState);
         }
@@ -140,11 +139,11 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             this.dslFile = dslFile;
         }
     }
-    
+
     class DSLLabelProvider extends LabelProvider {
 
         WorkbenchLabelProvider provider = new WorkbenchLabelProvider();
-        
+
         public void dispose() {
             provider.dispose();
             super.dispose();
@@ -158,29 +157,28 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
             return super.getText(element);
         }
-        
+
         public Image getImage(Object element) {
             IProject proj = toProject(element);
             if (proj != null) {
                 return provider.getImage(proj);
             }
-            
+
             IFile file = null;
             if (element instanceof ProjectContextKey && ((ProjectContextKey) element).dslFile instanceof IFile) {
                 file = (IFile) ((ProjectContextKey) element).dslFile;
             }
-            
+
             if (file != null) {
                 return provider.getImage(file);
             }
             return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CFILE);
         }
     }
-    
-    @SuppressWarnings("rawtypes")
-    class DSLListAdapter implements ITreeListAdapter {
 
-        public void customButtonPressed(TreeListDialogField field, int index) {
+    class DSLListAdapter implements ITreeListAdapter<String> {
+
+        public void customButtonPressed(TreeListDialogField<String> field, int index) {
             if (index == IDX_EDIT) {
                 // edit
                 edit();
@@ -199,7 +197,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
 
-        public void selectionChanged(TreeListDialogField field) {
+        public void selectionChanged(TreeListDialogField<String> field) {
             if (canEdit()) {
                 field.enableButton(IDX_EDIT, true);
             } else {
@@ -207,13 +205,13 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
 
-        public void doubleClicked(TreeListDialogField field) {
+        public void doubleClicked(TreeListDialogField<String> field) {
             edit();
         }
 
-        public void keyPressed(TreeListDialogField field, KeyEvent event) { }
+        public void keyPressed(TreeListDialogField<String> field, KeyEvent event) { }
 
-        public Object[] getChildren(TreeListDialogField field, Object element) {
+        public Object[] getChildren(TreeListDialogField<String> field, Object element) {
             if (element instanceof String) {
                 return elementsMap.get(element);
             } else {
@@ -221,36 +219,35 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
 
-        public Object getParent(TreeListDialogField field, Object element) {
+        public Object getParent(TreeListDialogField<String> field, Object element) {
             if (element instanceof ProjectContextKey) {
                 return ((ProjectContextKey) element).projectName;
             }
             return null;
         }
 
-        public boolean hasChildren(TreeListDialogField field, Object element) {
+        public boolean hasChildren(TreeListDialogField<String> field, Object element) {
             Object[] children = getChildren(field, element);
             return children != null && children.length > 0;
         }
     }
 
-    
     DisabledScriptsCache cache;
-    
+
     Map<String, ProjectContextKey[]> elementsMap;
-    
+
     private CheckedTreeListDialogField tree;
-    
+
     private DSLDStoreManager manager;
 
     private IWorkbenchPage page;
-    
+
     private IPreferenceStore store = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
 
     private Button autoAdd;
 
     private Button disableDSLDs;
-    
+
     public DSLPreferencesPage() {
     }
 
@@ -271,7 +268,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         } catch (NullPointerException e) {
             // try later;
         }
-            
+
     }
 
     @Override
@@ -279,7 +276,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         Composite composite= new Composite(parent, SWT.NONE);
         composite.setFont(parent.getFont());
 
-        
+
         tree = new CheckedTreeListDialogField(new DSLListAdapter(), LABELS, new DSLLabelProvider());
         tree.setTreeExpansionLevel(2);
         LayoutUtil.doDefaultLayout(composite, new DialogField[] { tree }, true, SWT.DEFAULT, SWT.DEFAULT);
@@ -289,11 +286,11 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         PixelConverter converter= new PixelConverter(parent);
         int buttonBarWidth= converter.convertWidthInCharsToPixels(24);
         tree.setButtonsMinWidth(buttonBarWidth);
-            
+
         autoAdd = new Button(composite, SWT.CHECK);
         autoAdd.setText("Automatically add DSL Support to all Groovy projects");
         autoAdd.setSelection(store.getBoolean(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT));
-        
+
         GridData data = new GridData(SWT.LEFT, SWT.TOP, true, false);
         data.horizontalSpan = 2;
         autoAdd.setLayoutData(data);
@@ -302,12 +299,12 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         boolean isDisabled = store.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED);
         disableDSLDs.setSelection(isDisabled);
         disableDSLDs.setLayoutData(data);
-        
+
         if (disableDSLDs.getSelection()) {
             Label l = new Label(composite, SWT.NONE);
             l.setText("NOTE: DSLD support is currently disabled.");
         }
-        
+
         return composite;
     }
 
@@ -321,12 +318,12 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         }
         return null;
     }
-    
+
     protected boolean canEdit() {
         List<?> selected = tree.getSelectedElements();
         return selected.size() == 1 && selected.get(0) instanceof ProjectContextKey;
     }
-    
+
     protected void edit() {
         if (canEdit()) {
             List<?> selected = tree.getSelectedElements();
@@ -353,16 +350,12 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         }
     }
 
-    /**
-     * @param storage
-     * @return
-     */
     private IEditorInput getEditorInput(IStorage storage) {
-    	if (storage instanceof IFile && ((IFile) storage).getProject().equals(JavaModelManager.getExternalManager().getExternalFoldersProject())) {
-    		return new FileStoreEditorInput(new LocalFile(new File(((IFile) storage).getLocationURI())));
-    	} else {
-    		return EditorUtility.getEditorInput(storage);
-    	}
+        if (storage instanceof IFile && ((IFile) storage).getProject().equals(JavaModelManager.getExternalManager().getExternalFoldersProject())) {
+            return new FileStoreEditorInput(new LocalFile(new File(((IFile) storage).getLocationURI())));
+        } else {
+            return EditorUtility.getEditorInput(storage);
+        }
     }
 
     protected void refresh() {
@@ -376,7 +369,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                     IStorage[] keys = store.getAllContextKeys();
                     ProjectContextKey[] pck = new ProjectContextKey[keys.length];
                     for (int i = 0; i < pck.length; i++) {
-                        pck[i] = new ProjectContextKey(element, keys[i]); 
+                        pck[i] = new ProjectContextKey(element, keys[i]);
                         pck[i].isChecked = ! cache.isDisabled(DSLDStore.toUniqueString(pck[i].dslFile));
                     }
                     elementsMap.put(element, pck);
@@ -384,7 +377,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
         Collections.sort(allStores);
-        
+
         tree.setElements(allStores);
         tree.refresh();
         for (ProjectContextKey[] keys : elementsMap.values()) {
@@ -393,7 +386,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
     }
-    
+
     void checkAll(boolean newState) {
         for (ProjectContextKey[] keys : elementsMap.values()) {
             for (ProjectContextKey key : keys) {
@@ -401,7 +394,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 tree.setChecked(key, key.isChecked);
             }
         }
-        
+
     }
 
     protected void storeChecks() {
@@ -415,14 +408,14 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         }
         cache.setDisabled(unchecked);
     }
-    
+
 
     private static final String EVENT = "Recompiling all DSLDs in the workspace.";
 
 
     protected void recompile() {
-    	// re-compile all scripts and then wait for the results to refresh the UIs
-    	new UIJob("Refresh DSLD launcher") {
+        // re-compile all scripts and then wait for the results to refresh the UIs
+        new UIJob("Refresh DSLD launcher") {
             @Override
             public IStatus runInUIThread(IProgressMonitor monitor) {
                 GroovyLogManager.manager.log(TraceCategory.DSL, EVENT);
@@ -436,7 +429,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }.schedule();
     }
-    
+
     @Override
     protected void performDefaults() {
         super.performDefaults();
@@ -449,13 +442,13 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     public boolean performOk() {
         storeChecks();
         store.setValue(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT, autoAdd.getSelection());
-        
+
         boolean origDisabled = store.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED);
         if (origDisabled != disableDSLDs.getSelection()) {
             store.setValue(DSLPreferencesInitializer.DSLD_DISABLED, disableDSLDs.getSelection());
             String newValue = disableDSLDs.getSelection() ? "enabled" : "disabled";
-        
-            boolean res = MessageDialog.openQuestion(getShell(), "Restart now?", "You have " + newValue + 
+
+            boolean res = MessageDialog.openQuestion(getShell(), "Restart now?", "You have " + newValue +
                     " DSLDs in your worksoace.  This setting will not coming effect until a restart has " +
                     "been performed.\n\nDo you want to restart now?");
             if (res) {

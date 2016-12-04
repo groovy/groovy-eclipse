@@ -21,9 +21,6 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 /**
  * All of these tests should produce {@link ModuleNode}s with
  * {@code encounteredUnrecoverableError} set to {@code true}.
- *
- * @author andrew
- * @created Feb 9, 2011
  */
 public class UnrecoverableErrorTests extends EclipseTestCase {
     private GroovySnippetCompiler compiler;
@@ -46,12 +43,11 @@ public class UnrecoverableErrorTests extends EclipseTestCase {
 
     public void testSomething() throws Exception {
         ModuleNode result = compileScript("package a\n" +
-                //"import javax.swing.text.html.HTML;\n" +
                 "void method() {\n" +
-                //"if (! (this instanceof HTML/*_*/) {\n" +
-                //"    \n" +
-                //"  }\n" +
+                "if (###) {\n" +
+                "    \n" +
+                " }\n" +
                 "} ");
-        //assertTrue(result.encounteredUnrecoverableError());
+        assertTrue(result.encounteredUnrecoverableError());
     }
 }
