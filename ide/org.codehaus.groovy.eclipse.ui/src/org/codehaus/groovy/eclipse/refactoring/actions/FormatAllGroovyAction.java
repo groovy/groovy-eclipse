@@ -16,8 +16,6 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Hashtable;
-import java.util.Map;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -26,7 +24,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
@@ -35,7 +32,6 @@ import org.eclipse.jdt.internal.ui.actions.MultiFormatAction;
 import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jdt.ui.actions.FormatAllAction;
-import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -110,14 +106,10 @@ public class FormatAllGroovyAction extends FormatAllAction {
          */
         @Override
         protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
-            Map settings= new Hashtable();
-            settings.put(CleanUpConstants.FORMAT_SOURCE_CODE, CleanUpOptions.TRUE);
-
-            return new ICleanUp[] {
-                    new GroovyCodeFormatCleanUp(kind)
-            };
+//            Map settings= new Hashtable();
+//            settings.put(CleanUpConstants.FORMAT_SOURCE_CODE, CleanUpOptions.TRUE);
+            return new ICleanUp[] {new GroovyCodeFormatCleanUp(kind)};
         }
-
     }
 
     public FormatAllGroovyAction(IWorkbenchSite site, FormatKind kind) {

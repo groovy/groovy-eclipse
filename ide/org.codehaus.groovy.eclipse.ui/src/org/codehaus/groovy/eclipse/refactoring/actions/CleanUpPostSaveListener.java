@@ -1,19 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -107,9 +111,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
  * from JDT.  Changes marked with // Groovy Change
  *
  * @created Aug 17, 2009
- *
  */
-@SuppressWarnings("unchecked")
 public class CleanUpPostSaveListener implements IPostSaveListener {
 
     private static class CleanUpSaveUndo extends TextFileChange {
@@ -162,7 +164,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                 }
 
                 // perform the changes
-                LinkedList list= new LinkedList();
+                LinkedList<UndoEdit> list= new LinkedList<UndoEdit>();
                 for (int index= 0; index < fUndos.length; index++) {
                     UndoEdit edit= fUndos[index];
                     UndoEdit redo= edit.apply(document, TextEdit.CREATE_UNDO);
@@ -185,7 +187,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                     fFile.revertModificationStamp(fFileStamp);
                 }
 
-                return new CleanUpSaveUndo(getName(), fFile, ((UndoEdit[]) list.toArray(new UndoEdit[list.size()])), oldDocValue, oldFileValue);
+                return new CleanUpSaveUndo(getName(), fFile, list.toArray(new UndoEdit[list.size()]), oldDocValue, oldFileValue);
             } catch (BadLocationException e) {
                 throw wrapBadLocationException(e);
             } finally {
@@ -301,7 +303,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             long oldDocValue= getDocumentStamp((IFile)unit.getResource(), new SubProgressMonitor(monitor, 2));
 
             CompositeChange result= new CompositeChange(FixMessages.CleanUpPostSaveListener_SaveAction_ChangeName);
-            LinkedList undoEdits= new LinkedList();
+            LinkedList<UndoEdit> undoEdits= new LinkedList<UndoEdit>();
 
             if (FIRST_CALL && !FIRST_CALL_DONE) {
                 FIRST_CALL= false;
@@ -309,9 +311,9 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             } else {
                 FIRST_CALL= true;
             }
-            HashSet slowCleanUps;
+            HashSet<ICleanUp> slowCleanUps;
             if (FIRST_CALL_DONE) {
-                slowCleanUps= new HashSet();
+                slowCleanUps= new HashSet<ICleanUp>();
             } else {
                 slowCleanUps= null;
             }
@@ -330,9 +332,9 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                     if (showStatus(preCondition) != Window.OK)
                         return;
 
-                    Map options= new HashMap();
+                    Map<String, String> options= new HashMap<String, String>();
                     for (int i= 0; i < cleanUps.length; i++) {
-                        Map map= cleanUps[i].getRequirements().getCompilerOptions();
+                        Map<String, String> map= cleanUps[i].getRequirements().getCompilerOptions();
                         if (map != null) {
                             options.putAll(map);
                         }
@@ -350,7 +352,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                         context= new MultiLineCleanUpContext(unit, ast, changedRegions);
                     }
 
-                    ArrayList undoneCleanUps= new ArrayList();
+                    ArrayList<ICleanUp> undoneCleanUps= new ArrayList<ICleanUp>();
                     CleanUpChange change= CleanUpRefactoring.calculateChange(context, cleanUps, undoneCleanUps, slowCleanUps);
 
                     RefactoringStatus postCondition= new RefactoringStatus();
@@ -361,7 +363,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                     if (showStatus(postCondition) != Window.OK)
                         return;
 
-                    cleanUps= (ICleanUp[])undoneCleanUps.toArray(new ICleanUp[undoneCleanUps.size()]);
+                    cleanUps= undoneCleanUps.toArray(new ICleanUp[undoneCleanUps.size()]);
                     if (change != null) {
                         result.add(change);
 
@@ -387,7 +389,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             }
 
             if (undoEdits.size() > 0) {
-                UndoEdit[] undoEditArray= (UndoEdit[])undoEdits.toArray(new UndoEdit[undoEdits.size()]);
+                UndoEdit[] undoEditArray= undoEdits.toArray(new UndoEdit[undoEdits.size()]);
                 CleanUpSaveUndo undo= new CleanUpSaveUndo(result.getName(), (IFile)unit.getResource(), undoEditArray, oldDocValue, oldFileValue);
                 undo.initializeValidationData(new NullProgressMonitor());
                 manager.addUndo(result.getName(), undo);
@@ -403,7 +405,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
     // Groovy Change --- not static so methods called can be overrided
     private ICleanUp[] getCleanUps(IProject project) throws CoreException {
         ICleanUp[] cleanUps;
-        Map settings= CleanUpPreferenceUtil.loadSaveParticipantOptions(new ProjectScope(project));
+        Map<String, String> settings= CleanUpPreferenceUtil.loadSaveParticipantOptions(new ProjectScope(project));
         if (settings == null) {
             IEclipsePreferences contextNode= new InstanceScope().getNode(JavaUI.ID_PLUGIN);
             String id= contextNode.get(CleanUpConstants.CLEANUP_ON_SAVE_PROFILE, null);
@@ -416,7 +418,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         if (CleanUpOptions.TRUE.equals(settings.get(CleanUpConstants.CLEANUP_ON_SAVE_ADDITIONAL_OPTIONS))) {
             cleanUps= getCleanUps(settings, null);
         } else {
-            HashMap filteredSettins= new HashMap();
+            HashMap<String, String> filteredSettins= new HashMap<String, String>();
             filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE));
             filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY));
             filteredSettins.put(CleanUpConstants.ORGANIZE_IMPORTS, settings.get(CleanUpConstants.ORGANIZE_IMPORTS));
@@ -424,7 +426,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL));
             filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY));
 
-            Set ids= new HashSet(2);
+            Set<String> ids= new HashSet<String>(2);
             ids.add("org.eclipse.jdt.ui.cleanup.format"); //$NON-NLS-1$
             ids.add("org.eclipse.jdt.ui.cleanup.imports"); //$NON-NLS-1$
 
@@ -435,7 +437,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
     }
 
     // Groovy Change --- not static so can be overriden, also made protected
-    protected ICleanUp[] getCleanUps(Map settings, Set ids) {
+    protected ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
         ICleanUp[] result= JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
 
         for (int i= 0; i < result.length; i++) {
@@ -516,14 +518,14 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
                 performChangeOperation.run(new SubProgressMonitor(monitor, 5));
 
-                ArrayList result= new ArrayList();
+                ArrayList<IRegion> result= new ArrayList<IRegion>();
                 for (int i= 0; i < positions.length; i++) {
                     Position position= positions[i];
                     if (!position.isDeleted())
                         result.add(new Region(position.getOffset(), position.getLength()));
                 }
 
-                return (IRegion[]) result.toArray(new IRegion[result.size()]);
+                return result.toArray(new IRegion[result.size()]);
             } finally {
                 document.removePositionUpdater(updater);
                 try {
@@ -562,7 +564,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         return false;
     }
 
-    private CompilationUnit createAst(ICompilationUnit unit, Map cleanUpOptions, IProgressMonitor monitor) {
+    private CompilationUnit createAst(ICompilationUnit unit, Map<String, String> cleanUpOptions, IProgressMonitor monitor) {
         IJavaProject project= unit.getJavaProject();
         if (compatibleOptions(project, cleanUpOptions)) {
             CompilationUnit ast= SharedASTProvider.getAST(unit, SharedASTProvider.WAIT_NO, monitor);
@@ -573,23 +575,22 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         ASTParser parser= CleanUpRefactoring.createCleanUpASTParser();
         parser.setSource(unit);
 
-        Map compilerOptions= RefactoringASTParser.getCompilerOptions(unit.getJavaProject());
+        Map<String, String> compilerOptions= RefactoringASTParser.getCompilerOptions(unit.getJavaProject());
         compilerOptions.putAll(cleanUpOptions);
         parser.setCompilerOptions(compilerOptions);
 
         return (CompilationUnit)parser.createAST(monitor);
     }
 
-    private boolean compatibleOptions(IJavaProject project, Map cleanUpOptions) {
+    private boolean compatibleOptions(IJavaProject project, Map<String, String> cleanUpOptions) {
         if (cleanUpOptions.size() == 0)
             return true;
 
-        Map projectOptions= project.getOptions(true);
+        Map<String, String> projectOptions= project.getOptions(true);
 
-        for (Iterator iterator= cleanUpOptions.keySet().iterator(); iterator.hasNext();) {
-            String key= (String)iterator.next();
-            String projectOption= (String)projectOptions.get(key);
-            String cleanUpOption= (String)cleanUpOptions.get(key);
+        for (String key : cleanUpOptions.keySet()) {
+            String projectOption= projectOptions.get(key);
+            String cleanUpOption= cleanUpOptions.get(key);
             if (!strongerEquals(projectOption, cleanUpOption))
                 return false;
         }
@@ -638,11 +639,10 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         return new CoreException(new Status(IStatus.ERROR, JavaUI.ID_PLUGIN, 0, message, e));
     }
 
-    private void showSlowCleanUpsWarning(HashSet slowCleanUps) {
+    private void showSlowCleanUpsWarning(HashSet<ICleanUp> slowCleanUps) {
 
         final StringBuffer cleanUpNames= new StringBuffer();
-        for (Iterator iterator= slowCleanUps.iterator(); iterator.hasNext();) {
-            ICleanUp cleanUp= (ICleanUp)iterator.next();
+        for (ICleanUp cleanUp : slowCleanUps) {
             String[] descriptions= cleanUp.getStepDescriptions();
             if (descriptions != null) {
                 for (int i= 0; i < descriptions.length; i++) {

@@ -25,7 +25,6 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
-import org.eclipse.jdt.internal.corext.util.History;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.corext.util.QualifiedTypeNameHistory;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
@@ -54,7 +53,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
             if (o1.equals(o2))
                 return 0;
 
-            History history = QualifiedTypeNameHistory.getDefault();
+            QualifiedTypeNameHistory history = QualifiedTypeNameHistory.getDefault();
             int pos1 = history.getPosition(o1);
             int pos2 = history.getPosition(o2);
 

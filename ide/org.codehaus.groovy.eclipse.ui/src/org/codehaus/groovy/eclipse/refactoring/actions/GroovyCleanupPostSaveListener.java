@@ -42,7 +42,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener implements IPostSaveListener {
 
     @Override
-    protected ICleanUp[] getCleanUps(Map settings, Set ids) {
+    protected ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
         ICleanUp[] javaCleanUps = JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
         CleanUpOptions options = new MapCleanUpOptions(settings);
         boolean doImports = false;
