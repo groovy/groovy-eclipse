@@ -226,8 +226,14 @@ public final class TypeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "Compile"));
 
         proposalExists(proposals, "CompileStatic", 1, true);
-        proposalExists(proposals, "CompileDynamic", 1, true); //org.eclipse.jdt.internal.core.NameLookup.acceptType(IType, int, boolean) needs to say yes to CompileDynamic
-        assertEquals("Only @CompileStatic and @CompileDynamic should have been proposed", 2, proposals.length);
+        proposalExists(proposals, "CompileDynamic", 1, true);
+        int expect = 2;
+        try {
+            proposalExists(proposals, "Compiled", 1, true); // java.lang.invoke.LambdaForm.Compiled is in 1.8+
+            expect += 1;
+        } catch (Throwable ignored) {
+        }
+        assertEquals("Only @CompileStatic and @CompileDynamic should have been proposed", expect, proposals.length);
     }
 
     public void testAnnotation3() throws Exception {

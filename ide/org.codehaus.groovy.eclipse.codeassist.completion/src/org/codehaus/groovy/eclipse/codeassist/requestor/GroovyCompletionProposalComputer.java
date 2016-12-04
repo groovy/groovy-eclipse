@@ -25,6 +25,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
+import org.codehaus.groovy.eclipse.codeassist.factories.AnnotationCollectorTypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ConstructorCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.GetSetMethodCompletionProcessorFactory;
@@ -70,7 +71,8 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         locationFactories.put(ContentAssistLocation.ANNOTATION, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
             new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory()
+            new ConstructorCompletionProcessorFactory(),
+            new AnnotationCollectorTypeCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.CLASS_BODY, Collections.unmodifiableList(Arrays.asList(
