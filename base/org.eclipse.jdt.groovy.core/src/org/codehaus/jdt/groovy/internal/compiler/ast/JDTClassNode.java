@@ -606,11 +606,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     /**
-     * Converts from a method get/set/is name to a property name Assumes that methodName is more than 4/3 characters long and starts
-     * with a proper prefix
-     *
-     * @param methodNode
-     * @return
+     * Converts from a method get/set/is name to a property name.
+     * Assumes that methodName is more than 4/3 characters long and starts with a proper prefix.
      */
     private String convertToPropertyName(String methodName) {
         StringBuffer propertyName = new StringBuffer();
@@ -629,24 +626,26 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     /**
-     * @return true if the methodNode looks like a setter method for a property: method starting set<Something> with a void return
-     *         type and taking one parameter
+     * @return {@code true} if the methodNode looks like a setter method for a property:
+     *         method starting set<Something> with a void return type and taking one parameter
      */
     @SuppressWarnings("unused")
     private boolean isSetter(MethodNode methodNode) {
-        return methodNode.getReturnType() == ClassHelper.VOID_TYPE && methodNode.getParameters().length == 1
-                && methodNode.getName().startsWith("set") && methodNode.getName().length() > 3;
+        return methodNode.getReturnType() == ClassHelper.VOID_TYPE &&
+            methodNode.getParameters().length == 1 &&
+            methodNode.getName().startsWith("set") &&
+            methodNode.getName().length() > 3;
     }
 
     /**
-     * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void
-     *         return type and taking no parameters
+     * @return {@code true} if the methodNode looks like a getter method for a property:
+     *         method starting get<Something> with a non void return type and taking no parameters
      */
     private boolean isGetter(MethodNode methodNode) {
-        return methodNode.getReturnType() != ClassHelper.VOID_TYPE
-                && methodNode.getParameters().length == 0
-                && ((methodNode.getName().startsWith("get") && methodNode.getName().length() > 3) || (methodNode.getName()
-                        .startsWith("is") && methodNode.getName().length() > 2));
+        return methodNode.getReturnType() != ClassHelper.VOID_TYPE &&
+            methodNode.getParameters().length == 0 &&
+            ((methodNode.getName().startsWith("get") && methodNode.getName().length() > 3) ||
+                (methodNode.getName().startsWith("is") && methodNode.getName().length() > 2));
     }
 
     @Override
@@ -669,13 +668,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public void addProperty(PropertyNode node) {
-        new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + node.getName())
-                .printStackTrace();
+        new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + node.getName()).printStackTrace();
     }
 
     @Override
-    public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression,
-            Statement getterBlock, Statement setterBlock) {
+    public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression, Statement getterBlock, Statement setterBlock) {
         new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + name).printStackTrace();
         return null;
     }
@@ -695,8 +692,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     private boolean unfindable = false;
 
     /**
-     * Some AST transforms are written such that they refer to typeClass on a ClassNode. This is not available under Eclipse.
-     * However, we can support it in a rudimentary fashion by attempting a class load for the class using the transform loader (if
+     * Some AST transforms are written such that they refer to typeClass on a ClassNode.
+     * This is not available under Eclipse. However, we can support it in a rudimentary
+     * fashion by attempting a class load for the class using the transform loader (if
      * available).
      */
     public Class getTypeClass() {
@@ -713,8 +711,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 unfindable = true;
             }
         }
-        throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader "
-                + transformLoader);
+        throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader " + transformLoader);
     }
 
     // When working with parameterized types, groovy will create a simple ClassNode for the raw type and then initialize the

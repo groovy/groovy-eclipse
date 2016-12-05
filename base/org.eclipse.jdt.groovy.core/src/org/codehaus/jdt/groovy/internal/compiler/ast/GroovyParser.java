@@ -262,11 +262,9 @@ public class GroovyParser {
     }
 
     public void reset() {
-        //GroovyClassLoader gcl = getLoaderFor(gclClasspath);
-        //GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
+        GroovyClassLoader gcl = getLoaderFor(gclClasspath);
         this.compilationUnit = makeCompilationUnit(
-            /*grabbyLoader*/this.compilationUnit.getClassLoader(),
-            /*gcl*/this.compilationUnit.getTransformLoader(),
+            new GrapeAwareGroovyClassLoader(gcl), gcl,
             this.compilationUnit.isReconcile,
             this.compilationUnit.allowTransforms);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.preferences;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -30,10 +29,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.progress.UIJob;
 
 /**
- * Brings up a dialogue that asks if old plugins should be converted
+ * Brings up a dialogue that asks if old plugins should be converted.
+ *
  * @author Andrew Eisenberg
  * @created Sep 28, 2009
- *
  */
 public class AskToConvertLegacyProjects extends UIJob {
 

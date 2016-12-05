@@ -40,8 +40,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
-public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage
-        implements IWorkbenchPropertyPage {
+public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage implements IWorkbenchPropertyPage {
     // Stores all created field editors
     private final List<FieldEditor> editors = new ArrayList<FieldEditor>();
 

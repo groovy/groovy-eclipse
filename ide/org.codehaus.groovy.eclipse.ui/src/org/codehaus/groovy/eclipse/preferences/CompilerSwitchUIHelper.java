@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.osgi.framework.Version;
 
 /**
- * Shared functionality to provide
- * a UI for compiler switching
+ * Shared functionality to provide a UI for compiler switching.
+ *
  * @author andrew
  * @created 2013-01-04
  */
@@ -264,6 +264,4 @@ public class CompilerSwitchUIHelper {
                     location);
         }
     }
-
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,9 +61,9 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 /**
- * Dialog for creating and editing script folders in the workspace
+ * Dialog for creating and editing script folders in the workspace.
  *
- * @author andrew eisenberg
+ * @author Andrew Eisenberg
  * @created Sep 14, 2010
  */
 public class ScriptFolderSelectorPreferences {
@@ -100,43 +100,26 @@ public class ScriptFolderSelectorPreferences {
         public String getText(Object element) {
             return BasicElementLabels.getFilePattern((String) element);
         }
-
     }
 
-    private class ScriptPatternAdapter implements IListAdapter, IDialogFieldListener {
-        /**
-         * @see org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter#customButtonPressed(org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField,
-         *      int)
-         */
-        public void customButtonPressed(ListDialogField field, int index) {
+    private class ScriptPatternAdapter implements IListAdapter<String>, IDialogFieldListener {
+        public void customButtonPressed(ListDialogField<String> field, int index) {
             doCustomButtonPressed(field, index);
             hasChanges = true;
         }
 
-
-
-        /**
-         * @see org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter#selectionChanged(org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField)
-         */
-        public void selectionChanged(ListDialogField field) {
+        public void selectionChanged(ListDialogField<String> field) {
             doSelectionChanged(field);
         }
 
-        /**
-         * @see org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter#doubleClicked(org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField)
-         */
-        public void doubleClicked(ListDialogField field) {
+        public void doubleClicked(ListDialogField<String> field) {
             doDoubleClicked(field);
             hasChanges = true;
         }
 
-        /**
-         * @see org.eclipse.jdt.internal.ui.wizards.dialogfields.IDialogFieldListener#dialogFieldChanged(org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField)
-         */
         public void dialogFieldChanged(DialogField field) {
             hasChanges = true;
         }
-
     }
 
     private static class BuildJob extends Job {
@@ -180,7 +163,7 @@ public class ScriptFolderSelectorPreferences {
 
     private final Composite parent;
 
-    private CheckedListDialogField patternList;
+    private CheckedListDialogField<String> patternList;
 
     private BooleanFieldEditor disableButton;
 
@@ -199,7 +182,7 @@ public class ScriptFolderSelectorPreferences {
         this.project = project;
     }
 
-    public ListDialogField createListContents() {
+    public ListDialogField<String> createListContents() {
         Label label = new Label(parent, SWT.WRAP);
         label.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
         label.setText("Groovy Script Folders:");
@@ -214,10 +197,7 @@ public class ScriptFolderSelectorPreferences {
         inner.setLayout(layout);
         inner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-
-        disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
-                "Enable script folder support",
-                BooleanFieldEditor.DEFAULT, inner);
+        disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "Enable script folder support", BooleanFieldEditor.DEFAULT, inner);
 
         disableButton.setPreferenceStore(store);
         disableButton.load();
@@ -254,7 +234,7 @@ public class ScriptFolderSelectorPreferences {
 
         ScriptPatternAdapter adapter = new ScriptPatternAdapter();
 
-        patternList = new CheckedListDialogField(adapter, buttonLabels, new ScriptLabelProvider(DESCRIPTOR));
+        patternList = new CheckedListDialogField<String>(adapter, buttonLabels, new ScriptLabelProvider(DESCRIPTOR));
         patternList.setDialogFieldListener(adapter);
         patternList.setLabelText("Groovy files that match these patterns are treated as scripts.  "
                 + "They will not be compiled and will be copied as-is to the output folder.\n\n"
@@ -289,7 +269,7 @@ public class ScriptFolderSelectorPreferences {
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
-    protected void doCustomButtonPressed(ListDialogField field, int index) {
+    protected void doCustomButtonPressed(ListDialogField<String> field, int index) {
         if (index == IDX_ADD) {
             addEntry(field);
         } else if (index == IDX_EDIT) {
@@ -297,12 +277,12 @@ public class ScriptFolderSelectorPreferences {
         }
     }
 
-    protected void doSelectionChanged(ListDialogField field) {
+    protected void doSelectionChanged(ListDialogField<String> field) {
         List<String> selected = field.getSelectedElements();
         field.enableButton(IDX_EDIT, canEdit(selected));
     }
 
-    protected void doDoubleClicked(ListDialogField field) {
+    protected void doDoubleClicked(ListDialogField<String> field) {
         editEntry(field);
     }
 
@@ -310,7 +290,7 @@ public class ScriptFolderSelectorPreferences {
         return selected.size() == 1;
     }
 
-    private void addEntry(ListDialogField field) {
+    private void addEntry(ListDialogField<String> field) {
         InputDialog dialog = createInputDialog("");
         if (dialog.open() == Window.OK) {
             field.addElement(dialog.getValue());
@@ -368,11 +348,9 @@ public class ScriptFolderSelectorPreferences {
     }
 
     public void restoreDefaultsPressed() {
-        // must do the store before setting the preference
-        // to ensure that the store is flushed
+        // must do the store before setting the preference to ensure that the store is flushed
         disableButton.loadDefault();
-        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
-                Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         resetElements();
     }
 
@@ -395,6 +373,4 @@ public class ScriptFolderSelectorPreferences {
         patternList.selectFirstElement();
         hasChanges = false;
     }
-
-
 }

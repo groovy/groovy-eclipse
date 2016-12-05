@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,13 +38,12 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
+/**
+ * @author Andrew Eisenberg
+ * @created Aug 20, 2009
+ */
 public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
-    /**
-     * @author Andrew Eisenberg
-     * @created Aug 20, 2009
-     *
-     */
     private final class MonospaceFieldEditor extends BooleanFieldEditor {
         Label myLabel;
 
@@ -80,14 +79,10 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         }
     }
 
-
-
     public GroovyPreferencePage() {
         super(GRID);
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
     }
-
-
 
     public void init(IWorkbench workbench) {}
 
@@ -95,8 +90,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
     protected String getPageId() {
         return "org.codehaus.groovy.eclipse.preferences";
     }
-
-
 
     @Override
     protected void createFieldEditors() {
@@ -158,8 +151,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         }
     }
 
-
-
     private void populateProjectsList(final List oldProjectsList, final IProject[] oldProjects) {
         final String[] projNames = new String[oldProjects.length];
         for (int i = 0; i < oldProjects.length; i++) {
@@ -167,8 +158,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         }
         oldProjectsList.setItems(projNames);
     }
-
-
 
     protected void convertSelectedProjects(String[] selection) {
         if (selection.length == 0) {

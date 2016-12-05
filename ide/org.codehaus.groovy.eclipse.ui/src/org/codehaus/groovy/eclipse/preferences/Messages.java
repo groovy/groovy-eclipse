@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@ package org.codehaus.groovy.eclipse.preferences;
 import java.util.ResourceBundle;
 
 public class Messages {
-    public final static String RESOURCE_BUNDLE = Messages.class.getPackage()
-            .getName()
-            + ".Messages";//$NON-NLS-1$
+    public final static String RESOURCE_BUNDLE = Messages.class.getPackage().getName() + ".Messages";
 
     private static ResourceBundle resourceBundle = null;
 
@@ -44,7 +42,7 @@ public class Messages {
         try {
             return getResourceBundle().getString(key);
         } catch (final Exception e) {
-            return "!" + key + "!";//$NON-NLS-2$ //$NON-NLS-1$
+            return "!" + key + "!";
         }
     }
 }
