@@ -44,7 +44,7 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
@@ -297,15 +297,14 @@ public class RefreshDSLDJob extends Job {
                 return Status.OK_STATUS;
             }
 
+            SubMonitor submon = SubMonitor.convert(monitor != null ? monitor : new NullProgressMonitor());
+            submon.beginTask("Refresh DSLD scripts", projects.size() * 9);
+
             List<IStatus> errorStatuses = new ArrayList<IStatus>();
-            if (monitor == null) {
-                monitor = new NullProgressMonitor();
-            }
-            monitor.beginTask("Refresh DSLD scripts", projects.size() * 9);
             for (IProject project : projects) {
                 IStatus res = Status.OK_STATUS;
                 try {
-                    res = refreshProject(project, new SubProgressMonitor(monitor, 9));
+                    res = refreshProject(project, submon.split(9));
                 } finally {
                     contextStoreManager.removeInProgress(project);
                 }
@@ -315,7 +314,8 @@ public class RefreshDSLDJob extends Job {
                     return res;
                 }
             }
-            monitor.done();
+
+            submon.done();
 
             if (errorStatuses.isEmpty()) {
                 return Status.OK_STATUS;
@@ -327,8 +327,7 @@ public class RefreshDSLDJob extends Job {
                 return multi;
             }
         } finally {
-            // in case the job was exited early, ensure all projects
-            // have their initialization stage removed
+            // in case the job was exited early, ensure all projects have their initialization stage removed
             for (IProject project : projects) {
                 contextStoreManager.removeInProgress(project);
             }
