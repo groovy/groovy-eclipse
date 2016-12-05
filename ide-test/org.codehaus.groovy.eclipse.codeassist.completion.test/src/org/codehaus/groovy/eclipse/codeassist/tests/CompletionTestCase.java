@@ -331,14 +331,14 @@ public abstract class CompletionTestCase extends TestCase {
 
     protected ICompletionProposal[] orderByRelevance(ICompletionProposal[] proposals) {
         Arrays.sort(proposals, 0, proposals.length, new Comparator<ICompletionProposal>() {
-            public int compare(ICompletionProposal left, ICompletionProposal right) {
-                int initial = ((IJavaCompletionProposal) right).getRelevance() - ((IJavaCompletionProposal) left).getRelevance();
-                if (initial != 0) {
-                    return initial;
-                } else {
-                    // sort lexically
-                    return left.toString().compareTo(right.toString());
+            public int compare(ICompletionProposal lhs, ICompletionProposal rhs) {
+                int leftRel = ((IJavaCompletionProposal) lhs).getRelevance();
+                int rghtRel = ((IJavaCompletionProposal) rhs).getRelevance();
+                if (leftRel != rghtRel) {
+                    return rghtRel - leftRel;
                 }
+                // sort lexically
+                return lhs.getDisplayString().compareTo(rhs.getDisplayString());
             }
         });
         return proposals;
