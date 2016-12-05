@@ -803,7 +803,7 @@ public abstract class Annotation extends Expression {
 				// allow the Groovy annotation to show in Javadoc
 				// TODO: Does this cause unanticipated side effects?
 				this.compilerAnnotation = scope.environment().createAnnotation(
-						(ReferenceBinding) this.resolvedType, computeElementValuePairs());
+					(ReferenceBinding) this.resolvedType, Binding.NO_ELEMENT_VALUE_PAIRS);
 			} else {
 				scope.problemReporter().notAnnotationType(typeBinding, this.type);
 			}
