@@ -304,7 +304,7 @@ public class RefreshDSLDJob extends Job {
             for (IProject project : projects) {
                 IStatus res = Status.OK_STATUS;
                 try {
-                    res = refreshProject(project, submon.split(9));
+                    res = refreshProject(project, submon.newChild(9));
                 } finally {
                     contextStoreManager.removeInProgress(project);
                 }
