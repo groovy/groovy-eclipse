@@ -215,61 +215,82 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             '''.stripIndent().replaceAll('\\|', ''))
     }
 
-    void testGRE757() {
-        makeEditor('''\
+    void testIndentAfterIfStatement() {
+        makeEditor("""\
             class Bagaga {
-                def foo(def a, def b) {<***>
+                def foo(def a, def b) {
+                    if (a == b)${CARET}
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
 
-        send('\nif (a < b)\n\t')
+        send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b)
+                        ${CARET}
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testGRE757() {
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {${CARET}
+                }
+            }
+            """.stripIndent())
+
+        send('\nif (a < b)\n')
+
+        assertEditorContents("""\
             class Bagaga {
                 def foo(def a, def b) {
                     if (a < b)
-                        <***>
+                        ${CARET}
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
 
         send('foo()\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             class Bagaga {
                 def foo(def a, def b) {
                     if (a < b)
                         foo()
-                        <***>
+                        ${CARET}
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
 
         sendBackTab()
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             class Bagaga {
                 def foo(def a, def b) {
                     if (a < b)
                         foo()
-                    <***>
+                    ${CARET}
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
 
         send('else\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             class Bagaga {
                 def foo(def a, def b) {
                     if (a < b)
                         foo()
                     else
-                    <***>
+                    ${CARET}
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
     }
 
     void testGRE620() {
@@ -701,13 +722,13 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs1() {
-       makeEditor('''\
+        makeEditor('''\
             def x = { yyy -><***>
             '''.stripIndent())
 
-       send('\n')
+        send('\n')
 
-       assertEditorContents('''\
+        assertEditorContents('''\
             def x = { yyy ->
                 <***>
             }
@@ -716,15 +737,15 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs2() {
-       makeEditor('''\
+        makeEditor('''\
             def xxx() {
                 def x = { yyy -><***>
             }
             '''.stripIndent())
 
-       send('\n')
+        send('\n')
 
-       assertEditorContents('''\
+        assertEditorContents('''\
             def xxx() {
                 def x = { yyy ->
                     <***>
@@ -735,15 +756,15 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-1475
     void testAutoIndentCurly1() {
-       makeEditor('''\
+        makeEditor('''\
             def xxx() {
                 def x = { yyy -><***>}
             }
             '''.stripIndent())
 
-       send('\n')
+        send('\n')
 
-       assertEditorContents('''\
+        assertEditorContents('''\
             def xxx() {
                 def x = { yyy ->
                     <***>
@@ -754,15 +775,15 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-1475
     void testAutoIndentCurly2() {
-       makeEditor('''\
+        makeEditor('''\
             def xxx() {
                 def x = { yyy -><***>  }
             }
             '''.stripIndent())
 
-       send('\n')
+        send('\n')
 
-       assertEditorContents('''\
+        assertEditorContents('''\
             def xxx() {
                 def x = { yyy ->
                     <***>
@@ -773,15 +794,15 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-1475
     void testAutoIndentCurly3() {
-       makeEditor('''\
+        makeEditor('''\
             def xxx() {
                 def x = { yyy -><***>  } def foo
             }
             '''.stripIndent())
 
-       send('\n')
+        send('\n')
 
-       assertEditorContents('''\
+        assertEditorContents('''\
             def xxx() {
                 def x = { yyy ->
                     <***>
@@ -792,15 +813,15 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
 
     // GRECLIPSE-1475
     void testAutoIndentCurly4() {
-       makeEditor('''\
+        makeEditor('''\
             def xxx() {
                 def x = { yyy -><***>  )
             }
             '''.stripIndent())
 
-       send('\n')
+        send('\n')
 
-       assertEditorContents('''\
+        assertEditorContents('''\
             def xxx() {
                 def x = { yyy ->
                     <***>  )

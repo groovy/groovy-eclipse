@@ -15,16 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.EOF;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LBRACK;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LCURLY;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LPAREN;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.NLS;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.RBRACK;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.RCURLY;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.RPAREN;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_END;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_START;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.*;
 import groovyjarjarantlr.Token;
 
 import java.util.HashMap;
@@ -211,15 +202,27 @@ public class GroovyIndentationService {
         List<Token> tokens = getTokens(d, d.getLineOffset(line), offset);
 
         int indentLevel = simpleComputeNextLineIndentLevel(orgIndentLevel, tokens);
-        if (indentLevel < orgIndentLevel) {
-            // Jumping back from indentation is more complex.
-            Token lastToken = tokens.get(tokens.size() - 1);
-            if (lastToken.getType() == GroovyTokenTypeBridge.NLS)
-                lastToken = getTokenBefore(d, lastToken);
-            if (isCloserOfPair(lastToken)) {
+
+        Token lastToken = tokens.get(tokens.size() - 1);
+        while (lastToken.getType() == GroovyTokenTypeBridge.NLS) {
+            lastToken = getTokenBefore(d, lastToken);
+        }
+        if (isCloserOfPair(lastToken)) {
+            if (indentLevel < orgIndentLevel) {
+                // Jumping back from indentation is more complex.
                 // A somewhat better strategy for newline after closing
                 // brackets, parens or braces.
                 indentLevel = getIndentLevelForCloserPair(d, lastToken);
+            } else if (indentLevel == orgIndentLevel) {
+                // if balanced line starts with a conditional keyword, indent the new line
+                switch (tokens.get(0).getType()) {
+                case LITERAL_if:
+                case LITERAL_else:
+                case LITERAL_while:
+                case LITERAL_switch:
+                case LITERAL_for:
+                    indentLevel = getIndentLevelForCloserPair(d, lastToken) + getPrefs().getIndentationSize();
+                }
             }
         }
         return indentLevel;
@@ -345,14 +348,13 @@ public class GroovyIndentationService {
         try {
             while (closeCount != 0 && (token = scanner.getLastTokenBefore(token)) != null) {
                 if (token.getType() == openerType)
-                    closeCount--;
+                    closeCount -= 1;
                 if (token.getType() == closerType)
-                    closeCount++;
+                    closeCount += 1;
             }
             return getIndentLevel(d, scanner.getOffset(token));
         } catch (BadLocationException e) {
-            // Something went wrong. Just use indent level of the line itself as
-            // a "sensible" default.
+            // Something went wrong. Just use indent level of the line itself as a "sensible" default.
             try {
                 return getIndentLevel(d, scanner.getOffset(closer));
             } catch (BadLocationException e1) {
@@ -519,15 +521,15 @@ public class GroovyIndentationService {
     /**
      * Compute an adjusted indentation level for the next line, based on
      * some simple heuristics about the types of tokens seen only in the
-     * previous
-     * line.
+     * previous line.
      */
     private int simpleComputeNextLineIndentLevel(int indentLevel, List<Token> tokens) {
         int adjust = getOpenVersusCloseBalance(tokens);
-        if (adjust > 0)
+        if (adjust > 0) {
             indentLevel += getPrefs().getIndentationSize();
-        else if (adjust < 0)
-            indentLevel = indentLevel - getPrefs().getIndentationSize();
+        } else if (adjust < 0) {
+            indentLevel -= getPrefs().getIndentationSize();
+        }
         return indentLevel;
     }
 
