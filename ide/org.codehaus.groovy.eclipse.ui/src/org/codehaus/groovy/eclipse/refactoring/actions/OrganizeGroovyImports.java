@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +38,6 @@ import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
@@ -51,13 +49,11 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
+import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -79,36 +75,6 @@ import org.eclipse.text.edits.TextEdit;
 public class OrganizeGroovyImports {
 
     private static final ClassNode CLASS_NODE_FIELD = ClassHelper.make(Field.class);
-
-    /**
-     * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
-     */
-    public static class UnresolvedTypeData {
-        final String ref;
-        final boolean isAnnotation;
-        final ISourceRange range;
-        final List<TypeNameMatch> foundInfos = new LinkedList<TypeNameMatch>();
-
-        public UnresolvedTypeData(String ref, boolean annotation, ISourceRange range) {
-            this.ref = ref;
-            this.isAnnotation = annotation;
-            this.range = range;
-        }
-
-        public void addInfo(TypeNameMatch info) {
-            for (int i = foundInfos.size() - 1; i >= 0; i -= 1) {
-                TypeNameMatch curr= foundInfos.get(i);
-                if (curr.getTypeContainerName().equals(info.getTypeContainerName())) {
-                    return; // not added; already contains type with same name
-                }
-            }
-            foundInfos.add(info);
-        }
-
-        public List<TypeNameMatch> getFoundInfos() {
-            return foundInfos;
-        }
-    }
 
     private class FindUnresolvedReferencesVisitor extends ClassCodeVisitorSupport {
 
@@ -456,7 +422,7 @@ public class OrganizeGroovyImports {
 
     public TextEdit calculateMissingImports() {
         ModuleNodeInfo info = unit.getModuleInfo(true);
-        if (isEmpty(info.module) || isUnclean(info, unit)) {
+        if (info.isEmpty() || isUnclean(info, unit)) {
             return null;
         }
 
@@ -733,30 +699,6 @@ public class OrganizeGroovyImports {
             boolean aliasIsSameAsClassName = className.endsWith(alias)
                     && (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
             return !aliasIsSameAsClassName;
-        }
-        return false;
-    }
-
-    private static boolean isEmpty(ModuleNode node) {
-        if (node == null || node.getClasses() == null || (node.getClasses().isEmpty() && node.getImports().isEmpty())) {
-            return true;
-        }
-        if (node.getClasses().size() == 1 && node.getImports().isEmpty() && node.getClasses().get(0).isScript()) {
-            if ((node.getStatementBlock() == null || node.getStatementBlock().isEmpty() || isNullReturn(node.getStatementBlock())) &&
-                    (node.getMethods() == null || node.getMethods().isEmpty())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isNullReturn(BlockStatement statementBlock) {
-        List<Statement> statements = statementBlock.getStatements();
-        if (statements.size() == 1 && statements.get(0) instanceof ReturnStatement) {
-            ReturnStatement ret = (ReturnStatement) statements.get(0);
-            if (ret.getExpression() instanceof ConstantExpression) {
-                return ((ConstantExpression) ret.getExpression()).isNullExpression();
-            }
         }
         return false;
     }

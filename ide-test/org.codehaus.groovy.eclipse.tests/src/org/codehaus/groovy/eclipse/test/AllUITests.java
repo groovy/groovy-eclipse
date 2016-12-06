@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.test;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.codehaus.groovy.eclipse.test.actions.AddImportOnSelectionTests;
 import org.codehaus.groovy.eclipse.test.actions.AliasingOrganizeImportsTest;
 import org.codehaus.groovy.eclipse.test.actions.ConvertToJavaOrGroovyActionTest;
 import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTestCase;
@@ -52,6 +53,7 @@ public final class AllUITests {
         // actions
         suite.addTest(new EclipseTestSetup(newTestSuite("Organize Imports",
                 OrganizeImportsTest.class, AliasingOrganizeImportsTest.class)));
+        suite.addTestSuite(AddImportOnSelectionTests.class);
         suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
         suite.addTestSuite(GroovyNatureActionTestCase.class);
         suite.addTestSuite(SaveParticipantRegistryTest.class);

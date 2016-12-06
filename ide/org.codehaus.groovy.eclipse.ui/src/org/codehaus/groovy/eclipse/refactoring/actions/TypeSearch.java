@@ -16,14 +16,15 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports.UnresolvedTypeData;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -40,13 +41,42 @@ import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
  */
 public class TypeSearch {
     /**
+     * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
+     */
+    public static class UnresolvedTypeData {
+        final String ref;
+        final boolean isAnnotation;
+        final ISourceRange range;
+        final List<TypeNameMatch> foundInfos = new LinkedList<TypeNameMatch>();
+
+        public UnresolvedTypeData(String ref, boolean annotation, ISourceRange range) {
+            this.ref = ref;
+            this.isAnnotation = annotation;
+            this.range = range;
+        }
+
+        public void addInfo(TypeNameMatch info) {
+            for (int i = foundInfos.size() - 1; i >= 0; i -= 1) {
+                TypeNameMatch curr= foundInfos.get(i);
+                if (curr.getTypeContainerName().equals(info.getTypeContainerName())) {
+                    return; // not added; already contains type with same name
+                }
+            }
+            foundInfos.add(info);
+        }
+
+        public List<TypeNameMatch> getFoundInfos() {
+            return foundInfos;
+        }
+    }
+
+    /**
      * Use a SearchEngine to look for the types
      * This will not find inner types, however
      *
      * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
      */
-    public void searchForTypes(GroovyCompilationUnit unit, Map<String, OrganizeGroovyImports.UnresolvedTypeData> missingTypes)
-            throws JavaModelException {
+    public void searchForTypes(GroovyCompilationUnit unit, Map<String, UnresolvedTypeData> missingTypes) throws JavaModelException {
         char[][] allTypes = new char[missingTypes.size()][];
         int i = 0;
         for (String simpleName : missingTypes.keySet()) {

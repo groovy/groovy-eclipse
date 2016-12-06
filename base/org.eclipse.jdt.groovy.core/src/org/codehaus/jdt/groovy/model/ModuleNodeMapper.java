@@ -22,6 +22,10 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -36,12 +40,12 @@ import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
+ * Stores module nodes for groovy compilation units This class is not meant to be accessed externally.
+ * <p>
+ * One module node is stored per working copy of a unit.
+ *
  * @author Andrew Eisenberg
  * @created Jun 11, 2009
- *
- *          This class stores module nodes for groovy compilation units This class is not meant to be accessed externally.
- *
- *          One module node is stored per working copy of a unit
  */
 public class ModuleNodeMapper {
 
@@ -55,6 +59,30 @@ public class ModuleNodeMapper {
         public final ModuleNode module;
         public CompilationResult result;
         public final JDTResolver resolver;
+
+        public final boolean isEmpty() {
+            if (module == null || module.getClasses() == null || (module.getClasses().isEmpty() && module.getImports().isEmpty())) {
+                return true;
+            }
+            if (module.getClasses().size() == 1 && module.getImports().isEmpty() && module.getClasses().get(0).isScript()) {
+                if ((module.getStatementBlock() == null || module.getStatementBlock().isEmpty() || isNullReturn(module.getStatementBlock())) &&
+                        (module.getMethods() == null || module.getMethods().isEmpty())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean isNullReturn(BlockStatement statementBlock) {
+            List<Statement> statements = statementBlock.getStatements();
+            if (statements.size() == 1 && statements.get(0) instanceof ReturnStatement) {
+                ReturnStatement ret = (ReturnStatement) statements.get(0);
+                if (ret.getExpression() instanceof ConstantExpression) {
+                    return ((ConstantExpression) ret.getExpression()).isNullExpression();
+                }
+            }
+            return false;
+        }
     }
 
     private static final ModuleNodeMapper INSTANCE = new ModuleNodeMapper();

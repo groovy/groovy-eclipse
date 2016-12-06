@@ -24,9 +24,8 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
-import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports;
-import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports.UnresolvedTypeData;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch;
+import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IType;
@@ -128,7 +127,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         try {
             String simpleTypeName = getUnresolvedSimpleName();
             if (simpleTypeName != null) {
-                Map<String, OrganizeGroovyImports.UnresolvedTypeData> unresolvedTypes = new HashMap<String, OrganizeGroovyImports.UnresolvedTypeData>();
+                Map<String, UnresolvedTypeData> unresolvedTypes = new HashMap<String, UnresolvedTypeData>();
                 unresolvedTypes.put(simpleTypeName, new UnresolvedTypeData(simpleTypeName, false, new SourceRange(offset, simpleTypeName.length())));
                 new TypeSearch().searchForTypes(getGroovyCompilationUnit(), unresolvedTypes);
                 UnresolvedTypeData foundData = unresolvedTypes.get(simpleTypeName);
