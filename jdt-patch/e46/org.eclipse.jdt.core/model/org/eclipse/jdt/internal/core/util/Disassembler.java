@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1239,9 +1239,9 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		try {
 			codeAttribute.traverse(visitor);
 		} catch(ClassFormatException e) {
-			dumpTab(tabNumber + 2, buffer);
+			dumpTab(tabNumber + 3, buffer);
 			buffer.append(Messages.classformat_classformatexception);
-			writeNewLine(buffer, lineSeparator, tabNumber + 1);
+			writeNewLine(buffer, lineSeparator, tabNumber - 1);
 		}
 		final int exceptionTableLength = codeAttribute.getExceptionTableLength();
 		boolean isFirstAttribute = true;

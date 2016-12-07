@@ -446,8 +446,14 @@ public class ExternalAnnotationProvider {
 								while (i < length && this.source[i] == Util.C_ARRAY)
 									i++;
 								if (i < length && this.source[i] == Util.C_RESOLVED) {
-									while (i < length && this.source[i] != Util.C_NAME_END)
+									int currentdepth = depth;
+									while (i < length && (currentdepth != depth || this.source[i] != Util.C_NAME_END)) {
+										if(this.source[i] == Util.C_GENERIC_START)
+											currentdepth++;
+										if(this.source[i] == Util.C_GENERIC_END)
+											currentdepth--;
 										i++;
+									}
 								}
 								i--; // unget
 								break;

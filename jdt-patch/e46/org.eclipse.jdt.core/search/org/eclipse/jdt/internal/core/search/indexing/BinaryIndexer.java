@@ -11,7 +11,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
@@ -823,9 +822,8 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			// TODO would be nice to check for an "interesting project" here, but don't have access to that
 			char[] sourceFileName = reader.sourceFileName();
 			if (sourceFileName!= null && LanguageSupportFactory.isInterestingSourceFile(String.valueOf(sourceFileName))) {
-				List references = LanguageSupportFactory.getSupplementalIndexer().extractNamedReferences(contents, reader);
-				for (Iterator iterator = references.iterator(); iterator.hasNext();) {
-					char[] reference = (char[]) iterator.next();
+				List<char[]> references = LanguageSupportFactory.getSupplementalIndexer().extractNamedReferences(contents, reader);
+				for (char[] reference : references) {
 					addNameReference(reference);
 					addMethodReference(reference, 0);
 					addMethodReference(reference, 1);

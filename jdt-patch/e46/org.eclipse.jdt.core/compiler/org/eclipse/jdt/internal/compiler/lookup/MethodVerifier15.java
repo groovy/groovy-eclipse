@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -949,21 +949,18 @@ boolean isAcceptableReturnTypeOverride(MethodBinding currentMethod, MethodBindin
 			return true;
 	}
 }
-// caveat: returns false if a method is implemented that needs a bridge method
+// caveat: returns false if a method is implemented, but with a return type that is incompatible with that of the interface method
 boolean isInterfaceMethodImplemented(MethodBinding inheritedMethod, MethodBinding existingMethod, ReferenceBinding superType) {
 	if (inheritedMethod.original() != inheritedMethod && existingMethod.declaringClass.isInterface())
 		return false; // must hold onto ParameterizedMethod to see if a bridge method is necessary
 
 	inheritedMethod = computeSubstituteMethod(inheritedMethod, existingMethod);
-	if (inheritedMethod == null
-			|| TypeBinding.notEquals(inheritedMethod.returnType, existingMethod.returnType)) // need to keep around to produce bridge methods? ...
+	if (inheritedMethod == null	|| !doesMethodOverride(existingMethod, inheritedMethod))
 		return false;
-
-	if (!doesMethodOverride(existingMethod, inheritedMethod))
-		return false;
-
-	return TypeBinding.notEquals(this.type, existingMethod.declaringClass) // ... not if inheriting the bridge situation from a superclass
-			&& !existingMethod.declaringClass.isInterface();
+	return TypeBinding.equalsEquals(inheritedMethod.returnType, existingMethod.returnType)
+			|| (TypeBinding.notEquals(this.type, existingMethod.declaringClass) // ... not if inheriting the bridge situation from a superclass
+				&& !existingMethod.declaringClass.isInterface()
+				&& areReturnTypesCompatible(existingMethod, inheritedMethod)); // may have to report incompatible return type
 }
 public boolean isMethodSubsignature(MethodBinding method, MethodBinding inheritedMethod) {
 	if (!org.eclipse.jdt.core.compiler.CharOperation.equals(method.selector, inheritedMethod.selector))

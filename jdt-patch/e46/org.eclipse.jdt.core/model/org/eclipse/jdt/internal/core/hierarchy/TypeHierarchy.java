@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -256,7 +256,7 @@ public synchronized void addTypeHierarchyChangedListener(ITypeHierarchyChangedLi
 }
 private static Integer bytesToFlags(byte[] bytes){
 	if(bytes != null && bytes.length > 0) {
-		return new Integer(new String(bytes));
+		return Integer.valueOf(new String(bytes));
 	} else {
 		return null;
 	}
@@ -265,7 +265,7 @@ private static Integer bytesToFlags(byte[] bytes){
  * cacheFlags.
  */
 public void cacheFlags(IType type, int flags) {
-	this.typeFlags.put(type, new Integer(flags));
+	this.typeFlags.put(type, Integer.valueOf(flags));
 }
 /**
  * Caches the handle of the superclass for the specified type.
@@ -1195,11 +1195,11 @@ public static ITypeHierarchy load(IType type, InputStream input, WorkingCopyOwne
 		while((b = (byte)input.read()) != SEPARATOR1 && b != -1) {
 			bytes = readUntil(input, SEPARATOR3, 1);
 			bytes[0] = b;
-			int subClass = new Integer(new String(bytes)).intValue();
+			int subClass = Integer.parseInt(new String(bytes));
 
 			// read super type
 			bytes = readUntil(input, SEPARATOR1);
-			int superClass = new Integer(new String(bytes)).intValue();
+			int superClass = Integer.parseInt(new String(bytes));
 
 			typeHierarchy.cacheSuperclass(
 				types[subClass],
@@ -1210,7 +1210,7 @@ public static ITypeHierarchy load(IType type, InputStream input, WorkingCopyOwne
 		while((b = (byte)input.read()) != SEPARATOR1 && b != -1) {
 			bytes = readUntil(input, SEPARATOR3, 1);
 			bytes[0] = b;
-			int subClass = new Integer(new String(bytes)).intValue();
+			int subClass = Integer.parseInt(new String(bytes));
 
 			// read super interface
 			bytes = readUntil(input, SEPARATOR1);
@@ -1224,12 +1224,12 @@ public static ITypeHierarchy load(IType type, InputStream input, WorkingCopyOwne
 					b2 = new byte[i - j];
 					System.arraycopy(bytes, j, b2, 0, i - j);
 					j = i + 1;
-					superInterfaces[interfaceCount++] = types[new Integer(new String(b2)).intValue()];
+					superInterfaces[interfaceCount++] = types[Integer.parseInt(new String(b2))];
 				}
 			}
 			b2 = new byte[bytes.length - j];
 			System.arraycopy(bytes, j, b2, 0, bytes.length - j);
-			superInterfaces[interfaceCount++] = types[new Integer(new String(b2)).intValue()];
+			superInterfaces[interfaceCount++] = types[Integer.parseInt(new String(b2))];
 			System.arraycopy(superInterfaces, 0, superInterfaces = new IType[interfaceCount], 0, interfaceCount);
 
 			typeHierarchy.cacheSuperInterfaces(
@@ -1335,7 +1335,7 @@ public void store(OutputStream output, IProgressMonitor monitor) throws JavaMode
 		int count = 0;
 
 		if(this.focusType != null) {
-			Integer index = new Integer(count++);
+			Integer index = Integer.valueOf(count++);
 			hashtable.put(this.focusType, index);
 			hashtable2.put(index, this.focusType);
 		}
@@ -1344,13 +1344,13 @@ public void store(OutputStream output, IProgressMonitor monitor) throws JavaMode
 			Map.Entry<IType, IType> entry = (Map.Entry<IType, IType>) types[i];
 			IType t = entry.getKey();
 			if(hashtable.get(t) == null) {
-				Integer index = new Integer(count++);
+				Integer index = Integer.valueOf(count++);
 				hashtable.put(t, index);
 				hashtable2.put(index, t);
 			}
 			IType superClass = entry.getValue();
 			if(superClass != null && hashtable.get(superClass) == null) {
-				Integer index = new Integer(count++);
+				Integer index = Integer.valueOf(count++);
 				hashtable.put(superClass, index);
 				hashtable2.put(index, superClass);
 			}
@@ -1360,7 +1360,7 @@ public void store(OutputStream output, IProgressMonitor monitor) throws JavaMode
 			Map.Entry<IType, IType[]> entry = (Map.Entry<IType, IType[]>) intfs[i];
 			IType t = entry.getKey();
 			if(hashtable.get(t) == null) {
-				Integer index = new Integer(count++);
+				Integer index = Integer.valueOf(count++);
 				hashtable.put(t, index);
 				hashtable2.put(index, t);
 			}
@@ -1369,7 +1369,7 @@ public void store(OutputStream output, IProgressMonitor monitor) throws JavaMode
 				for (int j = 0; j < sp.length; j++) {
 					IType superInterface = sp[j];
 					if(sp[j] != null && hashtable.get(superInterface) == null) {
-						Integer index = new Integer(count++);
+						Integer index = Integer.valueOf(count++);
 						hashtable.put(superInterface, index);
 						hashtable2.put(index, superInterface);
 					}
@@ -1404,7 +1404,7 @@ public void store(OutputStream output, IProgressMonitor monitor) throws JavaMode
 
 		// save types
 		for (int i = 0; i < count ; i++) {
-			IType t = hashtable2.get(new Integer(i));
+			IType t = hashtable2.get(Integer.valueOf(i));
 
 			// n bytes
 			output.write(t.getHandleIdentifier().getBytes());

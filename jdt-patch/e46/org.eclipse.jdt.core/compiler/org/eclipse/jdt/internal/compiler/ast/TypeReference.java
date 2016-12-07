@@ -48,7 +48,6 @@ import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
-import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
@@ -558,10 +557,9 @@ protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 }
 
 protected void reportInvalidType(Scope scope) {
-	// GROOVY start: don't report this, let groovy do it
-	if (scope!=null) {
-		CompilationUnitScope cuScope = scope.compilationUnitScope();
-		if (!cuScope.reportInvalidType(this, this.resolvedType)) {
+	// GROOVY add - don't report this, let groovy do it
+	if (scope != null) {
+		if (!scope.compilationUnitScope().reportInvalidType(this, this.resolvedType)) {
 			return;
 		}
 	}

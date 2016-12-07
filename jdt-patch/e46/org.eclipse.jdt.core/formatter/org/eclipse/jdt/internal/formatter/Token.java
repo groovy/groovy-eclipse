@@ -81,9 +81,6 @@ public class Token {
 		}
 	}
 
-	/** Special token type used to mark tokens that store empty line indentation */
-	public static final int TokenNameEMPTY_LINE = 10000;
-
 	/** Position in source of the first character. */
 	public final int originalStart;
 	/** Position in source of the last character (this position is included in the token). */
@@ -93,11 +90,13 @@ public class Token {
 	private boolean spaceBefore, spaceAfter;
 	private int lineBreaksBefore, lineBreaksAfter;
 	private int indent;
+	private int emptyLineIndentAdjustment;
 	private int align;
 	private boolean toEscape;
 
 	private boolean nextLineOnWrap;
 	private WrapPolicy wrapPolicy;
+	private Token separateLinesOnWrapUntil;
 
 	private Token nlsTagToken;
 
@@ -223,6 +222,14 @@ public class Token {
 		return this.indent;
 	}
 
+	public void setEmptyLineIndentAdjustment(int adjustment) {
+		this.emptyLineIndentAdjustment = adjustment;
+	}
+
+	public int getEmptyLineIndentAdjustment() {
+		return this.emptyLineIndentAdjustment;
+	}
+
 	public void setAlign(int align) {
 		this.align = align;
 	}
@@ -245,6 +252,14 @@ public class Token {
 
 	public boolean isNextLineOnWrap() {
 		return this.nextLineOnWrap;
+	}
+
+	public void setSeparateLinesOnWrapUntil(Token token) {
+		this.separateLinesOnWrapUntil = token;
+	}
+
+	public Token getSeparateLinesOnWrapUntil() {
+		return this.separateLinesOnWrapUntil;
 	}
 
 	public void setWrapPolicy(WrapPolicy wrapPolicy) {
@@ -291,8 +306,6 @@ public class Token {
 	}
 
 	public String toString(String source) {
-		if (this.tokenType == TokenNameEMPTY_LINE)
-			return ""; //$NON-NLS-1$
 		return source.substring(this.originalStart, this.originalEnd + 1);
 	}
 

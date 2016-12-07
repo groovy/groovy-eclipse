@@ -127,7 +127,7 @@ public void handle(
 		return;
 
 	 boolean mandatory = (severity & (ProblemSeverities.Error | ProblemSeverities.Optional)) == ProblemSeverities.Error;
-	 if (severity < ProblemSeverities.InternalError && this.policy.ignoreAllErrors()) { 
+	 if ((severity & ProblemSeverities.InternalError) == 0 && this.policy.ignoreAllErrors()) { 
 		 // Error is not to be exposed, but clients may need still notification as to whether there are silently-ignored-errors.
 		 // if no reference context, we need to abort from the current compilation process
 		 if (referenceContext == null) {
@@ -210,7 +210,7 @@ public void handle(
 		case ProblemSeverities.Warning :
 			// GROOVY add - still required?
 			if ((this.options.groovyFlags & 0x01) != 0) {
-				if ((unitResult.compilationUnit instanceof SourceFile) && ((SourceFile)unitResult.compilationUnit).isInLinkedSourceFolder()) {
+				if ((unitResult.compilationUnit instanceof SourceFile) && ((SourceFile) unitResult.compilationUnit).isInLinkedSourceFolder()) {
 					return;
 				}
 			}

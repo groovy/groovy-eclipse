@@ -805,7 +805,7 @@ public abstract class Annotation extends Expression {
 				this.compilerAnnotation = scope.environment().createAnnotation(
 					(ReferenceBinding) this.resolvedType, Binding.NO_ELEMENT_VALUE_PAIRS);
 			} else {
-				scope.problemReporter().notAnnotationType(typeBinding, this.type);
+			scope.problemReporter().notAnnotationType(typeBinding, this.type);
 			}
 			return null;
 		}

@@ -14,12 +14,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
@@ -31,11 +25,19 @@ import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.Util;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ClasspathDirectory extends ClasspathLocation {
@@ -152,8 +154,14 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 	return null;
 }
 public NameEnvironmentAnswer findSecondaryInClass(char[] typeName, String qualifiedPackageName, String qualifiedBinaryFileName) {
-	boolean prereqs = this.options != null && isPackage(qualifiedPackageName) && ((this.mode & SOURCE) != 0) && doesFileExist( new String(typeName) + SUFFIX_STRING_java, qualifiedPackageName);
-	return prereqs ? null : findSourceSecondaryType(typeName, qualifiedPackageName, qualifiedBinaryFileName); /* only secondary types */
+	//"package-info" is a reserved class name and can never be a secondary type (it is much faster to stop the search here).
+	if(TypeConstants.PACKAGE_INFO_NAME.equals(typeName)) {
+		return null;
+	}
+
+	String typeNameString = new String(typeName);
+	boolean prereqs = this.options != null && isPackage(qualifiedPackageName) && ((this.mode & SOURCE) != 0) && doesFileExist(typeNameString + SUFFIX_STRING_java, qualifiedPackageName);
+	return prereqs ? null : findSourceSecondaryType(typeNameString, qualifiedPackageName, qualifiedBinaryFileName); /* only secondary types */
 }
 
 @Override
@@ -170,7 +178,7 @@ public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 /**
  *  Add all the secondary types in the package
  */
-private Hashtable<String, String> getPackageTypes(char[] typeName, String qualifiedPackageName) {
+private Hashtable<String, String> getPackageTypes(String qualifiedPackageName) {
 	Hashtable<String, String> packageEntry = new Hashtable<>();
 
 	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
@@ -187,6 +195,7 @@ private Hashtable<String, String> getPackageTypes(char[] typeName, String qualif
 		if (f.isDirectory()) continue;
 		String s = f.getAbsolutePath();
 		if (s == null) continue;
+		if (!(s.endsWith(SUFFIX_STRING_java) || s.endsWith(SUFFIX_STRING_JAVA))) continue;
 		CompilationUnit cu = new CompilationUnit(null, s, this.encoding, this.destinationPath);
 		CompilationResult compilationResult = new CompilationResult(cu.getContents(), 1, 1, 10);
 		ProblemReporter problemReporter = 
@@ -195,6 +204,7 @@ private Hashtable<String, String> getPackageTypes(char[] typeName, String qualif
 					new CompilerOptions(this.options),
 					new DefaultProblemFactory());
 		Parser parser = new Parser(problemReporter, false);
+		parser.reportSyntaxErrorIsRequired = false;
 
 		CompilationUnitDeclaration unit = parser.parse(cu, compilationResult);
 		org.eclipse.jdt.internal.compiler.ast.TypeDeclaration[] types = unit != null ? unit.types : null;
@@ -208,15 +218,15 @@ private Hashtable<String, String> getPackageTypes(char[] typeName, String qualif
 	}
 	return packageEntry;
 }
-private NameEnvironmentAnswer findSourceSecondaryType(char[] typeName, String qualifiedPackageName, String qualifiedBinaryFileName) {
+private NameEnvironmentAnswer findSourceSecondaryType(String typeName, String qualifiedPackageName, String qualifiedBinaryFileName) {
 	
 	if (this.packageSecondaryTypes == null) this.packageSecondaryTypes = new Hashtable<>();
 	Hashtable<String, String> packageEntry = this.packageSecondaryTypes.get(qualifiedPackageName);
 	if (packageEntry == null) {
-		packageEntry = 	getPackageTypes(typeName, qualifiedPackageName);
+		packageEntry = 	getPackageTypes(qualifiedPackageName);
 		this.packageSecondaryTypes.put(qualifiedPackageName, packageEntry);
 	}
-	String fileName = packageEntry.get(new String(typeName));
+	String fileName = packageEntry.get(typeName);
 	return fileName != null ? new NameEnvironmentAnswer(new CompilationUnit(null,
 			fileName, this.encoding, this.destinationPath),
 			fetchAccessRestriction(qualifiedBinaryFileName)) : null;

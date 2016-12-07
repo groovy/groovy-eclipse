@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -95,7 +95,7 @@ public class QualifiedThisReference extends ThisReference {
 
 		// the qualification MUST exactly match some enclosing type name
 		// It is possible to qualify 'this' by the name of the current class
-		int depth = findCompatibleEnclosing(scope.referenceType().binding, type);
+		int depth = findCompatibleEnclosing(scope.referenceType().binding, type, scope);
 		this.bits &= ~DepthMASK; // flush previous depth if any
 		this.bits |= (depth & 0xFF) << DepthSHIFT; // encoded depth into 8 bits
 
@@ -128,7 +128,7 @@ public class QualifiedThisReference extends ThisReference {
 		return this.resolvedType;
 	}
 
-	int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type) {
+	int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, BlockScope scope) {
 		int depth = 0;
 		this.currentCompatibleType = enclosingType;
 		while (this.currentCompatibleType != null && TypeBinding.notEquals(this.currentCompatibleType, type)) {

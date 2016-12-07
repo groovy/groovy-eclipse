@@ -378,11 +378,14 @@ private IBinaryType getJarBinaryTypeInfo(PackageFragment pkg, boolean fullyIniti
 				if (entry != null) {
 					IProject project = javaProject.getProject();
 					IPath externalAnnotationPath = ClasspathEntry.getExternalAnnotationPath(entry, project, false); // unresolved for use in ExternalAnnotationTracker
-					if (externalAnnotationPath != null)
+					if (externalAnnotationPath != null) {
 						setupExternalAnnotationProvider(project, externalAnnotationPath, annotationZip, reader, 
 								entryName.substring(0, entryName.length() - SuffixConstants.SUFFIX_CLASS.length));
+					} else if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+						reader.markAsFromSource();
+					}
 				}
-			} 
+			}
 			return reader;
 		}
 	} finally {

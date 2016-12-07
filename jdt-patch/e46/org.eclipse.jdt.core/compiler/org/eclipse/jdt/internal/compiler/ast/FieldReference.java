@@ -120,7 +120,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 			// assigning a final field outside an initializer or constructor or wrong reference
 			currentScope.problemReporter().cannotAssignToFinalField(this.binding, this);
 		}
-	} else if (this.binding.isNonNull()) {
+	} else if (this.binding.isNonNull() || this.binding.type.isTypeVariable()) {
 		// in a context where it can be assigned?
 		if (   !isCompound
 			&& this.receiver.isThis()

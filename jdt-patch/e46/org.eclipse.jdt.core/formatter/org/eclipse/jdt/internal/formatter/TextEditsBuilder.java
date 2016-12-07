@@ -189,9 +189,8 @@ public class TextEditsBuilder extends TokenTraverser {
 
 		this.parent.counter = this.counter;
 		this.parent.bufferLineSeparator(null, false);
+		this.parent.bufferIndent(this.parent.tm.get(this.parentTokenIndex), this.parentTokenIndex);
 		this.counter = this.parent.counter;
-
-		bufferIndent(this.parent.tm.get(this.parentTokenIndex), -1);
 
 		if (token != null && token.tokenType == TokenNameNotAToken)
 			return; // this is an unformatted block comment, don't force asterisk
@@ -224,36 +223,28 @@ public class TextEditsBuilder extends TokenTraverser {
 
 	private void bufferIndent(Token token, int index) {
 		int indent = token.getIndent();
-		int additionalSpaces = 0;
-		if (this.options.use_tabs_only_for_leading_indentations) {
-			// use indentation of wrap-line start token and add spaces to match current token
+		if (getCurrent() != null && getCurrent() != token)
+			indent += getCurrent().getEmptyLineIndentAdjustment();
+		int spaces = 0;
+		if (this.options.use_tabs_only_for_leading_indentations
+				&& this.options.tab_char != DefaultCodeFormatterOptions.SPACE) {
 			WrapPolicy wrapPolicy = token.getWrapPolicy();
-			int wrapRootIndent = indent;
-			if (index == -1) { // this means we print a line separator in a multi-line comment
-				TokenManager tm2 = this.parent.tm;
-				wrapRootIndent = tm2.get(tm2.findFirstTokenInLine(this.parentTokenIndex, true, true)).getIndent();
-			} else if (wrapPolicy != null) {
-				wrapRootIndent = this.tm.get(this.tm.findFirstTokenInLine(index, true, true)).getIndent();
+			boolean isWrappedBlockComment = this.childBuilder != null && this.childBuilder.parentTokenIndex == index;
+			if (isWrappedBlockComment) {
+				Token lineStart = this.tm.get(this.tm.findFirstTokenInLine(index));
+				spaces = token.getIndent() - lineStart.getIndent();
+				token = lineStart;
+				wrapPolicy = token.getWrapPolicy();
 			}
-			additionalSpaces = indent - wrapRootIndent;
-			indent = wrapRootIndent;
-
-			if (wrapPolicy != null && wrapPolicy.wrapMode == WrapMode.FORCED) {
-				int parentIndex = wrapPolicy.wrapParentIndex;
-				int parentAlign = 0;
-				int lineStart = this.tm.findFirstTokenInLine(parentIndex);
-				for (int i = parentIndex; i >= lineStart; i--) {
-					parentAlign = this.tm.get(i).getAlign();
-					if (parentAlign > 0)
-						break;
-				}
-
-				int extraIndent = parentAlign == 0 ? wrapPolicy.extraIndent : (token.getIndent() - parentAlign);
-				additionalSpaces -= extraIndent;
-				indent += extraIndent;
+			while (wrapPolicy != null) {
+				Token parentLineStart = this.tm.get(this.tm.findFirstTokenInLine(wrapPolicy.wrapParentIndex));
+				if (wrapPolicy.wrapMode != WrapMode.FORCED)
+					spaces += token.getIndent() - parentLineStart.getIndent();
+				token = parentLineStart;
+				wrapPolicy = token.getWrapPolicy();
 			}
 		}
-		appendIndentationString(this.buffer, this.options.tab_char, this.options.tab_size, indent, additionalSpaces);
+		appendIndentationString(this.buffer, this.options.tab_char, this.options.tab_size, indent - spaces, spaces);
 	}
 
 	public static void appendIndentationString(StringBuilder target, int tabChar, int tabSize, int indent,
@@ -302,6 +293,8 @@ public class TextEditsBuilder extends TokenTraverser {
 			currentPositionInLine = this.tm.getPositionInLine(index - 1);
 			currentPositionInLine += this.tm.getLength(this.tm.get(index - 1), currentPositionInLine);
 		}
+		if (isSpaceBefore())
+			align = Math.max(align, currentPositionInLine + 1);
 
 		final int tabSize = this.options.tab_size;
 		switch (this.alignChar) {
@@ -439,8 +432,8 @@ public class TextEditsBuilder extends TokenTraverser {
 			} else if (c1 == '\t' && c2 == ' ') {
 				for (i = 0; i < this.options.tab_size; i++) {
 					sourcePos += direction;
-					if (i < this.options.tab_size - 1
-							&& (sourcePos < 0 || sourcePos >= this.source.length() || this.source.charAt(sourcePos) != ' '))
+					if (i < this.options.tab_size - 1 && (sourcePos < 0 || sourcePos >= this.source.length()
+							|| this.source.charAt(sourcePos) != ' '))
 						continue theLoop;
 				}
 				textPos -= direction;

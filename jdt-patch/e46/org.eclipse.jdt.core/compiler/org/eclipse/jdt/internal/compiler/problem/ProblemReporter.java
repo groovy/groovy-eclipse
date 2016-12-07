@@ -113,6 +113,7 @@ import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.EqualExpression;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.ExpressionContext;
 import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldReference;
@@ -134,6 +135,7 @@ import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedSuperReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Receiver;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
@@ -407,8 +409,6 @@ public static int getIrritant(int problemID) {
 		case IProblem.CannotImplementIncompatibleNullness:
 		case IProblem.ConflictingNullAnnotations:
 		case IProblem.ConflictingInheritedNullAnnotations:
-		case IProblem.NullNotCompatibleToFreeTypeVariable:
-		case IProblem.NullityMismatchAgainstFreeTypeVariable:
 		case IProblem.NullityMismatchingTypeAnnotation:
 		case IProblem.NullityMismatchingTypeAnnotationSuperHint:
 		case IProblem.NullityMismatchTypeArgument:
@@ -421,6 +421,18 @@ public static int getIrritant(int problemID) {
 		case IProblem.ContradictoryNullAnnotationsInferred:
 		case IProblem.ContradictoryNullAnnotationsInferredFunctionType:
 			return CompilerOptions.NullSpecViolation;
+
+		case IProblem.NullNotCompatibleToFreeTypeVariable:
+		case IProblem.NullityMismatchAgainstFreeTypeVariable:
+		case IProblem.UncheckedAccessOfValueOfFreeTypeVariable:
+		case IProblem.RequiredNonNullButProvidedFreeTypeVariable:
+		case IProblem.UninitializedFreeTypeVariableField:
+		case IProblem.UninitializedFreeTypeVariableFieldHintMissingDefault:
+			return CompilerOptions.PessimisticNullAnalysisForFreeTypeVariables;
+
+		case IProblem.NonNullTypeVariableFromLegacyMethod:
+		case IProblem.NonNullMethodTypeVariableFromLegacyMethod:
+			return CompilerOptions.NonNullTypeVariableFromLegacyInvocation;
 
 		case IProblem.ParameterLackingNonNullAnnotation:
 			return CompilerOptions.NonnullParameterAnnotationDropped;
@@ -653,6 +665,8 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.UnusedObjectAllocation :
 			case CompilerOptions.UnclosedCloseable :
 			case CompilerOptions.PotentiallyUnclosedCloseable :
+			case CompilerOptions.PessimisticNullAnalysisForFreeTypeVariables :
+			case CompilerOptions.NonNullTypeVariableFromLegacyInvocation :
 				return CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM;
 			
 			case CompilerOptions.OverriddenPackageDefaultMethod :
@@ -1132,6 +1146,15 @@ public void boundMustBeAnInterface(ASTNode location, TypeBinding type) {
 		location.sourceStart,
 		location.sourceEnd);
 }
+public void bytecodeExceeds64KLimit(MethodBinding method, int start, int end) {
+	this.handle(
+		IProblem.BytecodeExceeds64KLimit,
+		new String[] {new String(method.selector), typesAsString(method, false)},
+		new String[] {new String(method.selector), typesAsString(method, true)},
+		ProblemSeverities.Error | ProblemSeverities.Abort | ProblemSeverities.Fatal,
+		start,
+		end);
+}
 public void bytecodeExceeds64KLimit(AbstractMethodDeclaration location) {
 	MethodBinding method = location.binding;
 	if (location.isConstructor()) {
@@ -1143,24 +1166,11 @@ public void bytecodeExceeds64KLimit(AbstractMethodDeclaration location) {
 			location.sourceStart,
 			location.sourceEnd);
 	} else {
-		this.handle(
-			IProblem.BytecodeExceeds64KLimit,
-			new String[] {new String(location.selector), typesAsString(method, false)},
-			new String[] {new String(location.selector), typesAsString(method, true)},
-			ProblemSeverities.Error | ProblemSeverities.Abort | ProblemSeverities.Fatal,
-			location.sourceStart,
-			location.sourceEnd);
+		bytecodeExceeds64KLimit(method,	location.sourceStart, location.sourceEnd);
 	}
 }
 public void bytecodeExceeds64KLimit(LambdaExpression location) {
-	MethodBinding method = location.binding;
-		this.handle(
-			IProblem.BytecodeExceeds64KLimit,
-			new String[] {new String(method.selector), typesAsString(method, false)},
-			new String[] {new String(method.selector), typesAsString(method, true)},
-			ProblemSeverities.Error | ProblemSeverities.Abort | ProblemSeverities.Fatal,
-			location.sourceStart,
-			location.diagnosticsSourceEnd());
+	bytecodeExceeds64KLimit(location.binding, location.sourceStart, location.diagnosticsSourceEnd());
 }
 public void bytecodeExceeds64KLimit(TypeDeclaration location) {
 	this.handle(
@@ -3007,6 +3017,14 @@ public void defaultMethodsNotBelow18(MethodDeclaration md) {
 			md.sourceStart,
 			md.sourceEnd);
 }
+public void interfaceSuperInvocationNotBelow18(QualifiedSuperReference qualifiedSuperReference) {
+	this.handle(
+			IProblem.InterfaceSuperInvocationNotBelow18,
+			NoArgument,
+			NoArgument,
+			qualifiedSuperReference.sourceStart,
+			qualifiedSuperReference.sourceEnd);
+}
 public void staticInterfaceMethodsNotBelow18(MethodDeclaration md) {
 	this.handle(
 			IProblem.StaticInterfaceMethodNotBelow18,
@@ -4159,6 +4177,20 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method, Scope s
 					(int) (messageSend.nameSourcePosition >>> 32),
 					(int) messageSend.nameSourcePosition);
 			return;
+		case ProblemReasons.InterfaceMethodInvocationNotBelow18:
+			this.handle(
+					IProblem.InterfaceStaticMethodInvocationNotBelow18,
+					new String[] {
+							new String(method.declaringClass.readableName()),
+					        new String(method.selector),
+					},
+					new String[] {
+							new String(method.declaringClass.shortReadableName()),
+					        new String(method.selector),
+					},
+					(int) (messageSend.nameSourcePosition >>> 32),
+					(int) messageSend.nameSourcePosition);
+			return;
 		case ProblemReasons.ReceiverTypeNotVisible :
 			this.handle(
 				IProblem.NotVisibleType,	// cannot occur in javadoc comments
@@ -4277,8 +4309,18 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method, Scope s
 			// FIXME(stephan): construct suitable message (https://bugs.eclipse.org/404675)
 			problemMethod = (ProblemMethodBinding) method;
 			shownMethod = problemMethod.closestMatch;
-			if (problemMethod.returnType == shownMethod.returnType) //$IDENTITY-COMPARISON$
+			if (problemMethod.returnType == shownMethod.returnType) { //$IDENTITY-COMPARISON$
+				if (messageSend.expressionContext == ExpressionContext.VANILLA_CONTEXT) {
+					TypeVariableBinding[] typeVariables = method.shallowOriginal().typeVariables;
+					String typeArguments = typesAsString(typeVariables, false);
+					this.handle(IProblem.CannotInferInvocationType, 
+							new String[] { typeArguments, String.valueOf(shownMethod.original().readableName()) },
+							new String[] { typeArguments, String.valueOf(shownMethod.original().shortReadableName()) },
+							messageSend.sourceStart,
+							messageSend.sourceEnd);
+				}
 				return; // funnily this can happen in a deeply nested call, because the inner lies by stealing its closest match and the outer does not know so. See GRT1_8.testBug430296
+			}
 			TypeBinding shownMethodReturnType = shownMethod.returnType.capture(scope, messageSend.sourceStart, messageSend.sourceEnd);
 			this.handle(
 				IProblem.TypeMismatch,
@@ -5878,7 +5920,54 @@ public void localVariableNullReference(LocalVariableBinding local, ASTNode locat
 		nodeSourceEnd(local, location));
 }
 
+public void fieldFreeTypeVariableReference(FieldBinding variable, long position) {
+	char[][] nullableName = this.options.nullableAnnotationName;
+	String[] arguments = new String[] {new String(variable.type.readableName()), 
+			new String(nullableName[nullableName.length-1])};
+	this.handle(
+		IProblem.UncheckedAccessOfValueOfFreeTypeVariable,
+		arguments,
+		arguments,
+		(int)(position >>> 32),
+		(int)position);
+}
+
+
+public void localVariableFreeTypeVariableReference(LocalVariableBinding local, ASTNode location) {
+	int severity = computeSeverity(IProblem.UncheckedAccessOfValueOfFreeTypeVariable);
+	if (severity == ProblemSeverities.Ignore) return;
+	char[][] nullableName = this.options.nullableAnnotationName;
+	String[] arguments = new String[] {new String(local.type.readableName()), 
+			new String(nullableName[nullableName.length-1])};
+	this.handle(
+		IProblem.UncheckedAccessOfValueOfFreeTypeVariable,
+		arguments,
+		arguments,
+		severity,
+		nodeSourceStart(local, location),
+		nodeSourceEnd(local, location));
+}
+
+public void methodReturnTypeFreeTypeVariableReference(MethodBinding method, ASTNode location) {
+	int severity = computeSeverity(IProblem.UncheckedAccessOfValueOfFreeTypeVariable);
+	if (severity == ProblemSeverities.Ignore) return;
+	char[][] nullableName = this.options.nullableAnnotationName;
+	String[] arguments = new String[] {new String(method.returnType.readableName()), 
+			new String(nullableName[nullableName.length-1])};
+	this.handle(
+		IProblem.UncheckedAccessOfValueOfFreeTypeVariable,
+		arguments,
+		arguments,
+		location.sourceStart,
+		location.sourceEnd);
+}
+
+
 public void localVariablePotentialNullReference(LocalVariableBinding local, ASTNode location) {
+	if(local.type.isFreeTypeVariable()) {
+		localVariableFreeTypeVariableReference(local, location);
+		return;
+	}
 	if (location instanceof Expression && (((Expression)location).implicitConversion & TypeIds.UNBOXING) != 0) {
 		potentialNullUnboxing(location, local.type);
 		return;
@@ -8147,6 +8236,20 @@ public void uninitializedBlankFinalField(FieldBinding field, ASTNode location) {
 }
 public void uninitializedNonNullField(FieldBinding field, ASTNode location) {
 	char[][] nonNullAnnotationName = this.options.nonNullAnnotationName;
+	if(!field.isNonNull()) {
+		String[] arguments = new String[] {
+				new String(field.readableName()), 
+				new String(field.type.readableName()), 
+				new String(nonNullAnnotationName[nonNullAnnotationName.length-1])
+		};
+		this.handle(
+				methodHasMissingSwitchDefault() ? IProblem.UninitializedFreeTypeVariableFieldHintMissingDefault : IProblem.UninitializedFreeTypeVariableField,
+				arguments,
+				arguments,
+				nodeSourceStart(field, location),
+				nodeSourceEnd(field, location));	
+		return;
+	}
 	String[] arguments = new String[] {
 			new String(nonNullAnnotationName[nonNullAnnotationName.length-1]),
 			new String(field.readableName())
@@ -9255,6 +9358,10 @@ public void nullityMismatch(Expression expression, TypeBinding providedType, Typ
 		if (var == null && expression instanceof Reference) {
 			var = ((Reference)expression).lastFieldBinding();
 		}
+		if(var != null && var.type.isFreeTypeVariable()) {			
+			nullityMismatchVariableIsFreeTypeVariable(var, expression);
+			return;
+		}
 		if (var != null && var.isNullable()) {
 			nullityMismatchSpecdNullable(expression, requiredType, annotationName);
 			return;
@@ -9335,6 +9442,21 @@ public void nullityMismatchIsUnknown(Expression expression, TypeBinding provided
 			shortAnnotatedTypeName(requiredType, annotationName)
 	};
 	this.handle(problemId, arguments, argumentsShort, expression.sourceStart, expression.sourceEnd);
+}
+private void nullityMismatchIsFreeTypeVariable(TypeBinding providedType, int sourceStart, int sourceEnd) {
+	char[][] nullableName = this.options.nullableAnnotationName;
+	char[][] nonNullName = this.options.nonNullAnnotationName;
+	String[] arguments = new String[] { 
+			new String(nonNullName[nonNullName.length-1]), 
+			new String(providedType.readableName()), 
+			new String(nullableName[nullableName.length-1])};
+	this.handle(IProblem.RequiredNonNullButProvidedFreeTypeVariable, arguments, arguments, sourceStart, sourceEnd);
+}
+public void nullityMismatchVariableIsFreeTypeVariable(VariableBinding variable, ASTNode location) {
+	int severity = computeSeverity(IProblem.RequiredNonNullButProvidedFreeTypeVariable);
+	if (severity == ProblemSeverities.Ignore) return;
+	nullityMismatchIsFreeTypeVariable(variable.type, nodeSourceStart(variable, location),
+			nodeSourceEnd(variable, location));
 }
 public void illegalRedefinitionToNonNullParameter(Argument argument, ReferenceBinding declaringClass, char[][] inheritedAnnotationName) {
 	int sourceStart = argument.type.sourceStart;
@@ -9862,6 +9984,11 @@ public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding 
 			&& (requiredType.tagBits & TagBits.AnnotationNonNull) != 0 
 			&& (providedType.tagBits & TagBits.AnnotationNullable) == 0)
 	{
+		if(this.options.pessimisticNullAnalysisForFreeTypeVariablesEnabled && providedType.isTypeVariable() && !providedType.hasNullTypeAnnotations()) {
+			nullityMismatchIsFreeTypeVariable(providedType, expression.sourceStart, expression.sourceEnd);
+			return;
+		}
+
 		nullityMismatchPotentiallyNull(expression, requiredType, this.options.nonNullAnnotationName);
 		return;
 	}
@@ -9957,7 +10084,54 @@ public void implicitObjectBoundNoNullDefault(TypeReference reference) {
 			ProblemSeverities.Warning,
 			reference.sourceStart, reference.sourceEnd);
 }
+public void nonNullTypeVariableInUnannotatedBinary(LookupEnvironment environment, MethodBinding method, Expression expression, int providedSeverity) {
+	TypeBinding declaredReturnType = method.original().returnType;
+	int severity = computeSeverity(IProblem.NonNullTypeVariableFromLegacyMethod);
+	if ((severity & ProblemSeverities.CoreSeverityMASK) == ProblemSeverities.Warning)
+		severity = providedSeverity; // leverage the greater precision from our caller
+	if (declaredReturnType instanceof TypeVariableBinding) { // paranoia check
+		TypeVariableBinding typeVariable = (TypeVariableBinding) declaredReturnType;
+		TypeBinding declaringClass = method.declaringClass;
 
+		char[][] nonNullName = this.options.nonNullAnnotationName;
+		String shortNonNullName = String.valueOf(nonNullName[nonNullName.length-1]);
+		
+		if (typeVariable.declaringElement instanceof ReferenceBinding) {
+			String[] arguments = new String[] {
+					shortNonNullName,
+					String.valueOf(declaringClass.nullAnnotatedReadableName(this.options, false)),
+					String.valueOf(declaringClass.original().readableName())};
+			String[] shortArguments = {
+					shortNonNullName,
+					String.valueOf(declaringClass.nullAnnotatedReadableName(this.options, true)),
+					String.valueOf(declaringClass.original().shortReadableName()) };
+			this.handle(IProblem.NonNullTypeVariableFromLegacyMethod,
+					arguments, 
+					shortArguments,
+					severity,
+					expression.sourceStart,
+					expression.sourceEnd);
+		} else if (typeVariable.declaringElement instanceof MethodBinding && method instanceof ParameterizedGenericMethodBinding) {
+			TypeBinding substitution = ((ParameterizedGenericMethodBinding) method).typeArguments[typeVariable.rank];
+			String[] arguments = new String[] {
+					shortNonNullName,
+					String.valueOf(typeVariable.readableName()),
+					String.valueOf(substitution.nullAnnotatedReadableName(this.options, false)),
+					String.valueOf(declaringClass.original().readableName())};
+			String[] shortArguments = {
+					shortNonNullName,
+					String.valueOf(typeVariable.shortReadableName()),
+					String.valueOf(substitution.nullAnnotatedReadableName(this.options, true)),
+					String.valueOf(declaringClass.original().shortReadableName()) };
+			this.handle(IProblem.NonNullMethodTypeVariableFromLegacyMethod,
+					arguments, 
+					shortArguments, 
+					severity,
+					expression.sourceStart,
+					expression.sourceEnd);			
+		}
+	}
+}
 public void dereferencingNullableExpression(Expression expression) {
 	if (expression instanceof MessageSend) {
 		MessageSend send = (MessageSend) expression;
@@ -10210,6 +10384,10 @@ public void incompatibleReturnType(ReferenceExpression expression, MethodBinding
 }
 
 public void illegalSuperAccess(TypeBinding superType, TypeBinding directSuperType, ASTNode location) {
+	if (directSuperType.problemId() == ProblemReasons.InterfaceMethodInvocationNotBelow18) {
+		interfaceSuperInvocationNotBelow18((QualifiedSuperReference) location);
+		return;
+	}
 	if (directSuperType.problemId() != ProblemReasons.AttemptToBypassDirectSuper)
 		needImplementation(location);
 	handle(IProblem.SuperAccessCannotBypassDirectSuper, 

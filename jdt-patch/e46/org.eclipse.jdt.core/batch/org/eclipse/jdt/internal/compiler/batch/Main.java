@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +11,7 @@
  *     Tom Tromey - Contribution for bug 125961
  *     Tom Tromey - Contribution for bug 159641
  *     Benjamin Muskalla - Contribution for bug 239066
- *     Stephan Herrmann  - Contributions for
+ *     Stephan Herrmann  - Contributions for 
  *     							bug 236385 - [compiler] Warn for potential programming problem if an object is created but not used
  *     							bug 295551 - Add option to automatically promote all warnings to errors
  *     							bug 359721 - [options] add command line option for new warning token "resource"
@@ -24,10 +25,10 @@
  *								Bug 408815 - [batch][null] Add CLI option for COMPILER_PB_SYNTACTIC_NULL_ANALYSIS_FOR_FIELDS
  *     Jesper S Moller   - Contributions for
  *								bug 407297 - [1.8][compiler] Control generation of parameter names by option
- *    Mat Booth - Contribution for bug 405176
+ *    Mat Booth - Contribution for bug 405176 
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
-// GROOVY PATCHED
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -713,7 +714,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		 */
 		public void logNumberOfClassFilesGenerated(int exportedClassFilesCounter) {
 			if ((this.tagBits & Logger.XML) != 0) {
-				this.parameters.put(Logger.VALUE, new Integer(exportedClassFilesCounter));
+				this.parameters.put(Logger.VALUE, Integer.valueOf(exportedClassFilesCounter));
 				printTag(Logger.NUMBER_OF_CLASSFILES, this.parameters, true, true);
 			}
 			if (exportedClassFilesCounter == 1) {
@@ -876,10 +877,10 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			int globalErrorsCount, int globalWarningsCount, int globalTasksCount) {
 			if ((this.tagBits & Logger.XML) != 0) {
 				// generate xml
-				this.parameters.put(Logger.NUMBER_OF_PROBLEMS, new Integer(globalProblemsCount));
-				this.parameters.put(Logger.NUMBER_OF_ERRORS, new Integer(globalErrorsCount));
-				this.parameters.put(Logger.NUMBER_OF_WARNINGS, new Integer(globalWarningsCount));
-				this.parameters.put(Logger.NUMBER_OF_TASKS, new Integer(globalTasksCount));
+				this.parameters.put(Logger.NUMBER_OF_PROBLEMS, Integer.valueOf(globalProblemsCount));
+				this.parameters.put(Logger.NUMBER_OF_ERRORS, Integer.valueOf(globalErrorsCount));
+				this.parameters.put(Logger.NUMBER_OF_WARNINGS, Integer.valueOf(globalWarningsCount));
+				this.parameters.put(Logger.NUMBER_OF_TASKS, Integer.valueOf(globalTasksCount));
 				printTag(Logger.PROBLEM_SUMMARY, this.parameters, true, true);
 			}
 			if (globalProblemsCount == 1) {
@@ -959,9 +960,9 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			long time = compilerStats.elapsedTime();
 			long lineCount = compilerStats.lineCount;
 			if ((this.tagBits & Logger.XML) != 0) {
-				this.parameters.put(Logger.VALUE, new Long(time));
+				this.parameters.put(Logger.VALUE, Long.valueOf(time));
 				printTag(Logger.TIME, this.parameters, true, true);
-				this.parameters.put(Logger.VALUE, new Long(lineCount));
+				this.parameters.put(Logger.VALUE, Long.valueOf(lineCount));
 				printTag(Logger.NUMBER_OF_LINES, this.parameters, true, true);
 			}
 			if (lineCount != 0) {
@@ -1049,9 +1050,9 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			final int sourceEnd = problem.getSourceEnd();
 			boolean isError = problem.isError();
 			this.parameters.put(Logger.PROBLEM_SEVERITY, isError ? Logger.ERROR : Logger.WARNING);
-			this.parameters.put(Logger.PROBLEM_LINE, new Integer(problem.getSourceLineNumber()));
-			this.parameters.put(Logger.PROBLEM_SOURCE_START, new Integer(sourceStart));
-			this.parameters.put(Logger.PROBLEM_SOURCE_END, new Integer(sourceEnd));
+			this.parameters.put(Logger.PROBLEM_LINE, Integer.valueOf(problem.getSourceLineNumber()));
+			this.parameters.put(Logger.PROBLEM_SOURCE_START, Integer.valueOf(sourceStart));
+			this.parameters.put(Logger.PROBLEM_SOURCE_END, Integer.valueOf(sourceEnd));
 			printTag(Logger.EXTRA_PROBLEM_TAG, this.parameters, true, false);
 			this.parameters.put(Logger.VALUE, problem.getMessage());
 			printTag(Logger.PROBLEM_MESSAGE, this.parameters, true, true);
@@ -1069,19 +1070,19 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			final int sourceEnd = problem.getSourceEnd();
 			final int id = problem.getID();
 			this.parameters.put(Logger.ID, getFieldName(id)); // ID as field name
-			this.parameters.put(Logger.PROBLEM_ID, new Integer(id)); // ID as numeric value
+			this.parameters.put(Logger.PROBLEM_ID, Integer.valueOf(id)); // ID as numeric value
 			boolean isError = problem.isError();
 			int severity = isError ? ProblemSeverities.Error : ProblemSeverities.Warning;
 			this.parameters.put(Logger.PROBLEM_SEVERITY, isError ? Logger.ERROR : Logger.WARNING);
-			this.parameters.put(Logger.PROBLEM_LINE, new Integer(problem.getSourceLineNumber()));
-			this.parameters.put(Logger.PROBLEM_SOURCE_START, new Integer(sourceStart));
-			this.parameters.put(Logger.PROBLEM_SOURCE_END, new Integer(sourceEnd));
+			this.parameters.put(Logger.PROBLEM_LINE, Integer.valueOf(problem.getSourceLineNumber()));
+			this.parameters.put(Logger.PROBLEM_SOURCE_START, Integer.valueOf(sourceStart));
+			this.parameters.put(Logger.PROBLEM_SOURCE_END, Integer.valueOf(sourceEnd));
 			String problemOptionKey = getProblemOptionKey(id);
 			if (problemOptionKey != null) {
 				this.parameters.put(Logger.PROBLEM_OPTION_KEY, problemOptionKey);
 			}
 			int categoryID = ProblemReporter.getProblemCategory(severity, id);
-			this.parameters.put(Logger.PROBLEM_CATEGORY_ID, new Integer(categoryID));
+			this.parameters.put(Logger.PROBLEM_CATEGORY_ID, Integer.valueOf(categoryID));
 			printTag(Logger.PROBLEM_TAG, this.parameters, true, false);
 			this.parameters.put(Logger.VALUE, problem.getMessage());
 			printTag(Logger.PROBLEM_MESSAGE, this.parameters, true, true);
@@ -1105,9 +1106,9 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		 *            the given unit source
 		 */
 		private void logXmlTask(CategorizedProblem problem, char[] unitSource) {
-			this.parameters.put(Logger.PROBLEM_LINE, new Integer(problem.getSourceLineNumber()));
-			this.parameters.put(Logger.PROBLEM_SOURCE_START, new Integer(problem.getSourceStart()));
-			this.parameters.put(Logger.PROBLEM_SOURCE_END, new Integer(problem.getSourceEnd()));
+			this.parameters.put(Logger.PROBLEM_LINE, Integer.valueOf(problem.getSourceLineNumber()));
+			this.parameters.put(Logger.PROBLEM_SOURCE_START, Integer.valueOf(problem.getSourceStart()));
+			this.parameters.put(Logger.PROBLEM_SOURCE_END, Integer.valueOf(problem.getSourceEnd()));
 			String problemOptionKey = getProblemOptionKey(problem.getID());
 			if (problemOptionKey != null) {
 				this.parameters.put(Logger.PROBLEM_OPTION_KEY, problemOptionKey);
@@ -1222,7 +1223,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			}
 		}
 		private void startLoggingExtraProblems(int count) {
-			this.parameters.put(Logger.NUMBER_OF_PROBLEMS, new Integer(count));
+			this.parameters.put(Logger.NUMBER_OF_PROBLEMS, Integer.valueOf(count));
 			printTag(Logger.EXTRA_PROBLEMS, this.parameters, true, false);
 		}
 
@@ -1231,9 +1232,9 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		 * Only use in xml mode.
 		 */
 		private void startLoggingProblems(int errors, int warnings) {
-			this.parameters.put(Logger.NUMBER_OF_PROBLEMS, new Integer(errors + warnings));
-			this.parameters.put(Logger.NUMBER_OF_ERRORS, new Integer(errors));
-			this.parameters.put(Logger.NUMBER_OF_WARNINGS, new Integer(warnings));
+			this.parameters.put(Logger.NUMBER_OF_PROBLEMS, Integer.valueOf(errors + warnings));
+			this.parameters.put(Logger.NUMBER_OF_ERRORS, Integer.valueOf(errors));
+			this.parameters.put(Logger.NUMBER_OF_WARNINGS, Integer.valueOf(warnings));
 			printTag(Logger.PROBLEMS, this.parameters, true, false);
 		}
 
@@ -1277,7 +1278,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 
 		public void startLoggingTasks(int tasks) {
 			if ((this.tagBits & Logger.XML) != 0) {
-				this.parameters.put(Logger.NUMBER_OF_TASKS, new Integer(tasks));
+				this.parameters.put(Logger.NUMBER_OF_TASKS, Integer.valueOf(tasks));
 				printTag(Logger.TASKS, this.parameters, true, false);
 			}
 		}
@@ -1505,8 +1506,8 @@ public void addExtraProblems(CategorizedProblem problem) {
 	}
 	this.extraProblems.add(problem);
 }
-protected void addNewEntry(List paths, String currentClasspathName,
-		List currentRuleSpecs, String customEncoding,
+protected void addNewEntry(ArrayList paths, String currentClasspathName,
+		ArrayList currentRuleSpecs, String customEncoding,
 		String destPath, boolean isSourceOnly,
 		boolean rejectDestinationPathOnJars) {
 
@@ -1809,7 +1810,7 @@ public void configure(String[] argv) {
 	String customDestinationPath = null;
 	String currentSourceDirectory = null;
 	String currentArg = Util.EMPTY_STRING;
-
+	
 	Set specifiedEncodings = null;
 
 	// expand the command line if necessary
@@ -1944,12 +1945,12 @@ public void configure(String[] argv) {
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
 				}new code: */
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)
-					|| currentArg.endsWith(".groovy")) {				 //$NON-NLS-1$
+					|| currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 
 					if (currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 						encounteredGroovySourceFile = true;
 					}
-				// GROOVY change end
+				// GROOVY end
 					if (this.filenames == null) {
 						this.filenames = new String[argCount - index];
 						this.encodings = new String[argCount - index];
@@ -2808,7 +2809,7 @@ public void configure(String[] argv) {
 			CompilerOptions.PRIVATE);
 	}
 
-	// GROOVY start
+	// GROOVY add
 	// grails 1.1 batch builds need the extra phase
 	//optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"1");
 	if (encounteredGroovySourceFile) {
@@ -3110,7 +3111,7 @@ public File getJavaHome() {
 }
 
 public FileSystem getLibraryAccess() {
-	return new FileSystem(this.checkedClasspaths, this.filenames,
+	return new FileSystem(this.checkedClasspaths, this.filenames, 
 					this.annotationsFromClasspath && CompilerOptions.ENABLED.equals(this.options.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis)));
 }
 
@@ -3486,7 +3487,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 						default: // no severity update
 					}
 				}
-				this.options.put(CompilerOptions.OPTION_ReportMissingEnumCaseDespiteDefault,
+				this.options.put(CompilerOptions.OPTION_ReportMissingEnumCaseDespiteDefault, 
 								 isEnabling ? CompilerOptions.ENABLED : CompilerOptions.DISABLED);
 				return;
 			} else if (token.equals("emptyBlock")) {//$NON-NLS-1$
@@ -3792,10 +3793,10 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				setSeverity(CompilerOptions.OPTION_ReportNonnullParameterAnnotationDropped, severity, isEnabling);
 				return;
 			}
-
+			
 			break;
 		case 'o' :
-			if (token.equals("over-sync") /*|| token.equals("syncOverride")*/) { //$NON-NLS-1$
+			if (token.equals("over-sync") /*|| token.equals("syncOverride")*/) { //$NON-NLS-1$ 
 				setSeverity(CompilerOptions.OPTION_ReportMissingSynchronizedOnInheritedMethod, severity, isEnabling);
 				return;
 			} else if (token.equals("over-ann")) { //$NON-NLS-1$
@@ -3841,7 +3842,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 			} else if (token.equals("staticReceiver")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, severity, isEnabling);
 				return;
-			} else 	if (/*token.equals("over-sync") ||*/ token.equals("syncOverride")) { //$NON-NLS-1$
+			} else 	if (/*token.equals("over-sync") ||*/ token.equals("syncOverride")) { //$NON-NLS-1$ 
 				setSeverity(CompilerOptions.OPTION_ReportMissingSynchronizedOnInheritedMethod, severity, isEnabling);
 				return;
 			} else if (token.equals("semicolon")) {//$NON-NLS-1$
@@ -3904,7 +3905,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				this.options.put(
 					CompilerOptions.OPTION_TaskTags,
 					isEnabling ? taskTags : Util.EMPTY_STRING);
-
+				
 				setSeverity(CompilerOptions.OPTION_ReportTasks, severity, isEnabling);
 				return;
 			} else if (token.equals("typeHiding")) { //$NON-NLS-1$
@@ -4268,7 +4269,7 @@ private ReferenceBinding[] processClassNames(LookupEnvironment environment) {
 /*
  * External API
  */
-public void processPathEntries(final int defaultSize, final List paths,
+public void processPathEntries(final int defaultSize, final ArrayList paths,
 			final String currentPath, String customEncoding, boolean isSourceOnly,
 			boolean rejectDestinationPathOnJars) {
 	String currentClasspathName = null;

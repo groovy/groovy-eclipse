@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@
 package org.eclipse.jdt.internal.compiler.env;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 
 public interface IBinaryType extends IGenericType {
@@ -58,8 +59,9 @@ char[] getEnclosingTypeName();
 
 IBinaryField[] getFields();
 /**
- * Answer the receiver's signature which describes the parameter &
- * return types as specified in section 4.4.4 of the Java 2 VM spec 3rd edition.
+ * Answer the receiver's ClassSignature, which describes the type parameters,
+ * super class, and super interfaces as specified in section "4.7.9.1 Signatures"
+ * of the Java SE 8 VM spec.
  * Returns null if none.
  *
  * @return the receiver's signature, null if none
@@ -159,5 +161,10 @@ char[] sourceFileName();
  * @return either a matching walker with data from external annotations or the walker provided via argument 'walker'.
  */
 ITypeAnnotationWalker enrichWithExternalAnnotationsFor(ITypeAnnotationWalker walker, Object member, LookupEnvironment environment);
+
+/**
+ * Answer whether a provider for external annotations is associated with this binary type.
+ */
+ExternalAnnotationStatus getExternalAnnotationStatus();
 
 }

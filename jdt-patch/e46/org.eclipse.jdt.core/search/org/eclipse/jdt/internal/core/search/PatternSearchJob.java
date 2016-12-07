@@ -15,6 +15,7 @@ import java.io.IOException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.search.*;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.index.FileIndexLocation;
@@ -52,28 +53,22 @@ public void ensureReadyToRun() {
 		getIndexes(null/*progress*/); // may trigger some index recreation
 }
 public boolean execute(IProgressMonitor progressMonitor) {
-	if (progressMonitor != null && progressMonitor.isCanceled()) throw new OperationCanceledException();
+	SubMonitor subMonitor = SubMonitor.convert(progressMonitor, 3);
 
 	boolean isComplete = COMPLETE;
 	this.executionTime = 0;
-	Index[] indexes = getIndexes(progressMonitor);
+	Index[] indexes = getIndexes(subMonitor.split(1));
 	try {
 		int max = indexes.length;
-		if (progressMonitor != null)
-			progressMonitor.beginTask("", max); //$NON-NLS-1$
+		SubMonitor loopMonitor = subMonitor.split(2).setWorkRemaining(max);
 		for (int i = 0; i < max; i++) {
-			isComplete &= search(indexes[i], progressMonitor);
-			if (progressMonitor != null) {
-				if (progressMonitor.isCanceled()) throw new OperationCanceledException();
-				progressMonitor.worked(1);
-			}
+			isComplete &= search(indexes[i], loopMonitor.split(1));
 		}
 		if (JobManager.VERBOSE)
 			Util.verbose("-> execution time: " + this.executionTime + "ms - " + this);//$NON-NLS-1$//$NON-NLS-2$
 		return isComplete;
 	} finally {
-		if (progressMonitor != null)
-			progressMonitor.done();
+		SubMonitor.done(progressMonitor);
 	}
 }
 public Index[] getIndexes(IProgressMonitor progressMonitor) {

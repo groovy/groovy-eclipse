@@ -43,10 +43,10 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
+import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
-import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BoundCheckStatus;
@@ -140,76 +140,99 @@ public class TypeVariableBinding extends ReferenceBinding {
 		if (this.superclass == null)
 			return BoundCheckStatus.OK;
 
+		BoundCheckStatus nullStatus = BoundCheckStatus.OK;
+		boolean checkNullAnnotations = scope.environment().usesNullTypeAnnotations();
+
 		if (argumentType.kind() == Binding.WILDCARD_TYPE) {
 			WildcardBinding wildcard = (WildcardBinding) argumentType;
 			switch(wildcard.boundKind) {
 				case Wildcard.EXTENDS :
+					boolean checkedAsOK = false;
 					TypeBinding wildcardBound = wildcard.bound;
 					if (TypeBinding.equalsEquals(wildcardBound, this))
-						return BoundCheckStatus.OK;
+						checkedAsOK = true; // OK per JLS, but may require null checking below
 					boolean isArrayBound = wildcardBound.isArrayType();
 					if (!wildcardBound.isInterface()) {
 						TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superclass) : this.superclass;
-						if (substitutedSuperType.id != TypeIds.T_JavaLangObject) {
+						if (!checkedAsOK) {
+							if (substitutedSuperType.id != TypeIds.T_JavaLangObject) {
+								if (isArrayBound) {
+									if (!wildcardBound.isCompatibleWith(substitutedSuperType, scope))
+										return BoundCheckStatus.MISMATCH;
+								} else {
+									TypeBinding match = wildcardBound.findSuperTypeOriginatingFrom(substitutedSuperType);
+									if (match != null) {
+										if (substitutedSuperType.isProvablyDistinct(match)) {
+											return BoundCheckStatus.MISMATCH;
+										}
+									} else {
+										match =  substitutedSuperType.findSuperTypeOriginatingFrom(wildcardBound);
+										if (match != null) {
+											if (match.isProvablyDistinct(wildcardBound)) {
+												return BoundCheckStatus.MISMATCH;
+											}
+										} else {
+											if (denotesRelevantSuperClass(wildcardBound) && denotesRelevantSuperClass(substitutedSuperType)) {
+												// non-object real superclass should have produced a valid 'match' above
+												return BoundCheckStatus.MISMATCH;
+											}
+										}
+									}
+								}
+							}
+						}
+						if (checkNullAnnotations && argumentType.hasNullTypeAnnotations()) {
+							nullStatus = nullBoundCheck(scope, argumentType, substitutedSuperType, substitution, location, nullStatus);
+						}
+					}
+					boolean mustImplement = isArrayBound || ((ReferenceBinding)wildcardBound).isFinal();
+					for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
+						TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superInterfaces[i]) : this.superInterfaces[i];
+						if (!checkedAsOK) {
 							if (isArrayBound) {
 								if (!wildcardBound.isCompatibleWith(substitutedSuperType, scope))
-									return BoundCheckStatus.MISMATCH;
+										return BoundCheckStatus.MISMATCH;
 							} else {
 								TypeBinding match = wildcardBound.findSuperTypeOriginatingFrom(substitutedSuperType);
 								if (match != null) {
 									if (substitutedSuperType.isProvablyDistinct(match)) {
 										return BoundCheckStatus.MISMATCH;
 									}
-								} else {
-									match =  substitutedSuperType.findSuperTypeOriginatingFrom(wildcardBound);
-									if (match != null) {
-										if (match.isProvablyDistinct(wildcardBound)) {
-											return BoundCheckStatus.MISMATCH;
-										}
-									} else {
-										if (denotesRelevantSuperClass(wildcardBound) && denotesRelevantSuperClass(substitutedSuperType)) {
-											// non-object real superclass should have produced a valid 'match' above
-											return BoundCheckStatus.MISMATCH;
-										}
-									}
+								} else if (mustImplement) {
+										return BoundCheckStatus.MISMATCH; // cannot be extended further to satisfy missing bounds
 								}
 							}
 						}
-					}
-					boolean mustImplement = isArrayBound || ((ReferenceBinding)wildcardBound).isFinal();
-					for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
-						TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superInterfaces[i]) : this.superInterfaces[i];
-						if (isArrayBound) {
-							if (!wildcardBound.isCompatibleWith(substitutedSuperType, scope))
-									return BoundCheckStatus.MISMATCH;
-						} else {
-							TypeBinding match = wildcardBound.findSuperTypeOriginatingFrom(substitutedSuperType);
-							if (match != null) {
-								if (substitutedSuperType.isProvablyDistinct(match)) {
-									return BoundCheckStatus.MISMATCH;
-								}
-							} else if (mustImplement) {
-									return BoundCheckStatus.MISMATCH; // cannot be extended further to satisfy missing bounds
-							}
+						if (checkNullAnnotations && argumentType.hasNullTypeAnnotations()) {
+							nullStatus = nullBoundCheck(scope, argumentType, substitutedSuperType, substitution, location, nullStatus);
 						}
-
 					}
+					if (nullStatus != null)
+						return nullStatus;
 					break;
 
 				case Wildcard.SUPER :
 					// if the wildcard is lower-bounded by a type variable that has no relevant upper bound there's nothing to check here (bug 282152):
-					if (wildcard.bound.isTypeVariable() && ((TypeVariableBinding)wildcard.bound).superclass.id == TypeIds.T_JavaLangObject)
-						break;
-					return boundCheck(substitution, wildcard.bound, scope, location);
-
+					if (wildcard.bound.isTypeVariable() && ((TypeVariableBinding)wildcard.bound).superclass.id == TypeIds.T_JavaLangObject) {
+						return nullBoundCheck(scope, argumentType, null, substitution, location, nullStatus);
+					} else {
+						TypeBinding bound = wildcard.bound;
+						if (checkNullAnnotations && this.environment.containsNullTypeAnnotation(wildcard.typeAnnotations))
+							bound = this.environment.createAnnotatedType(bound.withoutToplevelNullAnnotation(), wildcard.getTypeAnnotations());
+						BoundCheckStatus status = boundCheck(substitution, bound, scope, null); // do not report null-errors against the tweaked bound ...
+						if (status == BoundCheckStatus.NULL_PROBLEM && location != null)
+							scope.problemReporter().nullityMismatchTypeArgument(this, wildcard, location); // ... but against the wildcard
+						return status;
+					}
 				case Wildcard.UNBOUND :
+					if (checkNullAnnotations && argumentType.hasNullTypeAnnotations()) {
+						return nullBoundCheck(scope, argumentType, null, substitution, location, nullStatus);
+					}
 					break;
 			}
 			return BoundCheckStatus.OK;
 		}
 		boolean unchecked = false;
-		boolean checkNullAnnotations = scope.environment().usesNullTypeAnnotations();
-		boolean haveReportedNullProblem = false;
 		if (this.superclass.id != TypeIds.T_JavaLangObject) {
 			TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superclass) : this.superclass;
 	    	if (TypeBinding.notEquals(substitutedSuperType, argumentType)) {
@@ -223,11 +246,8 @@ public class TypeVariableBinding extends ReferenceBinding {
 						unchecked = true;
 				}
 	    	}
-			if (location != null && checkNullAnnotations) {
-				if (NullAnnotationMatching.analyse(this, argumentType, substitutedSuperType, substitution, -1, null, CheckMode.BOUND_CHECK).isAnyMismatch()) {
-					scope.problemReporter().nullityMismatchTypeArgument(this, argumentType, location);
-					haveReportedNullProblem = true;
-				}
+			if (checkNullAnnotations) {
+				nullStatus = nullBoundCheck(scope, argumentType, substitutedSuperType, substitution, location, nullStatus);
 			}
 		}
 	    for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
@@ -243,21 +263,28 @@ public class TypeVariableBinding extends ReferenceBinding {
 						unchecked = true;
 				}
 	    	}
-			if (location != null && checkNullAnnotations) {
-				if (NullAnnotationMatching.analyse(this, argumentType, substitutedSuperType, substitution, -1, null, CheckMode.BOUND_CHECK).isAnyMismatch()) {
-					scope.problemReporter().nullityMismatchTypeArgument(this, argumentType, location);
-					haveReportedNullProblem = true;
-				}
+			if (checkNullAnnotations) {
+				nullStatus = nullBoundCheck(scope, argumentType, substitutedSuperType, substitution, location, nullStatus);
 			}
 	    }
-	    if (location != null && checkNullAnnotations && !haveReportedNullProblem) {
+	    if (checkNullAnnotations && nullStatus != BoundCheckStatus.NULL_PROBLEM) {
 	    	long nullBits = this.tagBits & TagBits.AnnotationNullMASK;
 	    	if (nullBits != 0 && nullBits != (argumentType.tagBits & TagBits.AnnotationNullMASK)) {
-				scope.problemReporter().nullityMismatchTypeArgument(this, argumentType, location);
-				haveReportedNullProblem = true;
+				if (location != null)
+					scope.problemReporter().nullityMismatchTypeArgument(this, argumentType, location);
+				nullStatus = BoundCheckStatus.NULL_PROBLEM;
 			}
 	    }
-	    return unchecked ? BoundCheckStatus.UNCHECKED : haveReportedNullProblem ? BoundCheckStatus.NULL_PROBLEM : BoundCheckStatus.OK;
+	    return unchecked ? BoundCheckStatus.UNCHECKED : nullStatus != null ? nullStatus : BoundCheckStatus.OK;
+	}
+
+	private BoundCheckStatus nullBoundCheck(Scope scope, TypeBinding argumentType, TypeBinding substitutedSuperType, Substitution substitution, ASTNode location, BoundCheckStatus previousStatus) {
+		if (NullAnnotationMatching.analyse(this, argumentType, substitutedSuperType, substitution, -1, null, CheckMode.BOUND_CHECK).isAnyMismatch()) {
+			if (location != null)
+				scope.problemReporter().nullityMismatchTypeArgument(this, argumentType, location);
+			return BoundCheckStatus.NULL_PROBLEM;
+		}
+		return previousStatus;
 	}
 
 	boolean denotesRelevantSuperClass(TypeBinding type) {
@@ -902,7 +929,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		}	
 		ReferenceBinding[] interfaces = this.superInterfaces;
 		int length;
-		if ((length = interfaces.length) != 0) {
+		if (interfaces != null && (length = interfaces.length) != 0) {
 			for (int i = length; --i >= 0;) {
 				ReferenceBinding resolveType = interfaces[i];
 				long superNullTagBits = NullAnnotationMatching.validNullTagBits(resolveType.tagBits);
@@ -1049,5 +1076,12 @@ public class TypeVariableBinding extends ReferenceBinding {
 			}
 		}
 		return super.updateTagBits();
+	}
+
+	@Override
+	public boolean isFreeTypeVariable() {
+		return this.environment.usesNullTypeAnnotations() 
+				&& this.environment.globalOptions.pessimisticNullAnalysisForFreeTypeVariablesEnabled 
+				&& (this.tagBits & TagBits.AnnotationNullMASK) == 0;	
 	}
 }

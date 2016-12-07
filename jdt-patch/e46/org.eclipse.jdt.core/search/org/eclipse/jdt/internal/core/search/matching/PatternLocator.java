@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
+
 
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.*;
@@ -790,6 +791,17 @@ protected int resolveLevelForType(char[] qualifiedPattern, TypeBinding type) {
 	// Type variable cannot be specified through pattern => this kind of binding cannot match it (see bug 79803)
 	if (type.isTypeVariable()) return IMPOSSIBLE_MATCH;
 
+	if (type instanceof IntersectionTypeBinding18) {
+		int result = IMPOSSIBLE_MATCH, prev = IMPOSSIBLE_MATCH;
+		IntersectionTypeBinding18 i18 = (IntersectionTypeBinding18) type;
+		for (ReferenceBinding ref : i18.intersectingTypes) {
+			result = resolveLevelForType(qualifiedPattern, ref);
+			if (result == ACCURATE_MATCH) return result; 
+			if (result == IMPOSSIBLE_MATCH) continue;
+			if (prev == IMPOSSIBLE_MATCH) prev = result;
+		}
+		return prev;
+	}
 	// NOTE: if case insensitive search then qualifiedPattern is assumed to be lowercase
 
 	char[] qualifiedPackageName = type.qualifiedPackageName();

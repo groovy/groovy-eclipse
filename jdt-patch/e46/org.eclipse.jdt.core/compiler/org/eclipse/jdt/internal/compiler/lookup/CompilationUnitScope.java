@@ -87,16 +87,15 @@ void buildFieldsAndMethods() {
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
 		this.topLevelTypes[i].scope.buildFieldsAndMethods();
 }
-//GROOVY add - new method, can be overridden
+// GROOVY add - new method, can be overridden
 /**
-* @param referenceContext
 * @return true if error gets reported
 */
-protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration referenceContext) {
-	problemReporter().packageIsNotExpectedPackage(referenceContext);	
+protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration unitDeclaration) {
+	problemReporter().packageIsNotExpectedPackage(unitDeclaration);	
 	return true;
 }
-//GROOVY end
+// GROOVY end
 
 protected // GROOVY package->protected
 void buildTypeBindings(AccessRestriction accessRestriction) {
@@ -224,8 +223,8 @@ protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
 		}
 	}
 }
-protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
-	return new ClassScope(parent, typeDecl);
+protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl) {
+	return new ClassScope(parentScope, typeDecl);
 }
 //GROOVY end
 void checkAndSetImports() {
@@ -622,8 +621,9 @@ protected boolean canBeSeenBy(ReferenceBinding type, PackageBinding pkg) {
 	return type.canBeSeenBy(pkg);
 }
 //GROOVY end
-protected // GROOVY package->protected
-Binding findSingleImport(char[][] compoundName, int mask, boolean findStaticImports) {
+
+// GROOVY package->protected
+protected Binding findSingleImport(char[][] compoundName, int mask, boolean findStaticImports) {
 	if (compoundName.length == 1) {
 		// findType records the reference
 		// the name cannot be a package
@@ -695,8 +695,8 @@ private MethodBinding findStaticMethod(ReferenceBinding currentType, char[] sele
 	} while ((currentType = currentType.superclass()) != null);
 	return null;
 }
-protected // GROOVY package->protected
-ImportBinding[] getDefaultImports() {
+// GROOVY package->protected
+protected ImportBinding[] getDefaultImports() {
 	// initialize the default imports if necessary... share the default java.lang.* import
 	if (this.environment.defaultImports != null) return this.environment.defaultImports;
 
@@ -775,8 +775,8 @@ OR 'a' -> 'a' in the simple name collection
 -> As long as each single char[] is interned, we should not have a space problem
  and can handle collision cases.
 */
-public // GROOVY package->public
-void recordQualifiedReference(char[][] qualifiedName) {
+// GROOVY package->public
+public void recordQualifiedReference(char[][] qualifiedName) {
 	if (this.qualifiedReferences == null) return; // not recording dependencies
 
 	int length = qualifiedName.length;
@@ -815,8 +815,8 @@ void recordRootReference(char[] simpleName) {
 	if (!this.rootReferences.contains(simpleName))
 		this.rootReferences.add(simpleName);
 }
-public // GROOVY package->public
-void recordSimpleReference(char[] simpleName) {
+// GROOVY package->public
+public void recordSimpleReference(char[] simpleName) {
 	if (this.simpleNameReferences == null) return; // not recording dependencies
 
 	if (!this.simpleNameReferences.contains(simpleName))

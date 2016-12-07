@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
+
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.*;
@@ -77,8 +78,8 @@ public class ImportReference extends ASTNode {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}
-	
-	// GROOVY start - can be overridden by aliased imports that don't use the final token as the name
+
+	// GROOVY add - can be overridden by aliased imports that don't use the final token as the name
 	public char[] getSimpleName() {
 		return this.tokens[this.tokens.length-1];
 	}

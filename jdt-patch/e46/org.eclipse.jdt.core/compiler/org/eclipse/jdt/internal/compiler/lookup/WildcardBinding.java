@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -89,7 +90,125 @@ public class WildcardBinding extends ReferenceBinding {
 		}
 		return this.environment.createIntersectionType18(allBounds);
 	}
+	
+	
+	@Override
+	public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
+		this.tagBits |= TagBits.HasTypeAnnotations;
+		if (annotations != null && annotations.length != 0) {
+			this.typeAnnotations = annotations;
+		}
+		if (evalNullAnnotations) {
+			evaluateNullAnnotations(null, null);
+		}
+	}
 
+	/**
+	 * evaluate null type annotations and check / copy nullTagBits from bound and typevariable.
+	 * may be invoked repeatedly.
+	 * @param scope (may be null, if wildcard is null)
+	 * @param wildcard (may be null. if non-null, errors are reported and type annotations are dropped from this.bound in case of conflicts.)
+	 */
+	public void evaluateNullAnnotations(Scope scope, Wildcard wildcard) {
+		long nullTagBits = determineNullBitsFromDeclaration(scope, wildcard);
+		if (nullTagBits == 0L) {
+			TypeVariableBinding typeVariable2 = typeVariable();
+			if (typeVariable2 != null) {
+				long typeVariableNullTagBits = typeVariable2.tagBits & TagBits.AnnotationNullMASK;
+				if (typeVariableNullTagBits != 0L) {
+					nullTagBits = typeVariableNullTagBits;
+				}
+			}
+		}
+		if (nullTagBits != 0)
+			this.tagBits = (this.tagBits & ~TagBits.AnnotationNullMASK) | nullTagBits | TagBits.HasNullTypeAnnotation;
+	}
+
+	/**
+	 * compute the nullTagBits from type annotations and bound.
+	 * @param scope (may be null, if wildcard is null)
+	 * @param wildcard (may be null. if non-null, errors are reported and type annotations are dropped from this.bound in case of conflicts.)
+	 */
+	public long determineNullBitsFromDeclaration(Scope scope, Wildcard wildcard) {
+		long nullTagBits = 0L;
+		AnnotationBinding [] annotations = this.typeAnnotations;
+		if (annotations != null) {
+			for (int i = 0, length = annotations.length; i < length; i++) {
+				AnnotationBinding annotation = annotations[i];
+				if (annotation != null) {
+					if (annotation.type.hasNullBit(TypeIds.BitNullableAnnotation)) {
+						if ((nullTagBits & TagBits.AnnotationNonNull) == 0) {
+							nullTagBits |= TagBits.AnnotationNullable;
+						} else {
+							if (wildcard != null) {
+								Annotation annotation1 = wildcard.findAnnotation(TagBits.AnnotationNullable);
+								if (annotation1 != null)
+									scope.problemReporter().contradictoryNullAnnotations(annotation1);
+							}
+						}
+					} else if (annotation.type.hasNullBit(TypeIds.BitNonNullAnnotation)) {
+						if ((nullTagBits & TagBits.AnnotationNullable) == 0) {
+							nullTagBits |= TagBits.AnnotationNonNull;
+						} else {
+							if (wildcard != null) {
+								Annotation annotation1 = wildcard.findAnnotation(TagBits.AnnotationNonNull);
+								if (annotation1 != null)
+									scope.problemReporter().contradictoryNullAnnotations(annotation1);
+							}
+						}
+					}
+				}
+			}
+		}
+		if (this.bound != null && this.bound.isValidBinding()) {
+			long boundNullTagBits = this.bound.tagBits & TagBits.AnnotationNullMASK;
+			if (boundNullTagBits != 0L) {
+				if (this.boundKind == Wildcard.SUPER) {
+					if ((boundNullTagBits & TagBits.AnnotationNullable) != 0) {
+						if (nullTagBits == 0L) {
+							nullTagBits = TagBits.AnnotationNullable;
+						} else if (wildcard != null && (nullTagBits & TagBits.AnnotationNonNull) != 0) {
+							Annotation annotation = wildcard.bound.findAnnotation(boundNullTagBits);
+							if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
+								// may not be reachable, how could we have an implicit @Nullable (not via @NonNullByDefault)?
+								TypeBinding newBound = this.bound.withoutToplevelNullAnnotation();
+								this.bound = newBound;
+								wildcard.bound.resolvedType = newBound;
+							} else {
+								scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, nullTagBits);
+							}
+						}
+					}
+				} else {
+					if ((boundNullTagBits & TagBits.AnnotationNonNull) != 0) {
+						if (nullTagBits == 0L) {
+							nullTagBits = TagBits.AnnotationNonNull;
+						} else if (wildcard != null && (nullTagBits & TagBits.AnnotationNullable) != 0) {
+							Annotation annotation = wildcard.bound.findAnnotation(boundNullTagBits);
+							if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
+								TypeBinding newBound = this.bound.withoutToplevelNullAnnotation();
+								this.bound = newBound;
+								wildcard.bound.resolvedType = newBound;
+							} else {
+								scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, nullTagBits);
+							}
+						}
+					}
+					if (nullTagBits == 0L && this.otherBounds != null) {
+						for (int i = 0, length = this.otherBounds.length; i < length; i++) {
+							if ((this.otherBounds[i].tagBits & TagBits.AnnotationNonNull) != 0) { // can this happen?
+								nullTagBits = TagBits.AnnotationNonNull;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		return nullTagBits;
+	}
+
+	
 	public ReferenceBinding actualType() {
 		return this.genericType;
 	}
@@ -704,6 +823,7 @@ public class WildcardBinding extends ReferenceBinding {
 
 		this.tagBits &= ~TagBits.HasUnresolvedTypeVariables;
 		BinaryTypeBinding.resolveType(this.genericType, this.environment, false /* no raw conversion */);
+
 		switch(this.boundKind) {
 			case Wildcard.EXTENDS :
 				TypeBinding resolveType = BinaryTypeBinding.resolveType(this.bound, this.environment, true /* raw conversion */);
@@ -721,6 +841,9 @@ public class WildcardBinding extends ReferenceBinding {
 				this.tagBits |= resolveType.tagBits & TagBits.ContainsNestedTypeReferences | TagBits.HasCapturedWildcard;
 				break;
 			case Wildcard.UNBOUND :
+		}
+		if (this.environment.usesNullTypeAnnotations()) {
+			evaluateNullAnnotations(null, null);
 		}
 		return this;
 	}

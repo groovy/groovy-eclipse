@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -185,7 +185,9 @@ public class CompilerOptions {
 	public static final String OPTION_SyntacticNullAnalysisForFields = "org.eclipse.jdt.core.compiler.problem.syntacticNullAnalysisForFields"; //$NON-NLS-1$
 	public static final String OPTION_InheritNullAnnotations = "org.eclipse.jdt.core.compiler.annotation.inheritNullAnnotations";  //$NON-NLS-1$
 	public static final String OPTION_ReportNonnullParameterAnnotationDropped = "org.eclipse.jdt.core.compiler.problem.nonnullParameterAnnotationDropped";  //$NON-NLS-1$
-	// GROOVY start
+	public static final String OPTION_PessimisticNullAnalysisForFreeTypeVariables = "org.eclipse.jdt.core.compiler.problem.pessimisticNullAnalysisForFreeTypeVariables";  //$NON-NLS-1$
+	public static final String OPTION_ReportNonNullTypeVariableFromLegacyInvocation = "org.eclipse.jdt.core.compiler.problem.nonnullTypeVariableFromLegacyInvocation"; //$NON-NLS-1$
+	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
 	public static final String OPTIONG_BuildGroovyFiles = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
@@ -196,7 +198,6 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyTransformsToRunOnReconcile = "org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyCustomizerClassesList = "org.eclipse.jdt.core.compiler.groovy.groovyCustomizerClassesList"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyExcludeGlobalASTScan = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude";  //$NON-NLS-1$
-
 	// GROOVY end
 	
 	/**
@@ -319,6 +320,8 @@ public class CompilerOptions {
 	public static final int UnusedTypeParameter = IrritantSet.GROUP2 | ASTNode.Bit17;
 	public static final int NonnullParameterAnnotationDropped = IrritantSet.GROUP2 | ASTNode.Bit18;
 	public static final int UnusedExceptionParameter = IrritantSet.GROUP2 | ASTNode.Bit19;
+	public static final int PessimisticNullAnalysisForFreeTypeVariables = IrritantSet.GROUP2 | ASTNode.Bit20;
+	public static final int NonNullTypeVariableFromLegacyInvocation = IrritantSet.GROUP2 | ASTNode.Bit21;
 
 	// Severity level for handlers
 	/** 
@@ -456,7 +459,7 @@ public class CompilerOptions {
 	 */
 	public boolean ignoreSourceFolderWarningOption;
 
-	// GROOVY start
+	// GROOVY add
 	public int buildGroovyFiles = 0; // 0=dontknow 1=no 2=yes
 	public int groovyFlags = 0; // 0x01 == IsGrails
 	
@@ -467,7 +470,7 @@ public class CompilerOptions {
 	public String groovyTransformsToRunOnReconcile = null;
 	public String groovyExcludeGlobalASTScan = null;
 	// GROOVY end
-	
+
 	// === Support for Null Annotations: ===
 	/** Master switch for null analysis based on annotations: */
 	public boolean isAnnotationBasedNullAnalysisEnabled;
@@ -493,10 +496,13 @@ public class CompilerOptions {
 	/** Should the compiler tolerate illegal ambiguous varargs invocation in compliance < 1.7 
 	 * to be bug compatible with javac? (bug 383780) */
 	public static boolean tolerateIllegalAmbiguousVarargsInvocation;
-	
+	/** Should the compiler use performance optimization during type inference (bug 476718) */
+	public static boolean useunspecdtypeinferenceperformanceoptimization;
 	{
 		String tolerateIllegalAmbiguousVarargs = System.getProperty("tolerateIllegalAmbiguousVarargsInvocation"); //$NON-NLS-1$
 		tolerateIllegalAmbiguousVarargsInvocation = tolerateIllegalAmbiguousVarargs != null && tolerateIllegalAmbiguousVarargs.equalsIgnoreCase("true"); //$NON-NLS-1$
+		String useunspecdtypeinferenceoptimization = System.getProperty("useunspecdtypeinferenceperformanceoptimization"); //$NON-NLS-1$
+		useunspecdtypeinferenceperformanceoptimization = useunspecdtypeinferenceoptimization != null && useunspecdtypeinferenceoptimization.equalsIgnoreCase("true"); //$NON-NLS-1$
 	}
 	/** Should null annotations of overridden methods be inherited? */
 	public boolean inheritNullAnnotations;
@@ -504,11 +510,15 @@ public class CompilerOptions {
 	/** Should immediate null-check for fields be considered during null analysis (syntactical match)? */
 	public boolean enableSyntacticNullAnalysisForFields;
 
+	/** Is the error level for pessimistic null analysis for free type variables different from "ignore"? */
+	public boolean pessimisticNullAnalysisForFreeTypeVariablesEnabled;
+
 	public boolean complainOnUninternedIdentityComparison;
 	public boolean emulateJavacBug8031744 = true;
 
 	/** Not directly configurable, derived from other options by LookupEnvironment.usesNullTypeAnnotations() */
 	public Boolean useNullTypeAnnotations = null;
+	
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
@@ -725,6 +735,10 @@ public class CompilerOptions {
 				return OPTION_ReportRedundantNullAnnotation;
 			case NonnullParameterAnnotationDropped:
 				return OPTION_ReportNonnullParameterAnnotationDropped;
+			case PessimisticNullAnalysisForFreeTypeVariables:
+				return OPTION_PessimisticNullAnalysisForFreeTypeVariables;
+			case NonNullTypeVariableFromLegacyInvocation:
+				return OPTION_ReportNonNullTypeVariableFromLegacyInvocation;
 		}
 		return null;
 	}
@@ -988,6 +1002,8 @@ public class CompilerOptions {
 			case RedundantNullAnnotation :
 			case MissingNonNullByDefaultAnnotation:
 			case NonnullParameterAnnotationDropped:
+			case PessimisticNullAnalysisForFreeTypeVariables:
+			case NonNullTypeVariableFromLegacyInvocation:
 				return "null"; //$NON-NLS-1$
 			case FallthroughCase :
 				return "fallthrough"; //$NON-NLS-1$
@@ -1229,9 +1245,11 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_InheritNullAnnotations, this.inheritNullAnnotations ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportNonnullParameterAnnotationDropped, getSeverityString(NonnullParameterAnnotationDropped));
 		optionsMap.put(OPTION_ReportUninternedIdentityComparison, this.complainOnUninternedIdentityComparison ? ENABLED : DISABLED);
-		// GROOVY start
+		optionsMap.put(OPTION_PessimisticNullAnalysisForFreeTypeVariables, getSeverityString(PessimisticNullAnalysisForFreeTypeVariables));
+		optionsMap.put(OPTION_ReportNonNullTypeVariableFromLegacyInvocation, getSeverityString(NonNullTypeVariableFromLegacyInvocation));
+		// GROOVY add
 		// if not supplied here it isn't seen as something that can be set from elsewhere
-		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile,"");
+		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile, ""); //$NON-NLS-1$
 		// GROOVY end
 		return optionsMap;
 	}
@@ -1767,6 +1785,13 @@ public class CompilerOptions {
 				this.inheritNullAnnotations = ENABLED.equals(optionValue);
 			}
 			if ((optionValue = optionsMap.get(OPTION_ReportNonnullParameterAnnotationDropped)) != null) updateSeverity(NonnullParameterAnnotationDropped, optionValue);
+			if ((optionValue = optionsMap.get(OPTION_PessimisticNullAnalysisForFreeTypeVariables)) != null) updateSeverity(PessimisticNullAnalysisForFreeTypeVariables, optionValue);
+			if (getSeverity(PessimisticNullAnalysisForFreeTypeVariables) == ProblemSeverities.Ignore) {
+				this.pessimisticNullAnalysisForFreeTypeVariablesEnabled = false;
+			} else {
+				this.pessimisticNullAnalysisForFreeTypeVariablesEnabled = true;
+			}
+			if ((optionValue = optionsMap.get(OPTION_ReportNonNullTypeVariableFromLegacyInvocation)) != null) updateSeverity(NonNullTypeVariableFromLegacyInvocation, optionValue);
 		}
 
 		// Javadoc options
@@ -1903,8 +1928,7 @@ public class CompilerOptions {
 				this.complainOnUninternedIdentityComparison = false;
 			}
 		}
-
-		// GROOVY start
+		// GROOVY add
 		if ((optionValue = optionsMap.get(OPTIONG_BuildGroovyFiles)) != null) {
 			if (ENABLED.equals(optionValue)) {
 				this.buildGroovyFiles = 2;
@@ -1955,26 +1979,28 @@ public class CompilerOptions {
 		// GROOVY end
 	}
 
+	// GROOVY add
 	static String sysPropConfiguredCustomizerClassesList = null;
 	static String sysPropConfiguredExtraImports = null;
 	static String sysPropConfiguredGroovyTransforms = null;
 	static {
 		try {
-			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports");
+			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports"); //$NON-NLS-1$
 		} catch (Exception e) {
 			sysPropConfiguredExtraImports= null;
 		}
 		try {
-			sysPropConfiguredGroovyTransforms = System.getProperty("greclipse.transformsDuringReconcile");
+			sysPropConfiguredGroovyTransforms = System.getProperty("greclipse.transformsDuringReconcile"); //$NON-NLS-1$
 		} catch (Exception e) {
 			sysPropConfiguredGroovyTransforms= null;
 		}
 		try {
-			sysPropConfiguredCustomizerClassesList = System.getProperty("greclipse.customizerClassesList");
+			sysPropConfiguredCustomizerClassesList = System.getProperty("greclipse.customizerClassesList"); //$NON-NLS-1$
 		} catch (Exception e) {
 			sysPropConfiguredCustomizerClassesList= null;
 		}
 	}
+	// GROOVY end
 
 	private String[] stringToNameList(String optionValue) {
 		String[] result = optionValue.split(","); //$NON-NLS-1$
@@ -1994,6 +2020,7 @@ public class CompilerOptions {
 		}
 		return buf.toString();
 	}
+
 	public String toString() {
 		StringBuffer buf = new StringBuffer("CompilerOptions:"); //$NON-NLS-1$
 		buf.append("\n\t- local variables debug attributes: ").append((this.produceDebugAttributes & ClassFileConstants.ATTR_VARS) != 0 ? "ON" : " OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -2104,8 +2131,9 @@ public class CompilerOptions {
 		buf.append("\n\t- resource may not be closed: ").append(getSeverityString(PotentiallyUnclosedCloseable)); //$NON-NLS-1$
 		buf.append("\n\t- resource should be handled by try-with-resources: ").append(getSeverityString(ExplicitlyClosedAutoCloseable)); //$NON-NLS-1$
 		buf.append("\n\t- Unused Type Parameter: ").append(getSeverityString(UnusedTypeParameter)); //$NON-NLS-1$
-
-		// GROOVY start
+		buf.append("\n\t- pessimistic null analysis for free type variables: ").append(getSeverityString(PessimisticNullAnalysisForFreeTypeVariables)); //$NON-NLS-1$
+		buf.append("\n\t- report unsafe nonnull return from legacy method: ").append(getSeverityString(NonNullTypeVariableFromLegacyInvocation)); //$NON-NLS-1$
+		// GROOVY add
 		buf.append("\n\t- build groovy files: ").append((this.buildGroovyFiles==0)?"dontknow":(this.buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(this.groovyFlags)); //$NON-NLS-1$
 		buf.append("\n\t- groovyclassloader path: ").append(this.groovyClassLoaderPath); //$NON-NLS-1$

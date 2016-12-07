@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2015 GK Software AG and others.
+ * Copyright (c) 2011, 2016 GK Software AG and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -900,7 +900,7 @@ public class FakedTrackingVariable extends LocalDeclaration {
 		}
 		if (this.recordedLocations == null)
 			this.recordedLocations = new HashMap();
-		this.recordedLocations.put(location, new Integer(nullStatus));
+		this.recordedLocations.put(location, Integer.valueOf(nullStatus));
 	}
 
 	public boolean reportRecordedErrors(Scope scope, int mergedStatus, boolean atDeadEnd) {

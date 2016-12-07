@@ -10,14 +10,24 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.Arrays;
+import java.util.HashMap;
+
 import org.eclipse.jdt.core.IType;
 
 public final class TypeVector {
 	static int INITIAL_SIZE = 10;
+	static int MIN_ELEMENTS_FOR_HASHSET = 8;
 
 	public int size;
 	int maxSize;
 	IType[] elements;
+	/**
+	 * {@link HashMap} that contains the same elements as the {@link #elements}. Used to speed up {@link #contains} 
+	 * for large lists. It is lazily constructed the first time it is needed for vectors larger than
+	 * {@link #MIN_ELEMENTS_FOR_HASHSET}. Set to null if not constructed yet. The keys and values are the same
+	 */
+	private HashMap<IType, IType> elementSet = null;
 
 	public final static IType[] NoElements = new IType[0];
 
@@ -42,6 +52,9 @@ public void add(IType newElement) {
 	if (this.size == this.maxSize)	// knows that size starts <= maxSize
 		System.arraycopy(this.elements, 0, (this.elements = new IType[this.maxSize *= 2]), 0, this.size);
 	this.elements[this.size++] = newElement;
+	if (this.elementSet != null) {
+		this.elementSet.put(newElement, newElement);
+	}
 }
 public void addAll(IType[] newElements) {
 	if (this.size + newElements.length >= this.maxSize) {
@@ -50,12 +63,34 @@ public void addAll(IType[] newElements) {
 	}
 	System.arraycopy(newElements, 0, this.elements, this.size, newElements.length);
 	this.size += newElements.length;
+	if (this.elementSet != null) {
+		for (IType next : newElements) {
+			this.elementSet.put(next, next);
+		}
+	}
 }
 public boolean contains(IType element) {
+	constructElementSetIfNecessary();
+
+	if (this.elementSet != null) {
+		return this.elementSet.containsKey(element);
+	}
+
 	for (int i = this.size; --i >= 0;) 
 		if (element.equals(this.elements[i]))
 			return true;
 	return false;
+}
+/**
+ * 
+ */
+private void constructElementSetIfNecessary() {
+	if (this.elementSet == null && this.size >= MIN_ELEMENTS_FOR_HASHSET) {
+		this.elementSet = new HashMap<>();
+		for (IType next : this.elements) {
+			this.elementSet.put(next, next);
+		}
+	}
 }
 public TypeVector copy() {
 	TypeVector clone = new TypeVector();
@@ -79,13 +114,16 @@ public IType[] elements() {
 	}
 	return this.elements;
 }
-public IType find(IType element) {
-	for (int i = this.size; --i >= 0;)
-		if (element == this.elements[i])
-			return this.elements[i];
-	return null;
-}
+
 public IType remove(IType element) {
+	if (this.elementSet != null) {
+		IType value = this.elementSet.get(element);
+		if (value == element) {
+			this.elementSet.remove(element);
+		} else {
+			return null;
+		}
+	}
 	// assumes only one occurrence of the element exists
 	for (int i = this.size; --i >= 0;)
 		if (element == this.elements[i]) {
@@ -97,12 +135,12 @@ public IType remove(IType element) {
 	return null;
 }
 public void removeAll() {
-	for (int i = this.size; --i >= 0;)
-		this.elements[i] = null;
+	Arrays.fill(this.elements, null);
+	this.elementSet = null;
 	this.size = 0;
 }
 public String toString() {
-	StringBuffer buffer = new StringBuffer("["); //$NON-NLS-1$
+	StringBuilder buffer = new StringBuilder("["); //$NON-NLS-1$
 	for (int i = 0; i < this.size; i++) {
 		buffer.append("\n"); //$NON-NLS-1$
 		buffer.append(this.elements[i]);

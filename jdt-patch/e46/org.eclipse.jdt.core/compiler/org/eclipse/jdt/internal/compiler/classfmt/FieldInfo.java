@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -253,16 +253,16 @@ public Object getWrappedConstantValue() {
 			Constant fieldConstant = getConstant();
 			switch (fieldConstant.typeID()) {
 				case TypeIds.T_int :
-					this.wrappedConstantValue = new Integer(fieldConstant.intValue());
+					this.wrappedConstantValue = Integer.valueOf(fieldConstant.intValue());
 					break;
 				case TypeIds.T_byte :
-					this.wrappedConstantValue = new Byte(fieldConstant.byteValue());
+					this.wrappedConstantValue = Byte.valueOf(fieldConstant.byteValue());
 					break;
 				case TypeIds.T_short :
-					this.wrappedConstantValue = new Short(fieldConstant.shortValue());
+					this.wrappedConstantValue = Short.valueOf(fieldConstant.shortValue());
 					break;
 				case TypeIds.T_char :
-					this.wrappedConstantValue = new Character(fieldConstant.charValue());
+					this.wrappedConstantValue = Character.valueOf(fieldConstant.charValue());
 					break;
 				case TypeIds.T_float :
 					this.wrappedConstantValue = new Float(fieldConstant.floatValue());
@@ -274,7 +274,7 @@ public Object getWrappedConstantValue() {
 					this.wrappedConstantValue = Util.toBoolean(fieldConstant.booleanValue());
 					break;
 				case TypeIds.T_long :
-					this.wrappedConstantValue = new Long(fieldConstant.longValue());
+					this.wrappedConstantValue = Long.valueOf(fieldConstant.longValue());
 					break;
 				case TypeIds.T_JavaLangString :
 					this.wrappedConstantValue = fieldConstant.stringValue();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -289,6 +289,9 @@ public interface ITypeBinding extends IBinding {
 	 * Returns the binding representing the element type of this array type,
 	 * or <code>null</code> if this is not an array type binding. The element
 	 * type of an array type is never itself an array type.
+	 * 
+	 * To get the type annotations on dimensions, clients should repeatedly
+	 *  call getComponentType() and get the type annotations from there. 
 	 *
 	 * @return the element type binding, or <code>null</code> if this is
 	 *   not an array type
@@ -553,6 +556,9 @@ public interface ITypeBinding extends IBinding {
 	 * <li>java.lang.String</li>
 	 * </ul>
 	 * </p>
+	 * To get the type annotations on dimensions, clients should repeatedly call 
+	 * {@link #getComponentType()} and get the type annotations from there. 
+
 	 * @return type annotations specified on this type reference, or an empty array if
 	 * no type use annotations are found.
 	 * @see #getTypeDeclaration()
@@ -560,23 +566,6 @@ public interface ITypeBinding extends IBinding {
 	 * @since 3.10
 	 */
 	public IAnnotationBinding[] getTypeAnnotations();
-
-	/**
-	 * Returns the type use annotations on dimensions, or the empty array if there
-	 * are no annotations on dimensions.
-	 * 
-	 * <p>
-	 *  Since JLS8, (Section 9.7.4) type annotations can appear at array dimensions. These annotations
-	 *  are returned in a 2-d array with each row containing annotations for that dimension. If only some
-	 *  of the dimensions have type annotations, the rows corresponding to the dimensions without
-	 *  annotations will have an empty single dimensional array.
-	 * </p>
-	 * 
-	 * @return type annotations specified on the dimensions of this type reference, or an empty array if
-	 * either there is no dimension or no type use annotation is found on the dimensions.
-	 * @since 3.12
-	 */
-	public IAnnotationBinding[][] getTypeAnnotationsOnDimensions();
 
 	/**
 	 * Returns the type arguments of this generic type instance, or the
