@@ -33,6 +33,7 @@ import org.codehaus.groovy.eclipse.editor.actions.IGroovyEditorActionDefinitionI
 import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage;
 import org.codehaus.groovy.eclipse.editor.outline.OutlineExtenderRegistry;
+import org.codehaus.groovy.eclipse.refactoring.actions.AddImportOnSelectionAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatKind;
@@ -772,6 +773,12 @@ public class GroovyEditor extends CompilationUnitEditor {
         super.createActions();
 
         GenerateActionGroup group = getGenerateActionGroup();
+
+        // use our Add Import instead
+        IAction addImportOnSelectionAction = new AddImportOnSelectionAction(this);
+        addImportOnSelectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.ADD_IMPORT);
+        setAction("AddImport", addImportOnSelectionAction);
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddImport", group, addImportOnSelectionAction);
 
         // use our Organize Imports instead
         IAction organizeGroovyImportsAction = new OrganizeGroovyImportsAction(this);
