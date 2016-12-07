@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -270,16 +270,13 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 		this.options = options;
 		this.progress = progress;
 
-		// GROOVY start - temporary
+		// GROOVY add
 		if (this.options.buildGroovyFiles==0) {
-			// demoted to error message, groovy disabled
-			// disable this println for now - seems to have served its purpose:
-//			System.err.println("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'");//$NON-NLS-1$
 			this.options.buildGroovyFiles=1;
 			this.options.groovyFlags = 0;
 		}
 		// GROOVY end
-		
+
 		// wrap requestor in DebugRequestor if one is specified
 		if(DebugRequestor == null) {
 			this.requestor = requestor;
@@ -425,12 +422,15 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 		}
 	}
 
+	public void compile(ICompilationUnit[] sourceUnits) {
+		compile(sourceUnits, false);
+	}
 	/**
 	 * General API
 	 * -> compile each of supplied files
 	 * -> recompile any required types for which we have an incomplete principle structure
 	 */
-	public void compile(ICompilationUnit[] sourceUnits) {
+	private void compile(ICompilationUnit[] sourceUnits, boolean lastRound) {
 		this.stats.startTime = System.currentTimeMillis();
 		// GROOVY start
 		// sort the sourceUnits - java first! might be temporary, hmmm
@@ -485,8 +485,9 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 				ICompilationUnit[] originalUnits = sourceUnits.clone(); // remember source units in case a source type collision occurs
 				try {
 					beginToCompile(sourceUnits);
-
-					processAnnotations();
+					if (!lastRound) {
+						processAnnotations();
+					}
 					if (!this.options.generateClassFiles) {
 						// -proc:only was set on the command line
 						return;
@@ -504,13 +505,13 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 					System.arraycopy(originalUnits, 0, combinedUnits, 0, originalLength);
 					System.arraycopy(e.newAnnotationProcessorUnits, 0, combinedUnits, originalLength, newProcessedLength);
 					this.annotationProcessorStartIndex  = originalLength;
-					compile(combinedUnits);
+					compile(combinedUnits, e.isLastRound);
 					return;
 				}
 			}
 			// Restore the problems before the results are processed and cleaned up.
 			restoreAptProblems();
-			processCompiledUnits(0);
+			processCompiledUnits(0, lastRound);
 		} catch (AbortCompilation e) {
 			this.handleInternalException(e, null);
 		}
@@ -578,7 +579,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 		this.aptProblems = null; // No need for this.
 	}
 
-	protected void processCompiledUnits(int startingIndex) throws java.lang.Error {
+	protected void processCompiledUnits(int startingIndex, boolean lastRound) throws java.lang.Error {
 		CompilationUnitDeclaration unit = null;
 		ProcessTaskManager processingTask = null;
 		try {
@@ -652,15 +653,17 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 							}));
 				}
 			}
-			if (this.annotationProcessorManager != null && this.totalUnits > this.annotationProcessorStartIndex) {
-				int backup = this.annotationProcessorStartIndex;
-				int prevUnits = this.totalUnits;
-				processAnnotations();
-				// Clean up the units that were left out previously for annotation processing.
-				for (int i = backup; i < prevUnits; i++) {
-					this.unitsToProcess[i].cleanUp();
+			if (!lastRound) {
+				if (this.annotationProcessorManager != null && this.totalUnits > this.annotationProcessorStartIndex) {
+					int backup = this.annotationProcessorStartIndex;
+					int prevUnits = this.totalUnits;
+					processAnnotations();
+					// Clean up the units that were left out previously for annotation processing.
+					for (int i = backup; i < prevUnits; i++) {
+						this.unitsToProcess[i].cleanUp();
+					}
+					processCompiledUnits(backup, lastRound);
 				}
-				processCompiledUnits(backup);
 			}
 		} catch (AbortCompilation e) {
 			this.handleInternalException(e, unit);
@@ -829,7 +832,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	}
 
 	public void initializeParser() {
-		// GROOVY start
+		// GROOVY edit
 		/* old {
 		this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
 		} new */
@@ -1013,6 +1016,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 				this.lookupEnvironment.isProcessingAnnotations = true;
 				internalBeginToCompile(newUnits, newUnitSize);
 			} catch (SourceTypeCollisionException e) {
+				e.isLastRound = true;
 				e.newAnnotationProcessorUnits = newProcessedUnits;
 				throw e;
 			} finally {
@@ -1028,7 +1032,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 
 	public void reset() {
 		this.lookupEnvironment.reset();
-		// GROOVY start: give the parser a chance to reset as well
+		// GROOVY add - give the parser a chance to reset as well
 		this.parser.reset();
 		// GROOVY end
 		this.parser.scanner.source = null;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1774,6 +1774,22 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_NULL_UNCHECKED_CONVERSION = PLUGIN_ID + ".compiler.problem.nullUncheckedConversion"; //$NON-NLS-1$
 	/**
+	 * Compiler option ID: Reporting problems detected by pessimistic null analysis for free type variables.
+	 * <p>Unless set to <code>"ignore"</code>, type variables not affected by any explicit null annotation are pessimistically analyzed
+	 * in two directions: When reading a value of this type, it is assumed to be nullable. When this type appears as the required type
+	 * (i.e., at the left hand side of an assignment or variable initialization, or as the method return type against which a return statement
+	 * is being checked) the type is considered to require the nonnull property.</p>
+	 * <p>Problems reported due to this pessimistic analysis are reported with the level given in this option.</p>
+	 * @since 3.12
+	 * @category CompilerOptionID
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.pessimisticNullAnalysisForFreeTypeVariables"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 */
+	public static final String COMPILER_PB_PESSIMISTIC_NULL_ANALYSIS_FOR_FREE_TYPE_VARIABLES = PLUGIN_ID + ".compiler.problem.pessimisticNullAnalysisForFreeTypeVariables"; //$NON-NLS-1$
+	/**
 	 * Compiler option ID: Reporting Redundant Null Annotations.
 	 * <p>When enabled, the compiler will issue an error or a warning when a non-null annotation
 	 *    (see {@link #COMPILER_NONNULL_ANNOTATION_NAME})
@@ -1850,6 +1866,30 @@ public final class JavaCore extends Plugin {
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_PB_NONNULL_PARAMETER_ANNOTATION_DROPPED = JavaCore.PLUGIN_ID+".compiler.problem.nonnullParameterAnnotationDropped"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Unsafe NonNull Interpretation Of Type Variables.
+	 * <p>When enabled, the compiler will issue an error or a warning against a method call
+	 *    if all of the following hold:</p>
+	 * <ul>
+	 *    <li>The method's declared return type is a type variable without any null annotation.</li>
+	 *    <li>For the given invocation this type variable is substituted with a nonnull type.</li>
+	 *    <li>The type declaring the method is provided by a third-party library.</li>
+	 *    <li>No null annotations exist for this library type, neither in its class file nor using external annotations.</li>
+	 * </ul>
+	 * <p>This particular situation leverages the option to consistently substitute all occurrences of a type variable
+	 *  with a nonnull type, but it bears the risk that the library type may not be aware of null annotations thus lacking
+	 *  a necessary <code>@Nullable</code> annotation for a particular occurrence of a type variable.</p>   
+	 * <p>This option only has an effect if the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled and when
+	 *  the configured set of null annotations declares the target <code>TYPE_USE</code></p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.nonnullTypeVariableFromLegacyInvocation"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * @since 3.12
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_NONNULL_TYPEVAR_FROM_LEGACY_INVOCATION = JavaCore.PLUGIN_ID+".compiler.problem.nonnullTypeVariableFromLegacyInvocation"; //$NON-NLS-1$
 
 	/**
 	 * Compiler option ID: Setting Source Compatibility Mode.

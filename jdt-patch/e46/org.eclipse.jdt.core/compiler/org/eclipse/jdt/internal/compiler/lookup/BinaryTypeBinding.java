@@ -96,7 +96,23 @@ public class BinaryTypeBinding extends ReferenceBinding {
 
 	private ReferenceBinding containerAnnotationType;
 	int defaultNullness = 0;
-
+	public enum ExternalAnnotationStatus {
+		FROM_SOURCE,
+		NOT_EEA_CONFIGURED,
+		NO_EEA_FILE,
+		TYPE_IS_ANNOTATED;
+		public boolean isPotentiallyUnannotatedLib() {
+			switch (this) {
+				case FROM_SOURCE:
+				case TYPE_IS_ANNOTATED:
+					return false;
+				default:
+					return true;
+			}
+		}
+	}
+	public ExternalAnnotationStatus externalAnnotationStatus = ExternalAnnotationStatus.NOT_EEA_CONFIGURED; // unless proven differently
+	
 static Object convertMemberValue(Object binaryValue, LookupEnvironment env, char[][][] missingTypeNames, boolean resolveEnumConstants) {
 	if (binaryValue == null) return null;
 	if (binaryValue instanceof Constant)
@@ -424,6 +440,10 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 		}
 		ITypeAnnotationWalker walker = getTypeAnnotationWalker(binaryType.getTypeAnnotations(), Binding.NO_NULL_DEFAULT);
 		ITypeAnnotationWalker toplevelWalker = binaryType.enrichWithExternalAnnotationsFor(walker, null, this.environment);
+		this.externalAnnotationStatus = binaryType.getExternalAnnotationStatus();
+		if (this.externalAnnotationStatus.isPotentiallyUnannotatedLib() && this.defaultNullness != 0) {
+			this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
+		}
 		char[] typeSignature = binaryType.getGenericSignature(); // use generic signature even in 1.4
 		this.tagBits |= binaryType.getTagBits();
 		
@@ -489,6 +509,19 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 				this.tagBits |= TagBits.HasUnresolvedSuperinterfaces;
 			}
 		}
+		boolean canUseNullTypeAnnotations = this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled && this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8;
+		if (canUseNullTypeAnnotations && this.externalAnnotationStatus.isPotentiallyUnannotatedLib()) {
+			if (this.superclass != null && this.superclass.hasNullTypeAnnotations()) {
+				this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
+			} else {
+				for (TypeBinding ifc : this.superInterfaces) {
+					if (ifc.hasNullTypeAnnotations()) {
+						this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
+						break;
+					}
+				}
+			}
+		}
 
 		if (needFieldsAndMethods) {
 			IBinaryField[] iFields = binaryType.getFields();
@@ -525,7 +558,7 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 						ITypeAnnotationWalker methodWalker = ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
 						if (sourceLevel < ClassFileConstants.JDK1_8)
 							methodWalker = binaryType.enrichWithExternalAnnotationsFor(methodWalker, iMethods[i], this.environment);
-						scanMethodForNullAnnotation(iMethods[i], this.methods[i], methodWalker);
+						scanMethodForNullAnnotation(iMethods[i], this.methods[i], methodWalker, canUseNullTypeAnnotations);
 					}
 				}
 			}
@@ -581,7 +614,7 @@ private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long s
 	if (iFields != null) {
 		int size = iFields.length;
 		if (size > 0) {
-			this.fields = new FieldBinding[size];
+			FieldBinding[] fields1 = new FieldBinding[size];
 			boolean use15specifics = sourceLevel >= ClassFileConstants.JDK1_5;
 			boolean hasRestrictedAccess = hasRestrictedAccess();
 			int firstAnnotatedFieldIndex = -1;
@@ -615,8 +648,9 @@ private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long s
 					field.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 				if (fieldSignature != null)
 					field.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
-				this.fields[i] = field;
+				fields1[i] = field;
 			}
+			this.fields = fields1;
 			// second pass for reifying annotations, since may refer to fields being constructed (147875)
 			if (firstAnnotatedFieldIndex >= 0) {
 				for (int i = firstAnnotatedFieldIndex; i <size; i++) {
@@ -866,14 +900,15 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 	}
 
 	boolean hasRestrictedAccess = hasRestrictedAccess();
-	this.methods = new MethodBinding[total];
+	MethodBinding[] methods1 = new MethodBinding[total];
 	if (total == initialTotal) {
 		for (int i = 0; i < initialTotal; i++) {
 			MethodBinding method = createMethod(iMethods[i], binaryType, sourceLevel, missingTypeNames);
 			if (hasRestrictedAccess)
 				method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
-			this.methods[i] = method;
+			methods1[i] = method;
 		}
+		this.methods = methods1;
 		return iMethods;
 	} else {
 		IBinaryMethod[] mappedBinaryMethods = new IBinaryMethod[total];
@@ -883,10 +918,11 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 				if (hasRestrictedAccess)
 					method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 				mappedBinaryMethods[index] = iMethods[i];
-				this.methods[index++] = method;
+				methods1[index++] = method;
 			}
 		}
-		// GROOVY start
+		this.methods = methods1;
+		// GROOVY add
 		// hold onto the skipped methods, groovy will want to see them
 		if (this.environment.globalOptions.buildGroovyFiles==2) {
 			int skipped = initialTotal-this.methods.length-(iClinit==-1?0:1);
@@ -957,6 +993,8 @@ private TypeVariableBinding[] createTypeVariables(SignatureWrapper wrapper, bool
 		this.typeVariables = result;
 	for (int i = 0; i < rank; i++) {
 		initializeTypeVariable(result[i], result, wrapper, missingTypeNames, walker.toTypeParameterBounds(isClassTypeParameter, i));
+		if (this.externalAnnotationStatus.isPotentiallyUnannotatedLib() && result[i].hasNullTypeAnnotations())
+			this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
 	}
 	return result;
 }
@@ -1417,7 +1455,7 @@ public ReferenceBinding[] memberTypes() {
 	this.tagBits &= ~TagBits.HasUnresolvedMemberTypes;
 	return this.memberTypes;
 }
-//GROOVY start
+// GROOVY add
 public MethodBinding[] infraMethods() {
 	if (!this.infraMethodsComplete) {
 		for (int i = this.infraMethods.length; --i >= 0;) {
@@ -1427,7 +1465,7 @@ public MethodBinding[] infraMethods() {
 	}
 	return this.infraMethods;
 }
-//GROOVY end
+// GROOVY end
 // NOTE: the return type, arg & exception types of each method of a binary type are resolved when needed
 public MethodBinding[] methods() {
 	
@@ -1599,12 +1637,14 @@ private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBi
 			}
 		}
 	}
+	if (explicitNullness && this.externalAnnotationStatus.isPotentiallyUnannotatedLib())
+		this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
 	if (!explicitNullness && (this.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
 		fieldBinding.tagBits |= TagBits.AnnotationNonNull;
 	}
 }
 
-private void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBinding, ITypeAnnotationWalker externalAnnotationWalker) {
+private void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBinding, ITypeAnnotationWalker externalAnnotationWalker, boolean useNullTypeAnnotations) {
 	if (!isPrototype()) throw new IllegalStateException();
 	if (isEnum()) {
 		int purpose = 0;
@@ -1689,6 +1729,18 @@ private void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding met
 							break;
 						}
 					}
+				}
+			}
+		}
+	}
+	if (useNullTypeAnnotations && this.externalAnnotationStatus.isPotentiallyUnannotatedLib()) {
+		if (methodBinding.returnType.hasNullTypeAnnotations()) {
+			this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
+		} else {
+			for (TypeBinding parameter : parameters) {
+				if (parameter.hasNullTypeAnnotations()) {
+					this.externalAnnotationStatus = ExternalAnnotationStatus.TYPE_IS_ANNOTATED;
+					break;
 				}
 			}
 		}

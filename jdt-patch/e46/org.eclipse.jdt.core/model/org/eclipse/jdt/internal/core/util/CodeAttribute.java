@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1023,7 +1023,8 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 				case IOpcodeMnemonics.INVOKESPECIAL :
 					index = u2At(this.classFileBytes, 1, pc);
 					constantPoolEntry = this.constantPool.decodeEntry(index);
-					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Methodref) {
+					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Methodref
+							&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_InterfaceMethodref) {
 						throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 					}
 					visitor._invokespecial(pc - this.codeOffset, index, constantPoolEntry);
@@ -1032,7 +1033,8 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 				case IOpcodeMnemonics.INVOKESTATIC :
 					index = u2At(this.classFileBytes, 1, pc);
 					constantPoolEntry = this.constantPool.decodeEntry(index);
-					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Methodref) {
+					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Methodref
+							&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_InterfaceMethodref) {
 						throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 					}
 					visitor._invokestatic(pc - this.codeOffset, index, constantPoolEntry);

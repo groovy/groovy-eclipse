@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -438,7 +438,11 @@ public class SearchEngine {
 
 	/**
 	 * Create a method name match on a given method with specific modifiers.
-	 *
+	 * <p>
+	 * NOTE: this is a first-cut version and might have noticeable delay times in some cases. 
+	 * Targeted for optimization during 4.7. It is recommended to contact JDT Team if 
+	 * anyone plans to use this.
+	 * </p>
 	 * @param method The Java model handle of the method
 	 * @param modifiers Modifiers of the method
 	 * @return A non-null match on the given method.
@@ -609,8 +613,9 @@ public class SearchEngine {
 	 * Searches for all method declarations in the given scope. Accepted matches will be returned by
 	 * {@link MethodNameRequestor#acceptMethod}.
 	 * <p>
-	 * Warning: This API is in experimental phase and may be modified/removed. Do not use this until this
-	 * comment is removed.
+	 * NOTE: this is a first-cut version and might have noticeable delay times in some cases. 
+	 * Targeted for optimization during 4.7. It is recommended to contact JDT Team if 
+	 * anyone plans to use this.
 	 * </p>
 	 * 
 	 * @param packageName the full name of the package of the searched types, or a prefix for this
@@ -670,8 +675,9 @@ public class SearchEngine {
 
 	 * </p>
 	 * <p>
-	 * Warning: This API is in experimental phase and may be modified/removed. Do not use this until this
-	 * comment is removed.
+	 * NOTE: this is a first-cut version and might have noticeable delay times in some cases. 
+	 * Targeted for optimization during 4.7. It is recommended to contact JDT Team if 
+	 * anyone plans to use this.
 	 * </p>
 	 * 
 	 * @param packageName the full name of the package of the searched types, or a prefix for this
@@ -727,8 +733,9 @@ public class SearchEngine {
 	 * Searches for all method declarations in the given scope. Accepted matches will be returned by
 	 * {@link MethodNameRequestor#acceptMethod}.
 	 * <p>
-	 * Warning: This API is in experimental phase and may be modified/removed. Do not use this until this
-	 * comment is removed.
+	 * NOTE: this is a first-cut version and might have noticeable delay times in some cases. 
+	 * Targeted for optimization during 4.7. It is recommended to contact JDT Team if 
+	 * anyone plans to use this.
 	 * </p>
 	 * 
 	 * @param qualifier qualifier including package name and qualified type name
@@ -802,8 +809,9 @@ public class SearchEngine {
 	 * matches found during the search.
 	 * </p>
 	 * <p>
-	 * Warning: This API is in experimental phase and may be modified/removed. Do not use this until this
-	 * comment is removed.
+	 * NOTE: this is a first-cut version and might have noticeable delay times in some cases. 
+	 * Targeted for optimization during 4.7. It is recommended to contact JDT Team if 
+	 * anyone plans to use this.
 	 * </p>
 	 * 
 	 * @param qualifier qualifier including package name and qualified type name

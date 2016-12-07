@@ -211,6 +211,9 @@ public abstract class AbstractMethodDeclaration
 						flowInfo.markAsDefinitelyNonNull(methodArguments[i].binding);
 					else if (tagBits == TagBits.AnnotationNullable)
 						flowInfo.markPotentiallyNullBit(methodArguments[i].binding);
+					else if (methodBinding.parameters[i].isFreeTypeVariable()) {
+						flowInfo.markNullStatus(methodArguments[i].binding, FlowInfo.FREE_TYPEVARIABLE);
+					}
 				} else {					
 					if (methodBinding.parameterNonNullness != null) {
 						// leverage null-info from parameter annotations:

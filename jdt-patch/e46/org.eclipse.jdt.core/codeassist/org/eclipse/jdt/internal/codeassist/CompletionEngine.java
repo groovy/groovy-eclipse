@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -14,7 +15,7 @@
  *     Gábor Kövesdán - Contribution for Bug 350000 - [content assist] Include non-prefix matches in auto-complete suggestions
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist;
-// GROOVY PATCHED
+
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
@@ -684,9 +685,9 @@ public final class CompletionEngine
 				this.problemFactory);
 		this.lookupEnvironment =
 			new LookupEnvironment(this, this.compilerOptions, this.problemReporter, nameEnvironment);
-		// GROOVY start
-//		this.parser =
-//			new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+		// GROOVY edit
+		//this.parser =
+		//	new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
 		this.parser = LanguageSupportFactory.getCompletionParser(this.lookupEnvironment.globalOptions,
 				this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
 		// GROOVY end
@@ -1638,6 +1639,8 @@ public final class CompletionEngine
 			if (completionOnQualifiedTypeReference.isConstructorType){
 						context.setTokenLocation(CompletionContext.TL_CONSTRUCTOR_START);
 			}
+		} else if (astNode instanceof CompletionOnKeyword3 && ((CompletionOnKeyword3) astNode).afterTryOrCatch()) {
+				context.setTokenLocation(CompletionContext.TL_STATEMENT_START);
 		} else {
 			ReferenceContext referenceContext = scope.referenceContext();
 			if (referenceContext instanceof AbstractMethodDeclaration) {
@@ -7497,7 +7500,7 @@ public final class CompletionEngine
 							if(proposeMethod && !insideAnnotationAttribute) {
 								MethodBinding methodBinding = (MethodBinding)binding;
 								if ((exactMatch && CharOperation.equals(token, methodBinding.selector)) ||
-										!exactMatch && CharOperation.prefixEquals(token, methodBinding.selector) ||
+										!exactMatch && CharOperation.prefixEquals(token, methodBinding.selector, false) ||
 										(this.options.camelCaseMatch && CharOperation.camelCaseMatch(token, methodBinding.selector))) {
 									findLocalMethodsFromStaticImports(
 											token,
@@ -9867,6 +9870,7 @@ public final class CompletionEngine
 		}
 		
 		boolean hasPotentialDefaultAbstractMethods = true;
+		boolean java8Plus = this.compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8;
 		while (currentType != null) {
 
 			MethodBinding[] methods = currentType.availableMethods();
@@ -9880,11 +9884,11 @@ public final class CompletionEngine
 					receiverType);
 			}
 
-			if (hasPotentialDefaultAbstractMethods &&
+			if (hasPotentialDefaultAbstractMethods && (java8Plus ||
 					(currentType.isAbstract() ||
 							currentType.isTypeVariable() ||
 							currentType.isIntersectionType() ||
-							currentType.isEnum())){
+							currentType.isEnum()))){
 
 				ReferenceBinding[] superInterfaces = currentType.superInterfaces();
 
@@ -10243,7 +10247,7 @@ public final class CompletionEngine
 
 	private void findPackages(CompletionOnPackageReference packageStatement) {
 
-		this.completionToken = CharOperation.concatWith(packageStatement.tokens, '.');
+		this.completionToken = CharOperation.concatWithAll(packageStatement.tokens, '.');
 		if (this.completionToken.length == 0)
 			return;
 

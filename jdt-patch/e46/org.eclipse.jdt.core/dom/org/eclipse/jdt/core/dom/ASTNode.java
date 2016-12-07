@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1674,7 +1674,7 @@ public abstract class ASTNode {
 			SimplePropertyDescriptor p = (SimplePropertyDescriptor) property;
 			if (p.getValueType() == int.class) {
 				int result = internalGetSetIntProperty(p, true, 0);
-				return new Integer(result);
+				return Integer.valueOf(result);
 			} else if (p.getValueType() == boolean.class) {
 				boolean result = internalGetSetBooleanProperty(p, true, false);
 				return Boolean.valueOf(result);

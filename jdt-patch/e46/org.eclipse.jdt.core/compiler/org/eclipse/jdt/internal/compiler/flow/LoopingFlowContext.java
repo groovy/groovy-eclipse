@@ -161,6 +161,9 @@ public void complainOnDeferredFinalChecks(BlockScope scope, FlowInfo flowInfo) {
  * @param callerFlowInfo the flow info against which checks must be performed
  */
 public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowInfo) {
+	complainOnDeferredNullChecks(scope, callerFlowInfo, true);
+}
+public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowInfo, boolean updateInitsOnBreak) {
 	for (int i = 0 ; i < this.innerFlowContextsCount ; i++) {
 		this.upstreamNullFlowInfo.
 			addPotentialNullInfoFrom(
@@ -433,9 +436,11 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 		}
 	}
 	// propagate breaks
-	this.initsOnBreak.addPotentialNullInfoFrom(incomingInfo);
-	for (int i = 0; i < this.breakTargetsCount; i++) {
-		this.breakTargetContexts[i].initsOnBreak.addPotentialNullInfoFrom(incomingInfo);
+	if(updateInitsOnBreak) {
+		this.initsOnBreak.addPotentialNullInfoFrom(incomingInfo);
+		for (int i = 0; i < this.breakTargetsCount; i++) {
+			this.breakTargetContexts[i].initsOnBreak.addPotentialNullInfoFrom(incomingInfo);
+		}
 	}
 }
 

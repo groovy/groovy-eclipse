@@ -47,8 +47,9 @@ Object getDefaultValue();
 char[][] getExceptionTypeNames();
 
 /**
- * Answer the receiver's signature which describes the parameter &
- * return types as specified in section 4.4.4 of the Java 2 VM spec.
+ * Answer the receiver's MethodSignature, which describes the type parameters,
+ * parameter types, return type, and exception types
+ * as specified in "4.7.9.1 Signatures" of the Java SE 8 VM spec.
  */
 char[] getGenericSignature();
 

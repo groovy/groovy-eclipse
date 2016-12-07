@@ -121,11 +121,9 @@ public class LanguageSupportFactory {
 		getLanguageSupport().filterNonSourceMembers(binaryType);
 	}
 	
-	
-	//FIXASC static state issues?
 	private static LanguageSupport getLanguageSupport() {
 		if (languageSupport==null) {
-			languageSupport = /*new GroovyLanguageSupport();*/tryInstantiate("org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport"); //$NON-NLS-1$
+			languageSupport = tryInstantiate("org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport"); //$NON-NLS-1$
 			if (languageSupport==null) {
 				languageSupport = new DefaultLanguageSupport();
 			}
@@ -134,34 +132,34 @@ public class LanguageSupportFactory {
 	}
 	
 	private static LanguageSupport tryInstantiate(String className) {
-		LanguageSupport instance= null;
+		LanguageSupport instance = null;
 		if (className != null && className.length() > 0) {
 			try {
-				int separator= className.indexOf(':');
-				Bundle bundle= null;
+				int separator = className.indexOf(':');
+				Bundle bundle = null;
 				if (separator == -1) {
 					JavaCore javaCore = JavaCore.getJavaCore();
-					if (javaCore==null) {
-						Class clazz = Class.forName(className);
-						return (LanguageSupport)clazz.newInstance();
+					if (javaCore == null) {
+						Class<?> clazz = Class.forName(className);
+						return (LanguageSupport) clazz.newInstance();
 					} else {
-						bundle= javaCore.getBundle();
+						bundle = javaCore.getBundle();
 					}
 				} else {
 					String bundleName = className.substring(0, separator);
 					className = className.substring(separator + 1);
 					bundle = Platform.getBundle(bundleName);
 				}
-				Class c= bundle.loadClass(className);
-				instance= (LanguageSupport) c.newInstance();
+				Class<?> c = bundle.loadClass(className);
+				instance = (LanguageSupport) c.newInstance();
 			} catch (ClassNotFoundException e) {
-		        log(e);
+				log(e);
 			} catch (InstantiationException e) {
-		        log(e);
+				log(e);
 			} catch (IllegalAccessException e) {
-		        log(e);
+				log(e);
 			} catch (ClassCastException e) {
-		        log(e);
+				log(e);
 			}
 		}
 		return instance;

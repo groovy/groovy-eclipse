@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -74,18 +74,11 @@ public class Wildcard extends SingleTypeReference {
 		}
 		this.resolvedType = scope.environment().createWildcard(genericType, rank, boundType, null /*no extra bound*/, this.kind);
 		resolveAnnotations(scope, 0); // no defaultNullness for wildcards
-		if (boundType != null && boundType.hasNullTypeAnnotations() && this.resolvedType.hasNullTypeAnnotations()) {
-			if (((boundType.tagBits | this.resolvedType.tagBits) & TagBits.AnnotationNullMASK) == TagBits.AnnotationNullMASK) { // are both set?
-				Annotation annotation = this.bound.findAnnotation(boundType.tagBits & TagBits.AnnotationNullMASK);
-				if (annotation == null) { // false alarm, implicit annotation is no conflict, but should be removed:
-					TypeBinding newBound = boundType.withoutToplevelNullAnnotation();
-					((WildcardBinding)this.resolvedType).bound = newBound;
-					this.bound.resolvedType = newBound;
-				} else {
-					scope.problemReporter().contradictoryNullAnnotationsOnBounds(annotation, this.resolvedType.tagBits);
-				}
-			}
+		
+		if(scope.environment().usesNullTypeAnnotations()) {
+			((WildcardBinding)this.resolvedType).evaluateNullAnnotations(scope, this);
 		}
+		
 		return this.resolvedType;
 	}
 

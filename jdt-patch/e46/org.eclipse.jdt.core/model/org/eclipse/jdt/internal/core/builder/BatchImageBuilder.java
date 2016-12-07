@@ -167,7 +167,7 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 		}
 	}
 	// GROOVY add
-	LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject,"cleanOutputFolders");
+	LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject, "cleanOutputFolders"); //$NON-NLS-1$
 	// GROOVY end
 }
 

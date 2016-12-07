@@ -50,6 +50,8 @@ public class CaptureBinding18 extends CaptureBinding {
 					this.superclass = (ReferenceBinding) aBound;
 				else if (aBound.isInterface())
 					numReferenceInterfaces++;
+			} else if (TypeBinding.equalsEquals(aBound.leafComponentType(), this)) {
+				return false; // cycle detected
 			}
 		}
 		this.superInterfaces = new ReferenceBinding[numReferenceInterfaces];

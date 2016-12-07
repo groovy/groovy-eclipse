@@ -129,6 +129,11 @@ public class WhileStatement extends Statement {
 				if ((combinedTagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0)
 					this.continueLabel = null;
 				exitBranch.addInitializationsFrom(condInfo.initsWhenFalse());
+				actionInfo = actionInfo.mergedWith(loopingContext.initsOnContinue.unconditionalInits());
+				condLoopContext.complainOnDeferredNullChecks(currentScope,
+						actionInfo, false);
+				loopingContext.complainOnDeferredNullChecks(currentScope,
+						actionInfo, false);
 			} else {
 				condLoopContext.complainOnDeferredFinalChecks(currentScope,
 						condInfo);

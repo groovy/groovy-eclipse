@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2015 IBM Corporation and others.
+ * Copyright (c) 2010, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,10 +41,15 @@ class NameEnvironmentWithProgress extends FileSystem implements INameEnvironment
 			throw new AbortCompilation(true/*silent*/, new OperationCanceledException());
 		}
 	}
+
 	public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName) {
+		return findType(typeName, packageName, true);
+	}
+
+	public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes) {
 		checkCanceled();
 		NameEnvironmentAnswer answer = super.findType(typeName, packageName);
-		if (answer == null) {
+		if (answer == null && searchWithSecondaryTypes) {
 			NameEnvironmentAnswer suggestedAnswer = null;
 			String qualifiedPackageName = new String(CharOperation.concatWith(packageName, '/'));
 			String qualifiedTypeName = new String(CharOperation.concatWith(packageName, typeName, '/'));

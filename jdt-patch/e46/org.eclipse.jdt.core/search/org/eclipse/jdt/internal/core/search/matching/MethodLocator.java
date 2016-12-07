@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
+import org.eclipse.jdt.internal.core.BinaryMethod;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -149,6 +150,22 @@ protected boolean isVirtualInvoke(MethodBinding method, MessageSend messageSend)
 		return !method.isStatic() && !method.isPrivate() && !messageSend.isSuperAccess()
 			&& !(method.isDefault() && this.pattern.focus != null 
 			&& !CharOperation.equals(this.pattern.declaringPackageName, method.declaringClass.qualifiedPackageName()));
+}
+protected ReferenceBinding checkMethodRef(MethodBinding method, ReferenceExpression referenceExpression) {
+	boolean result = (!method.isStatic() && !method.isPrivate()
+		&&	referenceExpression.isMethodReference()  
+		&& !(method.isDefault() && this.pattern.focus != null 
+		&& !CharOperation.equals(this.pattern.declaringPackageName, method.declaringClass.qualifiedPackageName())));
+	if (result) {
+		Expression lhs = referenceExpression.lhs;
+		if (lhs instanceof NameReference) {
+			Binding binding = ((NameReference) lhs).binding;
+			if (binding instanceof ReferenceBinding)
+				return (ReferenceBinding) binding;
+		}
+	}
+	
+	return null;
 }
 public int match(ASTNode node, MatchingNodeSet nodeSet) {
 	int declarationsLevel = IMPOSSIBLE_MATCH;
@@ -314,6 +331,7 @@ protected int matchMethod(MethodBinding method, boolean skipImpossibleArg) {
 		boolean foundTypeVariable = false;
 		MethodBinding focusMethodBinding = null;
 		boolean checkedFocus = false;
+		boolean isBinary = this.pattern!= null && this.pattern.focus instanceof BinaryMethod;
 		// verify each parameter
 		for (int i = 0; i < parameterCount; i++) {
 			TypeBinding argType = method.parameters[i];
@@ -327,7 +345,8 @@ protected int matchMethod(MethodBinding method, boolean skipImpossibleArg) {
 				if (focusMethodBinding != null) {// textual comparison insufficient
 					TypeBinding[] parameters = focusMethodBinding.parameters;
 					if (parameters.length >= parameterCount) {
-						newLevel = argType.isEquivalentTo((parameters[i])) ? ACCURATE_MATCH : IMPOSSIBLE_MATCH;
+						newLevel = (isBinary ? argType.erasure().isEquivalentTo((parameters[i].erasure())) :argType.isEquivalentTo((parameters[i]))) ? 
+								ACCURATE_MATCH : IMPOSSIBLE_MATCH;
 						foundLevel = true;
 					}
 				}
@@ -793,7 +812,28 @@ protected int resolveLevel(ReferenceExpression referenceExpression) {
 
 	// receiver type
 	if (this.pattern.declaringSimpleName == null && this.pattern.declaringQualification == null) return methodLevel; // since any declaring class will do
-	int declaringLevel = resolveLevelForType(this.pattern.declaringSimpleName, this.pattern.declaringQualification, method.declaringClass);
+	int declaringLevel;
+	ReferenceBinding ref = checkMethodRef(method, referenceExpression);
+	if (ref != null) {
+		declaringLevel = resolveLevelAsSubtype(this.pattern.declaringSimpleName, this.pattern.declaringQualification, ref, method.selector, method.parameters, ref.qualifiedPackageName(), method.isDefault());
+		if (declaringLevel == IMPOSSIBLE_MATCH) {
+			if (method.declaringClass == null || this.allSuperDeclaringTypeNames == null) {
+				declaringLevel = INACCURATE_MATCH;
+			} else {
+				char[][][] superTypeNames = (method.isDefault() && this.pattern.focus == null) ? this.samePkgSuperDeclaringTypeNames: this.allSuperDeclaringTypeNames;
+				if (superTypeNames != null && resolveLevelAsSuperInvocation(ref, method.parameters, superTypeNames, true)) {
+						declaringLevel = methodLevel // since this is an ACCURATE_MATCH so return the possibly weaker match
+							| SUPER_INVOCATION_FLAVOR; // TODO: not an invocation really but ref -> add flavor to returned level
+				}
+			}
+		}
+		if ((declaringLevel & FLAVORS_MASK) != 0) {
+			// level got some flavors => return it
+			return declaringLevel;
+		}
+	} else {
+		declaringLevel = resolveLevelForType(this.pattern.declaringSimpleName, this.pattern.declaringQualification, method.declaringClass);
+	}
 	return (methodLevel & MATCH_LEVEL_MASK) > (declaringLevel & MATCH_LEVEL_MASK) ? declaringLevel : methodLevel; // return the weaker match
 }
 

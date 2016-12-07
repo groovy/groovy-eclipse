@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -99,6 +99,10 @@ public void cleanStarting(IJavaProject project) {
  * </p><p>
  * For efficiency, participants that are not interested in the
  * given project should return <code>false</code> for that project.
+ * </p><p>
+ * Note: In {@link org.eclipse.jdt.core.WorkingCopyOwner#newWorkingCopy(String, org.eclipse.jdt.core.IClasspathEntry[], org.eclipse.core.runtime.IProgressMonitor)
+ * special cases}, the project may be closed and not exist. Participants typically return false for projects that are
+ * !{@link IJavaProject#isOpen()}.
  * </p>
  * @param project the project to participate in
  * @return whether this participant is active for a given project
@@ -108,11 +112,16 @@ public boolean isActive(IJavaProject project) {
 }
 
 /**
- * Returns whether this participant is interested in only Annotations.
+ * Returns whether this participant is interested in Annotations.
+ * <p>
+ * Returning <code>true</code> enables the callback {@link #processAnnotations(BuildContext[])}, where this
+ * participant can influence build results.
+ * </p>
  * <p>
  * Default is to return <code>false</code>.
  * </p>
- * @return whether this participant is interested in only Annotations.
+ * 
+ * @return whether this participant is interested in Annotations
  */
 public boolean isAnnotationProcessor() {
 	return false;
@@ -120,7 +129,7 @@ public boolean isAnnotationProcessor() {
 
 /**
  * Notifies this participant that a compile operation has found source files using Annotations.
- * Only sent to participants interested in the current build project that answer true to isAnnotationProcessor().
+ * Only sent to participants interested in the current build project that answer true to {@link #isAnnotationProcessor()}.
  * Each BuildContext was informed whether its source file currently hasAnnotations().
  *
  * @param files is an array of BuildContext

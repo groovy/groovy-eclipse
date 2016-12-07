@@ -121,7 +121,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 						inferInvocationApplicability(inferenceContext, method, argumentTypes, isDiamond, inferenceContext.inferenceKind);
 						// b2 has been lifted, inferring poly invocation type amounts to lifting b3.
 					}
-					if (!inferPolyInvocationType(inferenceContext, invocation, this.right, method))
+					if (!inferenceContext.computeB3(invocation, this.right, method))
 						return FALSE;
 					return null; // already incorporated
 				} finally {
@@ -288,14 +288,21 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 							// not checking r.mentionsAny for constructors, because A::new resolves to the raw type
 							// whereas in fact the type of all expressions of this shape depends on their type variable (if any)
 			{
-				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(functionType.parameters));
+				TypeBinding[] argumentTypes;
+				if (t.isParameterizedType()) {
+					MethodBinding capturedFunctionType = ((ParameterizedTypeBinding)t).getSingleAbstractMethod(inferenceContext.scope, true, reference.sourceStart, reference.sourceEnd);
+					argumentTypes = capturedFunctionType.parameters;
+				} else {
+					argumentTypes = functionType.parameters;
+				}
+				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(argumentTypes));
 
 				// Invocation Applicability Inference: 18.5.1 & Invocation Type Inference: 18.5.2
 				try {
 					InferenceContext18 innerContex = reference.getInferenceContext((ParameterizedMethodBinding) compileTimeDecl);
 					int innerInferenceKind = innerContex != null ? innerContex.inferenceKind : InferenceContext18.CHECK_STRICT;
-					inferInvocationApplicability(inferenceContext, original, functionType.parameters, original.isConstructor()/*mimic a diamond?*/, innerInferenceKind);
-					if (!inferPolyInvocationType(inferenceContext, reference, r, original))
+					inferInvocationApplicability(inferenceContext, original, argumentTypes, original.isConstructor()/*mimic a diamond?*/, innerInferenceKind);
+					if (!inferenceContext.computeB3(reference, r, original))
 						return FALSE;
 					if (!original.isConstructor() 
 							|| reference.receiverType.isRawType()  // note: rawtypes may/may not have typeArguments() depending on initialization state
@@ -409,7 +416,15 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			}
 			if (this.right.isFunctionalInterface(context.scope)) {
 				LambdaExpression lambda = (LambdaExpression) this.left;
-				MethodBinding sam = this.right.getSingleAbstractMethod(context.scope, true); // TODO derive with target type?
+				ReferenceBinding targetType = (ReferenceBinding) this.right;
+				ParameterizedTypeBinding withWildCards = InferenceContext18.parameterizedWithWildcard(targetType);
+				if (withWildCards != null) {
+					targetType = ConstraintExpressionFormula.findGroundTargetType(context, lambda.enclosingScope, lambda, withWildCards);
+				}
+				if (targetType == null) {
+					return EMPTY_VARIABLE_LIST;
+				}
+				MethodBinding sam = targetType.getSingleAbstractMethod(context.scope, true);
 				final Set<InferenceVariable> variables = new HashSet<>();
 				if (lambda.argumentsTypeElided()) {
 					// i)

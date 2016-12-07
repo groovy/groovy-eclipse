@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 BEA Systems, Inc.
+ * Copyright (c) 2005, 2011 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,7 +28,6 @@ import org.eclipse.jdt.internal.compiler.util.*;
  */
 class AnnotationBinding implements IAnnotationBinding {
 	static final AnnotationBinding[] NoAnnotations = new AnnotationBinding[0];
-	static final AnnotationBinding[][] NoAnnotationsOnDimensions = new AnnotationBinding[0][];
 	private org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding binding;
 	private BindingResolver bindingResolver;
 	private String key;

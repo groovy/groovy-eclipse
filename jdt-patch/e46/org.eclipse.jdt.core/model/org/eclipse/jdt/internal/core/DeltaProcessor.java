@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -976,7 +976,7 @@ public class DeltaProcessor {
 
 								} else if (oldTimestamp.longValue() != newTimeStamp){
 									externalArchivesStatus.put(entryPath, EXTERNAL_JAR_CHANGED);
-									this.state.getExternalLibTimeStamps().put(entryPath, new Long(newTimeStamp));
+									this.state.getExternalLibTimeStamps().put(entryPath, Long.valueOf(newTimeStamp));
 									// first remove the index so that it is forced to be re-indexed
 									this.manager.indexManager.removeIndex(entryPath);
 									// then index the jar
@@ -993,7 +993,7 @@ public class DeltaProcessor {
 									externalArchivesStatus.put(entryPath, EXTERNAL_JAR_UNCHANGED);
 								} else {
 									externalArchivesStatus.put(entryPath, EXTERNAL_JAR_ADDED);
-									this.state.getExternalLibTimeStamps().put(entryPath, new Long(newTimeStamp));
+									this.state.getExternalLibTimeStamps().put(entryPath, Long.valueOf(newTimeStamp));
 									// index the new jar
 									this.manager.indexManager.removeIndex(entryPath);
 									this.manager.indexManager.indexLibrary(entryPath, project.getProject(), ((ClasspathEntry)entries[j]).getLibraryIndexLocation());
