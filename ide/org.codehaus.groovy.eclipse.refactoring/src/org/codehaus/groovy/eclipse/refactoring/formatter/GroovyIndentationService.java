@@ -213,14 +213,11 @@ public class GroovyIndentationService {
                 // A somewhat better strategy for newline after closing
                 // brackets, parens or braces.
                 indentLevel = getIndentLevelForCloserPair(d, lastToken);
-            } else if (indentLevel == orgIndentLevel) {
+            } else if (indentLevel == orgIndentLevel && lastToken.getType() == RPAREN) {
                 // if balanced line starts with a conditional keyword, indent the new line
-                switch (tokens.get(0).getType()) {
-                case LITERAL_if:
-                case LITERAL_else:
-                case LITERAL_while:
-                case LITERAL_switch:
-                case LITERAL_for:
+                int firstTokenType = tokens.get(0).getType();
+                if (firstTokenType == LITERAL_if || firstTokenType == LITERAL_else ||
+                        firstTokenType == LITERAL_for || firstTokenType == LITERAL_while) {
                     indentLevel = getIndentLevelForCloserPair(d, lastToken) + getPrefs().getIndentationSize();
                 }
             }
