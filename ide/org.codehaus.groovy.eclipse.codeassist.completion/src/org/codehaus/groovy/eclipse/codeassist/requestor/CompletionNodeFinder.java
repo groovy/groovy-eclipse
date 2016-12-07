@@ -608,15 +608,11 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     void checkForCommandExpression(Expression leftExpression, Expression rightExpression) {
-        // see
-        // http://docs.codehaus.org/display/GROOVY/Groovy+1.8+release+notes#Groovy18releasenotes-CommandchainsfornicerDomain-SpecificLanguages
         // if all of these are true, then we have a command expression:
         // if objectExpr is a method call with >1 arguments
         // if property is a constant expression
         // if there are no parens (note that we don't actually have to test for
-        // this since if there are parens, then the result would still be the
-        // same)
-        // if doTest(expression.getProperty())
+        // this since if there are parens, then the result would still be the same)
 
         Expression leftMost = leftMost(rightExpression);
         if (methodCallWithOneArgument(leftExpression) && leftMost instanceof ConstantExpression && doTest(leftMost)) {

@@ -100,10 +100,8 @@ public class CompilerSwitchUIHelper {
         }
 
         Link moreInfoLink = new Link(compilerPage, 0);
-        moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-                false));
-        moreInfoLink.setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">See here</a> for more information "
-                + "on compiler switching (opens a browser window).");
+        moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        moreInfoLink.setText("<a href=\"https://github.com/groovy/groovy-eclipse/wiki\">See here</a> for more information (opens a browser window).");
         moreInfoLink.addListener (SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 openUrl(event.text);
