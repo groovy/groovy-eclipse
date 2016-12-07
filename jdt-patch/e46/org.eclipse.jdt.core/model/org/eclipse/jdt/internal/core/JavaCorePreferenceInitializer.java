@@ -1,4 +1,4 @@
-//GROOVY PATCHED
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -110,7 +110,7 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 			optionNames.add(optionName);
 		}
 
-		// GROOVY start
+		// GROOVY add
 		// add groovy-specific options
 		optionNames.add(CompilerOptions.OPTIONG_GroovyExtraImports);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile);

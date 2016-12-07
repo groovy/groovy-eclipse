@@ -35,8 +35,7 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeReference {
 
 	public TypeReference[][] typeArguments;
-	ReferenceBinding[] typesPerToken;
-	
+
 	/**
 	 * @param tokens
 	 * @param dim
@@ -75,10 +74,8 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 	}
 	public void checkBounds(ReferenceBinding type, Scope scope, int index) {
 		// recurse on enclosing type if any, and assuming explictly  part of the reference (index>0)
-		if (index > 0) {
-			ReferenceBinding enclosingType = this.typesPerToken[index-1];
-			if (enclosingType != null)
-				checkBounds(enclosingType, scope, index - 1);
+		if (index > 0 &&  type.enclosingType() != null) {
+			checkBounds(type.enclosingType(), scope, index - 1);
 		}
 		if (type.isParameterizedTypeWithActualArguments()) {
 			ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) type;
@@ -234,9 +231,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 
 		boolean typeIsConsistent = true;
 		ReferenceBinding qualifyingType = null;
-		int max = this.tokens.length;
-		this.typesPerToken = new ReferenceBinding[max];
-		for (int i = packageBinding == null ? 0 : packageBinding.compoundName.length; i < max; i++) {
+		for (int i = packageBinding == null ? 0 : packageBinding.compoundName.length, max = this.tokens.length; i < max; i++) {
 			findNextTypeBinding(i, scope, packageBinding);
 			if (!(this.resolvedType.isValidBinding())) {
 				reportInvalidType(scope);
@@ -368,7 +363,6 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			if (isTypeUseDeprecated(qualifyingType, scope))
 				reportDeprecatedType(qualifyingType, scope, i);
 			this.resolvedType = qualifyingType;
-			this.typesPerToken[i] = qualifyingType;
 			recordResolution(scope.environment(), this.resolvedType);
 		}
 		return this.resolvedType;

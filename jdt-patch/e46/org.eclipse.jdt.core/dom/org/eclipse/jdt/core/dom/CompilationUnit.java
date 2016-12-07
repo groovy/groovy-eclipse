@@ -197,10 +197,7 @@ public class CompilationUnit extends ASTNode {
 	 *
 	 * @param ast the AST that is to own this node
 	 */
-	/**
-	 * @since 3.11
-	 */ 
-	protected // GROOVY patched: made protected
+	protected // GROOVY package->protected
 	CompilationUnit(AST ast) {
 		super(ast);
 	}
@@ -208,10 +205,7 @@ public class CompilationUnit extends ASTNode {
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */
-	/**
-	 * @since 3.11
-	 */
-	protected // GROOVY patched: made protected
+	protected // GROOVY package->protected
 	void accept0(ASTVisitor visitor) {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {

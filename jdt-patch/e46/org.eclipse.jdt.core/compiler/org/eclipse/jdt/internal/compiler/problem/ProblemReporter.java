@@ -810,7 +810,7 @@ public void abstractMethodInConcreteClass(SourceTypeBinding type) {
 	}
 }
 public void abstractMethodMustBeImplemented(SourceTypeBinding type, MethodBinding abstractMethod) {
-    // GROOVY start: fired off by method verifier
+	// GROOVY add - fired off by method verifier
 	if (type.scope!=null && !type.scope.shouldReport(IProblem.IncompatibleReturnType)) {
 		return;
 	}
@@ -3195,7 +3195,7 @@ public void incompatibleExceptionInThrowsClause(SourceTypeBinding type, MethodBi
 			type.sourceEnd());
 }
 public void incompatibleReturnType(MethodBinding currentMethod, MethodBinding inheritedMethod) {
-	// GROOVY start: fired off by method verifier
+	// GROOVY add - fired off by method verifier
 	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
 		SourceTypeBinding stb = (SourceTypeBinding)currentMethod.declaringClass;
 		if (stb.scope!=null && !stb.scope.shouldReport(IProblem.IncompatibleReturnType)) {
@@ -5980,7 +5980,7 @@ public void methodMustOverride(AbstractMethodDeclaration method, long compliance
 }
 
 public void methodNameClash(MethodBinding currentMethod, MethodBinding inheritedMethod, int severity) {
-	// GROOVY start: fired off by method verifier
+	// GROOVY add - fired off by method verifier
 	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
 		SourceTypeBinding stb = (SourceTypeBinding)currentMethod.declaringClass;
 		if (stb.scope!=null && !stb.scope.shouldReport(IProblem.MethodNameClash)) {
@@ -8500,15 +8500,15 @@ public void unsafeReturnTypeOverride(MethodBinding currentMethod, MethodBinding 
 	int start = type.sourceStart();
 	int end = type.sourceEnd();
 	if (TypeBinding.equalsEquals(currentMethod.declaringClass, type)) {
-		// GROOVY - @Delegate introduced methods don't have a source method (GROOVY-873)
+		// GROOVY add - @Delegate introduced methods don't have a source method (GROOVY-873)
 		if (currentMethod.sourceMethod()!=null) {
-		// GROOVY - end
+		// GROOVY end
 		ASTNode location = ((MethodDeclaration) currentMethod.sourceMethod()).returnType;
 		start = location.sourceStart();
 		end = location.sourceEnd();
-		// GROOVY - start
+		// GROOVY add
 		}
-		// GROOVY - end
+		// GROOVY end
 	}
 	this.handle(
 			IProblem.UnsafeReturnTypeOverride,
@@ -8949,7 +8949,7 @@ public void varargsArgumentNeedCast(MethodBinding method, TypeBinding argumentTy
 	}
 }
 public void varargsConflict(MethodBinding method1, MethodBinding method2, SourceTypeBinding type) {
-	// GROOVY - start (GRE925)
+	// GROOVY add - GRECLIPSE-925
 	// Groovy 'guesses' about varargs rather than remembering from the declaration *sigh*
 	ReferenceBinding rb1 = method1.declaringClass;
 	ReferenceBinding rb2 = method2.declaringClass;
@@ -8959,7 +8959,7 @@ public void varargsConflict(MethodBinding method1, MethodBinding method2, Source
 	if (rb2!=null && (rb2 instanceof SourceTypeBinding) && ((SourceTypeBinding)rb2).scope!=null && !((SourceTypeBinding)rb2).scope.shouldReport(IProblem.VarargsConflict)) { 
 		return;
 	}
-	// GROOVY - end
+	// GROOVY end
 	this.handle(
 		IProblem.VarargsConflict,
 		new String[] {

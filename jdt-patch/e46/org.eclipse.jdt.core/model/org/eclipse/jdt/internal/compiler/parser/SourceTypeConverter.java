@@ -109,12 +109,12 @@ public class SourceTypeConverter extends TypeConverter {
 	 * at least contain one type.
 	 */
 	private CompilationUnitDeclaration convert(ISourceType[] sourceTypes, CompilationResult compilationResult) throws JavaModelException {
-		// GROOVY start
-        /* old {
+		// GROOVY edit
+		/* old {
 		this.unit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);
-        } new */
+		} new */
 		this.unit = LanguageSupportFactory.newCompilationUnitDeclaration((ICompilationUnit) ((SourceTypeElementInfo) sourceTypes[0]).getHandle().getCompilationUnit(), this.problemReporter, compilationResult, 0);
-        // GROOVY end
+		// GROOVY end
 		// not filled at this point
 
 		if (sourceTypes.length == 0) return this.unit;
@@ -122,7 +122,7 @@ public class SourceTypeConverter extends TypeConverter {
 		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
 		this.cu = (ICompilationUnit) cuHandle;
 
-		// GROOVY start
+		// GROOVY add
 		// trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration).
 		// similar to code below that creates the Parser and calls dietParse
 		// FIXASC think about doing the necessary rewrite below rather than this - does it make things too slow?
@@ -137,7 +137,7 @@ public class SourceTypeConverter extends TypeConverter {
 			}
 		}
 		// GROOVY end
-		
+
 		final CompilationUnitElementInfo compilationUnitElementInfo = (CompilationUnitElementInfo) ((JavaElement) this.cu).getElementInfo();
 		if (this.has1_5Compliance && 
 				(compilationUnitElementInfo.annotationNumber >= CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE ||

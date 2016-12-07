@@ -265,10 +265,10 @@ private void createParentFolder(IContainer parent) throws CoreException {
 	}
 }
 
-//GROOVY GRECLIPSE-1594
+// GROOVY add - GRECLIPSE-1594
 public boolean avoidAdditionalGroovyAnswers = false;
 private static char[] groovySuffixAsChars = ".groovy".toCharArray(); //$NON-NLS-1$
-//GROOVY end
+// GROOVY end
 
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName) {
 	if (this.notifier != null)
@@ -290,7 +290,7 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// Also take care of $ in the name of the class (https://bugs.eclipse.org/377401)
 		// and prefer name with '$' if unit exists rather than failing to search for nested class (https://bugs.eclipse.org/392727)
 		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
-		// GROOVY patch
+		// GROOVY add
 		if (this.avoidAdditionalGroovyAnswers && unit!=null) {
 			if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
 				unit = null;
@@ -303,7 +303,7 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		if (index > 0) {
 			String enclosingTypeName = qualifiedTypeName.substring(0, index);
 			unit = (SourceFile) this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
-			// GROOVY start
+			// GROOVY add
 			if (this.avoidAdditionalGroovyAnswers && unit!=null) {
 				if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
 					unit = null;

@@ -229,16 +229,16 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 	Map options = project.getOptions(true);
 	options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 
-	// GROOVY start
-    /* old {
-		SourceElementParser parser = new IndexingParser(
-				requestor,
-				new DefaultProblemFactory(Locale.getDefault()),
-				new CompilerOptions(options),
-				true, // index local declarations
-				true, // optimize string literals
-				false); // do not use source javadoc parser to speed up parsing
-    } new */
+	// GROOVY edit
+	/* old {
+	SourceElementParser parser = new IndexingParser(
+		requestor,
+		new DefaultProblemFactory(Locale.getDefault()),
+		new CompilerOptions(options),
+		true, // index local declarations
+		true, // optimize string literals
+		false); // do not use source javadoc parser to speed up parsing
+	} new */
 	SourceElementParser parser = LanguageSupportFactory.getIndexingParser(
 			requestor,
 			new DefaultProblemFactory(Locale.getDefault()),
@@ -247,7 +247,7 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 			true, // optimize string literals
 			false); // do not use source javadoc parser to speed up parsing
 	// GROOVY end
-	
+
 	parser.reportOnlyOneSyntaxError = true;
 
 	// Always check javadoc while indexing

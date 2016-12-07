@@ -253,9 +253,9 @@ public class CommentRecorderParser extends Parser {
 				this.options.taskTags/*taskTags*/,
 				this.options.taskPriorities/*taskPriorities*/,
 				this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
-		// GROOVY start - workaround JDT bug where it sorts the tasks but not the priorities!
+		// GROOVY add - workaround JDT bug where it sorts the tasks but not the priorities!
 		this.options.taskPriorities = this.scanner.taskPriorities;
-		// GROOVY end	
+		// GROOVY end
 	}
 
 	/*

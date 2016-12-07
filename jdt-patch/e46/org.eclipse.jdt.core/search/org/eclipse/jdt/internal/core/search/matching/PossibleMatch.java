@@ -169,7 +169,7 @@ public String toString() {
 	return this.openable == null ? "Fake PossibleMatch" : this.openable.toString(); //$NON-NLS-1$
 }
 
-//GROOVY start
+// GROOVY add
 /**
 * Determines if this file is relevant for extra language support
 * 
@@ -185,5 +185,5 @@ public boolean isInterestingSourceFile() {
 			(this.openable instanceof ClassFile && 
 					LanguageSupportFactory.isInterestingSourceFile(getSourceFileName()));
 }
-//GROOVY end
+// GROOVY end
 }

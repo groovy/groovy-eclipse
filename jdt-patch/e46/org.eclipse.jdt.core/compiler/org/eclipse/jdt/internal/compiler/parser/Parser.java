@@ -1,4 +1,4 @@
-//GROOVY PATCHED
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10696,7 +10696,7 @@ public void initializeScanner(){
 		this.options.taskTags/*taskTags*/,
 		this.options.taskPriorities/*taskPriorities*/,
 		this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
-	// GROOVY start - workaround JDT bug where it sorts the tasks but not the priorities!
+	// GROOVY add - workaround JDT bug where it sorts the tasks but not the priorities!
 	this.options.taskPriorities = this.scanner.taskPriorities;
 	// GROOVY end
 }
@@ -12641,9 +12641,9 @@ public boolean automatonWillShift(int token, int lastAction) {
 	}
 }
 
-//GROOVY start: new method where parser resetting can be done
+// GROOVY add - new method where parser resetting can be done
 public void reset() {
 	// standard Java parser, nothing to do
 }
-//GROOVY end
+// GROOVY end
 }

@@ -86,23 +86,22 @@ private Object[] computeNonJavaResources(ArrayList entryNames) {
 		return JavaElementInfo.NO_NON_JAVA_RESOURCES;
 	HashMap jarEntries = new HashMap(); // map from IPath to IJarEntryResource
 	HashMap childrenMap = new HashMap(); // map from IPath to ArrayList<IJarEntryResource>
-	
-	// GROOVY start
+
+	// GROOVY add
 	boolean isInteresting = LanguageSupportFactory.isInterestingProject(this.getJavaProject().getProject());
 	// GROOVY end
-	
+
 	ArrayList topJarEntries = new ArrayList();
 	for (int i = 0; i < length; i++) {
 		String resName = (String) entryNames.get(i);
 		// consider that a .java file is not a non-java resource (see bug 12246 Packages view shows .class and .java files when JAR has source)
-		// GROOVY start 
+		// GROOVY edit 
 		// we want to show uncompiled groovy scripts that are coming in from a jar file
 		/* old {
 		if (!Util.isJavaLikeFileName(resName)) {
 		} new */
-		if ( (!Util.isJavaLikeFileName(resName) || 
-				(isInteresting && LanguageSupportFactory.isInterestingSourceFile(resName)))) {
-			// GROOVY end
+		if ((!Util.isJavaLikeFileName(resName) || (isInteresting && LanguageSupportFactory.isInterestingSourceFile(resName)))) {
+		// GROOVY end
 			IPath filePath = new Path(resName);
 			IPath childPath = filePath.removeFirstSegments(this.names.length);
 			if (jarEntries.containsKey(childPath)) {

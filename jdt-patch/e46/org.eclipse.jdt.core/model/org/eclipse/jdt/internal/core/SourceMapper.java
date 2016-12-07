@@ -1432,12 +1432,12 @@ public class SourceMapper
 				}
 			}
 			boolean doFullParse = hasToRetrieveSourceRangesForLocalClass(fullName);
-			 // GROOVY start
-	        /* old {
+			// GROOVY add
+			/* old {
 			parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals..);
-	        } new */
+			} new */
 			parser = LanguageSupportFactory.getSourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/, true);
-	        // GROOVY end
+			// GROOVY end
 			parser.javadocParser.checkDocComment = false; // disable javadoc parsing
 			IJavaElement javaElement = this.binaryType.getCompilationUnit();
 			if (javaElement == null) javaElement = this.binaryType.getParent();
@@ -1445,8 +1445,8 @@ public class SourceMapper
 				new BasicCompilationUnit(contents, null, this.binaryType.sourceFileName(info), javaElement),
 				doFullParse,
 				null/*no progress*/);
-			// GROOVY start
-	        // if this is an interesting file in an interesting project,
+			// GROOVY add
+			// if this is an interesting file in an interesting project,
 			// then filter out all binary members that do not have a direct
 			// mapping to the source
 			IProject project = javaElement.getJavaProject().getProject();
@@ -1454,7 +1454,6 @@ public class SourceMapper
 					LanguageSupportFactory.isInterestingSourceFile(this.binaryType.getSourceFileName(info))) {
 				LanguageSupportFactory.filterNonSourceMembers(this.binaryType);
 			}
-			
 			// GROOVY end
 			if (elementToFind != null) {
 				ISourceRange range = getNameRange(elementToFind);

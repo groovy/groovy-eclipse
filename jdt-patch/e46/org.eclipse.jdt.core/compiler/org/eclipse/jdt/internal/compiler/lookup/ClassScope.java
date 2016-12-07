@@ -306,7 +306,7 @@ public class ClassScope extends Scope {
 						continue nextMember;
 					}
 				}
-				// GROOVY start: use the factory in order to get the right type of scope
+				// GROOVY edit - use the factory in order to get the right type of scope
 				/* old {
 				ClassScope memberScope = new ClassScope(this, memberContext);
 				} new */
@@ -320,7 +320,7 @@ public class ClassScope extends Scope {
 		sourceType.setMemberTypes(memberTypeBindings);
 	}
 
-	// GROOVY start: overridable method so the scope can build the right kind of new scope
+	// GROOVY add - overridable method so the scope can build the right kind of new scope
 	protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
 		return new ClassScope(parent, typeDecl);
 	}
@@ -386,7 +386,7 @@ public class ClassScope extends Scope {
 		}
 		if (count != methodBindings.length)
 			System.arraycopy(methodBindings, 0, methodBindings = new MethodBinding[count], 0, count);
-		// GROOVY start: allow extra methods
+		// GROOVY add - allow extra methods
 		methodBindings = augmentMethodBindings(methodBindings);
 		// GROOVY end
 		sourceType.tagBits &= ~(TagBits.AreMethodsSorted|TagBits.AreMethodsComplete); // in case some static imports reached already into this type
@@ -410,13 +410,13 @@ public class ClassScope extends Scope {
 		}
 	}
 
-	// GROOVY start: new method that can be overridden for groovy
+	// GROOVY add - new method that can be overridden for groovy
 	protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
 		// NOP for pure Java
 		return methodBindings;
 	}
 	// GROOVY end
-	
+
 	SourceTypeBinding buildType(SourceTypeBinding enclosingType, PackageBinding packageBinding, AccessRestriction accessRestriction) {
 		// provide the typeDeclaration with needed scopes
 		this.referenceContext.scope = this;
@@ -975,9 +975,7 @@ public class ClassScope extends Scope {
 		ReferenceBinding superclass = findSupertype(superclassRef);
 		if (superclass != null) { // is null if a cycle was detected cycle or a problem
 			if (!superclass.isClass() && (superclass.tagBits & TagBits.HasMissingType) == 0) {
-				// GROOVY start: make reporting conditional
-				// new
-				// TODO move strings to a constant
+				// GROOVY add - make reporting conditional
 				if (shouldReport(IProblem.SuperclassMustBeAClass)) 
 				// GROOVY end
 				problemReporter().superclassMustBeAClass(sourceType, superclassRef, superclass);
@@ -1008,7 +1006,7 @@ public class ClassScope extends Scope {
 			detectHierarchyCycle(sourceType, sourceType.superclass, null);
 		return false; // reported some error against the source type
 	}
-	// GROOVY start: new method, for overriding
+	// GROOVY add - new method, for overriding
 	public boolean shouldReport(int i) {
 		return true;
 	}
@@ -1061,7 +1059,7 @@ public class ClassScope extends Scope {
 
 		Answer false if an error was reported against the sourceType.
 	*/
-	// GROOVY patched: private to protected
+	// GROOVY private->protected
 	protected boolean connectSuperInterfaces() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;
 		sourceType.setSuperInterfaces(Binding.NO_SUPERINTERFACES);
@@ -1405,7 +1403,7 @@ public class ClassScope extends Scope {
 		return "--- Class Scope ---\n\n Binding not initialized" ; //$NON-NLS-1$
 	}
 
-	// GROOVY start
+	// GROOVY add
 	// more thought required - is this in the right place?
 	public MethodBinding[] getAnyExtraMethods(char[] selector) {
 		return null;

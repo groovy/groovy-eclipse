@@ -81,7 +81,7 @@ public abstract class HierarchyBuilder {
 			unitsToLookInside = workingCopies;
 		}
 		if (project != null) {
-			// GROOVY start - pulled out of the call
+			// GROOVY add - pulled out of the call
 			Map optionMap = project.getOptions(true);
 			CompilerUtils.configureOptionsBasedOnNature(optionMap, project);
 			// GROOVY end
@@ -90,7 +90,7 @@ public abstract class HierarchyBuilder {
 			this.hierarchyResolver =
 				new HierarchyResolver(
 					searchableEnvironment,
-					// GROOVY start
+					// GROOVY edit
 					/* old {
 					project.getOptions(true),
 					} new */

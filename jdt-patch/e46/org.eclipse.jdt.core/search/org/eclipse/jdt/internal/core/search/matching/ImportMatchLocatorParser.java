@@ -14,13 +14,13 @@ package org.eclipse.jdt.internal.core.search.matching;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
-public // GROOVY patched: made public
-class ImportMatchLocatorParser extends MatchLocatorParser {
+// GROOVY package->public
+public class ImportMatchLocatorParser extends MatchLocatorParser {
 
 	boolean reportImportMatch;
 
-public // GROOVY patched: from protected to public
-ImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+// GROOVY protected->public
+public ImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
 	super(problemReporter, locator);
 	this.reportImportMatch = this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.IMPORT_DECLARATION_TYPE_REFERENCE) != 0;
 }

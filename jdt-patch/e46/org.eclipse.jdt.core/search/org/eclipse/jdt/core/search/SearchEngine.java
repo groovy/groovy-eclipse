@@ -595,8 +595,8 @@ public class SearchEngine {
 	 *@since 3.0
 	 */
 	public void search(SearchPattern pattern, SearchParticipant[] participants, IJavaSearchScope scope, SearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
-	    // GROOVY start
-	    // GRECLIPSE-1054
+		// GROOVY add
+		// GRECLIPSE-1054
 		// potentially expand search scope because private declarations can be referenced outside the class that declares them.
 		if (pattern.focus != null && LanguageSupportFactory.isInterestingProject(pattern.focus.getJavaProject().getProject())) {
 			scope = LanguageSupportFactory.expandSearchScope(scope, pattern, requestor);

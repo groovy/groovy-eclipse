@@ -208,7 +208,7 @@ ReferenceBinding askForType(PackageBinding packageBinding, char[] name) {
 * NOTE: This method can be called multiple times as additional source files are needed
 */
 public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction accessRestriction) {
-	// GROOVY start
+	// GROOVY edit
 	/* old {
 	CompilationUnitScope scope = new CompilationUnitScope(unit, this);
 	} new */
@@ -253,9 +253,9 @@ public void completeTypeBindings() {
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 	    (this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy();
-		// GROOVY start: extra step, augment type hierarchy, may bring in GroovyObject as source (if in groovycore) and that
-	    // will then need its type hierarchy connecting
-	    (this.unitBeingCompleted = this.units[i]).scope.augmentTypeHierarchy();
+		// GROOVY add - extra step, augment type hierarchy, may bring in GroovyObject as source (if in groovycore) and that
+		// will then need its type hierarchy connecting
+		(this.unitBeingCompleted = this.units[i]).scope.augmentTypeHierarchy();
 		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;

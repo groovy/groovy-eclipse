@@ -1189,11 +1189,11 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMatches, int start, int length) throws CoreException {
 	initialize(javaProject, length);
 
-	// GROOVY start
+	// GROOVY add
 	boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaProject.getProject());
 	Set alreadyMatched = new HashSet();
 	// GROOVY end
-	
+
 	// create and resolve binding (equivalent to beginCompilation() in Compiler)
 	boolean mustResolvePattern = this.pattern.mustResolve;
 	boolean mustResolve = mustResolvePattern;
@@ -1202,7 +1202,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 	try {
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
-			// GROOVY start
+			// GROOVY add
 			if (isInterestingProject && possibleMatch.isInterestingSourceFile()) {
 				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
 				if (matchPerformed) {
@@ -1245,12 +1245,12 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 					possibleMatches[i] = possibleMatch.getSimilarMatch();
 					i--;
 				}
-				// GROOVY: delay cleanup for groovy matches.
-				// because it clears out 'scope' backpointer that may be used later in 'completeTypeBindings'
-				// was: if (!possibleMatch.nodeSet.mustResolve)
-				 if ((!possibleMatch.nodeSet.mustResolve) && !alreadyMatched.contains(possibleMatch))
-			    // GROOVY end
-					 possibleMatch.cleanUp();
+				// GROOVY edit
+				//if (!possibleMatch.nodeSet.mustResolve)
+				// delay cleanup for groovy matches because it clears out 'scope' backpointer that may be used later in 'completeTypeBindings'
+				if ((!possibleMatch.nodeSet.mustResolve) && !alreadyMatched.contains(possibleMatch))
+				// GROOVY end
+					possibleMatch.cleanUp();
 			}
 		}
 		if (mustResolve)
@@ -1302,25 +1302,25 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 							new String(possibleMatch.parsedUnit.getFileName())
 						}));
 			// cleanup compilation unit result
-			// GROOVY Start
+			// GROOVY add
 			// delay cleanup of groovy possible matches until later
 			// the clean up will null-out back pointers to scopes used by other CompilationUnitDeclarations
 			/* old {
 			possibleMatch.cleanUp();
 			} *///new
 			if (!alreadyMatched.contains(possibleMatch)) {
-				possibleMatch.cleanUp();
+			possibleMatch.cleanUp();
 			}
-			// GROOVY End
+			// GROOVY end
 		}
 	}
-	// GROOVY Start
+	// GROOVY add
 	// now do the clean up of groovy matches
 	for (Iterator iterator = alreadyMatched.iterator(); iterator.hasNext();) {
 		PossibleMatch match = (PossibleMatch) iterator.next();
 		match.cleanUp();
 	}
-	// GROOVY End	
+	// GROOVY end
 }
 /**
  * Locate the matches amongst the possible matches.
@@ -1811,16 +1811,10 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 					this.lookupEnvironment.buildTypeBindings(parsedUnit, null /*no access restriction*/);
 				}
 				if (hasAlreadyDefinedType(parsedUnit)) return false; // skip type has it is hidden so not visible
-				
-				// GROOVY Start
-				// old
-				// getMethodBodies(parsedUnit, possibleMatch.nodeSet);
-				// new
-				// Only getMethodBodies for Java files
-				if (!possibleMatch.isInterestingSourceFile()) {
-					getMethodBodies(parsedUnit, possibleMatch.nodeSet);
-				}
-				// GROOVY End
+				// GROOVY add
+				if (!possibleMatch.isInterestingSourceFile())
+				// GROOVY end
+				getMethodBodies(parsedUnit, possibleMatch.nodeSet);
 				if (this.patternLocator.mayBeGeneric && !mustResolve && possibleMatch.nodeSet.mustResolve) {
 					// special case: possible match node set force resolution although pattern does not
 					// => we need to build types for this compilation unit
@@ -1844,7 +1838,7 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
  * Process a compilation unit already parsed and build.
  */
 protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException {
-	// GROOVY Start
+	// GROOVY add
 	// Do not process non-Java files.  They use a separate delegated search
 	if (possibleMatch.isInterestingSourceFile()) {
 		try {
@@ -1855,8 +1849,8 @@ protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated)
 		possibleMatch.parsedUnit.resolve();
 		return;
 	}
-	// GROOVY End
-	
+	// GROOVY end
+
 	this.currentPossibleMatch = possibleMatch;
 	CompilationUnitDeclaration unit = possibleMatch.parsedUnit;
 	try {

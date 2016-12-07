@@ -2673,12 +2673,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			if (primaryWCs != null) {
 				for (int i = 0; i < primaryLength; i++) {
 					ICompilationUnit primaryWorkingCopy = primaryWCs[i];
-				    // GROOVY start
-			        /* old {
-			        ICompilationUnit workingCopy = new CompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
-			        } new */
+					// GROOVY edit
+					/* old {
+					ICompilationUnit workingCopy = new CompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
+					} new */
 					ICompilationUnit workingCopy = LanguageSupportFactory.newCompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
-			        // GROOVY end
+					// GROOVY end
 					if (!workingCopyToInfos.containsKey(workingCopy))
 						result[index++] = primaryWorkingCopy;
 				}

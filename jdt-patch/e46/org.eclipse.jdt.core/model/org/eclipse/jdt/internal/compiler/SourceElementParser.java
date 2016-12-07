@@ -997,8 +997,8 @@ private void rememberCategories() {
 		}
 	}
 }
-public // GROOVY patched: private to public
-void reset() {
+// GROOVY private->public
+public void reset() {
 	this.sourceEnds = new HashtableOfObjectToInt();
 	this.nodesToCategories = new HashMap();
 }

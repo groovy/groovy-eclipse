@@ -490,7 +490,7 @@ public class JavaProject
 				}
 			}
 		}
-		// GROOVY start
+		// GROOVY add
 		LanguageSupportFactory.getEventHandler().handle(this,"close");
 		// GROOVY end
 		super.close();

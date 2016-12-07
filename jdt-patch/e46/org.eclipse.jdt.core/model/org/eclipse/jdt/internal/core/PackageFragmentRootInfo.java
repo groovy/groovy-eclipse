@@ -63,7 +63,7 @@ static Object[] computeFolderNonJavaResources(IPackageFragmentRoot root, IContai
 	IResource[] nonJavaResources = new IResource[5];
 	int nonJavaResourcesCounter = 0;
 	try {
-		// GROOVY start
+		// GROOVY add
 		JavaProject project = (JavaProject)root.getJavaProject();
 		// here, we only care about non-source package roots in Groovy projects
 		boolean isInterestingPackageRoot = LanguageSupportFactory.isInterestingProject(project.getProject()) && root.getRawClasspathEntry().getEntryKind() != IClasspathEntry.CPE_SOURCE;
@@ -86,7 +86,7 @@ static Object[] computeFolderNonJavaResources(IPackageFragmentRoot root, IContai
 						String fileName = member.getName();
 
 						// ignore .java files that are not excluded
-						// GROOVY start
+						// GROOVY edit
 						/* old {
 						if (Util.isValidCompilationUnitName(fileName, sourceLevel, complianceLevel) && !Util.isExcluded(member, inclusionPatterns, exclusionPatterns))
 						} new */

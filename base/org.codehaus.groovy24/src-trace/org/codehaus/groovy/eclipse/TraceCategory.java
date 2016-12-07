@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,9 @@ package org.codehaus.groovy.eclipse;
 import java.util.Arrays;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
-@SuppressWarnings("nls")
 public enum TraceCategory {
 
     DEFAULT("_"),

@@ -326,12 +326,12 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		// copy resource
 		IContainer destFolder = (IContainer)dest.getResource(); // can be an IFolder or an IProject
 		IFile destFile = destFolder.getFile(new Path(destName));
-		// GROOVY start
-	    /* old {
+		// GROOVY edit
+		/* old {
 		org.eclipse.jdt.internal.core.CompilationUnit destCU = new org.eclipse.jdt.internal.core.CompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
-	    } new */
+		} new */
 		org.eclipse.jdt.internal.core.CompilationUnit destCU = LanguageSupportFactory.newCompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
-	    // GROOVY end
+		// GROOVY end
 		if (!destFile.equals(sourceResource)) {
 			try {
 				if (!destCU.isWorkingCopy()) {
@@ -639,14 +639,12 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		} else {
 			// ensure cu is consistent (noop if already consistent)
 			cu.makeConsistent(this.progressMonitor);
-
-		    // GROOVY start
+			// GROOVY add
 			// don't use the ASTParser if not a Java compilation unit
 			if (LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())) {
 				return updateNonJavaContent(cu, destPackageName, currPackageName, newName);
 			}
-		    // GROOVY end
-			
+			// GROOVY end
 			this.parser.setSource(cu);
 			CompilationUnit astCU = (CompilationUnit) this.parser.createAST(this.progressMonitor);
 			AST ast = astCU.getAST();
@@ -656,7 +654,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 			return rewrite.rewriteAST();
 		}
 	}
-	// GROOVY start
+	// GROOVY add
 	// create the content for non-Java files 
 	private TextEdit updateNonJavaContent(ICompilationUnit cu, String[] destPackageName, String[] currPackageName, String newName) throws JavaModelException {
 		// package statement

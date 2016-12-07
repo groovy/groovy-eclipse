@@ -81,7 +81,7 @@ public class BinaryTypeBinding extends ReferenceBinding {
 	protected ReferenceBinding[] superInterfaces;
 	protected FieldBinding[] fields;
 	protected MethodBinding[] methods;
-	// GROOVY start
+	// GROOVY add
 	private boolean infraMethodsComplete = false;
 	protected MethodBinding[] infraMethods = Binding.NO_METHODS;
 	// GROOVY end

@@ -1,4 +1,4 @@
-//GROOVY PATCHED
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -24,7 +24,6 @@ package org.eclipse.jdt.internal.core.hierarchy;
  * why the requestor should be informed that binary type X subclasses Y &
  * implements I & J?
  */
-
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import java.util.HashMap;
@@ -675,7 +674,7 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		}
 
 		// build type bindings
-		// GROOVY start: ensure downstream groovy parses share the same compilationunit
+		// GROOVY edit - ensure downstream groovy parses share the same compilationunit
 		/* old {
 		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
 		} new */

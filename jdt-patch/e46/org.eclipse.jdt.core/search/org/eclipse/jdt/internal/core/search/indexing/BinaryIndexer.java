@@ -818,7 +818,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			// record all references found inside the .class file
 			extractReferenceFromConstantPool(contents, reader);
 
-			// GROOVY start since groovy method calls and property accesses are dynamically invoked and accessed
+			// GROOVY add - since groovy method calls and property accesses are dynamically invoked and accessed
 			// must index the string constants in the constant pool
 			// TODO would be nice to check for an "interesting project" here, but don't have access to that
 			char[] sourceFileName = reader.sourceFileName();

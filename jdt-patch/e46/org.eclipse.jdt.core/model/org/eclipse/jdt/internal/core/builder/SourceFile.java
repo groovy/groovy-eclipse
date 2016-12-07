@@ -116,7 +116,7 @@ public String toString() {
 		+ this.resource.getFullPath() + "]";  //$NON-NLS-1$
 }
 
-//GROOVY - GRECLIPSE-963
+// GROOVY add - GRECLIPSE-963
 public static final String LINK_TO_GRAILS_PLUGINS = ".link_to_grails_plugins"; //$NON-NLS-1$
 
 public boolean isInLinkedSourceFolder() {
@@ -128,5 +128,5 @@ public boolean isInLinkedSourceFolder() {
 	}
 	return false;
 }
-//GROOVY - end
+// GROOVY end
 }

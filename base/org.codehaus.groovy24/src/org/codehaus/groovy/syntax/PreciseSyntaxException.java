@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.syntax;
 
-// FIXASC (groovychange) new type - could be merged into existing SyntaxException
 /**
  * A more precise form of SyntaxException that is aware of the precise start/end offsets.
  *

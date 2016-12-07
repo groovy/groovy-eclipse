@@ -343,7 +343,7 @@ public boolean canBeSeenBy(ReferenceBinding receiverType, ReferenceBinding invoc
  * Answer true if the receiver is visible to the type provided by the scope.
  */
 public boolean canBeSeenBy(Scope scope) {
-	// GROOVY start
+	// GROOVY add
 	if (scope.compilationUnitScope()!=null && scope.compilationUnitScope().canSeeEverything()) {
 		return true;
 	}
@@ -2143,10 +2143,10 @@ public static boolean isConsistentIntersection(TypeBinding[] intersectingTypes) 
 	}
 	return true;
 }
-//GROOVY start
+//GROOVY add
 //more thought required - is this in the right place?
 public MethodBinding[] getAnyExtraMethods(char[] selector) {
-       return null;
+	return null;
 }
 //GROOVY end
 }

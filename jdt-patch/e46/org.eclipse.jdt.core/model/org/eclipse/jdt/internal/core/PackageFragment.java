@@ -89,12 +89,12 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 						&& !Util.isExcluded(child, inclusionPatterns, exclusionPatterns)) {
 					IJavaElement childElement;
 					if (kind == IPackageFragmentRoot.K_SOURCE && Util.isValidCompilationUnitName(child.getName(), sourceLevel, complianceLevel)) {
-						 // GROOVY start
-	                    /* old {
+						// GROOVY edit
+						/* old {
 						childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
-	                    } new */
-					    childElement = LanguageSupportFactory.newCompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
-	                    // GROOVY end
+						} new */
+						childElement = LanguageSupportFactory.newCompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
+						// GROOVY end
 						vChildren.add(childElement);
 					} else if (kind == IPackageFragmentRoot.K_BINARY && Util.isValidClassFileName(child.getName(), sourceLevel, complianceLevel)) {
 						childElement = getClassFile(child.getName());
@@ -153,12 +153,12 @@ public void copy(IJavaElement container, IJavaElement sibling, String rename, bo
 public ICompilationUnit createCompilationUnit(String cuName, String contents, boolean force, IProgressMonitor monitor) throws JavaModelException {
 	CreateCompilationUnitOperation op= new CreateCompilationUnitOperation(this, cuName, contents, force);
 	op.runOperation(monitor);
-	 // GROOVY start
-    /* old {
+	// GROOVY edit
+	/* old {
 	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    } new */
-    return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    // GROOVY end
+	} new */
+	return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	// GROOVY end
 }
 /**
  * @see JavaElement
@@ -228,12 +228,12 @@ public ICompilationUnit getCompilationUnit(String cuName) {
 	if (!org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(cuName)) {
 		throw new IllegalArgumentException(Messages.convention_unit_notJavaName);
 	}
-	 // GROOVY start
-    /* old {
-    return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    } new */
+	// GROOVY edit
+	/* old {
+	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	} new */
 	return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    // GROOVY end
+	// GROOVY end
 }
 /**
  * @see IPackageFragment#getCompilationUnits()
@@ -292,12 +292,12 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 		case JEM_COMPILATIONUNIT:
 			if (!memento.hasMoreTokens()) return this;
 			String cuName = memento.nextToken();
-		    // GROOVY start
-		    /* old {
-		    JavaElement cu = new CompilationUnit(this, cuName, owner);
-		    } new */
+			// GROOVY edit
+			/* old {
+			JavaElement cu = new CompilationUnit(this, cuName, owner);
+			} new */
 			JavaElement cu = LanguageSupportFactory.newCompilationUnit(this, cuName, owner);
-		    // GROOVY end
+			// GROOVY end
 			return cu.getHandleFromMemento(memento, owner);
 	}
 	return null;

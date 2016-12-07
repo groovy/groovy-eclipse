@@ -178,15 +178,14 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
 	    BinaryType type = (BinaryType) getType();
-		// GROOVY start
+		// GROOVY edit
 		/*old{
 		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()));
 		}new*/
-		
 		// handle code select for Groovy files differently
 		IBinaryType typeInfo = (IBinaryType) type.getElementInfo();
 		if (LanguageSupportFactory.isInterestingBinary(type, typeInfo)) {
-		    return LanguageSupportFactory.binaryCodeSelect(this, offset, length, owner);
+			return LanguageSupportFactory.binaryCodeSelect(this, offset, length, owner);
 		}
 		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName(typeInfo));
 		// GROOVY end

@@ -295,7 +295,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 	public void initializeParser() {
 		// GROOVY edit
 		//this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-        this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
-        // GROOVY end
+		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
+		// GROOVY end
 	}
 }

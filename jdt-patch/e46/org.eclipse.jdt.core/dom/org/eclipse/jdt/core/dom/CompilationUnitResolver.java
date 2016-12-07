@@ -71,11 +71,8 @@ import org.eclipse.jdt.internal.core.util.BindingKeyResolver;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.DOMFinder;
 
-/**
- * @since 3.11
- */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public // GROOVY patched: made public
+public // GROOVY package->public
 class CompilationUnitResolver extends Compiler {
 	public static final int RESOLVE_BINDING = 0x1;
 	public static final int PARTIAL = 0x2;
@@ -349,7 +346,7 @@ class CompilationUnitResolver extends Compiler {
 	 * @see org.eclipse.jdt.internal.compiler.Compiler#initializeParser()
 	 */
 	public void initializeParser() {
-		// GROOVY start
+		// GROOVY edit
 		/* old {
 		this.parser = new CommentRecorderParser(this.problemReporter, false);
 		} new */
@@ -512,7 +509,7 @@ class CompilationUnitResolver extends Compiler {
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
 		compilerOptions.ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
-		// GROOVY Start
+		// GROOVY edit
 		/* old {
 		Parser parser = new CommentRecorderParser(
 			new ProblemReporter(
@@ -527,7 +524,7 @@ class CompilationUnitResolver extends Compiler {
 						compilerOptions,
 						new DefaultProblemFactory()),
 						false, 2 /* comment recorder parser */);
-		// GROOVY End
+		// GROOVY end
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);
 

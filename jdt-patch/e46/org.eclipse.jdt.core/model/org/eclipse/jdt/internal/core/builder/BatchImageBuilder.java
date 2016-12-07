@@ -166,7 +166,7 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 			this.notifier.checkCancel();
 		}
 	}
-	// GROOVY start
+	// GROOVY add
 	LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject,"cleanOutputFolders");
 	// GROOVY end
 }
@@ -194,7 +194,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 	final char[][] inclusionPatterns = sourceLocation.inclusionPatterns;
 	final IContainer outputFolder = sourceLocation.binaryFolder;
 	final boolean isAlsoProject = sourceLocation.sourceFolder.equals(this.javaBuilder.currentProject);
-	// GROOVY start
+	// GROOVY add
 	final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
 	// GROOVY end
 	sourceLocation.sourceFolder.accept(
@@ -203,7 +203,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 				IResource resource = null;
 				switch(proxy.getType()) {
 					case IResource.FILE :
-						// GROOVY start
+						// GROOVY edit
 						/* old {
 						if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()) ||
 							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) return false;
@@ -214,7 +214,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 						if ((LanguageSupportFactory.isSourceFile(proxy.getName(), isInterestingProject) && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) ||
 							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName()))
 								return false;
-						// GROOVY end						
+						// GROOVY end
 
 						resource = proxy.requestResource();
 						if (BatchImageBuilder.this.javaBuilder.filterExtraResource(resource)) return false;

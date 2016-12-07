@@ -30,7 +30,7 @@ public class MatchLocatorParser extends Parser {
 	final int patternFineGrain;
 
 public static MatchLocatorParser createParser(ProblemReporter problemReporter, MatchLocator locator) {
-	// GROOVY Start
+	// GROOVY edit
 	/* old {
 	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
 		return new ImportMatchLocatorParser(problemReporter, locator);
@@ -42,7 +42,7 @@ public static MatchLocatorParser createParser(ProblemReporter problemReporter, M
 		return LanguageSupportFactory.getImportMatchLocatorParser(problemReporter, locator);
 	}
 	return LanguageSupportFactory.getMatchLocatorParser(problemReporter, locator);
-	// GROOVY End
+	// GROOVY end
 }
 
 /**
@@ -101,8 +101,8 @@ public class ClassAndMethodDeclarationVisitor extends ClassButNoMethodDeclaratio
 	}
 }
 
-public // GROOVY PATCHED: protected to public
-MatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+// GROOVY protected->public
+public MatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
 	super(problemReporter, true);
 	this.reportOnlyOneSyntaxError = true;
 	this.patternLocator = locator.patternLocator;
