@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import groovyjarjarantlr.Token;
-
 import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import groovyjarjarantlr.Token;
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -52,11 +48,9 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
 /**
- * @author Mike Klenk mklenk@hsr.ch
+ * @author Mike Klenk
  */
 public class DefaultGroovyFormatter extends GroovyFormatter {
-
-    private static final boolean DEGUG = false;
 
     protected IFormatterPreferences pref;
     private ModuleNode rootNode;
@@ -78,30 +72,27 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
      */
     public DefaultGroovyFormatter(ITextSelection sel, IDocument doc, IFormatterPreferences pref, boolean indentOnly) {
         super(sel, doc);
-        this.indentOnly = indentOnly;
         this.pref = pref;
+        this.indentOnly = indentOnly;
 
-        if (selection.getLength() != 0) {
+        formatOffset = selection.getOffset();
+        formatLength = selection.getLength();
+
+        if (formatLength > 0 || (formatOffset > 0 && indentOnly)) {
             try {
                 // expand selection to include start of line
-                int startLine = document.getLineOfOffset(selection.getOffset());
+                int startLine = document.getLineOfOffset(formatOffset);
                 IRegion startLineInfo = document.getLineInformation(startLine);
 
-                // -1 because we don't want a selection at the start of a new
-                // line to cause that line to be formatted
-                int endLine = document.getLineOfOffset(selection.getOffset() + selection.getLength() - 1);
+                int endLine = document.getLineOfOffset(formatOffset + formatLength);
                 IRegion endLineInfo = document.getLineInformation(endLine);
 
                 formatOffset = startLineInfo.getOffset();
                 formatLength = endLineInfo.getOffset() + endLineInfo.getLength() - formatOffset;
             } catch (BadLocationException e) {
                 GroovyCore.logException("Exception when calculating offsets for formatting", e);
-                // well, do the best we can
-                formatOffset = selection.getOffset();
-                formatLength = selection.getLength();
             }
-        } else {
-            formatOffset = 0;
+        } else if (formatLength == 0 && formatOffset == 0) { // TODO: Can the refactorings set a selection range instead of [0,0]?
             formatLength = document.getLength();
         }
     }
@@ -136,15 +127,8 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
             initCodebase();
             GroovyIndentation indent = new GroovyIndentation(this, pref, indentationLevel);
-            UndoEdit undo2 = indent.getIndentationEdits().apply(formattedDocument);
-            formatLength += undo2.getLength();
-
-//          if (!indentendOnly) {
-//              initCodebase();
-//              GroovyLineWrapper linewrap = new GroovyLineWrapper(this, pref, indent.getLineIndentations());
-//              UndoEdit undo3 = linewrap.getLineWrapEdits().apply(formattedDocument);
-//              formatLength += undo3.getLength();
-//          }
+            UndoEdit undo = indent.getIndentationEdits().apply(formattedDocument);
+            formatLength += undo.getLength();
         } catch (Exception e) {
             GroovyCore.logWarning("Cannot format, probably due to compilation errors.  Please fix and try again.", e);
         }
@@ -169,12 +153,6 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         if (t != null) {
             ASTNode node = findCorrespondingNode(t);
 
-            if (DEGUG) {
-                System.out.println("Searching for: " + t);
-                System.out.println(">>>NODE");
-                System.out.println(ASTTools.getTextofNode(node, formattedDocument));
-                System.out.println("<<<NODE");
-            }
             if (isMultilineNodeType(node)) {
                 IncludesClosureOrListPredicate cltest = new IncludesClosureOrListPredicate(false, t.getLine());
                 node.visit(cltest);
@@ -189,10 +167,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
     }
 
     /**
-     * Returns a string without spaces / line feeds at the end
-     *
-     * @param s
-     * @return
+     * Returns a string without spaces / line feeds at the end.
      */
     public String trimEnd(String s) {
         int len = s.length();
@@ -211,9 +186,6 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
     /**
      * Tests if the ASTNode is a valid MultiNodeType an has multiple lines
      * Statements, ClassNodes, MethodNodes and Variable Expressions are ignored
-     *
-     * @param node
-     * @return
      */
     private boolean isMultilineNodeType(ASTNode node) {
         if (node != null && node.getLineNumber() < node.getLastLineNumber()) {
