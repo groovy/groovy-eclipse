@@ -200,25 +200,25 @@ public class GroovyIndentationService {
         int line = token == null ? 0 : getLine(token);
         int orgIndentLevel = token == null ? 0 : getLineIndentLevel(d, line);
         List<Token> tokens = getTokens(d, d.getLineOffset(line), offset);
-
         int indentLevel = simpleComputeNextLineIndentLevel(orgIndentLevel, tokens);
-
-        Token lastToken = tokens.get(tokens.size() - 1);
-        while (lastToken.getType() == GroovyTokenTypeBridge.NLS) {
-            lastToken = getTokenBefore(d, lastToken);
-        }
-        if (isCloserOfPair(lastToken)) {
-            if (indentLevel < orgIndentLevel) {
-                // Jumping back from indentation is more complex.
-                // A somewhat better strategy for newline after closing
-                // brackets, parens or braces.
-                indentLevel = getIndentLevelForCloserPair(d, lastToken);
-            } else if (indentLevel == orgIndentLevel && lastToken.getType() == RPAREN) {
-                // if balanced line starts with a conditional keyword, indent the new line
-                int firstTokenType = tokens.get(0).getType();
-                if (firstTokenType == LITERAL_if || firstTokenType == LITERAL_else ||
-                        firstTokenType == LITERAL_for || firstTokenType == LITERAL_while) {
-                    indentLevel = getIndentLevelForCloserPair(d, lastToken) + getPrefs().getIndentationSize();
+        if (tokens != null && !tokens.isEmpty()) {
+            Token lastToken = tokens.get(tokens.size() - 1);
+            while (lastToken.getType() == GroovyTokenTypeBridge.NLS) {
+                lastToken = getTokenBefore(d, lastToken);
+            }
+            if (isCloserOfPair(lastToken)) {
+                if (indentLevel < orgIndentLevel) {
+                    // Jumping back from indentation is more complex.
+                    // A somewhat better strategy for newline after closing
+                    // brackets, parens or braces.
+                    indentLevel = getIndentLevelForCloserPair(d, lastToken);
+                } else if (indentLevel == orgIndentLevel && lastToken.getType() == RPAREN) {
+                    // if balanced line starts with a conditional keyword, indent the new line
+                    int firstTokenType = tokens.get(0).getType();
+                    if (firstTokenType == LITERAL_if || firstTokenType == LITERAL_else ||
+                            firstTokenType == LITERAL_for || firstTokenType == LITERAL_while) {
+                        indentLevel = getIndentLevelForCloserPair(d, lastToken) + getPrefs().getIndentationSize();
+                    }
                 }
             }
         }
