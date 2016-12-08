@@ -215,7 +215,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             '''.stripIndent().replaceAll('\\|', ''))
     }
 
-    void testIndentAfterIfStatement() {
+    void testIndentAfterIfStatement1() {
         makeEditor("""\
             class Bagaga {
                 def foo(def a, def b) {
@@ -231,6 +231,163 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                 def foo(def a, def b) {
                     if (a == b)
                         ${CARET}
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testIndentAfterIfStatement2() {
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {${CARET}
+                    }
+                }
+            }
+            """.stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        ${CARET}
+                    }
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testIndentAfterIfStatement3() {
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    } else if (a < b)${CARET}
+                }
+            }
+            """.stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    } else if (a < b)
+                        ${CARET}
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testIndentAfterIfStatement3a() {
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    }
+                    else if (a < b)${CARET}
+                }
+            }
+            """.stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    }
+                    else if (a < b)
+                        ${CARET}
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testIndentAfterElseStatement1() {
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b)
+                        return a
+                    else${CARET}
+                }
+            }
+            """.stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b)
+                        return a
+                    else
+                        ${CARET}
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testIndentAfterElseStatement2() {
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    } else {${CARET}
+                    }
+                }
+            }
+            """.stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    } else {
+                        ${CARET}
+                    }
+                }
+            }
+            """.stripIndent())
+    }
+
+    void testIndentAfterElseStatement3() {
+        // count of braces on line is slightly different in this case
+        makeEditor("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    }
+                    else {${CARET}
+                    }
+                }
+            }
+            """.stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+            class Bagaga {
+                def foo(def a, def b) {
+                    if (a == b) {
+                        return a
+                    }
+                    else {
+                        ${CARET}
+                    }
                 }
             }
             """.stripIndent())
@@ -287,7 +444,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                     if (a < b)
                         foo()
                     else
-                    ${CARET}
+                        ${CARET}
                 }
             }
             """.stripIndent())

@@ -195,12 +195,13 @@ public class GroovyIndentationService {
      * at a given offset.
      */
     public int computeIndentAfterNewline(IDocument d, int offset) throws BadLocationException {
-        // To ensure we are basing this on a line that has actual tokens on it...
         Token token = getTokenBefore(d, offset);
-        int line = token == null ? 0 : getLine(token);
-        int orgIndentLevel = token == null ? 0 : getLineIndentLevel(d, line);
+        int line = (token == null ? 0 : getLine(token));
+        int orgIndentLevel = (token == null ? 0 : getLineIndentLevel(d, line));
+
         List<Token> tokens = getTokens(d, d.getLineOffset(line), offset);
         int indentLevel = simpleComputeNextLineIndentLevel(orgIndentLevel, tokens);
+
         if (tokens != null && !tokens.isEmpty()) {
             Token lastToken = tokens.get(tokens.size() - 1);
             while (lastToken.getType() == GroovyTokenTypeBridge.NLS) {
@@ -213,15 +214,19 @@ public class GroovyIndentationService {
                     // brackets, parens or braces.
                     indentLevel = getIndentLevelForCloserPair(d, lastToken);
                 } else if (indentLevel == orgIndentLevel && lastToken.getType() == RPAREN) {
-                    // if balanced line starts with a conditional keyword, indent the new line
+                    // line ended with ')' -- check for incomplete conditional statement
                     int firstTokenType = tokens.get(0).getType();
                     if (firstTokenType == LITERAL_if || firstTokenType == LITERAL_else ||
-                            firstTokenType == LITERAL_for || firstTokenType == LITERAL_while) {
+                            firstTokenType == LITERAL_for || firstTokenType == LITERAL_while ||
+                            (firstTokenType == RCURLY && tokens.size() > 1 && tokens.get(1).getType() == LITERAL_else)) {
                         indentLevel = getIndentLevelForCloserPair(d, lastToken) + getPrefs().getIndentationSize();
                     }
                 }
+            } else if (indentLevel == orgIndentLevel && lastToken.getType() == LITERAL_else) { // bare else
+                indentLevel += getPrefs().getIndentationSize();
             }
         }
+
         return indentLevel;
     }
 
@@ -530,14 +535,22 @@ public class GroovyIndentationService {
         return indentLevel;
     }
 
-    public int getOpenVersusCloseBalance(List<Token> tokens) {
+    protected int getOpenVersusCloseBalance(List<Token> tokens) {
         int adjust = 0;
+
+        // if line starts with closer, assume adjustment has already been made
+        // examples include "} else {" and "} while ()" (end of do-while loop)
+        if (!tokens.isEmpty() && jumpOut.contains(tokens.get(0).getType())) {
+            adjust += 1;
+        }
+
         for (Token tok : tokens) {
             if (jumpIn.contains(tok.getType()))
-                adjust++;
+                adjust += 1;
             if (jumpOut.contains(tok.getType()))
-                adjust--;
+                adjust -= 1;
         }
+
         return adjust;
     }
 
