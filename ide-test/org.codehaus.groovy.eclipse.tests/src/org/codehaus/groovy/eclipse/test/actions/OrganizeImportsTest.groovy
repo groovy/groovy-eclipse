@@ -418,6 +418,36 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doContentsCompareTest(contents, contents)
     }
 
+    void testRetainImport9() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        String contents = '''\
+            import groovy.transform.AnnotationCollector
+            import groovy.transform.EqualsAndHashCode
+            import groovy.transform.ToString
+
+            @AnnotationCollector([EqualsAndHashCode, ToString])
+            public @interface Custom {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport9a() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        String contents = '''\
+            import groovy.transform.AnnotationCollector
+            import groovy.transform.EqualsAndHashCode
+            import groovy.transform.ToString
+
+            @ToString
+            @EqualsAndHashCode
+            @AnnotationCollector
+            public @interface Custom {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
     void testChoices() {
         String contents = '''
             FourthClass f = null

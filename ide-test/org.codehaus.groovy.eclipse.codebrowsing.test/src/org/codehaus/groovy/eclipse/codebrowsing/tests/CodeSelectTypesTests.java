@@ -115,6 +115,18 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), "CompileDynamic");
     }
 
+    public void testSelectAnnotationClass4() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return; // AnnotationCollector was added in 2.1
+        String contents = "import groovy.transform.*; @AnnotationCollector([EqualsAndHashCode]) public @interface Custom { }";
+        assertCodeSelect(asList(contents), "EqualsAndHashCode");
+    }
+
+    public void testSelectAnnotationClass4a() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return; // AnnotationCollector was added in 2.1
+        String contents = "import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector public @interface Custom { }";
+        assertCodeSelect(asList(contents), "EqualsAndHashCode");
+    }
+
     public void testSelectAnnotationValue() {
         String another = "@interface RunWith {\n  Class value()\n}\nclass Runner { }";
         String contents = "@RunWith(Runner)\nclass ATest { }";
@@ -539,5 +551,17 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
     public void testSelectMethodGenericType2() {
         String contents = "class Foo<T> { def T x() { null } }";
         assertCodeSelect(contents, new SourceRange(contents.lastIndexOf("T"), 1), "T");
+    }
+
+    // javadocs
+
+    public void testSelectTypeInJavadocLink() {
+        String contents = "/** {@link java.util.regex.Pattern} */ class X { }";
+        assertCodeSelect(asList(contents), "Pattern");
+    }
+
+    public void testSelectTypeInJavadocLink2() {
+        String contents = "import java.util.regex.Pattern; /** {@link Pattern} */ class X { }";
+        assertCodeSelect(asList(contents), "Pattern");
     }
 }

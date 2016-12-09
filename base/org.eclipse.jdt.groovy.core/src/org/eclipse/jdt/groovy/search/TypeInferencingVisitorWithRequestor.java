@@ -621,6 +621,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitClassReference(intr);
         }
 
+        // TODO: Should all methods w/o peer in JDT model have their bodies visited?  Below are two cases in particular.
+
+        if (isMetaAnnotation(node)) {
+            // visit relocated @AnnotationCollector annotations
+            MethodNode value = node.getMethod("value", NO_PARAMETERS);
+            if (value != null && value.getEnd() < 1) {
+                visitClassCodeContainer(value.getCode());
+            }
+        }
+
         // visit relocated @Memoized method bodies
         for (MethodNode method : node.getMethods()) {
             if (method.getName().startsWith("memoizedMethodPriv$")) {
@@ -2308,9 +2318,19 @@ assert primaryExprType != null && dependentExprType != null;
         return ((typeModifiers & Opcodes.ACC_ENUM) > 0 && node.getMethod().equals("$INIT"));
     }
 
+    private boolean isMetaAnnotation(ClassNode node) {
+        if (node.isAnnotated() && node.hasMethod("value", NO_PARAMETERS)) {
+            for (AnnotationNode annotation : node.getAnnotations()) {
+                if (annotation.getClassNode().getName().equals("groovy.transform.AnnotationCollector")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean isLazy(FieldNode fieldNode) {
-        List<AnnotationNode> annotations = fieldNode.getAnnotations();
-        for (AnnotationNode annotation : annotations) {
+        for (AnnotationNode annotation : fieldNode.getAnnotations()) {
             if (annotation.getClassNode().getName().equals("groovy.lang.Lazy")) {
                 return true;
             }

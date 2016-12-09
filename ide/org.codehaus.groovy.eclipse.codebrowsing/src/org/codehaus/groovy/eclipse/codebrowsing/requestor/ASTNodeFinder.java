@@ -243,8 +243,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (arrayClass != arrayClass.redirect()) {
             check(arrayClass);
         } else {
-            // this is a synthetic ArrayExpression used for when
-            // referencing enum fields
+            // synthetic ArrayExpression for referencing enum fields or collected annotations
         }
         super.visitArrayExpression(expression);
     }
@@ -391,7 +390,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      * Checks if the node covers the selection.
      */
     protected void check(ASTNode node) {
-        //if (node == null) return;
         if (node instanceof ClassNode) {
             checkGenerics((ClassNode) node);
         }
