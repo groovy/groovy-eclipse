@@ -202,11 +202,8 @@ public class GroovyIndentationService {
         List<Token> tokens = getTokens(d, d.getLineOffset(line), offset);
         int indentLevel = simpleComputeNextLineIndentLevel(orgIndentLevel, tokens);
 
-        if (tokens != null && !tokens.isEmpty()) {
-            Token lastToken = tokens.get(tokens.size() - 1);
-            while (lastToken.getType() == GroovyTokenTypeBridge.NLS) {
-                lastToken = getTokenBefore(d, lastToken);
-            }
+        Token lastToken = lastNonNlsToken(d, tokens);
+        if (lastToken != null) {
             if (isCloserOfPair(lastToken)) {
                 if (indentLevel < orgIndentLevel) {
                     // Jumping back from indentation is more complex.
@@ -499,6 +496,21 @@ public class GroovyIndentationService {
             GroovyCore.logException("Internal error", e);
             return false;
         }
+    }
+
+    /**
+     * @param tokens same-line tokens preceding the caret
+     * @return first preceding token that is not a non-localized string comment
+     */
+    private Token lastNonNlsToken(IDocument d, List<Token> tokens) throws BadLocationException {
+        if (tokens != null && !tokens.isEmpty()) {
+            Token lastToken = tokens.get(tokens.size() - 1);
+            while (lastToken != null && lastToken.getType() == GroovyTokenTypeBridge.NLS) {
+                lastToken = getTokenBefore(d, lastToken);
+            }
+            return lastToken;
+        }
+        return null;
     }
 
     /**
