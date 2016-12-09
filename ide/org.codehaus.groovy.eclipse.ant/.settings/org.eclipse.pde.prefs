@@ -1,0 +1,3 @@
+# disable warning for 'groovyAntEclipse.jar' missing from the bundle classpath
+compilers.p.build.output.library=2
+eclipse.preferences.version=1
