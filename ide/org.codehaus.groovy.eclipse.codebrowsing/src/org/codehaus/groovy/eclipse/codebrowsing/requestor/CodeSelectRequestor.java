@@ -287,11 +287,33 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (nameStart > typeStart && nameStart > selectRegion.getEnd() && selectRegion.getEnd() > typeStart) {
                     String selected = gunit.getSource().substring(typeStart, selectRegion.getEnd());
                     selected = selected.replaceAll("\\.$", ""); // remove trailing .
+                    String qualifier = GroovyUtils.splitName(type)[0];
+
+                    // check for selection in fully-qualified name like 'java.lang.String'
                     Pattern pattern = Pattern.compile("^\\Q" + selected + "\\E\\w*");
-                    Matcher matcher = pattern.matcher(GroovyUtils.splitName(type)[0]);
+                    Matcher matcher = pattern.matcher(qualifier);
                     if (matcher.find()) {
                         return matcher.group();
                     }
+                    // check for selection in qualified name like 'Map.Entry'
+                    pattern = Pattern.compile("\\b\\Q" + selected + "\\E$");
+                    matcher = pattern.matcher(qualifier);
+                    if (matcher.find()) {
+                        return qualifier;
+                    }
+                    // check for selection in aliased name like 'Foo.Entry' with 'import java.util.Map as Foo'
+                    ImportNode alias = findImportAlias(selected, enclosingElement);
+                    if (alias != null) {
+                        // decode 'Foo' to 'Map' and try again, because qualifier could be 'java.util.Map'
+                        selected = alias.getType().getNameWithoutPackage();
+                        pattern = Pattern.compile("\\b\\Q" + selected + "\\E$");
+                        matcher = pattern.matcher(qualifier);
+                        if (matcher.find()) {
+                            return qualifier;
+                        }
+                    }
+
+                    // TODO: Handle select on 'A' of 'A.B.C'.
                 }
             }
         }
@@ -317,6 +339,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
             declaringType = removeArray(((DeclarationExpression) result.declaration).getLeftExpression().getType());
         }
         return declaringType;
+    }
+
+    private ImportNode findImportAlias(String name, IJavaElement enclosingElement) {
+        IJavaElement elem = enclosingElement;
+        while (!(elem instanceof GroovyCompilationUnit)) {
+            elem = elem.getParent();
+        }
+        return ((GroovyCompilationUnit) elem).getModuleNode().getImport(name);
     }
 
     private ITypeParameter findTypeParam(String name, IJavaElement enclosingElement) throws JavaModelException {

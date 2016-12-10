@@ -379,6 +379,16 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), "InnerInnerInner");
     }
 
+    public void testSelectQualifyingType() {
+        String contents = "for (Map.Entry e : [:].entrySet()) { }";
+        assertCodeSelect(asList(contents), "Map");
+    }
+
+    public void testSelectAliasedQualifyingType() {
+        String contents = "import java.util.Map as Foo; for (Foo.Entry e : [:].entrySet()) { }";
+        assertCodeSelect(asList(contents), "Foo", "Map");
+    }
+
     // GRECLIPSE-1219
     public void testSelectAnnotationOnImport() {
         String contents = "@Deprecated import java.util.List; class Type { }";
