@@ -375,8 +375,13 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
 
     // GRECLIPSE-803
     public void testSelectInnerType6() {
-        String contents = "class Outer { \n class Inner { \n class InnerInner { \n class InnerInnerInner { } } } }";
+        String contents = "class Outer { class Inner { class InnerInner { class InnerInnerInner { } } } }";
         assertCodeSelect(asList(contents), "InnerInnerInner");
+    }
+
+    public void testSelectAnonymousInnerType() {
+        String contents = "class Outer { def meth() { def m = new Map() { } } }";
+        assertCodeSelect(asList(contents), "Map");
     }
 
     public void testSelectQualifyingType() {

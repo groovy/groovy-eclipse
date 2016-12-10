@@ -212,12 +212,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
 
             checkParameters(node.getParameters());
-
-            if (node.getExceptions() != null) {
-                for (ClassNode e : node.getExceptions()) {
-                    check(e);
-                }
-            }
+            checkTypes(node.getExceptions());
         }
         // visit annotations, param annotations, and statements
         super.visitConstructorOrMethod(node, isConstructor);
@@ -325,7 +320,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             int start, until;
 
             if (call.getNameStart() > 0) {
-                checkNameRange(call);
+                if (call.isUsingAnonymousInnerClass()) {
+                    check(call.getType().getUnresolvedSuperClass());
+                    checkTypes(call.getType().getUnresolvedInterfaces());
+                } else {
+                    checkNameRange(call);
+                }
                 checkGenerics(call.getType());
 
                 start = call.getStart();
@@ -533,15 +533,22 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 param.getInitialExpression().visit(this);
             }
             check(param.getType(), param.getStart(), param.getEnd());
-            //check(param); // what's left?
         }
     }
 
     private void checkParameters(Parameter[] params) {
-        if (params != null) {
+        if (params != null && params.length > 0) {
            for (Parameter p : params) {
                checkParameter(p);
            }
+        }
+    }
+
+    private void checkTypes(ClassNode[] nodes) {
+        if (nodes != null && nodes.length > 0) {
+            for (ClassNode node : nodes) {
+                check(node);
+            }
         }
     }
 
