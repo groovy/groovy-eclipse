@@ -24,12 +24,10 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 /**
  * @author Andrew Eisenberg
  * @created Nov 10, 2009
- *
  */
 public class TypeCompletionProcessorFactory implements IGroovyCompletionProcessorFactory {
-    public IGroovyCompletionProcessor createProcessor(
-            ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    public IGroovyCompletionProcessor createProcessor(ContentAssistContext context,
+            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         return new TypeCompletionProcessor(context, javaContext, nameEnvironment);
     }
-
 }

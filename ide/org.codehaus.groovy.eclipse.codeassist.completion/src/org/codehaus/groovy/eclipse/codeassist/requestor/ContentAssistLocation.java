@@ -16,21 +16,21 @@
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
 /**
+ * The set of different contexts available for content assist.
+ *
  * @author Andrew Eisenberg
  * @created Nov 9, 2009
- * The set of different contexts available for content assist
  */
 public enum ContentAssistLocation {
-    /**
-     * Annotations. Type proposals are available and these proposals are
-     * restricted to annotations
-     */
+    /** Proposals should be restricted to annotation types. */
     ANNOTATION,
 
+    /** Proposals should be restricted to annotation members. */
+    ANNOTATION_BODY,
+
     /**
-     * import statements. Type proposals are available. They do not cause an
-     * additional import statement, and filter out proposals of types already
-     * imported
+     * Type proposals should be available. They should not cause an additional
+     * import statement, and filter out proposals of types already imported.
      */
     IMPORT,
 
@@ -44,26 +44,32 @@ public enum ContentAssistLocation {
      * standard import statement to appear if required
      */
     PARAMETER,
+
     /**
      * types for implements clauses
      */
     IMPLEMENTS,
+
     /**
      * types for extends clauses
      */
     EXTENDS,
+
     /**
      * exception types
      */
     EXCEPTIONS,
+
     /**
-     * part of an expression.  (eg- foo.bar^, or foo().bar^)
+     * part of an expression (e.g. foo.bar^, or foo().bar^).
      */
     EXPRESSION,
+
     /**
      * a constructor call types and their constructors are available
      */
     CONSTRUCTOR,
+
     /**
      * start of a new statement. So, everything from expressions are available,
      * but also local variables and types should be included
@@ -81,16 +87,19 @@ public enum ContentAssistLocation {
      * new expression that is not part of a dotted expression
      */
     STATEMENT,
+
     /**
      * inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
      */
     CLASS_BODY,
+
     /**
      * inside a script, but not in an expression. Here, type proposals,
      * modifiers, and overridable methods, as well as statements should
      * appear
      */
     SCRIPT,
+
     /**
      * Method call at a paren or a comma. Here should show
      * context information of the relevant method only

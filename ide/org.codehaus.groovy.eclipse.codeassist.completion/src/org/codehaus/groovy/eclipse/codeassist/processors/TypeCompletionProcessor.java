@@ -39,7 +39,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
-    // GRECLIPSE-1527 field modifiers collection
     private static final Set<String> FIELD_MODIFIERS = new HashSet<String>();
     static {
         FIELD_MODIFIERS.add("private");
@@ -48,10 +47,8 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         FIELD_MODIFIERS.add("static");
         FIELD_MODIFIERS.add("final");
     }
-    // GRECLIPSE end
 
-    public TypeCompletionProcessor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    public TypeCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
 
@@ -120,7 +117,6 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
     }
 
     private boolean isBeforeTypeName(ContentAssistLocation location, GroovyCompilationUnit unit, int completionLocation) {
-        // GRECLIPE-1527 Updated logic
         if (location != ContentAssistLocation.CLASS_BODY) {
             return false;
         }
@@ -133,6 +129,5 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
             return false;
         }
         return !FIELD_MODIFIERS.contains(nameAndLocation.name.trim());
-        // GRECLIPSE end
     }
 }

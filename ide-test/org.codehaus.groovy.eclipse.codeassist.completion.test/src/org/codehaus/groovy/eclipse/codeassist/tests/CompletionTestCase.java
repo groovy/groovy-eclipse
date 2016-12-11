@@ -111,9 +111,8 @@ public abstract class CompletionTestCase extends TestCase {
     protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType) {
         int foundCount = 0;
         for (ICompletionProposal proposal : proposals) {
-
-            // if a field
             String propName = proposal.getDisplayString();
+            // if a field
             if (propName.startsWith(name + " ")) {
                 foundCount += 1;
             } else
@@ -126,13 +125,8 @@ public abstract class CompletionTestCase extends TestCase {
                 foundCount += 1;
             }
         }
-
         if (foundCount != expectedCount) {
-            StringBuffer sb = new StringBuffer();
-            for (ICompletionProposal proposal : proposals) {
-                sb.append("\n" + proposal.toString());
-            }
-            fail("Expected to find proposal '" + name + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals:" + sb);
+            fail("Expected to find proposal '" + name + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals: " + printProposals(proposals));
         }
     }
 
@@ -346,9 +340,11 @@ public abstract class CompletionTestCase extends TestCase {
 
     protected String printProposals(ICompletionProposal[] proposals) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Incorrect proposals:\n");
         for (ICompletionProposal proposal : proposals) {
-            sb.append(proposal.getDisplayString() + "\n");
+            sb.append('\n').append(proposal.getDisplayString());
+            if (proposal instanceof IJavaCompletionProposal) {
+                sb.append(" (").append(((IJavaCompletionProposal) proposal).getRelevance()).append(')');
+            }
         }
         return sb.toString();
     }
@@ -374,20 +370,25 @@ public abstract class CompletionTestCase extends TestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation);
         for (int i = 0; i < expecteds.length; i++) {
             ICompletionProposal firstProposal = findFirstProposal(proposals, proposalNames[i], false);
-            if (firstProposal == null) {
-                fail("Expected at least one proposal, but found none");
-            }
+            assertNotNull("Expected at least one proposal, but found none", firstProposal);
             applyProposalAndCheck(new Document(contents), firstProposal, expecteds[i]);
         }
     }
 
-    protected void assertProposalOrdering(ICompletionProposal[] proposals, String...order) {
-        int startFrom = 0;
-        for (String propName : order) {
-            startFrom = findProposal(proposals, propName, false, startFrom) + 1;
-            if (startFrom == 0) {
-                fail("Failed to find '" + propName + "' in order inside of:\n" + printProposals(proposals));
+    protected void assertProposalOrdering(ICompletionProposal[] proposals, String... order) {
+        int prev = -1;
+        for (int i = 0, n = order.length; i < n; i += 1) {
+            int next = findProposal(proposals, order[i], false, prev + 1);
+
+            String message;
+            if (i == 0) {
+                message = String.format("Proposal '%s' should have been found in: ", order[i]);
+            } else {
+                message = String.format("Proposal '%s' should have followed proposal '%s' in: ", order[i - 1], order[i]);
             }
+            assertTrue(message + printProposals(proposals), next > prev);
+
+            prev = next;
         }
     }
 

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSignature;
+
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -37,6 +39,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.ui.text.java.AnnotationAtttributeProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -46,11 +49,11 @@ import org.eclipse.jface.text.BadLocationException;
 /**
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
- *
  */
 public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     protected final MethodNode method;
+
     private String contributor;
 
     /**
@@ -73,6 +76,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         useNamedArguments = false;
         noParens = false;
     }
+
     public GroovyMethodProposal(MethodNode method, String contributor) {
         this(method);
         this.contributor = contributor;
@@ -96,29 +100,26 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return method;
     }
 
-    public IJavaCompletionProposal createJavaProposal(
-            ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext) {
+    public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
 
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.METHOD_REF, context.completionLocation);
+        int kind = (context.location == ContentAssistLocation.ANNOTATION_BODY ? CompletionProposal.ANNOTATION_ATTRIBUTE_REF : CompletionProposal.METHOD_REF);
+        GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, context.completionLocation);
 
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
-            // only show context information and only for methods
-            // that exactly match the name. This happens when we are at the
-            // start
-            // of an argument or an open paren
+            // only show context information and only for methods that exactly match the name
+            // this happens when we are at the start of an argument or an open paren
             MethodInfoContentAssistContext methodContext = (MethodInfoContentAssistContext) context;
             if (!methodContext.methodName.equals(method.getName())) {
                 return null;
             }
             proposal.setReplaceRange(context.completionLocation, context.completionLocation);
             proposal.setCompletion(CharOperation.NO_CHAR);
-        } else {
-            // otherwise this is a normal method proposal
-            proposal.setCompletion(completionName(!isParens(context, javaContext)));
+        } else { // this is a normal method proposal
+            boolean parens = (kind == CompletionProposal.ANNOTATION_ATTRIBUTE_REF ? false : !isParens(context, javaContext));
+            proposal.setCompletion(completionName(parens));
             proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         }
-        proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
+        proposal.setDeclarationSignature(createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
         if (method instanceof NamedArgsMethodNode) {
             fillInExtraParameters((NamedArgsMethodNode) method, proposal);
@@ -128,41 +129,45 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         proposal.setFlags(getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
-        char[] methodSignature = createMethodSignature();
-        proposal.setKey(methodSignature);
-        proposal.setSignature(methodSignature);
+        proposal.setSignature(createMethodSignature());
+        proposal.setKey(proposal.getSignature());
         proposal.setRelevance(computeRelevance());
 
         LazyJavaCompletionProposal lazyProposal = null;
-        ProposalFormattingOptions groovyProposalOptions = getGroovyProposalOptions();
-        if (groovyProposalOptions.doParameterGuessing) {
-            lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor,
-                    groovyProposalOptions);
-        }
-        if (lazyProposal == null) {
-            lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, groovyProposalOptions, contributor);
-            // if location is METHOD_CONTEXT, then the type must be
-            // MethodInfoContentAssistContext,
-            // but there are other times when the type is
-            // MethodInfoContentAssistContext as well.
+        if (kind == CompletionProposal.ANNOTATION_ATTRIBUTE_REF) {
+            proposal.setSignature(createTypeSignature(getMethod().getReturnType()));
+            proposal.setFlags(getModifiers() & 0xFFFDFFFF); // clear the "default method" flag
+
+            lazyProposal = new LazyJavaCompletionProposal(proposal, javaContext);
+            lazyProposal.setProposalInfo(new AnnotationAtttributeProposalInfo(javaContext.getProject(), proposal));
+        } else {
+            ProposalFormattingOptions groovyProposalOptions = getGroovyProposalOptions();
+            if (groovyProposalOptions.doParameterGuessing) {
+                lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor, groovyProposalOptions);
+            }
+            if (lazyProposal == null) {
+                lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, groovyProposalOptions, contributor);
+                // if location is METHOD_CONTEXT, then the type must be
+                // MethodInfoContentAssistContext,
+                // but there are other times when the type is
+                // MethodInfoContentAssistContext as well.
+                if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+                    ((GroovyJavaMethodCompletionProposal) lazyProposal).contextOnly();
+                }
+            }
             if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
-                ((GroovyJavaMethodCompletionProposal) lazyProposal).contextOnly();
+                // attempt to find the location immediately after the opening
+                // paren.
+                // if this is wrong, no big deal, but the context information
+                // will not be properly
+                // highlighted.
+                // Assume that there is the method name, and then an opening
+                // paren (or a space) and then
+                // the arguments (hence the +2).
+                lazyProposal.setContextInformationPosition(((MethodInfoContentAssistContext) context).methodNameEnd + 1);
             }
         }
-
-        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
-            // attempt to find the location immediately after the opening
-            // paren.
-            // if this is wrong, no big deal, but the context information
-            // will not be properly
-            // highlighted.
-            // Assume that there is the method name, and then an opening
-            // paren (or a space) and then
-            // the arguments (hence the +2).
-            lazyProposal.setContextInformationPosition(((MethodInfoContentAssistContext) context).methodNameEnd + 1);
-        }
         return lazyProposal;
-
     }
 
     private void fillInExtraParameters(NamedArgsMethodNode namedArgsMethod, GroovyCompletionProposal proposal) {
@@ -176,6 +181,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setNamedParameterTypeNames(getParameterTypeNames(namedArgsMethod.getNamedParams()));
         proposal.setOptionalParameterTypeNames(getParameterTypeNames(namedArgsMethod.getOptionalParams()));
     }
+
     private ProposalFormattingOptions getGroovyProposalOptions() {
         if (options == null) {
             options = ProposalFormattingOptions.newFromOptions();
@@ -183,14 +189,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return options.newFromExisting(useNamedArguments, noParens, method);
     }
 
-    /**
-     * @param context
-     * @param javaContext
-     * @return
-     * @throws BadLocationException
-     */
-    private boolean isParens(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext) {
+    private boolean isParens(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         if (javaContext.getDocument().getLength() > context.completionEnd) {
             try {
                 return javaContext.getDocument().getChar(context.completionEnd) == '(';
@@ -200,10 +199,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         return false;
     }
+
     protected boolean shouldUseNamedArguments(IPreferenceStore prefs) {
-        return (prefs
-                .getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS) && method instanceof ConstructorNode)
-                || useNamedArguments;
+        return (prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS) && method instanceof ConstructorNode) || useNamedArguments;
     }
 
     protected char[] createMethodSignature() {
@@ -213,7 +211,6 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     protected int getModifiers() {
         return method.getModifiers();
     }
-
 
     protected char[] completionName(boolean includeParens) {
         String name = method.getName();
@@ -397,9 +394,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     /**
-	 * @return the method
-	 */
-	public MethodNode getMethod() {
-		return method;
-	}
+     * @return the method
+     */
+    public MethodNode getMethod() {
+        return method;
+    }
 }
