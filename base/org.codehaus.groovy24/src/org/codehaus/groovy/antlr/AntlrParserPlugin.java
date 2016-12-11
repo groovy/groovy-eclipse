@@ -3749,40 +3749,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return statements != null && statements.getStatements() != null && statements.getStatements().size() > 0;
     }
 
-    // FIXASC (groovychange) new method for correctly configuring the position of the annotation - based on configureAST
-    protected void configureAnnotationAST(ASTNode node, AST ast) {
+    protected void configureAnnotationAST(AnnotationNode node, AST ast) {
         if (ast == null) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null Node");
+            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
         }
-        if (ast instanceof GroovySourceAST) {
-            // Structure of incoming parameter 'ast':
-            // ANNOTATION
-            // - down='annotationName' (IDENT:84)
-            GroovySourceAST correctAst = (GroovySourceAST) ast;
-            correctAst = (GroovySourceAST) correctAst.getFirstChild();
-            setPositions(node, correctAst.getColumn(), correctAst.getLine(), correctAst.getColumnLast(), correctAst.getLineLast());
-            // also configure the sloc of the actual annotation type reference
-            if (node instanceof AnnotationNode) {
-                setPositions(((AnnotationNode) node).getClassNode(), correctAst.getColumn(), correctAst.getLine(), correctAst.getColumnLast() + 1, correctAst.getLineLast());
-            }
-        } else {
-            int startcol = ast.getColumn();
-            int startline = ast.getLine();
-            node.setColumnNumber(startcol);
-            node.setLineNumber(startline);
-            int startoffset = locations.findOffset(startline, startcol);
-            node.setStart(startoffset);
+        if (!(ast instanceof GroovySourceAST)) {
+            throw new ASTRuntimeException(ast, "PARSER BUG: Expected a GroovySourceAST node for annotation, but got: " + ast.getClass().getName());
         }
-    }
+        // Structure of incoming parameter 'ast':
+        // ANNOTATION
+        // - down='annotationName' (IDENT:84)
+        configureAST(node, ast.getFirstChild());
+        configureAST(node.getClassNode(), ast.getFirstChild());
+        // save the full source range of the annotation for future use
+        long start = locations.findOffset(ast.getLine(), ast.getColumn());
+        long until = locations.findOffset(((GroovySourceAST) ast).getLineLast(), ((GroovySourceAST) ast).getColumnLast());
+        node.setNodeMetaData("source.offsets", (start << 32) | until); // pack the two offsets into one long integer value
 
-    private void setPositions(ASTNode node, int scol, int sline, int ecol, int eline) {
-        node.setColumnNumber(scol);
-        node.setLineNumber(sline);
-        node.setStart(locations.findOffset(sline, scol));
-        node.setLastColumnNumber(ecol);
-        node.setLastLineNumber(eline);
-        // FIXASC think about this -1 - is it right for what groovy likes to see or just for eclipse?
-        node.setEnd(locations.findOffset(eline, ecol) - 1);
+        node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
     }
     // GRECLIPSE end
 }

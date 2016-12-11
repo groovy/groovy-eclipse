@@ -3805,7 +3805,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         System.out.println("Type: " + getTokenName(node) + " text: " + node.getText());
     }
 
-    // GRECLIPSE: start
+    // GRECLIPSE add
     private void fixModuleNodeLocations() {
         output.setStart(0);
         output.setEnd(locations.getEnd());
@@ -3831,22 +3831,22 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 statements.setLastColumnNumber(last.getLastColumnNumber());
             }
             if (output.getClasses().size() > 0) {
-            	ClassNode scriptClass = output.getClasses().get(0);
-            	scriptClass.setStart(first.getStart());
-            	scriptClass.setLineNumber(first.getLineNumber());
-            	scriptClass.setColumnNumber(first.getColumnNumber());
-            	scriptClass.setEnd(last.getEnd());
-            	scriptClass.setLastLineNumber(last.getLastLineNumber());
-            	scriptClass.setLastColumnNumber(last.getLastColumnNumber());
+                ClassNode scriptClass = output.getClasses().get(0);
+                scriptClass.setStart(first.getStart());
+                scriptClass.setLineNumber(first.getLineNumber());
+                scriptClass.setColumnNumber(first.getColumnNumber());
+                scriptClass.setEnd(last.getEnd());
+                scriptClass.setLastLineNumber(last.getLastLineNumber());
+                scriptClass.setLastColumnNumber(last.getLastColumnNumber());
 
-            	// fix the run method to contain the start and end locations of the statement block
-            	MethodNode runMethod = scriptClass.getDeclaredMethod("run", new Parameter[0]);
-            	runMethod.setStart(first.getStart());
-            	runMethod.setLineNumber(first.getLineNumber());
-            	runMethod.setColumnNumber(first.getColumnNumber());
-            	runMethod.setEnd(last.getEnd());
-            	runMethod.setLastLineNumber(last.getLastLineNumber());
-            	runMethod.setLastColumnNumber(last.getLastColumnNumber());
+                // fix the run method to contain the start and end locations of the statement block
+                MethodNode runMethod = scriptClass.getDeclaredMethod("run", new Parameter[0]);
+                runMethod.setStart(first.getStart());
+                runMethod.setLineNumber(first.getLineNumber());
+                runMethod.setColumnNumber(first.getColumnNumber());
+                runMethod.setEnd(last.getEnd());
+                runMethod.setLastLineNumber(last.getLastLineNumber());
+                runMethod.setLastColumnNumber(last.getLastColumnNumber());
             }
         }
     }
@@ -3910,67 +3910,25 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private boolean hasScriptStatements(BlockStatement statements) {
         return statements != null && statements.getStatements() != null && statements.getStatements().size() > 0;
     }
-    // end fix source locations
 
-    // FIXASC (groovychange) new method for correctly configuring the position of the annotation - based on configureAST
-    protected void configureAnnotationAST(ASTNode node, AST ast) {
+    protected void configureAnnotationAST(AnnotationNode node, AST ast) {
         if (ast == null) {
-        	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");
+            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
         }
-        if (ast instanceof GroovySourceAST) {
-        	// Structure of incoming parameter 'ast':
-        	// ANNOTATION
-        	// - down='annotationName' (IDENT:84)
-            GroovySourceAST correctAst = (GroovySourceAST) ast;
-            correctAst = (GroovySourceAST)correctAst.getFirstChild();
-            setPositions(node,correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast(),correctAst.getLineLast());
-            // also configure the sloc of the actual annotation type reference
-            if (node instanceof AnnotationNode) {
-                setPositions(((AnnotationNode) node).getClassNode(),correctAst.getColumn(),correctAst.getLine(),correctAst.getColumnLast()+1,correctAst.getLineLast());
-            }
-        } else {
-            int startcol = ast.getColumn();
-            int startline = ast.getLine();
-            node.setColumnNumber(startcol);
-            node.setLineNumber(startline);
-            int startoffset = locations.findOffset(startline,startcol);
-            node.setStart(startoffset);
+        if (!(ast instanceof GroovySourceAST)) {
+            throw new ASTRuntimeException(ast, "PARSER BUG: Expected a GroovySourceAST node for annotation, but got: " + ast.getClass().getName());
         }
-    }
+        // Structure of incoming parameter 'ast':
+        // ANNOTATION
+        // - down='annotationName' (IDENT:84)
+        configureAST(node, ast.getFirstChild());
+        configureAST(node.getClassNode(), ast.getFirstChild());
+        // save the full source range of the annotation for future use
+        long start = locations.findOffset(ast.getLine(), ast.getColumn());
+        long until = locations.findOffset(((GroovySourceAST) ast).getLineLast(), ((GroovySourceAST) ast).getColumnLast());
+        node.setNodeMetaData("source.offsets", (start << 32) | until); // pack the two offsets into one long integer value
 
-    @SuppressWarnings("unused")
-    private void configureClassNodeForClassDefAST(ASTNode node, AST ast) {
-        if (ast == null) {
-        	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");
-        }
-        if (ast instanceof GroovySourceAST) {
-            // Structure of the AST from Antlr:
-            // CLASS_DEF (13)
-            // - down=MODIFIERS (5)
-            //   - right=typename (84==IDENT)
-            //     - down
-            //     - right=EXTENDS_CLAUSE (17)
-            GroovySourceAST theAst = (GroovySourceAST) ast;
-            theAst = (GroovySourceAST)theAst.getFirstChild().getNextSibling();
-            setPositions(node,theAst.getColumn(),theAst.getLine(),theAst.getColumnLast(),theAst.getLineLast());
-        } else {
-        	int startcol = ast.getColumn();
-        	int startline = ast.getLine();
-        	node.setColumnNumber(startcol);
-        	node.setLineNumber(startline);
-        	int startoffset = locations.findOffset(startline,startcol);
-        	node.setStart(startoffset);
-        }
+        node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
     }
-
-    private void setPositions(ASTNode node, int scol, int sline, int ecol, int eline) {
-        node.setColumnNumber(scol);
-        node.setLineNumber(sline);
-        node.setStart(locations.findOffset(sline,scol));
-        node.setLastColumnNumber(ecol);
-        node.setLastLineNumber(eline);
-        // FIXASC think about this -1 - is it right for what groovy likes to see or just for eclipse?
-        node.setEnd(locations.findOffset(eline,ecol)-1);
-    }
-    // end
+    // GRECLIPSE end
 }

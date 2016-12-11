@@ -194,9 +194,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                     } else if ((n = node.getAnnotations().size()) > 0) {
                         for (int i = (n - 1); i >= 0; i -= 1) {
                             // find the rightmost annotation with end source position info
-                            last = GroovyUtils.lastElement(node.getAnnotations().get(i));
-                            if (last.getEnd() > 0) {
-                                offset = last.getEnd() + 1;
+                            int end = GroovyUtils.endOffset(node.getAnnotations().get(i));
+                            if (end > 0) {
+                                offset = end;
                                 break;
                             }
                         }

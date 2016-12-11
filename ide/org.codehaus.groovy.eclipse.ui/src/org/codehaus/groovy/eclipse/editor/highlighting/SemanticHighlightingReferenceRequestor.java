@@ -184,7 +184,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
     private HighlightedTypedPosition handleAnnotationElement(AnnotationNode anno, MethodNode elem) {
         try {
-            int start = anno.getStart() - 1, until = GroovyUtils.lastElement(anno).getEnd() + 1;
+            int start = GroovyUtils.startOffset(anno), until = GroovyUtils.endOffset(anno);
             String source = unit.getSource().substring(start, until);
 
             // search for the element label in the source since no AST node exists for it

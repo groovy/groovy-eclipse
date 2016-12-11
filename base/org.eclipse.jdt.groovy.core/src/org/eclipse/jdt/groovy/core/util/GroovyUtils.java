@@ -107,6 +107,34 @@ public abstract class GroovyUtils {
     }
 
     /**
+     * @return position of '@' (or best approximation) for specified annotation
+     */
+    public static int startOffset(AnnotationNode node) {
+        int start = -1;
+        Long offsets = node.getNodeMetaData("source.offsets");
+        if (offsets != null) {
+            start = (int) (offsets >> 32);
+        } else if (node.getEnd() > 0) {
+            start = node.getStart() - 1;
+        }
+        return start;
+    }
+
+    /**
+     * @return position of ')' (or best approximation) for specified annotation
+     */
+    public static int endOffset(AnnotationNode node) {
+        int end = -1;
+        Long offsets = node.getNodeMetaData("source.offsets");
+        if (offsets != null) {
+            end = (int) (offsets & 0xFFFFFFFF);
+        } else {
+            end = lastElement(node).getEnd() + 1;
+        }
+        return end;
+    }
+
+    /**
      * @return qualifier and type name
      */
     public static String[] splitName(ClassNode node) {
@@ -123,10 +151,6 @@ public abstract class GroovyUtils {
      * @see org.eclipse.jdt.core.Signature
      */
     public static String getTypeSignature(ClassNode node, boolean qualified) {
-        //if (node.getName().endsWith(";")) {
-        //    return node.getName().replaceFirst("^\\[L", "[Q");
-        //}
-
         StringBuilder builder = new StringBuilder();
         while (node.isArray()) {
             builder.append('[');
