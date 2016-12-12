@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.TypeCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -28,8 +29,10 @@ import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -48,19 +51,22 @@ public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroov
             @Override
             public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
                 List<ICompletionProposal> proposals = super.generateProposals(monitor);
-
                 if ((monitor != null && monitor.isCanceled()) || proposals.isEmpty()) {
                     return Collections.EMPTY_LIST;
                 }
 
                 // remove types that are not annotated with the AnnotationCollector transform
                 for (Iterator<ICompletionProposal> it = proposals.iterator(); it.hasNext();) {
-                    if (!isAnnotationCollectorType(it.next())) {
+                    ICompletionProposal proposal = it.next();
+                    if (!isAnnotationCollectorType(proposal)) {
                         it.remove();
+                    } else {
+                        // change the displayed icon from 'C' to '@'
+                        GroovyCompletionProposal gcp = (GroovyCompletionProposal) ReflectionUtils
+                            .getPrivateField(LazyJavaCompletionProposal.class, "fProposal", proposal);
+                        gcp.setFlags(gcp.getFlags() | 0x00002000 /*aka Modifier.ANNOTATION*/);
                     }
                 }
-
-                // TODO: Change the icon from 'C' to '@'
 
                 return proposals;
             }
