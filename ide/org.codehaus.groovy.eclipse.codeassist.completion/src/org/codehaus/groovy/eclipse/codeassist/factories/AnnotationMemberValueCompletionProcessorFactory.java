@@ -66,19 +66,21 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
             protected void generateAnnotationAttributeProposals(List<ICompletionProposal> proposals) {
                 MethodProposalCreator mpc = new MethodProposalCreator();
                 mpc.setCurrentScope(getContext().currentScope);
-                List<IGroovyProposal> methodProposals = mpc.findAllProposals(
+                List<IGroovyProposal> candidates = mpc.findAllProposals(
                     ((AnnotationNode) getContext().containingCodeBlock).getClassNode(),
                     Collections.<ClassNode>emptySet(),
                     getContext().completionExpression,
                     false, // isStatic
                     true); // isPrimary
 
-                for (IGroovyProposal methodProposal : methodProposals) {
-                    if (((GroovyMethodProposal) methodProposal).getMethod()
-                            .getDeclaringClass().getName().equals("java.lang.annotation.Annotation")) {
-                        continue;
+                for (IGroovyProposal candidate : candidates) {
+                    if (candidate instanceof GroovyMethodProposal) {
+                        GroovyMethodProposal gmp = (GroovyMethodProposal) candidate;
+                        String src = gmp.getMethod().getDeclaringClass().getName();
+                        if (!src.equals("java.lang.Object") && !src.equals("java.lang.annotation.Annotation")) {
+                            proposals.add(gmp.createJavaProposal(getContext(), getJavaContext()));
+                        }
                     }
-                    proposals.add(methodProposal.createJavaProposal(getContext(), getJavaContext()));
                 }
             }
         };
