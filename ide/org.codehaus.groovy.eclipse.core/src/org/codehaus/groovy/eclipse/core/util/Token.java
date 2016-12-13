@@ -23,87 +23,113 @@ import java.io.Serializable;
  * @author empovazan
  */
 public class Token implements Serializable {
+
     private static final long serialVersionUID = 384520235046067298L;
 
-    private static final String[] names = new String[] { "EOF", "IDENT", "DOT", "SEMI", "QUOTED_STRING", "PAREN_BLOCK",
-            "BRACE_BLOCK", "BRACK_BLOCK", "LINE_COMMENT", "BLOCK_COMMENT" , "LINE_BREAK", "DOUBLE_DOT", "SAFE_DEREF" };
+    public enum Type {
+        EOF,
 
-    public static final int EOF = 0;
+        /** [0-9a-zA-Z_'"]* Note, can start with [0-9] */
+        IDENT,
 
-    /**
-     * [0-9a-zA-Z_'"]* Note, can start with [0-9]
-     */
-    public static final int IDENT = 1;
+        DOT,
 
-    public static final int DOT = 2;
+        SEMI,
 
-    public static final int SEMI = 3;
+        /** Any quoted string, single and triple */
+        QUOTED_STRING,
 
-    /** Any quoted string, single and triple */
-    public static final int QUOTED_STRING = 4;
+        /** '(' anything ')' */
+        PAREN_BLOCK,
 
-    /** '(' anything ')' */
-    public static final int PAREN_BLOCK = 5;
+        /** '{' anything '}' */
+        BRACE_BLOCK,
 
-    /** '{' anything '}' */
-    public static final int BRACE_BLOCK = 6;
+        /** '[' anything ']' */
+        BRACK_BLOCK,
 
-    /** '[' anything ']' */
-    public static final int BRACK_BLOCK = 7;
+        /** '//' */
+        LINE_COMMENT,
 
-    /** '//' */
-    public static final int LINE_COMMENT = 8;
+        /** '/star ... star/' */
+        BLOCK_COMMENT,
 
-    /** '/_* ... *_/' */
-    public static final int BLOCK_COMMENT = 9;
+        /** '\n', '\r', '\n\r', '\r\n' */
+        LINE_BREAK,
 
-    /** '\n', '\r', '\n\r', '\r\n' */
-    public static final int LINE_BREAK = 10;
+        /** range definition 10..23, 10..<23 */
+        DOUBLE_DOT,
 
-    /** range definition 10..23, 10..<23 */
-    public static final int DOUBLE_DOT = 11;
+        /** safe navigation operator ?. */
+        SAFE_DEREF,
 
-    /** safe navigation operator ?. */
-    public static final int SAFE_DEREF = 12;
+        /** spread operator *. */
+        SPREAD,
 
-    /** spread operator *. */
-    public static final int SPREAD = 13;
+        /** direct field access .@ */
+        FIELD_ACCESS,
 
+        /** method pointer .& */
+        METHOD_POINTER,
+    }
 
+    private final int type;
+    public final int startOffset;
+    public final int endOffset;
+    public final String text;
 
-    public int type;
-
-    public int startOffset;
-
-    public int endOffset;
-
-    public String text;
-
-//	private String desc;
-
-    public Token(int type, int startOffset, int endOffset, String text) {
-        this.type = type;
+    public Token(Type type, int startOffset, int endOffset, String text) {
+        this.type = type.ordinal();
         this.startOffset = startOffset;
         this.endOffset = endOffset;
         this.text = text;
     }
 
-    public boolean equals(Object obj) {
-        try {
-            if (obj != null) {
-                return type == ((Token) obj).type;
-            }
-        } catch (ClassCastException e) {
+    public Type getType() {
+        return Type.values()[type];
+    }
+
+    public boolean isType(Type t) {
+        return getType() == t;
+    }
+
+    public boolean isDotAccess() {
+        switch (getType()) {
+        case DOT:
+        case SAFE_DEREF:
+        case SPREAD:
+        case FIELD_ACCESS:
+        case METHOD_POINTER:
+            return true;
+        default:
+            return false;
         }
-        return false;
+    }
+
+    public boolean isValidBeforeDot() {
+        switch (getType()) {
+        case IDENT:
+        case QUOTED_STRING:
+        case BRACE_BLOCK:
+        case BRACK_BLOCK:
+        case PAREN_BLOCK:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    public boolean equals(Object that) {
+        if (that == this) return true;
+        if (!(that instanceof Token)) return false;
+        return ((Token) that).type == this.type;
     }
 
     public int hashCode() {
-        return names[type].hashCode() + type;
+        return getType().hashCode() + type;
     }
 
     public String toString() {
-        return names[type] + "[" + startOffset + ":" + endOffset + "] - " + text;
+        return getType() + "[" + startOffset + ":" + endOffset + "] - " + text;
     }
-
 }

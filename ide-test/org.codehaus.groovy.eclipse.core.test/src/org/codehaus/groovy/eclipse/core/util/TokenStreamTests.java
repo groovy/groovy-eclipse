@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.util;
 
+import static org.codehaus.groovy.eclipse.core.util.Token.Type.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,31 +25,6 @@ import junit.framework.TestCase;
 import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
 
 public class TokenStreamTests extends TestCase {
-    static int EOF = Token.EOF;
-
-    static int IDENT = Token.IDENT;
-
-    static int DOT = Token.DOT;
-
-    static int SEMI = Token.SEMI;
-
-    static int QUOTED_STRING = Token.QUOTED_STRING;
-
-    static int PAREN_BLOCK = Token.PAREN_BLOCK;
-
-    static int BRACE_BLOCK = Token.BRACE_BLOCK;
-
-    static int BRACK_BLOCK = Token.BRACK_BLOCK;
-
-    static int LINE_COMMENT = Token.LINE_COMMENT;
-
-    static int BLOCK_COMMENT = Token.BLOCK_COMMENT;
-
-    static int LINE_BREAK = Token.LINE_BREAK;
-
-    static int SAFE_DEREF = Token.SAFE_DEREF;
-
-    static int SPREAD = Token.SPREAD;
 
     @Override
     protected void setUp() throws Exception {
@@ -56,7 +33,7 @@ public class TokenStreamTests extends TestCase {
         super.setUp();
     }
 
-    void doTest(String sample, int off, int[] expected) throws TokenStreamException {
+    void doTest(String sample, int off, Token.Type... expected) throws TokenStreamException {
         int offset = off;
         if (offset == -1) {
             offset = sample.length() - 1;
@@ -67,7 +44,7 @@ public class TokenStreamTests extends TestCase {
         List<Token> list = new ArrayList<Token>();
 
         Token token = null;
-        while ((token = stream.next()).type != Token.EOF) {
+        while (!(token = stream.next()).isType(Token.Type.EOF)) {
             list.add(token);
         }
         list.add(token);
@@ -85,7 +62,7 @@ public class TokenStreamTests extends TestCase {
 
         Token token = null;
         try {
-            while ((token = stream.next()).type != Token.EOF) {
+            while (!(token = stream.next()).isType(Token.Type.EOF)) {
                 list.add(token);
             }
         } catch (TokenStreamException e) {
@@ -100,68 +77,154 @@ public class TokenStreamTests extends TestCase {
     }
 
     public void testWhite1() throws Exception {
-        doTest(" hello ", -1, new int[] { IDENT, EOF });
+        doTest(" hello ", -1, IDENT, EOF);
     }
 
     public void testWhite2() throws Exception {
-        doTest("\thello\t", -1, new int[] { IDENT, EOF });
+        doTest("\thello\t", -1, IDENT, EOF);
     }
 
     public void testWhite3() throws Exception {
-        doTest("\rhello\r", -1, new int[] { LINE_BREAK, IDENT, LINE_BREAK, EOF });
+        doTest("\rhello\r", -1, LINE_BREAK, IDENT, LINE_BREAK, EOF);
     }
 
     public void testWhite4() throws Exception {
-        doTest("\nhello\n", -1, new int[] { LINE_BREAK, IDENT, LINE_BREAK, EOF });
+        doTest("\nhello\n", -1, LINE_BREAK, IDENT, LINE_BREAK, EOF);
     }
 
     public void testWhite5() throws Exception {
-        doTest("\r\nhello\r\n", -1, new int[] { LINE_BREAK, IDENT, LINE_BREAK, EOF });
+        doTest("\r\nhello\r\n", -1, LINE_BREAK, IDENT, LINE_BREAK, EOF);
     }
 
     public void testSemi() throws Exception {
-        doTest(";", -1, new int[] { SEMI, EOF });
+        doTest(";", -1, SEMI, EOF);
     }
 
     public void testSimple1() throws Exception {
-        doTest("hello", -1, new int[] { IDENT, EOF });
+        doTest("hello", -1, IDENT, EOF);
     }
 
     public void testSimple2() throws Exception {
-        doTest("hello.there", -1, new int[] { IDENT, DOT, IDENT, EOF });
+        doTest("hello.there", -1, IDENT, DOT, IDENT, EOF);
     }
 
     public void testSimple3() throws Exception {
-        doTest("10.times", -1, new int[] { IDENT, DOT, IDENT, EOF });
+        doTest("10.times", -1, IDENT, DOT, IDENT, EOF);
     }
 
     public void testSimple4() throws Exception {
-        doTest("10.times", 2, new int[] { DOT, IDENT, EOF });
+        doTest("10.times", 2, DOT, IDENT, EOF);
     }
 
     public void testComplex1() throws Exception {
-        doTest("10.times { println it }", -1, new int[] { BRACE_BLOCK, IDENT, DOT, IDENT, EOF });
+        doTest("10.times { println it }", -1, BRACE_BLOCK, IDENT, DOT, IDENT, EOF);
     }
 
     public void testComplex2() throws Exception {
-        doTest("10.times { it.times { println it } }", -1, new int[] { BRACE_BLOCK, IDENT, DOT, IDENT, EOF });
+        doTest("10.times { it.times { println it } }", -1, BRACE_BLOCK, IDENT, DOT, IDENT, EOF);
     }
 
     public void testComplex3() throws Exception {
-        doTest("hello.getName().", -1, new int[] { DOT, PAREN_BLOCK, IDENT, DOT, IDENT, EOF });
+        doTest("hello.getName().", -1, DOT, PAREN_BLOCK, IDENT, DOT, IDENT, EOF);
     }
 
     public void testComplex4() throws Exception {
-        doTest("list[thing[i]].name", -1, new int[] { IDENT, DOT, BRACK_BLOCK, IDENT, EOF });
+        doTest("list[thing[i]].name", -1, IDENT, DOT, BRACK_BLOCK, IDENT, EOF);
     }
 
     public void testComplex5() throws Exception {
-        doTest("[1, 2, 3].collect { it.toString() } .", -1,
-                new int[] { DOT, BRACE_BLOCK, IDENT, DOT, BRACK_BLOCK, EOF });
+        doTest("[1, 2, 3].collect { it.toString() } .", -1, DOT, BRACE_BLOCK, IDENT, DOT, BRACK_BLOCK, EOF);
     }
 
     public void testComplex6() throws Exception {
-        doTest("a[20].", -1, new int[] { DOT, BRACK_BLOCK, IDENT, EOF });
+        doTest("a[20].", -1, DOT, BRACK_BLOCK, IDENT, EOF);
+    }
+
+    public void testQuote1() throws Exception {
+        doTest("\"hello\"", -1, QUOTED_STRING, EOF);
+    }
+
+    public void testQuote2() throws Exception {
+        doTest("'hello'", -1, QUOTED_STRING, EOF);
+    }
+
+    public void testQuote3() throws Exception {
+        doTest("\"\"\"hello\"\"\"", -1, QUOTED_STRING, EOF);
+    }
+
+    public void testQuote4() throws Exception {
+        doTest("'''hello'''", -1, QUOTED_STRING, EOF);
+    }
+
+    public void testQuote5() throws Exception {
+        doTest("'boo'\n'hello'", -1, QUOTED_STRING, LINE_BREAK, QUOTED_STRING, EOF);
+    }
+
+    public void testArray1() throws TokenStreamException {
+        doTest("foo['foo'].x", -1, IDENT, DOT, BRACK_BLOCK, IDENT, EOF);
+    }
+
+    public void testArray2() throws TokenStreamException {
+        doTest("foo['foo']['foo'].x", -1, IDENT, DOT, BRACK_BLOCK, BRACK_BLOCK, IDENT, EOF);
+    }
+
+    public void testArray3() throws TokenStreamException {
+        doTest("foo[foo[0]]['foo'].x", -1, IDENT, DOT, BRACK_BLOCK, BRACK_BLOCK, IDENT, EOF);
+    }
+
+    public void testArray4() throws TokenStreamException {
+        doTest("foo{ }['foo'].x", -1, IDENT, DOT, BRACK_BLOCK, BRACE_BLOCK, IDENT, EOF);
+    }
+
+    public void testArray5() throws TokenStreamException {
+        doTest("foo['foo']{ }", -1, BRACE_BLOCK, BRACK_BLOCK, IDENT, EOF);
+    }
+
+    public void testLineComment1() throws Exception {
+        doTest("// This is a comment\n'hello'", -1, QUOTED_STRING, LINE_BREAK, LINE_COMMENT, EOF);
+    }
+
+    public void testLineComment2() throws Exception {
+        doTest("//\t\thelp.\n\t\ta.", -1, DOT, IDENT, LINE_BREAK, LINE_COMMENT, EOF);
+    }
+
+    public void testLineComment3() throws Exception {
+        doTest("thing\n//\t\thelp.\n\t\ta.", -1, DOT, IDENT, LINE_BREAK, LINE_COMMENT, LINE_BREAK, IDENT, EOF);
+    }
+
+    public void testBlockComment1() throws Exception {
+        doTest("/* This is a block comment in a line */\n'hello'", -1, QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF);
+    }
+
+    public void testBlockComment2() throws Exception {
+        doTest("/*\nThis is a block comment\n*/\n'hello'", -1, QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF);
+    }
+
+    public void testSafeDeref() throws Exception {
+        doTest("foo?.bar", -1, IDENT, SAFE_DEREF, IDENT, EOF);
+    }
+
+    public void testSpread() throws Exception {
+        doTest("foo*.bar", -1, IDENT, SPREAD, IDENT, EOF);
+    }
+
+    public void testFieldAccess() throws Exception {
+        doTest("foo.@bar", -1, IDENT, FIELD_ACCESS, IDENT, EOF);
+    }
+
+    public void testMethodPointer() throws Exception {
+        doTest("foo.&bar", -1, IDENT, METHOD_POINTER, IDENT, EOF);
+    }
+
+    public void testError1() throws Exception {
+        StringSourceBuffer sb = new StringSourceBuffer("0..1]");
+        TokenStream stream = new TokenStream(sb, "0..1]".length() - 1);
+
+        try {
+            stream.next();
+            fail("Expecting TokenStreamException");
+        } catch (TokenStreamException e) {
+        }
     }
 
     public void testOffsets1() throws Exception {
@@ -178,69 +241,10 @@ public class TokenStreamTests extends TestCase {
         doTestOffsets("list[thing[i]].name", new int[] { 15, 19, 14, 15, 4, 14, 0, 4 });
     }
 
-    public void testQuote1() throws Exception {
-        doTest("\"hello\"", -1, new int[] { QUOTED_STRING, EOF });
-    }
-
-    public void testQuote2() throws Exception {
-        doTest("'hello'", -1, new int[] { QUOTED_STRING, EOF });
-    }
-
-    public void testQuote3() throws Exception {
-        doTest("\"\"\"hello\"\"\"", -1, new int[] { QUOTED_STRING, EOF });
-    }
-
-    public void testQuote4() throws Exception {
-        doTest("'''hello'''", -1, new int[] { QUOTED_STRING, EOF });
-    }
-
-    public void testQuote5() throws Exception {
-        doTest("'boo'\n'hello'", -1, new int[] { QUOTED_STRING, LINE_BREAK, QUOTED_STRING, EOF });
-    }
-
-    public void testLineComment1() throws Exception {
-        doTest("// This is a comment\n'hello'", -1, new int[] { QUOTED_STRING, LINE_BREAK, LINE_COMMENT, EOF });
-    }
-
-    public void testLineComment2() throws Exception {
-        doTest("//\t\thelp.\n\t\ta.", -1, new int[] { DOT, IDENT, LINE_BREAK, LINE_COMMENT, EOF });
-    }
-
-    public void testLineComment3() throws Exception {
-        doTest("thing\n//\t\thelp.\n\t\ta.", -1, new int[] { DOT, IDENT, LINE_BREAK, LINE_COMMENT, LINE_BREAK, IDENT, EOF });
-    }
-
-    public void testBlockComment1() throws Exception {
-        doTest("/* This is a block comment in a line */\n'hello'", -1, new int[] { QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF });
-    }
-
-    public void testBlockComment2() throws Exception {
-        doTest("/*\nThis is a block comment\n*/\n'hello'", -1, new int[] { QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF });
-    }
-
-    public void testSafeDeref() throws Exception {
-        doTest("foo?.bar", -1, new int[] { IDENT, SAFE_DEREF, IDENT, EOF });
-    }
-
-    public void testSpread() throws Exception {
-        doTest("foo*.bar", -1, new int[] { IDENT, SPREAD, IDENT, EOF });
-    }
-
-    public void testError1() throws Exception {
-        StringSourceBuffer sb = new StringSourceBuffer("0..1]");
-        TokenStream stream = new TokenStream(sb, "0..1]".length() - 1);
-
-        try {
-            stream.next();
-            fail("Expecting TokenStreamException");
-        } catch (TokenStreamException e) {
-        }
-    }
-
     public void testPeek() throws TokenStreamException {
         StringSourceBuffer sb = new StringSourceBuffer("hello");
         TokenStream stream = new TokenStream(sb, "hello".length() - 1);
-        assertTrue(stream.peek().type == Token.IDENT);
+        assertTrue(stream.peek().isType(Token.Type.IDENT));
     }
 
     public void testLast() throws TokenStreamException {
@@ -248,27 +252,7 @@ public class TokenStreamTests extends TestCase {
         TokenStream stream = new TokenStream(sb, "hello.".length() - 1);
         Token next = stream.next();
         assertTrue(stream.last() == next);
-        assertTrue(stream.peek().type == Token.IDENT);
+        assertTrue(stream.peek().isType(Token.Type.IDENT));
         assertTrue(stream.last() == next);
-    }
-
-    public void testArray1() throws TokenStreamException {
-        doTest("foo['foo'].x", -1, new int[] { IDENT, DOT, BRACK_BLOCK, IDENT, EOF });
-    }
-
-    public void testArray2() throws TokenStreamException {
-        doTest("foo['foo']['foo'].x", -1, new int[] { IDENT, DOT, BRACK_BLOCK, BRACK_BLOCK, IDENT, EOF });
-    }
-
-    public void testArray3() throws TokenStreamException {
-        doTest("foo[foo[0]]['foo'].x", -1, new int[] { IDENT, DOT, BRACK_BLOCK, BRACK_BLOCK, IDENT, EOF });
-    }
-
-    public void testArray4() throws TokenStreamException {
-        doTest("foo{ }['foo'].x", -1, new int[] { IDENT, DOT, BRACK_BLOCK, BRACE_BLOCK, IDENT, EOF });
-    }
-
-    public void testArray5() throws TokenStreamException {
-        doTest("foo['foo']{ }", -1, new int[] { BRACE_BLOCK, BRACK_BLOCK, IDENT, EOF });
     }
 }

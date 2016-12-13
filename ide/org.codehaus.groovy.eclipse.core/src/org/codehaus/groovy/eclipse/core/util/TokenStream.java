@@ -27,8 +27,7 @@ import org.codehaus.groovy.eclipse.core.impl.ReverseSourceBuffer;
  * @author empovazan
  */
 public class TokenStream {
-    private static final Token TOKEN_EOF = new Token(Token.EOF, -1, -1, null);
-//	private static final Token TOKEN_LINE_BREAK = new Token(Token.LINE_BREAK, -1, -1, null);
+    private static final Token TOKEN_EOF = new Token(Token.Type.EOF, -1, -1, null);
 
     private ISourceBuffer buffer;
 
@@ -72,7 +71,6 @@ public class TokenStream {
 
     /**
      * @return The next token in the stream.
-     * @throws TokenStreamException
      */
     public Token next() throws TokenStreamException {
         if (next != null) {
@@ -109,25 +107,38 @@ public class TokenStream {
             case '.':
                 last = scanDot();
                 break;
-            case ';':
-                nextChar();
-                last = new Token(Token.SEMI, offset + 1, offset + 2, buffer
-                        .subSequence(offset + 1, offset + 2).toString());
-                break;
             case '}':
-                last = scanPair('{', '}', Token.BRACE_BLOCK);
+                last = scanPair('{', '}', Token.Type.BRACE_BLOCK);
                 break;
             case ')':
-                last = scanPair('(', ')', Token.PAREN_BLOCK);
+                last = scanPair('(', ')', Token.Type.PAREN_BLOCK);
                 break;
             case ']':
-                last = scanPair('[', ']', Token.BRACK_BLOCK);
+                last = scanPair('[', ']', Token.Type.BRACK_BLOCK);
                 break;
             case '\'':
                 last = scanQuote('\'');
                 break;
             case '"':
                 last = scanQuote('"');
+                break;
+            case '@':
+                nextChar();
+                if (ch == '.') {
+                    nextChar();
+                    last = new Token(Token.Type.FIELD_ACCESS, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
+                }
+                break;
+            case '&':
+                nextChar();
+                if (ch == '.') {
+                    nextChar();
+                    last = new Token(Token.Type.METHOD_POINTER, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
+                }
+                break;
+            case ';':
+                nextChar();
+                last = new Token(Token.Type.SEMI, offset + 1, offset + 2, buffer.subSequence(offset + 1, offset + 2).toString());
                 break;
             default:
                 throw new TokenStreamException(ch);
@@ -141,22 +152,17 @@ public class TokenStream {
         if (offset == -1) {
             return TOKEN_EOF;
         }
-
         if (ch == '.') {
             nextChar();
-            return new Token(Token.DOUBLE_DOT, offset + 1, offset + 3, buffer
-                    .subSequence(offset + 1, offset + 3).toString());
+            return new Token(Token.Type.DOUBLE_DOT, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
         } if (ch == '?')  {
             nextChar();
-            return new Token(Token.SAFE_DEREF, offset + 1, offset + 3, buffer
-                    .subSequence(offset + 1, offset + 3).toString());
+            return new Token(Token.Type.SAFE_DEREF, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
         } if (ch == '*') {
             nextChar();
-            return new Token(Token.SPREAD, offset + 1, offset + 3, buffer
-                    .subSequence(offset + 1, offset + 3).toString());
+            return new Token(Token.Type.SPREAD, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
         }
-        return new Token(Token.DOT, offset + 1, offset + 2, buffer.subSequence(
-                offset + 1, offset + 2).toString());
+        return new Token(Token.Type.DOT, offset + 1, offset + 2, buffer.subSequence(offset + 1, offset + 2).toString());
     }
 
     private Token skipLineBreak() {
@@ -167,9 +173,9 @@ public class TokenStream {
             char secondChar = ch;
 
             nextChar();
-            return new Token(Token.LINE_BREAK, offset + 1, endOffset, new String(new char[]{firstChar, secondChar}));
+            return new Token(Token.Type.LINE_BREAK, offset + 1, endOffset, new String(new char[]{firstChar, secondChar}));
         }
-        return new Token(Token.LINE_BREAK, offset+ 1, endOffset, new String(new char[]{firstChar}));
+        return new Token(Token.Type.LINE_BREAK, offset+ 1, endOffset, new String(new char[]{firstChar}));
     }
 
     private boolean isLineBreakChar() {
@@ -195,22 +201,16 @@ public class TokenStream {
 
     /**
      * Scans closing and opening pairs, ignoring nested pairs.
-     *
-     * @param open
-     * @param close
-     * @return
-     * @throws TokenStreamException
      */
-    private Token scanPair(char open, char close, int type)
-            throws TokenStreamException {
+    private Token scanPair(char open, char close, Token.Type type) throws TokenStreamException {
         int endOffset = offset + 1;
         int pairCount = 1;
         while (pairCount > 0 && offset > 0) {
             ch = buffer.charAt(--offset);
             if (ch == open) {
-                --pairCount;
+                pairCount -= 1;
             } else if (ch == close) {
-                ++pairCount;
+                pairCount += 1;
             }
         }
         if (offset != 0) {
@@ -222,8 +222,7 @@ public class TokenStream {
             }
         }
 
-        return new Token(type, offset + 1, endOffset, buffer.subSequence(
-                offset + 1, endOffset).toString());
+        return new Token(type, offset + 1, endOffset, buffer.subSequence(offset + 1, endOffset).toString());
     }
 
     private Token scanIdent() {
@@ -231,8 +230,8 @@ public class TokenStream {
         do {
             nextChar();
         } while (offset > -1 && Character.isJavaIdentifierPart(ch));
-        return new Token(Token.IDENT, offset + 1, endOffset, buffer
-                .subSequence(offset + 1, endOffset).toString());
+
+        return new Token(Token.Type.IDENT, offset + 1, endOffset, buffer.subSequence(offset + 1, endOffset).toString());
     }
 
     private Token scanQuote(char quote) throws TokenStreamException {
@@ -272,10 +271,10 @@ public class TokenStream {
                 offset = -1;
             }
             if (offset != -1) {
-                --offset;
+                offset -= 1;
                 ch = buffer.charAt(offset);
             }
-            return new Token(Token.QUOTED_STRING, startOffset, endOffset, match);
+            return new Token(Token.Type.QUOTED_STRING, startOffset, endOffset, match);
         }
         return null;
     }
@@ -285,8 +284,7 @@ public class TokenStream {
             return;
         do {
             nextChar();
-        } while (Character.isWhitespace(ch) && !isLineBreakChar()
-                && offset > -1);
+        } while (Character.isWhitespace(ch) && !isLineBreakChar() && offset > -1);
     }
 
     private Token skipLineComment() {
@@ -303,7 +301,7 @@ public class TokenStream {
             } else {
                 ch = buffer.charAt(offset--);
             }
-            return new Token(Token.LINE_COMMENT, startOffset, endOffset, match);
+            return new Token(Token.Type.LINE_COMMENT, startOffset, endOffset, match);
         }
         // } else {
         // ch = buffer.charAt(--offset);
@@ -331,7 +329,7 @@ public class TokenStream {
             } else {
                 ch = buffer.charAt(offset--);
             }
-            return new Token(Token.BLOCK_COMMENT, startOffset, endOffset, match);
+            return new Token(Token.Type.BLOCK_COMMENT, startOffset, endOffset, match);
         } else {
             ch = buffer.charAt(--offset);
         }

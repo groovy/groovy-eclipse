@@ -71,10 +71,8 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 /**
  * @author Andrew Eisenberg
  * @created Nov 11, 2009
- *
  */
-public class StatementAndExpressionCompletionProcessor extends
-        AbstractGroovyCompletionProcessor {
+public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
     class ExpressionCompletionRequestor implements ITypeRequestor {
 
@@ -93,21 +91,17 @@ public class StatementAndExpressionCompletionProcessor extends
         private int derefCount = 0;
 
         public ExpressionCompletionRequestor() {
-            // remember the rightmost part of the LHS of a
-            // binary expression
+            // remember the rightmost part of the LHS of a binary expression
             ASTNode maybeLHS = getContext().getPerceivedCompletionNode();
             while (maybeLHS != null) {
                 if (maybeLHS instanceof BinaryExpression) {
-                    maybeLHS = arrayAccessLHS = ((BinaryExpression) maybeLHS)
-                            .getLeftExpression();
-                    derefCount++;
+                    maybeLHS = arrayAccessLHS = ((BinaryExpression) maybeLHS).getLeftExpression();
+                    derefCount += 1;
                 } else if (maybeLHS instanceof PropertyExpression) {
-                    arrayAccessLHS = ((PropertyExpression) maybeLHS)
-                            .getObjectExpression();
+                    arrayAccessLHS = ((PropertyExpression) maybeLHS).getObjectExpression();
                     maybeLHS = ((PropertyExpression) maybeLHS).getProperty();
                 } else if (maybeLHS instanceof MethodCallExpression) {
-                    arrayAccessLHS = ((MethodCallExpression) maybeLHS)
-                            .getObjectExpression();
+                    arrayAccessLHS = ((MethodCallExpression) maybeLHS).getObjectExpression();
                     maybeLHS = ((MethodCallExpression) maybeLHS).getMethod();
                 } else {
                     if (maybeLHS instanceof Expression) {
@@ -133,9 +127,9 @@ public class StatementAndExpressionCompletionProcessor extends
                 }
             } else if (node instanceof MethodNode) {
                 MethodNode run = (MethodNode) node;
-                if (run.getName().equals("run")
-                        && run.getDeclaringClass().isScript()
-                        && (run.getParameters() == null || run.getParameters().length == 0)) {
+                if (run.getName().equals("run") &&
+                        run.getDeclaringClass().isScript() &&
+                        (run.getParameters() == null || run.getParameters().length == 0)) {
                     return VisitStatus.CONTINUE;
                 }
             }
@@ -272,8 +266,7 @@ public class StatementAndExpressionCompletionProcessor extends
 
         /**
          * @param enclosingElement
-         * @return true iff enclosingElement's source location contains the source location of
-         *         {@link #nodeToLookFor}
+         * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor}
          */
         private boolean interestingElement(IJavaElement enclosingElement) {
             // the clinit is always interesting since the clinit contains static initializers
@@ -283,11 +276,9 @@ public class StatementAndExpressionCompletionProcessor extends
 
             if (enclosingElement instanceof ISourceReference) {
                 try {
-                    ISourceRange range = ((ISourceReference) enclosingElement)
-                            .getSourceRange();
-                    return range.getOffset() <= completionNode.getStart()
-                            && range.getOffset() + range.getLength() >= completionNode
-                                    .getEnd();
+                    ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
+                    return range.getOffset() <= completionNode.getStart() &&
+                        range.getOffset() + range.getLength() >= completionNode.getEnd();
                 } catch (JavaModelException e) {
                     Util.log(e);
                 }
@@ -329,8 +320,7 @@ public class StatementAndExpressionCompletionProcessor extends
     final Expression lhsNode;
 
     public StatementAndExpressionCompletionProcessor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext,
-            SearchableEnvironment nameEnvironment) {
+            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
         this.completionNode = context.getPerceivedCompletionNode();
         this.lhsNode = context.lhsNode;
@@ -350,28 +340,32 @@ public class StatementAndExpressionCompletionProcessor extends
         boolean isStatic;
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.isVisitSuccessful()) {
-            // get all proposal creators
             isStatic = isStatic() || requestor.isStatic;
-            IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
             if (completionType == null) {
-                completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
-                        : context.unit.getModuleNode().getScriptClassDummy();
+                if (context.containingDeclaration instanceof ClassNode) {
+                    completionType = (ClassNode) context.containingDeclaration;
+                } else {
+                    completionType = context.unit.getModuleNode().getScriptClassDummy();
+                }
             }
+
+            IProposalCreator[] creators = chooseProposalCreators(isStatic);
+
             if (context.completionNode instanceof ClassExpression) {
                 if ("java.lang.Class".equals(completionType.getName())) {
-                    // Add proposals for static members
+                    // add proposals for static members
                     ClassNode type = ((ClassExpression) context.completionNode).getType();
                     proposalCreatorLoop(context, requestor, type, isStatic, groovyProposals, creators, false);
                 }
             }
+
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
-            if (ContentAssistLocation.STATEMENT == context.location) {
+
+            if (context.location == ContentAssistLocation.STATEMENT) {
                 ClassNode closureThis = requestor.currentScope.getThis();
                 if (closureThis != null && !closureThis.equals(completionType)) {
-                    // inside of a closure
-                    // must also add content assist for this (previously did the
-                    // delegate)
+                    // inside of a closure; must also add content assist for this (previously did the delegate)
                     proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators, true);
                 }
             }
@@ -411,24 +405,16 @@ public class StatementAndExpressionCompletionProcessor extends
 
         // get proposals from providers
         try {
-            context.currentScope = requestor.currentScope != null ? requestor.currentScope
-                    : createTopLevelScope(completionType);
+            context.currentScope = requestor.currentScope != null ? requestor.currentScope : createTopLevelScope(completionType);
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {
                 try {
-                    List<IGroovyProposal> otherProposals = provider
-                            .getStatementAndExpressionProposals(context,
-                                    completionType, isStatic,
-                                    requestor.categories);
+                    List<IGroovyProposal> otherProposals = provider.getStatementAndExpressionProposals(context, completionType, isStatic, requestor.categories);
                     if (otherProposals != null) {
                         groovyProposals.addAll(otherProposals);
                     }
                 } catch (Exception e) {
-                    GroovyCore
-                            .logException(
-                                    "Exception when using third party proposal provider: "
-                                            + provider.getClass()
-                                                    .getCanonicalName(), e);
+                    GroovyCore.logException("Exception when using third party proposal provider: " + provider.getClass().getCanonicalName(), e);
                 }
             }
         } catch (CoreException e) {
@@ -439,24 +425,17 @@ public class StatementAndExpressionCompletionProcessor extends
 
         // extra filtering and sorting provided by third parties
         try {
-            List<IProposalFilter> filters = ProposalProviderRegistry
-                    .getRegistry().getFiltersFor(context.unit);
+            List<IProposalFilter> filters = ProposalProviderRegistry.getRegistry().getFiltersFor(context.unit);
             for (IProposalFilter filter : filters) {
                 try {
-                    List<IGroovyProposal> newProposals = filter
-                            .filterProposals(groovyProposals, context,
-                                    getJavaContext());
-                    groovyProposals = newProposals == null ? groovyProposals
-                            : newProposals;
+                    List<IGroovyProposal> newProposals = filter.filterProposals(groovyProposals, context, getJavaContext());
+                    groovyProposals = newProposals == null ? groovyProposals : newProposals;
                 } catch (Exception e) {
-                    GroovyCore.logException(
-                            "Exception when using third party proposal filter: "
-                                    + filter.getClass().getCanonicalName(), e);
+                    GroovyCore.logException("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
                 }
             }
         } catch (CoreException e) {
-            GroovyCore.logException(
-                    "Exception accessing proposal provider registry", e);
+            GroovyCore.logException("Exception accessing proposal provider registry", e);
         }
 
         List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
@@ -468,9 +447,7 @@ public class StatementAndExpressionCompletionProcessor extends
                     javaProposals.add(javaProposal);
                 }
             } catch (Exception e) {
-                GroovyCore.logException(
-                                "Exception when creating groovy completion proposal",
-                                e);
+                GroovyCore.logException("Exception when creating groovy completion proposal", e);
             }
         }
 
@@ -482,8 +459,7 @@ public class StatementAndExpressionCompletionProcessor extends
             boolean isClosureThis) {
         for (IProposalCreator creator : creators) {
             if (isClosureThis && !creator.redoForLoopClosure()) {
-                // avoid duplicate DGMs by not proposing category proposals
-                // twice
+                // avoid duplicate DGMs by not proposing category proposals twice
                 continue;
             }
             if (creator instanceof AbstractProposalCreator) {
@@ -495,9 +471,6 @@ public class StatementAndExpressionCompletionProcessor extends
         }
     }
 
-    /**
-     * @param requestor
-     */
     private void fillInExtendedContext(ExpressionCompletionRequestor requestor) {
         JavaContentAssistInvocationContext javaContext = getJavaContext();
         CompletionContext coreContext = javaContext.getCoreContext();
@@ -509,20 +482,14 @@ public class StatementAndExpressionCompletionProcessor extends
         }
     }
 
-    /**
-     * @param completionType
-     * @return
-     */
     protected VariableScope createTopLevelScope(ClassNode completionType) {
         VariableScope scope = new VariableScope(null, completionType, false);
         return scope;
     }
 
     /**
-     * When completing an expression, use the completion type found by the requestor. Otherwise, use
-     * the current type
-     * @param requestor
-     * @return
+     * When completing an expression, use the completion type found by the requestor.
+     * Otherwise, use the current type.
      */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
         if (getContext().location == ContentAssistLocation.EXPRESSION) {
@@ -532,8 +499,7 @@ public class StatementAndExpressionCompletionProcessor extends
             // we have something like this:
             // myMethodCall _
             // so, we want to look at the type of 'this' to complete on
-            return completionNode instanceof VariableExpression ? requestor.currentScope.getDelegateOrThis()
-                    : requestor.resultingType;
+            return completionNode instanceof VariableExpression ? requestor.currentScope.getDelegateOrThis() : requestor.resultingType;
         } else {
             // use the current 'this' type so that closure types are correct
             ClassNode type = requestor.currentScope.getDelegateOrThis();
@@ -549,7 +515,6 @@ public class StatementAndExpressionCompletionProcessor extends
     /**
      * When completing a expression, static context exists only if a ClassExpression
      * When completing a statement, static context exists if in a static method or field
-     * @return true iff static
      */
     private boolean isStatic() {
         if (getContext().location == ContentAssistLocation.STATEMENT) {
@@ -561,5 +526,22 @@ public class StatementAndExpressionCompletionProcessor extends
             }
         }
         return false;
+    }
+
+    private IProposalCreator[] chooseProposalCreators(boolean isStatic) {
+        String completionExpression = getContext().fullCompletionExpression;
+        if (completionExpression == null) completionExpression = "";
+        if (completionExpression.matches(".+\\.@\\w*")) {
+            if (!isStatic) {
+                return new IProposalCreator[] {new FieldProposalCreator()};
+            }
+            return new IProposalCreator[0];
+        }
+        if (completionExpression.matches(".+\\.&\\w*")) {
+            return new IProposalCreator[] {new MethodProposalCreator()};
+            // TODO: Completions should not insert parens and arguments.
+            // TODO: Don't want "class" suggested. Static case is not well handled.
+        }
+        return getAllProposalCreators();
     }
 }
