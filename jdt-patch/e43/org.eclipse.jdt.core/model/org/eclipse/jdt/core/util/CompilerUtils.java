@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
@@ -79,7 +80,7 @@ public class CompilerUtils {
 	 * Configure an options map (usually retrieved from a CompilerOptions object) based on the project.
 	 * If anything goes wrong it will configure the options to just build java.
 	 */
-	public static void configureOptionsBasedOnNature(Map<String, String> optionMap, IJavaProject javaProject) {
+	public static void configureOptionsBasedOnNature(Map optionMap, IJavaProject javaProject) {
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
@@ -125,7 +126,7 @@ public class CompilerUtils {
 	 * @param javaProject the project involved right now (may have the groovy nature)
 	 */
 	public static void setGroovyClasspath(CompilerOptions compilerOptions, IJavaProject javaProject) {
-		Map<String, String> newOptions = new HashMap<String, String>();
+		Map newOptions = new HashMap();
 		setGroovyClasspath(newOptions, javaProject);
 		compilerOptions.groovyProjectName = javaProject.getProject().getName();
 		if (!newOptions.isEmpty()) {
@@ -133,14 +134,14 @@ public class CompilerUtils {
 		}
 	}
 
-	public static void setGroovyClasspath(Map<String, String> optionMap, IJavaProject javaProject) {
+	public static void setGroovyClasspath(Map optionMap, IJavaProject javaProject) {
 		IFile file = javaProject.getProject().getFile("groovy.properties"); //$NON-NLS-1$
 		if (file.exists()) {
 			try {
 				PropertyResourceBundle prb = new PropertyResourceBundle(file.getContents());
-				Enumeration<String> e = prb.getKeys();
+				Enumeration e = prb.getKeys();
 				while (e.hasMoreElements()) {
-					String k = e.nextElement();
+					String k = (String) e.nextElement();
 					String v = (String) prb.getObject(k);
 					v = fixup(v, javaProject);
 					if (k.equals(CompilerOptions.OPTIONG_GroovyClassLoaderPath)) {
@@ -224,7 +225,7 @@ public class CompilerUtils {
 	// visible for testing
 	public static String calculateClasspath(IJavaProject javaProject) {
 		try {
-			Set<String> accumulatedPathEntries = new LinkedHashSet<String>();
+			Set accumulatedPathEntries = new LinkedHashSet();
 			IProject project = javaProject.getProject();
 			String projectName = project.getName();
 			IPath defaultOutputPath = javaProject.getOutputLocation();
@@ -232,7 +233,8 @@ public class CompilerUtils {
 
 			IClasspathEntry[] cpes = javaProject.getResolvedClasspath(true);
 			if (cpes != null) {
-				for (IClasspathEntry cpe : cpes) {
+				for (int i = 0, n = cpes.length; i < n; i += 1) {
+					IClasspathEntry cpe = cpes[i];
 					if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 						continue;
 					}
@@ -276,9 +278,11 @@ public class CompilerUtils {
 				// Add output locations which are not default
 				try {
 					if (isGroovyNaturedProject(project)) {
-						for (IClasspathEntry entry : javaProject.getRawClasspath()) {
+						IClasspathEntry[] cpes = javaProject.getRawClasspath();
+						for (int i = 0, n = cpes.length; i < n; i += 1) {
+							IClasspathEntry cpe = cpes[i];
 							if (entry.getOutputLocation() != null) {
-								String location = pathToString(entry.getOutputLocation(), project);
+								String location = pathToString(cpe.getOutputLocation(), project);
 								if (!defaultOutputLocation.equals(location)) {
 									accumulatedPathEntries.add(location);
 								}
@@ -289,9 +293,9 @@ public class CompilerUtils {
 					System.err.println("Unexpected error on checking Groovy Nature"); //$NON-NLS-1$
 				}
 
-				StringBuilder sb = new StringBuilder();
-				for (String entry : accumulatedPathEntries) {
-					sb.append(entry).append(File.pathSeparator);
+				StringBuffer sb = new StringBuffer();
+				for (Iterator it = accumulatedPathEntries.iterator(); it.hasNext();) {
+					sb.append(it.next()).append(File.pathSeparator);
 				}
 				return sb.toString();
 			}
@@ -313,7 +317,7 @@ public class CompilerUtils {
 	 * @param otherProject a project something in the dependency chain for the original project
 	 * @param accumulatedPathEntries a String set of classpath entries, into which new entries should be added
 	 */
-	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set<String> accumulatedPathEntries)
+	private static void computeDependenciesFromProject(IProject baseProject, String otherProject, Set accumulatedPathEntries)
 			throws JavaModelException {
 
 		IProject iproject = baseProject.getWorkspace().getRoot().getProject(otherProject);
@@ -324,7 +328,8 @@ public class CompilerUtils {
 
 		IClasspathEntry[] cpes = iJavaProject.getResolvedClasspath(true);
 		if (cpes != null) {
-			for (IClasspathEntry cpe : cpes) {
+			for (int i = 0, n = cpes.length; i < n; i += 1) {
+				IClasspathEntry cpe = cpes[i];
 				if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE && cpe.getOutputLocation() != null) {
 					// add the source folder's output location (if different from the project's)
 					accumulatedPathEntries.add(pathToString(cpe.getOutputLocation(), iproject));
