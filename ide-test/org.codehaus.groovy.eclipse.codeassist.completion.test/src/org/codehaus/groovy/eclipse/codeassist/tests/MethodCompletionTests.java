@@ -268,24 +268,6 @@ public final class MethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "util", 1);
     }
 
-    public void testAnnotationMembers0() throws Exception {
-        String contents = "@SuppressWarnings()\nclass C { }";
-        ICompilationUnit unit = addGroovySource(contents, "File", "");
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "@SuppressWarnings("), GroovyCompletionProposalComputer.class);
-        assertTrue("Proposal for 'value()' should have been found", -1 != findProposal(proposals, "value", false, 0));
-        assertTrue("Proposal for 'equals()' should not have been found", -1 == findProposal(proposals, "equals", false, 0));
-        assertTrue("Proposal for 'public' should not have been found", -1 == findProposal(proposals, "public", false, 0));
-    }
-
-    public void testAnnotationMembers1() throws Exception {
-        String contents = "@SuppressWarnings(v)\nclass C { }";
-        ICompilationUnit unit = addGroovySource(contents, "File", "");
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "@SuppressWarnings(v"), GroovyCompletionProposalComputer.class);
-        assertTrue("Proposal for 'value()' should have been found", -1 != findProposal(proposals, "value", false, 0));
-        assertTrue("Proposal for 'equals()' should not have been found", -1 == findProposal(proposals, "equals", false, 0));
-        assertTrue("Proposal for 'public' should not have been found", -1 == findProposal(proposals, "public", false, 0));
-    }
-
     //
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) throws Exception {

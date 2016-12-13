@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import junit.framework.Test;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -32,8 +31,6 @@ public final class TypeCompletionTests extends CompletionTestCase {
         return newTestSuite(TypeCompletionTests.class);
     }
 
-    private static final String A_TEST = "ATest";
-    private static final String RUN_WITH = "RunWith";
     private static final String HTML = "HTML";
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
     private static final String HTML_ANCHOR = "HTMLAnchorElement";
@@ -103,26 +100,6 @@ public final class TypeCompletionTests extends CompletionTestCase {
         String contents = "class Foo implements HTMLAnchorElement { }";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML_ANCHOR));
         proposalExists(proposals, HTML_ANCHOR_PROPOSAL, 1);
-    }
-
-    public void testCompletionTypesInAnnotation1() throws Exception {
-        String contents = "@RunWith(ATest)\n" + "class ATest { }\n" + "@interface RunWith {\n" + "Class value()\n}";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, RUN_WITH));
-        proposalExists(proposals, RUN_WITH, 1, true);
-    }
-
-    public void testCompletionTypesInAnnotation2() throws Exception {
-        String contents = "@RunWith(ATest)\n" + "class ATest { }\n" + "@interface RunWith {\n" + "Class value()\n}";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, A_TEST));
-        proposalExists(proposals, A_TEST, 1, true);
-    }
-
-    public void testCompletionTypesInAnnotation3() throws Exception {
-        String contents = "@RunWith(Foo.FOO1)\n" + "class ATest { }";
-        String javaContents =
-            "enum Foo {\n" + "FOO1, FOO2\n" + "} \n" + "@interface RunWith {\n" + "Foo value();\n" + "}";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, javaContents, getIndexOf(contents, "FOO"));
-        proposalExists(proposals, "FOO1", 1);
     }
 
     public void testCompleteFullyQualifiedTypeInScript() throws Exception {
@@ -208,63 +185,8 @@ public final class TypeCompletionTests extends CompletionTestCase {
     public void testGRECLIPSE673() throws Exception {
         String contents = "throw new MPE";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "MPE"));
-        // found twice:  once as a type proposal and once as a constructor proposal
+        // found twice: once as a type proposal and once as a constructor proposal
         proposalExists(proposals, "MissingPropertyExceptionNoStack", 2, true);
-    }
-
-    public void testAnnotation1() throws Exception {
-        String contents = "@Dep class Foo { }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Dep"));
-
-        proposalExists(proposals, "Deprecated", 1, true);
-        assertEquals("Only @Deprecated should have been proposed", 1, proposals.length);
-    }
-
-    public void testAnnotation2() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
-        String contents = "@Compile class Foo { }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "Compile"));
-
-        proposalExists(proposals, "CompileStatic", 1, true);
-        proposalExists(proposals, "CompileDynamic", 1, true);
-        int expect = 2;
-        try {
-            proposalExists(proposals, "Compiled", 1, true); // java.lang.invoke.LambdaForm.Compiled is in 1.8+
-            expect += 1;
-        } catch (Throwable ignored) {
-        }
-        assertEquals("Only @CompileStatic and @CompileDynamic should have been proposed", expect, proposals.length);
-    }
-
-    public void testAnnotation3() throws Exception {
-        String contents = "@Single class Foo { }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
-        proposalExists(proposals, "Singleton", 1, true);
-        proposalExists(proposals, "SingletonASTTransformation", 0, true);
-    }
-
-    public void testAnnotation4() throws Exception {
-        // not exactly right since @Singlton is only allowed on classes, but good enoug for testing
-        String contents = "class Foo { @Single  def foo() {} }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
-        proposalExists(proposals, "Singleton", 1, true);
-        proposalExists(proposals, "SingletonASTTransformation", 0, true);
-    }
-
-    public void testAnnotation5() throws Exception {
-        // not exactly right since @Singlton is only allowed on classes, but good enoug for testing
-        String contents = "class Foo { @Single  def foo }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
-        proposalExists(proposals, "Singleton", 1, true);
-        proposalExists(proposals, "SingletonASTTransformation", 0, true);
-    }
-
-    public void testAnnotation6() throws Exception {
-        // not exactly right since @Singlton is only allowed on classes, but good enoug for testing
-        String contents = "@Single import java.util.List\nclass Foo { }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
-        proposalExists(proposals, "Singleton", 1, true);
-        proposalExists(proposals, "SingletonASTTransformation", 0, true);
     }
 
     public void testField1() throws Exception {

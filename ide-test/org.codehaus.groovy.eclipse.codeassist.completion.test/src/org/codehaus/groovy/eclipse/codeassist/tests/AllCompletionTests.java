@@ -27,6 +27,7 @@ import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 public class AllCompletionTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite(AllCompletionTests.class.getName());
+        suite.addTestSuite(AnnotationCompletionTests.class);
         suite.addTestSuite(CommandChainCompletionTests.class);
         suite.addTestSuite(ConstructorCompletionTests.class);
         suite.addTestSuite(ContentAssistLocationTests.class);

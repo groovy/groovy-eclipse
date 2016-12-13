@@ -295,9 +295,8 @@ public abstract class CompletionTestCase extends TestCase {
 
     protected ICompletionProposal[] createProposalsAtOffset(ICompilationUnit unit, int completionOffset) throws Exception {
         int count = 0;
-        int maxCount = 15;
+        int maxCount = 5;
         ICompletionProposal[] proposals;
-        System.err.println("Attempting createProposalsAtOffset(unit="+unit.getElementName()+",completionOffset="+completionOffset+")");
         do {
             if (count > 0) {
                 SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
@@ -306,20 +305,14 @@ public abstract class CompletionTestCase extends TestCase {
 
                 SynchronizationUtils.waitForIndexingToComplete(unit);
             }
-
-            System.err.println("Content assist for " + unit.getElementName());
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
-            if (proposals == null) {
-                System.err.println("Found null proposals");
-            } else {
-                System.err.println("Found : " + Arrays.toString(proposals));
-            }
             count++;
         } while ((proposals == null || proposals.length == 0) && count < maxCount);
 
         if (count >= maxCount) {
-            System.err.println("Reached maxcount("+maxCount+") attempts and still got no proposals - hopefully that is what the test expects");
+            System.err.println("Reached maxcount(" + maxCount + ") attempts and still got no proposals - hopefully that is what the test expects");
         }
+
         return proposals;
     }
 
