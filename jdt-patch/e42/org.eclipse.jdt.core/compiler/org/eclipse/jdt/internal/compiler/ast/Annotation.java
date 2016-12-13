@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -12,7 +13,6 @@
  *								bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
@@ -498,8 +498,9 @@ public abstract class Annotation extends Expression {
 				ReferenceBinding trb = (ReferenceBinding) tb;
 				if (isInterestingGroovyType(trb)) {
 					AnnotationBinding[] abs = trb.getAnnotations();
-					if (abs != null && abs.length > 0) {
-						for (AnnotationBinding ab : abs) {
+					if (abs != null) {
+						for (int i = 0, n = abs.length; i < n; i += 1) {
+							AnnotationBinding ab = abs[i];
 							if (ab == null) continue;
 							ReferenceBinding arb = ab.getAnnotationType();
 							if (arb != null && arb.compoundName != null) {

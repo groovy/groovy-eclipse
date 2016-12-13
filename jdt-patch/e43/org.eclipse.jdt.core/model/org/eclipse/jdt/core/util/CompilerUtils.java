@@ -278,10 +278,10 @@ public class CompilerUtils {
 				// Add output locations which are not default
 				try {
 					if (isGroovyNaturedProject(project)) {
-						IClasspathEntry[] cpes = javaProject.getRawClasspath();
+						cpes = javaProject.getRawClasspath();
 						for (int i = 0, n = cpes.length; i < n; i += 1) {
 							IClasspathEntry cpe = cpes[i];
-							if (entry.getOutputLocation() != null) {
+							if (cpe.getOutputLocation() != null) {
 								String location = pathToString(cpe.getOutputLocation(), project);
 								if (!defaultOutputLocation.equals(location)) {
 									accumulatedPathEntries.add(location);
