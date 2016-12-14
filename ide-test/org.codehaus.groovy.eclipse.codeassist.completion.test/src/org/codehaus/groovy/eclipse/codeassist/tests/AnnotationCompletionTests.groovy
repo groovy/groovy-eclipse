@@ -35,6 +35,20 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Deprecated')
     }
 
+    void testAnno0a() {
+        String contents = '@Generated @ class Foo { }'
+        def proposals = getProposals(contents, '@')
+
+        assertThat(proposals).includes('Deprecated')
+    }
+
+    void testAnno0b() {
+        String contents = '@ @Generated class Foo { }'
+        def proposals = getProposals(contents, '@')
+
+        assertThat(proposals).includes('Deprecated')
+    }
+
     void testAnno1() {
         String contents = '@Dep class Foo { }'
         def proposals = getProposals(contents, '@Dep')
@@ -44,9 +58,8 @@ final class AnnotationCompletionTests extends CompletionTestCase {
 
     void testAnno2() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return
-
         String contents = '@Compile class Foo { }'
-        def proposals = getProposals(contents, 'Compile')
+        def proposals = getProposals(contents, '@Compile')
 
         assertThat(proposals).includes('CompileStatic', 'CompileDynamic')
         int total = 2
@@ -56,6 +69,13 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         } catch (notJava8) {
         }
         assertThat(proposals).hasSize(total, 'Only @CompileStatic and @CompileDynamic should have been proposed\n')
+    }
+
+    void testAnno2a() { // checks camel case matching
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        String contents = '@ComDyn class Foo { }'
+        def proposals = getProposals(contents, '@ComDyn')
+        assertThat(proposals).includes('CompileDynamic').hasSize(1, 'Only @CompileDynamic should have been proposed\n')
     }
 
     void testAnno3() {

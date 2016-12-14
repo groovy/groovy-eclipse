@@ -29,7 +29,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 /**
  * @author Andrew Eisenberg
  * @created Nov 9, 2009
- *
  */
 public class ContentAssistContext {
 
@@ -98,11 +97,16 @@ public class ContentAssistContext {
      */
     public VariableScope currentScope;
 
-    public ContentAssistContext(int completionLocation,
-    		String completionExpression, String fullCompletionExpression, ASTNode completionNode,
- ASTNode containingCodeBlock,
-            Expression lhsNode, ContentAssistLocation location,
-            GroovyCompilationUnit unit, AnnotatedNode containingDeclaration,
+    public ContentAssistContext(
+            int completionLocation,
+            String completionExpression,
+            String fullCompletionExpression,
+            ASTNode completionNode,
+            ASTNode containingCodeBlock,
+            Expression lhsNode,
+            ContentAssistLocation location,
+            GroovyCompilationUnit unit,
+            AnnotatedNode containingDeclaration,
             int completionEnd) {
         this.completionLocation = completionLocation;
         this.completionExpression = completionExpression;
@@ -139,8 +143,6 @@ public class ContentAssistContext {
     /**
      * The completion node that is being used for completion
      * (may be different than the default if doing a method context completon
-     *
-     * @return
      */
     public ASTNode getPerceivedCompletionNode() {
         return completionNode;
@@ -149,11 +151,8 @@ public class ContentAssistContext {
     /**
      * The completion text that is being used for completion
      * (may be different than the default if doing a method context completon
-     *
-     * @return
      */
     public String getPerceivedCompletionExpression() {
         return completionExpression;
     }
-
 }

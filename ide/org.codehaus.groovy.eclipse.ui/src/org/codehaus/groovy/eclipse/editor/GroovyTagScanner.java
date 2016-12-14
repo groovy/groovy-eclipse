@@ -249,7 +249,16 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             }
         }
 
-        private final IWhitespaceDetector fWhitespaceDetector = new JavaWhitespaceDetector();
+        /**
+         * Do not mark '@' followed by newline; even if it's legal it's uncommon.
+         * Doing sp could be confusing when an incomplete annotation is present
+         * and the modifier of a method or field is highlighted as an annotation.
+         */
+        private final IWhitespaceDetector fWhitespaceDetector = new IWhitespaceDetector() {
+            public boolean isWhitespace(char ch) {
+                return Character.isWhitespace(ch) && ch != '\n' && ch != '\r';
+            }
+        };
 
         private final IWordDetector fWordDetector = new JavaWordDetector();
 

@@ -63,7 +63,9 @@ public class ExpressionFinder {
             if (offsetIsWhitespace && !token.isDotAccess() && !token.isType(Token.Type.DOUBLE_DOT)) {
                 return "";
             }
-
+            if ("@".equals(token.text)) {
+                return "@";
+            }
             if (token.isType(Token.Type.EOF)) {
                 return null;
             }
@@ -102,7 +104,6 @@ public class ExpressionFinder {
         }
         return "";
     }
-
 
     /**
      * Finds the end of the String token that exists at initialOffset.
@@ -159,7 +160,6 @@ public class ExpressionFinder {
         }
         return split;
     }
-
 
     public String[] splitForCompletionNoTrim(String expression) {
        String[] ret = new String[2];

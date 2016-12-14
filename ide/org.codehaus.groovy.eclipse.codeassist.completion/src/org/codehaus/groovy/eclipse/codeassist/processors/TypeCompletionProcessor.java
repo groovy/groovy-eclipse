@@ -76,16 +76,24 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
     }
 
     /**
-     * Don't show types if there is no previous text (except if in imports)
-     * Don't show types if there is a '.'
-     * Don't show types when in a class body and there is a type declaration
-     * immediately before
+     * <ul>
+     * <li>Don't show types if there is no previous text (except for imports or annotations)
+     * <li>Don't show types if there is a '.'
+     * <li>Don't show types when in a class body and there is a type declaration immediately before
+     * </ul>
      */
-    private boolean shouldShowTypes(ContentAssistContext context,
-            String toSearch) {
-        return (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT)
-                || context.fullCompletionExpression.contains(".")
-                || isBeforeTypeName(context.location, context.unit, context.completionLocation);
+    private boolean shouldShowTypes(ContentAssistContext context, String toSearch) {
+        if (toSearch == null || toSearch.length() == 0) {
+            switch (context.location) {
+            case ANNOTATION:
+            case IMPORT:
+                break;
+            default:
+                return false;
+            }
+        }
+        return context.fullCompletionExpression.contains(".") ||
+            isBeforeTypeName(context.location, context.unit, context.completionLocation);
     }
 
     private int findExpressionStart(ContentAssistContext context) {
@@ -103,16 +111,16 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
     protected int getSearchFor() {
         switch(getContext().location) {
-            case EXTENDS:
-                return IJavaSearchConstants.CLASS;
-            case IMPLEMENTS:
-                return IJavaSearchConstants.INTERFACE;
-            case EXCEPTIONS:
-                return IJavaSearchConstants.CLASS;
-            case ANNOTATION:
-                return IJavaSearchConstants.ANNOTATION_TYPE;
-            default:
-                return IJavaSearchConstants.TYPE;
+        case EXTENDS:
+            return IJavaSearchConstants.CLASS;
+        case IMPLEMENTS:
+            return IJavaSearchConstants.INTERFACE;
+        case EXCEPTIONS:
+            return IJavaSearchConstants.CLASS;
+        case ANNOTATION:
+            return IJavaSearchConstants.ANNOTATION_TYPE;
+        default:
+            return IJavaSearchConstants.TYPE;
         }
     }
 
@@ -120,8 +128,8 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
         if (location != ContentAssistLocation.CLASS_BODY) {
             return false;
         }
-        NameAndLocation nameAndLocation = new ExpressionFinder().findPreviousTypeNameToken(
-                new CharArraySourceBuffer(unit.getContents()), completionLocation);
+        NameAndLocation nameAndLocation = new ExpressionFinder()
+            .findPreviousTypeNameToken(new CharArraySourceBuffer(unit.getContents()), completionLocation);
         if (nameAndLocation == null) {
             return false;
         }

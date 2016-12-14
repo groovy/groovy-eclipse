@@ -127,6 +127,8 @@ public class TokenStream {
                 if (ch == '.') {
                     nextChar();
                     last = new Token(Token.Type.FIELD_ACCESS, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
+                } else {
+                    last = new Token(Token.Type.IDENT, offset + 1, offset + 2, buffer.subSequence(offset + 1, offset + 2).toString());
                 }
                 break;
             case '&':

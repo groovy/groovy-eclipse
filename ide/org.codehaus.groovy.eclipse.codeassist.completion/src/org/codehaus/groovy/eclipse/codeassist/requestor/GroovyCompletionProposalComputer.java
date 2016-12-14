@@ -165,20 +165,19 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
     }
 
     public List<ICompletionProposal> computeCompletionProposals(ContentAssistInvocationContext context, IProgressMonitor monitor) {
-        if (! (context instanceof JavaContentAssistInvocationContext)) {
+        if (!(context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
 
         JavaContentAssistInvocationContext javaContext = (JavaContentAssistInvocationContext) context;
         ICompilationUnit unit = javaContext.getCompilationUnit();
-        if (! (unit instanceof GroovyCompilationUnit)) {
+        if (!(unit instanceof GroovyCompilationUnit)) {
             return Collections.EMPTY_LIST;
         }
 
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
-                    "Starting content assist for " + unit.getElementName());
+            GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Starting content assist for " + unit.getElementName());
             event = "Content assist for " + unit.getElementName();
             GroovyLogManager.manager.logStart(event);
         }
@@ -247,21 +246,25 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
     public ContentAssistContext createContentAssistContext(GroovyCompilationUnit gunit, int invocationOffset, IDocument document) {
         String fullCompletionText = findCompletionText(document, invocationOffset);
         String[] completionExpressions = findCompletionExpression(fullCompletionText);
-        if (completionExpressions == null) {
-            completionExpressions = new String[] { "", "" };
+        final String completionExpression;
+        if (completionExpressions == null || "@".equals(fullCompletionText)) {
+            completionExpression = "";
+        } else if (completionExpressions[1] == null) {
+            completionExpression = completionExpressions[0];
+        } else {
+            completionExpression = completionExpressions[1];
         }
-        String completionExpression = completionExpressions[1] == null ? completionExpressions[0] : completionExpressions[1];
-        int supportingNodeEnd = findSupportingNodeEnd(invocationOffset, fullCompletionText);
         int completionEnd = findCompletionEnd(document, invocationOffset);
-        CompletionNodeFinder finder = new CompletionNodeFinder(invocationOffset, completionEnd, supportingNodeEnd, completionExpression, fullCompletionText);
-        ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
-        return assistContext;
-    }
+        int supportingNodeEnd = findSupportingNodeEnd(gunit, invocationOffset, fullCompletionText);
 
-    private int findSupportingNodeEnd(int invocationOffset, String fullCompletionText) {
-        String[] completionExpressions = new ExpressionFinder().splitForCompletionNoTrim(fullCompletionText);
-        // if second part of completion expression is null, then there is no supporting node (ie- no '.')
-        return completionExpressions[1] == null ? -1 : invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
+        CompletionNodeFinder finder = new CompletionNodeFinder(
+            invocationOffset,
+            completionEnd,
+            supportingNodeEnd,
+            completionExpression,
+            fullCompletionText);
+        ContentAssistContext context = finder.findContentAssistContext(gunit);
+        return context;
     }
 
     private SearchableEnvironment createSearchableEnvironment(JavaContentAssistInvocationContext javaContext) {
@@ -295,9 +298,19 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         return new ExpressionFinder().findTokenEnd(buffer, offset);
     }
 
+    protected int findSupportingNodeEnd(GroovyCompilationUnit gunit, int invocationOffset, String fullCompletionText) {
+        String[] completionExpressions = new ExpressionFinder().splitForCompletionNoTrim(fullCompletionText);
+        // if second part of completion expression is null, then there is no supporting node (ie- no '.')
+        if (completionExpressions[1] == null) {
+            return -1;
+        }
+        int end = invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
+        return end;
+    }
+
     public List<IContextInformation> computeContextInformation(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         List<ICompletionProposal> proposals = computeCompletionProposals(context, monitor);
-        ArrayList<IContextInformation> contexts = new ArrayList<IContextInformation>(proposals.size());
+        List<IContextInformation> contexts = new ArrayList<IContextInformation>(proposals.size());
         for (ICompletionProposal proposal : proposals) {
             if (proposal.getContextInformation() != null) {
                 contexts.add(proposal.getContextInformation());
