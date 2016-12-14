@@ -485,9 +485,9 @@ public abstract class AbstractCompilerTest extends TestCase {
 			options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
 			options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
 		} else if (this.complianceLevel == JDK1_8) {
-			options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_8);
-			options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_8);
-			options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+			options.put(CompilerOptions.OPTION_Compliance, "1.8"/*CompilerOptions.VERSION_1_8*/);
+			options.put(CompilerOptions.OPTION_Source, "1.8"/*CompilerOptions.VERSION_1_8*/);
+			options.put(CompilerOptions.OPTION_TargetPlatform, "1.8"/*CompilerOptions.VERSION_1_8*/);
 		}
 		return options;
 	}

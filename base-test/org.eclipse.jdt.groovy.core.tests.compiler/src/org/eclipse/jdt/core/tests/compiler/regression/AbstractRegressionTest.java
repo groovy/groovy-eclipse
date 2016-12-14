@@ -121,7 +121,7 @@ static class JavacCompiler {
 		} else if (rawVersion.indexOf("1.7") != -1) {
 			this.version = JavaCore.VERSION_1_7;
 		} else if (rawVersion.indexOf("1.8") != -1) {
-			this.version = JavaCore.VERSION_1_8;
+			this.version = "1.8";//JavaCore.VERSION_1_8;
 		} else {
 			throw new RuntimeException("unknown javac version: " + rawVersion);
 		}
