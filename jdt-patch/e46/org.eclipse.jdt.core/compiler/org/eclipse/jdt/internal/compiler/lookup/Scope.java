@@ -2141,7 +2141,10 @@ public abstract class Scope {
 						for (int i = 0, length = imports.length; i < length; i++) {
 							ImportBinding importBinding = imports[i];
 							if (importBinding.isStatic() && !importBinding.onDemand) {
-								if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
+								// GROOVY edit
+								//if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
+								if (CharOperation.equals(getSimpleName(importBinding), name)) {
+								// GROOVY end
 									if (unitScope.resolveSingleImport(importBinding, Binding.TYPE | Binding.FIELD | Binding.METHOD) != null && importBinding.resolvedImport instanceof FieldBinding) {
 										foundField = (FieldBinding) importBinding.resolvedImport;
 										ImportReference importReference = importBinding.reference;

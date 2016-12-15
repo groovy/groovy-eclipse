@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 /**
  * MemberValuePair node
@@ -59,6 +60,15 @@ public class MemberValuePair extends ASTNode {
 	}
 
 	// GROOVY add
+	private boolean isClass(TypeBinding requiredType) {
+		if (requiredType.isArrayType()) {
+			requiredType = requiredType.leafComponentType();
+		}
+		requiredType = requiredType.original();
+		boolean isClass = requiredType.id == TypeIds.T_JavaLangClass;
+		return isClass;
+	}
+
 	private boolean isGroovy(Scope scope) {
 		while (scope.parent != null) {
 			scope = scope.parent;
@@ -107,7 +117,7 @@ public class MemberValuePair extends ASTNode {
 
 		// GROOVY add - handling for class literals that do not end in '.class'
 		TypeBinding[] vtb = null;
-		if (requiredType.isClass() || (requiredType.isArrayType() && requiredType.leafComponentType().isClass()) && isGroovy(scope)) {
+		if (isClass(requiredType) && isGroovy(scope)) {
 			if (this.value instanceof ArrayInitializer) {
 				Expression[] values = ((ArrayInitializer) this.value).expressions;
 				for (int i = 0, n = values.length; i < n; i += 1) {

@@ -24,12 +24,15 @@ import java.util.Arrays;
 public enum TraceCategory {
 
     DEFAULT("_"),
+    COMPILER("Compiler"),
     CLASSPATH("Classpath"),
+
+    DSL("DSL"),
+    CODE_SELECT("Code select"),
     REFACTORING("Refactoring"),
-    COMPILER("Compiler"), DSL("DSL"),
-    CODESELECT("Code select"),
+    AST_TRANSFORM("AST Transforms"),
     CONTENT_ASSIST("Content assist"),
-    AST_TRANSFORM("Ast Transforms");
+    ORGANIZE_IMPORTS("Clean imports");
 
     TraceCategory(String label) {
         this.label = label;

@@ -5100,7 +5100,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
         ImportReference[] irs = gcud.imports;
         assertTrue(irs[0] instanceof AliasImportReference);
-        assertEquals("a.B.Wibble",irs[0].toString().trim()); // FIXASC hmmm, why isn't that a.B.FOO (ie. declared long name)
+        assertEquals("a.B.FOO",irs[0].toString().trim());
         assertTrue(irs[0].isStatic());
         assertEquals("Wibble",new String(((AliasImportReference)irs[0]).getSimpleName()));
     }

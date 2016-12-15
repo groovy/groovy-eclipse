@@ -48,7 +48,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         if (module != null) {
             String event = null;
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
+                GroovyLogManager.manager.log(TraceCategory.CODE_SELECT, unit.getElementName() + " at [" + start + "," + length + "]");
                 event = "Code select: " + unit.getElementName();
                 GroovyLogManager.manager.logStart(event);
             }
@@ -74,12 +74,12 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 }
             } catch (RuntimeException e) {
                 if (event != null) {
-                    GroovyLogManager.manager.logException(TraceCategory.CODESELECT, e);
+                    GroovyLogManager.manager.logException(TraceCategory.CODE_SELECT, e);
                 }
                 throw e;
             } finally {
                 if (event != null) {
-                    GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
+                    GroovyLogManager.manager.logEnd(event, TraceCategory.CODE_SELECT);
                 }
             }
         }
@@ -91,7 +91,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         if (module != null) {
             String event = null;
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.CODESELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
+                GroovyLogManager.manager.log(TraceCategory.CODE_SELECT, "Code select starting on " + unit.getElementName() + " at [ " + start + "," + length + " ]");
                 event = "Code select: " + unit.getElementName();
                 GroovyLogManager.manager.logStart(event);
             }
@@ -113,7 +113,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 }
             } finally {
                 if (event != null) {
-                    GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
+                    GroovyLogManager.manager.logEnd(event, TraceCategory.CODE_SELECT);
                 }
             }
         }

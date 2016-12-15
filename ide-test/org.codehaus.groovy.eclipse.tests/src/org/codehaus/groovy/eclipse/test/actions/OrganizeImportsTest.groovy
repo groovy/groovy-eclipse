@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.test.actions
 
 import junit.framework.Test
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 
 /**
@@ -443,6 +444,21 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             @EqualsAndHashCode
             @AnnotationCollector
             public @interface Custom {
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainImport10() {
+        EclipseTestSetup.addJavaSource('interface I { static String NLS = "nls"; }', 'I', 'p')
+
+        String contents = '''\
+            import static p.I.NLS
+            class Foo {
+              @SuppressWarnings(NLS)
+              def method() {
+                System.getProperty('non.localized.string')
+              }
             }
             '''
         doContentsCompareTest(contents, contents)

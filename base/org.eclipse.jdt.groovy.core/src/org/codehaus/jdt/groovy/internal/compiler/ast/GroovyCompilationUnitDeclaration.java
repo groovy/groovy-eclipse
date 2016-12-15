@@ -1028,8 +1028,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // static imports
                 for (Map.Entry<String, ImportNode> importStatic : importStatics.entrySet()) {
                     ImportNode importNode = importStatic.getValue();
-                    String importName = importNode.getClassName() + "." + importStatic.getKey();
-                    char[][] splits = CharOperation.splitOn('.', importName.toCharArray());
+                    char[][] splits = CharOperation.splitOn('.', (importNode.getClassName() + '.' + importNode.getFieldName()).toCharArray());
                     int typeStartOffset = importNode.getTypeStart(),
                         typeEndOffset = importNode.getTypeEnd(),
                         endOffset = typeEndOffset;
@@ -1436,25 +1435,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.modifiers = modifiers;
                 methodDeclaration.selector = methodNode.getName().toCharArray();
-                // Need to capture the rule in Verifier.adjustTypesIfStaticMainMethod(MethodNode node)
-                // if (node.getName().equals("main") && node.isStatic()) {
-                // Parameter[] params = node.getParameters();
-                // if (params.length == 1) {
-                // Parameter param = params[0];
-                // if (param.getType() == null || param.getType()==ClassHelper.OBJECT_TYPE) {
-                // param.setType(ClassHelper.STRING_TYPE.makeArray());
-                // ClassNode returnType = node.getReturnType();
-                // if(returnType == ClassHelper.OBJECT_TYPE) {
-                // node.setReturnType(ClassHelper.VOID_TYPE);
-                // }
-                // }
-                // }
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
 
                 // source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
-                if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1
-                        && methodNode.getName().equals("main")) {
+                if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1 && methodNode.getName().equals("main")) {
                     Parameter p = params[0];
                     if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
                         String name = p.getName();

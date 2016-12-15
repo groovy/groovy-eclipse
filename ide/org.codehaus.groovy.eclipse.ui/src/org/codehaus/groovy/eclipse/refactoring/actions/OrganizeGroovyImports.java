@@ -51,7 +51,9 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -117,13 +119,16 @@ public class OrganizeGroovyImports {
         public void visitConstantExpression(ConstantExpression expression) {
             if (expression instanceof AnnotationConstantExpression) {
                 handleType(expression.getType(), true);
+            } else {
+                // see StaticImportVisitor.transformInlineConstants(Expression)
+                doNotRemoveImport(expression.getNodeMetaData("static.import"));
             }
         }
 
         @Override
         public void visitPropertyExpression(PropertyExpression expression) {
             if (!expression.isStatic() && !expression.isSynthetic()) {
-                String alias = (String) expression.getNodeMetaData("static.import.alias");
+                Object alias = expression.getNodeMetaData("static.import.alias");
                 if (alias != null) {
                     String staticImport = expression.getText().replace('$', '.');
                     if (!alias.equals(expression.getPropertyAsString())) {
@@ -165,7 +170,7 @@ public class OrganizeGroovyImports {
         public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
             if (!call.isSynthetic() && call.getStart() > 0) {
                 String method = call.getOwnerType().getName().replace('$', '.') + '.' + call.getMethod();
-                String alias = (String) call.getNodeMetaData("static.import.alias");
+                Object alias = call.getNodeMetaData("static.import.alias");
                 if (alias != null) {
                     method += " as " + alias;
                 }
@@ -390,8 +395,8 @@ public class OrganizeGroovyImports {
             return false;
         }
 
-        private void doNotRemoveImport(String name) {
-            importsSlatedForRemoval.remove(name);
+        private void doNotRemoveImport(Object which) {
+            importsSlatedForRemoval.remove(which);
         }
     }
 
@@ -421,6 +426,13 @@ public class OrganizeGroovyImports {
     }
 
     public TextEdit calculateMissingImports() {
+        String event = null;
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.logStart(event = unit.getElementName());
+            GroovyLogManager.manager.log(TraceCategory.ORGANIZE_IMPORTS, event);
+        }
+        try {
+
         ModuleNodeInfo info = unit.getModuleInfo(true);
         if (info.isEmpty() || isUnclean(info, unit)) {
             return null;
@@ -494,6 +506,7 @@ public class OrganizeGroovyImports {
 
             // remove imports that were not matched to a source element
             for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
+                trace("Remove import '%s'", entry.getKey());
                 if (!entry.getValue().isStatic()) {
                     rewriter.removeImport(entry.getKey());
                 } else {
@@ -506,12 +519,14 @@ public class OrganizeGroovyImports {
                 pruneMissingTypes(allImports);
                 if (!missingTypes.isEmpty()) {
                     for (IType type : resolveMissingTypes()) {
+                        trace("Missing type '%s'", type);
                         rewriter.addImport(type.getFullyQualifiedName('.'));
                     }
                 }
             }
 
             TextEdit rewrite = rewriter.rewriteImports(null);
+            trace("%s", rewrite);
             return rewrite;
 
         } catch (Exception e) {
@@ -521,6 +536,12 @@ public class OrganizeGroovyImports {
             missingTypes = null;
         }
         return null;
+
+        } finally {
+            if (event != null) {
+                GroovyLogManager.manager.logEnd(event, TraceCategory.ORGANIZE_IMPORTS);
+            }
+        }
     }
 
     /**
@@ -688,7 +709,6 @@ public class OrganizeGroovyImports {
         if (alias == null) {
             return false;
         }
-
         String fieldName = imp.getFieldName();
         if (fieldName != null) {
             return !fieldName.equals(alias);
@@ -696,8 +716,8 @@ public class OrganizeGroovyImports {
         String className = imp.getClassName();
         if (className != null) {
             // it is possible to import from the default package
-            boolean aliasIsSameAsClassName = className.endsWith(alias)
-                    && (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
+            boolean aliasIsSameAsClassName = className.endsWith(alias) &&
+                (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
             return !aliasIsSameAsClassName;
         }
         return false;
@@ -715,6 +735,7 @@ public class OrganizeGroovyImports {
                     if (problem.isError() && problem.getCategoryID() == CategorizedProblem.CAT_INTERNAL) {
                         String message = problem.getMessage();
                         if (message.contains("unexpected token")) {
+                             trace("Stopping due to error in compilation unit: %s", message);
                             return true;
                         }
                     }
@@ -724,5 +745,11 @@ public class OrganizeGroovyImports {
             return true;
         }
         return false;
+    }
+
+    private static void trace(String message, Object... arguments) {
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.ORGANIZE_IMPORTS, String.format(message, arguments));
+        }
     }
 }

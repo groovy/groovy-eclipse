@@ -240,7 +240,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    public void testLocalAnnotationConstant() {
+    public void testLocalAnnotationConstant1() {
         // there was an error because the variable expression VALUE was not recognized as constant
         // see ResolveVisitor.transformInlineConstants(Expression)
         String[] sources = {
@@ -248,6 +248,102 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "class Main {\n" +
             "  public static final String VALUE = 'nls'\n" +
             "  @SuppressWarnings(VALUE)\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testLocalAnnotationConstant2() {
+        // there was an error because the variable expression VALUE was not recognized as constant
+        // see ResolveVisitor.transformInlineConstants(Expression)
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  public static final String VALUE = 'nls'\n" +
+            "  @SuppressWarnings(value = [VALUE])\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testImportedAnnotationConstant1() {
+        String[] sources = {
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  static final String VALUE = \"nls\";\n" +
+            "}",
+
+            "Main.groovy",
+            "import static p.I.VALUE\n" +
+            "class Main {\n" +
+            "  @SuppressWarnings(VALUE)\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testImportedAnnotationConstant2() {
+        String[] sources = {
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  static final String VALUE = \"nls\";\n" +
+            "}",
+
+            "Main.groovy",
+            "import static p.I.VALUE\n" +
+            "class Main {\n" +
+            "  @SuppressWarnings(value=[VALUE])\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testAliasedAnnotationConstant1() {
+        String[] sources = {
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  static final String VALUE = \"xyz\";\n" +
+            "}",
+
+            "Main.groovy",
+            "import static p.I.VALUE as FOO\n" +
+            "class Main {\n" +
+            "  @SuppressWarnings(FOO)\n" +
+            "  def method() {\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testAliasedAnnotationConstant2() {
+        String[] sources = {
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "  static final String VALUE = \"xyz\";\n" +
+            "}",
+
+            "Main.groovy",
+            "import static p.I.VALUE as FOO\n" +
+            "class Main {\n" +
+            "  @SuppressWarnings(value=[FOO])\n" +
             "  def method() {\n" +
             "  }\n" +
             "}"

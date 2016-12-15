@@ -231,7 +231,20 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 ClassNode type = ce.getType();
                 if (type.isEnum()) return exp;
                 Expression constant = findConstant(type.getField(pe.getPropertyAsString()));
-                if (constant != null) return constant;
+                // GRECLIPSE edit
+                //if (constant != null) return constant;
+                if (constant != null) {
+                    String name = pe.getText().replace('$', '.');
+                    Object alias = pe.getNodeMetaData("static.import.alias");
+                    if (alias != null && !alias.equals(pe.getPropertyAsString())) {
+                        name += " as " + alias;
+                    }
+                    // store the qualified name to facilitate organizing static imports
+                    constant.setNodeMetaData("static.import", name);
+
+                    return constant;
+                }
+                // GRECLIPSE end
             }
         } else if (exp instanceof ListExpression) {
             ListExpression le = (ListExpression) exp;

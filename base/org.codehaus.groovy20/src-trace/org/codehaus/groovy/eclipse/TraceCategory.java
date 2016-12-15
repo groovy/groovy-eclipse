@@ -18,16 +18,23 @@ package org.codehaus.groovy.eclipse;
 import java.util.Arrays;
 
 /**
- * 
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
 @SuppressWarnings("nls")
 public enum TraceCategory {
 
-    DEFAULT("_"), CLASSPATH("Classpath"),
-    REFACTORING("Refactoring"), COMPILER("Compiler"), DSL("DSL"), CODESELECT("Code select"), CONTENT_ASSIST("Content assist"),AST_TRANSFORM("Ast Transforms");
-    
+    DEFAULT("_"),
+    COMPILER("Compiler"),
+    CLASSPATH("Classpath"),
+
+    DSL("DSL"),
+    CODE_SELECT("Code select"),
+    REFACTORING("Refactoring"),
+    AST_TRANSFORM("AST Transforms"),
+    CONTENT_ASSIST("Content assist"),
+    ORGANIZE_IMPORTS("Clean imports");
+
     TraceCategory(String label) {
         this.label = label;
     }
