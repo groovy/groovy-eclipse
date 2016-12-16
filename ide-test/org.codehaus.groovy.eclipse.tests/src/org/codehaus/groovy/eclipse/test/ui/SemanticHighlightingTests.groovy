@@ -264,6 +264,12 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), GROOVY_CALL))
     }
 
+    void testNotCategoryMethod() {
+        String contents = 'def x = "equals"' // equals is a DGM and had been improperly identified by CategoryTypeLookup
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE))
+    }
+
     void testVariadicMehtods() {
         String contents = '''\
             class X {

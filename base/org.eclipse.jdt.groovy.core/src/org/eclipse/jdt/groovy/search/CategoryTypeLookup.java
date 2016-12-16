@@ -15,12 +15,12 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -36,7 +36,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 /**
  * Looks up the type of an expression in the currently applicable categories.
  * Note that DefaultGroovyMethods are always considered to be an applicable
- * category. This lookup is not being used yet
+ * category.
  *
  * @author Andrew Eisenberg
  * @created Oct 25, 2009
@@ -47,58 +47,58 @@ public class CategoryTypeLookup implements ITypeLookup {
      * Looks up method calls to see if they are declared in any current categories
      */
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        if (node instanceof ConstantExpression || node instanceof VariableExpression) {
-            Set<ClassNode> categories = scope.getCategoryNames();
-            ClassNode currentType = objectExpressionType != null ? objectExpressionType : scope.getDelegateOrThis();
-            List<MethodNode> possibleMethods = new ArrayList<MethodNode>();
-            // go through all categories and look for and look for a method with the given name
-            String text = node.getText();
-            if (text.startsWith("${") && text.endsWith("}")) {
-                text = text.substring(2, text.length() - 1);
-            } else if (text.startsWith("$")) {
-                text = text.substring(1);
-            }
-            String getterName = AccessorSupport.GETTER.createAccessorName(text);
-            String setterName = AccessorSupport.SETTER.createAccessorName(text);
-            for (ClassNode category : categories) {
-                List<MethodNode> methods = category.getMethods(text);
+        if (node instanceof VariableExpression || (node instanceof ConstantExpression &&
+                ClassHelper.STRING_TYPE.equals(node.getType()) && node.getLength() <= node.getText().length())) {
+            TypeLookupResult result;
+            String simpleName = node.getText();
+            ClassNode expectedType = objectExpressionType != null ? objectExpressionType : scope.getDelegateOrThis();
+            ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(expectedType);
+            String getterName = AccessorSupport.GETTER.createAccessorName(simpleName);
+            String setterName = AccessorSupport.SETTER.createAccessorName(simpleName);
 
-                possibleMethods.addAll(methods);
-
-                // also check to see if the getter variant of any name is available
+            // go through all categories and look for a method with the given name
+            for (ClassNode category : scope.getCategoryNames()) {
+                for (MethodNode method : category.getMethods(simpleName)) {
+                    if ((result = tryMatch(method, scope, expectedType, normalizedType)) != null) {
+                        return result;
+                    }
+                }
+                // also check to see if an accessor variant is available
                 if (getterName != null) {
-                    methods = category.getMethods(getterName);
-                    for (MethodNode method : methods) {
+                    for (MethodNode method : category.getMethods(getterName)) {
                         if (method.isStatic() && AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER) {
-                            possibleMethods.add(method);
+                            if ((result = tryMatch(method, scope, expectedType, normalizedType)) != null) {
+                                return result;
+                            }
                         }
                     }
                 }
                 if (setterName != null) {
-                    methods = category.getMethods(setterName);
-                    for (MethodNode method : methods) {
+                    for (MethodNode method : category.getMethods(setterName)) {
                         if (method.isStatic() && AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER) {
-                            possibleMethods.add(method);
+                            if ((result = tryMatch(method, scope, expectedType, normalizedType)) != null) {
+                                return result;
+                            }
                         }
                     }
                 }
             }
+        }
+        return null;
+    }
 
-            ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(currentType);
-            for (MethodNode methodNode : possibleMethods) {
-                Parameter[] params = methodNode.getParameters();
-                if (params != null && params.length > 0 && isAssignableFrom(normalizedType, params[0].getType())) {
-                    ClassNode declaringClass = methodNode.getDeclaringClass();
-                    ClassNode returnType = SimpleTypeLookup.typeFromDeclaration(methodNode, currentType);
-                    TypeConfidence confidence = getConfidence(declaringClass);
-                    if (confidence == TypeConfidence.LOOSELY_INFERRED) {
-                        confidence = checkParameters(params, scope.getMethodCallArgumentTypes());
-                    }
-                    TypeLookupResult result = new TypeLookupResult(returnType, declaringClass, methodNode, confidence, scope);
-                    result.isGroovy = true;
-                    return result;
-                }
+    private TypeLookupResult tryMatch(MethodNode method, VariableScope scope, ClassNode expectedType, ClassNode normalizedType) {
+        Parameter[] params = method.getParameters();
+        if (params != null && params.length > 0 && isAssignableFrom(normalizedType, params[0].getType())) {
+            ClassNode declaringClass = method.getDeclaringClass();
+            ClassNode returnType = SimpleTypeLookup.typeFromDeclaration(method, expectedType);
+            TypeConfidence confidence = getConfidence(declaringClass);
+            if (confidence == TypeConfidence.LOOSELY_INFERRED) {
+                confidence = checkParameters(params, scope.getMethodCallArgumentTypes());
             }
+            TypeLookupResult result = new TypeLookupResult(returnType, declaringClass, method, confidence, scope);
+            result.isGroovy = true;
+            return result;
         }
         return null;
     }

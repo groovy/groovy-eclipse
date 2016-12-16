@@ -2069,8 +2069,7 @@ assert primaryExprType != null && dependentExprType != null;
             if (currentMapVariable != null && node instanceof ConstantExpression) {
                 inferredType = localMapProperties.get(currentMapVariable).get(((ConstantExpression) node).getConstantName());
             }
-            result = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED,
-                    result.scope);
+            result = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope);
         }
         return result;
     }
