@@ -40,7 +40,6 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
-import org.eclipse.jdt.internal.core.hierarchy.BindingMap;
 
 /**
  * An extension to the standard groovy ResolveVisitor that can ask JDT for types when groovy cannot find them. A groovy project in
@@ -110,11 +109,7 @@ public class JDTResolver extends ResolveVisitor {
         return null;
     }
     public static JDTClassNode getCachedNode(JDTResolver instance, String name) {
-        @SuppressWarnings("unchecked")
-        Map<TypeBinding, JDTClassNode> map = (Map<TypeBinding, JDTClassNode>)
-            ReflectionUtils.getPrivateField(BindingMap.class, "identityMap", instance.nodeCache);
-
-        for (JDTClassNode nodeFromCache : map.values()) {
+        for (JDTClassNode nodeFromCache : instance.nodeCache.values()) {
             if (name.equals(String.valueOf(nodeFromCache.jdtBinding.readableName()))) {
                 return nodeFromCache;
             }
@@ -133,7 +128,7 @@ public class JDTResolver extends ResolveVisitor {
     private Map<TypeBinding, JDTClassNode> inProgress = new IdentityHashMap<TypeBinding, JDTClassNode>();
 
     // Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
-    private BindingMap<JDTClassNode> nodeCache = new BindingMap<JDTClassNode>();
+    private Map<TypeBinding, JDTClassNode> nodeCache = new IdentityHashMap<TypeBinding, JDTClassNode>();
 
     private Set<ClassNode> resolvedClassNodes = new HashSet<ClassNode>();
 
