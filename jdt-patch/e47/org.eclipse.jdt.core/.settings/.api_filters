@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core" version="2">
+    <resource path="dom/org/eclipse/jdt/core/dom/IExtendedModifier.java" type="org.eclipse.jdt.core.dom.IExtendedModifier">
+        <filter comment="IExtendedModifier was never meant to be extendable (bug 416586)" id="403853384">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.IExtendedModifier"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

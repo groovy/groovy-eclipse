@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2007, 2011 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<project name="export-executable" default="build" basedir=".">
+
+	<property name="version" value="3.1.0" />
+	<property name="gcc-path" value="C:/java_tools/thisiscool-gcc/gcc-4.0" />
+	<property name="binaryname" value="ejavac${version}" />
+	<property name="dest" value="c:/temp/bingcj" />
+	<property name="extract_folder" value="${dest}/src/" />
+	<property name="work" value="${dest}/tmp/" />
+	<property name="source" value="C:/eclipse/I1111/eclipse/plugins/org.eclipse.jdt.source_3.1.0/src/org.eclipse.jdt.core_3.1.0/jdtcoresrc.zip" />
+	<property name="binaries" value="C:/eclipse/I1111/eclipse/plugins/org.eclipse.jdt.core_3.1.0/jdtcore.jar" />
+	<property name="gcj_script_name" value="export-executable.xml" />
+
+	<target name="build">
+		<echo message="target: ${dest}" />
+		<delete dir="${dest}" failonerror="no" />
+		<mkdir dir="${dest}" />
+
+		<unzip overwrite="yes" dest="${work}" src="${source}">
+			<patternset>
+				<include name="**/compiler/**" />
+				<exclude name="**/compiler/**/*.html" />
+				<exclude name="**/IScanner.java" />
+				<exclude name="**/ITerminalSymbols.java" />
+				<exclude name="**/DocumentElementParser.java" />
+				<exclude name="**/IDocumentElementRequestor.java" />
+				<exclude name="**/ISourceElementRequestor.java" />
+				<exclude name="**/SourceElementParser.java" />
+				<exclude name="**/SourceElementRequestorAdapter.java" />
+				<exclude name="**/SourceConstructorDeclaration.java" />
+				<exclude name="**/SourceFieldDeclaration.java" />
+				<exclude name="**/SourceMethodDeclaration.java" />
+				<exclude name="**/SourceTypeConverter.java" />
+			</patternset>
+		</unzip>
+
+		<unzip overwrite="yes" dest="${work}" src="${binaries}">
+			<patternset>
+				<include name="**/compiler/**/*.properties" />
+				<include name="**/*.rsc" />
+				<exclude name="**/*.class" />
+				<exclude name="**/*.mf" />
+			</patternset>
+		</unzip>
+
+		<!-- echo message="generate build script" />
+		<java classname="GenerateBuildScript">
+			<sysproperty key="user.dir" value="${basedir}/scripts"/>
+			<arg value="${gcj_script_name}"/>
+			<arg value="${basedir}/${work}"/>
+			<classpath>
+				<pathelement path="${basedir}/scripts"/>
+			</classpath>
+		</java>
+		
+		<echo message="run the new build script" />
+		<ant antfile="${basedir}/scripts/export-executable.xml"/>
+		<delete file="${basedir}/scripts/export-executable.xml"/ -->
+	</target>
+</project>
