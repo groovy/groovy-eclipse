@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<!-- I don't like how this works, it is terribly long and complicated for basically being just
@@ -9,7 +8,7 @@
 	    Maybe gradle? Or just a groovy script.
 	 -->
 
- 	<parent>
+	<parent>
 		<relativePath>../../pom.xml</relativePath>
 		<groupId>org.codehaus.groovy.eclipse</groupId>
 		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
@@ -41,9 +40,8 @@
 			That way there's no risk of accidentally deleting / overwriting something important. 
 			If all is working well? Then remove the '-test' -->
 		<dist.path>release/GRECLIPSE-test</dist.path>
-		<!-- if you change dist.targets you also have to change the list of <items> embedded in the 
-		     build-loqic below -->
-		<dist.targets>e4.5,e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
+		<!-- if you change dist.targets you also have to change the list of <items> embedded in the build-loqic below -->
+		<dist.targets>e4.7,e4.6,e4.5,e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
 	</properties>
 
 	<profiles>
@@ -125,15 +123,17 @@
 				<groupId>com.soebes.maven.plugins</groupId>
 				<artifactId>iterator-maven-plugin</artifactId>
 				<version>0.2</version>
-		        <executions>
-		          <execution>
-		            <phase>generate-resources</phase>
+				<executions>
+					<execution>
+					<phase>generate-resources</phase>
 					<goals>
 						<goal>executor</goal>
 					</goals>
 					<configuration> 
 						<items>
 							<!-- It would be nice to define the list of items as a variable up top but this not possible. -->
+							<item>e4.7</item>
+							<item>e4.6</item>
 							<item>e4.5</item>
 							<item>e4.4</item>
 							<item>e4.3</item>
@@ -141,7 +141,8 @@
 							<item>e4.2</item>
 							<item>e3.7</item>
 						</items>
-						<pluginExecutors> <pluginExecutor>
+						<pluginExecutors>
+							<pluginExecutor>
 							<plugin>
 								<groupId>org.springsource.ide</groupId>
 								<artifactId>p2.composite.site.maven.plugin</artifactId>
@@ -155,9 +156,10 @@
 									<param>http://dist.springsource.org/release/GRECLIPSE/${dist.version}/@item@</param>
 								</sites>
 							</configuration>
-						</pluginExecutor> </pluginExecutors> 
+							</pluginExecutor>
+						</pluginExecutors> 
 					</configuration>
-		          </execution>
+					</execution>
 				</executions>				
 			</plugin>		
 
