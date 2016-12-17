@@ -416,7 +416,7 @@ public class JDTResolver extends ResolveVisitor {
             return existingNode;
         }
         if (DEBUG) {
-            if (jdtBinding.id != TypeIds.T_void && !jdtBinding.isPrimitiveOrBoxedPrimitiveType()) {
+            if (jdtBinding.id != TypeIds.T_void /*&& !jdtBinding.isPrimitiveOrBoxedPrimitiveType()*/) {
                 log("createJDTClassNode: Building new JDTClassNode for binding " + toString(jdtBinding));
             }
         }
