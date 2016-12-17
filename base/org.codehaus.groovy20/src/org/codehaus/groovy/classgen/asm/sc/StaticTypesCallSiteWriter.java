@@ -324,7 +324,6 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         controller.getCompileStack().removeVar(var);
     }
 
-    @SuppressWarnings("unchecked")
     private boolean makeGetPrivateFieldWithBridgeMethod(final Expression receiver, final ClassNode receiverType, final String fieldName, final boolean safe, final boolean implicitThis) {
         FieldNode field = receiverType.getField(fieldName);
         ClassNode classNode = controller.getClassNode();

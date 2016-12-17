@@ -120,9 +120,9 @@ public class GroovyLogManager {
                 long now = System.currentTimeMillis();
                 long elapsed = now - then.longValue();
                 if ((message != null) && (message.length() > 0)) {
-                    log(category,"Event complete: "+elapsed + "ms: " + event + " (" + message + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    log(category,"Event complete: "+elapsed + "ms: " + event + " (" + message + ")");
                 } else {
-                    log(category,"Event complete: "+elapsed + "ms: " + event); //$NON-NLS-1$ //$NON-NLS-2$
+                    log(category,"Event complete: "+elapsed + "ms: " + event);
                 }
             }
             timers.remove(event);

@@ -323,7 +323,6 @@ public class GroovyTypeCheckingExtensionSupport extends AbstractTypeCheckingExte
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<MethodNode> handleMissingMethod(final ClassNode receiver, final String name, final ArgumentListExpression argumentList, final ClassNode[] argumentTypes, final MethodCall call) {
         List<Closure> onMethodSelection = eventHandlers.get("handleMissingMethod");
         List<MethodNode> methodList = new LinkedList<MethodNode>();
@@ -345,7 +344,6 @@ public class GroovyTypeCheckingExtensionSupport extends AbstractTypeCheckingExte
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<MethodNode> handleAmbiguousMethods(final List<MethodNode> nodes, final Expression origin) {
         List<Closure> onMethodSelection = eventHandlers.get("handleAmbiguousMethods");
         List<MethodNode> methodList = nodes;

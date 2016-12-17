@@ -268,7 +268,6 @@ public class GenericsUtils {
         return type;
     }
 
-    @SuppressWarnings("unchecked")
     public static Map<String,ClassNode> createGenericsSpec(ClassNode current) {
         return createGenericsSpec(current, Collections.EMPTY_MAP);
     }
