@@ -15,15 +15,22 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * A subtype of the Groovy ErrorCollector that can be made more JDT friendly (not throwing exceptions when errors occur and doing
- * nicer mapping from errors to JDT problems). Still much to be done with this.
+ * A subtype of the Groovy ErrorCollector that can be made more JDT friendly
+ * (not throwing exceptions when errors occur and doing nicer mapping from
+ * errors to JDT problems). Still much to be done with this.
  *
  * @author Andy Clement
  */
@@ -35,11 +42,20 @@ public class GroovyErrorCollectorForJDT extends ErrorCollector {
 
     @Override
     public void addErrorAndContinue(Message message) {
-        // System.err.println(message);
-        // FIXASC SimpleMessage can be an error, it just isn't a syntax error - should be recorded with appropriate priority.
-        // Look at creators of SimpleMessage - are they all errors?
-        if (message instanceof SimpleMessage) {
-            System.err.println("SimpleMessage: " + ((SimpleMessage) message).getMessage());
+        try {
+            String error;
+            if (message instanceof SimpleMessage) {
+                error = ((SimpleMessage) message).getMessage();
+            } else {
+                StringWriter writer = new StringWriter();
+                message.write(new PrintWriter(writer));
+                error = writer.toString().trim();
+            }
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, error);
+            }
+        } catch (Throwable t) {
+            Util.log(t);
         }
         super.addErrorAndContinue(message);
     }
