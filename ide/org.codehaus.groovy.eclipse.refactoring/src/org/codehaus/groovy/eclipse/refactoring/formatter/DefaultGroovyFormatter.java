@@ -92,7 +92,8 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
             } catch (BadLocationException e) {
                 GroovyCore.logException("Exception when calculating offsets for formatting", e);
             }
-        } else if (formatLength == 0 && formatOffset == 0) { // TODO: Can the refactorings set a selection range instead of [0,0]?
+        } else {
+            formatOffset = 0;
             formatLength = document.getLength();
         }
     }
