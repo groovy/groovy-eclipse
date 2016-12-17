@@ -706,6 +706,14 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('k}'), 1, VARIABLE))
     }
 
+    void testGString3() {
+        String contents = 'def a, b = "/$a/b/c"' // no regex at offset 15
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('$a') + 1, 1, VARIABLE))
+    }
+
     void testRegex() {
         String contents = '/fdsfasdfas/'
         assertHighlighting(contents,
@@ -735,9 +743,8 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('/$'), 2, REGEXP),
-            new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('/'), 1, REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('/$'), '/$a/'.length(), REGEXP),
+            new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE))
     }
 
     void testSlashyString4() {
@@ -746,9 +753,8 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('/$'), 2, REGEXP),
-            new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('/'), 1, REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('/$'), '/${a}/'.length(), REGEXP),
+            new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE))
     }
 
     void testSlashyString5() {
@@ -788,8 +794,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('$/\n$'), '$/\n$'.length(), REGEXP),
-            new HighlightedTypedPosition(contents.indexOf('$\n/$'), '$\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n${a}$\n/$'.length(), REGEXP))
     }
 
     void testMultiLineSlashyString5() {
@@ -799,8 +804,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('$/\n$'), '$/\n$'.length(), REGEXP),
-            new HighlightedTypedPosition(contents.indexOf('$\n/$'), '$\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n$a$\n/$'.length(), REGEXP))
     }
 
     void testUnknown() {

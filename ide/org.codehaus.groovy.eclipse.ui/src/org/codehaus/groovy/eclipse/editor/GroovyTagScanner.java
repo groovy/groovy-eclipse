@@ -537,7 +537,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
         combinedWordRule.addWordMatcher(groovyKeywordsMatcher);
 
-        // GJDK words, including additional keywords
+        // additional GJDK words
         WordMatcher gjdkWordsMatcher = new WordMatcher();
         token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
         if (additionalGJDKWords != null) {

@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
@@ -59,9 +60,14 @@ import org.eclipse.jface.text.Position;
  */
 public class SemanticHighlightingReferenceRequestor extends SemanticReferenceRequestor {
 
+    private static final Position NO_POSITION;
+    static {
+        NO_POSITION = new Position(0);
+        NO_POSITION.delete();
+    }
+
     private char[] contents;
-    private boolean insideSlashy;
-    private boolean insideDollarSlashy;
+    private Position lastGString = NO_POSITION;
     private final GroovyCompilationUnit unit;
     private static final boolean DEBUG = false;
 
@@ -126,25 +132,27 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         } else if (node instanceof MethodPointerExpression) {
             pos = handleMethodReference((MethodPointerExpression) node);
 
-        } else if (node instanceof ConstantExpression) {
-            if (!(result.declaration instanceof MethodNode)) {
-                pos = handleConstantExpression((ConstantExpression) node);
-            } else {
-                pos = handleMethodReference((ConstantExpression) node, result, (enclosingElement instanceof ImportDeclaration));
-            }
-
-        } else if (node instanceof MapEntryExpression) {
-            pos = handleMapEntryExpression((MapEntryExpression) node);
-
         } else if (node instanceof Parameter) {
             pos = handleVariableExpression((Parameter) node, result.scope);
 
         } else if (node instanceof VariableExpression) {
             pos = handleVariableExpression((VariableExpression) node, result.scope, enclosingElement);
 
+        } else if (node instanceof ConstantExpression) {
+            if (result.declaration instanceof MethodNode) {
+                pos = handleMethodReference((ConstantExpression) node, result, (enclosingElement instanceof ImportDeclaration));
+            } else {
+                pos = handleConstantExpression((ConstantExpression) node);
+            }
+        } else if (node instanceof GStringExpression) {
+            pos = handleGStringExpression((GStringExpression) node);
+
+        } else if (node instanceof MapEntryExpression) {
+            pos = handleMapEntryExpression((MapEntryExpression) node);
+
         } else if (DEBUG) {
             String type = node.getClass().getSimpleName();
-            if (!type.matches("ClassNode|(Class|Binary|ArgumentList|Closure(List)?|Declaration|Property|GString|List|Map)Expression"))
+            if (!type.matches("ClassNode|(Class|Binary|ArgumentList|Closure(List)?|Declaration|Property|List|Map)Expression"))
                 System.err.println("found: " + type);
         }
 
@@ -274,54 +282,6 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         return null;
     }
 
-    private HighlightedTypedPosition handleMapEntryExpression(MapEntryExpression expr) {
-        Expression key = expr.getKeyExpression();
-        if (key instanceof ConstantExpression) {
-            unitLength(); // ensure loaded
-            char c = contents[key.getStart()];
-            if (c != '\'' && c != '"' && c != '/') {
-                return new HighlightedTypedPosition(key.getStart(), key.getLength(), HighlightKind.MAP_KEY);
-            }
-        }
-        return null;
-    }
-
-    private HighlightedTypedPosition handleConstantExpression(ConstantExpression expr) {
-        if (expr.getStart() > unitLength()) {
-            return null;
-        }
-
-        int offset = expr.getStart(),
-            length = expr.getLength();
-
-        HighlightedTypedPosition pos = null;
-        if (insideSlashy) {
-            pos = new HighlightedTypedPosition(offset, length, HighlightKind.REGEXP);
-            if (contents[expr.getEnd() - 1] == '/') {
-                insideSlashy = false;
-            }
-        } else if (insideDollarSlashy) {
-            pos = new HighlightedTypedPosition(offset, length, HighlightKind.REGEXP);
-            if (contents[expr.getEnd() - 2] == '/' && contents[expr.getEnd() - 1] == '$') {
-                insideDollarSlashy = false;
-            }
-        } else if (contents[expr.getStart()] == '/') {
-            pos = new HighlightedTypedPosition(offset, length, HighlightKind.REGEXP);
-            if (contents[expr.getEnd() - 1] != '/') {
-                insideSlashy = true;
-            }
-        } else if (contents[expr.getStart()] == '$' && contents[expr.getStart() + 1] == '/') {
-            pos = new HighlightedTypedPosition(offset, length, HighlightKind.REGEXP);
-            if (contents[expr.getEnd() - 2] != '/' || contents[expr.getEnd() - 1] != '$') {
-                insideDollarSlashy = true;
-            }
-        } else if (isNumber(expr.getType())) {
-            // GroovyTagScanner sees numbers but offset/length here is more accurate
-            pos = new HighlightedTypedPosition(offset, length, HighlightKind.NUMBER);
-        }
-        return pos;
-    }
-
     private HighlightedTypedPosition handleVariableExpression(Parameter expr, VariableScope scope) {
         HighlightKind kind = HighlightKind.PARAMETER;
         if (isCatchParam(expr, scope) || isForLoopParam(expr, scope)) {
@@ -343,6 +303,57 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         if (!isSuperOrThis && (!isParam || isIt || (((Parameter) expr.getAccessedVariable()).getLineNumber() > 0) || source instanceof SourceType)) {
             HighlightKind kind = isParam ? (isIt ? HighlightKind.GROOVY_CALL : HighlightKind.PARAMETER) : HighlightKind.VARIABLE;
             return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
+        }
+        return null;
+    }
+
+    private HighlightedTypedPosition handleConstantExpression(ConstantExpression expr) {
+        int offset = expr.getStart(),
+            length = expr.getLength();
+
+        HighlightedTypedPosition pos = null;
+        if (!lastGString.includes(offset)) {
+            if (isNumber(expr.getType())) {
+                pos = new HighlightedTypedPosition(offset, length, HighlightKind.NUMBER);
+            } else if (expr.getEnd() <= unitLength()) {
+                // check for /.../ or $/.../$ form of string literal (usually a regex literal)
+                boolean slashy = contents[offset] == '/' && contents[expr.getEnd() - 1] == '/';
+                boolean dollar = !slashy && contents[offset] == '$' && contents[offset + 1] == '/' &&
+                        contents[expr.getEnd() - 2] == '/' && contents[expr.getEnd() - 1] == '$';
+                if (slashy || dollar) {
+                    pos = new HighlightedTypedPosition(offset, length, HighlightKind.REGEXP);
+                }
+            }
+        }
+        return pos;
+    }
+
+    private HighlightedTypedPosition handleGStringExpression(GStringExpression expr) {
+        int offset = expr.getStart(),
+            length = expr.getLength();
+
+        // save to help deal with forthcoming ConstantExpression nodes
+        lastGString = new Position(offset, length);
+
+        // check for slashy form of GString
+        if (expr.getEnd() <= unitLength()) {
+            String source = String.valueOf(contents, offset, length);
+            if ((source.startsWith("/") && source.endsWith("/")) ||
+                    (source.startsWith("$/") && source.endsWith("/$"))) {
+                return new HighlightedTypedPosition(lastGString, HighlightKind.REGEXP);
+            }
+        }
+        return null;
+    }
+
+    private HighlightedTypedPosition handleMapEntryExpression(MapEntryExpression expr) {
+        Expression key = expr.getKeyExpression();
+        if (key instanceof ConstantExpression) {
+            unitLength(); // ensure loaded
+            char c = contents[key.getStart()];
+            if (c != '\'' && c != '"' && c != '/') {
+                return new HighlightedTypedPosition(key.getStart(), key.getLength(), HighlightKind.MAP_KEY);
+            }
         }
         return null;
     }
