@@ -11,15 +11,6 @@
   <version>2.9.2-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
-  <dependencies>
-    <dependency>
-      <type>eclipse-feature</type>
-      <groupId>org.codehaus.groovy.eclipse</groupId>
-      <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
-      <version>0.0.0</version>
-    </dependency>
-  </dependencies>
-
   <!--Most useful and readable info on configure tycho I found is here:
       https://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
 
@@ -44,8 +35,8 @@
             <!--include>**/alltests/AllGroovyAndJDTTests.java</include-->
           </includes>
 
-          <!--dependencies>
-            <dependency>
+          <dependencies>
+            <!--dependency>
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy24.feature</artifactId>
               <version>0.0.0</version>
@@ -54,14 +45,14 @@
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
               <version>0.0.0</version>
-            </dependency>
+            </dependency-->
             <dependency>
               <type>eclipse-feature</type>
               <groupId>org.codehaus.groovy.eclipse</groupId>
               <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
               <version>0.0.0</version>
             </dependency>
-          </dependencies-->
+          </dependencies>
 
         </configuration>
       </plugin>
