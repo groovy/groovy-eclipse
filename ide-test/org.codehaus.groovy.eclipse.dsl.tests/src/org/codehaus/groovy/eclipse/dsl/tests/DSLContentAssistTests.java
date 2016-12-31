@@ -15,10 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import groovy.lang.Closure;
-
-import junit.framework.Test;
-
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
@@ -31,7 +27,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * @author Andrew Eisenberg
  * @created Jul 27, 2011
  */
-public class DSLContentAssistTests extends CompletionTestCase {
+public final class DSLContentAssistTests extends CompletionTestCase {
 
     private static final String COMMAND_CHAIN_NO_ARGS =
             "contribute (currentType('Inner')) {\n" +
@@ -50,10 +46,10 @@ public class DSLContentAssistTests extends CompletionTestCase {
             "  delegatesTo type: 'Other', noParens: true\n" +
             "}";
     private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" +
-            "    setDelegateType(String)\n" +
+            "  setDelegateType(String)\n" +
             "}";
 
-    public static Test suite() {
+    public static junit.framework.Test suite() {
         return newTestSuite(DSLContentAssistTests.class);
     }
 
@@ -62,7 +58,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
         super.setUp();
         AbstractDSLInferencingTest.refreshExternalFoldersProject();
         EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
-        EclipseTestSetup.withProject(new Closure<IProject>(null) {
+        EclipseTestSetup.withProject(new groovy.lang.Closure<IProject>(null) {
             public Void doCall(IProject project) {
                 GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
                 GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
@@ -87,29 +83,30 @@ public class DSLContentAssistTests extends CompletionTestCase {
     //
 
     public void testDSLProposalFirstStaticField() throws Exception {
-        String contents = "@Singleton class Foo { static aaa }\n Foo.s";
+        String contents = "@Singleton class Foo { static aaa }\n Foo.";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ".")));
-        assertProposalOrdering(proposals, "instance", "aaa");
+        assertProposalOrdering(proposals, "getInstance", "aaa");
     }
 
     public void testDSLProposalFirstStaticMethod() throws Exception {
-        String contents = "@Singleton class Foo { static aaa() { } }\n Foo.s";
+        String contents = "@Singleton class Foo { static aaa() { } }\n Foo.";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ".")));
         assertProposalOrdering(proposals, "getInstance", "aaa");
     }
 
     public void testDSLProposalFirstMethod1() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
-                "new SwingBuilder().edt {\n" +
-                "delegate.x\n" +
+                "  new SwingBuilder().edt {\n" +
+                "  delegate.x\n" +
                 "}";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "delegate.")));
         assertProposalOrdering(proposals, "frame", "registerBinding");
     }
+
     public void testDSLProposalFirstMethod2() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
-                "new SwingBuilder().edt {\n" +
-                "\n" +
+                "  new SwingBuilder().edt {\n" +
+                "  \n" +
                 "}";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "{\n")));
         assertProposalOrdering(proposals, "frame", "registerBinding");
@@ -118,8 +115,8 @@ public class DSLContentAssistTests extends CompletionTestCase {
     // proposals should not exist since not applied to 'this'
     public void testDSLProposalFirstMethod3() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
-                "new SwingBuilder().edt {\n" +
-                "this.x\n" +
+                "  new SwingBuilder().edt {\n" +
+                "  this.x\n" +
                 "}";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "this.")));
         proposalExists(proposals, "frame", 0);
@@ -128,11 +125,9 @@ public class DSLContentAssistTests extends CompletionTestCase {
 
     // GRECLIPSE-1324
     public void testEmptyClosure1() throws Exception {
-        createDsls(
-                SET_DELEGATE_ON_INT);
+        createDsls(SET_DELEGATE_ON_INT);
         String contents = "1.foo {\n" +
-                "    // here\n" +
-                "}";
+                "    // here\n" + "}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "\n    "));
 
         // should see proposals from String, not Integer
@@ -145,14 +140,14 @@ public class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "capitalize", 1); // DGM
         proposalExists(proposals, "digits", 0);
     }
+
     // GRECLIPSE-1324
     public void testEmptyClosure2() throws Exception {
-        createDsls(
-                SET_DELEGATE_ON_INT);
+        createDsls(SET_DELEGATE_ON_INT);
         String contents = "1.foo {\n" +
-                "    to\n" +
+                "  to\n" +
                 "}";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "\n    "));
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " to") + 1);
 
         // should see proposals from String, not Integer
         proposalExists(proposals, "toUpperCase()", 1);
@@ -250,12 +245,12 @@ public class DSLContentAssistTests extends CompletionTestCase {
         createDsls(NO_PARENS_FOR_DELEGATE);
         String contents =
                 "class Other {\n" +
-                        "  def blart(a, b, c) { }\n" +
-                        "  def flart(a) { }\n" +
-                        "}\n" +
-                        "class Inner { }\n" +
-                        "def val = new Inner()\n" +
-                        "val.fl";
+                "  def blart(a, b, c) { }\n" +
+                "  def flart(a) { }\n" +
+                "}\n" +
+                "class Inner { }\n" +
+                "def val = new Inner()\n" +
+                "val.fl";
 
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "val.fl"));
