@@ -30,12 +30,12 @@
           <showEclipseLog>true</showEclipseLog>
           <!--skip>${maven.test.skip}</skip-->
           <skip>false</skip>
-          <useUIHarness>true</useUIHarness>
+          <testFailureIgnore>true</testFailureIgnore>
+          <useUIHarness>false</useUIHarness>
           <useUIThread>false</useUIThread>
 
           <includes>
-            <include>**/alltests/SanityTest.java</include>
-            <!--include>**/alltests/GroovyJDTTests.java</include-->
+            <include>**/alltests/GroovyJDTTests.java</include>
             <!--include>**/alltests/AllGroovyAndJDTTests.java</include-->
           </includes>
 
