@@ -27,8 +27,8 @@
         <configuration>
           <!--argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine-->
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
-          <!--showEclipseLog>true</showEclipseLog>
-          <skip>${maven.test.skip}</skip-->
+          <showEclipseLog>true</showEclipseLog>
+          <!--skip>${maven.test.skip}</skip-->
           <skip>false</skip>
           <useUIHarness>true</useUIHarness>
           <useUIThread>false</useUIThread>
