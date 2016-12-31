@@ -77,21 +77,6 @@
 		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
 		<module>ide/org.codehaus.groovy.eclipse.ui</module>
 
-
-		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
-		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
-
-		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.junit.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.quickfix.test</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.refactoring.test</module>
-
-		<module>ide-test/org.codehaus.groovy.alltests</module>
-
 		<module>ide/Feature-org.codehaus.groovy18.feature</module>
 		<module>ide/Feature-org.codehaus.groovy20.feature</module>
 		<module>ide/Feature-org.codehaus.groovy21.feature</module>
@@ -101,7 +86,22 @@
 		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
-		<!--module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module-->
+
+
+		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
+		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
+
+		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.junit.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.quickfix.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.refactoring.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
+
+		<module>ide-test/org.codehaus.groovy.alltests</module>
+		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
 
 		<!-- m2e integration -->
 		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
@@ -432,6 +432,7 @@
 				<artifactId>target-platform-configuration</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
+					<pomDependencies>consider</pomDependencies>
 					<!--dependency-resolution>
 						<extraRequirements>
 							<requirement>
