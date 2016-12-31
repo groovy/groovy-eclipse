@@ -25,14 +25,10 @@
         <artifactId>tycho-surefire-plugin</artifactId>
         <version>${tycho-version}</version>
         <configuration>
-          <!--argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine-->
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
-          <!--skip>${maven.test.skip}</skip-->
-          <skip>false</skip>
           <testFailureIgnore>true</testFailureIgnore>
-          <useUIHarness>false</useUIHarness>
-          <useUIThread>false</useUIThread>
+          <useUIHarness>false</useUIHarness><!-- TODO: Set to true once GTK/SWT can create a display -->
 
           <includes>
             <include>**/alltests/GroovyJDTTests.java</include>
@@ -53,6 +49,7 @@
             <dependency>
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
+              <version>${project.version}</version>
             </dependency>
           </dependencies>
 
