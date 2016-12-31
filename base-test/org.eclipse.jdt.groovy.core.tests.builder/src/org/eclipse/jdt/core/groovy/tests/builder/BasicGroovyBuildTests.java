@@ -284,7 +284,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
     }
 
     public void testNPEAnno_1398() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5");
+        IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
@@ -302,14 +302,13 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "	public static final String instance= \"abc\";\n"
                 + "}");
 
-        env.addGroovyClass(root, "", "A", "@Anno(Const.instance)\n"
-                + "class A {}\n");
-
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Anno", "Const", "A");
+        expectingCompiledClassesV("Anno", "Const");
         expectingNoProblems();
+
         IPath pathToSecond = env.addGroovyClass(root, "", "A",
-                "@Anno(Const.instance)\n" + "class A {}\n");
+                "@Anno(Const.instance)\n" +
+                "class A {}\n");
         incrementalBuild(projectPath);
         expectingNoProblems();
         expectingCompiledClassesV("A");
