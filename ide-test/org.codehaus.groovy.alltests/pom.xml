@@ -18,40 +18,6 @@
       http://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
    -->
 
-  <!-- For reference. This is what was in the PDE build before: -->
-
-  <!--
-  <target name="-runTestSuite">
-    <ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
-      <property name="data-dir" value="${test.workspace} -clean" />
-      <property name="plugin-name" value="org.codehaus.groovy.alltests" />
-      <property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
-      <property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests.xml" />
-      <property name="eclipse-home" value="${test.eclipse.host}" />
-      <property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
-      <property name="org.eclipse.test" value="3.3.100"/>
-      <property name="arch" value="${test_arch}"/>
-      <property name="os" value="${test_os}"/>
-      <property name="ws" value="${test_ws}"/>
-      <property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dgroovy.compiler.level=${compiler.level}"/>
-    </ant>
-    <ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
-      <property name="data-dir" value="${test.workspace} -clean" />
-      <property name="plugin-name" value="org.codehaus.groovy.alltests" />
-      <property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
-      <property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests.xml" />
-      <property name="eclipse-home" value="${test.eclipse.host}" />
-      <property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
-      <property name="org.eclipse.test" value="3.3.100"/>
-      <property name="arch" value="${test_arch}"/>
-      <property name="os" value="${test_os}"/>
-      <property name="ws" value="${test_ws}"/>
-      <property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dgroovy.compiler.level=${compiler.level}"/>
-    </ant>
-  </target>
-   -->
-
-<!--
   <build>
     <plugins>
       <plugin>
@@ -59,18 +25,19 @@
         <artifactId>tycho-surefire-plugin</artifactId>
         <version>${tycho-version}</version>
         <configuration>
-           <skip>${maven.test.skip}</skip>
-          <useUIThread>true</useUIThread>
-          <useUIHarness>true</useUIHarness>
+          <!--argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine-->
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
-          <argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
+          <!--skip>${maven.test.skip}</skip-->
+          <useUIHarness>true</useUIHarness>
+          <useUIThread>true</useUIThread>
 
           <includes>
-            <include>**/alltests/AllGroovyAndJDTTests.java</include>
+            <include>**/alltests/GroovyJDTTests.java</include>
+            <!--include>**/alltests/AllGroovyAndJDTTests.java</include-->
           </includes>
 
-          <dependencies>
+          <!--dependencies>
             <dependency>
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
@@ -86,11 +53,42 @@
               <artifactId>org.eclipse.rcp</artifactId>
               <version>0.0.0</version>
             </dependency>
-          </dependencies>
+          </dependencies-->
 
         </configuration>
       </plugin>
     </plugins>
   </build>
--->
+
+  <!-- For reference, this is what was in the PDE build before:
+  <target name="-runTestSuite">
+    <ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
+      <property name="data-dir" value="${test.workspace} -clean" />
+      <property name="plugin-name" value="org.codehaus.groovy.alltests" />
+      <property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
+      <property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests.xml" />
+      <property name="eclipse-home" value="${test.eclipse.host}" />
+      <property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
+      <property name="org.eclipse.test" value="3.3.100"/>
+      <property name="arch" value="${test_arch}"/>
+      <property name="os" value="${test_os}"/>
+      <property name="ws" value="${test_ws}"/>
+      <property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dgroovy.compiler.level=${compiler.level}"/>
+    </ant>
+    <ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
+      <property name="data-dir" value="${test.workspace} -clean" />
+      <property name="plugin-name" value="org.codehaus.groovy.alltests" />
+      <property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
+      <property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests.xml" />
+      <property name="eclipse-home" value="${test.eclipse.host}" />
+      <property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
+      <property name="org.eclipse.test" value="3.3.100"/>
+      <property name="arch" value="${test_arch}"/>
+      <property name="os" value="${test_os}"/>
+      <property name="ws" value="${test_ws}"/>
+      <property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dgroovy.compiler.level=${compiler.level}"/>
+    </ant>
+  </target>
+  -->
+
 </project>

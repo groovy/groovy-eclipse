@@ -439,6 +439,25 @@
 				<artifactId>target-platform-configuration</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
+					<dependency-resolution>
+						<extraRequirements>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.codehaus.groovy.eclipse.feature</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.codehaus.groovy24.feature</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<!--requirement>
+								<type>eclipse-feature</type>
+								<id>org.eclipse.rcp</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement-->
+						</extraRequirements>
+					</dependency-resolution>
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -469,8 +488,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- We'll be doing our own deployment by antrun task uploading to s3.
-				Disable default behavior: -->
+			<!-- We'll be doing our own deployment by antrun task uploading to s3. Disable default behavior: -->
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
 				<version>2.5</version>
