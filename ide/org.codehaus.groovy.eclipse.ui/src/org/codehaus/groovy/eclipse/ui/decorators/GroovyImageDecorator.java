@@ -17,17 +17,16 @@ package org.codehaus.groovy.eclipse.ui.decorators;
 
 import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isGroovyLikeFileName;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
 import org.eclipse.jdt.ui.JavaElementImageDescriptor;
 import org.eclipse.jdt.ui.ProblemsLabelDecorator;
@@ -36,26 +35,12 @@ import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.internal.WorkbenchPlugin;
 
 public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDecorator {
 
-    protected ILabelDecorator problemsDecorator = new ProblemsLabelDecorator();
-    protected ScriptFolderSelector scriptFolderSelector = new ScriptFolderSelector(null);
-    // declare locally to prevent accidentally loading the GroovyNature class or its bundle
-    protected static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature";
-
-    public GroovyImageDecorator() {
-        // receive notification when script folders change
-        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(new IPreferenceChangeListener() {
-            public void preferenceChange(PreferenceChangeEvent event) {
-                // preference has changed; ensure that the new preferece is used
-                scriptFolderSelector = new ScriptFolderSelector(null);
-                // TODO: we should automatically do a refresh of all places where this is used, but we are not doing that now
-            }
-        });
-    }
+    private ILabelDecorator problemsDecorator = new ProblemsLabelDecorator();
+    private Map<IProject, ScriptFolderSelector> scriptFolderSelectors = new HashMap<IProject, ScriptFolderSelector>(); // TODO: GroovyParser maintains this same cache
 
     public Image decorateImage(Image image, Object element) {
         if (preventRecursion) {
@@ -105,45 +90,43 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
     private ILabelDecorator defaultDecorator;
 
     private Image getJavaElementImageDescriptor(Image image, IResource resource) {
-        int flags;
-        if (image != null) {
-            Rectangle rect = image.getBounds();
-            flags = (rect.width == 16) ? JavaElementImageProvider.SMALL_ICONS : 0;
-        } else {
-            flags = JavaElementImageProvider.SMALL_ICONS;
+        int flags = 0;
+        Point size = JavaElementImageProvider.SMALL_SIZE;
+        if (image != null && image.getBounds().width > 16) {
+            size = JavaElementImageProvider.BIG_SIZE;
         }
-        Point size = useSmallSize(flags) ? JavaElementImageProvider.SMALL_SIZE : JavaElementImageProvider.BIG_SIZE;
-        ImageDescriptor desc;
+        ImageDescriptor desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
         try {
-            if (resource.getProject().hasNature(GROOVY_NATURE)) {
-                if (scriptFolderSelector.isScript(resource.getProjectRelativePath().toPortableString().toCharArray())) {
-                    desc = GroovyPluginImages.DESC_GROOVY_FILE_SCRIPT;
+            if (isGroovyProject(resource.getProject())) {
+                if (isRuntimeCompiled(resource)) {
+                    desc = GroovyPluginImages.DESC_GROOVY_FILE;
+                    //flags |= JavaElementImageDescriptor.STATIC;
+                    flags |= JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS;
                 } else {
                     desc = GroovyPluginImages.DESC_GROOVY_FILE;
                 }
-            } else {
-                desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
             }
-        } catch (CoreException e) {
-            desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return getImage(new JavaElementImageDescriptor(desc, 0, size));
+        return getImage(new JavaElementImageDescriptor(desc, flags, size));
     }
 
-    private static boolean useSmallSize(int flags) {
-        return (flags & JavaElementImageProvider.SMALL_ICONS) != 0;
+    private boolean isGroovyProject(IProject project) throws CoreException {
+        return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature");
+    }
+
+    private boolean isRuntimeCompiled(IResource resource) throws CoreException {
+        ScriptFolderSelector scriptFolderSelector = scriptFolderSelectors.get(resource.getProject());
+        if (scriptFolderSelector == null) {
+            scriptFolderSelectors.put(resource.getProject(), (scriptFolderSelector = new ScriptFolderSelector(resource.getProject())));
+        }
+        return scriptFolderSelector.isScript(resource);
     }
 
     private Image getImage(ImageDescriptor descriptor) {
-        if (descriptor == null) {
-            return null;
-        }
-        if (registry == null) {
-            registry = JavaPlugin.getImageDescriptorRegistry();
-        }
-        return registry.get(descriptor);
+        return JavaPlugin.getImageDescriptorRegistry().get(descriptor);
     }
-    private ImageDescriptorRegistry registry;
 
     public boolean isLabelProperty(Object element, String property) {
         return false;

@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -23,58 +24,75 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
 
-public class ScriptFolderSelector {
+public class ScriptFolderSelector implements IEclipsePreferences.IPreferenceChangeListener {
+
+    public static boolean isEnabled(IProject project) {
+        IEclipsePreferences preferences = getGroovyPreferences(project);
+        if (preferences != null) {
+            return preferences.getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        }
+        return false;
+    }
+
+    private static IEclipsePreferences getGroovyPreferences(IProject project) {
+        IEclipsePreferences preferences = null;
+        Activator activator = Activator.getDefault();
+        if (activator != null) {
+            preferences = activator.getProjectOrWorkspacePreferences(project);
+        }
+        return preferences;
+    }
 
     public static enum FileKind {
         SOURCE, SCRIPT, SCRIPT_NO_COPY
     }
 
-    private char[][] scriptPatterns;
+    //--------------------------------------------------------------------------
+
+    private boolean enabled;
     private boolean[] doCopy;
-    private final boolean enabled;
+    private char[][] scriptPatterns;
     private IEclipsePreferences preferences;
 
-    public static boolean isEnabled(IProject project) {
-        // disabled by default
-        Activator activator = Activator.getDefault();
-        // perform null check since this is occasionally being called during shutdown after the plugin has been closed
-        if (activator != null) {
-            IEclipsePreferences preferences = activator.getProjectOrWorkspacePreferences(project);
-            return activator.getBooleanPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+    public ScriptFolderSelector(IProject project) {
+        preferences = getGroovyPreferences(project);
+        if (preferences == null) {
+            enabled = false;
         } else {
-            return false;
+            preferenceChange(null);
         }
     }
 
-    public ScriptFolderSelector(IProject project) {
-        Activator activator = Activator.getDefault();
-        if (activator == null) {
-            // either in the middle of startup or shutdown
-            this.enabled = false;
-        } else {
-            preferences = activator.getProjectOrWorkspacePreferences(project);
-            // disabled by default
-            boolean isEnabled = activator.getBooleanPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-            if (!isEnabled) {
-                this.enabled = false;
-                this.scriptPatterns = null;
-            } else {
-                init(activator.getListStringPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
-                        Activator.DEFAULT_GROOVY_SCRIPT_FILTER));
-                this.enabled = true;
+    /** Do not use! For testing only. */
+    protected ScriptFolderSelector(List<String> preferences, boolean enabled) {
+        this.enabled = enabled;
+        initFilters(preferences);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        if (preferences != null) {
+            try {
+                preferences.removePreferenceChangeListener(this);
+            } finally {
+                preferences = null;
+                enabled = false;
             }
         }
     }
 
-    /**
-     * do not use! For testing only
-     */
-    protected ScriptFolderSelector(List<String> preferences, boolean isEnabled) {
-        this.enabled = isEnabled;
-        init(preferences);
+    public void preferenceChange(IEclipsePreferences.PreferenceChangeEvent event) {
+        doCopy = null;
+        scriptPatterns = null;
+        enabled = preferences.getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        if (enabled) {
+            String filters = preferences.get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+            initFilters(Arrays.asList(filters.split(",")));
+        }
     }
 
-    private void init(List<String> listStringPreference) {
+    private void initFilters(List<String> listStringPreference) {
         if (listStringPreference == null) {
             scriptPatterns = CharOperation.NO_CHAR_CHAR;
             doCopy = new boolean[0];
@@ -158,5 +176,4 @@ public class ScriptFolderSelector {
         }
         return isScript(file.getProjectRelativePath().toPortableString().toCharArray());
     }
-
 }

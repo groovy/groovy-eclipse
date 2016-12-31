@@ -2,14 +2,14 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point
-         id="syntaxHighlightingExtension"
-         name="Groovy Editor Syntax Highlighting Extension"
-         schema="schema/syntaxHighlightingExtension.exsd"
-   />
-   <extension-point
          id="outlineExtension"
          name="Groovy Outline Extension"
          schema="schema/outlineExtension.exsd"
+   />
+   <extension-point
+         id="syntaxHighlightingExtension"
+         name="Groovy Syntax Highlighting Extension"
+         schema="schema/syntaxHighlightingExtension.exsd"
    />
 
    <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
@@ -157,7 +157,6 @@
             class="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
             default="true"
-            extensions="groovy"
             icon="icons/groovy_file.gif"
             id="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             name="Groovy Editor"
@@ -179,16 +178,16 @@
 
    <extension point="org.eclipse.ui.newWizards">
       <category
-            name="Groovy"
-            id="org.codehaus.groovy.eclipse">
+            id="org.codehaus.groovy.eclipse"
+            name="Groovy">
       </category>
       <wizard
-            name="Groovy Class"
-            icon="icons/newgroovyclass_wiz.gif"
             category="org.codehaus.groovy.eclipse"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            id="org.codehaus.groovy.eclipse.ui.groovyClassWizard">
+            icon="icons/newgroovyclass_wiz.gif"
+            id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"
+            name="Groovy Class"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
          <class class="org.codehaus.groovy.eclipse.wizards.NewClassWizard">
             <parameter
                   name="javatype"
@@ -200,15 +199,15 @@
          </description>
       </wizard>
       <wizard
-            name="Groovy Project"
-            icon="icons/newgroovyprj_wiz.gif"
             category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.wizards.GroovyProjectWizard"
             descriptionImage="icons/full/newgroovyprj_wiz.gif"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
-            project="true"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
+            icon="icons/newgroovyprj_wiz.gif"
+            id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"
+            name="Groovy Project"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
+            project="true">
          <description>
             Create a new Groovy project
          </description>
@@ -230,21 +229,19 @@
             Create a new Groovy JUnit test suite
          </description>
       </wizard>
-      <primaryWizard
-            id="org.codehaus.groovy.eclipse.ui.groovyClassWizard">
-      </primaryWizard>
-      <primaryWizard
-            id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
-      </primaryWizard>
    </extension>
 
    <extension point="org.eclipse.ui.views">
-      <category name="Groovy" id="org.codehaus.groovy.eclipse.Groovy" />
+      <category
+            id="org.codehaus.groovy.eclipse.Groovy"
+            name="Groovy">
+      </category>
    </extension>
 
    <extension point="org.eclipse.ui.popupMenus">
-      <objectContribution id="org.codehaus.groovy.eclipse.groovyProjectContributions"
+      <objectContribution
             adaptable="true"
+            id="org.codehaus.groovy.eclipse.groovyProjectContributions"
             objectClass="org.eclipse.core.resources.IProject">
          <action
                class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
@@ -277,8 +274,9 @@
          </visibility>
       </objectContribution>
 
-      <objectContribution id="org.codehaus.groovy.eclipse.groovyFileContributions"
+      <objectContribution
             adaptable="true"
+            id="org.codehaus.groovy.eclipse.groovyFileContributions"
             objectClass="org.eclipse.core.resources.IFile">
          <action
                class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
@@ -322,14 +320,9 @@
          </visibility>
       </objectContribution>
 
-      <!--
-      Restrict selection to be a project with a Groovy nature.
-      Specifying an "IJavaProject" objectClass would mean that
-      this contribution would become unavailable for web and EJB
-      projects in IBM Rational 6.x tools.
-      -->
-      <objectContribution id="org.codehaus.groovy.eclipse.groovymenu"
+      <objectContribution
             adaptable="true"
+            id="org.codehaus.groovy.eclipse.groovymenu"
             objectClass="org.eclipse.core.resources.IProject">
          <menu
                id="groovy"
@@ -370,6 +363,7 @@
             </and>
          </visibility>
       </objectContribution>
+
       <objectContribution
             adaptable="true"
             id="org.codehaus.groovy.eclipse.legacyContributions"
@@ -391,52 +385,51 @@
 
       <!-- Toggle breakpoint action and JDT's other breakpoint actions -->
       <viewerContribution
-            targetID="#GroovyCompilationUnitRulerContext"
-            id="org.codehaus.groovy.eclipse.ui.CompilationUnitRulerPopupActions">
+            id="org.codehaus.groovy.eclipse.ui.CompilationUnitRulerPopupActions"
+            targetID="#GroovyCompilationUnitRulerContext">
          <action
-               label="Breakpoint P&amp;roperties..."
-               helpContextId="breakpoint_properties_action_context"
                class="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
-               menubarPath="group.properties"
-               id="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate">
+               helpContextId="breakpoint_properties_action_context"
+               id="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
+               label="Breakpoint P&amp;roperties..."
+               menubarPath="group.properties">
          </action>
          <action
-               label="(Groovy) &amp;Toggle Breakpoint Enabled"
-               helpContextId="enable_disable_breakpoint_action_context"
                class="org.eclipse.debug.ui.actions.RulerEnableDisableBreakpointActionDelegate"
-               menubarPath="debug"
-               id="org.eclipse.jdt.debug.ui.actions.EnableDisableBreakpointRulerActionDelegate">
+               helpContextId="enable_disable_breakpoint_action_context"
+               id="org.eclipse.jdt.debug.ui.actions.EnableDisableBreakpointRulerActionDelegate"
+               label="(Groovy) &amp;Toggle Breakpoint Enabled"
+               menubarPath="debug">
          </action>
          <action
-               helpContextId="manage_breakpoint_action_context"
-               label="(Groovy) Toggle Breakpoint"
                class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
-               menubarPath="debug"
-               id="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate">
+               helpContextId="manage_breakpoint_action_context"
+               id="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
+               label="(Groovy) Toggle Breakpoint"
+               menubarPath="debug">
          </action>
          <action
-               label="Add Task..."
-               helpContextId="org.eclipse.ui.AddTask_action_context"
-               tooltip="%AddTask.tooltip"
                class="org.eclipse.ui.texteditor.TaskRulerAction"
+               helpContextId="org.eclipse.ui.AddTask_action_context"
+               id="org.eclipse.ui.texteditor.TaskRulerAction"
+               label="Add Task..."
                menubarPath="add"
-               id="org.eclipse.ui.texteditor.TaskRulerAction">
+               tooltip="%AddTask.tooltip">
          </action>
          <action
-               label="Add Bookmark..."
-               helpContextId="org.eclipse.ui.bookmark_action_context"
                class="org.eclipse.ui.texteditor.BookmarkRulerAction"
-               menubarPath="add"
-               id="org.eclipse.ui.texteditor.BookmarkRulerAction">
+               helpContextId="org.eclipse.ui.bookmark_action_context"
+               id="org.eclipse.ui.texteditor.BookmarkRulerAction"
+               label="Add Bookmark..."
+               menubarPath="add">
          </action>
-
          <!-- This adds "Quick Fix" action to the Groovy editor ruler context menu -->
          <action
-               label="Select Annotation ruler"
-               helpContextId="org.eclipse.ui.bookmark_action_context"
                class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
-               menubarPath="add"
-               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
+               helpContextId="org.eclipse.ui.bookmark_action_context"
+               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+               label="Select Annotation ruler"
+               menubarPath="add">
          </action>
       </viewerContribution>
 
@@ -444,23 +437,24 @@
       <viewerContribution
                id="org.codehaus.groovy.viewer.refactorings"
                targetID="#GroovyCompilationUnitEditorContext">
-         <menu id="org.codehaus.groovy.refactoring.menu"
+         <menu
+               id="org.codehaus.groovy.refactoring.menu"
                label="Groovy Refac&amp;tor">
             <separator name="refactoring"/>
          </menu>
          <action
             class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
+            definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
             id="org.groovy.codehaus.eclipse.ui.actions.convertToMethodContribution"
             label="Convert closure to method"
-            definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
             menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
             style="push">
          </action>
          <action
             class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToClosureAction"
+            definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
             id="org.groovy.codehaus.eclipse.ui.actions.convertToClosureContribution"
             label="Convert method to closure"
-            definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
             menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
             style="push">
          </action>
@@ -469,9 +463,9 @@
 
    <extension point="org.eclipse.ui.actionSets">
       <actionSet
+            id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"
             label="Groovy Element Creation"
-            visible="true"
-            id="org.codehaus.groovy.eclipse.ui.groovyElementCreation">
+            visible="true">
          <action
                class="org.codehaus.groovy.eclipse.wizards.OpenGroovyProjectWizardAction"
                icon="icons/newgroovyprj_wiz.gif"
@@ -519,40 +513,62 @@
    <extension point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <actionSet id="org.codehaus.groovy.eclipse.conversion"/>
-         <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.conversion"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaBrowsingPerspective">
-         <actionSet id="org.codehaus.groovy.eclipse.conversion"/>
-         <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.conversion"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaHierarchyPerspective">
-         <actionSet id="org.codehaus.groovy.eclipse.conversion"/>
-         <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.conversion"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.eclipse.jst.j2ee.J2EEPerspective">
-         <actionSet id="org.codehaus.groovy.eclipse.conversion"/>
-         <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
-         <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.conversion"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.eclipse.pde.ui.PDEPerspective">
-         <actionSet id="org.codehaus.groovy.eclipse.conversion"/>
-         <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.conversion"/>
+         <actionSet
+               id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
       </perspectiveExtension>
    </extension>
 
@@ -731,12 +747,12 @@
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
       <consoleLineTracker
          class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
-         processType="java"
-         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"/>
+         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"
+         processType="java"/>
       <consoleLineTracker
          class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
-         processType="groovy"
-         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"/>
+         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"
+         processType="groovy"/>
    </extension>
 
    <extension point="org.eclipse.core.expressions.propertyTesters">
@@ -749,9 +765,12 @@
    </extension>
 
    <extension point="org.eclipse.core.runtime.preferences">
-      <initializer class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
-      <initializer class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer"/>
-      <initializer class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferenceInitializer"/>
+      <initializer
+            class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
+      <initializer
+            class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer"/>
+      <initializer
+            class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferenceInitializer"/>
    </extension>
 
    <extension point="org.eclipse.jdt.ui.classpathContainerPage">
@@ -785,38 +804,41 @@
 
    <extension point="org.eclipse.core.runtime.adapters">
       <factory
-            class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory"
-            adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor">
-         <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
-      </factory>
-      <factory adaptableType="org.eclipse.ui.IFileEditorInput"
+            adaptableType="org.eclipse.ui.IFileEditorInput"
             class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
-         <adapter type="org.codehaus.groovy.ast.ClassNode"/>
+         <adapter
+               type="org.codehaus.groovy.ast.ClassNode"/>
       </factory>
       <factory
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             class="org.codehaus.groovy.eclipse.adapters.GroovyEditorAdapterFactory">
-         <adapter type="org.codehaus.groovy.ast.ModuleNode">
-         </adapter>
+         <adapter
+               type="org.codehaus.groovy.ast.ModuleNode"/>
+      </factory>
+      <factory
+            adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
+            class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory">
+         <adapter
+               type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
       </factory>
    </extension>
 
    <extension point="org.eclipse.ui.editorActions">
       <editorContribution
-            targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            id="org.codehaus.groovy.editor.actions">
+            id="org.codehaus.groovy.editor.actions"
+            targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor">
          <!-- Ruler actions -->
          <action
-               label="Toggle Breakpoint"
-               class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
                actionID="RulerDoubleClick"
-               id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction">
+               class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
+               id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction"
+               label="Toggle Breakpoint">
          </action>
          <action
-               label="Select Annotation ruler"
-               class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
                actionID="RulerClick"
-               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
+               class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+               label="Select Annotation ruler">
          </action>
          <action
                class="org.codehaus.groovy.eclipse.editor.actions.FindOccurrencesAction"
@@ -864,18 +886,6 @@
             type="groovy.lang.Reference"
             value="return get();">
       </javaLogicalStructure>
-   </extension>
-
-   <extension point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <newWizardShortcut
-               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard">
-         </newWizardShortcut>
-         <newWizardShortcut
-               id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
-         </newWizardShortcut>
-      </perspectiveExtension>
    </extension>
 
    <extension point="org.eclipse.ui.console.consoleFactories">
