@@ -29,16 +29,18 @@
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <!--skip>${maven.test.skip}</skip-->
+          <skip>false</skip>
           <useUIHarness>false</useUIHarness>
           <useUIThread>false</useUIThread>
 
           <includes>
-            <include>**/alltests/GroovyJDTTests.java</include>
+            <include>**/alltests/SanityTest.java</include>
+            <!--include>**/alltests/GroovyJDTTests.java</include-->
             <!--include>**/alltests/AllGroovyAndJDTTests.java</include-->
           </includes>
 
-          <!--dependencies>
-            <dependency>
+          <dependencies>
+            <!--dependency>
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
               <version>0.0.0</version>
@@ -47,13 +49,12 @@
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy24.feature</artifactId>
               <version>0.0.0</version>
-            </dependency>
+            </dependency-->
             <dependency>
               <type>eclipse-feature</type>
-              <artifactId>org.eclipse.rcp</artifactId>
-              <version>0.0.0</version>
+              <artifactId>org.eclipse.jdt</artifactId>
             </dependency>
-          </dependencies-->
+          </dependencies>
 
         </configuration>
       </plugin>
