@@ -29,8 +29,8 @@
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <!--skip>${maven.test.skip}</skip-->
-          <useUIHarness>true</useUIHarness>
-          <useUIThread>true</useUIThread>
+          <useUIHarness>false</useUIHarness>
+          <useUIThread>false</useUIThread>
 
           <includes>
             <include>**/alltests/GroovyJDTTests.java</include>
