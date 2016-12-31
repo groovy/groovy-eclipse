@@ -6,8 +6,7 @@
 	<version>2.9.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<!-- To run this build use the following commands (depending on what you
-		are trying to do) -->
+	<!-- To run this build use the following commands (depending on what you are trying to do) -->
 	<!-- mvn clean install -Pe43j8 -->
 	<!-- mvn clean deploy -Pe43j8 -->
 	<!-- Running 'deploy' requires s3 accessKey and secretKey to be provided
@@ -16,13 +15,13 @@
 		profile automatically and will allow the 'deploy' to execute. -->
 
 	<!-- Example commands to build and deploy a milestone or a release
-	    mvn clean deploy -Pe43j8 -Pmilestone
-	    mvn clean deploy -Pe43j8 -Prelease
+		mvn clean deploy -Pe43j8 -Pmilestone
+		mvn clean deploy -Pe43j8 -Prelease
 
-	    Before building a release also check the definition of the release profile
-	    in this pom. It may need some minor edits such as the deploy location
-	    and version number.
-	    -->
+		Before building a release also check the definition of the release profile
+		in this pom. It may need some minor edits such as the deploy location
+		and version number.
+	-->
 
 	<properties>
 		<tycho-version>0.24.0</tycho-version>
@@ -439,7 +438,7 @@
 				<artifactId>target-platform-configuration</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
-					<dependency-resolution>
+					<!--dependency-resolution>
 						<extraRequirements>
 							<requirement>
 								<type>eclipse-feature</type>
@@ -451,13 +450,13 @@
 								<id>org.codehaus.groovy24.feature</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
-							<!--requirement>
+							<requirement>
 								<type>eclipse-feature</type>
 								<id>org.eclipse.rcp</id>
 								<versionRange>0.0.0</versionRange>
-							</requirement-->
+							</requirement>
 						</extraRequirements>
-					</dependency-resolution>
+					</dependency-resolution-->
 					<environments>
 						<environment>
 							<os>linux</os>
