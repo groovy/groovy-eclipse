@@ -101,7 +101,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     // not a great test, needs work
     public void testBadCodeCategory_STS3822() {
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.valueOf("3.10")) < 0) return;
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
 
         String[] sources = {
             "bad.groovy",

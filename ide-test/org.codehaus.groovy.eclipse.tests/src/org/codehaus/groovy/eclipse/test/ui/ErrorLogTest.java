@@ -65,7 +65,7 @@ public class ErrorLogTest extends TestCase {
     }
 
     public void testNoWarningsOnStartup() throws Exception {
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.valueOf("3.8")) < 0) return;
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.parseVersion("3.8")) < 0) return;
 
         IViewPart view = Workbench.getInstance().getActiveWorkbenchWindow()
                 .getActivePage().getActivePart().getSite().getPage().showView(
