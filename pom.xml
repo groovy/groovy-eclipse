@@ -92,16 +92,16 @@
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
 
-		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
-		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
-		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy18.feature</module>
 		<module>ide/Feature-org.codehaus.groovy20.feature</module>
 		<module>ide/Feature-org.codehaus.groovy21.feature</module>
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
 		<module>ide/Feature-org.codehaus.groovy23.feature</module>
 		<module>ide/Feature-org.codehaus.groovy24.feature</module>
+		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
+		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
+		<!--module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module-->
 
 		<!-- m2e integration -->
 		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
@@ -436,17 +436,7 @@
 						<extraRequirements>
 							<requirement>
 								<type>eclipse-feature</type>
-								<id>org.codehaus.groovy.eclipse.feature</id>
-								<versionRange>0.0.0</versionRange>
-							</requirement>
-							<requirement>
-								<type>eclipse-feature</type>
 								<id>org.codehaus.groovy24.feature</id>
-								<versionRange>0.0.0</versionRange>
-							</requirement>
-							<requirement>
-								<type>eclipse-feature</type>
-								<id>org.eclipse.rcp</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
