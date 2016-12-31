@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.osgi.framework.Version;
 
 public final class TransformationsTests extends AbstractGroovyRegressionTest {
 
@@ -100,6 +101,8 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     // not a great test, needs work
     public void testBadCodeCategory_STS3822() {
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.valueOf("3.10")) < 0) return;
+
         String[] sources = {
             "bad.groovy",
             "@Category(C.class) \n"+

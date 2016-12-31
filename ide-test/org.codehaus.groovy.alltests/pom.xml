@@ -16,6 +16,7 @@
       <type>eclipse-feature</type>
       <groupId>org.codehaus.groovy.eclipse</groupId>
       <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
+      <version>0.0.0</version>
     </dependency>
   </dependencies>
 
