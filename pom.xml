@@ -56,12 +56,32 @@
 	</properties>
 
 	<modules>
-		<!-- SDK and test bits -->
+		<module>base/org.codehaus.groovy18</module>
+		<module>base/org.codehaus.groovy20</module>
+		<module>base/org.codehaus.groovy21</module>
+		<module>base/org.codehaus.groovy22</module>
+		<module>base/org.codehaus.groovy23</module>
+		<module>base/org.codehaus.groovy24</module>
+
+		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
+		<module>base/org.eclipse.jdt.groovy.core</module>
+
+		<module>ide/org.codehaus.groovy.eclipse</module>
+		<module>ide/org.codehaus.groovy.eclipse.core</module>
+		<module>ide/org.codehaus.groovy.eclipse.ant</module>
+		<module>ide/org.codehaus.groovy.eclipse.astviews</module>
+		<module>ide/org.codehaus.groovy.eclipse.codeassist.completion</module>
+		<module>ide/org.codehaus.groovy.eclipse.codebrowsing</module>
+		<module>ide/org.codehaus.groovy.eclipse.dsl</module>
+		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
+		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
+		<module>ide/org.codehaus.groovy.eclipse.ui</module>
+
 
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
 
-		<module>ide-test</module><!-- parent for ide-test/* -->
+		<!--module>ide-test</module>< parent for ide-test/* -->
 
 		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
@@ -73,12 +93,8 @@
 		<module>ide-test/org.codehaus.groovy.eclipse.refactoring.test</module>
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
+
 		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
-
-		<!-- 'Real' Bits -->
-
-		<module>ide/org.codehaus.groovy.eclipse</module>
-
 		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy18.feature</module>
@@ -89,27 +105,7 @@
 		<module>ide/Feature-org.codehaus.groovy24.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
 
-		<module>base/org.eclipse.jdt.groovy.core</module>
-		<module>base/org.codehaus.groovy18</module>
-		<module>base/org.codehaus.groovy20</module>
-		<module>base/org.codehaus.groovy21</module>
-		<module>base/org.codehaus.groovy22</module>
-		<module>base/org.codehaus.groovy23</module>
-		<module>base/org.codehaus.groovy24</module>
-		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
-
-		<module>ide/org.codehaus.groovy.eclipse.ant</module>
-		<module>ide/org.codehaus.groovy.eclipse.astviews</module>
-		<module>ide/org.codehaus.groovy.eclipse.codeassist.completion</module>
-		<module>ide/org.codehaus.groovy.eclipse.codebrowsing</module>
-		<module>ide/org.codehaus.groovy.eclipse.core</module>
-		<module>ide/org.codehaus.groovy.eclipse.dsl</module>
-		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
-		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
-		<module>ide/org.codehaus.groovy.eclipse.ui</module>
-
 		<!-- m2e integration -->
-
 		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
 		<module>extras/org.codehaus.groovy.m2eclipse</module>
 
