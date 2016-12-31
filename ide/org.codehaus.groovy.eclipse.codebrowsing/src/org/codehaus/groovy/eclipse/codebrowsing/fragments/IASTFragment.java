@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ public interface IASTFragment {
      * Property-based fragments can only match if their beginnings match
      * Binary expression-based fragments can match anywhere
      *
-     * @param other
      * @return true iff other matches this fragment
      */
     public boolean matches(IASTFragment other);
@@ -75,31 +74,23 @@ public interface IASTFragment {
 
     /**
      * Convenience method for getEnd() - getStart()
-     *
-     * @return
      */
     public int getLength();
 
     /**
      * Convenience method for getTrimmedLength(unit) - getStart()
-     *
-     * @return
      */
     public int getTrimmedLength(GroovyCompilationUnit unit);
 
     /**
-     * The associated node is the parent node that contains all fragments. The
-     * source location
-     * of the node may be larger than the start and length
-     *
-     * @return Will return null for {@link EnclosingASTNodeFragment}
+     * The associated expression is the parent node that contains all fragments. The
+     * source location of the node may be larger than the start and length
      */
     public Expression getAssociatedExpression();
 
     /**
      * The associated node is the parent node that contains all fragments. The
-     * source location
-     * of the node may be larger than the start and length
+     * source location of the node may be larger than the start and length
      */
     public ASTNode getAssociatedNode();
 
@@ -122,5 +113,4 @@ public interface IASTFragment {
     public void accept(FragmentVisitor visitor);
 
     public ASTFragmentKind kind();
-
 }

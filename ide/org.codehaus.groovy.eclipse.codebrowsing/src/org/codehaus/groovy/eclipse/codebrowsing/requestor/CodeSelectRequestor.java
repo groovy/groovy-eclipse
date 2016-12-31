@@ -533,7 +533,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 }
                 sb.append(',');
             }
-            sb.replace(sb.length()-1, sb.length(), ">");
+            sb.replace(sb.length() - 1, sb.length(), ">");
         }
         if (sbArr != null) {
             sb.append(sbArr);
@@ -689,14 +689,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return null;
     }
 
-    private String removeGenerics(String maybeMethodParameterName) {
-        int genericStart = maybeMethodParameterName.indexOf("<");
+    private String removeGenerics(String param) {
+        // TODO: Check for nested generics
+        int genericStart = param.indexOf('<');
         if (genericStart > 0) {
-            maybeMethodParameterName = maybeMethodParameterName.substring(0, genericStart)
-                    + maybeMethodParameterName.substring(maybeMethodParameterName.indexOf(">") + 1,
-                            maybeMethodParameterName.length());
+            param = param.substring(0, genericStart) + param.substring(param.indexOf('>') + 1, param.length());
         }
-        return maybeMethodParameterName;
+        return param;
     }
 
     private String extractPrefix(String text) {
@@ -747,8 +746,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private Object typeOf(ASTNode node) {
         if (node instanceof ClassNode) {
-            return ((ClassNode) node)
-                .getNameWithoutPackage();
+            return ((ClassNode) node).getNameWithoutPackage();
         }
         return node.getClass();
     }

@@ -723,11 +723,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private void visitClassReference(ClassNode node) {
-//		// if this is a placeholder, then the type doesn't really exist in the code, so can ignore
-//		if (node.isGenericsPlaceHolder()) {
-//			return;
-//		}
-
         TypeLookupResult result = null;
         VariableScope scope = scopes.peek();
         for (ITypeLookup lookup : lookups) {

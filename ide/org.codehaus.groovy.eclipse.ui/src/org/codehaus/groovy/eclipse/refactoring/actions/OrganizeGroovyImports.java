@@ -215,10 +215,24 @@ public class OrganizeGroovyImports {
                 for (Parameter param : node.getParameters()) {
                     handleType(param.getType(), false);
                 }
-                ClassNode[] thrownExceptions = node.getExceptions();
-                if (thrownExceptions != null) {
-                    for (ClassNode thrownException : thrownExceptions) {
-                        handleType(thrownException, false);
+                ClassNode[] exceptions = node.getExceptions();
+                if (exceptions != null) {
+                    for (ClassNode exception : exceptions) {
+                        handleType(exception, false);
+                    }
+                }
+                GenericsType[] generics = node.getGenericsTypes();
+                if (generics != null) {
+                    for (GenericsType generic : generics) {
+                        if (!generic.isPlaceholder()) {
+                            handleType(generic.getType(), false);
+                        } else if (generic.getLowerBound() != null) {
+                            handleType(generic.getLowerBound(), false);
+                        } else if (generic.getUpperBounds() != null) {
+                            for (ClassNode upper : generic.getUpperBounds()) {
+                                handleType(upper, false);
+                            }
+                        }
                     }
                 }
             }

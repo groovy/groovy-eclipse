@@ -15,148 +15,94 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
-import java.text.Collator;
-import java.util.Comparator;
-
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.ISourceRange;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.util.Messages;
-import org.eclipse.jdt.internal.corext.util.QualifiedTypeNameHistory;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
-import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog;
+import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
+import org.eclipse.jdt.internal.ui.actions.MultiOrganizeImportAction;
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
-import org.eclipse.jdt.internal.ui.util.TypeNameMatchLabelProvider;
+import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jdt.ui.actions.OrganizeImportsAction;
+import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jface.action.IStatusLineManager;
-import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.window.Window;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPartSite;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 14, 2009
- */
 public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
 
-    private static final OrganizeImportComparator ORGANIZE_IMPORT_COMPARATOR = new OrganizeImportComparator();
-
-    private static final class OrganizeImportComparator implements Comparator<String> {
-
-        public int compare(String o1, String o2) {
-            if (o1.equals(o2))
-                return 0;
-
-            QualifiedTypeNameHistory history = QualifiedTypeNameHistory.getDefault();
-            int pos1 = history.getPosition(o1);
-            int pos2 = history.getPosition(o2);
-
-            if (pos1 == pos2)
-                return Collator.getInstance().compare(o1, o2);
-            if (pos1 > pos2) {
-                return -1;
-            }
-            return 1;
-        }
+    public OrganizeGroovyImportsAction(IWorkbenchPartSite site) {
+        super(site);
     }
-
-    private JavaEditor editor;
 
     public OrganizeGroovyImportsAction(JavaEditor editor) {
         super(editor);
-        this.editor = editor;
     }
 
-    @Override
-    public void run(ICompilationUnit cu) {
-        if (cu instanceof GroovyCompilationUnit) {
+    public void run(ICompilationUnit unit) {
+        if (!(unit instanceof GroovyCompilationUnit)) {
+            super.run(unit);
+        } else {
             try {
-                OrganizeGroovyImports action = new OrganizeGroovyImports((GroovyCompilationUnit) cu, createChooseImportQuery(editor));
+                JavaEditor editor = getEditor();
+                if (editor == null) {
+                    IEditorPart openEditor = EditorUtility.isOpenInEditor(unit);
+                    if (!(openEditor instanceof JavaEditor)) {
+                        getDelegate().run(new StructuredSelection(unit));
+                        return;
+                    }
+                    editor = (JavaEditor) openEditor;
+                }
+                if (!ElementValidator.check(unit, getShell(), ActionMessages.OrganizeImportsAction_error_title, false))
+                    return;
+
+                OrganizeGroovyImports action = new OrganizeGroovyImports((GroovyCompilationUnit) unit, newChooseImportQuery(editor));
                 boolean success = action.calculateAndApplyMissingImports();
                 if (!success) {
-                    IStatusLineManager manager = getStatusLineManager();
-                    if (manager != null) {
-                        manager.setErrorMessage(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse, getLocationString(cu)));
-                    }
+                    IStatusLineManager manager = editor.getEditorSite().getActionBars().getStatusLineManager();
+                    if (manager != null)
+                        manager.setMessage(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_parse, BasicElementLabels.getPathLabel(unit.getPath(), false)));
                 }
-            } catch (JavaModelException e) {
-                GroovyPlugin.getDefault().logException("Error organizing imports for " + cu.getElementName(), e);
+            } catch (Exception e) {
+                GroovyPlugin.getDefault().logException("Error organizing imports for " + unit.getElementName(), e);
             }
-        } else {
-            super.run(cu);
         }
     }
 
-    private static String getLocationString(final ICompilationUnit cu) {
-        return BasicElementLabels.getPathLabel(cu.getPath(), false);
+    public void run(IStructuredSelection selection) {
+        MultiOrganizeImportAction delegate = getDelegate();
+        ICompilationUnit[] units = delegate.getCompilationUnits(selection);
+        if (units.length <= 1) {
+            super.run(selection);
+        } else { // avoid calling getCompilationUnits again by calling runOnMultiple directly
+            ReflectionUtils.executePrivateMethod(CleanUpAction.class, "runOnMultiple", new Class[] {ICompilationUnit[].class}, delegate, new Object[] {units});
+        }
     }
 
-    private IChooseImportQuery createChooseImportQuery(final JavaEditor editor) {
-        return new IChooseImportQuery() {
-            public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges) {
-                return doChooseImports(openChoices, ranges, editor);
+    protected JavaEditor getEditor() {
+        return (JavaEditor) ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fEditor", this);
+    }
+
+    protected MultiOrganizeImportAction getDelegate() {
+        MultiOrganizeImportAction delegate = (MultiOrganizeImportAction) ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fCleanUpDelegate", this);
+        // override the final field's MultiOrganizeImportAction with our import clean-up
+        MultiOrganizeImportAction override = new MultiOrganizeImportAction(getSite()) {
+            protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
+                return new ICleanUp[] {new GroovyImportsCleanUp()};
             }
         };
+        override.setEnabled(delegate.isEnabled());
+        return override;
     }
 
-    private TypeNameMatch[] doChooseImports(TypeNameMatch[][] openChoices, final ISourceRange[] ranges, final JavaEditor editor) {
-        // remember selection
-        ISelection sel= editor.getSelectionProvider().getSelection();
-        TypeNameMatch[] result= null;
-        ILabelProvider labelProvider= new TypeNameMatchLabelProvider(TypeNameMatchLabelProvider.SHOW_FULLYQUALIFIED);
-
-        MultiElementListSelectionDialog dialog= new MultiElementListSelectionDialog(getShell(), labelProvider) {
-            @Override
-            protected void handleSelectionChanged() {
-                super.handleSelectionChanged();
-                // show choices in editor
-                doListSelectionChanged(getCurrentPage(), ranges, editor);
-            }
-        };
-        dialog.setTitle(ActionMessages.OrganizeImportsAction_selectiondialog_title);
-        dialog.setMessage(ActionMessages.OrganizeImportsAction_selectiondialog_message);
-        dialog.setElements(openChoices);
-        dialog.setComparator(ORGANIZE_IMPORT_COMPARATOR);
-        if (dialog.open() == Window.OK) {
-            Object[] res= dialog.getResult();
-            result= new TypeNameMatch[res.length];
-            for (int i= 0; i < res.length; i++) {
-                Object[] array= (Object[]) res[i];
-                if (array.length > 0) {
-                    result[i]= (TypeNameMatch) array[0];
-                    QualifiedTypeNameHistory.remember(result[i].getFullyQualifiedName());
-                }
-            }
-        }
-        // restore selection
-        if (sel instanceof ITextSelection) {
-            ITextSelection textSelection= (ITextSelection) sel;
-            editor.selectAndReveal(textSelection.getOffset(), textSelection.getLength());
-        }
-        return result;
-    }
-
-    private void doListSelectionChanged(int page, ISourceRange[] ranges, JavaEditor editor) {
-        if (ranges != null && page >= 0 && page < ranges.length) {
-            ISourceRange range= ranges[page];
-            editor.selectAndReveal(range.getOffset(), range.getLength());
-        }
-    }
-
-    private IStatusLineManager getStatusLineManager() {
-        if (editor != null) {
-            try {
-                return editor.getEditorSite().getActionBars().getStatusLineManager();
-            } catch (NullPointerException e) {
-                // can ignore
-            }
-        }
-        return null;
+    protected IChooseImportQuery newChooseImportQuery(JavaEditor editor) {
+        return (IChooseImportQuery) ReflectionUtils.executePrivateMethod(OrganizeImportsAction.class, "createChooseImportQuery", new Class[] {JavaEditor.class}, this, new Object[] {editor});
     }
 }

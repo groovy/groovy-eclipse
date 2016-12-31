@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,72 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
+import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.fix.FixMessages;
 import org.eclipse.jdt.internal.corext.fix.ImportsFix;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
-import org.eclipse.jdt.internal.ui.fix.MultiFixMessages;
+import org.eclipse.jdt.internal.ui.fix.ImportsCleanUp;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jdt.ui.cleanup.CleanUpContext;
+import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
+import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 17, 2009
- */
 public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
 
-    @Override
+    private ImportsCleanUp javaCleanUp = new ImportsCleanUp(Collections.singletonMap(CleanUpConstants.ORGANIZE_IMPORTS, CleanUpOptions.TRUE));
+
+    public CleanUpRequirements getRequirements() {
+        return javaCleanUp.getRequirements();
+    }
+
+    public String[] getStepDescriptions() {
+        return javaCleanUp.getStepDescriptions();
+    }
+
+    public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits, IProgressMonitor monitor) throws CoreException {
+        List<ICompilationUnit> groovyUnits = new ArrayList<ICompilationUnit>(compilationUnits.length);
+        //List<ICompilationUnit> otherUnits = new ArrayList<ICompilationUnit>(compilationUnits.length);
+        for (ICompilationUnit unit : compilationUnits) {
+            if (unit instanceof GroovyCompilationUnit) {
+                groovyUnits.add(unit);
+            }/* else {
+                otherUnits.add(unit);
+            }*/
+        }
+        RefactoringStatus groovyStatus = super.checkPreConditions(project, groovyUnits.toArray(new ICompilationUnit[groovyUnits.size()]), monitor);
+        //RefactoringStatus otherStatus = javaCleanUp.checkPreConditions(project, otherUnits.toArray(new ICompilationUnit[otherUnits.size()]), monitor);
+                javaCleanUp.checkPreConditions(project, new ICompilationUnit[0], monitor);
+        return groovyStatus;
+    }
+
+    public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
+        return javaCleanUp.checkPostConditions(monitor);
+    }
+
     public ICleanUpFix createFix(CleanUpContext context) throws CoreException {
         ICompilationUnit unit = context.getCompilationUnit();
         if (!(unit instanceof GroovyCompilationUnit)) {
-            return null;
+            return javaCleanUp.createFix(context);
         }
 
-        final boolean hasAmbiguity[] = new boolean[] { false };
+        final boolean hasAmbiguity[] = new boolean[] {false};
         IChooseImportQuery query = new IChooseImportQuery() {
             public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges) {
                 hasAmbiguity[0] = true;
@@ -71,12 +105,7 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
         return new ImportsFix(edit, unit, FixMessages.ImportsFix_OrganizeImports_Description);
     }
 
-    @Override
-    public String[] getStepDescriptions() {
-        return new String[] { MultiFixMessages.ImportsCleanUp_OrganizeImports_Description };
-    }
-
-    private static String getLocationString(final ICompilationUnit unit) {
+    private static String getLocationString(ICompilationUnit unit) {
         return BasicElementLabels.getPathLabel(unit.getPath(), false);
     }
 }

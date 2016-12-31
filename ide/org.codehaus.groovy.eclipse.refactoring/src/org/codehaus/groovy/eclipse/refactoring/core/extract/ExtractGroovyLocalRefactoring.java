@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,6 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created May 10, 2010
  */
@@ -222,7 +221,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     private Set<String> getExcludedVariableNames() {
         Set<String> usedNames = new HashSet<String>();
         if (getSelectedFragment() != null) {
-            Set<Variable> vars = ASTTools.getVariablesInScope(module, getSelectedFragment().getAssociatedNode());
+            Set<Variable> vars = ASTTools.getVariablesInScope(module, getSelectedFragment().getAssociatedExpression());
             for (Variable v : vars) {
                 usedNames.add(v.getName());
             }

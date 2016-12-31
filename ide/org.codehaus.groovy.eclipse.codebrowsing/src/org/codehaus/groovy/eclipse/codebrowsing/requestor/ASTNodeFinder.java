@@ -44,6 +44,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -166,22 +167,30 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitField(FieldNode node) {
-//        if (node.getName().contains("$")) {
-//            // synthetic field, probably 'this$0' for an inner class reference to the outer class
-//            return;
-//        }
         if (node.getNameEnd() > 0) {
             checkNameRange(node);
         }
+
         // visit annotations and init expression
         super.visitField(node);
+
+        // compute supporting type start position
+        int start = node.getStart(),
+            annos = node.getAnnotations().size();
+        if (annos > 0)
+            start = GroovyUtils.endOffset(node.getAnnotations().get(annos - 1));
+
         // visit type and generics
-        check(node.getType(), node.getStart(), node.getEnd() - node.getName().length());
+        check(node.getType(), start, node.getEnd() - node.getName().length());
     }
 
     @Override
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         if (node.getEnd() > 0) {
+            if (!isConstructor && node.getGenericsTypes() != null) {
+                checkGenerics(node.getGenericsTypes(), null);
+            }
+
             ClassNode returnType = node.getReturnType();
             if (returnType != null /*&& !returnType.isPrimitive()*/) { // allow primitives to be found to stop the visit
                 int n, offset = -1;
@@ -357,6 +366,14 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     }
 
     @Override
+    public void visitMethodCallExpression(MethodCallExpression call) {
+        if (call.isUsingGenerics()) {
+            checkGenerics(call.getGenericsTypes(), null);
+        }
+        super.visitMethodCallExpression(call);
+    }
+
+    @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
         // don't check here if the type reference is implicit
         // we know that the type is not implicit if the name
@@ -496,30 +513,34 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     private void checkGenerics(ClassNode node) {
         if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-            for (GenericsType generics : node.getGenericsTypes()) {
-                int start = generics.getStart(),
-                    until = start + generics.getName().length();
+            checkGenerics(node.getGenericsTypes(), node.getName());
+        }
+    }
 
-                if (generics.getType() != null && generics.getType().getName().charAt(0) != '?') {
-                    check(generics.getType(), start, until);
-                }
+    private void checkGenerics(GenericsType[] generics, String typeName) {
+        for (GenericsType generic : generics) {
+            int start = generic.getStart(),
+                until = start + generic.getName().length();
 
-                start = until + 1;
-                until = generics.getEnd();
+            if (generic.getType() != null && generic.getType().getName().charAt(0) != '?') {
+                check(generic.getType(), start, until);
+            }
 
-                if (generics.getLowerBound() != null) {
-                    start += "super ".length(); // assume 1 space
-                    check(generics.getLowerBound(), start, until);
-                } else if (generics.getUpperBounds() != null) {
-                    start += "extends ".length(); // assume 1 space
-                    for (ClassNode upper : generics.getUpperBounds()) {
-                        String name = upper.getName();
-                        // handle enums where the upper bound is the same as the type
-                        if (!name.equals(node.getName())) {
-                            check(upper, start, Math.min(start + name.length(), until));
-                            if (upper.getEnd() > 0)
-                                start = upper.getEnd() + 1;
-                        }
+            start = until + 1;
+            until = generic.getEnd();
+
+            if (generic.getLowerBound() != null) {
+                start += "super ".length(); // assume 1 space
+                check(generic.getLowerBound(), start, until);
+            } else if (generic.getUpperBounds() != null) {
+                start += "extends ".length(); // assume 1 space
+                for (ClassNode upper : generic.getUpperBounds()) {
+                    String name = upper.getName();
+                    // handle enums where the upper bound is the same as the type
+                    if (!name.equals(typeName)) {
+                        check(upper, start, Math.min(start + name.length(), until));
+                        if (upper.getEnd() > 0)
+                            start = upper.getEnd() + 1;
                     }
                 }
             }
@@ -532,7 +553,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             if (param.getInitialExpression() != null) {
                 param.getInitialExpression().visit(this);
             }
-            check(param.getType(), param.getStart(), param.getEnd());
+            check(param.getType(), param.getStart(), param.getNameStart() - 1);
         }
     }
 
