@@ -1159,7 +1159,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
     }
 
     // Java classes should be able to implement traits as well...
-    public void testTraitsInteroperability() {
+    public void _testTraitsInteroperability() {
         String[] sources = {
             "Sample.java",
             "public class Sample implements Valuable {\n" +

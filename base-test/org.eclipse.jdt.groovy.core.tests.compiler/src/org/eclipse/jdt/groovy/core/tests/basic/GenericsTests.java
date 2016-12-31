@@ -1304,7 +1304,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
      */
-    public void testExtendingGenerics_GroovyExtendsJava14() {
+    public void _testExtendingGenerics_GroovyExtendsJava14() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
 
         String[] sources = {
