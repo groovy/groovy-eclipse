@@ -1214,6 +1214,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope#buildFieldsAndMethods()
      */
     public void testExtendingGenerics_GroovyExtendsJava11() {
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.valueOf("3.10")) < 0) return;
+
         String[] sources = {
             "Groovy.groovy",
             "class Groovy {\n" +
