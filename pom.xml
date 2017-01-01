@@ -433,27 +433,27 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<pomDependencies>consider</pomDependencies>
-					<!--dependency-resolution>
+					<dependency-resolution>
 						<extraRequirements>
 							<requirement>
 								<type>eclipse-feature</type>
-								<id>org.eclipse.platform</id>
+								<id>org.eclipse.jdt</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
-					</dependency-resolution-->
+					</dependency-resolution>
 					<environments>
-						<!--environment>
+						<environment>
 							<os>linux</os>
 							<ws>gtk</ws>
 							<arch>x86</arch>
-						</environment-->
+						</environment>
 						<environment>
 							<os>linux</os>
 							<ws>gtk</ws>
 							<arch>x86_64</arch>
 						</environment>
-						<!--environment>
+						<environment>
 							<os>win32</os>
 							<ws>win32</ws>
 							<arch>x86</arch>
@@ -467,7 +467,7 @@
 							<os>macosx</os>
 							<ws>cocoa</ws>
 							<arch>x86_64</arch>
-						</environment-->
+						</environment>
 					</environments>
 				</configuration>
 			</plugin>
