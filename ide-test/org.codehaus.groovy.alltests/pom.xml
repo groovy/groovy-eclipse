@@ -43,13 +43,13 @@
           </includes>
 
           <!-- Items required only by the testing runtime: -->
+          <!-- I think these deps are all satisfied elsewhere -->
           <!--dependencies>
             <dependency>
               <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
               <type>eclipse-feature</type>
             </dependency>
             <dependency>
-              <!-- If including this, environments in parent need to be limited or this needs to be classified -->
               <artifactId>org.eclipse.jdt</artifactId>
               <type>eclipse-feature</type>
             </dependency>
