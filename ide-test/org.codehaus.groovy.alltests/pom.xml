@@ -11,13 +11,7 @@
   <version>2.9.2-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
-  <!--Most useful and readable info on configure tycho I found is here:
-      https://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
-
-      A more comprehensive but less readable description of options for tycho test target:
-      http://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
-   -->
-
+  <!-- Link to our patch so JDT Core is resolved properly -->
   <dependencies>
     <dependency>
       <groupId>org.codehaus.groovy.eclipse</groupId>
@@ -32,6 +26,12 @@
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-surefire-plugin</artifactId>
         <version>${tycho-version}</version>
+
+        <!-- Useful references:
+          http://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
+          http://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
+        -->
+
         <configuration>
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
@@ -43,15 +43,13 @@
             <!--include>**/alltests/AllGroovyAndJDTTests.java</include-->
           </includes>
 
-          <!-- Dependencies required only for the testing runtime -->
-          <!--dependencies>
+          <!-- Items required only by the testing runtime: -->
+          <dependencies>
             <dependency>
               <type>eclipse-feature</type>
-              <groupId>org.codehaus.groovy.eclipse</groupId>
-              <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
-              <version>0.0.0</version>
+              <artifactId>org.eclipse.jdt</artifactId>
             </dependency>
-          </dependencies-->
+          </dependencies>
 
         </configuration>
       </plugin>
