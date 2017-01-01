@@ -11,7 +11,7 @@
   <version>2.9.2-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
-  <!-- Link to our patch so JDT Core is resolved properly -->
+  <!-- Link to our patch so it and JDT Core are resolved properly below -->
   <dependencies>
     <dependency>
       <groupId>org.codehaus.groovy.eclipse</groupId>
@@ -36,7 +36,7 @@
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
-          <useUIHarness>false</useUIHarness><!-- TODO: Set to true once GTK/SWT can create a display -->
+          <useUIHarness>true</useUIHarness><!-- TODO: Set to true once GTK/SWT can create a display -->
 
           <includes>
             <include>**/alltests/GroovyJDTTests.java</include>
@@ -48,10 +48,6 @@
             <dependency>
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
-            </dependency>
-            <dependency>
-              <type>eclipse-feature</type>
-              <artifactId>org.eclipse.jdt</artifactId>
             </dependency>
           </dependencies>
 
