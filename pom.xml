@@ -433,15 +433,14 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<pomDependencies>consider</pomDependencies>
-					<!--dependency-resolution>
+					<dependency-resolution>
 						<extraRequirements>
 							<requirement>
 								<type>eclipse-feature</type>
-								<id>org.codehaus.groovy24.feature</id>
-								<versionRange>0.0.0</versionRange>
+								<id>org.eclipse.platform</id>
 							</requirement>
 						</extraRequirements>
-					</dependency-resolution-->
+					</dependency-resolution>
 					<environments>
 						<environment>
 							<os>linux</os>
