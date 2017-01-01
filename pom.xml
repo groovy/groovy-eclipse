@@ -433,15 +433,15 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<pomDependencies>consider</pomDependencies>
-					<dependency-resolution>
+					<!--dependency-resolution>
 						<extraRequirements>
 							<requirement>
+								<id>org.eclipse.xyz</id>
 								<type>eclipse-feature</type>
-								<id>org.eclipse.jdt</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
-					</dependency-resolution>
+					</dependency-resolution-->
 					<environments>
 						<environment>
 							<os>linux</os>

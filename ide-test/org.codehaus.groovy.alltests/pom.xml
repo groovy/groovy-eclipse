@@ -11,14 +11,13 @@
   <version>2.9.2-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
-  <!-- Link to our patch so it and JDT Core are resolved properly below -->
-  <dependencies>
+  <!--dependencies>
     <dependency>
-      <groupId>org.codehaus.groovy.eclipse</groupId>
       <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
+      <groupId>org.codehaus.groovy.eclipse</groupId>
       <version>${project.version}</version>
     </dependency>
-  </dependencies>
+  </dependencies-->
 
   <build>
     <plugins>
@@ -36,7 +35,7 @@
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
-          <useUIHarness>true</useUIHarness><!-- TODO: Set to true once GTK/SWT can create a display -->
+          <useUIHarness>false</useUIHarness><!-- TODO: Set to true once GTK/SWT can create a display -->
 
           <includes>
             <include>**/alltests/GroovyJDTTests.java</include>
@@ -44,12 +43,17 @@
           </includes>
 
           <!-- Items required only by the testing runtime: -->
-          <dependencies>
+          <!--dependencies>
             <dependency>
-              <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
+              <type>eclipse-feature</type>
             </dependency>
-          </dependencies>
+            <dependency>
+              <!-- If including this, environments in parent need to be limited or this needs to be classified -->
+              <artifactId>org.eclipse.jdt</artifactId>
+              <type>eclipse-feature</type>
+            </dependency>
+          </dependencies-->
 
         </configuration>
       </plugin>
