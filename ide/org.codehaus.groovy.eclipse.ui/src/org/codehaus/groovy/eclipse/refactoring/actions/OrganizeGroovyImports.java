@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -377,7 +377,7 @@ public class OrganizeGroovyImports {
                 doNotRemoveImport(partialName);
 
             } else if (length > name.length()) {
-                GroovyPlugin.getDefault().logException(String.format(
+                GroovyPlugin.getDefault().logError(String.format(
                     "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
                     name, start, until, node.getLineNumber(), length, name.length()), new Exception());
             }
@@ -544,7 +544,7 @@ public class OrganizeGroovyImports {
             return rewrite;
 
         } catch (Exception e) {
-            GroovyPlugin.getDefault().logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
+            GroovyPlugin.getDefault().logError("Exception thrown when organizing imports for " + unit.getElementName(), e);
         } finally {
             importsSlatedForRemoval = null;
             missingTypes = null;

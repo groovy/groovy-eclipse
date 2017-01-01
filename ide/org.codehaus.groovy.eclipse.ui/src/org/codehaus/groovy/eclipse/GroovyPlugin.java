@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
             getPreferenceStore().addPropertyChangeListener(junitMono);
             PrefUtil.getInternalPreferenceStore().addPropertyChangeListener(junitMono);
         } catch (Exception e) {
-            logException("Error installing JUnit monospace font listener", e);
+            logError("Error installing JUnit monospace font listener", e);
         }
     }
 
@@ -174,30 +174,20 @@ public class GroovyPlugin extends AbstractUIPlugin {
         return outlineTools;
     }
 
-    /**
-     * @param message The message to save.
-     * @param exception The exception to be logged.
-     */
-    public void logException(String message, Exception exception) {
-        log(IStatus.ERROR, message, exception);
+    public void logError(String message, Throwable error) {
+        log(IStatus.ERROR, message, error);
     }
 
-    /**
-     * @param message The warning to log.
-     */
-    public void logWarning( final String message ){
+    public void logWarning(String message) {
         log(IStatus.WARNING, message, null);
     }
 
-    /**
-     * @param message The message to log.
-     */
     public void logTraceMessage(String message) {
         log(IStatus.INFO, message, null);
     }
 
-    private void log(int severity, String message, Exception exception) {
-        final IStatus status = new Status( severity, getBundle().getSymbolicName(), 0, message, exception );
+    private void log(int severity, String message, Throwable cause) {
+        final IStatus status = new Status(severity, PLUGIN_ID, message, cause);
         getLog().log(status);
     }
 }
