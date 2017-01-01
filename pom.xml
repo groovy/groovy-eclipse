@@ -433,7 +433,7 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<pomDependencies>consider</pomDependencies>
-					<dependency-resolution>
+					<!--dependency-resolution>
 						<extraRequirements>
 							<requirement>
 								<type>eclipse-feature</type>
@@ -441,7 +441,7 @@
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
-					</dependency-resolution>
+					</dependency-resolution-->
 					<environments>
 						<environment>
 							<os>linux</os>

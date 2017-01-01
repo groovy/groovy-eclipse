@@ -51,6 +51,10 @@
             </dependency>
             <dependency>
               <type>eclipse-feature</type>
+              <artifactId>org.eclipse.platform.ide</artifactId>
+            </dependency>
+            <dependency>
+              <type>eclipse-feature</type>
               <artifactId>org.eclipse.jdt</artifactId>
             </dependency>
           </dependencies>
