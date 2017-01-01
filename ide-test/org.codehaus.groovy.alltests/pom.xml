@@ -53,6 +53,10 @@
               <type>eclipse-feature</type>
               <artifactId>org.eclipse.jdt</artifactId>
             </dependency>
+            <dependency>
+              <type>eclipse-feature</type>
+              <artifactId>org.eclipse.platform</artifactId>
+            </dependency>
           </dependencies>
 
         </configuration>
