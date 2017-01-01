@@ -49,6 +49,10 @@
               <type>eclipse-feature</type>
               <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
             </dependency>
+            <dependency>
+              <type>eclipse-feature</type>
+              <artifactId>org.eclipse.jdt</artifactId>
+            </dependency>
           </dependencies>
 
         </configuration>
