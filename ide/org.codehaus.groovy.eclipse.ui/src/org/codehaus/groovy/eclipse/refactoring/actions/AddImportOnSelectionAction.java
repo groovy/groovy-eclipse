@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,11 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationMessages;
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
+import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
+import org.eclipse.jdt.internal.ui.JavaUIStatus;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
+import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.text.edits.DeleteEdit;
@@ -77,7 +80,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 return fStatus;
             }
 
-            public void run(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
+            public void run(IProgressMonitor monitor) throws CoreException {
                 if (monitor == null) monitor = new NullProgressMonitor();
                 try {
                     monitor.beginTask(CodeGenerationMessages.AddImportsOperation_description, 4);
@@ -100,8 +103,8 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                     result.addChild(importRewrite.rewriteImports(new SubProgressMonitor(monitor, 1)));
                     JavaModelUtil.applyEdit(compilationUnit, result, true, new SubProgressMonitor(monitor, 1));
                 } catch (OperationCanceledException cancel) {
-                    fStatus = Status.CANCEL_STATUS;
-                    throw cancel;
+                    if (fStatus == Status.OK_STATUS)
+                        fStatus = Status.CANCEL_STATUS;
                 } finally {
                     monitor.done();
                 }
@@ -146,7 +149,13 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                         int nameStart = typeStart + source.indexOf(GroovyUtils.splitName(type)[1]);
                         if (nameStart > typeStart) {
                             if (nameStart <= selectRegion.getEnd()) {
-                                importRewrite.addImport(type.getName().replace('$', '.'));
+                                String result = importRewrite.addImport(type.getName().replace('$', '.'));
+                                // result is fully-qualified name in case of conflict with another import
+                                if (result.indexOf('.') > 0) {
+                                    fStatus = JavaUIStatus.createError(IStatus.ERROR,
+                                        CodeGenerationMessages.AddImportsOperation_error_importclash, null);
+                                    return null;
+                                }
                                 return new DeleteEdit(typeStart, nameStart - typeStart);
                             }
 
@@ -223,6 +232,13 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 new SearchEngine().searchAllTypeNames(null, 0, typeName.toCharArray(), matchRule, searchFor,
                     SearchEngine.createJavaSearchScope(new IJavaElement[] {compilationUnit.getJavaProject()}),
                     new TypeNameMatchCollector(typesFound), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, monitor);
+
+                if (typesFound.isEmpty()) {
+                    fStatus = JavaUIStatus.createError(IStatus.ERROR, Messages.format(
+                        CodeGenerationMessages.AddImportsOperation_error_notresolved_message,
+                        BasicElementLabels.getJavaElementName(typeName)), null);
+                    throw new OperationCanceledException();
+                }
 
                 TypeNameMatch choice = typeQuery.chooseImport(typesFound.toArray(new TypeNameMatch[typesFound.size()]), typeName);
                 if (choice == null) throw new OperationCanceledException();

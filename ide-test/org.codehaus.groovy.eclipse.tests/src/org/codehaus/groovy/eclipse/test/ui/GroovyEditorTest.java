@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
@@ -31,6 +32,7 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.ui.texteditor.AbstractTextEditor;
 
 /**
  * A test class, meant to be subclasses. Provides utilities for initializing
@@ -170,6 +172,12 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
         if (File.separatorChar == '\\') {
             actual = actual.replace("\r\n", "\n");
         }
+        assertEquals(expected, actual);
+    }
+
+    protected void assertStatusLineText(String expected) throws Exception {
+        Object manager = ReflectionUtils.throwableExecutePrivateMethod(AbstractTextEditor.class, "getStatusLineManager", new Class[0], editor, new Object[0]);
+        String actual = (String) ReflectionUtils.throwableGetPrivateField(manager.getClass(), "message", manager);
         assertEquals(expected, actual);
     }
 }

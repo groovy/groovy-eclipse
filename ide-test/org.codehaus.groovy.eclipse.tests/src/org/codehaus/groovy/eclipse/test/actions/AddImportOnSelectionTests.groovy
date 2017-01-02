@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -997,5 +997,17 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
             String s = \$/units: \${Time${CARET}Unit.SECONDS.name()}/\$
             """.stripIndent()
+    }
+
+    void testTryAddConflictingType() {
+        addImportOnSelection "import a.b.c.Pattern\n\ndef pat = java.util.regex.Pat${CARET}tern.compile('123')"
+        assertEditorContents "import a.b.c.Pattern\n\ndef pat = java.util.regex.Pattern.compile('123')"
+        assertStatusLineText "Import would conflict with an other import declaration or visible type."
+    }
+
+    void testTryAddUnresolvedType() {
+        addImportOnSelection "def x = Unresolvable${CARET}ClassName.WHATEVER"
+        assertEditorContents "def x = UnresolvableClassName.WHATEVER"
+        assertStatusLineText "Type 'UnresolvableClassName' could not be found or is not visible."
     }
 }
