@@ -79,6 +79,7 @@ public char[] declaringTypeName() {
 	}
 	return null;
 }
+@SuppressWarnings("cast")
 protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 	try {
 		// desintall previous breakpoints
@@ -121,12 +122,12 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 			}
 		}
 		ClassType clazz = (ClassType)classes.get(0);
-		Method method = clazz.methodsByName(this.breakpointMethodName).get(0);
+		Method method = (Method)clazz.methodsByName(this.breakpointMethodName).get(0);
 		Location location;
 		if (this.breakpointLine < 0 || this.breakpointLine == Integer.MAX_VALUE) {
 			location = method.location();
 		} else {
-			location = method.locationsOfLine(this.breakpointLine).get(0);
+			location = (Location)method.locationsOfLine(this.breakpointLine).get(0);
 		}
 		BreakpointRequest request = this.jdiVM.eventRequestManager().createBreakpointRequest(location);
 		request.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
@@ -254,6 +255,7 @@ public char[][] localVariableTypeNames() {
 		return null;
 	}
 }
+@SuppressWarnings("cast")
 public boolean run(String codeSnippetClassName) {
 		ClassType codeSnippetClass;
 		ObjectReference codeSnippet;
@@ -285,7 +287,7 @@ public boolean run(String codeSnippetClassName) {
 			codeSnippetClass = (ClassType)classes.get(0);
 
 			// Create a new code snippet
-			Method constructor = codeSnippetClass.methodsByName("<init>").get(0);
+			Method constructor = (Method)codeSnippetClass.methodsByName("<init>").get(0);
 			codeSnippet = codeSnippetClass.newInstance(jdiThread, constructor, new ArrayList<Value>(), ClassType.INVOKE_SINGLE_THREADED);
 
 			// Install local variables and "this" into generated fields
@@ -313,7 +315,7 @@ public boolean run(String codeSnippetClassName) {
 			codeSnippetRunner = (ObjectReference)codeSnippetRunnerClass.getValue(theRunner);
 
 			// Get the method 'runCodeSnippet' and its arguments
-			method = codeSnippetRunnerClass.methodsByName(RUN_CODE_SNIPPET_METHOD).get(0);
+			method = (Method)codeSnippetRunnerClass.methodsByName(RUN_CODE_SNIPPET_METHOD).get(0);
 			arguments = new ArrayList<ObjectReference>();
 			arguments.add(codeSnippet);
 		} catch (ClassNotLoadedException e) {
