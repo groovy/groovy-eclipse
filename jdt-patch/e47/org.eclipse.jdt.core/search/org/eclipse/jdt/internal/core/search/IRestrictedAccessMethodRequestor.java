@@ -1,0 +1,36 @@
+/*******************************************************************************
+ * Copyright (c) 2015 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.jdt.internal.core.search;
+
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+
+/**
+ * A <code>IRestrictedAccessMethodRequestor</code> collects search results from a <code>searchAllMethodDeclarations</code>
+ * query to a <code>SearchBasicEngine</code> providing restricted access information of declaring type when a method is accepted.
+ */
+public interface IRestrictedAccessMethodRequestor {
+
+	public void acceptMethod(
+			char[] methodName,
+			int parameterCount,
+			char[] declaringQualification,
+			char[] simpleTypeName,
+			int typeModifiers,
+			char[] packageName,
+			char[] signature,
+			char[][] parameterTypes,
+			char[][] parameterNames,
+			char[] returnType,
+			int modifiers,
+			String path,
+			AccessRestriction access,
+			int methodIndex);
+}
