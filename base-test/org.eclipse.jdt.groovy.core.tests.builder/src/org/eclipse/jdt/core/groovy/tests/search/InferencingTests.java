@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.osgi.framework.Version;
  * @author Andrew Eisenberg
  * @created Nov 4, 2009
  */
-public class InferencingTests extends AbstractInferencingTest {
+public final class InferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(InferencingTests.class);
@@ -243,7 +243,7 @@ public class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testSpread1() throws Exception {
-        String contents = "def z = [1,2]*.value\nz";
+        String contents = "def z = [1,2]*.value";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + "value".length(), "java.lang.Integer");
     }
@@ -273,7 +273,7 @@ public class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testSpread6() throws Exception {
-        String contents = "[x:1,y:2,z:3]*.key()";
+        String contents = "[x:1,y:2,z:3]*.key";
         int start = contents.lastIndexOf("key");
         assertType(contents, start, start + "key".length(), "java.lang.String");
     }
@@ -300,6 +300,33 @@ public class InferencingTests extends AbstractInferencingTest {
         String contents = "[1,2,3]*.value[0].value";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + "value".length(), "java.lang.Integer");
+    }
+
+    public void testSpread11() throws Exception {
+        String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
+            "strings*.bytes";
+        int start = contents.lastIndexOf("bytes");
+        assertType(contents, start, start + "bytes".length(), "byte[]");
+    }
+
+    public void testSpread12() throws Exception {
+        String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
+            "strings*.length()";
+        int start = contents.lastIndexOf("length");
+        assertType(contents, start, start + "length".length(), "java.lang.Integer");
+    }
+
+    public void testSpread13() throws Exception {
+        String contents = "@groovy.transform.TypeChecked class Foo {\n" +
+            "  static def meth() {\n" +
+            "    Set<java.beans.BeanInfo> beans = []\n" +
+            "    beans*.additionalBeanInfo\n" +
+            "  }\n" +
+            "}";
+        int start = contents.lastIndexOf("beans");
+        assertType(contents, start, start + "beans".length(), "java.util.Set<java.beans.BeanInfo>");
+        start = contents.lastIndexOf("additionalBeanInfo");
+        assertType(contents, start, start + "additionalBeanInfo".length(), "java.beans.BeanInfo[]");
     }
 
     public void testInferMap1() throws Exception {
