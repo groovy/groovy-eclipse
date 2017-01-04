@@ -125,7 +125,7 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/milestones/oxygen</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.7milestones</url>
 				</repository>
 				<repository>
 					<id>m2e</id>
