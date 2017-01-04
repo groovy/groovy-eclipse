@@ -101,7 +101,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
                 if (isRuntimeCompiled(resource)) {
                     desc = GroovyPluginImages.DESC_GROOVY_FILE;
                     //flags |= JavaElementImageDescriptor.STATIC;
-                    flags |= JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS;
+                    flags |= 0x8000/*JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS*/; // TODO: Restore when e37 is no longer supported.
                 } else {
                     desc = GroovyPluginImages.DESC_GROOVY_FILE;
                 }
