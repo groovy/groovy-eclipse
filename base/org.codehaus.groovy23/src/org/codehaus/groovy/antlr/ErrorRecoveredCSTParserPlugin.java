@@ -128,7 +128,6 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 		reportCST(sourceUnit, parser);
 	}
 
-	@SuppressWarnings("unchecked")
 	private void reportCST(final SourceUnit sourceUnit,
 			final GroovyRecognizer parser) {
 		final List errorList = parser.getErrorList();

@@ -291,7 +291,6 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void addTransform(AnnotationNode annotation, Class klass)  {
         classNode.addTransform(klass, annotation);
     }

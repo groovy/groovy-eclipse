@@ -22,7 +22,6 @@ import java.util.Date;
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
-@SuppressWarnings("nls")
 public class DefaultGroovyLogger implements IGroovyLogger {
 
     public void log(TraceCategory category, String message) {
@@ -32,5 +31,4 @@ public class DefaultGroovyLogger implements IGroovyLogger {
     public boolean isCategoryEnabled(TraceCategory category) {
         return true;
     }
-
 }

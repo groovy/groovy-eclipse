@@ -28,9 +28,9 @@ import org.osgi.framework.BundleContext;
 
 public class GroovyActivator extends Plugin {
 
-    public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
+    public static final String PLUGIN_ID = "org.codehaus.groovy";
 
-    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.1.9.jar"; //$NON-NLS-1$
+    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.1.9.jar";
 
     public static URL GROOVY_ALL_JAR_URL;
 

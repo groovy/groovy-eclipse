@@ -227,14 +227,13 @@ public class AnnotationCollectorTransform {
     
     private static List<AnnotationNode> makeListOfAnnotations(Object[][] data) {
         if (data.length==0) return Collections.EMPTY_LIST;
-
+        
         ArrayList<AnnotationNode> ret = new ArrayList<AnnotationNode>(data.length);
         for (Object[] inner : data) {
             Class anno = (Class) inner[0];
             AnnotationNode toAdd = new AnnotationNode(ClassHelper.make(anno));
             ret.add(toAdd);
-
-            @SuppressWarnings("unchecked")
+            
             Map<String,Object> member = (Map<String, Object>) inner[1];
             if (member.isEmpty()) continue;
             Map<String, Expression> generated = new HashMap<String, Expression>(member.size());

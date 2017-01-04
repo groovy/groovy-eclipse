@@ -294,7 +294,6 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void addTransform(AnnotationNode annotation, Class klass)  {
         boolean apply = !Traits.isTrait(classNode) || klass == TraitASTTransformation.class;
         if (apply) {
