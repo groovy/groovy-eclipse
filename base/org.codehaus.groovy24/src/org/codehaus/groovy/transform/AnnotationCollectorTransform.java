@@ -234,7 +234,6 @@ public class AnnotationCollectorTransform {
             AnnotationNode toAdd = new AnnotationNode(ClassHelper.make(anno));
             ret.add(toAdd);
 
-            @SuppressWarnings("unchecked")
             Map<String,Object> member = (Map<String, Object>) inner[1];
             if (member.isEmpty()) continue;
             Map<String, Expression> generated = new HashMap<String, Expression>(member.size());

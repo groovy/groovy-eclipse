@@ -21,7 +21,6 @@ import java.util.Arrays;
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
-@SuppressWarnings("nls")
 public enum TraceCategory {
 
     DEFAULT("_"),

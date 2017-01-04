@@ -147,6 +147,35 @@
 			<id>e46</id>
 			<repositories>
 				<repository>
+					<id>e47</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
+				</repository>
+				<repository>
+					<id>oxygen</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/oxygen</url>
+				</repository>
+				<repository>
+					<id>m2e</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e47/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e47/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.7</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e47${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>e46</id>
+			<repositories>
+				<repository>
 					<id>e46</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/eclipse/updates/4.6</url>
