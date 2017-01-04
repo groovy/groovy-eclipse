@@ -461,16 +461,6 @@
 				<artifactId>target-platform-configuration</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
-					<pomDependencies>consider</pomDependencies>
-					<!--dependency-resolution>
-						<extraRequirements>
-							<requirement>
-								<id>org.eclipse.xyz</id>
-								<type>eclipse-feature</type>
-								<versionRange>0.0.0</versionRange>
-							</requirement>
-						</extraRequirements>
-					</dependency-resolution-->
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -498,6 +488,7 @@
 							<arch>x86_64</arch>
 						</environment>
 					</environments>
+					<pomDependencies>consider</pomDependencies>
 				</configuration>
 			</plugin>
 
@@ -547,20 +538,6 @@
 						<configuration>
 							<excludes>
 								<plugin id="org.codehaus.groovy.eclipse" />
-								<!-- Stuff below is related to j8 patch. Can't find source for these patched bits. -->
-								<plugin id="org.eclipse.jdt.apt.core" />
-								<plugin id="org.eclipse.jdt.apt.ui" />
-								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
-								<plugin id="org.eclipse.jdt.compiler.apt" />
-								<plugin id="org.eclipse.jdt.compiler.tool" />
-								<plugin id="org.eclipse.jdt.annotation" />
-								<plugin id="org.eclipse.jdt.debug.ui" />
-								<plugin id="org.eclipse.jdt.debug" />
-								<plugin id="org.eclipse.jdt.launching" />
-								<plugin id="org.eclipse.jdt.ui" />
-								<plugin id="org.eclipse.jdt.junit" />
-								<plugin id="org.eclipse.jdt.junit.core" />
-								<feature id="org.eclipse.jdt.a2.java8patch" />
 							</excludes>
 						</configuration>
 					</execution>

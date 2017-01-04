@@ -11,14 +11,6 @@
   <version>2.9.2-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
-  <!--dependencies>
-    <dependency>
-      <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
-      <groupId>org.codehaus.groovy.eclipse</groupId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies-->
-
   <build>
     <plugins>
       <plugin>
@@ -35,25 +27,12 @@
           <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
-          <useUIHarness>false</useUIHarness><!-- TODO: Set to true once GTK/SWT can create a display -->
+          <useUIHarness>true</useUIHarness>
 
           <includes>
             <include>**/alltests/GroovyJDTTests.java</include>
-            <!--include>**/alltests/AllGroovyAndJDTTests.java</include-->
+            <include>**/alltests/AllGroovyTests.java</include>
           </includes>
-
-          <!-- Items required only by the testing runtime: -->
-          <!-- I think these deps are all satisfied elsewhere -->
-          <!--dependencies>
-            <dependency>
-              <artifactId>org.codehaus.groovy.jdt.patch</artifactId>
-              <type>eclipse-feature</type>
-            </dependency>
-            <dependency>
-              <artifactId>org.eclipse.jdt</artifactId>
-              <type>eclipse-feature</type>
-            </dependency>
-          </dependencies-->
 
         </configuration>
       </plugin>
