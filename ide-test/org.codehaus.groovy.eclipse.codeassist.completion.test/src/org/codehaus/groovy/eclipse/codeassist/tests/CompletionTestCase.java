@@ -302,11 +302,9 @@ public abstract class CompletionTestCase extends TestCase {
                 SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
                 unit.reconcile(JavaConstants.AST_LEVEL, true, null, spm);
                 spm.waitForCompletion();
-
-                SynchronizationUtils.waitForIndexingToComplete(unit);
             }
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
-            count++;
+            count += 1;
         } while ((proposals == null || proposals.length == 0) && count < maxCount);
 
         if (count >= maxCount) {
@@ -361,7 +359,7 @@ public abstract class CompletionTestCase extends TestCase {
 
     protected void checkProposalApplication(String contents, int proposalLocation, String[] expecteds, String[] proposalNames) throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation);
-        for (int i = 0; i < expecteds.length; i++) {
+        for (int i = 0, n = expecteds.length; i < n; i += 1) {
             ICompletionProposal firstProposal = findFirstProposal(proposals, proposalNames[i], false);
             assertNotNull("Expected at least one proposal, but found none", firstProposal);
             applyProposalAndCheck(new Document(contents), firstProposal, expecteds[i]);

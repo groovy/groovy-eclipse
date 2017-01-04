@@ -3778,6 +3778,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     // GRECLIPSE add
     private void fixModuleNodeLocations() {
+        // only occurs if in a script
+
         output.setStart(0);
         output.setEnd(locations.getEnd());
         output.setLineNumber(1);
@@ -3785,23 +3787,22 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         output.setLastColumnNumber(locations.getEndColumn());
         output.setLastLineNumber(locations.getEndLine());
         
-        // only occurs if in a script
         // start location should be the start of either the first method or statement
         // end location should be the end of either the last method or statement
-        BlockStatement statements = output.getStatementBlock();
+        BlockStatement statement = output.getStatementBlock();
         List<MethodNode> methods = output.getMethods();
-        if (hasScriptMethodsOrStatements(statements, methods)) {
-            ASTNode first = getFirst(statements, methods);
-            ASTNode last = getLast(statements, methods);
-            if (hasScriptStatements(statements)) {
-                statements.setStart(first.getStart());
-                statements.setLineNumber(first.getLineNumber());
-                statements.setColumnNumber(first.getColumnNumber());
-                statements.setEnd(last.getEnd());
-                statements.setLastLineNumber(last.getLastLineNumber());
-                statements.setLastColumnNumber(last.getLastColumnNumber());
+        if (hasScriptStatements(statement) || hasScriptMethods(methods)) {
+            ASTNode first = getFirst(statement, methods);
+            ASTNode last = getLast(statement, methods);
+            if (hasScriptStatements(statement)) {
+                statement.setStart(first.getStart());
+                statement.setLineNumber(first.getLineNumber());
+                statement.setColumnNumber(first.getColumnNumber());
+                statement.setEnd(last.getEnd());
+                statement.setLastLineNumber(last.getLastLineNumber());
+                statement.setLastColumnNumber(last.getLastColumnNumber());
             }
-            if (output.getClasses().size() > 0) {
+            if (!output.getClasses().isEmpty()) {
                 ClassNode scriptClass = output.getClasses().get(0);
                 scriptClass.setStart(first.getStart());
                 scriptClass.setLineNumber(first.getLineNumber());
@@ -3822,9 +3823,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-    // return the first ast node in the script, either a method or a statement
-    private ASTNode getFirst(BlockStatement statements, List<MethodNode> methods) {
-        Statement firstStatement = hasScriptStatements(statements) ? statements.getStatements().get(0) : null;
+    private boolean hasScriptMethods(List<MethodNode> methods) {
+        return methods != null && !methods.isEmpty();
+    }
+
+    private boolean hasScriptStatements(BlockStatement statement) {
+        return statement != null && statement.getStatements() != null && !statement.getStatements().isEmpty();
+    }
+
+    /** Returns the first ast node in the script, either a method or a statement. */
+    private ASTNode getFirst(BlockStatement statement, List<MethodNode> methods) {
+        Statement firstStatement = hasScriptStatements(statement) ? statement.getStatements().get(0) : null;
         MethodNode firstMethod = hasScriptMethods(methods) ? methods.get(0) : null;
         if (firstMethod == null && (firstStatement == null || (firstStatement.getStart() == 0 && firstStatement.getLength() == 0))) {
             // An empty script with no methods or statements.
@@ -3836,9 +3845,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return statementStart <= methodStart ? firstStatement : firstMethod;
     }
 
-    // return the last ast node in the script, either a method or a statement
-    private ASTNode getLast(BlockStatement statements, List<MethodNode> methods) {
-        Statement lastStatement = hasScriptStatements(statements) ? statements.getStatements().get(statements.getStatements().size()-1) : null;
+    /** Returns the last ast node in the script, either a method or a statement. */
+    private ASTNode getLast(BlockStatement statement, List<MethodNode> methods) {
+        Statement lastStatement = hasScriptStatements(statement) ? statement.getStatements().get(statement.getStatements().size() - 1) : null;
         MethodNode lastMethod = hasScriptMethods(methods) ? methods.get(methods.size()-1) : null;
         if (lastMethod == null && (lastStatement == null || (lastStatement.getStart() == 0 && lastStatement.getLength() == 0))) {
             // An empty script with no methods or statements.
@@ -3850,36 +3859,29 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return statementStart >= methodStart ? lastStatement : lastMethod;
     }
     
-    // creates a synthetic, empty statement that starts after the last import or package statement
+    /** Creates a synthetic statement that starts after the last import or package statement. */
     private Statement createSyntheticAfterImports() {
-        ASTNode target = null;
         Statement synthetic = ReturnStatement.RETURN_NULL_OR_VOID;
-        if (output.getImports() != null && output.getImports().size() > 0) {
+        ASTNode target = null;
+        if (output.getImports() != null && !output.getImports().isEmpty()) {
             target = output.getImports().get(output.getImports().size() -1);
         } else if (output.hasPackage()) {
             target = output.getPackage();
         }
         if (target != null) {
+            // import/package nodes do not include trailing semicolon, so use end of line instead of end of node
+            int off = Math.min(locations.findOffset(target.getLastLineNumber() + 1, 1), locations.getEnd() - 1);
+            int[] row_col = locations.getRowCol(off);
+
             synthetic = new ReturnStatement(ConstantExpression.NULL);
-            synthetic.setStart(target.getEnd()+1);
-            synthetic.setEnd(target.getEnd()+1);
-            synthetic.setLineNumber(target.getLastLineNumber());
-            synthetic.setLastLineNumber(target.getLineNumber());
-            synthetic.setColumnNumber(target.getLastColumnNumber()+1);
-            synthetic.setLastColumnNumber(target.getColumnNumber()+1);
+            synthetic.setStart(off);
+            synthetic.setEnd(off);
+            synthetic.setLineNumber(row_col[0]);
+            synthetic.setColumnNumber(row_col[1]);
+            synthetic.setLastLineNumber(row_col[0]);
+            synthetic.setLastColumnNumber(row_col[1]);
         }
         return synthetic;
-    }
-
-    private boolean hasScriptMethodsOrStatements(BlockStatement statements, List<MethodNode> methods) {
-        return hasScriptStatements(statements) ||
-               hasScriptMethods(methods);
-    }
-    private boolean hasScriptMethods(List<MethodNode> methods) {
-        return methods != null && methods.size() > 0;
-    }
-    private boolean hasScriptStatements(BlockStatement statements) {
-        return statements != null && statements.getStatements() != null && statements.getStatements().size() > 0;
     }
 
     protected void configureAnnotationAST(AnnotationNode node, AST ast) {

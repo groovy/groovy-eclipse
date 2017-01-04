@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
 
     //
 
-    public void testTypeCompletionInScript1() {
+    public void testTypeCompletionInScript() {
         String contents = "HTML";
         String expected = "import javax.swing.text.html.HTML\n\nHTML";
 
@@ -147,7 +147,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void _testTypeCompletionInScript6() {
+    public void testTypeCompletionInScript6() {
         String contents = "/* header comment */\n" +
                 "import javax.swing.plaf.ButtonUI /*tag*/ //note\n" +
                 "  // some single-line comment\n" +
@@ -165,9 +165,7 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    // TODO: Add cases for default package and variations with a package def.
-
-    public void testTypeCompletionInBrokenScript1() {
+    public void testTypeCompletionInBrokenScript() {
         String contents = "def x(HTML";
         String expected = "import javax.swing.text.html.HTML\n\ndef x(HTML";
 
@@ -181,6 +179,13 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
+    public void testTypeCompletionInBrokenScript2a() {
+        String contents = "package f;\n\ndef x(HTML";
+        String expected = "package f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
     public void testTypeCompletionInBrokenScript3() {
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
@@ -188,7 +193,13 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
+    public void testTypeCompletionInBrokenScript3a() {
+        String contents = "/**some stuff*/\npackage f;\n\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
     public void testTypeCompletionInBrokenScript4() {
         String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI\n\ndef x(HTML";
         String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
@@ -196,10 +207,23 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
+    public void testTypeCompletionInBrokenScript4a() {
+        String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
+        String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
     public void testTypeCompletionInBrokenScript5() {
         String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInBrokenScript5a() {
+        String contents = "/**some stuff*/\npackage f;\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f;\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML\n\ndef x(HTML";
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
