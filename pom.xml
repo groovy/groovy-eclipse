@@ -125,7 +125,7 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/neon</url>
+					<url>http://download.eclipse.org/milestones/oxygen</url>
 				</repository>
 				<repository>
 					<id>m2e</id>
