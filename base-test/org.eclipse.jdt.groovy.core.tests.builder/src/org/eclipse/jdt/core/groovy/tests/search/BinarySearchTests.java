@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,7 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 
 /**
- * Tests for searches into class files
  * @author Andrew Eisenberg
- * @created 2013-05-01
  */
 public class BinarySearchTests extends AbstractGroovySearchTest {
 
@@ -211,13 +209,12 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     }
 
     private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws CoreException {
+        waitForIndexer(javaProject);
+
         SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
-        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] { javaProject });
-        performDummySearch(javaProject);
-        SearchEngine engine = new SearchEngine();
+        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
         MockSearchRequestor requestor = new MockSearchRequestor();
-        engine.search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, scope, requestor, null);
+        new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, scope, requestor, null);
         return requestor;
     }
-
 }
