@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1127,7 +1127,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
 
-    void testTailCallMethods() {
+    void _testTailCallMethods() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return
 
         String contents = '''\
@@ -1221,7 +1221,7 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }')
     }
 
-    void testTraits() {
+    void _testTraits() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return
 
         String contents = '''\

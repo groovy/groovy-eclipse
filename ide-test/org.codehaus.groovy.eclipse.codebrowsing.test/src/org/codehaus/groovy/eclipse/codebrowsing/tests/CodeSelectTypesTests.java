@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -570,12 +570,12 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
 
     // javadocs
 
-    public void testSelectTypeInJavadocLink() {
+    public void _testSelectTypeInJavadocLink() {
         String contents = "/** {@link java.util.regex.Pattern} */ class X { }";
         assertCodeSelect(asList(contents), "Pattern");
     }
 
-    public void testSelectTypeInJavadocLink2() {
+    public void _testSelectTypeInJavadocLink2() {
         String contents = "import java.util.regex.Pattern; /** {@link Pattern} */ class X { }";
         assertCodeSelect(asList(contents), "Pattern");
     }

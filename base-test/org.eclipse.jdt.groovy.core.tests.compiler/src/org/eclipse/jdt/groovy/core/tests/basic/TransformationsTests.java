@@ -933,7 +933,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "@a.SampleAnnotation()");
     }
 
-    public void testGrab() {
+    public void _testGrab() {
         String[] sources = {
             "Printer.groovy",
             "@Grab('joda-time:joda-time:1.6')\n"+
@@ -954,7 +954,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
      * org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
      * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
      */
-    public void testGrabWithErrors() {
+    public void _testGrabWithErrors() {
         String[] sources = {
             "Grab1.groovy",
             "@Grapes([\n"+
@@ -987,7 +987,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    public void testGrabScriptAndImports_GRE680() {
+    public void _testGrabScriptAndImports_GRE680() {
         String[] sources = {
             "Script.groovy",
             "import org.mortbay.jetty.Server\n"+

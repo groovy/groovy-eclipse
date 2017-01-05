@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -158,13 +158,13 @@ public final class RenameMethodTests extends RefactoringTest {
     // org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration#parseMethods was set to no-op and so no bodies avail for refactor
 
     /** @see org.eclipse.jdt.internal.corext.refactoring.rename.RenameNonVirtualMethodProcessor#addDeclarationUpdate */
-    public void testDelegate1() throws Exception {
+    public void _testDelegate1() throws Exception {
         // rename static method "m" to "k" and add deprecated delegate
         runTest("A", "m", "k", new String[] {}, true, true);
     }
 
     /** @see org.eclipse.jdt.internal.corext.refactoring.rename.RenameVirtualMethodProcessor */
-    public void testDelegate2() throws Exception {
+    public void _testDelegate2() throws Exception {
         // rename non-static method "m" to "k" and add deprecated delegate
         runTest("A", "m", "k", new String[] {}, true, true);
     }
