@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,18 +87,21 @@ public final class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = addGroovySource(groovyClass, "File", "");
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "bar", 1);
-        assertEquals ("bar() : String - StringExtension (Category: StringExtension)", proposals[0].getDisplayString());
+        assertEquals("bar() : String - StringExtension (Category: StringExtension)", proposals[0].getDisplayString());
 
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
         Arrays.sort(proposals, new Comparator<ICompletionProposal>() {
             public int compare(ICompletionProposal o1, ICompletionProposal o2) {
-                return - o1.getDisplayString().compareTo(o2.getDisplayString());
+                return o2.getDisplayString().compareTo(o1.getDisplayString());
             }
         });
         proposalExists(proposals, "collect", 3);
-        assertEquals(printProposals(proposals), "collect(Collection collector, Closure transform) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
-        assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
-        assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
+        assertTrue(printProposals(proposals), proposals[0].getDisplayString().matches(
+            "collect\\(Collection \\w+, Closure \\w+\\) : Collection - DefaultGroovyMethods \\(Category: DefaultGroovyMethods\\)"));
+        assertTrue(printProposals(proposals), proposals[1].getDisplayString().matches(
+            "collect\\(Closure \\w+\\) : List - DefaultGroovyMethods \\(Category: DefaultGroovyMethods\\)"));
+        assertTrue(printProposals(proposals), proposals[2].getDisplayString().matches(
+            "collect\\(\\) : Collection - DefaultGroovyMethods \\(Category: DefaultGroovyMethods\\)"));
     }
 
     public void testVisibility() throws Exception {

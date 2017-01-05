@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public final class GroovyLikeCompletionTests extends CompletionTestCase {
     public void testMethodWith2Args() throws Exception {
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf(startIndex) {  }", 1);
+        checkReplacementRegexp(proposals, "findIndexOf\\(\\w+\\) \\{  \\}", 1);
     }
 
     public void testMethodWithClosureNotGroovyLike() throws Exception {
@@ -128,7 +128,7 @@ public final class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "any(closure)", 1);
+        checkReplacementRegexp(proposals, "any\\(\\w+\\)", 1);
     }
 
     public void testMethodWith2ArgsNotGroovyLike() throws Exception {
@@ -136,7 +136,7 @@ public final class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "");
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf(startIndex, closure)", 1);
+        checkReplacementRegexp(proposals, "findIndexOf\\(\\w+, \\w+\\)", 1);
     }
 
     public void testClosureApplication1a() throws Exception {

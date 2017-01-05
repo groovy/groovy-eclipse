@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -202,12 +202,12 @@ public abstract class CompletionTestCase extends TestCase {
             AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
             String replacement = javaProposal.getReplacementString();
             if (Pattern.matches(expectedReplacement, replacement)) {
-                foundCount ++;
+                foundCount += 1;
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (ICompletionProposal proposal : proposals) {
                 AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
                 sb.append("\n" + javaProposal.getReplacementString());
@@ -222,12 +222,12 @@ public abstract class CompletionTestCase extends TestCase {
             AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
             String replacement = javaProposal.getReplacementString();
             if (replacement.equals(expectedReplacement)) {
-                foundCount ++;
+                foundCount += 1;
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (ICompletionProposal proposal : proposals) {
                 AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
                 sb.append("\n" + javaProposal.getReplacementString());
@@ -247,12 +247,12 @@ public abstract class CompletionTestCase extends TestCase {
             AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
             String replacement = javaProposal.getReplacementString();
             if (replacement.equals(expectedReplacementOptions[0]) || replacement.equals(expectedReplacementOptions[1])) {
-                foundCount ++;
+                foundCount += 1;
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (ICompletionProposal proposal : proposals) {
                 AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
                 sb.append("\n" + javaProposal.getReplacementString());
