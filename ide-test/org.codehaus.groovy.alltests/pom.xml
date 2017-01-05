@@ -34,6 +34,14 @@
             <include>**/alltests/AllGroovyTests.java</include>
           </includes>
 
+          <!-- Items required only by the testing runtime: -->
+          <dependencies>
+            <dependency>
+              <artifactId>org.eclipse.rcp</artifactId>
+              <type>eclipse-feature</type>
+            </dependency>
+          </dependencies>
+
         </configuration>
       </plugin>
     </plugins>

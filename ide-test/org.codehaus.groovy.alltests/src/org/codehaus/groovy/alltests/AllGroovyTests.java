@@ -46,7 +46,7 @@ public class AllGroovyTests {
         TestSuite suite = new TestSuite(AllGroovyTests.class.getName());
         suite.addTestSuite(SanityTest.class);
         suite.addTest(AllUITests.suite()); // first for 'ErrorLogTest'
-        //suite.addTest(AllCompletionTests.suite());
+        suite.addTest(AllCompletionTests.suite());
         suite.addTest(AllBrowsingTests.suite());
         suite.addTest(AllCoreTests.suite());
         suite.addTest(AllDSLTests.suite());
