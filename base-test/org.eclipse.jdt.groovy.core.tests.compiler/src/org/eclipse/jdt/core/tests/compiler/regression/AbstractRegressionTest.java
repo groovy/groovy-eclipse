@@ -1038,12 +1038,12 @@ protected static class JavacTestOptions {
 		if (logTitle) {
 			logTestTitle();
 		}
-		for (int i = 0; i < testFiles.length; i += 2) {
-			System.out.print(testFiles[i]);
-			System.out.println(" [");
-			System.out.println(testFiles[i + 1]);
-			System.out.println("]");
-		}
+//		for (int i = 0; i < testFiles.length; i += 2) {
+//			System.out.print(testFiles[i]);
+//			System.out.println(" [");
+//			System.out.println(testFiles[i + 1]);
+//			System.out.println("]");
+//		}
 	}
 	void logTestTitle() {
 		System.out.println(getClass().getName() + '#' + getName());
@@ -2180,12 +2180,7 @@ protected void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
 				if (execOutputString != null && execOutputString.length() > 0) {
 					System.out.println("[OUT]:"+execOutputString);
 				}
-				for (int i = 0; i < testFiles.length; i += 2) {
-					System.out.print(testFiles[i]);
-					System.out.println(" [");
-					System.out.println(testFiles[i + 1]);
-					System.out.println("]");
-				}
+//				logTestFiles(false, testFiles);
 			}
 			assertTrue(this.verifier.failureReason, // computed by verifyClassFiles(...) action
 					passed);

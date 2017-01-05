@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ class DebugRequestor implements IGroovyDebugRequestor {
     Map<String, GroovyCompilationUnitDeclaration> declarations = new HashMap<String, GroovyCompilationUnitDeclaration>();
 
     public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
-        System.out.println(gcuDeclaration);
-        String filename = new String(gcuDeclaration.getFileName());
-        filename = filename.substring(filename.lastIndexOf(File.separator) + 1); // Filename now being just X.groovy or Foo.java
+        String filename = String.valueOf(gcuDeclaration.getFileName());
+        filename = filename.substring(filename.lastIndexOf(File.separator) + 1); // Filename now being just Foo.groovy or Bar.java
+
         declarations.put(filename, gcuDeclaration);
     }
 }
