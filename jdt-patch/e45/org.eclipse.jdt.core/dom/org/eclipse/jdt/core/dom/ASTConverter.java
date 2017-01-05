@@ -3670,7 +3670,14 @@ class ASTConverter {
 							for (int i = 0, max = typeArguments.length; i < max; i++) {
 								type2 = convertType(typeArguments[i]);
 								((ParameterizedType) type).typeArguments().add(type2);
+								// GROOVY add
+								if (type2.getStartPosition() > 0)
+								// GROOVY end
 								end = type2.getStartPosition() + type2.getLength() - 1;
+								// GROOVY add
+								else // generic type lacks positional info (probably backed by an ImmutableClassNode in the Groovy AST)
+									end += type2.toString().length();
+								// GROOVY end
 							}
 							end = retrieveClosingAngleBracketPosition(end + 1);
 							type.setSourceRange(sourceStart, end - sourceStart + 1);

@@ -577,7 +577,6 @@ class ASTConverter {
 			do {
 				// GROOVY add
 				// make sure the scope is available just in case it is necessary for varargs
-				// new code
 				BlockScope origScope = null;
 				if (parameters[i].binding != null) {
 					origScope = parameters[i].binding.declaringScope;
@@ -3689,10 +3688,16 @@ class ASTConverter {
 							for (int i = 0, max = typeArguments.length; i < max; i++) {
 								type2 = convertType(typeArguments[i]);
 								((ParameterizedType) type).typeArguments().add(type2);
+								// GROOVY add
+								if (type2.getStartPosition() > 0)
+								// GROOVY end
 								end = type2.getStartPosition() + type2.getLength() - 1;
+								// GROOVY add
+								else // generic type lacks positional info (probably backed by an ImmutableClassNode in the Groovy AST)
+									end += type2.toString().length();
+								// GROOVY end
 							}
-							// GROOVY edit -- end can be -1
-							end = retrieveClosingAngleBracketPosition(/*end + 1*/ sourceStart + simpleName.getLength());
+							end = retrieveClosingAngleBracketPosition(end + 1);
 							type.setSourceRange(sourceStart, end - sourceStart + 1);
 						} else {
 							type.setSourceRange(sourceStart, end - sourceStart + 1);
