@@ -24,6 +24,7 @@
         -->
 
         <configuration>
+          <argLine>-Xmx1G -XX:MaxPermSize=256M</argLine>
           <forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
