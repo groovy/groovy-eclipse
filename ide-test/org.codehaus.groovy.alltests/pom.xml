@@ -24,7 +24,7 @@
         -->
 
         <configuration>
-          <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
+          <forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
           <useUIHarness>true</useUIHarness>
