@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 /**
- * Test Case to test the ExtractMethod refactoring
- *
  * @author Michael Klenk mklenk@hsr.ch
  */
 public class ExtractMethodTestCase extends RefactoringTestCase {
@@ -43,8 +41,8 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     private GroovyCompilationUnit unit;
     private TestProject testProject;
 
-    public ExtractMethodTestCase(String arg0, File arg1) throws FileNotFoundException, IOException {
-        super(arg0, arg1);
+    public ExtractMethodTestCase(String name, File file) throws FileNotFoundException, IOException {
+        super(name, file);
     }
 
     @Override
@@ -52,10 +50,11 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
         try {
             testProject = new TestProject();
             unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", "File.groovy", getOrigin().get());
+
             RefactoringStatus status = new RefactoringStatus();
             refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(), status);
-            refactoring.setPreferences(
-                TestPrefInitializer.initializePreferences(getFileProperties(), testProject.getJavaProject()));
+            refactoring.setPreferences(TestPrefInitializer.initializePreferences(getFileProperties(), testProject.getJavaProject()));
+
             if (status.getSeverity() != RefactoringStatus.OK) {
                 fail("Bad refactoring status on init: " + status);
             }
@@ -91,8 +90,7 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
             if (mod.equals("protected"))
                 modifier = Opcodes.ACC_PROTECTED;
         } catch (Exception e) {
-            e.printStackTrace();
-            fail("Initialisation of testproperties failed! " + e.getMessage());
+            fail("Initialisation of test properties failed! " + e.getMessage());
         }
         refactoring.setModifier(modifier);
         refactoring.setNewMethodname(newMethodName);
@@ -122,7 +120,7 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
         if (variableToRename != null) {
             variablesToRename = new HashMap<String, String>();
             String[] renameMappings = variableToRename.split(";");
-            for (int i = 0; i < renameMappings.length; i++) {
+            for (int i = 0, n = renameMappings.length; i < n; i += 1) {
                 String[] singleRenames = renameMappings[i].split(":");
                 if (singleRenames.length == 2) {
                     variablesToRename.put(singleRenames[0], singleRenames[1]);

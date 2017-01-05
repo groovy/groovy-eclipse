@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.extract;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,6 +25,7 @@ import java.util.Observer;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -88,8 +87,8 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
 /**
- * @author Michael Klenk mklenk@hsr.ch
  * @author Andrew Eisenberg
+ * @author Michael Klenk mklenk@hsr.ch
  */
 public class ExtractGroovyMethodRefactoring extends Refactoring {
 
@@ -172,7 +171,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     private void initializeExtractedStatements(RefactoringStatus status) {
         StatementFinder f;
         try {
-            f = new StatementFinder(selectedText, this.unit.getModuleNode());
+            f = new StatementFinder(selectedText, unit.getModuleNode());
         } catch (Exception e) {
             status.addFatalError(e.getMessage(), createErrorContext());
             f = null;
@@ -246,8 +245,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     /**
      * For testing, override actual preferences with test-specific ones
-     *
-     * @param preferences
      */
     public void setPreferences(IPreferenceStore preferences) {
         this.refactoringPreferences = preferences;
@@ -342,8 +339,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     public Parameter[] getCallAndMethHeadParameters() {
         Parameter[] params = new Parameter[actualParameters.size()];
-
-        for (int i = 0; i < params.length; i++) {
+        for (int i = 0, n = params.length; i < n; i += 1) {
             Variable v = actualParameters.get(i);
             ClassNode t = inferredTypeOfActualParameters.get(i);
             Parameter tmpParam = new Parameter(t, v.getName());
@@ -371,7 +367,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
         ASTWriter writer = new ASTWriter(unit.getModuleNode(), replaceScope.getOffset(), null);
 
-        if (returnParameters.size() > 0) {
+        if (!returnParameters.isEmpty()) {
             visitExpressionsForReturnStmt(newMethodCall, writer);
         } else {
             writer.visitMethodCallExpression(newMethodCall);
@@ -381,17 +377,14 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private void visitExpressionsForReturnStmt(MethodCallExpression newMethodCall, ASTWriter astw) {
-        Assert.isTrue(returnParameters.size() > 0);
+        Assert.isTrue(!returnParameters.isEmpty());
         Variable retVar = returnParameters.iterator().next();
-
         if (returnMustBeDeclared) {
             VariableExpression varExp = new VariableExpression(retVar);
-            DeclarationExpression declarationExpression = new DeclarationExpression(varExp, Token.newSymbol(Types.ASSIGN, -1, -1),
-                    newMethodCall);
+            DeclarationExpression declarationExpression = new DeclarationExpression(varExp, Token.newSymbol(Types.ASSIGN, -1, -1), newMethodCall);
             astw.visitDeclarationExpression(declarationExpression);
         } else {
-            BinaryExpression binaryExpression = new BinaryExpression(new VariableExpression(retVar), Token.newSymbol(Types.ASSIGN,
-                    -1, -1), newMethodCall);
+            BinaryExpression binaryExpression = new BinaryExpression(new VariableExpression(retVar), Token.newSymbol(Types.ASSIGN, -1, -1), newMethodCall);
             astw.visitBinaryExpression(binaryExpression);
         }
     }
@@ -416,12 +409,11 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      * create the method node with all given parameters
      */
     private void updateMethod() {
-
         // rearrange parameters if necessary
-        if (block.getStatements().size() > 0) {
+        if (!block.getStatements().isEmpty()) {
             Parameter[] params = getCallAndMethHeadParameters();
             ClassNode returnType = ClassHelper.DYNAMIC_TYPE;
-            if (returnParameters.size() > 0) {
+            if (!returnParameters.isEmpty()) {
                 returnType = inferredReturnTypes.get(0);
                 if (returnType.equals(VariableScope.OBJECT_CLASS_NODE)) {
                     returnType = ClassHelper.DYNAMIC_TYPE;
@@ -446,22 +438,21 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     /**
-     * determine the statements in the new method
-     * also determine the parameters and return type
+     * Determines the statements in the new method and the parameters and return type.
      */
     private void createBlockStatement() {
         block = new BlockStatement();
         block.addStatements(methodCodeFinder.getInSelection());
-
         replaceScope = ASTTools.getPositionOfBlockStatements(block);
+        Assert.isLegal(replaceScope.getOffset() >= 0, "Replace scope has bad offset: " + replaceScope.getOffset());
+
         defineActualAndReturnParameters();
     }
 
     /**
-     * Determines parameters, return parameters, and inferred types
+     * Determines parameters, return parameters, and inferred types.
      */
     private void defineActualAndReturnParameters() {
-
         // Read used Variables
         ASTVariableScanner scanner = new ASTVariableScanner(methodCodeFinder.isInLoopOrClosure());
         scanner.visitNode(block);
@@ -588,14 +579,9 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     /**
-     * Return the Code of the new Method as a formated IDocument
-     *
-     * @param status
-     *
-     * @return
+     * Returns the Code of the new Method as a formated IDocument.
      */
     private String createCopiedMethodCode(RefactoringStatus status) {
-
         IDocument unitDocument = new Document(String.valueOf(unit.getContents()));
         String lineDelimiter = TextUtilities.getDefaultLineDelimiter(unitDocument);
 
@@ -629,17 +615,13 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             formatter.format().apply(newMethodDocument);
             return newMethodDocument.get();
         } catch (BadLocationException e) {
-            status
-                    .addFatalError("Problem when creating the body of the extracted method.\n" + e.getMessage(),
-                            createErrorContext());
+            status.addFatalError("Problem when creating the body of the extracted method.\n" + e.getMessage(), createErrorContext());
             GroovyCore.logException("Problem when creating the body of the extracted method.", e);
         }
         return sb.toString();
     }
 
     /**
-     * @param string
-     * @param status
      * @return may return null if there is a parse problem
      */
     private MethodNode createNewMethodForValidation(String methodText, RefactoringStatus status) {
@@ -662,12 +644,8 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return null;
     }
 
-    /**
-     * @return
-     */
     private FileStatusContext createErrorContext() {
-        return new FileStatusContext((IFile) unit.getResource(), new org.eclipse.jface.text.Region(selectedText.getOffset(),
-                selectedText.getLength()));
+        return new FileStatusContext((IFile) unit.getResource(), new org.eclipse.jface.text.Region(selectedText.getOffset(), selectedText.getLength()));
     }
 
     /**
@@ -739,7 +717,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      * @return the index of the selected variable in the collection
      */
     public int setMoveParameter(String variName, boolean upEvent, int numberOfMoves) {
-
         Parameter[] originalParams = getCallAndMethHeadParameters();
         List<Variable> newParamList = new ArrayList<Variable>();
 
@@ -788,14 +765,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     public void setParameterRename(Map<String, String> variablesToRename) {
-
         this.variablesToRename = variablesToRename;
         List<Variable> newParamList = new ArrayList<Variable>();
 
         for (Variable param : originalParametersBeforeRename) {
             if (variablesToRename.containsKey(param.getName())) {
-                // there's an entry for this variable in the map, therefore
-                // rename
+                // there's an entry for this variable in the map, therefore rename
                 newParamList.add(new Parameter(param.getOriginType(), variablesToRename.get(param.getName())));
             } else {
                 newParamList.add(param);
@@ -809,5 +784,4 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     public String getOriginalParameterName(int selectionIndex) {
         return originalParametersBeforeRename.get(selectionIndex).getName();
     }
-
 }
