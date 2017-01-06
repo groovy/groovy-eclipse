@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -27,12 +27,12 @@ import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
@@ -69,14 +69,14 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         }
 
         protected String getImageBundleLocation() {
-            return org.eclipse.jdt.internal.ui.JavaPluginImages.IMG_OBJS_IMPDECL;
+            return JavaPluginImages.IMG_OBJS_IMPDECL;
         }
 
         protected ImportRewrite getImportRewrite() {
             ImportRewrite rewriter = null;
             try {
                 rewriter = ImportRewrite.create(unit, true);
-            } catch (JavaModelException e) {
+            } catch (Exception e) {
                 GroovyQuickFixPlugin.log(e);
             }
             return rewriter;
@@ -85,17 +85,13 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         public void apply(IDocument document) {
             ImportRewrite rewrite = getImportRewrite();
             if (rewrite != null) {
-                rewrite.addImport(getSuggestedJavaType().getFullyQualifiedName(
-                        '.'));
+                rewrite.addImport(getSuggestedJavaType().getFullyQualifiedName('.'));
                 try {
                     TextEdit edit = rewrite.rewriteImports(null);
-
                     if (edit != null) {
                         unit.applyTextEdit(edit, null);
                     }
-                } catch (JavaModelException e) {
-                    GroovyQuickFixPlugin.log(e);
-                } catch (CoreException e) {
+                } catch (Exception e) {
                     GroovyQuickFixPlugin.log(e);
                 }
             }
@@ -106,34 +102,34 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
             // For inner types, display the fully qualified top-level type as
             // the declaration for the suggested type
             String declaration = declaringType != null
-                    ? declaringType.getFullyQualifiedName().replace('$', '.')
-                    : getSuggestedJavaType().getPackageFragment().getElementName();
+                ? declaringType.getFullyQualifiedName().replace('$', '.')
+                : getSuggestedJavaType().getPackageFragment().getElementName();
             return "Import '" + getSuggestedJavaType().getElementName() + "' (" + declaration + ")";
         }
     }
 
     protected ProblemType[] getTypes() {
-        return new ProblemType[] { ProblemType.MISSING_IMPORTS_TYPE };
+        return new ProblemType[] {ProblemType.MISSING_IMPORTS_TYPE};
     }
 
     /**
-     * Return the type suggestions that may resolve the unresolved type problem.
+     * Returns the type suggestions that may resolve the unresolved type problem.
      *
-     * @return list of type suggestions for the unresolved type, or null if
-     *         nothing is found
+     * @return list of type suggestions for the unresolved type, or null if nothing is found
      */
     protected List<IType> getImportTypeSuggestions() {
         int offset = getQuickFixProblem().getOffset();
         try {
             String simpleTypeName = getUnresolvedSimpleName();
             if (simpleTypeName != null) {
-                Map<String, UnresolvedTypeData> unresolvedTypes = new HashMap<String, UnresolvedTypeData>();
-                unresolvedTypes.put(simpleTypeName, new UnresolvedTypeData(simpleTypeName, false, new SourceRange(offset, simpleTypeName.length())));
-                new TypeSearch().searchForTypes(getGroovyCompilationUnit(), unresolvedTypes);
+                Map<String, UnresolvedTypeData> unresolvedTypes = Collections.singletonMap(
+                    simpleTypeName, new UnresolvedTypeData(simpleTypeName, false, new SourceRange(offset, simpleTypeName.length())));
+                new TypeSearch().searchForTypes(getGroovyCompilationUnit(), unresolvedTypes, null);
+
                 UnresolvedTypeData foundData = unresolvedTypes.get(simpleTypeName);
                 List<TypeNameMatch> matches = foundData.getFoundInfos();
-                if (matches != null) {
-                    List<IType> suggestions = new ArrayList<IType>();
+                if (matches != null && !matches.isEmpty()) {
+                    List<IType> suggestions = new ArrayList<IType>(matches.size());
                     for (TypeNameMatch match : matches) {
                         suggestions.add(match.getType());
                     }
@@ -147,7 +143,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
     }
 
     /**
-     * Obtain the simple name of the unresolved type from the quick fix problem
+     * Obtains the simple name of the unresolved type from the quick fix problem
      *
      * @return simple name of the unresolved type.
      */
@@ -198,21 +194,12 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         return simpleName;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver#
-     * getQuickFixProposals()
-     */
     public List<IJavaCompletionProposal> getQuickFixProposals() {
         List<IType> suggestions = getImportTypeSuggestions();
-        if (suggestions != null) {
-            List<IJavaCompletionProposal> fixes = new ArrayList<IJavaCompletionProposal>();
+        if (suggestions != null && !suggestions.isEmpty()) {
+            List<IJavaCompletionProposal> fixes = new ArrayList<IJavaCompletionProposal>(suggestions.size());
             for (IType type : suggestions) {
-                int revelance = getRelevance(type);
-                fixes.add(new AddMissingImportProposal(type,
-                        getGroovyCompilationUnit(), getQuickFixProblem(),
-                        revelance));
+                fixes.add(new AddMissingImportProposal(type, getGroovyCompilationUnit(), getQuickFixProblem(), getRelevance(type)));
             }
             return fixes;
         }
@@ -228,9 +215,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
     }
 
     protected int getRelevance(IType type) {
-        if (type == null) {
-            return 0;
-        }
+        if (type == null) return 0;
         return RelevanceRules.ALL_RULES.getRelevance(type, getContextTypes());
     }
 }

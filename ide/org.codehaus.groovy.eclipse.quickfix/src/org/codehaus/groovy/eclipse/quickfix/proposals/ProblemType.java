@@ -1,15 +1,17 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
@@ -17,8 +19,8 @@ import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.compiler.IProblem;
 
 /**
- * A descriptor that represents a Java or Eclipse resource problem (compilation problem, etc..)
- * which the Groovy quick fix framework can understand.
+ * A descriptor that represents a Java or Eclipse resource problem (compilation
+ * problem, etc..) which the Groovy quick fix framework can understand.
  *
  * @author Nieraj Singh
  * @author Andrew Eisenberg
@@ -28,12 +30,11 @@ public enum ProblemType {
     MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String[]) null),
     MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String[]) null),
 
-    MISSING_IMPORTS_TYPE("Groovy:unable to resolve class", "Groovy:[Static type checking] - The variable"),
     UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."),
+    MISSING_IMPORTS_TYPE("Groovy:unable to resolve class", "Groovy:[Static type checking] - The variable"),
     MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass"),
 
-    STATIC_TYPE_CHECKING_CANNOT_ASSIGN("Groovy:[Static type checking] - Cannot assign value of type",
-    		"Groovy:[Static type checking] - Cannot return value of type");
+    STATIC_TYPE_CHECKING_CANNOT_ASSIGN("Groovy:[Static type checking] - Cannot assign value of type", "Groovy:[Static type checking] - Cannot return value of type");
 
     /**
      * The {@link IMarker} type of the problem.
@@ -56,18 +57,15 @@ public enum ProblemType {
     public static final int GROOVY_PROBLEM_ID = 0;
 
     /** Constructor for groovy problems. Can only be distinguished by */
-    private ProblemType(String ... groovyProblemSnippets) {
-        this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER,
-                GROOVY_PROBLEM_ID, groovyProblemSnippets);
+    private ProblemType(String... groovyProblemSnippets) {
+        this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, GROOVY_PROBLEM_ID, groovyProblemSnippets);
     }
 
-    private ProblemType(int problemID, String ... groovyProblemSnippets) {
-        this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, problemID,
-                groovyProblemSnippets);
+    private ProblemType(int problemID, String... groovyProblemSnippets) {
+        this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, problemID, groovyProblemSnippets);
     }
 
-    private ProblemType(String markerType, int problemID,
-            String ... groovyProblemSnippets) {
+    private ProblemType(String markerType, int problemID, String... groovyProblemSnippets) {
         this.markerType = markerType;
         this.problemId = problemID;
         this.groovyProblemSnippets = groovyProblemSnippets;
@@ -90,9 +88,8 @@ public enum ProblemType {
         return false;
     }
 
-    public static ProblemType getProblemType(int problemID,
-            String markerType, String[] messages) {
-        for (ProblemType problemType : ProblemType.values()) {
+    public static ProblemType getProblemType(int problemID, String markerType, String[] messages) {
+        for (ProblemType problemType : values()) {
             if (problemType.matches(problemID, markerType, messages)) {
                 return problemType;
             }
@@ -101,7 +98,6 @@ public enum ProblemType {
     }
 
     /**
-     * @param problemId2
      * @return true iff the problemId is recognized by at least one of the problem types
      * This not entirely useful since all Groovy problems have the same problemId regardless of
      * whether or not they can be handled by a QuickFix handler
@@ -114,5 +110,4 @@ public enum ProblemType {
         }
         return false;
     }
-
 }

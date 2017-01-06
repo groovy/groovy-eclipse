@@ -59,6 +59,7 @@ import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedType
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -419,20 +420,26 @@ public class OrganizeGroovyImports {
 
     //--------------------------------------------------------------------------
 
+    private final SubMonitor monitor;
     private IChooseImportQuery query;
     private final GroovyCompilationUnit unit;
     private Map<String, UnresolvedTypeData> missingTypes;
     private Map<String, ImportNode> importsSlatedForRemoval;
 
     public OrganizeGroovyImports(GroovyCompilationUnit unit, IChooseImportQuery query) {
+        this(unit, query, null);
+    }
+
+    public OrganizeGroovyImports(GroovyCompilationUnit unit, IChooseImportQuery query, IProgressMonitor monitor) {
         this.unit = unit;
         this.query = query;
+        this.monitor = SubMonitor.convert(monitor, "Organize import statements", 7);
     }
 
     public boolean calculateAndApplyMissingImports() throws JavaModelException {
         TextEdit edit = calculateMissingImports();
         if (edit != null) {
-            unit.applyTextEdit(edit, null);
+            unit.applyTextEdit(edit, monitor.split(0));
             return true;
         } else {
             return false;
@@ -493,11 +500,15 @@ public class OrganizeGroovyImports {
                 }
             }
 
+            monitor.worked(1);
+
             // scan for imports that are not referenced
             for (ClassNode clazz : (Iterable<ClassNode>) info.module.getClasses()) {
                 GroovyClassVisitor visitor = new FindUnresolvedReferencesVisitor();
                 visitor.visitClass(clazz); // modifies missingTypes and importsSlatedForRemoval
             }
+
+            monitor.worked(4);
 
             // remove all default imports
             for (ImportNode imp : allImports) {
@@ -528,18 +539,22 @@ public class OrganizeGroovyImports {
                 }
             }
 
+            monitor.worked(1);
+
             // deal with the missing types
             if (!missingTypes.isEmpty()) {
                 pruneMissingTypes(allImports);
                 if (!missingTypes.isEmpty()) {
-                    for (IType type : resolveMissingTypes()) {
+                    monitor.subTask("Resolve missing types");
+                    monitor.setWorkRemaining(missingTypes.size() + 1);
+                    for (IType type : resolveMissingTypes(monitor.split(1))) {
                         trace("Missing type '%s'", type);
                         rewriter.addImport(type.getFullyQualifiedName('.'));
                     }
                 }
             }
 
-            TextEdit rewrite = rewriter.rewriteImports(null);
+            TextEdit rewrite = rewriter.rewriteImports(monitor.split(1));
             trace("%s", rewrite);
             return rewrite;
 
@@ -548,6 +563,7 @@ public class OrganizeGroovyImports {
         } finally {
             importsSlatedForRemoval = null;
             missingTypes = null;
+            monitor.done();
         }
         return null;
 
@@ -611,9 +627,9 @@ public class OrganizeGroovyImports {
         }
     }
 
-    private IType[] resolveMissingTypes() throws JavaModelException {
+    private IType[] resolveMissingTypes(IProgressMonitor monitor) throws JavaModelException {
         // fill in all the potential matches
-        new TypeSearch().searchForTypes(unit, missingTypes); // TODO: This is insanely slow!
+        new TypeSearch().searchForTypes(unit, missingTypes, monitor);
 
         List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<TypeNameMatch>();
         List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<TypeNameMatch[]>();
@@ -640,12 +656,13 @@ public class OrganizeGroovyImports {
 
         if (chosen != null) {
             IType[] typeMatches = new IType[missingTypesNoChoiceRequired.size() + chosen.length];
-            int cnt = 0;
+
+            int index = 0;
             for (TypeNameMatch typeNameMatch : missingTypesNoChoiceRequired) {
-                typeMatches[cnt++] = typeNameMatch.getType();
+                typeMatches[index++] = typeNameMatch.getType();
             }
-            for (int i = 0; i < chosen.length; i++) {
-                typeMatches[cnt++] = ((JavaSearchTypeNameMatch) chosen[i]).getType();
+            for (int i = 0, n = chosen.length; i < n; i += 1) {
+                typeMatches[index++] = ((JavaSearchTypeNameMatch) chosen[i]).getType();
             }
 
             return typeMatches;

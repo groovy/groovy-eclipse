@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
@@ -71,12 +72,13 @@ public class TypeSearch {
     }
 
     /**
-     * Use a SearchEngine to look for the types
-     * This will not find inner types, however
+     * Use a SearchEngine to look for the types.
+     * <p>
+     * NOTE: This will not find inner types.
      *
      * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
      */
-    public void searchForTypes(GroovyCompilationUnit unit, Map<String, UnresolvedTypeData> missingTypes) throws JavaModelException {
+    public void searchForTypes(GroovyCompilationUnit unit, Map<String, UnresolvedTypeData> missingTypes, IProgressMonitor monitor) throws JavaModelException {
         char[][] allTypes = new char[missingTypes.size()][];
         int i = 0;
         for (String simpleName : missingTypes.keySet()) {
@@ -84,8 +86,9 @@ public class TypeSearch {
         }
         final List<TypeNameMatch> typesFound = new ArrayList<TypeNameMatch>();
         TypeNameMatchCollector collector = new TypeNameMatchCollector(typesFound);
-        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] { unit.getJavaProject() });
-        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
+        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {unit.getJavaProject()});
+        int policy = (monitor == null ? IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH : IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH);
+        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, policy, monitor);
 
         for (TypeNameMatch match : typesFound) {
             UnresolvedTypeData data = missingTypes.get(match.getSimpleTypeName());
