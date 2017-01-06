@@ -439,7 +439,7 @@ public class OrganizeGroovyImports {
     public boolean calculateAndApplyMissingImports() throws JavaModelException {
         TextEdit edit = calculateMissingImports();
         if (edit != null) {
-            unit.applyTextEdit(edit, monitor.split(0));
+            unit.applyTextEdit(edit, monitor.newChild(0));
             return true;
         } else {
             return false;
@@ -547,14 +547,14 @@ public class OrganizeGroovyImports {
                 if (!missingTypes.isEmpty()) {
                     monitor.subTask("Resolve missing types");
                     monitor.setWorkRemaining(missingTypes.size() + 1);
-                    for (IType type : resolveMissingTypes(monitor.split(1))) {
+                    for (IType type : resolveMissingTypes(monitor.newChild(1))) {
                         trace("Missing type '%s'", type);
                         rewriter.addImport(type.getFullyQualifiedName('.'));
                     }
                 }
             }
 
-            TextEdit rewrite = rewriter.rewriteImports(monitor.split(1));
+            TextEdit rewrite = rewriter.rewriteImports(monitor.newChild(1));
             trace("%s", rewrite);
             return rewrite;
 
