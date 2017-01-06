@@ -20,11 +20,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
@@ -50,11 +50,18 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     public void preAction() throws FileNotFoundException, IOException {
         try {
             testProject = new TestProject();
-            unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", "File.groovy", getOrigin().get());
-            SynchronizationUtils.joinBackgroudActivities();
+            TestProject.setAutoBuilding(false);
 
+            String fileName = "File" + new Random(System.currentTimeMillis()).nextInt(99999) + ".groovy";
+            unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", fileName, getOrigin().get());
+
+            int offset = getUserSelection().getOffset(),
+                length = getUserSelection().getLength();
             RefactoringStatus status = new RefactoringStatus();
-            refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(), status);
+            System.out.printf("Attempting to extract new method from [%d,%d):%n %s%n", offset, offset + length,
+                                        String.valueOf(unit.getContents()).substring(offset, offset + length));
+
+            refactoring = new ExtractGroovyMethodRefactoring(unit, offset, length, status);
             refactoring.setPreferences(TestPrefInitializer.initializePreferences(getFileProperties(), testProject.getJavaProject()));
 
             if (status.getSeverity() != RefactoringStatus.OK) {
@@ -66,46 +73,61 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     }
 
     @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        testProject.dispose();
-    }
-
-    @Override
-    public RefactoringStatus checkInitialCondition() throws OperationCanceledException, CoreException {
+    public RefactoringStatus checkInitialCondition() throws CoreException, OperationCanceledException {
         return refactoring.checkInitialConditions(new NullProgressMonitor());
     }
 
     @Override
     public void simulateUserInput() {
-        // set refactoring parameters
-        int modifier = 0;
-        String newMethodName = "";
         try {
-            newMethodName = properties.get("newMethodName");
+            int modifier = 0;
             String mod = properties.get("modifier");
+            if (mod.equals("def") || mod.equals("public"))
+                modifier = Opcodes.ACC_PUBLIC;
             if (mod.equals("private"))
                 modifier = Opcodes.ACC_PRIVATE;
-            if (mod.equals("def"))
-                modifier = Opcodes.ACC_PUBLIC;
             if (mod.equals("protected"))
                 modifier = Opcodes.ACC_PROTECTED;
+
+            refactoring.setModifier(modifier);
+            refactoring.setNewMethodname(properties.get("newMethodName"));
+
+            String moveSettings = properties.get("moveVariable");
+            if (moveSettings != null && moveSettings.trim().length() > 0) {
+                boolean upEvent = false;
+                int sortOfMoveCharPosition = moveSettings.indexOf('+');
+                if (sortOfMoveCharPosition == -1) {
+                    upEvent = true;
+                    sortOfMoveCharPosition = moveSettings.indexOf('-');
+                }
+                String varName = moveSettings.substring(0, sortOfMoveCharPosition);
+                int numberOfMoves = Integer.valueOf(moveSettings.substring(sortOfMoveCharPosition + 1, moveSettings.length()));
+                refactoring.setMoveParameter(varName, upEvent, numberOfMoves);
+            }
+
+            String variableToRename = properties.get("variableToRename");
+            if (variableToRename != null && variableToRename.trim().length() > 0) {
+                Map<String, String> variablesToRename = new HashMap<String, String>();
+                for (String renameMapping : variableToRename.split(";")) {
+                    String[] singleRenames = renameMapping.split(":");
+                    if (singleRenames.length == 2) {
+                        variablesToRename.put(singleRenames[0], singleRenames[1]);
+                    }
+                }
+                refactoring.setParameterRename(variablesToRename);
+            }
         } catch (Exception e) {
             fail("Initialisation of test properties failed! " + e.getMessage());
         }
-        refactoring.setModifier(modifier);
-        refactoring.setNewMethodname(newMethodName);
-        setMoveParameter(refactoring);
-        setRenameParameter(refactoring);
     }
 
     @Override
-    public RefactoringStatus checkFinalCondition() throws OperationCanceledException, CoreException {
+    public RefactoringStatus checkFinalCondition() throws CoreException, OperationCanceledException {
         return refactoring.checkFinalConditions(new NullProgressMonitor());
     }
 
     @Override
-    public Change createChange() throws OperationCanceledException, CoreException {
+    public Change createChange() throws CoreException, OperationCanceledException {
         return refactoring.createChange(new NullProgressMonitor());
     }
 
@@ -115,34 +137,13 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
         super.finalAssert();
     }
 
-    private void setRenameParameter(ExtractGroovyMethodRefactoring provider) {
-        String variableToRename = properties.get("variableToRename");
-        Map<String, String> variablesToRename = null;
-        if (variableToRename != null) {
-            variablesToRename = new HashMap<String, String>();
-            String[] renameMappings = variableToRename.split(";");
-            for (int i = 0, n = renameMappings.length; i < n; i += 1) {
-                String[] singleRenames = renameMappings[i].split(":");
-                if (singleRenames.length == 2) {
-                    variablesToRename.put(singleRenames[0], singleRenames[1]);
-                }
-            }
-            provider.setParameterRename(variablesToRename);
-        }
-    }
-
-    private void setMoveParameter(ExtractGroovyMethodRefactoring provider) {
-        String moveSettings = properties.get("moveVariable");
-        if (moveSettings != null) {
-            boolean upEvent = false;
-            int sortOfMoveCharPosition = moveSettings.indexOf('+');
-            if (sortOfMoveCharPosition == -1) {
-                upEvent = true;
-                sortOfMoveCharPosition = moveSettings.indexOf('-');
-            }
-            String varName = moveSettings.substring(0, sortOfMoveCharPosition);
-            int numberOfMoves = Integer.valueOf(moveSettings.substring(sortOfMoveCharPosition + 1, moveSettings.length()));
-            provider.setMoveParameter(varName, upEvent, numberOfMoves);
+    @Override
+    protected void tearDown() throws Exception {
+        try {
+            testProject.dispose();
+            testProject = null;
+        } finally {
+            super.tearDown();
         }
     }
 }
