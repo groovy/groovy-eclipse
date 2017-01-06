@@ -48,8 +48,6 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * @author Andrew Eisenberg
@@ -93,12 +91,6 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        ICompilationUnit[] units = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
-        if (units != null) {
-            for (int i = 0; i < units.length; i++) {
-                units[i].discardWorkingCopy();
-            }
-        }
         defaultFileExtension = "groovy";
     }
 

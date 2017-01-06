@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.eclipse.core.resources.IStorage;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
  * @author Andrew Eisenberg
  * @created Feb 18, 2011
  */
-public class DSLStoreTests extends AbstractDSLInferencingTest {
+public final class DSLStoreTests extends AbstractDSLInferencingTest {
+
     public static Test suite() {
         return new TestSuite(DSLStoreTests.class);
     }
@@ -41,9 +41,17 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
         super(name);
     }
 
+    private void setDisabledScripts(String... scripts) {
+        System.out.println("Setting disabled scripts to: " + scripts);
+        DSLPreferences.setDisabledScripts(scripts);
+    }
+
+    //
+
     public void testNothing() throws Exception {
         assertDSLStore(0, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
     }
+
     public void testSingleSimple() throws Exception {
         createDsls("currentType().accept { }");
         assertDSLStore(1,
@@ -52,8 +60,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
 
                 createExpectedContributionCount(
                         new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0) },
-                        new Integer[] { 1 }
-        ));
+                        new Integer[] { 1 }));
     }
 
     // the same pointcut is used twice
@@ -67,8 +74,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
 
                         createExpectedContributionCount(
                                 new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0) },
-                                new Integer[] { 2 }
-                        ));
+                                new Integer[] { 2 }));
     }
 
     // two pointcuts in same file
@@ -83,8 +89,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         createExpectedContributionCount(
                                 new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
                                         createSemiUniqueName(FindFieldPointcut.class, 0)},
-                                new Integer[] { 1, 1 }
-                        ));
+                                new Integer[] { 1, 1 }));
     }
 
     // two pointcuts two files
@@ -99,8 +104,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         createExpectedContributionCount(
                                 new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
                                         createSemiUniqueName(FindFieldPointcut.class, 1)},
-                                new Integer[] { 1, 1 }
-                        ));
+                                new Integer[] { 1, 1 }));
     }
 
     public void testTwoFilesEachWith2Pointcuts() throws Exception {
@@ -174,7 +178,6 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         new Integer[] { 2, 2, 2, 2, 5 }));
     }
 
-
     public void testAddAndRemove() throws Exception {
         assertDSLStore(0, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
 
@@ -186,8 +189,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
 
                 createExpectedContributionCount(
                         new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0) },
-                        new Integer[] { 1 }
-        ));
+                        new Integer[] { 1 }));
 
         // add another
         createDsls(1, "currentType().accept { }");
@@ -199,8 +201,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                 createExpectedContributionCount(
                         new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
                                       createSemiUniqueName(CurrentTypePointcut.class, 1)},
-                        new Integer[] { 1, 1 }
-        ));
+                        new Integer[] { 1, 1 }));
 
         // remove second
         deleteDslFile(1);
@@ -210,14 +211,12 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
 
                 createExpectedContributionCount(
                         new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0) },
-                        new Integer[] { 1 }
-        ));
+                        new Integer[] { 1 }));
 
         // remove first
         deleteDslFile(0);
         assertDSLStore(0, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
     }
-
 
     public void testChange() throws Exception {
         createDsls("currentType().accept { }");
@@ -227,8 +226,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
 
                 createExpectedContributionCount(
                         new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0)},
-                        new Integer[] { 1 }
-        ));
+                        new Integer[] { 1 }));
 
         // overwrite the original
         createDsls("currentType().accept { }\n" + "fields().accept { }");
@@ -255,11 +253,10 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                 createExpectedContributionCount(
                         new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
                                 createSemiUniqueName(FindFieldPointcut.class, 1)},
-                        new Integer[] { 1, 1 }
-        ));
+                        new Integer[] { 1, 1 }));
 
         // disable script
-        DSLPreferences.setDisabledScripts(new String[] { DSLDStore.toUniqueString(project.getFile("dsl0.dsld")) });
+        setDisabledScripts(DSLDStore.toUniqueString(project.getFile("dsl0.dsld")));
 
         assertDSLStore(
                 2,
@@ -272,7 +269,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         new Integer[] { 1 }));
 
         // re-enable script
-        DSLPreferences.setDisabledScripts(new String[] { });
+        setDisabledScripts();
 
         createDsls("currentType().accept { }", "fields().accept { }");
         assertDSLStore(2,
@@ -281,58 +278,60 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                         new String[] { createSemiUniqueName(FindFieldPointcut.class, 1) }),
 
                 createExpectedContributionCount(
-                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, 0),
-                                createSemiUniqueName(FindFieldPointcut.class, 1)},
-                        new Integer[] { 1, 1 }
-        ));
+                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, 0), createSemiUniqueName(FindFieldPointcut.class, 1)},
+                        new Integer[] { 1, 1 }));
     }
 
     public void testDisabledOfJar() throws Exception {
         addJarToProject("simple_dsld.jar");
-        env.fullBuild();
-        IPackageFragmentRoot root = JavaCore.create(project).getPackageFragmentRoot(findExternalFilePath("simple_dsld.jar"));
-        IStorage storage = (IStorage) root.getPackageFragment("dsld").getNonJavaResources()[0];
+
+        IStorage storage = (IStorage) JavaCore.create(project)
+            .getPackageFragmentRoot(findExternalFilePath("simple_dsld.jar"))
+            .getPackageFragment("dsld").getNonJavaResources()[0];
 
         assertDSLStore(1,
-                createExpectedPointcuts(new IStorage[] { storage },
-                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) } ),
-
+                createExpectedPointcuts(
+                        new IStorage[] { storage }, new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) }
+                    ),
                 createExpectedContributionCount(
-                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, storage) },
-                        new Integer[] { 1 }
-        ));
+                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) }, new Integer[] { 1 }
+                    )
+            );
 
         // disable script
-        DSLPreferences.setDisabledScripts(new String[] { DSLDStore.toUniqueString(storage) });
-
-        assertDSLStore(
-                1,
-                createExpectedPointcuts(new String[] {} ),
-
-                createExpectedContributionCount(new String[] { },
-                        new Integer[] { }));
-
-        // re-enable
-        DSLPreferences.setDisabledScripts(new String[] { });
+        setDisabledScripts(DSLDStore.toUniqueString(storage));
 
         assertDSLStore(1,
-                createExpectedPointcuts(new IStorage[] { storage },
-                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) } ),
-
+                createExpectedPointcuts(
+                        new String[] { }
+                    ),
                 createExpectedContributionCount(
-                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, storage) },
-                        new Integer[] { 1 }
-        ));
+                        new String[] { }, new Integer[] { }
+                    )
+            );
+
+        // re-enable
+        setDisabledScripts();
+
+        assertDSLStore(1,
+                createExpectedPointcuts(
+                        new IStorage[] { storage }, new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) }
+                    ),
+                createExpectedContributionCount(
+                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, storage) }, new Integer[] { 1 }
+                    )
+            );
 
         // remove from classpath
         removeJarFromProject("simple_dsld.jar");
 
-        assertDSLStore(
-                0,
-                createExpectedPointcuts(new String[] {} ),
-
-                createExpectedContributionCount(new String[] { },
-                        new Integer[] { }));
-
+        assertDSLStore(0,
+                createExpectedPointcuts(
+                        new String[] {}
+                    ),
+                createExpectedContributionCount(
+                        new String[] { }, new Integer[] { }
+                    )
+            );
     }
 }

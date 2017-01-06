@@ -79,54 +79,53 @@ public class TestingEnvironment {
 		}
 	}
 
-
 	/**
 	 * Removes groovy nature from project and keeps only the JavaNature
 	 */
 	public void removeGroovyNature(String projectName) {
-        try {
-            IProject project = getProject(projectName);
-            IProjectDescription description = project.getDescription();
-            description.setNatureIds(new String[] { JavaCore.NATURE_ID });
-            project.setDescription(description, null);
-        } catch (CoreException e) {
-            handleCoreException(e);
-        }
+		try {
+			IProject project = getProject(projectName);
+			IProjectDescription description = project.getDescription();
+			description.setNatureIds(new String[] { JavaCore.NATURE_ID });
+			project.setDescription(description, null);
+		} catch (CoreException e) {
+			handleCoreException(e);
+		}
 	}
 
 	/**
-     * Removes groovy nature from project and keeps only the JavaNature
-     */
-    public void addGroovyNature(String projectName) {
-        try {
-            IProject project = getProject(projectName);
-            IProjectDescription description = project.getDescription();
-            description.setNatureIds(new String[] { JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE });
-            project.setDescription(description, null);
-        } catch (CoreException e) {
-            handleCoreException(e);
-        }
-    }
+	 * Removes groovy nature from project and keeps only the JavaNature
+	 */
+	public void addGroovyNature(String projectName) {
+		try {
+			IProject project = getProject(projectName);
+			IProjectDescription description = project.getDescription();
+			description.setNatureIds(new String[] { JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE });
+			project.setDescription(description, null);
+		} catch (CoreException e) {
+			handleCoreException(e);
+		}
+	}
 
-    /**
-     * Adds the specified nature to the project
-     * @param projectName
-     * @param natureId
-     */
-    public void addNature(String projectName, String natureId) {
-        try {
-            IProject project = getProject(projectName);
-            IProjectDescription description = project.getDescription();
-            String[] existingNatures = description.getNatureIds();
-            String[] newNatures = new String[existingNatures.length + 1];
-            System.arraycopy(existingNatures, 0, newNatures, 0, existingNatures.length);
-            newNatures[existingNatures.length] = natureId;
-            description.setNatureIds(newNatures);
-            project.setDescription(description, null);
-        } catch (CoreException e) {
-            handleCoreException(e);
-        }
-    }
+	/**
+	 * Adds the specified nature to the project
+	 * @param projectName
+	 * @param natureId
+	 */
+	public void addNature(String projectName, String natureId) {
+		try {
+			IProject project = getProject(projectName);
+			IProjectDescription description = project.getDescription();
+			String[] existingNatures = description.getNatureIds();
+			String[] newNatures = new String[existingNatures.length + 1];
+			System.arraycopy(existingNatures, 0, newNatures, 0, existingNatures.length);
+			newNatures[existingNatures.length] = natureId;
+			description.setNatureIds(newNatures);
+			project.setDescription(description, null);
+		} catch (CoreException e) {
+			handleCoreException(e);
+		}
+	}
 
 	/** Adds a binary class with the given contents to the
 	 * given package in the workspace.  The package is created
@@ -179,26 +178,26 @@ public class TestingEnvironment {
 		return classPath;
 	}
 
-    /** Adds a groovy class with the given contents to the given
-     * package in the workspace.  The package is created
-     * if necessary.  If a class with the same name already
-     * exists, it is replaced.  A workspace must be open,
-     * and the given class name must not end with ".java".
-     * Returns the path of the added class.
-     */
+	/** Adds a groovy class with the given contents to the given
+	 * package in the workspace.  The package is created
+	 * if necessary.  If a class with the same name already
+	 * exists, it is replaced.  A workspace must be open,
+	 * and the given class name must not end with ".java".
+	 * Returns the path of the added class.
+	 */
 	public IPath addGroovyClass(IPath packagePath, String className, String contents) {
-	    return addGroovyClassExtension(packagePath, className, contents, null);
+		return addGroovyClassExtension(packagePath, className, contents, null);
 	}
 
-    /**
-     * Adds a groovy class with the given contents to the given
-     * package in the workspace, the file will use the specified file suffix.
-     * The package is created if necessary.  If a class with the same name already
-     * exists, it is replaced.
-     * Returns the path of the added class.
-     */
+	/**
+	 * Adds a groovy class with the given contents to the given
+	 * package in the workspace, the file will use the specified file suffix.
+	 * The package is created if necessary.  If a class with the same name already
+	 * exists, it is replaced.
+	 * Returns the path of the added class.
+	 */
 	public IPath addGroovyClassWithSuffix(IPath packagePath, String className, String suffix, String contents) {
-	    return addGroovyClassExtension(packagePath, className, suffix, contents, suffix);
+		return addGroovyClassExtension(packagePath, className, suffix, contents, suffix);
 	}
 
 
@@ -213,7 +212,7 @@ public class TestingEnvironment {
 	public IPath addGroovyClassExtension(IPath packagePath, String className, String contents, String fileExtension) {
 		checkAssertion("a workspace must be open", fIsOpen);
 		if (fileExtension == null) {
-		    fileExtension = "groovy";
+			fileExtension = "groovy";
 		}
 		IPath classPath = packagePath.append(className + "." + fileExtension);
 		try {
@@ -244,19 +243,19 @@ public class TestingEnvironment {
 	}
 
 
-    /** Adds a groovy class with the given contents to the given
-     * package in the workspace.  The package is created
-     * if necessary.  If a class with the same name already
-     * exists, it is replaced.  A workspace must be open,
-     * and the given class name must not end with ".java".
-     * Returns the path of the added class.
-     */
+	/** Adds a groovy class with the given contents to the given
+	 * package in the workspace.  The package is created
+	 * if necessary.  If a class with the same name already
+	 * exists, it is replaced.  A workspace must be open,
+	 * and the given class name must not end with ".java".
+	 * Returns the path of the added class.
+	 */
 	public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
-	    return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
+		return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
 	}
 
 	public IPath addGroovyClassWithSuffix(IPath packageFragmentRootPath, String packageName, String className, String suffix, String contents) {
-	    return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, suffix);
+		return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, suffix);
 	}
 
 	/** Adds a groovy class with the given contents to the given
@@ -265,7 +264,7 @@ public class TestingEnvironment {
 	 * exists, it is replaced.  A workspace must be open,
 	 * and the given class name must not end with ".java".
 	 * Returns the path of the added class.
-     * @param fileExtension file extension of the groovy class to create (without a '.')
+	 * @param fileExtension file extension of the groovy class to create (without a '.')
 	 */
 	public IPath addGroovyClassExtension(IPath packageFragmentRootPath, String packageName, String className, String contents, String fileExtension) {
 		/* make sure the package exists */
@@ -434,19 +433,20 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		addEntry(projectPath, JavaCore.newLibraryEntry(new Path(jar), null, null, isExported));
 	}
 
-public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath)
-		throws JavaModelException {
-	addEntry(projectPath,
-		JavaCore.newLibraryEntry(libraryPath, sourceAttachmentPath,	sourceAttachmentRootPath));
-}
+	public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath)
+			throws JavaModelException {
+		addEntry(projectPath,
+			JavaCore.newLibraryEntry(libraryPath, sourceAttachmentPath,	sourceAttachmentRootPath));
+	}
+
 	public void addEntry(IPath projectPath, IClasspathEntry entryPath) throws JavaModelException {
 		IClasspathEntry[] classpath = getClasspath(projectPath);
 		// first look to see if the entry already exists:
 		for (IClasspathEntry entry : classpath) {
-            if (entry.equals(entryPath)) {
-                return;
-            }
-        }
+			if (entry.equals(entryPath)) {
+				return;
+			}
+		}
 		IClasspathEntry[] newClaspath = new IClasspathEntry[classpath.length + 1];
 		System.arraycopy(classpath, 0, newClaspath, 0, classpath.length);
 		newClaspath[classpath.length] = entryPath;
@@ -501,16 +501,16 @@ public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachm
 		Assert.isTrue(b, message);
 	}
 
-public void cleanBuild() {
-	checkAssertion("a workspace must be open", fIsOpen);
-	try {
-		SimpleProgressMonitor spm = new SimpleProgressMonitor("clean build");
-		getWorkspace().build(IncrementalProjectBuilder.CLEAN_BUILD, spm);
-		spm.waitForCompletion();
-	} catch (CoreException e) {
-		handle(e);
+	public void cleanBuild() {
+		checkAssertion("a workspace must be open", fIsOpen);
+		try {
+			SimpleProgressMonitor spm = new SimpleProgressMonitor("clean build");
+			getWorkspace().build(IncrementalProjectBuilder.CLEAN_BUILD, spm);
+			spm.waitForCompletion();
+		} catch (CoreException e) {
+			handle(e);
+		}
 	}
-}
 
 	/** Closes the testing environment and frees up any
 	 * resources.  Once the testing environment is closed,
@@ -619,23 +619,23 @@ public void cleanBuild() {
 		}
 	}
 
-    public static void waitForCompletion(String description, SimpleMonitor monitor, int timeoutSeconds) {
-        int count = 0;
-        while (!monitor.done) {
-        	try { Thread.sleep(250); } catch (Exception e) {}
-        	count++;
-        	if (count>(timeoutSeconds*4)) {
-        		throw new IllegalStateException(description+" timed out after "+timeoutSeconds+" seconds");
-        	}
-        }
-        if (monitor.done) {
-        	System.err.println(description+" completed");
-        }
-    }
+	public static void waitForCompletion(String description, SimpleMonitor monitor, int timeoutSeconds) {
+		int count = 0;
+		while (!monitor.done) {
+			try { Thread.sleep(250); } catch (Exception e) {}
+			count++;
+			if (count>(timeoutSeconds*4)) {
+				throw new IllegalStateException(description+" timed out after "+timeoutSeconds+" seconds");
+			}
+		}
+		if (monitor.done) {
+			System.out.println(description+" completed");
+		}
+	}
 
-    static class SimpleMonitor implements IProgressMonitor {
+	static class SimpleMonitor implements IProgressMonitor {
 
-    	public boolean done = false;
+		public boolean done = false;
 
 		public void beginTask(String name, int totalWork) {
 		}
@@ -664,7 +664,7 @@ public void cleanBuild() {
 		public void worked(int work) {
 		}
 
-    }
+	}
 
 	/**
 	 * Batch builds a project.  A workspace must be open.
@@ -793,7 +793,6 @@ public void cleanBuild() {
 		}
 		return new Problem[0];
 	}
-
 
 	/**
 	 * Return all problems with the specified element.
@@ -983,7 +982,7 @@ public void cleanBuild() {
 	}
 
 	/** Open an empty workspace.
- 	*/
+	 */
 	public void openEmptyWorkspace() {
 		close();
 		openWorkspace();
@@ -1199,29 +1198,29 @@ public void cleanBuild() {
 	 * roots.  The builder searches the classpath to
 	 * find the java files it needs during a build.
 	 */
-//	public void setClasspath(IPath projectPath, IPath[] packageFragmentRootsPath) {
-//		try {
-//			checkAssertion("a workspace must be open", fIsOpen);
-//			IJavaProject javaProject = JavaCore.create(getProject(projectPath));
-//			IClasspathEntry[] entries =
-//				new IClasspathEntry[packageFragmentRootsPath.length];
-//			for (int i = 0; i < packageFragmentRootsPath.length; ++i) {
-//				IPath path = packageFragmentRootsPath[i];
-//				if ("jar".equals(path.getFileExtension())
-//					|| "zip".equals(path.getFileExtension())) {
-//					entries[i] = JavaCore.newLibraryEntry(path, null, null, isExported);
-//				} else if (projectPath.isPrefixOf(packageFragmentRootsPath[i])) {
-//					entries[i] = JavaCore.newSourceEntry(path, IPath[] exclusionPatterns, IPath specificOutputLocation)
-//				} else {
-//					entries[i] = JavaCore.newProjectEntry(path, isExported);
-//				}
-//			}
-//			javaProject.setRawClasspath(entries, null);
-//		} catch (JavaModelException e) {
-//			e.printStackTrace();
-//			checkAssertion("JavaModelException", false);
-//		}
-//	}
+	/*public void setClasspath(IPath projectPath, IPath[] packageFragmentRootsPath) {
+		try {
+			checkAssertion("a workspace must be open", fIsOpen);
+			IJavaProject javaProject = JavaCore.create(getProject(projectPath));
+			IClasspathEntry[] entries =
+				new IClasspathEntry[packageFragmentRootsPath.length];
+			for (int i = 0; i < packageFragmentRootsPath.length; ++i) {
+				IPath path = packageFragmentRootsPath[i];
+				if ("jar".equals(path.getFileExtension())
+					|| "zip".equals(path.getFileExtension())) {
+					entries[i] = JavaCore.newLibraryEntry(path, null, null, isExported);
+				} else if (projectPath.isPrefixOf(packageFragmentRootsPath[i])) {
+					entries[i] = JavaCore.newSourceEntry(path, IPath[] exclusionPatterns, IPath specificOutputLocation)
+				} else {
+					entries[i] = JavaCore.newProjectEntry(path, isExported);
+				}
+			}
+			javaProject.setRawClasspath(entries, null);
+		} catch (JavaModelException e) {
+			e.printStackTrace();
+			checkAssertion("JavaModelException", false);
+		}
+	}*/
 
 	public void setAutoBuilding(boolean value) {
 		try {
