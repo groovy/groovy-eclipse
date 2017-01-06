@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,9 +89,7 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
 /**
- *
  * @author Andrew Eisenberg
- * @created May 10, 2010
  */
 public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring {
 
@@ -124,12 +122,12 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         this.unit = unit;
         this.start = offset;
 
-		// some ASTNodes include whitespace after their ends
-		// so expand the selection so that these kinds of nodes can be
-		// selected without the user having to explicitly include the
-		// whitespace
-		this.length = expandSelection(start, length);
-		setSelectionLength(this.length);
+        // some ASTNodes include whitespace after their ends
+        // so expand the selection so that these kinds of nodes can be
+        // selected without the user having to explicitly include the
+        // whitespace
+        this.length = expandSelection(start, length);
+        setSelectionLength(this.length);
     }
 
 
@@ -137,9 +135,9 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException {
         try {
-            pm.beginTask("", 7); //$NON-NLS-1$
+            pm.beginTask("", 7);
 
-			RefactoringStatus result= Checks.validateEdit(getCu(), getValidationContext());
+            RefactoringStatus result= Checks.validateEdit(getCu(), getValidationContext());
             if (result.hasFatalError()) {
                 return result;
             }
@@ -175,16 +173,16 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         }
     }
 
-	private int expandSelection(int s, int l) {
-		int end = s + l;
-		char[] contents = unit.getContents();
-		while (end < contents.length && (contents[end] == ' ' || contents[end] == '\t')) {
-			end++;
-		}
-		return end - s;
-	}
+    private int expandSelection(int s, int l) {
+        int end = s + l;
+        char[] contents = unit.getContents();
+        while (end < contents.length && (contents[end] == ' ' || contents[end] == '\t')) {
+            end++;
+        }
+        return end - s;
+    }
 
-	private CompilationUnitChange getChange() {
+    private CompilationUnitChange getChange() {
         return (CompilationUnitChange) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fChange", this);
     }
     private void setChange(CompilationUnitChange change) {
@@ -330,7 +328,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
                 indentLevel++;
                 containing = containing.getEnclosingMethod().getDeclaringClass();
             } else {
-				containing = containing.getOuterClass();
+                containing = containing.getOuterClass();
             }
         }
         return indentLevel;
@@ -379,7 +377,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_constant_name_pattern, BasicElementLabels.getJavaElementName(constantName)));
         comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_constant_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
         String visibility= "";
-        if ("".equals(visibility)) //$NON-NLS-1$
+        if ("".equals(visibility))
             visibility= RefactoringCoreMessages.ExtractConstantRefactoring_default_visibility;
         comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_visibility_pattern, visibility));
         if (getReplaceAllOccurrences()) {
@@ -390,7 +388,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         }
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, getCu()));
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, constantName);
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, new Integer(start).toString() + " " + new Integer(length).toString()); //$NON-NLS-1$
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, new Integer(start).toString() + " " + new Integer(length).toString());
         arguments.put("replace", Boolean.valueOf(getReplaceAllOccurrences()).toString());
         arguments.put("qualify", Boolean.valueOf(getQualifyReferencesWithDeclaringClassName()).toString());
         arguments.put("visibility", new Integer(JdtFlags.getVisibilityCode(getVisibility())).toString());
@@ -453,7 +451,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private RefactoringStatus checkSelection(IProgressMonitor pm) throws JavaModelException {
         try {
-            pm.beginTask("", 2); //$NON-NLS-1$
+            pm.beginTask("", 2);
 
             IASTFragment selectedFragment = getSelectedFragment();
 
@@ -560,7 +558,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     // !! similar to ExtractTempRefactoring equivalent
     @Override
     public String getConstantSignaturePreview() throws JavaModelException {
-        String space= " "; //$NON-NLS-1$
+        String space= " ";
         return getVisibility() + space + MODIFIER + space + getConstantTypeName() + space + constantName;
     }
 
@@ -601,7 +599,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         return fExcludedVariableNames;
     }
 
-    private static final String[] KNOWN_METHOD_NAME_PREFIXES= { "get", "is", "to", "set" }; //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-1$
+    private static final String[] KNOWN_METHOD_NAME_PREFIXES= {"get", "is", "to", "set"};
 
     private static String getBaseNameFromExpression(IJavaProject project, IASTFragment assignedFragment, int variableKind) {
         if (assignedFragment == null) {
@@ -716,12 +714,12 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
     private int getSelectionLength() {
         if (length == -1) {
-			length = (Integer) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this);
+            length = (Integer) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this);
         }
         return length;
     }
 
-	private void setSelectionLength(int newLength) {
-		ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this, newLength);
-	}
+    private void setSelectionLength(int newLength) {
+        ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this, newLength);
+    }
 }

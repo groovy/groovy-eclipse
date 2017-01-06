@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +18,8 @@ package org.codehaus.groovy.eclipse.refactoring.ui.extract;
 import org.eclipse.osgi.util.NLS;
 
 public class GroovyRefactoringMessages extends NLS {
-    private static final String BUNDLE_NAME = "org.codehaus.groovy.eclipse.refactoring.ui.extract.groovyRefactoring"; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = "org.codehaus.groovy.eclipse.refactoring.ui.extract.groovyRefactoring";
+
 	public static String GroovyRefactoringAction_No_Module_Node;
 	public static String GroovyRefactoringAction_Syntax_Errors;
 	public static String InlineMethodInfo_Multiple_Methodbodies;

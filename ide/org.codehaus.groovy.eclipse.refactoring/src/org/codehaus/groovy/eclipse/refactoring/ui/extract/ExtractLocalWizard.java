@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,17 +39,15 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
 /**
- *
  * @author andrew
- * @created Jun 3, 2010
  */
 public class ExtractLocalWizard extends RefactoringWizard {
 
-    /* package */static final String DIALOG_SETTING_SECTION = "ExtractLocalWizard"; //$NON-NLS-1$
+    static final String DIALOG_SETTING_SECTION = "ExtractLocalWizard";
 
     private static class ExtractLocalPage extends TextInputWizardPage {
 
-        private static final String REPLACE_ALL = "replaceOccurrences"; //$NON-NLS-1$
+        private static final String REPLACE_ALL = "replaceOccurrences";
 
         private final boolean fInitialValid;
 
@@ -60,7 +58,7 @@ public class ExtractLocalWizard extends RefactoringWizard {
         private IDialogSettings fSettings;
 
         public ExtractLocalPage(String[] tempNameProposals) {
-            super(DESCRIPTION, true, tempNameProposals.length == 0 ? "" : tempNameProposals[0]); //$NON-NLS-1$
+            super(DESCRIPTION, true, tempNameProposals.length == 0 ? "" : tempNameProposals[0]);
             Assert.isNotNull(tempNameProposals);
             fTempNameProposals = tempNameProposals;
             fInitialValid = tempNameProposals.length > 0;

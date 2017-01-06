@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,13 +102,12 @@ import org.eclipse.text.edits.TextEditGroup;
 
 /**
  * @author Andrew Eisenberg
- * @created May 10, 2010
  */
 public class ExtractGroovyLocalRefactoring extends Refactoring {
 
-    private static final String[] KNOWN_METHOD_NAME_PREFIXES= { "get", "is", "to", "set" }; //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-1$
+    private static final String[] KNOWN_METHOD_NAME_PREFIXES= {"get", "is", "to", "set"};
 
-    private static final String ATTRIBUTE_REPLACE = "replace"; //$NON-NLS-1$
+    private static final String ATTRIBUTE_REPLACE = "replace";
 
     private IASTFragment selectedExpression;
 
@@ -145,7 +144,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException {
         try {
-            pm.beginTask("", 6); //$NON-NLS-1$
+            pm.beginTask("", 6);
 
             IASTFragment expr = getSelectedFragment();
             if (expr == null) {
@@ -565,7 +564,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private RefactoringStatus checkSelection(IProgressMonitor pm) throws JavaModelException {
         try {
-            pm.beginTask("", 2); //$NON-NLS-1$
+            pm.beginTask("", 2);
 
             IASTFragment selectedExpression = getSelectedFragment();
 
@@ -641,7 +640,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     // !! similar to ExtractTempRefactoring equivalent
     public String getSignaturePreview() throws JavaModelException {
-        String space= " "; //$NON-NLS-1$
+        String space= " ";
         return "def" + space + localName;
     }
 
@@ -834,8 +833,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 description, comment.asString(), arguments, RefactoringDescriptor.NONE);
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, unit));
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, localName);
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, new Integer(start).toString()
-                + " " + new Integer(length).toString()); //$NON-NLS-1$
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, start + " " + length);
         arguments.put(ATTRIBUTE_REPLACE, Boolean.valueOf(replaceAllOccurrences).toString());
         return descriptor;
     }

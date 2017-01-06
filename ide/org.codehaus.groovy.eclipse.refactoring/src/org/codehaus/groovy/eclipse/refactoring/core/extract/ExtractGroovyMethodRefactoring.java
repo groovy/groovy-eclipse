@@ -157,9 +157,9 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     private CompilationUnitChange change;
 
     public ExtractGroovyMethodRefactoring(GroovyCompilationUnit unit, int offset, int length, RefactoringStatus status) {
-        this.refactoringPreferences = Activator.getDefault().getPreferenceStore();
-        this.selectedText = new Region(offset, length);
         this.unit = unit;
+        this.selectedText = new Region(offset, length);
+        this.refactoringPreferences = Activator.getDefault().getPreferenceStore();
         initializeExtractedStatements(status);
     }
 
@@ -185,7 +185,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException, OperationCanceledException {
         RefactoringStatus status = new RefactoringStatus();
-        pm.beginTask("Checking initial conditions for extract method", 100); //$NON-NLS-1$
+        pm.beginTask("Checking initial conditions for extract method", 100);
 
         updateMethod();
 
@@ -660,9 +660,9 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             int innerClassCount = 0;
             ClassNode current = methodCodeFinder.getClassNode();
             while (current != null) {
-                innerClassCount++;
+                innerClassCount += 1;
                 if (current.getEnclosingMethod() != null) {
-                    innerClassCount++;
+                    innerClassCount += 1;
                     current = current.getEnclosingMethod().getDeclaringClass();
                     continue;
                 }
@@ -680,7 +680,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private ASTWriter writeReturnStatements(IDocument document) {
         ASTWriter astw = new ASTWriter(unit.getModuleNode(), document);
-
         for (Variable var : returnParameters) {
             ReturnStatement ret = new ReturnStatement(new VariableExpression(var));
             astw.visitReturnStatement(ret);
@@ -690,16 +689,11 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private InsertEdit createMethodDeclarationEdit(RefactoringStatus status) {
-        String newMethodCode = createCopiedMethodCode(status);
-        return new InsertEdit(methodCodeFinder.getSelectedDeclaration().getEnd(), newMethodCode);
+        return new InsertEdit(methodCodeFinder.getSelectedDeclaration().getEnd(), createCopiedMethodCode(status));
     }
 
     private ReplaceEdit createMethodCallEdit() {
-        int offset = replaceScope.getOffset();
-        int length = replaceScope.getLength();
-
-        ReplaceEdit insertMethodCall = new ReplaceEdit(offset, length, getMethodCall());
-        return insertMethodCall;
+        return new ReplaceEdit(replaceScope.getOffset(), replaceScope.getLength(), getMethodCall());
     }
 
     public List<String> getMethodNames() {

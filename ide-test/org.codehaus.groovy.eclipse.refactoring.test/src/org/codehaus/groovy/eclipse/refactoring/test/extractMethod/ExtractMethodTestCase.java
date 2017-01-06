@@ -24,6 +24,7 @@ import java.util.Map;
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
@@ -50,6 +51,7 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
         try {
             testProject = new TestProject();
             unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", "File.groovy", getOrigin().get());
+            SynchronizationUtils.joinBackgroudActivities();
 
             RefactoringStatus status = new RefactoringStatus();
             refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(), status);
@@ -66,7 +68,6 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        unit.discardWorkingCopy();
         testProject.dispose();
     }
 
