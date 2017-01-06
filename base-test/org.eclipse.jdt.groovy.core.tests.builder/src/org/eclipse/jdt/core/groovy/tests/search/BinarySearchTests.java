@@ -17,6 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -102,11 +103,12 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
         Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
         env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
 
         javaProject = env.getJavaProject(project.getName());
-        waitForIndexer(javaProject);
+        javaProject.getProject().refreshLocal(IResource.DEPTH_INFINITE, null);
 
         // overwrite the contents vars with the actual contents
         groovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
