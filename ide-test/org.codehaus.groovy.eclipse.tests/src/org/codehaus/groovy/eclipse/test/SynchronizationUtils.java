@@ -163,7 +163,7 @@ public class SynchronizationUtils {
         SynchronizationUtils.joinBackgroudActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
-            if (jobs[i].getName().startsWith("Java indexing")) {
+            if (jobs[i].getName().contains("Java index")) {
                 boolean wasInterrupted = true;
                 while (wasInterrupted) {
                     try {
@@ -181,7 +181,7 @@ public class SynchronizationUtils {
         SynchronizationUtils.joinBackgroudActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
-            if (jobs[i].getName().startsWith("Java indexing")) {
+            if (jobs[i].getName().contains("Java index")) {
                 boolean wasInterrupted = true;
                 while (wasInterrupted) {
                     try {

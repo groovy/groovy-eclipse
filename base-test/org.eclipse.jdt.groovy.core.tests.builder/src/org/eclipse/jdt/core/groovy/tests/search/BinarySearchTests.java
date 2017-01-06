@@ -15,11 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import java.util.Iterator;
-
 import junit.framework.Test;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -41,17 +38,15 @@ import org.eclipse.jdt.core.search.SearchPattern;
  */
 public class BinarySearchTests extends AbstractGroovySearchTest {
 
-    private IJavaProject javaProject;
+    public static Test suite() {
+        return buildTestSuite(BinarySearchTests.class);
+    }
 
     public BinarySearchTests(String name) {
         super(name);
     }
 
-    public static Test suite() {
-        return buildTestSuite(BinarySearchTests.class);
-    }
-
-    private String AGroovyClassContents =
+    private String groovyClassContents =
             "package pack\n" +
             "\n" +
             "class OtherClass { }\n" +
@@ -80,7 +75,7 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
             "}\n" +
             "";
 
-    private String AnotherGroovyClassContents =
+    private String groovyClassContents2 =
             "package pack\n" +
             "\n" +
             "class AnotherGroovyClass {\n" +
@@ -102,25 +97,66 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
             "        }\n" +
             "}\n";
 
+    private IJavaProject javaProject;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        Path libFolder = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
-        env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(
-                libFolder.append("binGroovySearch.jar"),
-                libFolder.append("binGroovySearchSrc.zip"),
-                null));
+        Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
+        env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
+
         javaProject = env.getJavaProject(project.getName());
+        waitForIndexer(javaProject);
 
         // overwrite the contents vars with the actual contents
-        AGroovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
-        AnotherGroovyClassContents = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
+        groovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
+        groovyClassContents2 = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
     }
 
     @Override
     protected void tearDown() throws Exception {
+        javaProject = null;
         super.tearDown();
     }
+
+    private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws Exception {
+        SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
+        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
+        MockSearchRequestor requestor = new MockSearchRequestor();
+        new SearchEngine().search(pattern, new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()}, scope, requestor, null);
+        return requestor;
+    }
+
+    private void assertMatches(String toFind, MockSearchRequestor requestor, int allMatches, int firstMatches) {
+//        for (Iterator<SearchMatch> it = requestor.matches.iterator(); it.hasNext();) {
+//            IJavaElement elem = (IJavaElement) it.next().getElement();
+//            IJavaElement type = elem.getAncestor(IJavaElement.TYPE);
+//            if (type != null && type.getElementName().equals("XMLDTDScannerImpl")) {
+//                it.remove();
+//            }
+//        }
+        if (requestor.matches.size() != allMatches) {
+            fail("Expecting " + allMatches + " matches, but found " + requestor.matches.size() + "\n" + requestor.printMatches());
+        }
+        int currIndex = groovyClassContents.indexOf("def doit") + "def doit".length();
+        for (int i = 0; i < firstMatches; i += 1) {
+            SearchMatch match = requestor.matches.get(i);
+            currIndex = groovyClassContents.indexOf(toFind, currIndex);
+            assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
+            assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
+            currIndex += toFind.length();
+        }
+        currIndex = groovyClassContents2.indexOf("def doit") + "def doit".length();
+        for (int i = firstMatches; i < allMatches; i += 1) {
+            SearchMatch match = requestor.matches.get(i);
+            currIndex = groovyClassContents2.indexOf(toFind, currIndex);
+            assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
+            assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
+            currIndex += toFind.length();
+        }
+    }
+
+    //
 
     public void testClassDecl1() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
@@ -172,49 +208,5 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
         IMethod method = type.getMethod(toFind, new String[0]);
         MockSearchRequestor requestor = performSearch(method);
         assertMatches(toFind, requestor, 2, 1);
-    }
-
-    private void assertMatches(String toFind, MockSearchRequestor requestor,
-            int allMatches, int firstMatches) {
-
-        // TODO on build server, there is a mysterious match against XMLDTDScannerImpl
-        // should explore further, but not enough time right now.
-        for (Iterator<SearchMatch> iterator = requestor.matches.iterator(); iterator.hasNext();) {
-            SearchMatch m = iterator.next();
-            IJavaElement type = ((IJavaElement) m.getElement()).getAncestor(IJavaElement.TYPE);
-            if (type != null && type.getElementName().equals("XMLDTDScannerImpl")) {
-                iterator.remove();
-            }
-        }
-
-        if (requestor.matches.size() != allMatches) {
-            fail("Expecting " + allMatches + " matches, but found " + requestor.matches.size() + "\n" + requestor.printMatches());
-        }
-        int currIndex = AGroovyClassContents.indexOf("def doit") + "def doit".length();
-        for (int i = 0; i < firstMatches; i++) {
-            SearchMatch match = requestor.matches.get(i);
-            currIndex = AGroovyClassContents.indexOf(toFind, currIndex);
-            assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
-            assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
-            currIndex += toFind.length();
-        }
-        currIndex = AnotherGroovyClassContents.indexOf("def doit") + "def doit".length();
-        for (int i = firstMatches; i < allMatches; i++) {
-            SearchMatch match = requestor.matches.get(i);
-            currIndex = AnotherGroovyClassContents.indexOf(toFind, currIndex);
-            assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
-            assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
-            currIndex += toFind.length();
-        }
-    }
-
-    private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws CoreException {
-        waitForIndexer(javaProject);
-
-        SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
-        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
-        MockSearchRequestor requestor = new MockSearchRequestor();
-        new SearchEngine().search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, scope, requestor, null);
-        return requestor;
     }
 }

@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -34,7 +35,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -86,10 +86,8 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        System.out.println("\n------------------------------");
-        System.out.println("Starting: " + this.getClass().getName() + "." + this.getName());
-        searchRequestor = new MockSearchRequestor();
         project = createSimpleGroovyProject();
+        searchRequestor = new MockSearchRequestor();
     }
 
     @Override
@@ -255,15 +253,15 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
 
 
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws CoreException {
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws Exception {
         return getAllMatches(firstContents, secondContents, false);
     }
 
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer) throws CoreException {
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer) throws Exception {
         return getAllMatches(firstContents, secondContents, "", "", waitForIndexer);
 
     }
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, String firstPackage, String secondPackage, boolean waitForIndexer) throws CoreException {
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, String firstPackage, String secondPackage, boolean waitForIndexer) throws Exception {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstPackage, firstClassName, firstContents);
@@ -352,8 +350,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
 
-    protected void waitForIndexer(IJavaElement... elements) throws JavaModelException {
-        SimpleProgressMonitor monitor = new SimpleProgressMonitor("dummy search");
+    protected void waitForIndexer(IJavaElement... elements) throws Exception {
         new SearchEngine().searchAllTypeNames(
             null, 0,
             "XXXXXXXXX".toCharArray(),
@@ -362,7 +359,12 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
             SearchEngine.createJavaSearchScope(elements),
             new TypeNameRequestor() {},
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            monitor);
-        monitor.waitForCompletion(10);
+            null);
+
+        for (Job job : Job.getJobManager().find(null)) {
+            if (job.getName().contains("Java index")) {
+                job.join();
+            }
+        }
     }
 }
