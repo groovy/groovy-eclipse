@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +44,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
  * - is in a BlockStatement or contains a whole BlockStatement
  *
  * @author Michael Klenk mklenk@hsr.ch
- *
  */
 public class StatementFinder extends CodeVisitorSupport {
 
@@ -64,120 +60,118 @@ public class StatementFinder extends CodeVisitorSupport {
     private AnnotatedNode currentDeclaration;
 
     private final Region selection;
-	private final ModuleNode rootNode;
+    private final ModuleNode rootNode;
 
     /**
      * True when we have not found the selection yet
      */
-	boolean preCode = true;
-	boolean isInLoopOrClosure = false;
-	boolean internalInLoopOrClosure = false;
+    boolean preCode = true;
+    boolean isInLoopOrClosure = false;
+    boolean internalInLoopOrClosure = false;
 
     public StatementFinder(Region selection, ModuleNode rootNode) {
-		this.selection = selection;
-		this.rootNode = rootNode;
-		scanDocument();
-	}
+        this.selection = selection;
+        this.rootNode = rootNode;
+        scanDocument();
+    }
 
     /**
      * @return true if the selection is in a static Method
      */
-	public boolean isStatic() {
-		return actualSelectedDeclaration instanceof MethodNode ? ((MethodNode) actualSelectedDeclaration).isStatic() : ((FieldNode) actualSelectedDeclaration).isStatic();
-	}
+    public boolean isStatic() {
+        return actualSelectedDeclaration instanceof MethodNode ? ((MethodNode) actualSelectedDeclaration).isStatic() : ((FieldNode) actualSelectedDeclaration).isStatic();
+    }
 
     /**
      * @return true if the selection is in the constructor
      */
-	public boolean isInConstructor() {
-		return (actualSelectedDeclaration instanceof MethodNode && ((MethodNode) actualSelectedDeclaration).getName().equals("<init>"));
-	}
+    public boolean isInConstructor() {
+        return (actualSelectedDeclaration instanceof MethodNode && ((MethodNode) actualSelectedDeclaration).getName().equals("<init>"));
+    }
 
-	/**
-	 * Return true if the selection is in a loop or a closure
-	 * @return
-	 */
-	public boolean isInLoopOrClosure() {
-		return isInLoopOrClosure;
-	}
+    /**
+     * Return true if the selection is in a loop or a closure
+     * @return
+     */
+    public boolean isInLoopOrClosure() {
+        return isInLoopOrClosure;
+    }
 
     /**
      * @return all Statements in the given Selection
      */
-	public List<Statement> getInSelection() {
-		return inSelection;
-	}
+    public List<Statement> getInSelection() {
+        return inSelection;
+    }
 
     /**
      * @return all Statements after the Selection
      */
-	public List<Statement> getPostSelection() {
-		return postSelection;
-	}
+    public List<Statement> getPostSelection() {
+        return postSelection;
+    }
 
     /**
      * @return the declaration node in which contains the Selection (can be
      *         method or field)
      */
-	public AnnotatedNode getSelectedDeclaration() {
-		return actualSelectedDeclaration;
-	}
+    public AnnotatedNode getSelectedDeclaration() {
+        return actualSelectedDeclaration;
+    }
 
-	/**
-	 * Return a list of all method names, declared in the class which contains the selection
-	 * @return List of method names
-	 */
-	public List<String> getMethodNames() {
-		List<String> methods = new ArrayList<String>();
+    /**
+     * Return a list of all method names, declared in the class which contains the selection
+     * @return List of method names
+     */
+    public List<String> getMethodNames() {
+        List<String> methods = new ArrayList<String>();
         if (actualSelectedDeclaration != null) {
             ClassNode declaringClass = actualSelectedDeclaration.getDeclaringClass();
             for (MethodNode method : declaringClass.getMethods()) {
-				methods.add(method.getName());
-			}
-		}
-		return methods;
-	}
+                methods.add(method.getName());
+            }
+        }
+        return methods;
+    }
 
     /**
      * @return the name of the class that contains the current selection
      */
-	public String getClassName() {
+    public String getClassName() {
         ClassNode declaringClass = actualSelectedDeclaration.getDeclaringClass();
         if (declaringClass != null)
             return declaringClass.getNameWithoutPackage();
         return "";
-	}
+    }
 
     /**
      * @return the class which contains the selection
      */
-	public ClassNode getClassNode() {
+    public ClassNode getClassNode() {
         return actualSelectedDeclaration.getDeclaringClass();
-	}
+    }
 
-	/**
-	 * Finds all satements in the given editor and the given Selection
-	 */
-	public void scanDocument() {
+    /**
+     * Finds all satements in the given editor and the given Selection
+     */
+    public void scanDocument() {
+        inSelection = new ArrayList<Statement>();
+        postSelection = new ArrayList<Statement>();
 
-		inSelection = new ArrayList<Statement>();
-		postSelection = new ArrayList<Statement>();
-
-		if (rootNode != null) {
-			for (ClassNode cl : rootNode.getClasses()) {
-				for (ConstructorNode method : cl.getDeclaredConstructors()) {
-					scanMethod(cl, method);
-				}
-				for (MethodNode method : cl.getMethods()) {
-					scanMethod(cl, method);
-				}
-				for (FieldNode field : cl.getFields()) {
-				    scanField(cl, field);
-				}
-
-			}
-		}
-	}
+        if (rootNode != null) {
+            for (ClassNode cl : rootNode.getClasses()) {
+                for (ConstructorNode method : cl.getDeclaredConstructors()) {
+                    scanMethod(cl, method);
+                }
+                for (MethodNode method : cl.getMethods()) {
+                    scanMethod(cl, method);
+                }
+                for (FieldNode field : cl.getFields()) {
+                    scanField(cl, field);
+                }
+            }
+        }
+    }
 
     private void scanField(ClassNode cl, FieldNode field) {
         if (testSelection(selection, field, SelectionTestKind.SELECTION_IS_COVERED_BY)) {
@@ -193,68 +187,67 @@ public class StatementFinder extends CodeVisitorSupport {
 
     private void scanMethod(ClassNode cl, MethodNode method) {
         if (testSelection(selection, method, SelectionTestKind.SELECTION_IS_COVERED_BY)) {
-			if(method.getCode() instanceof BlockStatement) {
+            if(method.getCode() instanceof BlockStatement) {
                 currentDeclaration = method;
-				visitBlockStatement(((BlockStatement) method.getCode()));
-			}
-		}
-	}
+                visitBlockStatement(((BlockStatement) method.getCode()));
+            }
+        }
+    }
 
 
-	@Override
+    @Override
     public void visitBlockStatement(BlockStatement block) {
-		for (Statement statement : block.getStatements()) {
+        for (Statement statement : block.getStatements()) {
             if (testSelection(selection, statement, SelectionTestKind.SELECTION_COVERS)) {
-				inSelection.add(statement);
-				if (internalInLoopOrClosure) {
-					isInLoopOrClosure = true;
-				}
-				preCode = false;
+                inSelection.add(statement);
+                if (internalInLoopOrClosure) {
+                    isInLoopOrClosure = true;
+                }
+                preCode = false;
                 actualSelectedDeclaration = currentDeclaration;
-
-			} else {
+            } else {
                 if (preCode) {
                     if (testSelection(selection, statement, SelectionTestKind.SELECTION_IS_COVERED_BY)) {
-						statement.visit(this);
-					}
+                        statement.visit(this);
+                    }
                 } else {
-					postSelection.add(0, statement);
-				}
-			}
-		}
-	}
+                    postSelection.add(0, statement);
+                }
+            }
+        }
+    }
 
-	@Override
-	public void visitForLoop(ForStatement forLoop) {
-		boolean oldInLoop = internalInLoopOrClosure;
-		internalInLoopOrClosure = true;
-		super.visitForLoop(forLoop);
-		internalInLoopOrClosure = oldInLoop;
-	}
+    @Override
+    public void visitForLoop(ForStatement forLoop) {
+        boolean oldInLoop = internalInLoopOrClosure;
+        internalInLoopOrClosure = true;
+        super.visitForLoop(forLoop);
+        internalInLoopOrClosure = oldInLoop;
+    }
 
-	@Override
-	public void visitWhileLoop(WhileStatement loop) {
-		boolean oldInLoop = internalInLoopOrClosure;
-		internalInLoopOrClosure = true;
-		super.visitWhileLoop(loop);
-		internalInLoopOrClosure = oldInLoop;
-	}
+    @Override
+    public void visitWhileLoop(WhileStatement loop) {
+        boolean oldInLoop = internalInLoopOrClosure;
+        internalInLoopOrClosure = true;
+        super.visitWhileLoop(loop);
+        internalInLoopOrClosure = oldInLoop;
+    }
 
-	@Override
-	public void visitDoWhileLoop(DoWhileStatement loop) {
-		boolean oldInLoop = internalInLoopOrClosure;
-		internalInLoopOrClosure = true;
-		super.visitDoWhileLoop(loop);
-		internalInLoopOrClosure = oldInLoop;
-	}
+    @Override
+    public void visitDoWhileLoop(DoWhileStatement loop) {
+        boolean oldInLoop = internalInLoopOrClosure;
+        internalInLoopOrClosure = true;
+        super.visitDoWhileLoop(loop);
+        internalInLoopOrClosure = oldInLoop;
+    }
 
-	@Override
-	public void visitClosureExpression(ClosureExpression expression) {
-		boolean oldInLoop = internalInLoopOrClosure;
-		internalInLoopOrClosure = true;
-		super.visitClosureExpression(expression);
-		internalInLoopOrClosure = oldInLoop;
-	}
+    @Override
+    public void visitClosureExpression(ClosureExpression expression) {
+        boolean oldInLoop = internalInLoopOrClosure;
+        internalInLoopOrClosure = true;
+        super.visitClosureExpression(expression);
+        internalInLoopOrClosure = oldInLoop;
+    }
 
     private enum SelectionTestKind {
         SELECTION_COVERS, SELECTION_IS_COVERED_BY
@@ -265,21 +258,19 @@ public class StatementFinder extends CodeVisitorSupport {
      * the Node
      *
      * if true the node must be in the selection
-     *
-     * @return
      */
     private boolean testSelection(Region sel, ASTNode astNode, SelectionTestKind inSelection) {
         if (sel.isEmpty()) {
             return false;
         }
-	    ASTNode node = astNode;
-		if(!ASTTools.hasValidPosition(node) && node instanceof ReturnStatement) {
-			node = ((ReturnStatement) node).getExpression();
-		}
+        ASTNode node = astNode;
+        if (!ASTTools.hasValidPosition(node) && node instanceof ReturnStatement) {
+            node = ((ReturnStatement) node).getExpression();
+        }
         if (inSelection == SelectionTestKind.SELECTION_COVERS) {
             return sel.regionCoversNode(node);
         } else {
             return sel.regionIsCoveredByNode(node);
         }
-	}
+    }
 }

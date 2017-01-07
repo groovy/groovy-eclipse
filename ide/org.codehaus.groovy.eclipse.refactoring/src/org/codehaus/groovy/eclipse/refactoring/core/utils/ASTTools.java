@@ -58,43 +58,30 @@ import org.eclipse.text.edits.ReplaceEdit;
 
 public class ASTTools {
 
-    public static final int SPACE = 1;
-    public static final int TAB   = 2;
-
     /**
      * Returns a selection from the start of the first statement
      * to the end of the last statement in the block statement.
      */
     public static Region getPositionOfBlockStatements(BlockStatement block) {
         if (!block.getStatements().isEmpty()) {
-            int start;
-            Statement statement = block.getStatements().get(0);
-            if (statement instanceof ReturnStatement && statement.getLineNumber() < 1) {
-                start = ((ReturnStatement) statement).getExpression().getStart();
-System.out.printf("Start position is %d; determined from: %s%n%s%n", start, ((ReturnStatement) statement).getExpression(), ((ReturnStatement) statement).getExpression().getText());
-            } else {
-                start = statement.getStart();
-System.out.printf("Start position is %d; determined from: %s%n%s%n", start, statement, statement.getText());
+            int start = getPositionOfStatement(block.getStatements().get(0)).getOffset(),
+                until = getPositionOfStatement(block.getStatements().get(block.getStatements().size() - 1)).getEnd();
+            if (start >= until) {
+                throw new IllegalStateException(String.format(
+                    "Block statement start offset (%d) >= end offset (%d)%nfirst statement = %d%nlast statement = %s",
+                    start, until, block.getStatements().get(0), block.getStatements().get(block.getStatements().size() - 1)));
             }
-
-            int until;
-            statement = block.getStatements().get(block.getStatements().size() - 1);
-            if (statement instanceof ReturnStatement && statement.getLineNumber() < 1) {
-                until = ((ReturnStatement) statement).getExpression().getEnd();
-System.out.printf("End position is %d; determined from: %s%n%s%n", until, ((ReturnStatement) statement).getExpression(), ((ReturnStatement) statement).getExpression().getText());
-            } else {
-                until = statement.getEnd();
-System.out.printf("End position is %d; determined from: %s%n%s%n", until, statement, statement.getText());
-            }
-
-            if (until <= start) {
-                System.err.printf("Block has %d statements starting from line %d, column %d, offset %d:%n%s%n", block.getStatements().size(),
-                    block.getStatements().get(0).getLineNumber(), block.getStatements().get(0).getColumnNumber(), block.getStatements().get(0).getStart(), block.getText());
-            }
-
             return new Region(start, until - start);
         }
         return new Region(0, 0);
+    }
+
+    public static Region getPositionOfStatement(Statement statement) {
+        if (!hasValidPosition(statement) && statement instanceof ReturnStatement) {
+            ASTNode expression = ((ReturnStatement) statement).getExpression();
+            return new Region(expression.getStart(), expression.getLength());
+        }
+        return new Region(statement.getStart(), statement.getLength());
     }
 
     /**
@@ -160,6 +147,8 @@ System.out.printf("End position is %d; determined from: %s%n%s%n", until, statem
         }
         return retString.toString();
     }
+    public static final int SPACE = 1;
+    public static final int TAB   = 2;
 
     /**
      * Returns the current Intentation of this string measured in "Tabs".

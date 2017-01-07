@@ -134,7 +134,7 @@ public class ConstantExpression extends Expression {
             this == EMPTY_EXPRESSION) {
             throw new org.codehaus.groovy.GroovyBugError("Cannot set source position of shared constant expression: " + getText());
         }
-        if (value == null && node.getStart() == 61) {
+        if (value == null && node.getEnd() == 61) {
             new Exception("setting offset 61 for 'null'").printStackTrace();
         }
         super.setSourcePosition(node);
