@@ -23,6 +23,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
@@ -78,7 +79,7 @@ public class TypeSearch {
      *
      * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
      */
-    public void searchForTypes(GroovyCompilationUnit unit, Map<String, UnresolvedTypeData> missingTypes, IProgressMonitor monitor) throws JavaModelException {
+    public void searchForTypes(GroovyCompilationUnit unit, Map<String, UnresolvedTypeData> missingTypes, IProgressMonitor monitor) throws JavaModelException, OperationCanceledException {
         char[][] allTypes = new char[missingTypes.size()][];
         int i = 0;
         for (String simpleName : missingTypes.keySet()) {
@@ -87,7 +88,7 @@ public class TypeSearch {
         final List<TypeNameMatch> typesFound = new ArrayList<TypeNameMatch>();
         TypeNameMatchCollector collector = new TypeNameMatchCollector(typesFound);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {unit.getJavaProject()});
-        int policy = (monitor == null ? IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH : IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH);
+        int policy = (monitor == null ? IJavaSearchConstants.CANCEL_IF_NOT_READY_TO_SEARCH : IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH);
         new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, policy, monitor);
 
         for (TypeNameMatch match : typesFound) {
