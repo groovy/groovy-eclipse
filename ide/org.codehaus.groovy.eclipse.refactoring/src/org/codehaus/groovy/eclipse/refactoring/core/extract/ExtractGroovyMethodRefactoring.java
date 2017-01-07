@@ -169,17 +169,15 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private void initializeExtractedStatements(RefactoringStatus status) {
-        StatementFinder f;
         try {
-            f = new StatementFinder(selectedText, unit.getModuleNode());
+            methodCodeFinder = new StatementFinder(selectedText, unit.getModuleNode());
+            createBlockStatement();
+            updateMethod();
+            saveOriginalParameters();
         } catch (Exception e) {
+            e.printStackTrace();
             status.addFatalError(e.getMessage(), createErrorContext());
-            f = null;
         }
-        methodCodeFinder = f;
-        createBlockStatement();
-        updateMethod();
-        saveOriginalParameters();
     }
 
     @Override
@@ -693,6 +691,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private ReplaceEdit createMethodCallEdit() {
+        System.out.printf("Replacing [%d,%d) with '%s'%n", replaceScope.getOffset(), replaceScope.getOffset() + replaceScope.getLength(), getMethodCall());
         return new ReplaceEdit(replaceScope.getOffset(), replaceScope.getLength(), getMethodCall());
     }
 
