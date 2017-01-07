@@ -97,7 +97,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         protected synchronized void setChanged() {
             super.setChanged();
         }
-
         @Override
         public void notifyObservers(Object arg) {
             super.notifyObservers(arg);
@@ -147,7 +146,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private List<ClassNode> inferredReturnTypes;
 
-
     private Map<String, String> variablesToRename;
 
     protected IPreferenceStore refactoringPreferences;
@@ -175,7 +173,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             updateMethod();
             saveOriginalParameters();
         } catch (Exception e) {
-            e.printStackTrace();
             status.addFatalError(e.getMessage(), createErrorContext());
         }
     }
@@ -443,6 +440,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         block.addStatements(methodCodeFinder.getInSelection());
         replaceScope = ASTTools.getPositionOfBlockStatements(block);
         Assert.isLegal(replaceScope.getOffset() >= 0, "Replace scope has bad offset: " + replaceScope.getOffset());
+        Assert.isLegal(replaceScope.getLength() >= 0, "Replace scope has bad length: " + replaceScope.getLength());
 
         defineActualAndReturnParameters();
     }
@@ -691,7 +689,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private ReplaceEdit createMethodCallEdit() {
-        System.out.printf("Replacing [%d,%d) with '%s'%n", replaceScope.getOffset(), replaceScope.getOffset() + replaceScope.getLength(), getMethodCall());
         return new ReplaceEdit(replaceScope.getOffset(), replaceScope.getLength(), getMethodCall());
     }
 
