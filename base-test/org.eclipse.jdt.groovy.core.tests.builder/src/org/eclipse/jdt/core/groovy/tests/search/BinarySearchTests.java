@@ -17,7 +17,6 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
 
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -35,6 +34,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.BinaryMember;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * @author Andrew Eisenberg
@@ -110,8 +110,6 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
         env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
 
         javaProject = env.getJavaProject(project.getName());
-        javaProject.getProject().refreshLocal(IResource.DEPTH_INFINITE, null);
-
         // overwrite the contents vars with the actual contents
         groovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
         groovyClassContents2 = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
@@ -127,11 +125,16 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
         assertTrue("Expected binary member, but got: " + toSearchFor == null ? null :
                 toSearchFor.getClass().getName(), toSearchFor instanceof BinaryMember);
 
+        JavaModelManager.getIndexManager().indexAll(project);
+        waitForIndexer(javaProject);
+
         SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
+        SearchParticipant[] participants = {SearchEngine.getDefaultSearchParticipant()};
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
         MockSearchRequestor requestor = new MockSearchRequestor();
         SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search in project binaries");
-        new SearchEngine().search(pattern, new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()}, scope, requestor, monitor);
+
+        new SearchEngine().search(pattern, participants, scope, requestor, monitor);
         monitor.waitForCompletion();
         return requestor;
     }
