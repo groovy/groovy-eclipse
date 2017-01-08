@@ -18,7 +18,10 @@
  */
 package org.codehaus.groovy.ast.expr;
 
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
 
 /**
@@ -30,17 +33,16 @@ public class ConstantExpression extends Expression {
     // The following fields are only used internally; every occurrence of a user-defined expression of the same kind
     // has its own instance so as to preserve line information. Consequently, to test for such an expression, don't
     // compare against the field but call isXXXExpression() instead.
-    public static final ConstantExpression NULL = new ConstantExpression(null);
-    public static final ConstantExpression TRUE = new ConstantExpression(Boolean.TRUE);
-    public static final ConstantExpression FALSE = new ConstantExpression(Boolean.FALSE);
-    public static final ConstantExpression EMPTY_STRING = new ConstantExpression("");
-    public static final ConstantExpression PRIM_TRUE = new ConstantExpression(Boolean.TRUE, true);
-    public static final ConstantExpression PRIM_FALSE = new ConstantExpression(Boolean.FALSE, true);
-    //public static final Expression EMPTY_ARRAY = new PropertyExpression(new ClassExpression(ArgumentListExpression.class.getName()), "EMPTY_ARRAY");
+    public static final ConstantExpression NULL = new StaticConstantExpression(null);
+    public static final ConstantExpression TRUE = new StaticConstantExpression(Boolean.TRUE);
+    public static final ConstantExpression FALSE = new StaticConstantExpression(Boolean.FALSE);
+    public static final ConstantExpression EMPTY_STRING = new StaticConstantExpression("");
+    public static final ConstantExpression PRIM_TRUE = new StaticConstantExpression(Boolean.TRUE, true);
+    public static final ConstantExpression PRIM_FALSE = new StaticConstantExpression(Boolean.FALSE, true);
 
     // the following fields are only used internally; there are no user-defined expressions of the same kind
-    public static final ConstantExpression VOID = new ConstantExpression(Void.class);
-    public static final ConstantExpression EMPTY_EXPRESSION = new ConstantExpression(null);
+    public static final ConstantExpression VOID = new StaticConstantExpression(Void.class);
+    public static final ConstantExpression EMPTY_EXPRESSION = new StaticConstantExpression(null);
 
     private Object value;
     private String constantName;
@@ -68,7 +70,6 @@ public class ConstantExpression extends Expression {
                 } else {
                     setType(ClassHelper.make(value.getClass()));
                 }
-                //TODO: more cases here
             } else {
                 setType(ClassHelper.make(value.getClass()));
             }
@@ -121,23 +122,105 @@ public class ConstantExpression extends Expression {
     public boolean isEmptyStringExpression() {
         return "".equals(value);
     }
-
-    // GRECLIPSE add
-    public void setSourcePosition(org.codehaus.groovy.ast.ASTNode node) {
-        if (this == NULL ||
-            this == VOID ||
-            this == TRUE ||
-            this == FALSE ||
-            this == PRIM_TRUE ||
-            this == PRIM_FALSE ||
-            this == EMPTY_STRING ||
-            this == EMPTY_EXPRESSION) {
-            throw new org.codehaus.groovy.GroovyBugError("Cannot set source position of shared constant expression: " + getText());
-        }
-        if (value == null && node.getEnd() == 61) {
-            new Exception("setting offset 61 for 'null'").printStackTrace();
-        }
-        super.setSourcePosition(node);
-    }
-    // GRECLIPSE end
 }
+
+// GROOVY add
+class StaticConstantExpression extends ConstantExpression {
+
+    public StaticConstantExpression(Object value) {
+        super(value);
+    }
+
+    public StaticConstantExpression(Object value, boolean keepPrimitive) {
+        super(value, keepPrimitive);
+    }
+
+    // ASTNode overrides:
+
+    @Override
+    public void setColumnNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setLastColumnNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setLastLineNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setLineNumber(int n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setNodeMetaData(Object k, Object v) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public Object putNodeMetaData(Object k, Object v) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setSourcePosition(ASTNode n) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setStart(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setEnd(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    // AnnotatedNode overrides:
+
+    @Override
+    public void setNameStart(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setNameEnd(int i) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setDeclaringClass(ClassNode cn) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setHasNoRealSourcePosition(boolean b) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setSynthetic(boolean b) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    // ConstantExpression overrides:
+
+    public void setType(ClassNode t) {
+        if (getType() == ClassHelper.DYNAMIC_TYPE) {
+            super.setType(t);
+        } else {
+            throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+        }
+    }
+
+    public void setConstantName(String constantName) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+}
+// GROOVY end

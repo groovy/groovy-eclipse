@@ -2054,6 +2054,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 expression = new ConstantExpression(ve.getName());
             }
         }
+        // GRECLIPSE add -- expressionSwitch > blockExpression can return NULL for an empty GString expression
+        if (expression != ConstantExpression.NULL)
+        // GRECLIPSE end
         configureAST(expression, node);
         return expression;
     }
