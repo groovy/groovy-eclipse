@@ -173,6 +173,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             updateMethod();
             saveOriginalParameters();
         } catch (Exception e) {
+            e.printStackTrace();
             status.addFatalError(e.getMessage(), createErrorContext());
         }
     }
