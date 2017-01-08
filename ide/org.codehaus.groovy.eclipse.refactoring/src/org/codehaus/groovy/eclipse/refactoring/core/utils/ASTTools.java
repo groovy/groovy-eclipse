@@ -68,7 +68,7 @@ public class ASTTools {
                 until = getPositionOfStatement(block.getStatements().get(block.getStatements().size() - 1)).getEnd();
             if (start >= until) {
                 throw new IllegalStateException(String.format(
-                    "Block statement start offset (%d) >= end offset (%d)%nfirst statement = %d%nlast statement = %s",
+                    "Block statement start offset (%d) >= end offset (%d)%nfirst statement: %s%nlast statement: %s",
                     start, until, block.getStatements().get(0), block.getStatements().get(block.getStatements().size() - 1)));
             }
             return new Region(start, until - start);
