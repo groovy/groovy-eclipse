@@ -2854,7 +2854,7 @@ public abstract class Scope {
 				return methodBinding;
 
 			methodBinding = findMethod(currentType, selector, argumentTypes, invocationSite, false);
-			// GROOVY add - give it one more chance as the ast transform may have introduced it
+			// GROOVY add -- give it one more chance as the ast transform may have introduced it
 			// Is this the right approach?  Requires ast transforms running before this is done
 			if (methodBinding == null) {
 				methodBinding = oneLastLook(currentType, selector, argumentTypes, invocationSite);
@@ -3286,7 +3286,7 @@ public abstract class Scope {
 						}
 						if (TypeBinding.notEquals(temp, type) && temp != null) {
 							if (temp.isValidBinding()) {
-								// GROOVY add - allow for imports expressed in source to override 'default' imports - GRECLIPSE-945
+								// GROOVY add -- allow for imports expressed in source to override 'default' imports - GRECLIPSE-945
 								boolean conflict = true; // do we need to continue checking
 								if (this.parent != null && foundInImport) {
 									CompilationUnitScope cuScope = compilationUnitScope();

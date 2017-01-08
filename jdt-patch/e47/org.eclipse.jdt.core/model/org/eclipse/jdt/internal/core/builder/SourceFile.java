@@ -115,7 +115,7 @@ public String toString() {
 	return "SourceFile[" //$NON-NLS-1$
 		+ this.resource.getFullPath() + "]";  //$NON-NLS-1$
 }
-// GROOVY add - GRECLIPSE-963
+// GROOVY add -- GRECLIPSE-963
 public static final String LINK_TO_GRAILS_PLUGINS = ".link_to_grails_plugins"; //$NON-NLS-1$
 public boolean isInLinkedSourceFolder() {
 	if (this.sourceLocation != null &&  this.sourceLocation.sourceFolder != null) {

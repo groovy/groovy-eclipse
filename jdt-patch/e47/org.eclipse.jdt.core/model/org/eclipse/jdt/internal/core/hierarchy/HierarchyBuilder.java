@@ -91,7 +91,7 @@ public abstract class HierarchyBuilder {
 			unitsToLookInside = workingCopies;
 		}
 		if (project != null) {
-			// GROOVY add - pulled out of the call
+			// GROOVY add -- pulled out of the call
 			Map<String, String> projectOptions = project.getOptions(true);
 			CompilerUtils.configureOptionsBasedOnNature(projectOptions, project);
 			// GROOVY end

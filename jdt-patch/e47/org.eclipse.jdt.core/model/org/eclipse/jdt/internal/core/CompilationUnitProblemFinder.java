@@ -266,7 +266,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 			if (problemFactory != null)
 				problemFactory.monitor = null; // don't hold a reference to this external object
 			// NB: unit.cleanUp() is done by caller
-			// GROOVY edit - reset() can cause OOB exceptions in TypeSystem
+			// GROOVY edit -- reset() can cause OOB exceptions in TypeSystem
 			//if (problemFinder != null && !creatingAST)
 			if (problemFinder != null && !creatingAST && reset)
 			// GROOVY end

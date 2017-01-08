@@ -208,11 +208,9 @@ public void handle(
 			}
 			break;
 		case ProblemSeverities.Warning :
-			// GROOVY add - still required?
-			if ((this.options.groovyFlags & 0x01) != 0) {
-				if ((unitResult.compilationUnit instanceof SourceFile) && ((SourceFile) unitResult.compilationUnit).isInLinkedSourceFolder()) {
-					return;
-				}
+			// GROOVY add -- still required?
+			if ((this.options.groovyFlags & 0x01) != 0 && (unitResult.compilationUnit instanceof SourceFile) && ((SourceFile) unitResult.compilationUnit).isInLinkedSourceFolder()) {
+				return;
 			}
 			// GROOVY end
 			record(problem, unitResult, referenceContext, false);

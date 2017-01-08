@@ -597,7 +597,7 @@ private Binding findImport(char[][] compoundName, int length) {
 		return new ProblemReferenceBinding(compoundName, type, ProblemReasons.NotVisible);
 	return type;
 }
-// GROOVY add - new method for determining visibility; rules are relaxed for groovy
+// GROOVY add -- new method for determining visibility; rules are relaxed for groovy
 protected boolean canBeSeenBy(ReferenceBinding type, PackageBinding pkg) {
 	return type.canBeSeenBy(pkg);
 }

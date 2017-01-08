@@ -120,7 +120,7 @@ public class MemberValuePair extends ASTNode {
 			return;
 		}
 
-		// GROOVY add - handling for class literals that do not end in '.class'
+		// GROOVY add -- handling for class literals that do not end in '.class'
 		TypeBinding[] vtb = null;
 		if (isClass(requiredType) && isGroovy(scope)) {
 			if (this.value instanceof ArrayInitializer) {

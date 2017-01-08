@@ -10696,7 +10696,7 @@ public void initializeScanner(){
 		this.options.taskTags/*taskTags*/,
 		this.options.taskPriorities/*taskPriorities*/,
 		this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
-	// GROOVY add - workaround JDT bug where it sorts the tasks but not the priorities!
+	// GROOVY add -- workaround JDT bug where it sorts the tasks but not the priorities!
 	this.options.taskPriorities = this.scanner.taskPriorities;
 	// GROOVY end
 }

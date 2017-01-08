@@ -824,7 +824,7 @@ public void abstractMethodInConcreteClass(SourceTypeBinding type) {
 	}
 }
 public void abstractMethodMustBeImplemented(SourceTypeBinding type, MethodBinding abstractMethod) {
-	// GROOVY add - fired off by method verifier
+	// GROOVY add -- fired off by method verifier
 	if (type.scope != null && !type.scope.shouldReport(IProblem.IncompatibleReturnType)) {
 		return;
 	}
@@ -3215,7 +3215,7 @@ public void incompatibleExceptionInThrowsClause(SourceTypeBinding type, MethodBi
 			type.sourceEnd());
 }
 public void incompatibleReturnType(MethodBinding currentMethod, MethodBinding inheritedMethod) {
-	// GROOVY add - fired off by method verifier
+	// GROOVY add -- fired off by method verifier
 	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
 		SourceTypeBinding stb = (SourceTypeBinding) currentMethod.declaringClass;
 		if (stb.scope != null && !stb.scope.shouldReport(IProblem.IncompatibleReturnType)) {
@@ -6084,7 +6084,7 @@ public void methodMustOverride(AbstractMethodDeclaration method, long compliance
 }
 
 public void methodNameClash(MethodBinding currentMethod, MethodBinding inheritedMethod, int severity) {
-	// GROOVY add - fired off by method verifier
+	// GROOVY add -- fired off by method verifier
 	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
 		SourceTypeBinding stb = (SourceTypeBinding) currentMethod.declaringClass;
 		if (stb.scope != null && !stb.scope.shouldReport(IProblem.MethodNameClash)) {
@@ -8618,7 +8618,7 @@ public void unsafeReturnTypeOverride(MethodBinding currentMethod, MethodBinding 
 	int start = type.sourceStart();
 	int end = type.sourceEnd();
 	if (TypeBinding.equalsEquals(currentMethod.declaringClass, type)) {
-		// GROOVY add - @Delegate introduced methods don't have a source method (GROOVY-873)
+		// GROOVY add -- @Delegate introduced methods don't have a source method (GROOVY-873)
 		if (currentMethod.sourceMethod() != null) {
 		// GROOVY end
 		ASTNode location = ((MethodDeclaration) currentMethod.sourceMethod()).returnType;

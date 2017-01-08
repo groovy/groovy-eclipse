@@ -79,7 +79,7 @@ public class ImportReference extends ASTNode {
 		visitor.endVisit(this, scope);
 	}
 
-	// GROOVY add - can be overridden by aliased imports that don't use the final token as the name
+	// GROOVY add -- can be overridden by aliased imports that don't use the final token as the name
 	public char[] getSimpleName() {
 		return this.tokens[this.tokens.length - 1];
 	}

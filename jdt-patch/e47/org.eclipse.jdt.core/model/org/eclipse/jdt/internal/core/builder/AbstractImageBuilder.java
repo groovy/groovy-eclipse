@@ -215,7 +215,7 @@ protected void acceptSecondaryType(ClassFile classFile) {
 }
 
 protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreException {
-	// GROOVY add - determine if this is a Groovy project
+	// GROOVY add -- determine if this is a Groovy project
 	final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
 	// GROOVY end
 	for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
@@ -558,7 +558,7 @@ protected Compiler newCompiler() {
 	CompilerOptions compilerOptions = new CompilerOptions(projectOptions);
 	compilerOptions.performMethodsFullRecovery = true;
 	compilerOptions.performStatementsRecovery = true;
-	// GROOVY add - make it behave in a groovier way if this project has the right nature
+	// GROOVY add -- make it behave in a groovier way if this project has the right nature
 	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, this.javaBuilder.javaProject);
 	// GROOVY end
 	Compiler newCompiler = new Compiler(

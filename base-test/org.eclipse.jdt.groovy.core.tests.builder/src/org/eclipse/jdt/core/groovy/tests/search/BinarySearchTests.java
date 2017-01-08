@@ -27,12 +27,14 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.internal.core.BinaryMember;
 
 /**
  * @author Andrew Eisenberg
@@ -122,21 +124,19 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     }
 
     private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws Exception {
+        assertTrue("Expected binary member, but got: " + toSearchFor == null ? null :
+                toSearchFor.getClass().getName(), toSearchFor instanceof BinaryMember);
+
         SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
         MockSearchRequestor requestor = new MockSearchRequestor();
-        new SearchEngine().search(pattern, new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()}, scope, requestor, null);
+        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search in project binaries");
+        new SearchEngine().search(pattern, new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()}, scope, requestor, monitor);
+        monitor.waitForCompletion();
         return requestor;
     }
 
     private void assertMatches(String toFind, MockSearchRequestor requestor, int allMatches, int firstMatches) {
-//        for (Iterator<SearchMatch> it = requestor.matches.iterator(); it.hasNext();) {
-//            IJavaElement elem = (IJavaElement) it.next().getElement();
-//            IJavaElement type = elem.getAncestor(IJavaElement.TYPE);
-//            if (type != null && type.getElementName().equals("XMLDTDScannerImpl")) {
-//                it.remove();
-//            }
-//        }
         if (requestor.matches.size() != allMatches) {
             fail("Expecting " + allMatches + " matches, but found " + requestor.matches.size() + "\n" + requestor.printMatches());
         }

@@ -196,7 +196,7 @@ class ASTConverter {
 				case 1 :
 					methodsIndex++;
 					if (!nextMethodDeclaration.isDefaultConstructor() && !nextMethodDeclaration.isClinit()) {
-						// GROOVY add - a little ugly, but allows the conversion of the method declaration
+						// GROOVY add -- a little ugly, but allows the conversion of the method declaration
 						// to know if it is occurring within a pure java type or not
 						boolean originalValue = this.scannerUsable;
 						try {
@@ -3783,7 +3783,7 @@ class ASTConverter {
 								type2 = convertType(arguments[i]);
 								parameterizedType.typeArguments().add(type2);
 							}
-							// GROOVY edit - avoid IllegalArgumentException in setSourceRange below
+							// GROOVY edit -- avoid IllegalArgumentException in setSourceRange below
 							//end = type2 != null ? type2.getStartPosition() + type2.getLength() - 1 : end;
 							if (type2 != null) {
 								if (type2.getLength() > 0) {

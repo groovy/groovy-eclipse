@@ -433,7 +433,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	 */
 	private void compile(ICompilationUnit[] sourceUnits, boolean lastRound) {
 		this.stats.startTime = System.currentTimeMillis();
-		// GROOVY add - sort the sourceUnits; java first! might be temporary, hmmm
+		// GROOVY add -- sort the sourceUnits; java first! might be temporary, hmmm
 		if (this.options.buildGroovyFiles == 2) {
 			int groovyFileIndex = -1;
 			for (int u = 0, max = sourceUnits.length; u < max; u++) {

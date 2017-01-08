@@ -475,7 +475,7 @@ public final class ImportRewriteAnalyzer {
 
 		this.importsByNameIdentity = mapImportsByNameIdentity(this.originalImportEntries);
 
-		// GROOVY edit - prevent the addition of semicolons to import declarations
+		// GROOVY edit -- prevent the addition of semicolons to import declarations
 		boolean groovy = cu.getClass().getName().contains("Groovy"); //$NON-NLS-1$
 		this.importDeclarationWriter = new ImportDeclarationWriter(
 				groovy ? null : shouldInsertSpaceBeforeSemicolon(javaProject));

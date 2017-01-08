@@ -12,7 +12,7 @@
 package org.eclipse.jdt.internal.core.dom.rewrite.imports;
 
 final class ImportDeclarationWriter {
-	// GROOVY edit - change to wrapper type
+	// GROOVY edit -- change to wrapper type
 	private final Boolean insertSpaceBeforeSemicolon;
 
 	ImportDeclarationWriter(Boolean insertSpaceBeforeSemicolon) {

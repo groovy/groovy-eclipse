@@ -121,7 +121,7 @@ public class SourceTypeConverter extends TypeConverter {
 		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
 		this.cu = (ICompilationUnit) cuHandle;
 
-		// GROOVY add - trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration)
+		// GROOVY add -- trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration)
 		// FIXASC think about doing the necessary rewrite below rather than this - does it make things too slow?
 		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
 			try {

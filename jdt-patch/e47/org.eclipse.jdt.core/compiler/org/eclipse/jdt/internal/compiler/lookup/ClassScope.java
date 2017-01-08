@@ -317,7 +317,7 @@ public class ClassScope extends Scope {
 		sourceType.setMemberTypes(memberTypeBindings);
 	}
 
-	// GROOVY add - overridable method so the scope can build the right kind of new scope
+	// GROOVY add -- overridable method so the scope can build the right kind of new scope
 	protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl) {
 		return new ClassScope(parentScope, typeDecl);
 	}
@@ -383,7 +383,7 @@ public class ClassScope extends Scope {
 		}
 		if (count != methodBindings.length)
 			System.arraycopy(methodBindings, 0, methodBindings = new MethodBinding[count], 0, count);
-		// GROOVY add - allow extra methods
+		// GROOVY add -- allow extra methods
 		methodBindings = augmentMethodBindings(methodBindings);
 		// GROOVY end
 		sourceType.tagBits &= ~(TagBits.AreMethodsSorted|TagBits.AreMethodsComplete); // in case some static imports reached already into this type
@@ -407,7 +407,7 @@ public class ClassScope extends Scope {
 		}
 	}
 
-	// GROOVY add - new method that can be overridden for groovy
+	// GROOVY add -- new method that can be overridden for groovy
 	protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
 		// no-op for Java
 		return methodBindings;
@@ -974,7 +974,7 @@ public class ClassScope extends Scope {
 		ReferenceBinding superclass = findSupertype(superclassRef);
 		if (superclass != null) { // is null if a cycle was detected cycle or a problem
 			if (!superclass.isClass() && (superclass.tagBits & TagBits.HasMissingType) == 0) {
-				// GROOVY add - make reporting conditional
+				// GROOVY add -- make reporting conditional
 				if (shouldReport(org.eclipse.jdt.core.compiler.IProblem.SuperclassMustBeAClass))
 				// GROOVY end
 				problemReporter().superclassMustBeAClass(sourceType, superclassRef, superclass);
@@ -1006,7 +1006,7 @@ public class ClassScope extends Scope {
 		return false; // reported some error against the source type
 	}
 
-	// GROOVY add - new method for overriding
+	// GROOVY add -- new method for overriding
 	public boolean shouldReport(int problemCode) {
 		return true;
 	}

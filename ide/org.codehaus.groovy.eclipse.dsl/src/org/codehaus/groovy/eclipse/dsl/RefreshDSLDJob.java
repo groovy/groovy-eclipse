@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
@@ -297,7 +296,7 @@ public class RefreshDSLDJob extends Job {
                 return Status.OK_STATUS;
             }
 
-            SubMonitor submon = SubMonitor.convert(monitor != null ? monitor : new NullProgressMonitor());
+            SubMonitor submon = SubMonitor.convert(monitor);
             submon.beginTask("Refresh DSLD scripts", projects.size() * 9);
 
             List<IStatus> errorStatuses = new ArrayList<IStatus>();

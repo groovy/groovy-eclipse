@@ -1274,7 +1274,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 					i--;
 				}
 				if (!possibleMatch.nodeSet.mustResolve)
-				// GROOVY add - delay cleanup for groovy matches because it clears out 'scope' backpointer that may be used later in 'completeTypeBindings'
+				// GROOVY add -- delay cleanup for groovy matches because it clears out 'scope' backpointer that may be used later in 'completeTypeBindings'
 				if (!alreadyMatched.contains(possibleMatch))
 				// GROOVY end
 					possibleMatch.cleanUp();
@@ -1329,7 +1329,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 							new String(possibleMatch.parsedUnit.getFileName())
 						}));
 			// cleanup compilation unit result
-			// GROOVY add - delay cleanup of groovy possible matches until later the clean up will null-out back pointers to scopes used by other CompilationUnitDeclarations
+			// GROOVY add -- delay cleanup of groovy possible matches until later the clean up will null-out back pointers to scopes used by other CompilationUnitDeclarations
 			if (!alreadyMatched.contains(possibleMatch))
 			// GROOVY end
 			possibleMatch.cleanUp();
@@ -1831,7 +1831,7 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 					this.lookupEnvironment.buildTypeBindings(parsedUnit, null /*no access restriction*/);
 				}
 				if (hasAlreadyDefinedType(parsedUnit)) return false; // skip type has it is hidden so not visible
-				// GROOVY add - only for Java files
+				// GROOVY add -- only for Java files
 				if (!possibleMatch.isInterestingSourceFile())
 				// GROOVY end
 				getMethodBodies(parsedUnit, possibleMatch.nodeSet);
@@ -1858,7 +1858,7 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
  * Process a compilation unit already parsed and build.
  */
 protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException {
-	// GROOVY add - skip non-Java files; they use a separate delegated search
+	// GROOVY add -- skip non-Java files; they use a separate delegated search
 	if (possibleMatch.isInterestingSourceFile()) {
 		try {
 			this.lookupEnvironment.buildTypeBindings(possibleMatch.parsedUnit, null /*no access restriction*/);

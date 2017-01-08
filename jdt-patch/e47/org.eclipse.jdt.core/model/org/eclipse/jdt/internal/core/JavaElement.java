@@ -568,7 +568,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
-	// GROOVY add - overload for backwards compatibility on 3.7
+	// GROOVY add -- overload for backwards compatibility on 3.7
 	protected Object openWhenClosed(Object info, IProgressMonitor monitor) throws JavaModelException {
 		return openWhenClosed(info, true, monitor);
 	}
