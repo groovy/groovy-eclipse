@@ -38,10 +38,9 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
@@ -53,7 +52,7 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationMessages;
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
+import org.eclipse.jdt.internal.corext.refactoring.util.JavaElementUtil;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 import org.eclipse.jdt.internal.ui.JavaUIStatus;
@@ -81,32 +80,30 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             }
 
             public void run(IProgressMonitor monitor) throws CoreException {
-                if (monitor == null) monitor = new NullProgressMonitor();
+                SubMonitor submon = SubMonitor.convert(monitor, CodeGenerationMessages.AddImportsOperation_description, 4);
                 try {
-                    monitor.beginTask(CodeGenerationMessages.AddImportsOperation_description, 4);
-
                     ModuleNodeInfo info = compilationUnit.getModuleInfo(true);
                     if (info.isEmpty()) {
                         fStatus = Status.CANCEL_STATUS;
                         return;
                     }
-                    monitor.worked(1);
+                    submon.worked(1);
 
                     ImportRewrite importRewrite = CodeStyleConfiguration.createImportRewrite(compilationUnit, true);
-                    TextEdit edit = evaluateEdits(info.module, importRewrite, new SubProgressMonitor(monitor, 1));
+                    TextEdit edit = evaluateEdits(info.module, importRewrite, submon.newChild(1));
                     if (edit == null) {
                         return;
                     }
 
                     MultiTextEdit result = new MultiTextEdit();
                     result.addChild(edit);
-                    result.addChild(importRewrite.rewriteImports(new SubProgressMonitor(monitor, 1)));
-                    JavaModelUtil.applyEdit(compilationUnit, result, true, new SubProgressMonitor(monitor, 1));
+                    result.addChild(importRewrite.rewriteImports(submon.newChild(1)));
+                    JavaElementUtil.applyEdit(compilationUnit, result, true, submon.newChild(1));
                 } catch (OperationCanceledException cancel) {
                     if (fStatus == Status.OK_STATUS)
                         fStatus = Status.CANCEL_STATUS;
                 } finally {
-                    monitor.done();
+                    submon.done();
                 }
             }
 
@@ -250,9 +247,6 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 if (node.getEnd() < 1) {
                     Region nodeRegion = (Region) ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
                     if (nodeRegion != null) {
-
-
-
                         start = nodeRegion.getOffset(); // may be approximate
                         while (!Character.isJavaIdentifierStart(compilationUnit.getSource().charAt(start))) {
                             start += 1;

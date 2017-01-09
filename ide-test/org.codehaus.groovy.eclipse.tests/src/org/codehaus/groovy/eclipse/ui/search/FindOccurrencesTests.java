@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.ui.search;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import junit.framework.Test;
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractGroovySearchTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
-import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
  * Tests for {@link GroovyOccurrencesFinder}
@@ -31,7 +31,7 @@ import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
  * @author Andrew Eisenberg
  * @created Jan 2, 2011
  */
-public class FindOccurrencesTests extends AbstractGroovySearchTest {
+public final class FindOccurrencesTests extends AbstractGroovySearchTest {
 
     public static Test suite() {
         return buildTestSuite(FindOccurrencesTests.class);
@@ -584,43 +584,37 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len1, start1, len1, start2, len, start3, len, start4, len1);
     }
 
-    private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {
+    private void doTest(String contents, int start, int length, int... expected) throws Exception {
         GroovyCompilationUnit unit = createUnit("Occurrences", contents);
+        unit.becomeWorkingCopy(null);
         try {
-            unit.becomeWorkingCopy(null);
-            OccurrenceLocation[] actual = find(unit, start, length);
-            assertOccurrences(expected, actual);
+            GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
+            finder.setGroovyCompilationUnit(unit);
+            finder.initialize(null, start, length);
+            Object actual = finder.getOccurrences();
+
+            final int n = Array.getLength(actual);
+            if (n != expected.length/2) {
+                fail("Wrong number of occurrences found. expecting:\n" + Arrays.toString(expected) + "\nbut found:\n" + printOccurrences(actual, n));
+            }
+            for (int i = 0; i < n; i += 1) {
+                Object o = Array.get(actual, i);
+                int off = (Integer) ReflectionUtils.getPrivateField(o.getClass(), "fOffset", o),
+                    len = (Integer) ReflectionUtils.getPrivateField(o.getClass(), "fLength", o);
+                if (off != expected[i*2] || len != expected[i*2+1]) {
+                    fail("Problem in Occurrence " + i + " expecting:\n" + Arrays.toString(expected) + "\nbut found:\n" + printOccurrences(actual, n));
+                }
+            }
         } finally {
             unit.discardWorkingCopy();
         }
     }
 
-    private void assertOccurrences(int[] expected, OccurrenceLocation[] actual) {
-        assertEquals("Wrong number of occurrences found. expecting:\n" +
-                Arrays.toString(expected) + "\nbut found:\n" +
-                printOccurrences(actual), expected.length/2, actual.length);
-        for (int i = 0; i < actual.length; i++) {
-            assertEquals("Problem in Occurrence " + i + " expecting:\n" +
-                    Arrays.toString(expected) + "\nbut found:\n" +
-                    printOccurrences(actual), expected[i*2], actual[i].getOffset());
-            assertEquals("Problem in Occurrence " + i + " expecting:\n" +
-                    Arrays.toString(expected) + "\nbut found:\n" +
-                    printOccurrences(actual), expected[i*2+1], actual[i].getLength());
-        }
-    }
-
-    private String printOccurrences(OccurrenceLocation[] os) {
+    private String printOccurrences(Object array, int length) {
         StringBuilder sb = new StringBuilder();
-        for (OccurrenceLocation o : os) {
-            sb.append(o + "\n");
+        for (int i = 0; i < length; i += 1) {
+            sb.append(Array.get(array, i)).append('\n');
         }
         return sb.toString();
-    }
-
-    private OccurrenceLocation[] find(GroovyCompilationUnit unit, int start, int length) {
-        GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
-        finder.setGroovyCompilationUnit(unit);
-        finder.initialize(null, start, length);
-        return finder.getOccurrences();
     }
 }

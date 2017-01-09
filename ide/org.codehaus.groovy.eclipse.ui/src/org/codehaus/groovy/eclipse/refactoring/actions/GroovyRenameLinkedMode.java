@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.lang.reflect.Array;
 import java.util.Comparator;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
@@ -32,7 +32,6 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.refactoring.reorg.RenameLinkedMode;
-import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.ui.text.correction.proposals.LinkedNamesAssistProposal.DeleteBlockingExitPolicy;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.text.BadLocationException;
@@ -42,6 +41,7 @@ import org.eclipse.jface.text.IEditingSupportRegistry;
 import org.eclipse.jface.text.ITextViewerExtension6;
 import org.eclipse.jface.text.IUndoManager;
 import org.eclipse.jface.text.IUndoManagerExtension;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.link.ILinkedModeListener;
 import org.eclipse.jface.text.link.LinkedModeModel;
 import org.eclipse.jface.text.link.LinkedModeUI;
@@ -130,57 +130,51 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
             finder.setGroovyCompilationUnit(editor.getGroovyCompilationUnit());
             finder.initialize(null, offset, length);
-
             ASTNode nodeToLookFor = finder.getNodeToLookFor();
             if (nodeToLookFor == null) {
                 return;
             }
             setOriginalName(finder.getElementName());
             final int pos = nodeToLookFor.getStart();
-
-            OccurrenceLocation[] occurrences = finder.getOccurrences();
-            if (occurrences.length == 0) {
+            Object occurrences = finder.getOccurrences();
+            if (occurrences == null || Array.getLength(occurrences) == 0) {
                 return;
             }
 
-            // now just in case some source locations are not correct (eg-
-            // accessing a getter method as a non-getter property), remove all
-            // that do not have the same source length as the original
-            int nameLength = finder.getElementName().length();
-            List<OccurrenceLocation> newOccurrences = new ArrayList<OccurrenceLocation>(occurrences.length);
-            for (OccurrenceLocation occurrence : occurrences) {
-                if (occurrence.getLength() == nameLength) {
-                    newOccurrences.add(occurrence);
+            // convert from array of OccurrenceLocation to ordered collection of Position
+            Set<Position> positions = new TreeSet<Position>(new Comparator<Position>() {
+                public int compare(Position p1, Position p2) {
+                    return rank(p1) - rank(p2);
                 }
-            }
-            occurrences = newOccurrences.toArray(new OccurrenceLocation[0]);
-
-            // sort for iteration order, starting with the node @ offset
-            Arrays.sort(occurrences, new Comparator<OccurrenceLocation>() {
-                public int compare(OccurrenceLocation o1, OccurrenceLocation o2) {
-                    return rank(o1) - rank(o2);
-                }
-
                 /**
-                 * Returns the absolute rank of an <code>ASTNode</code>. Nodes
-                 * preceding <code>pos</code> are ranked last.
+                 * Returns the absolute rank of an <code>ASTNode</code>. Nodes preceding <code>pos</code> are ranked last.
                  *
-                 * @param node the node to compute the rank for
-                 * @return the rank of the node with respect to the invocation
-                 *         offset
+                 * @return the rank of the position with respect to the invocation offset
                  */
-                private int rank(OccurrenceLocation o) {
-                    int relativeRank = o.getOffset() + o.getLength() - pos;
+                private int rank(Position p) {
+                    int relativeRank = p.getOffset() + p.getLength() - pos;
                     if (relativeRank < 0)
                         return Integer.MAX_VALUE + relativeRank;
-                    else
-                        return relativeRank;
+                    return relativeRank;
                 }
             });
-            for (int i = 0; i < occurrences.length; i++) {
-                OccurrenceLocation location = occurrences[i];
-                LinkedPosition linkedPosition = new LinkedPosition(document, location.getOffset(), location.getLength(), i);
-                if (i == 0) {
+
+            int nameLength = finder.getElementName().length();
+            for (int i = 0, n = Array.getLength(occurrences); i < n; i += 1) {
+                Object occurrence = Array.get(occurrences, i);
+                int off = (Integer) ReflectionUtils.getPrivateField(occurrence.getClass(), "fOffset", occurrence),
+                    len = (Integer) ReflectionUtils.getPrivateField(occurrence.getClass(), "fLength", occurrence);
+
+                // just in case some source locations are not correct (eg-accessing a getter method as a non-getter property),
+                // remove ones that do not have the same source length as the original
+                if (len == nameLength)
+                    positions.add(new Position(off, len));
+            }
+
+            int i = 0;
+            for (Position position : positions) {
+                LinkedPosition linkedPosition = new LinkedPosition(document, position.getOffset(), position.getLength(), i);
+                if (i++ == 0) {
                     setNamePosition(linkedPosition);
                 }
                 fLinkedPositionGroup.addPosition(linkedPosition);
@@ -223,14 +217,6 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             JavaPlugin.log(e);
         }
     }
-
-    // method calls openSecondaryPopup
-
-    // get fields fFocusEditingSupport, fOriginalSelection, fLinkedModeModel,
-    // fLinkedPositionGroup
-
-    // set fields fgActiveLinkedMode, fLinkedModeModel, fNamePosition,
-    // fOriginalName, fStartingUndoOperation, fOriginalSelection, fShowPreview
 
     private void setOriginalSelection(Point p) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fOriginalSelection", this, p);
@@ -289,8 +275,7 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
     }
 
     private void doDoRename(boolean showPreview) {
-        ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "doRename", new Class[] { boolean.class }, this,
-                new Object[] { showPreview });
+        ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "doRename", new Class[] {boolean.class}, this, new Object[] {showPreview});
     }
 
     private IStatusLineManager getStatusLineManager() {

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import static java.lang.reflect.Array.getLength;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -70,7 +72,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction;
-import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
@@ -1272,13 +1273,11 @@ public class GroovyEditor extends CompilationUnitEditor {
             fMarkOccurrenceModificationStamp_set(currentModificationStamp);
         }
 
-        OccurrenceLocation[] locations = null;
-
         GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
         finder.initialize(astRoot, selection.getOffset(), selection.getLength());
-        locations = finder.getOccurrences();
+        Object locations = finder.getOccurrences();
 
-        if (locations == null) {
+        if (locations == null || getLength(locations) == 0) {
             if (!fStickyOccurrenceAnnotations_get())
                 removeOccurrenceAnnotations_call();
             else if (hasChanged) // check consistency of current annotations
@@ -1339,11 +1338,11 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected void fOccurrencesFinderJob_new(IDocument document, OccurrenceLocation[] locations, ISelection selection) throws Throwable {
+    protected void fOccurrencesFinderJob_new(IDocument document, Object locations, ISelection selection) throws Throwable {
         //OccurrencesFinderJob ofj = new OccurrencesFinderJob(document, locations, selection);
         java.lang.reflect.Constructor ctor = ReflectionUtils.getConstructor(
             Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaEditor$OccurrencesFinderJob"),
-            new Class[] {JavaEditor.class, IDocument.class, OccurrenceLocation[].class, ISelection.class});
+            new Class[] {JavaEditor.class, IDocument.class, locations.getClass(), ISelection.class});
         Job ofj = ReflectionUtils.invokeConstructor(ctor, new Object[] {this, document, locations, selection});
         //fOccurrencesFinderJob = ofj;
         ReflectionUtils.setPrivateField(JavaEditor.class, "fOccurrencesFinderJob", this, ofj);
