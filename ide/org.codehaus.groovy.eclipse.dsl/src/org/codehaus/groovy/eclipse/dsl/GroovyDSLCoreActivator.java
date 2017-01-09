@@ -85,15 +85,21 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
     }
 
     public void stopListening() {
-        JavaCore.removeElementChangedListener(dsldElementListener);
-        dsldElementListener = null;
+        if (dsldElementListener != null) {
+            JavaCore.removeElementChangedListener(dsldElementListener);
+            dsldElementListener = null;
+        }
 
-        ResourcesPlugin.getWorkspace().removeResourceChangeListener(dsldResourceListener);
-        dsldResourceListener = null;
+        if (dsldResourceListener != null) {
+            ResourcesPlugin.getWorkspace().removeResourceChangeListener(dsldResourceListener);
+            dsldResourceListener = null;
+        }
 
-        ResourcesPlugin.getWorkspace().removeResourceChangeListener(containerListener);
-        containerListener.dispose();
-        containerListener = null;
+        if (containerListener != null) {
+            ResourcesPlugin.getWorkspace().removeResourceChangeListener(containerListener);
+            containerListener.dispose();
+            containerListener = null;
+        }
     }
 
     public AutoAddContainerSupport getContainerListener() {
