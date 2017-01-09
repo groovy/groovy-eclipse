@@ -269,7 +269,7 @@ public class ImplicitNullAnnotationVerifier {
 						break returnType; // compatible by construction, skip complain phase below
 					}
 				}
-				if (hasReturnNonNullDefault && currentMethod.returnType.acceptsNonNullDefault()) { // conflict with inheritance already checked
+				if (hasReturnNonNullDefault && (!useTypeAnnotations || currentMethod.returnType.acceptsNonNullDefault())) { // conflict with inheritance already checked
 					currentNullnessBits = TagBits.AnnotationNonNull;
 					applyReturnNullBits(currentMethod, currentNullnessBits);
 				}

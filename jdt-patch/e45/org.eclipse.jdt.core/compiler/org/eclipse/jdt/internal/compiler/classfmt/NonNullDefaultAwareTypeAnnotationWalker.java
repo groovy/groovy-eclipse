@@ -109,6 +109,12 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	}
 	
 	@Override
+	public ITypeAnnotationWalker toSupertype(short index, char[] superTypeSignature) {
+		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
+		return super.toSupertype(index, superTypeSignature);
+	}
+
+	@Override
 	public ITypeAnnotationWalker toMethodParameter(short index) {
 		// don't set nextIsDefaultLocation, because signature-level nullness is handled by ImplicitNullAnnotationVerifier
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
@@ -128,6 +134,14 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		this.nextIsTypeBound = true;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toTypeBound(boundIndex);
+	}
+
+	@Override
+	public ITypeAnnotationWalker toWildcardBound() {
+		this.nextIsDefaultLocation = (this.defaultNullness & Binding.DefaultLocationTypeBound) != 0;
+		this.nextIsTypeBound = true;
+		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
+		return super.toWildcardBound();
 	}
 
 	@Override
@@ -152,6 +166,12 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		this.nextIsTypeBound = false;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toTypeParameter(isClassTypeParameter, rank);
+	}
+
+	@Override
+	protected ITypeAnnotationWalker toNextDetail(int detailKind) {
+		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
+		return super.toNextDetail(detailKind);
 	}
 
 	@Override

@@ -88,6 +88,13 @@ public class CommentRecorderParser extends Parser {
 	}
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeAnnotationTypeDeclarationHeader()
+	 */
+	protected void consumeAnnotationTypeDeclarationHeader() {
+		pushOnCommentsStack(0, this.scanner.commentPtr);
+		super.consumeAnnotationTypeDeclarationHeader();
+	}
+	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeClassHeader()
 	 */
 	protected void consumeClassHeader() {
@@ -101,6 +108,22 @@ public class CommentRecorderParser extends Parser {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeEmptyTypeDeclaration();
 	}
+	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeEnterAnonymousClassBody(boolean)
+	 */
+	@Override
+	protected void consumeEnterAnonymousClassBody(boolean qualified) {
+		pushOnCommentsStack(0, this.scanner.commentPtr);
+		super.consumeEnterAnonymousClassBody(qualified);
+	}
+	/* (non-Javadoc)
+	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeEnumHeader()
+	 */
+	protected void consumeEnumHeader() {
+		pushOnCommentsStack(0, this.scanner.commentPtr);
+		super.consumeEnumHeader();
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeInterfaceHeader()
 	 */

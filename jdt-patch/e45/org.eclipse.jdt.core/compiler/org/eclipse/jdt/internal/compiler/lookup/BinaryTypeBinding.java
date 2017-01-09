@@ -34,6 +34,7 @@
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 453475 - [1.8][null] Contradictory null annotations (4.5 M3 edition)
  *								Bug 454182 - Internal compiler error when using 1.8 compliance for simple project
+ *								Bug 447661 - [1.8][null] Incorrect 'expression needs unchecked conversion' warning
  *    Jesper Steen Moller - Contributions for
  *								Bug 412150 [1.8] [compiler] Enable reflected parameter names during annotation processing
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -412,7 +413,7 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 			// need annotations on the type before processing null annotations on members respecting any @NonNullByDefault:
 			scanTypeForNullDefaultAnnotation(binaryType, this.fPackage);
 		}
-		ITypeAnnotationWalker walker = getTypeAnnotationWalker(binaryType.getTypeAnnotations());
+		ITypeAnnotationWalker walker = getTypeAnnotationWalker(binaryType.getTypeAnnotations(), Binding.NO_NULL_DEFAULT);
 		ITypeAnnotationWalker toplevelWalker = binaryType.enrichWithExternalAnnotationsFor(walker, null, this.environment);
 		char[] typeSignature = binaryType.getGenericSignature(); // use generic signature even in 1.4
 		this.tagBits |= binaryType.getTagBits();
@@ -533,24 +534,38 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 	}
 }
 
-private ITypeAnnotationWalker getTypeAnnotationWalker(IBinaryTypeAnnotation[] annotations) {
+/* When creating a method we need to pass in any default 'nullness' from a @NNBD immediately on this method. */
+private ITypeAnnotationWalker getTypeAnnotationWalker(IBinaryTypeAnnotation[] annotations, int nullness) {
 	if (!isPrototype()) throw new IllegalStateException();
 	if (annotations == null || annotations.length == 0 || !this.environment.usesAnnotatedTypeSystem()) {
 		if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-			int nullness = getNullDefault();
+			if (nullness == Binding.NO_NULL_DEFAULT)
+				nullness = getNullDefault();
 			if (nullness > Binding.NULL_UNSPECIFIED_BY_DEFAULT)
 				return new NonNullDefaultAwareTypeAnnotationWalker(nullness, this.environment);
 		}
 		return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
 	}
 	if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-		int nullness = getNullDefault();
+		if (nullness == Binding.NO_NULL_DEFAULT)
+			nullness = getNullDefault();
 		if (nullness > Binding.NULL_UNSPECIFIED_BY_DEFAULT)
 			return new NonNullDefaultAwareTypeAnnotationWalker(annotations, nullness, this.environment);
 	}
 	return new TypeAnnotationWalker(annotations);
 }
 
+private int getNullDefaultFrom(IBinaryAnnotation[] declAnnotations) {
+	if (declAnnotations != null) {
+		char[][] nonNullByDefaultAnnotationName = this.environment.getNonNullByDefaultAnnotationName();
+		for (IBinaryAnnotation annotation : declAnnotations) {
+			char[][] typeName = signature2qualifiedTypeName(annotation.getTypeName());
+			if (CharOperation.equals(typeName, nonNullByDefaultAnnotationName))
+				return getNonNullByDefaultValue(annotation);
+		}
+	}
+	return Binding.NO_NULL_DEFAULT;
+}
 
 private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long sourceLevel, char[][][] missingTypeNames) {
 	if (!isPrototype()) throw new IllegalStateException();
@@ -565,7 +580,7 @@ private void createFields(IBinaryField[] iFields, IBinaryType binaryType, long s
 			for (int i = 0; i < size; i++) {
 				IBinaryField binaryField = iFields[i];
 				char[] fieldSignature = use15specifics ? binaryField.getGenericSignature() : null;
-				ITypeAnnotationWalker walker = getTypeAnnotationWalker(binaryField.getTypeAnnotations());
+				ITypeAnnotationWalker walker = getTypeAnnotationWalker(binaryField.getTypeAnnotations(), Binding.NO_NULL_DEFAULT);
 				if (sourceLevel >= ClassFileConstants.JDK1_8) { // below 1.8, external annotations will be attached later
 					walker = binaryType.enrichWithExternalAnnotationsFor(walker, iFields[i], this.environment);
 				}
@@ -631,7 +646,7 @@ private MethodBinding createMethod(IBinaryMethod method, IBinaryType binaryType,
 	   variables properly in order to be able to apply substitutions and thus be able to detect
 	   overriding in the presence of generics. Seeing the erased form is not good enough.
 	 */
-	ITypeAnnotationWalker walker = getTypeAnnotationWalker(method.getTypeAnnotations());
+	ITypeAnnotationWalker walker = getTypeAnnotationWalker(method.getTypeAnnotations(), getNullDefaultFrom(method.getAnnotations()));
 	char[] methodSignature = method.getGenericSignature(); // always use generic signature, even in 1.4
 	if (methodSignature == null) { // no generics
 		char[] methodDescriptor = method.getMethodDescriptor();   // of the form (I[Ljava/jang/String;)V
@@ -1565,7 +1580,7 @@ private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBi
 			char[] annotationTypeName = annotations[i].getTypeName();
 			if (annotationTypeName[0] != Util.C_RESOLVED)
 				continue;
-			char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
+			char[][] typeName = signature2qualifiedTypeName(annotationTypeName);
 			if (CharOperation.equals(typeName, nonNullAnnotationName)) {
 				fieldBinding.tagBits |= TagBits.AnnotationNonNull;
 				explicitNullness = true;
@@ -1601,7 +1616,7 @@ private void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding met
 			char[] annotationTypeName = annotations[i].getTypeName();
 			if (annotationTypeName[0] != Util.C_RESOLVED)
 				continue;
-			char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
+			char[][] typeName = signature2qualifiedTypeName(annotationTypeName);
 			if (CharOperation.equals(typeName, nonNullByDefaultAnnotationName)) {
 				methodBinding.defaultNullness = getNonNullByDefaultValue(annotations[i]);
 				if (methodBinding.defaultNullness == Binding.NULL_UNSPECIFIED_BY_DEFAULT)
@@ -1635,7 +1650,7 @@ private void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding met
 						char[] annotationTypeName = paramAnnotations[i].getTypeName();
 						if (annotationTypeName[0] != Util.C_RESOLVED)
 							continue;
-						char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
+						char[][] typeName = signature2qualifiedTypeName(annotationTypeName);
 						if (CharOperation.equals(typeName, nonNullAnnotationName)) {
 							if (methodBinding.parameterNonNullness == null)
 								methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
@@ -1673,7 +1688,7 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 			char[] annotationTypeName = annotations[i].getTypeName();
 			if (annotationTypeName[0] != Util.C_RESOLVED)
 				continue;
-			char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
+			char[][] typeName = signature2qualifiedTypeName(annotationTypeName);
 			if (CharOperation.equals(typeName, nonNullByDefaultAnnotationName)) {
 				// using NonNullByDefault we need to inspect the details of the value() attribute:
 				nullness = getNonNullByDefaultValue(annotations[i]);
@@ -1739,7 +1754,7 @@ boolean setNullDefault(long oldNullTagBits, int newNullDefault) {
 // pre: null annotation analysis is enabled
 int getNonNullByDefaultValue(IBinaryAnnotation annotation) {
 	char[] annotationTypeName = annotation.getTypeName();
-	char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
+	char[][] typeName = signature2qualifiedTypeName(annotationTypeName);
 	IBinaryElementValuePair[] elementValuePairs = annotation.getElementValuePairs();
 	if (elementValuePairs == null || elementValuePairs.length == 0 ) {
 		// no argument: apply default default
@@ -1763,6 +1778,10 @@ int getNonNullByDefaultValue(IBinaryAnnotation annotation) {
 		// empty argument: cancel all defaults from enclosing scopes
 		return NULL_UNSPECIFIED_BY_DEFAULT;
 	}
+}
+
+private char[][] signature2qualifiedTypeName(char[] typeSignature) {
+	return CharOperation.splitOn('/', typeSignature, 1, typeSignature.length-1); // cut off leading 'L' and trailing ';'
 }
 
 @Override

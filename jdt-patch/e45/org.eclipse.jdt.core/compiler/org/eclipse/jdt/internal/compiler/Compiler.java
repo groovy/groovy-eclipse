@@ -536,8 +536,8 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	
 	protected void backupAptProblems() {
 		if (this.unitsToProcess == null) return;
-		for (CompilationUnitDeclaration unitDecl : this.unitsToProcess) {
-			if (unitDecl == null) continue;
+		for (int i = 0; i < this.totalUnits; i++) {
+			CompilationUnitDeclaration unitDecl = this.unitsToProcess[i];
 			CompilationResult result = unitDecl.compilationResult;
 			if (result != null && result.hasErrors()) {
 				CategorizedProblem[] errors = result.getErrors();
@@ -565,11 +565,12 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	
 	protected void restoreAptProblems() {
 		if (this.unitsToProcess != null && this.aptProblems!= null) {
-			for (CompilationUnitDeclaration unit : this.unitsToProcess) {
-				APTProblem[] problems = this.aptProblems.get(new String(unit.getFileName()));
+			for (int i = 0; i < this.totalUnits; i++) {
+				CompilationUnitDeclaration unitDecl = this.unitsToProcess[i];
+				APTProblem[] problems = this.aptProblems.get(new String(unitDecl.getFileName()));
 				if (problems != null) {
 					for (APTProblem problem : problems) {
-						unit.compilationResult.record(problem.problem, problem.context);
+						unitDecl.compilationResult.record(problem.problem, problem.context);
 					}
 				}
 			}

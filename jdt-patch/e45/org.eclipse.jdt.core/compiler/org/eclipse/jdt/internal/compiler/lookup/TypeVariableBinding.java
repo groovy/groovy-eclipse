@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -95,7 +95,13 @@ public class TypeVariableBinding extends ReferenceBinding {
 		this.rank = prototype.rank;
 		this.firstBound = prototype.firstBound;
 		this.superclass = prototype.superclass;
-		this.superInterfaces = prototype.superInterfaces;
+		if (prototype.superInterfaces != null) {
+			int len = prototype.superInterfaces.length;
+			if (len > 0)
+				System.arraycopy(prototype.superInterfaces, 0, this.superInterfaces = new ReferenceBinding[len], 0, len);
+			else
+				this.superInterfaces = Binding.NO_SUPERINTERFACES;
+		}
 		this.genericTypeSignature = prototype.genericTypeSignature;
 		this.environment = prototype.environment;
 		prototype.tagBits |= TagBits.HasAnnotatedVariants;
@@ -244,13 +250,11 @@ public class TypeVariableBinding extends ReferenceBinding {
 	}
 
 	public int boundsCount() {
-		if (this.firstBound == null) {
+		if (this.firstBound == null)
 			return 0;
-		} else if (TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
-			return this.superInterfaces.length + 1;
-		} else {
-			return this.superInterfaces.length;
-		}
+		if (this.firstBound.isInterface())
+			return this.superInterfaces.length; // only interface bounds
+		return this.superInterfaces.length + 1; // class or array type isn't contained in superInterfaces
 	}
 
 	/**
@@ -421,10 +425,11 @@ public class TypeVariableBinding extends ReferenceBinding {
         if (n == 0)
         	return NO_TYPE_BOUNDS;
         TypeBound[] bounds = new TypeBound[n];
-        bounds[0] = TypeBound.createBoundOrDependency(theta, this.firstBound, variable);
-        int ifcOffset = TypeBinding.equalsEquals(this.firstBound, this.superclass) ? -1 : 0;
-        for (int i = 1; i < n; i++)
-			bounds[i] = TypeBound.createBoundOrDependency(theta, this.superInterfaces[i+ifcOffset], variable);
+        int idx = 0;
+        if (!this.firstBound.isInterface())
+        	bounds[idx++] = TypeBound.createBoundOrDependency(theta, this.firstBound, variable);
+        for (int i = 0; i < this.superInterfaces.length; i++)
+			bounds[idx++] = TypeBound.createBoundOrDependency(theta, this.superInterfaces[i], variable);
         return bounds;
 	}
 

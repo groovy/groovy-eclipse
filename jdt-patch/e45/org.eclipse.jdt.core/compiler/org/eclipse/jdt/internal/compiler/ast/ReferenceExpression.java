@@ -36,6 +36,7 @@
  *							Bug 448709 - [1.8][null] ensure we don't infer types that violate null constraints on a type parameter's bound
  *							Bug 459967 - [null] compiler should know about nullness of special methods like MyEnum.valueOf()
  *							Bug 466713 - Null Annotations: NullPointerException using <int @Nullable []> as Type Param
+ *							Bug 470542 - NullPointerException in ReferenceExpression.isPotentiallyCompatibleWith (962)
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contribution for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *******************************************************************************/
@@ -843,7 +844,11 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 				return null;
 			int n = functionType.parameters.length;
 			int k = this.exactMethodBinding.parameters.length;
-			return (n == k || n == k + 1) ? this : null;
+			
+			if (!this.haveReceiver && this.isMethodReference() && !this.exactMethodBinding.isStatic()) {
+				k++;
+			}
+			return (n == k) ? this : null;
 		}
 		// descriptors parameters should be free of inference variables.
 		ReferenceExpression copy = cachedResolvedCopy(targetType); 
@@ -959,10 +964,14 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 	public boolean isPotentiallyCompatibleWith(TypeBinding targetType, Scope scope) {
 
         final boolean isConstructorRef = isConstructorReference();
-		if (isConstructorRef && this.receiverType.isArrayType()) {
-			final TypeBinding leafComponentType = this.receiverType.leafComponentType();
-			if (!leafComponentType.isReifiable()) {
+		if (isConstructorRef) {
+			if (this.receiverType == null)
 				return false;
+			if (this.receiverType.isArrayType()) {
+				final TypeBinding leafComponentType = this.receiverType.leafComponentType();
+				if (!leafComponentType.isReifiable()) {
+					return false;
+				}
 			}
 		}
 

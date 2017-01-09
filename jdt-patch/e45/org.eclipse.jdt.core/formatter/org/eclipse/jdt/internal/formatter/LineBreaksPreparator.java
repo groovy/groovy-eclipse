@@ -18,6 +18,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameC
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameLBRACE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameRBRACE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameSEMICOLON;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_JAVADOC;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameelse;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamefinally;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNamepackage;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EmptyStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
@@ -97,11 +99,9 @@ public class LineBreaksPreparator extends ASTVisitor {
 		List<AnnotationTypeDeclaration> types = node.types();
 		if (!types.isEmpty()) {
 			if (!imports.isEmpty())
-				this.tm.firstTokenIn(types.get(0), -1).putLineBreaksBefore(this.options.blank_lines_after_imports + 1);
-			for (int i = 1; i < types.size(); i++) {
-				this.tm.firstTokenIn(types.get(i), -1).putLineBreaksBefore(
-						this.options.blank_lines_between_type_declarations + 1);
-			}
+				putBlankLinesBefore(types.get(0), this.options.blank_lines_after_imports);
+			for (int i = 1; i < types.size(); i++)
+				putBlankLinesBefore(types.get(i), this.options.blank_lines_between_type_declarations);
 		}
 		return true;
 	}
@@ -146,21 +146,22 @@ public class LineBreaksPreparator extends ASTVisitor {
 		BodyDeclaration previous = null;
 		for (BodyDeclaration bodyDeclaration : bodyDeclarations) {
 			if (previous == null) {
-				this.tm.firstTokenIn(bodyDeclaration, -1).putLineBreaksBefore(
-						this.options.blank_lines_before_first_class_body_declaration + 1);
+				putBlankLinesBefore(bodyDeclaration, this.options.blank_lines_before_first_class_body_declaration);
 			} else {
-				int blankLines;
-				if (bodyDeclaration instanceof FieldDeclaration)
+				int blankLines = 0;
+				if (bodyDeclaration instanceof FieldDeclaration) {
 					blankLines = this.options.blank_lines_before_field;
-				else if (bodyDeclaration instanceof AbstractTypeDeclaration)
+				} else if (bodyDeclaration instanceof AbstractTypeDeclaration) {
 					blankLines = this.options.blank_lines_before_member_type;
-				else
+				} else if (bodyDeclaration instanceof MethodDeclaration
+						|| bodyDeclaration instanceof AnnotationTypeMemberDeclaration) {
 					blankLines = this.options.blank_lines_before_method;
+				}
 
 				if (!sameChunk(previous, bodyDeclaration))
 					blankLines = Math.max(blankLines, this.options.blank_lines_before_new_chunk);
 
-				this.tm.firstTokenIn(bodyDeclaration, -1).putLineBreaksBefore(blankLines + 1);
+				putBlankLinesBefore(bodyDeclaration, blankLines);
 			}
 			previous = bodyDeclaration;
 		}
@@ -171,10 +172,17 @@ public class LineBreaksPreparator extends ASTVisitor {
 			return true;
 		if (bd1 instanceof AbstractTypeDeclaration && bd2 instanceof AbstractTypeDeclaration)
 			return true;
-		if ((bd1 instanceof MethodDeclaration || bd1 instanceof Initializer)
-				&& (bd2 instanceof MethodDeclaration || bd2 instanceof Initializer))
+		if ((bd1 instanceof FieldDeclaration || bd1 instanceof Initializer)
+				&& (bd2 instanceof FieldDeclaration || bd2 instanceof Initializer))
 			return true;
 		return false;
+	}
+
+	private void putBlankLinesBefore(ASTNode node, int linesCount) {
+		int index = this.tm.firstIndexIn(node, -1);
+		while (index > 0 && this.tm.get(index - 1).tokenType == TokenNameCOMMENT_JAVADOC)
+			index--;
+		this.tm.get(index).putLineBreaksBefore(linesCount + 1);
 	}
 
 	@Override
@@ -185,9 +193,11 @@ public class LineBreaksPreparator extends ASTVisitor {
 		handleBodyDeclarations(node.bodyDeclarations());
 
 		List<EnumConstantDeclaration> enumConstants = node.enumConstants();
-		for (int i = 0; i < enumConstants.size() - 1; i++) {
+		for (int i = 0; i < enumConstants.size(); i++) {
 			EnumConstantDeclaration declaration = enumConstants.get(i);
-			if (declaration.getAnonymousClassDeclaration() != null)
+			if (declaration.getJavadoc() != null)
+				this.tm.firstTokenIn(declaration, TokenNameCOMMENT_JAVADOC).breakBefore();
+			if (declaration.getAnonymousClassDeclaration() != null && i < enumConstants.size() - 1)
 				this.tm.firstTokenAfter(declaration, TokenNameCOMMA).breakAfter();
 		}
 
@@ -239,11 +249,16 @@ public class LineBreaksPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(MethodDeclaration node) {
+		this.declarationModifierVisited = false;
+
+		if (node.getBody() == null)
+			return true;
+
 		if (node.isConstructor()) {
 			handleBracedCode(node.getBody(), null, this.options.brace_position_for_constructor_declaration,
 					this.options.indent_statements_compare_to_body,
 					this.options.insert_new_line_in_empty_method_body);
-		} else if (node.getBody() != null) {
+		} else {
 			handleBracedCode(node.getBody(), null, this.options.brace_position_for_method_declaration,
 					this.options.indent_statements_compare_to_body,
 					this.options.insert_new_line_in_empty_method_body);
@@ -251,7 +266,6 @@ public class LineBreaksPreparator extends ASTVisitor {
 			if (openBrace.getLineBreaksAfter() > 0) // if not, these are empty braces
 				openBrace.putLineBreaksAfter(this.options.blank_lines_at_beginning_of_method_body + 1);
 		}
-		this.declarationModifierVisited = false;
 		return true;
 	}
 
@@ -297,6 +311,10 @@ public class LineBreaksPreparator extends ASTVisitor {
 		if (this.options.indent_switchstatements_compare_to_cases) {
 			int nonBreakStatementEnd = -1;
 			for (Statement statement : statements) {
+				boolean isBreaking = statement instanceof BreakStatement || statement instanceof ReturnStatement
+						|| statement instanceof ContinueStatement || statement instanceof Block;
+				if (isBreaking)
+					addEmptyLineTokenAfter(this.tm.lastIndexIn(statement, -1));
 				if (statement instanceof SwitchCase) {
 					if (nonBreakStatementEnd >= 0) {
 						// indent only comments between previous and current statement
@@ -306,8 +324,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 				} else if (!(statement instanceof BreakStatement || statement instanceof Block)) {
 					indent(statement);
 				}
-				nonBreakStatementEnd = (statement instanceof BreakStatement || statement instanceof ReturnStatement)
-						? -1 : this.tm.lastIndexIn(statement, -1);
+				nonBreakStatementEnd = isBreaking ? -1 : this.tm.lastIndexIn(statement, -1);
 			}
 			if (nonBreakStatementEnd >= 0) {
 				// indent comments between last statement and closing brace 
@@ -354,27 +371,33 @@ public class LineBreaksPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(ArrayInitializer node) {
 		int openBraceIndex = this.tm.firstIndexIn(node, TokenNameLBRACE);
-		Token afterOpenBraceToken = this.tm.get(openBraceIndex + 1);
-		boolean isEmpty = afterOpenBraceToken.tokenType == TokenNameRBRACE;
-		if (isEmpty && this.options.keep_empty_array_initializer_on_one_line)
-			return true;
+		int closeBraceIndex = this.tm.lastIndexIn(node, TokenNameRBRACE);
+
+		boolean isEmpty = openBraceIndex + 1 == closeBraceIndex;
+		if (isEmpty) {
+			addEmptyLineTokenAfter(openBraceIndex);
+			closeBraceIndex = this.tm.lastIndexIn(node, TokenNameRBRACE);
+		}
 
 		Token openBraceToken = this.tm.get(openBraceIndex);
-		int closeBraceIndex = this.tm.lastIndexIn(node, TokenNameRBRACE);
-		handleBracePosition(openBraceToken, closeBraceIndex, this.options.brace_position_for_array_initializer);
+		Token closeBraceToken = this.tm.get(closeBraceIndex);
+
+		if (!(node.getParent() instanceof ArrayInitializer)) {
+			Token afterOpenBraceToken = this.tm.get(openBraceIndex + 1);
+			for (int i = 0; i < this.options.continuation_indentation_for_array_initializer; i++) {
+				afterOpenBraceToken.indent();
+				closeBraceToken.unindent();
+			}
+		}
+
+		if (!isEmpty || !this.options.keep_empty_array_initializer_on_one_line)
+			handleBracePosition(openBraceToken, closeBraceIndex, this.options.brace_position_for_array_initializer);
 
 		if (!isEmpty) {
-			Token closeBraceToken = this.tm.get(closeBraceIndex);
 			if (this.options.insert_new_line_after_opening_brace_in_array_initializer)
 				openBraceToken.breakAfter();
 			if (this.options.insert_new_line_before_closing_brace_in_array_initializer)
 				closeBraceToken.breakBefore();
-			if (!(node.getParent() instanceof ArrayInitializer)) {
-				for (int i = 0; i < this.options.continuation_indentation_for_array_initializer; i++) {
-					afterOpenBraceToken.indent();
-					closeBraceToken.unindent();
-				}
-			}
 		}
 		return true;
 	}
@@ -449,9 +472,11 @@ public class LineBreaksPreparator extends ASTVisitor {
 			breakAfter = this.options.insert_new_line_after_annotation_on_type;
 		} else if (parentNode instanceof FieldDeclaration) {
 			breakAfter = this.options.insert_new_line_after_annotation_on_field;
-		} else if (parentNode instanceof MethodDeclaration
-				|| parentNode instanceof AnnotationTypeMemberDeclaration) {
+		} else if (parentNode instanceof MethodDeclaration) {
 			breakAfter = this.options.insert_new_line_after_annotation_on_method;
+		} else if (parentNode instanceof AnnotationTypeMemberDeclaration) {
+			breakAfter = this.options.insert_new_line_after_annotation_on_method
+					&& ((AnnotationTypeMemberDeclaration) parentNode).getDefault() != node;
 		} else if (parentNode instanceof VariableDeclarationStatement
 				|| parentNode instanceof VariableDeclarationExpression) {
 			breakAfter = this.options.insert_new_line_after_annotation_on_local_variable;
@@ -483,11 +508,14 @@ public class LineBreaksPreparator extends ASTVisitor {
 	}
 
 	private void handleLoopBody(Statement body) {
-		if (!(body instanceof Block)
-				&& !(body instanceof EmptyStatement && !this.options.put_empty_statement_on_new_line)) {
-			breakLineBefore(body);
-			indent(body);
-		}
+		if (body instanceof Block)
+			return;
+		if (body instanceof EmptyStatement && !this.options.put_empty_statement_on_new_line
+				&& !(body.getParent() instanceof IfStatement))
+			return;
+		breakLineBefore(body);
+		addEmptyLineTokenAfter(this.tm.lastIndexIn(body, -1));
+		indent(body);
 	}
 
 	@Override
@@ -498,21 +526,16 @@ public class LineBreaksPreparator extends ASTVisitor {
 			if (this.options.insert_new_line_before_else_in_if_statement || !(thenNode instanceof Block))
 				this.tm.firstTokenBefore(elseNode, TokenNameelse).breakBefore();
 
-			boolean keepElseOnSameLine = (elseNode instanceof Block)
-					|| (this.options.keep_else_statement_on_same_line)
+			boolean keepElseOnSameLine = (this.options.keep_else_statement_on_same_line)
 					|| (this.options.compact_else_if && (elseNode instanceof IfStatement));
-			if (!keepElseOnSameLine) {
-				breakLineBefore(elseNode);
-				indent(elseNode);
-			}
+			if (!keepElseOnSameLine)
+				handleLoopBody(elseNode);
 		}
 
 		boolean keepThenOnSameLine = this.options.keep_then_statement_on_same_line
 				|| (this.options.keep_simple_if_on_one_line && elseNode == null);
-		if (!keepThenOnSameLine && !(thenNode instanceof Block)) {
-			breakLineBefore(thenNode);
-			indent(thenNode);
-		}
+		if (!keepThenOnSameLine)
+			handleLoopBody(thenNode);
 
 		return true;
 	}
@@ -543,6 +566,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 				: this.tm.firstIndexAfter(nodeBeforeOpenBrace, TokenNameLBRACE);
 		int closeBraceIndex = this.tm.lastIndexIn(node, TokenNameRBRACE);
 		Token openBraceToken = this.tm.get(openBraceIndex);
+		Token closeBraceToken = this.tm.get(closeBraceIndex);
 		handleBracePosition(openBraceToken, closeBraceIndex, bracePosition);
 
 		boolean isEmpty = true;
@@ -552,13 +576,16 @@ public class LineBreaksPreparator extends ASTVisitor {
 				break;
 			}
 		}
+
+		addEmptyLineTokenAfter(openBraceIndex);
+
 		if (!isEmpty || newLineInEmpty) {
 			openBraceToken.breakAfter();
-			this.tm.get(closeBraceIndex).breakBefore();
+			closeBraceToken.breakBefore();
 		}
 		if (indentBody) {
 			this.tm.get(openBraceIndex + 1).indent();
-			this.tm.get(closeBraceIndex).unindent();
+			closeBraceToken.unindent();
 		}
 	}
 
@@ -573,6 +600,32 @@ public class LineBreaksPreparator extends ASTVisitor {
 		} else if (bracePosition.equals(DefaultCodeFormatterConstants.NEXT_LINE_ON_WRAP)) {
 			openBraceToken.setNextLineOnWrap();
 		}
+	}
+
+	private void addEmptyLineTokenAfter(int tokenIndex) {
+		if (tokenIndex + 1 >= this.tm.size())
+			return;
+		Token token = this.tm.get(tokenIndex);
+		Token next = this.tm.get(tokenIndex + 1);
+		if (this.tm.countLineBreaksBetween(token, next) < 2 || !this.options.indent_empty_lines)
+			return;
+
+		// find a line break and make a token out of it
+		for (int i = token.originalEnd + 1; i < next.originalStart; i++) {
+			char c = this.tm.charAt(i);
+			char c2 = this.tm.charAt(i + 1);
+			int lineBreakStart = (c == '\r' || c == '\n') ? i : -1;
+			int lineBreakEnd = ((c2 == '\r' || c2 == '\n') && c2 != c) ? i + 1 : lineBreakStart;
+			if (lineBreakStart >= 0) {
+				Token emptyLineToken = new Token(lineBreakStart, lineBreakEnd, Token.TokenNameEMPTY_LINE);
+				emptyLineToken.breakBefore();
+				emptyLineToken.breakAfter();
+				emptyLineToken.setToEscape(true); // force text builder to use toString()
+				this.tm.insert(tokenIndex + 1, emptyLineToken);
+				return;
+			}
+		}
+		assert false;
 	}
 
 	private void indent(ASTNode node) {

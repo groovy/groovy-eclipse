@@ -14,6 +14,7 @@
  *								Bug 447088 - [null] @Nullable on fully qualified field type is ignored
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 458396 - NPE in CodeStream.invoke()
+ *								Bug 446217 - [null] @NonNullByDefault in package-info.java causes bogus "null type safety" warning
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -245,8 +246,11 @@ public Constant constant(Scope scope) {
 
 public void fillInDefaultNonNullness(FieldDeclaration sourceField, Scope scope) {
 	LookupEnvironment environment = scope.environment();
-	if (   this.type != null
-		&& !this.type.isBaseType()
+	if (this.type == null)
+		return;
+	if (environment.usesNullTypeAnnotations() && !this.type.acceptsNonNullDefault())
+		return;
+	if (   !this.type.isBaseType()
 		&& (this.tagBits & TagBits.AnnotationNullMASK) == 0 		// declaration annotation?
 		&& (this.type.tagBits & TagBits.AnnotationNullMASK) == 0)	// type annotation? (java.lang.@Nullable String)
 	{

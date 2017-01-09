@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2014 IBM Corporation and others.
+ * Copyright (c) 2012, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,7 @@
  *							Bug 452788 - [1.8][compiler] Type not correctly inferred in lambda expression
  *							Bug 453483 - [compiler][null][loop] Improve null analysis for loops
  *							Bug 455723 - Nonnull argument not correctly inferred in loop
+ *							Bug 463728 - [1.8][compiler][inference] Ternary operator in lambda derives wrong type
  *     Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *******************************************************************************/
@@ -424,6 +425,8 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		if (this.body instanceof Expression) {
 			Expression expression = (Expression) this.body;
 			new ReturnStatement(expression, expression.sourceStart, expression.sourceEnd, true).resolve(this.scope); // :-) ;-)
+			if (expression.resolvedType == TypeBinding.VOID && !expression.statementExpression())
+				this.scope.problemReporter().invalidExpressionAsStatement(expression);
 		} else {
 			this.body.resolve(this.scope);
 			/* At this point, shape analysis is complete for ((see returnsExpression(...))
@@ -981,13 +984,11 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 			this.returnsValue = true;
 			this.voidCompatible = false;
 			this.valueCompatible = !this.returnsVoid;
-			if (resultType != null) {
-				Expression [] returnExpressions = this.resultExpressions;
-				int resultsLength = returnExpressions.length;
-				System.arraycopy(returnExpressions, 0, returnExpressions = new Expression[resultsLength + 1], 0, resultsLength);
-				returnExpressions[resultsLength] = expression;
-				this.resultExpressions = returnExpressions;
-			}
+			Expression [] returnExpressions = this.resultExpressions;
+			int resultsLength = returnExpressions.length;
+			System.arraycopy(returnExpressions, 0, returnExpressions = new Expression[resultsLength + 1], 0, resultsLength);
+			returnExpressions[resultsLength] = expression;
+			this.resultExpressions = returnExpressions;
 		} else {
 			this.returnsVoid = true;
 			this.valueCompatible = false;

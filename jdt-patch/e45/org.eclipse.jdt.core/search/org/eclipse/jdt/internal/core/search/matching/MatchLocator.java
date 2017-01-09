@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1168,6 +1168,7 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 	this.lookupEnvironment = new LookupEnvironment(this, this.options, problemReporter, this.nameEnvironment);
 	this.lookupEnvironment.mayTolerateMissingType = true;
 	this.parser = MatchLocatorParser.createParser(problemReporter, this);
+	this.bindings = new SimpleLookupTable(); // For every LE
 
 	// basic parser needs also to be reset as project options may have changed
 	// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=163072

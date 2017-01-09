@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.ExpressionContext;
 import org.eclipse.jdt.internal.compiler.ast.Invocation;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
+import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18.SuspendedInferenceRecord;
 
@@ -67,8 +68,11 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		}
 		if (!canBePolyExpression(this.left)) {
 			TypeBinding exprType = this.left.resolvedType;
-			if (exprType == null || !exprType.isValidBinding())
+			if (exprType == null || !exprType.isValidBinding()) {
+				if (this.left instanceof MessageSend && ((MessageSend)this.left).actualReceiverType instanceof InferenceVariable)
+					return null; // nothing valuable to infer from this
 				return FALSE;
+			}
 			return ConstraintTypeFormula.create(exprType, this.right, COMPATIBLE, this.isSoft);
 		} else {
 			// shapes of poly expressions (18.2.1)

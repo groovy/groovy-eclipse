@@ -217,7 +217,7 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
     // determine if this is a Groovy project
     final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
     // GROOVY end
-    for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
+	for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
 		final ClasspathMultiDirectory sourceLocation = this.sourceLocations[i];
 		final char[][] exclusionPatterns = sourceLocation.exclusionPatterns;
 		final char[][] inclusionPatterns = sourceLocation.inclusionPatterns;
@@ -232,7 +232,7 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
 						case IResource.FILE :
 							// GROOVY start
 						    /* old {
-						    if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
+							if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
 						    } new */
 							// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
 						    String resourceName = proxy.getName();
@@ -287,6 +287,7 @@ protected void cleanUp() {
 	this.javaBuilder = null;
 	this.nameEnvironment = null;
 	this.sourceLocations = null;
+	this.notifier = null;
 	// GROOVY start
 	if (this.compiler!=null && this.compiler.parser!=null) {
 		this.compiler.parser.reset();

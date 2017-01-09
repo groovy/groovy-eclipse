@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Mateusz Matela <mateusz.matela@gmail.com> - [formatter] Formatter does not format Java code correctly, especially when max line width is set - https://bugs.eclipse.org/303519
+ *     Till Brychcy - Java Code Formatter breaks code if single line comments contain unicode escape - https://bugs.eclipse.org/471090
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter;
 
@@ -24,50 +25,64 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
  */
 public class Token {
 
+	public static enum WrapMode {
+		/**
+		 * Wrap mode for the "Do not wrap" policy. Tokens still should be indented as if wrapped when a preceding line
+		 * break cannot be removed due to a line comment or formatting region restriction.
+		 */
+		DISABLED,
+		/** Wrap mode for the "Wrap where necessary" policies. */
+		WHERE_NECESSARY,
+		/** Wrap mode for the "Wrap all elements" policies. */
+		TOP_PRIORITY,
+		/**
+		 * Wrap mode for tokens that are already in new line before wrapping, but their indentation should be adjusted
+		 * in similar way to wrapping. Used for anonymous class body, lambda body and comments inside code.
+		 */
+		FORCED
+	}
+
 	public static class WrapPolicy {
 
 		/** Policy used for internal structure of multiline comments to mark tokens that should never be wrapped */
-		public final static WrapPolicy DISABLE_WRAP = new WrapPolicy(0, 0, false);
+		public final static WrapPolicy DISABLE_WRAP = new WrapPolicy(WrapMode.DISABLED, 0, 0);
 
 		/**
 		 * Policy used for internal structure of multiline comments to mark tokens that can be wrapped only in lines
 		 * that have no other tokens to wrap.
 		 */
-		public final static WrapPolicy SUBSTITUTE_ONLY = new WrapPolicy(0, 0, false);
+		public final static WrapPolicy SUBSTITUTE_ONLY = new WrapPolicy(WrapMode.DISABLED, 0, 0);
 
-		public final int extraIndent;
+		public final WrapMode wrapMode;
 		public final int wrapParentIndex;
+		public final int groupEndIndex;
+		public final int extraIndent;
 		public final int structureDepth;
 		public final float penaltyMultiplier;
 		public final boolean isFirstInGroup;
 		public final boolean indentOnColumn;
-		public final int topPriorityGroupEnd;
-		/**
-		 * If true, it means the token was in new line even before wrapping, but should be treaded as wrapped token for
-		 * indentation purposes. Used for anonymous class body, lambda body and comments inside code.
-		 */
-		public final boolean isForced;
 
-		public WrapPolicy(int extraIndent, int wrapParentIndex, int structureDepth, float penaltyMultiplier,
-				boolean isFirstInGroup, boolean indentOnColumn, int topPriorityGroupEnd, boolean isForced) {
-			this.extraIndent = extraIndent;
+		public WrapPolicy(WrapMode wrapMode, int wrapParentIndex, int groupEndIndex, int extraIndent,
+				int structureDepth, float penaltyMultiplier, boolean isFirstInGroup, boolean indentOnColumn) {
+			assert wrapMode != null && (wrapParentIndex < groupEndIndex || groupEndIndex == -1);
+
+			this.wrapMode = wrapMode;
 			this.wrapParentIndex = wrapParentIndex;
+			this.groupEndIndex = groupEndIndex;
+			this.extraIndent = extraIndent;
 			this.structureDepth = structureDepth;
 			this.penaltyMultiplier = penaltyMultiplier;
 			this.isFirstInGroup = isFirstInGroup;
 			this.indentOnColumn = indentOnColumn;
-			this.topPriorityGroupEnd = topPriorityGroupEnd;
-			this.isForced = isForced;
 		}
 
-		public WrapPolicy(int extraIndent, int wrapParentIndex, boolean isForced) {
-			this(extraIndent, wrapParentIndex, 0, 1, false, false, -1, isForced);
-		}
-
-		public boolean isTopPriority() {
-			return this.topPriorityGroupEnd >= 0;
+		public WrapPolicy(WrapMode wrapMode, int wrapParentIndex, int extraIndent) {
+			this(wrapMode, wrapParentIndex, -1, extraIndent, 0, 1, false, false);
 		}
 	}
+
+	/** Special token type used to mark tokens that store empty line indentation */
+	public static final int TokenNameEMPTY_LINE = 10000;
 
 	/** Position in source of the first character. */
 	public final int originalStart;
@@ -119,9 +134,8 @@ public class Token {
 		int end = scanner.getCurrentTokenEndPosition();
 		if (currentToken == TokenNameCOMMENT_LINE) {
 			// don't include line separator
-			String source = scanner.getCurrentTokenString();
-			for (int i = source.length() - 1; i > 0; i--) {
-				char c = source.charAt(i);
+			while(end >= start) {
+				char c = scanner.source[end];
 				if (c != '\r' && c != '\n')
 					break;
 				end--;
@@ -242,7 +256,8 @@ public class Token {
 	}
 
 	public boolean isWrappable() {
-		return this.wrapPolicy != null && !this.wrapPolicy.isForced;
+		WrapPolicy wp = this.wrapPolicy;
+		return wp != null && wp.wrapMode != WrapMode.DISABLED && wp.wrapMode != WrapMode.FORCED;
 	}
 
 	public void setNLSTag(Token nlsTagToken) {
@@ -276,6 +291,8 @@ public class Token {
 	}
 
 	public String toString(String source) {
+		if (this.tokenType == TokenNameEMPTY_LINE)
+			return ""; //$NON-NLS-1$
 		return source.substring(this.originalStart, this.originalEnd + 1);
 	}
 

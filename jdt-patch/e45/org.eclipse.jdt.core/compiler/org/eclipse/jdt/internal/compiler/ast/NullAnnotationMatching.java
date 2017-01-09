@@ -85,6 +85,7 @@ public class NullAnnotationMatching {
 	public static int checkAssignment(BlockScope currentScope, FlowContext flowContext,
 									   VariableBinding var, FlowInfo flowInfo, int nullStatus, Expression expression, TypeBinding providedType)
 	{
+		if (providedType == null) return FlowInfo.UNKNOWN; // assume we already reported an error
 		long lhsTagBits = 0L;
 		boolean hasReported = false;
 		if (!currentScope.environment().usesNullTypeAnnotations()) {

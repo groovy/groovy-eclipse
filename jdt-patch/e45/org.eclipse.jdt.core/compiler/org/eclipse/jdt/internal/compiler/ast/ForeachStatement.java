@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.CaptureBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -423,6 +424,11 @@ public class ForeachStatement extends Statement {
 		TypeBinding expectedCollectionType = null;
 		if (elementType != null && collectionType != null) {
 			boolean isTargetJsr14 = this.scope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
+			if (collectionType.isCapture()) {
+				TypeBinding upperBound = ((CaptureBinding)collectionType).firstBound;
+				if (upperBound.isArrayType())
+					collectionType = upperBound; // partially anticipating the fix for https://bugs.openjdk.java.net/browse/JDK-8013843
+			}
 			if (collectionType.isArrayType()) { // for(E e : E[])
 				this.kind = ARRAY;
 				this.collectionElementType = ((ArrayBinding) collectionType).elementsType();

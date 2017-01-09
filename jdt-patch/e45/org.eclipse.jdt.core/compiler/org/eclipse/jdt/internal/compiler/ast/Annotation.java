@@ -22,6 +22,7 @@
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 457210 - [1.8][compiler][null] Wrong Nullness errors given on full build build but not on incremental build?
+ *								Bug 469584 - ClassCastException in Annotation.detectStandardAnnotation (320) 
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *                          Bug 409517 - [1.8][compiler] Type annotation problems on more elaborate array references
@@ -320,7 +321,7 @@ public abstract class Annotation extends Expression {
 			case TypeIds.T_JavaLangAnnotationRetention :
 				if (valueAttribute != null) {
 					Expression expr = valueAttribute.value;
-					if ((expr.bits & Binding.VARIABLE) == Binding.FIELD) {
+					if ((expr.bits & Binding.VARIABLE) == Binding.FIELD && expr instanceof Reference) { // anything but Reference would be a type error anyway
 						FieldBinding field = ((Reference)expr).fieldBinding();
 						if (field != null && field.declaringClass.id == T_JavaLangAnnotationRetentionPolicy) {
 							tagBits |= getRetentionPolicy(field.name);

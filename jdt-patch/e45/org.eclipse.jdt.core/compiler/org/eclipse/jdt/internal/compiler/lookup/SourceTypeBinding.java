@@ -2004,14 +2004,14 @@ public MethodBinding resolveTypesFor(MethodBinding method) {
 				if (this.scope.environment().usesNullTypeAnnotations()) {
 					if (!this.scope.validateNullAnnotation(nullTagBits, returnTypeRef, methodDecl.annotations))
 						method.returnType.tagBits &= ~TagBits.AnnotationNullMASK;
-						method.tagBits &= ~TagBits.AnnotationNullMASK;
+					method.tagBits &= ~TagBits.AnnotationNullMASK;
 				} else {
 					if (!this.scope.validateNullAnnotation(nullTagBits, returnTypeRef, methodDecl.annotations))
 						method.tagBits &= ~TagBits.AnnotationNullMASK;
-					}
 				}
 			}
 		}
+	}
 	if (compilerOptions.storeAnnotations)
 		createArgumentBindings(method, compilerOptions); // need annotations resolved already at this point
 	if (foundReturnTypeProblem)
@@ -2588,11 +2588,11 @@ public TypeBinding unannotated() {
 
 @Override
 public TypeBinding withoutToplevelNullAnnotation() {
-		if (!hasNullTypeAnnotations())
-			return this;
-		AnnotationBinding[] newAnnotations = this.environment.filterNullTypeAnnotations(this.typeAnnotations);
-		if (newAnnotations.length > 0)
-			return this.environment.createAnnotatedType(this.prototype, newAnnotations);
+	if (!hasNullTypeAnnotations())
+		return this;
+	AnnotationBinding[] newAnnotations = this.environment.filterNullTypeAnnotations(this.typeAnnotations);
+	if (newAnnotations.length > 0)
+		return this.environment.createAnnotatedType(this.prototype, newAnnotations);
 	return this.prototype;
 }
 

@@ -1,4 +1,4 @@
-.TH ecj 1 "3 July 2014"
+.TH ecj 1 "10 August 2015"
 .LP
 .SH NAME
 ecj \- the eclipse JDT Batch Compiler
@@ -533,6 +533,10 @@ switch statement lacking a default case
 missing synchronized in synchronized method override
 .sp 
 \ -\ 
+.B syntacticAnalysis
+perform syntax-based null analysis for fields
+.sp 
+\ -\ 
 .B syntheticAccess
 when performing synthetic access for innerclass
 .sp 
@@ -775,6 +779,9 @@ Max number of problems per compilation unit (100 by default)
 .IP "\-log <filename>"
 Specify a log file in which all output from the compiler will be dumped. This is really useful if you want to debug the batch compiler or get a file which contains all errors and warnings from a batch build. If the extension is .xml, the generated log will be an xml file. 
 .B
+.IP "\-genericsignature"
+Explicitly request the compiler to preserve information about generic signature of lambda expressions. 
+.B
 .IP "\-Xemacs"
 Use emacs style to present errors and warnings locations into the console and regular text logs. XML logs are unaffected by this option. With this option active, the message:
 .br
@@ -818,6 +825,11 @@ Consider references inside Javadoc. The Javadoc options are effective only when 
 .B
 .IP "\-missingNullDefault"
 When annotation based null analysis is enabled (using "nullAnnot", above), this option will raise a warning whenever there is no default annotation on a package or a type. 
+.B
+.IP "\-annotationpath"
+When annotation based null analysis is enabled (using "nullAnnot", above), this option defines locations where to find external annotations to support annotation-based null analysis.
+The value of this options is a list of directories or zip files. Entries are separated by the platform path separator.
+The special name CLASSPATH will cause lookup of external annotations from the classpath and sourcepath. 
 
 .P
 .ul

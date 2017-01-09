@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,10 +65,6 @@ public class CodeStream {
 	public static final int LABELS_INCREMENT = 5;
 	// local variable attributes output
 	public static final int LOCALS_INCREMENT = 10;
-	static ExceptionLabel[] noExceptionHandlers = new ExceptionLabel[LABELS_INCREMENT];
-	static BranchLabel[] noLabels = new BranchLabel[LABELS_INCREMENT];
-	static LocalVariableBinding[] noLocals = new LocalVariableBinding[LOCALS_INCREMENT];
-	static LocalVariableBinding[] noVisibleLocals = new LocalVariableBinding[LOCALS_INCREMENT];
 	public static final CompilationResult RESTART_IN_WIDE_MODE = new CompilationResult((char[])null, 0, 0, 0);
 	public static final CompilationResult RESTART_CODE_GEN_FOR_UNUSED_LOCALS_MODE = new CompilationResult((char[])null, 0, 0, 0);
 
@@ -4107,32 +4103,12 @@ public void init(ClassFile targetClassFile) {
 	this.startingClassFileOffset = this.classFileOffset;
 	this.pcToSourceMapSize = 0;
 	this.lastEntryPC = 0;
-	int length = this.visibleLocals.length;
-	if (noVisibleLocals.length < length) {
-		noVisibleLocals = new LocalVariableBinding[length];
-	}
-	System.arraycopy(noVisibleLocals, 0, this.visibleLocals, 0, length);
 	this.visibleLocalsCount = 0;
 
-	length = this.locals.length;
-	if (noLocals.length < length) {
-		noLocals = new LocalVariableBinding[length];
-	}
-	System.arraycopy(noLocals, 0, this.locals, 0, length);
 	this.allLocalsCounter = 0;
 
-	length = this.exceptionLabels.length;
-	if (noExceptionHandlers.length < length) {
-		noExceptionHandlers = new ExceptionLabel[length];
-	}
-	System.arraycopy(noExceptionHandlers, 0, this.exceptionLabels, 0, length);
 	this.exceptionLabelsCounter = 0;
 
-	length = this.labels.length;
-	if (noLabels.length < length) {
-		noLabels = new BranchLabel[length];
-	}
-	System.arraycopy(noLabels, 0, this.labels, 0, length);
 	this.countLabels = 0;
 	this.lastAbruptCompletion = -1;
 

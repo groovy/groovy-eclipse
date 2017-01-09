@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,20 +162,17 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // GRECLIPSE-470
     void testImportWithinMapLiteral() {
         String contents = '''
-            import javax.xml.XMLConstants
-            [value: XMLConstants.XML_NS_URI]
+            import javax.util.concurrent.TimeUnit
+            [value: TimeUnit.SECONDS]
             '''
         doContentsCompareTest(contents, contents)
     }
 
     void testAddImportWithinMapLiteral() {
         String contents = '''
-            [value: XMLConstants.XML_NS_URI]
+            [value: TimeUnit.SECONDS]
             '''
-        doChoiceTest(contents, ['javax.xml.XMLConstants',
-            'com.sun.xml.internal.ws.encoding.xml.XMLConstants',
-            'com.sun.xml.internal.fastinfoset.stax.events.XMLConstants'
-        ])
+        doAddImportTest(contents, ['javax.util.concurrent.TimeUnit'])
     }
 
     void testAddImportForExtends() {

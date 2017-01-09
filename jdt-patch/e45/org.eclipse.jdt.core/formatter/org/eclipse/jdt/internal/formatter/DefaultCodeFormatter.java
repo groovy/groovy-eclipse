@@ -74,6 +74,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 
 	private String sourceString;
 	private char[] sourceArray;
+	private IRegion[] formatRegions;
 
 	private ASTNode astRoot;
 	private List<Token> tokens = new ArrayList<Token>();
@@ -146,11 +147,12 @@ public class DefaultCodeFormatter extends CodeFormatter {
 		if (!regionsSatisfiesPreconditions(regions, source.length())) {
 			throw new IllegalArgumentException();
 		}
+		this.formatRegions = regions;
 
 		updateWorkingOptions(indentationLevel, lineSeparator, kind);
 
 		if ((kind & K_COMMENTS_MASK) != 0)
-			return formatComments(source, kind & K_COMMENTS_MASK, regions);
+			return formatComments(source, kind & K_COMMENTS_MASK);
 
 		if (prepareFormattedCode(source, kind) == null)
 			return this.tokens.isEmpty() ? new MultiTextEdit() : null;
@@ -202,15 +204,17 @@ public class DefaultCodeFormatter extends CodeFormatter {
 
 	private void findHeader() {
 		if (this.astRoot instanceof CompilationUnit) {
-			List<TypeDeclaration> types = ((CompilationUnit) this.astRoot).types();
-			if (!types.isEmpty()) {
-				int headerEndIndex = this.tokenManager.firstIndexIn(types.get(0), -1);
+			CompilationUnit unit = (CompilationUnit) this.astRoot;
+			List<TypeDeclaration> types = unit.types();
+			ASTNode firstElement = types.isEmpty() ? unit.getPackage() : types.get(0);
+			if (firstElement != null) {
+				int headerEndIndex = this.tokenManager.firstIndexIn(firstElement, -1);
 				this.tokenManager.setHeaderEndIndex(headerEndIndex);
 			}
 		}
 	}
 
-	private TextEdit formatComments(String source, int kind, IRegion[] regions) {
+	private TextEdit formatComments(String source, int kind) {
 		MultiTextEdit result = new MultiTextEdit();
 		if (!init(source))
 			return result;
@@ -264,7 +268,8 @@ public class DefaultCodeFormatter extends CodeFormatter {
 
 		this.tokenManager.applyFormatOff();
 
-		TextEditsBuilder resultBuilder = new TextEditsBuilder(source, regions, this.tokenManager, this.workingOptions);
+		TextEditsBuilder resultBuilder = new TextEditsBuilder(source, this.formatRegions, this.tokenManager,
+				this.workingOptions);
 		resultBuilder.setAlignChar(DefaultCodeFormatterOptions.SPACE);
 		for (Token token : this.tokens) {
 			List<Token> structure = token.getInternalStructure();
@@ -282,6 +287,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		Map<String, String> parserOptions = JavaCore.getOptions();
 		parserOptions.put(CompilerOptions.OPTION_Source, this.sourceLevel);
+		parserOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
 		parser.setCompilerOptions(parserOptions);
 
 		switch (kind & K_MASK) {
@@ -370,7 +376,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 	private void prepareWraps(int kind) {
 		WrapPreparator wrapPreparator = new WrapPreparator(this.tokenManager, this.workingOptions, kind);
 		this.astRoot.accept(wrapPreparator);
-		wrapPreparator.finishUp(this.astRoot);
+		wrapPreparator.finishUp(this.astRoot, this.formatRegions);
 	}
 
 	/**

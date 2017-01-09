@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
 import org.eclipse.jdt.internal.formatter.Token;
 import org.eclipse.jdt.internal.formatter.TokenManager;
 import org.eclipse.jdt.internal.formatter.TokenTraverser;
+import org.eclipse.jdt.internal.formatter.Token.WrapMode;
 import org.eclipse.jdt.internal.formatter.Token.WrapPolicy;
 
 public class CommentWrapExecutor extends TokenTraverser {
@@ -225,16 +226,18 @@ public class CommentWrapExecutor extends TokenTraverser {
 		if (prefix.tokenType == TokenNameWHITESPACE) {
 			whitespace = new Token(prefix);
 			whitespace.breakBefore();
-			whitespace.setWrapPolicy(new WrapPolicy(0, commentIndex, false));
+			whitespace.setIndent(indent);
+			whitespace.setWrapPolicy(new WrapPolicy(WrapMode.WHERE_NECESSARY, commentIndex, 0));
 			prefix = structure.get(1);
+			assert prefix.tokenType == TokenNameCOMMENT_LINE;
 		}
 		int prefixEnd = commentToken.originalStart + 1;
-		if (prefix.tokenType == TokenNameCOMMENT_LINE)
-			prefixEnd = Math.max(prefixEnd, prefix.originalEnd);
+		if (!prefix.hasNLSTag())
+			prefixEnd = Math.max(prefixEnd, prefix.originalEnd); // comments can start with more than 2 slashes
 		prefix = new Token(commentToken.originalStart, prefixEnd, TokenNameCOMMENT_LINE);
 		if (whitespace == null) {
 			prefix.breakBefore();
-			prefix.setWrapPolicy(new WrapPolicy(0, commentIndex, false));
+			prefix.setWrapPolicy(new WrapPolicy(WrapMode.WHERE_NECESSARY, commentIndex, 0));
 		}
 
 		int lineStartIndex = whitespace == null ? 0 : 1;

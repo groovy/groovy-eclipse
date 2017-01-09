@@ -2600,7 +2600,7 @@ protected void consumeClassDeclaration() {
 						}
 					}
 				}
-				typeDecl.createDefaultConstructor(!this.diet || insideFieldInitializer, true);
+				typeDecl.createDefaultConstructor(!(this.diet && this.dietInt == 0) || insideFieldInitializer, true);
 		}
 	}
 	//always add <clinit> (will be remove at code gen time if empty)

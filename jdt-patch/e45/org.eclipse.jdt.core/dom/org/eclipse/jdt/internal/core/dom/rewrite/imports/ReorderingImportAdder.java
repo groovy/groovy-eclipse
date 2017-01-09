@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Totally sorts new and existing imports together, discarding the order of existing imports.
+ * Totally sorts new and existing imports together, discarding the order of existing imports
+ * and omitting duplicate entries.
  */
 final class ReorderingImportAdder implements ImportAdder {
 	private final Comparator<ImportName> importComparator;
@@ -30,18 +31,14 @@ final class ReorderingImportAdder implements ImportAdder {
 
 	@Override
 	public List<ImportName> addImports(Collection<ImportName> existingImports, Collection<ImportName> importsToAdd) {
-		Set<ImportName> existingImportsSet = new HashSet<ImportName>(existingImports);
+		int setCapacity = 2 * (existingImports.size() + importsToAdd.size());
+		Set<ImportName> uniqueImportsWithAdditions = new HashSet<ImportName>(setCapacity);
+		uniqueImportsWithAdditions.addAll(existingImports);
+		uniqueImportsWithAdditions.addAll(importsToAdd);
 
-		List<ImportName> importsWithAdditions = new ArrayList<ImportName>(existingImports.size() + importsToAdd.size());
-		importsWithAdditions.addAll(existingImports);
-		for (ImportName importToAdd : importsToAdd) {
-			if (!existingImportsSet.contains(importToAdd)) {
-				importsWithAdditions.add(importToAdd);
-			}
-		}
+		List<ImportName> sortedImports = new ArrayList<>(uniqueImportsWithAdditions);
+		Collections.sort(sortedImports, this.importComparator);
 
-		Collections.sort(importsWithAdditions, this.importComparator);
-
-		return importsWithAdditions;
+		return sortedImports;
 	}
 }

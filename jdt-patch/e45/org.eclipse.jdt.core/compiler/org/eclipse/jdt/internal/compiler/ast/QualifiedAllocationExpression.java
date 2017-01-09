@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -256,7 +256,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 
 		// perform some extra emulation work in case there is some and we are inside a local type only
 		if (allocatedTypeErasure.isNestedType()
-			&& (currentScope.enclosingSourceType().isLocalType() || currentScope.isLambdaScope())) {
+			&& (currentScope.enclosingSourceType().isLocalType() || currentScope.isLambdaSubscope())) {
 
 			if (allocatedTypeErasure.isLocalType()) {
 				((LocalTypeBinding) allocatedTypeErasure).addInnerEmulationDependent(currentScope, this.enclosingInstance != null);
