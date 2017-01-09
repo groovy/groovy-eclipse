@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,14 +55,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
  */
 public class AutoAddContainerSupport implements IResourceChangeListener {
 
-    /**
-     *
-     * @author andrew
-     * @created May 27, 2011
-     */
     private final class AddDSLSupportJob extends Job {
         private final String projectName;
-
         private final IJavaProject project;
 
         private AddDSLSupportJob(String name, String projectName, IJavaProject project) {
@@ -85,7 +79,6 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         }
     }
 
-
     private final IPreferenceStore store = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
 
     private final Set<String> alreadyAddedProjects;
@@ -102,7 +95,6 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
                 }
             }
         }
-
     }
 
     private boolean shouldAddSupport() {
@@ -148,7 +140,6 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         }
     }
 
-
     public void resourceChanged(IResourceChangeEvent event) {
         if (!shouldAddSupport()) {
             return;
@@ -185,7 +176,6 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         }
     }
 
-
     public void dispose() {
         StringBuilder sb = new StringBuilder();
         for (String projName : alreadyAddedProjects) {
@@ -207,5 +197,11 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
 
     public void ignoreProject(IProject project) {
         alreadyAddedProjects.add(project.getName());
+    }
+    public void unignoreProject(IProject project) {
+        alreadyAddedProjects.remove(project.getName());
+    }
+    public void unignoreAllProjects() {
+        alreadyAddedProjects.clear();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,29 +18,28 @@ package org.codehaus.groovy.eclipse.dsl;
 import java.util.Set;
 
 /**
- * 
  * @author andrew
  * @created Feb 28, 2011
  */
 public class DisabledScriptsCache {
 
     private Set<String> disabled;
-    
+
     public Set<String> getDisabled() {
         ensureInitialized();
         return disabled;
     }
-    
+
     public boolean isDisabled(String script) {
         ensureInitialized();
         return disabled.contains(script);
     }
-    
+
     public void setDisabled(Set<String> disabled) {
         this.disabled = disabled;
         DSLPreferences.setDisabledScripts(disabled.toArray(new String[0]));
     }
-    
+
     private void ensureInitialized() {
         if (disabled == null) {
             disabled = DSLPreferences.getDisabledScriptsAsSet();

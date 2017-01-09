@@ -182,6 +182,7 @@ public abstract class CompletionTestCase extends TestCase {
                 return proposal;
             }
         }
+        fail("Expected at least one proposal that matches '" + name + "', but found none");
         return null;
     }
 
@@ -351,9 +352,6 @@ public abstract class CompletionTestCase extends TestCase {
     protected void checkProposalApplication(String contents, String expected, int proposalLocation, String proposalName, boolean isType) throws Exception {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation);
         ICompletionProposal firstProposal = findFirstProposal(proposals, proposalName, isType);
-        if (firstProposal == null) {
-            fail("Expected at least one proposal, but found none");
-        }
         applyProposalAndCheck(new Document(contents), firstProposal, expected);
     }
 
@@ -361,7 +359,6 @@ public abstract class CompletionTestCase extends TestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation);
         for (int i = 0, n = expecteds.length; i < n; i += 1) {
             ICompletionProposal firstProposal = findFirstProposal(proposals, proposalNames[i], false);
-            assertNotNull("Expected at least one proposal, but found none", firstProposal);
             applyProposalAndCheck(new Document(contents), firstProposal, expecteds[i]);
         }
     }

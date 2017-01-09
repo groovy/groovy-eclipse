@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,17 @@ import junit.framework.TestSuite;
 public class AllDSLTests {
     public static Test suite() {
         TestSuite suite = new TestSuite(AllDSLTests.class.getName());
-        suite.addTest(BuiltInDSLInferencingTests.suite());
-        suite.addTest(DSLContentAssistTests.suite());
-        suite.addTest(DSLInferencingTests.suite());
-        suite.addTest(DSLNamedArgContentAssistTests.suite());
-        suite.addTest(DSLStoreTests.suite());
-        suite.addTest(MetaDSLInferencingTests.suite());
-        suite.addTest(PointcutCreationTests.suite());
-        suite.addTest(PointcutEvaluationTests.suite());
-        suite.addTestSuite(StringObjectVectorTests.class);
+        if (!Boolean.getBoolean("greclipse.dsld.disabled")) {
+            suite.addTest(BuiltInDSLInferencingTests.suite());
+            suite.addTest(DSLContentAssistTests.suite());
+            suite.addTest(DSLInferencingTests.suite());
+            suite.addTest(DSLNamedArgContentAssistTests.suite());
+            suite.addTest(DSLStoreTests.suite());
+            suite.addTest(MetaDSLInferencingTests.suite());
+            suite.addTest(PointcutCreationTests.suite());
+            suite.addTest(PointcutEvaluationTests.suite());
+            suite.addTestSuite(StringObjectVectorTests.class);
+        }
         return suite;
     }
 }

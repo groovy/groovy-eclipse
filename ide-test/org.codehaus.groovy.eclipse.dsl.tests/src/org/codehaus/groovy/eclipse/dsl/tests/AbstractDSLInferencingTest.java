@@ -36,6 +36,7 @@ import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.eclipse.core.internal.resources.Folder;
 import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.IFile;
@@ -50,6 +51,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * @author Andrew Eisenberg
@@ -76,18 +78,23 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     protected void setUp() throws Exception {
         super.setUp();
         GroovyLogManager.manager.addLogger(logger);
+        assertFalse(GroovyDSLCoreActivator.getDefault().isDSLDDisabled());
+        //GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
         if (doRemoveClasspathContainer) {
             GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
+            GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(project).purgeAll();
+            project.refreshLocal(IResource.DEPTH_ONE, null);
+            env.cleanBuild();
         } else {
             refreshExternalFoldersProject();
             GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
             GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
         }
-        GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
     }
 
     @Override
     protected void tearDown() throws Exception {
+        //GroovyDSLCoreActivator.getDefault().getContainerListener().unignoreProjects();
         GroovyLogManager.manager.removeLogger(logger);
         super.tearDown();
     }
@@ -172,9 +179,13 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         // ensure DSLDs are refreshed
         // don't schedule. instead run in the same thread.
         System.out.println("About to run RefreshDSLDJob");
-        // ensure this classpath container is gone
-        GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
-        env.fullBuild();
+//        // ensure this classpath container is gone
+//        GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
+        env.cleanBuild();
+        JavaModelManager.getIndexManager().removeIndex(project.getLocation());
+        JavaModelManager.getIndexManager().cleanUpIndexes();
+        SynchronizationUtils.waitForIndexingToComplete(JavaCore.create(project));
+
         DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
         manager.initialize(project, true);
         System.out.println("Finished RefreshDSLDJob");

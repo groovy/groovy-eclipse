@@ -17,7 +17,6 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -109,9 +108,6 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.6");
         javaProject.setOption(CompilerOptions.OPTION_Source, "1.6");
         javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.6");
-        //Ensure DSLD is initialized or it creates a race condition in some tests (test get different results
-        // if the RefreshDLSDJob looses the race with the test code.
-        GroovyDSLCoreActivator.getDefault().getContextStoreManager().ensureInitialized(proj, /*synchronous*/true);
         fullBuild(projectPath);
         return proj;
     }

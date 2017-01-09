@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.IJavaProject;
 /**
  * Listens for classpath changes and refreshes DSLDs accordingly.  Only look for raw classpath changes
  * all other changes are handled by the {@link DSLDResourceListener}.
+ *
  * @author andrew
  * @created Oct 28, 2011
  */
@@ -39,8 +40,8 @@ public class DSLDElementListener implements IElementChangedListener {
             List<IProject> projectsToRefresh = new ArrayList<IProject>();
             for (IJavaElementDelta delta : event.getDelta().getChangedChildren()) {
                 // Look for resolved classpath changes for Groovy projects
-                if (delta.getElement() instanceof IJavaProject && 
-                        isResolvedClasspathChangeNotRawClasspath(delta) && 
+                if (delta.getElement() instanceof IJavaProject &&
+                        isResolvedClasspathChangeNotRawClasspath(delta) &&
                         GroovyNature.hasGroovyNature(((IJavaProject) delta.getElement()).getProject())) {
                     projectsToRefresh.add(((IJavaProject) delta.getElement()).getProject());
                 }
@@ -54,7 +55,7 @@ public class DSLDElementListener implements IElementChangedListener {
     // returns true if there is a change to a classpath container, or something else that does not
     // show up in the .classpath file.
     private boolean isResolvedClasspathChangeNotRawClasspath(IJavaElementDelta delta) {
-        return (delta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0 && 
+        return (delta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0 &&
                 (delta.getFlags() & IJavaElementDelta.F_CLASSPATH_CHANGED) == 0;
     }
 

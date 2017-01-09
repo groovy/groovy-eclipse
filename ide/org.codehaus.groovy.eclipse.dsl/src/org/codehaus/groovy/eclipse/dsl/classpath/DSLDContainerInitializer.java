@@ -1,15 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2012 VMWare, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * Contributors:
- *     VMWare, Inc. - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.classpath;
- 
+
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
 import java.io.File;
@@ -19,7 +24,6 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
@@ -33,14 +37,14 @@ import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Classpath container initializer that grabs all of the DSLDs that live outside of the workspace.
- * 
+ *
  * @author andrew
  * @created May 21, 2011
  */
 public class DSLDContainerInitializer extends ClasspathContainerInitializer {
 
     private static final IClasspathEntry[] NO_ENTRIES = new IClasspathEntry[0];
-    
+
     /**
      * The location for global dsld files.  Null if the locaiton does not exist and cannot be created
      */
@@ -61,14 +65,14 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
         public String getDescription() {
             return "Groovy DSL Support";
         }
-        
+
         public IClasspathEntry[] getClasspathEntries() {
             if (entries == null) {
                 entries = calculateEntries();
             }
             return entries;
         }
-        
+
         void reset() {
             entries = null;
         }
@@ -78,23 +82,22 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
          * @return
          */
         protected IClasspathEntry[] calculateEntries() {
-            if (GroovyDSLCoreActivator.getDefault().getPreferenceStore()
-            		.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED)) {
-        		return NO_ENTRIES;
-        	}
-        	
+            if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
+                return NO_ENTRIES;
+            }
+
             List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>();
-            
+
             if (globalDsldLocation != null && globalDsldLocation.exists()) {
                 IPath dsldPath = new Path(globalDsldLocation.getAbsolutePath());
                 newEntries.add(newLibraryEntry(dsldPath, null, null, false));
             }
-            
+
             URL folder = CompilerUtils.findDSLDFolder();
             if (folder != null) {
                 String file = folder.getFile();
                 Assert.isTrue(new File(file).exists(), "Plugin DSLD location does not exist: " + file);
-                
+
                 IPath path = new Path(folder.getPath());
                 newEntries.add(newLibraryEntry(path, null, null));
             }
@@ -124,13 +127,13 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     }
 
     private IJavaProject javaProject;
-    
+
     @Override
     public void initialize(final IPath containerPath, final IJavaProject javaProject) throws CoreException {
         this.javaProject = javaProject;
         IClasspathContainer container = new DSLDClasspathContainer();
-        JavaCore.setClasspathContainer(containerPath, 
-                new IJavaProject[] { javaProject }, 
+        JavaCore.setClasspathContainer(containerPath,
+                new IJavaProject[] { javaProject },
                 new IClasspathContainer[] {container}, null);
     }
 
@@ -138,18 +141,19 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project) {
         return true;
     }
-    
+
     @Override
     public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project, IClasspathContainer containerSuggestion)
             throws CoreException {
         if (containerSuggestion instanceof DSLDClasspathContainer) {
             ((DSLDClasspathContainer) containerSuggestion).reset();
         }
-        
+
         if (javaProject == null) {
             IClasspathContainer dsld = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, javaProject);
             if (dsld instanceof DSLDClasspathContainer) {
                 ((DSLDClasspathContainer) dsld).reset();
+
             }
         }
     }

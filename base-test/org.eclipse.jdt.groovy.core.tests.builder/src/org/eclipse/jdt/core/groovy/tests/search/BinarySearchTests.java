@@ -109,7 +109,10 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
         Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
         env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
 
+        JavaModelManager.getIndexManager().indexAll(project);
         javaProject = env.getJavaProject(project.getName());
+        waitForIndexer(javaProject);
+
         // overwrite the contents vars with the actual contents
         groovyClassContents = javaProject.findType("pack.AGroovyClass").getTypeRoot().getBuffer().getContents();
         groovyClassContents2 = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
@@ -124,9 +127,6 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws Exception {
         assertTrue("Expected binary member, but got: " + toSearchFor == null ? null :
                 toSearchFor.getClass().getName(), toSearchFor instanceof BinaryMember);
-
-        JavaModelManager.getIndexManager().indexAll(project);
-        waitForIndexer(javaProject);
 
         SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
         SearchParticipant[] participants = {SearchEngine.getDefaultSearchParticipant()};

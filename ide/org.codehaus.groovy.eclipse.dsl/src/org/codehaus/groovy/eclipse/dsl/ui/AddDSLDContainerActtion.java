@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.IAction;
 
 /**
- * 
  * @author andrew
  * @created May 24, 2011
  */
 public class AddDSLDContainerActtion extends AbstractAddClasspathContainerAction {
-    
+
     @Override
     protected IPath getClasspathContainerPath() {
         return GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID;
@@ -52,7 +51,6 @@ public class AddDSLDContainerActtion extends AbstractAddClasspathContainerAction
         return "Remove DSL Support";
     }
 
-    
     @Override
     public void run(IAction action) {
         super.run(action);

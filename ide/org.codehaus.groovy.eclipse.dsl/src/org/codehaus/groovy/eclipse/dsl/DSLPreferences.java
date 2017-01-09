@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Manipulator of all preferences for DSLD settings
+ * Manipulator of all preferences for DSLD settings.
+ *
  * @author andrew
  * @created Feb 27, 2011
  */
 public class DSLPreferences {
 
-	public static final String AUTO_ADD_DSL_SUPPORT = "org.codehaus.groovy.eclipse.dsl.auto.add.support";
+    public static final String AUTO_ADD_DSL_SUPPORT = "org.codehaus.groovy.eclipse.dsl.auto.add.support";
 
     /**
      * Preference key for all the scripts that are disabled in this workspace.  The value is
