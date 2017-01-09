@@ -35,12 +35,14 @@ import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
@@ -51,9 +53,11 @@ import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
+import org.eclipse.jdt.internal.corext.CorextMessages;
+import org.eclipse.jdt.internal.corext.ValidateEditException;
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationMessages;
-import org.eclipse.jdt.internal.corext.refactoring.util.JavaElementUtil;
 import org.eclipse.jdt.internal.corext.util.Messages;
+import org.eclipse.jdt.internal.corext.util.Resources;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 import org.eclipse.jdt.internal.ui.JavaUIStatus;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
@@ -98,7 +102,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                     MultiTextEdit result = new MultiTextEdit();
                     result.addChild(edit);
                     result.addChild(importRewrite.rewriteImports(submon.newChild(1)));
-                    JavaElementUtil.applyEdit(compilationUnit, result, true, submon.newChild(1));
+                    applyEdit(compilationUnit, result, true, submon.newChild(1));
                 } catch (OperationCanceledException cancel) {
                     if (fStatus == Status.OK_STATUS)
                         fStatus = Status.CANCEL_STATUS;
@@ -285,5 +289,31 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 return type.getComponentType() != null ? componentType(type.getComponentType()) : type;
             }
         };
+    }
+
+    /**
+     * Applies a text edit to a compilation unit.
+     *
+     * @param cu the compilation unit to apply the edit to
+     * @param edit the edit to apply
+     * @param save is set, save the CU after the edit has been applied
+     * @param monitor the progress monitor to use
+     * @throws CoreException Thrown when the access to the CU failed
+     * @throws ValidateEditException if validate edit fails
+     */
+    // copied from JavaModelUtil (moved to JavaElementUtil circa Eclipse 4.7)
+    protected static void applyEdit(ICompilationUnit cu, TextEdit edit, boolean save, IProgressMonitor monitor) throws CoreException, ValidateEditException {
+        SubMonitor subMonitor = SubMonitor.convert(monitor, CorextMessages.JavaModelUtil_applyedit_operation, 2);
+        IFile file = (IFile) cu.getResource();
+        if (!save || !file.exists()) {
+            cu.applyTextEdit(edit, subMonitor.split(2));
+        } else {
+            IStatus status = Resources.makeCommittable(file, null);
+            if (!status.isOK()) {
+                throw new ValidateEditException(status);
+            }
+            cu.applyTextEdit(edit, subMonitor.split(1));
+            cu.save(subMonitor.split(1), true);
+        }
     }
 }
