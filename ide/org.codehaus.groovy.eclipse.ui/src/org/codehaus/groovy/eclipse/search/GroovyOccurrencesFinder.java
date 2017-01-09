@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,24 +43,20 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder;
 
 /**
  * @author Andrew Eisenberg
  * @created Dec 31, 2009
  */
-public class GroovyOccurrencesFinder implements IOccurrencesFinder {
-    public static final String ID= "GroovyOccurrencesFinder"; //$NON-NLS-1$
+public class GroovyOccurrencesFinder implements org.eclipse.jdt.internal.ui.search.IOccurrencesFinder {
 
-    public static final String IS_WRITEACCESS= "writeAccess"; //$NON-NLS-1$
-    public static final String IS_VARIABLE= "variable"; //$NON-NLS-1$
-
-    private GroovyCompilationUnit gunit;
-
-    private CompilationUnit cunit;
+    public static final String ID = "GroovyOccurrencesFinder";
+    public static final String IS_WRITEACCESS = "writeAccess";
+    public static final String IS_VARIABLE = "variable";
 
     private AnnotatedNode nodeToLookFor;
-
+    private GroovyCompilationUnit gunit;
+    private CompilationUnit cunit;
     private String elementName;
 
     public CompilationUnit getASTRoot() {
@@ -98,6 +94,10 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         return "Search for Occurrences in File (Groovy)";
     }
 
+    public org.codehaus.groovy.ast.ASTNode getNodeToLookFor() {
+        return nodeToLookFor;
+    }
+
     public OccurrenceLocation[] getOccurrences() {
         Map<org.codehaus.groovy.ast.ASTNode, Integer> occurences = internalFindOccurences();
         OccurrenceLocation[] locations = new OccurrenceLocation[occurences.size()];
@@ -108,36 +108,30 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
             OccurrenceLocation occurrenceLocation;
             if (node instanceof FieldNode) {
                 FieldNode c = (FieldNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag,
-                        "Occurrence of ''" + getElementName() + "''");
+                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag, "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof MethodNode) {
                 MethodNode c = (MethodNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag,
-                        "Occurrence of ''" + getElementName() + "''");
+                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag, "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof Parameter) {
                 // should be finding the start and end of the name region only,
                 // but this finds the entire declaration
                 Parameter c = (Parameter) node;
                 int start = c.getNameStart();
                 int length = c.getNameEnd() - c.getNameStart();
-                occurrenceLocation = new OccurrenceLocation(start, length, flag, "Occurrence of ''" + getElementName()
-                        + "''");
+                occurrenceLocation = new OccurrenceLocation(start, length, flag, "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) {
                 // class declaration
                 ClassNode c = (ClassNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag,
-                        "Occurrence of ''" + getElementName() + "''");
+                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag, "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof StaticMethodCallExpression) {
                 // special case...for static method calls, the start and end are
                 // of the entire expression, but we just want the name.
                 StaticMethodCallExpression smce = (StaticMethodCallExpression) node;
-                occurrenceLocation = new OccurrenceLocation(smce.getStart(), Math.min(smce.getLength(), smce.getMethod().length()), flag,
-                        "Occurrence of ''" + getElementName() + "''");
+                occurrenceLocation = new OccurrenceLocation(smce.getStart(), Math.min(smce.getLength(), smce.getMethod().length()), flag, "Occurrence of ''" + getElementName() + "''");
             } else {
                 SourceRange range = getSourceRange(node);
 
-                occurrenceLocation = new OccurrenceLocation(range.getOffset(), range.getLength(), flag, "Occurrence of ''"
-                        + getElementName() + "''");
+                occurrenceLocation = new OccurrenceLocation(range.getOffset(), range.getLength(), flag, "Occurrence of ''" + getElementName() + "''");
             }
             locations[i++] = occurrenceLocation;
         }
@@ -225,8 +219,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         }
         if (node instanceof PropertyNode) {
             PropertyNode property = (PropertyNode) node;
-            // hmmm...how do we handle synthetic field nodes based on a getter
-            // or setter?
+            // hmmm...how do we handle synthetic field nodes based on a getter or setter?
             node = property.getField();
         }
         nodeToLookFor = (AnnotatedNode) node;
@@ -235,9 +228,5 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
 
     public void setGroovyCompilationUnit(GroovyCompilationUnit gunit) {
         this.gunit = gunit;
-    }
-
-    public org.codehaus.groovy.ast.ASTNode getNodeToLookFor() {
-        return nodeToLookFor;
     }
 }
