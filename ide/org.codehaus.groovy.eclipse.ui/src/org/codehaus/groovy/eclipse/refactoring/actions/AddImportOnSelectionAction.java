@@ -296,7 +296,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
      *
      * @param cu the compilation unit to apply the edit to
      * @param edit the edit to apply
-     * @param save is set, save the CU after the edit has been applied
+     * @param save if set, save the CU after the edit has been applied
      * @param monitor the progress monitor to use
      * @throws CoreException Thrown when the access to the CU failed
      * @throws ValidateEditException if validate edit fails
@@ -306,14 +306,14 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
         SubMonitor subMonitor = SubMonitor.convert(monitor, CorextMessages.JavaModelUtil_applyedit_operation, 2);
         IFile file = (IFile) cu.getResource();
         if (!save || !file.exists()) {
-            cu.applyTextEdit(edit, subMonitor.split(2));
+            cu.applyTextEdit(edit, subMonitor.newChild(2));
         } else {
             IStatus status = Resources.makeCommittable(file, null);
             if (!status.isOK()) {
                 throw new ValidateEditException(status);
             }
-            cu.applyTextEdit(edit, subMonitor.split(1));
-            cu.save(subMonitor.split(1), true);
+            cu.applyTextEdit(edit, subMonitor.newChild(1));
+            cu.save(subMonitor.newChild(1), true);
         }
     }
 }
