@@ -18,7 +18,6 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -151,9 +150,6 @@ public RecoveredElement add(Statement stmt, int bracketBalanceValue) {
  * Record a statement declaration
  */
 public RecoveredElement add(Statement stmt, int bracketBalanceValue, boolean delegatedByParent) {
-	
-	if (stmt instanceof LambdaExpression) // lambdas are recovered up to the containing statement anyways.
-		return this;
 	
 	resetPendingModifiers();
 
@@ -289,11 +285,6 @@ public Block updatedBlock(int depth, Set knownTypes){
 	// if block was not marked to be preserved or empty, then ignore it
 	if (!this.preserveContent || this.statementCount == 0) return null;
 	
-	/* If this block stands for the lambda body, trash the contents. Lambda expressions are recovered as part of the enclosing statement.
-	   We still have left in a block here to make sure that contained elements can be trapped and tossed out.
-	*/
-	if (this.blockDeclaration.lambdaBody) return null; 
-
 	Statement[] updatedStatements = new Statement[this.statementCount];
 	int updatedCount = 0;
 
@@ -334,9 +325,19 @@ public Block updatedBlock(int depth, Set knownTypes){
 	int lastEnd = this.blockDeclaration.sourceStart;
 
 	// only collect the non-null updated statements
+	next:
 	for (int i = 0; i < this.statementCount; i++){
 		Statement updatedStatement = this.statements[i].updatedStatement(depth, knownTypes);
-		if (updatedStatement != null){
+		if (updatedStatement != null) {
+			for (int j = 0; j < i; j++) {
+				if (updatedStatements[j] instanceof LocalDeclaration) {
+					LocalDeclaration local = (LocalDeclaration) updatedStatements[j];
+					if (local.initialization != null) {
+						if (updatedStatement.sourceStart >= local.initialization.sourceStart && updatedStatement.sourceEnd <= local.initialization.sourceEnd)
+							continue next;
+					}
+				}
+			}
 			updatedStatements[updatedCount++] = updatedStatement;
 			
 			if (updatedStatement instanceof LocalDeclaration) {
@@ -422,42 +423,6 @@ public void updateParseTree(){
 
 	updatedBlock(0, new HashSet());
 }
-/*
- * Rebuild a flattened block from the nested structure which is in scope
- */
-public Statement updateStatement(int depth, Set knownTypes){
-
-	// if block was closed or empty, then ignore it
-	if (this.blockDeclaration.sourceEnd != 0 || this.statementCount == 0) return null;
-	
-	/* If this block stands for the lambda body, trash the contents. Lambda expressions are recovered as part of the enclosing statement.
-	   We still have left in a block here to make sure that contained elements can be trapped and tossed out.
-	*/
-	if (this.blockDeclaration.lambdaBody) return null; 
-
-	Statement[] updatedStatements = new Statement[this.statementCount];
-	int updatedCount = 0;
-
-	// only collect the non-null updated statements
-	for (int i = 0; i < this.statementCount; i++){
-		Statement updatedStatement = this.statements[i].updatedStatement(depth, knownTypes);
-		if (updatedStatement != null){
-			updatedStatements[updatedCount++] = updatedStatement;
-		}
-	}
-	if (updatedCount == 0) return null; // not interesting block
-
-	// resize statement collection if necessary
-	if (updatedCount != this.statementCount){
-		this.blockDeclaration.statements = new Statement[updatedCount];
-		System.arraycopy(updatedStatements, 0, this.blockDeclaration.statements, 0, updatedCount);
-	} else {
-		this.blockDeclaration.statements = updatedStatements;
-	}
-
-	return this.blockDeclaration;
-}
-
 /*
  * Record a field declaration
  */

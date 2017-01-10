@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -1783,7 +1784,7 @@ public void configure(String[] argv) {
 	// GROOVY start
 	boolean encounteredGroovySourceFile = false;
 	// GROOVY end
-	
+
 	String customEncoding = null;
 	String customDestinationPath = null;
 	String currentSourceDirectory = null;
@@ -2211,6 +2212,13 @@ public void configure(String[] argv) {
 					mode = DEFAULT;
 					this.options.put(
 							CompilerOptions.OPTION_MethodParametersAttribute,
+							CompilerOptions.GENERATE);
+					continue;
+				}
+				if (currentArg.equals("-genericsignature")) { //$NON-NLS-1$
+					mode = DEFAULT;
+					this.options.put(
+							CompilerOptions.OPTION_LambdaGenericSignature,
 							CompilerOptions.GENERATE);
 					continue;
 				}
@@ -2776,7 +2784,7 @@ public void configure(String[] argv) {
 				CompilerOptions.DISABLED);		
 	}
 	// GROOVY end
-	
+
 	if (printUsageRequired || (filesCount == 0 && classCount == 0)) {
 		if (usageSection ==  null) {
 			printUsage(); // default

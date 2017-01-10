@@ -457,9 +457,8 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	}
 	if (valueRequired) {
 		codeStream.generateImplicitConversion(this.implicitConversion);
-	} else if (needRuntimeCheckcast) {
-		boolean isUnboxing = (this.implicitConversion & TypeIds.UNBOXING) != 0;
-		switch (isUnboxing ? postConversionType(currentScope).id : this.resolvedType.id) {
+	} else if (annotatedCast || needRuntimeCheckcast) {
+		switch (this.resolvedType.id) {
 			case T_long :
 			case T_double :
 				codeStream.pop2();

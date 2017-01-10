@@ -27,12 +27,7 @@ public class Block extends Statement {
 	public int explicitDeclarations;
 	// the number of explicit declaration , used to create scope
 	public BlockScope scope;
-	public boolean lambdaBody;
 
-public Block(int explicitDeclarations, boolean lambdaBody) {
-	this.explicitDeclarations = explicitDeclarations;
-	this.lambdaBody = lambdaBody;
-}
 public Block(int explicitDeclarations) {
 	this.explicitDeclarations = explicitDeclarations;
 }

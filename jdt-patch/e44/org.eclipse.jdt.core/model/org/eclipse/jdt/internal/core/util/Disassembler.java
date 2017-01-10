@@ -1575,14 +1575,14 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	private String bootstrapMethodDescription(IBootstrapMethodsEntry entry, IConstantPool constantPool) {
 		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
 		// The BootstrapMethods attribute records bootstrap method specifiers referenced by invokedynamic instructions.
-		// The value of the bootstrap_method_ref item must be a valid index into the constant_pool table. The constant_pool entry at that index must be a CONSTANT_MethodHandle_info structure (ï¿½4.4.8).
+		// The value of the bootstrap_method_ref item must be a valid index into the constant_pool table. The constant_pool entry at that index must be a CONSTANT_MethodHandle_info structure (§4.4.8).
 		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
 		// constantpoolentry.getKind() = IConstantPoolConstant.CONSTANT_MethodHandle
 
 		ConstantPoolEntry2 constantPoolEntry2 =  (ConstantPoolEntry2) constantPool.decodeEntry(entry.getBootstrapMethodReference());
 
 		// The reference_kind item of the CONSTANT_MethodHandle_info structure should have the value 6 (REF_invokeStatic) or 8 (REF_newInvokeSpecial)
-		// (ï¿½5.4.3.5) or else invocation of the bootstrap method handle during call site specifier resolution for an invokedynamic instruction will complete abruptly.
+		// (§5.4.3.5) or else invocation of the bootstrap method handle during call site specifier resolution for an invokedynamic instruction will complete abruptly.
 		// If the value of the reference_kind item is 5 (REF_invokeVirtual), 6 (REF_invokeStatic), 7 (REF_invokeSpecial),
 		// or 9 (REF_invokeInterface), the name of the method represented by a CONSTANT_Methodref_info structure must not be <init> or <clinit>.
 
@@ -1601,7 +1601,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		// 	    Each entry in the bootstrap_arguments array must be a valid index into the constant_pool table.
 		//      The constant_pool entry at that index must be a CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info
 		//      CONSTANT_Long_info, CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, or
-		//      CONSTANT_MethodType_info structure (ï¿½4.4.3, ï¿½4.4.1, ï¿½4.4.4, ï¿½4.4.5), ï¿½4.4.8, ï¿½4.4.9).
+		//      CONSTANT_MethodType_info structure (§4.4.3, §4.4.1, §4.4.4, §4.4.5), §4.4.8, §4.4.9).
 		if (entry.getBootstrapArguments().length == 0)
 			return null;
 		int[] bootstrapArguments = entry.getBootstrapArguments();
@@ -1616,8 +1616,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 					// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
 					// If the value of the reference_kind item is 5 (REF_invokeVirtual), 6 (REF_invokeStatic),
 					// 7 (REF_invokeSpecial), or 8 (REF_newInvokeSpecial), then the constant_pool entry at that
-					// index must be a CONSTANT_Methodref_info structure (ï¿½4.4.2) representing a class's method or
-					// constructor (ï¿½2.9) for which a method handle is to be created.
+					// index must be a CONSTANT_Methodref_info structure (§4.4.2) representing a class's method or
+					// constructor (§2.9) for which a method handle is to be created.
 					ConstantPoolEntry2 constantPoolEntry2 = (ConstantPoolEntry2) constantPoolEntry;
 					StringBuilder builder = new StringBuilder(10);
 					switch(constantPoolEntry2.getReferenceKind()) {

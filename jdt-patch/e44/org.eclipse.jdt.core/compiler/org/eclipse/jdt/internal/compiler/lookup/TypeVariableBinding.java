@@ -499,6 +499,10 @@ public class TypeVariableBinding extends ReferenceBinding {
 		this.inRecursiveFunction = false;
 	}
 	
+	public boolean isPertinentToApplicability(TypeBinding argument, MethodBinding method) {
+		return argument.isPertinentToApplicability(this, method);
+	}
+	
 	public boolean isProperType(boolean admitCapture18) {
 		// handle recursive calls:
 		if (this.inRecursiveFunction) // be optimistic, since this node is not an inference variable

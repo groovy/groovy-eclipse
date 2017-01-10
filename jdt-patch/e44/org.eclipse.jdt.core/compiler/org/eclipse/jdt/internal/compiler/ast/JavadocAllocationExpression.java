@@ -46,7 +46,7 @@ public class JavadocAllocationExpression extends AllocationExpression {
 		TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 		boolean hasTypeVarArgs = false;
 		if (this.arguments != null) {
-			boolean argHasError = false;
+			this.argumentsHaveErrors = false;
 			int length = this.arguments.length;
 			argumentTypes = new TypeBinding[length];
 			for (int i = 0; i < length; i++) {
@@ -57,12 +57,12 @@ public class JavadocAllocationExpression extends AllocationExpression {
 					argumentTypes[i] = argument.resolveType((BlockScope)scope);
 				}
 				if (argumentTypes[i] == null) {
-					argHasError = true;
+					this.argumentsHaveErrors = true;
 				} else if (!hasTypeVarArgs) {
 					hasTypeVarArgs = argumentTypes[i].isTypeVariable();
 				}
 			}
-			if (argHasError) {
+			if (this.argumentsHaveErrors) {
 				return null;
 			}
 		}

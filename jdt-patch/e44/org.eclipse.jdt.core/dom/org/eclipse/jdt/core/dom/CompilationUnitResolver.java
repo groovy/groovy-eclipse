@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,7 @@
  *     Stephan Herrmann - Contribution for bug 363858 - [dom] early throwing of AbortCompilation causes NPE in CompilationUnitResolver
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
-// GROOVY PATCHED
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

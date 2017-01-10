@@ -78,6 +78,7 @@ public class AllocationExpression extends Expression implements Invocation {
 	 // hold on to this context from invocation applicability inference until invocation type inference (per method candidate):
 	private SimpleLookupTable/*<PMB,IC18>*/ inferenceContexts;
 	protected InnerInferenceHelper innerInferenceHelper;
+	public boolean argumentsHaveErrors;
 
 	/** Record to keep state between different parts of resolution. */
 	ResolutionState suspendedResolutionState;
@@ -385,14 +386,14 @@ public TypeBinding resolveType(BlockScope scope) {
 	// resolve type arguments (for generic constructor call)
 	if (this.typeArguments != null) {
 		int length = this.typeArguments.length;
-		boolean argHasError = sourceLevel < ClassFileConstants.JDK1_5;
+		this.argumentsHaveErrors = sourceLevel < ClassFileConstants.JDK1_5;
 		this.genericTypeArguments = new TypeBinding[length];
 		for (int i = 0; i < length; i++) {
 			TypeReference typeReference = this.typeArguments[i];
 			if ((this.genericTypeArguments[i] = typeReference.resolveType(scope, true /* check bounds*/)) == null) {
-				argHasError = true;
+				this.argumentsHaveErrors = true;
 			}
-			if (argHasError && typeReference instanceof Wildcard) {
+			if (this.argumentsHaveErrors && typeReference instanceof Wildcard) {
 				scope.problemReporter().illegalUsageOfWildcard(typeReference);
 			}
 		}
@@ -400,7 +401,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			scope.problemReporter().diamondNotWithExplicitTypeArguments(this.typeArguments);
 			return null;
 		}
-		if (argHasError) {
+		if (this.argumentsHaveErrors) {
 			if (this.arguments != null) { // still attempt to resolve arguments
 				for (int i = 0, max = this.arguments.length; i < max; i++) {
 					this.arguments[i].resolveType(scope);
@@ -414,7 +415,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	boolean argsContainCast = false;
 	TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 	if (this.arguments != null) {
-		boolean argHasError = false;
+		this.argumentsHaveErrors = false;
 		int length = this.arguments.length;
 		argumentTypes = new TypeBinding[length];
 		for (int i = 0; i < length; i++) {
@@ -427,14 +428,14 @@ public TypeBinding resolveType(BlockScope scope) {
 			if (this.arguments[i].resolvedType != null) 
 				scope.problemReporter().genericInferenceError("Argument was unexpectedly found resolved", this); //$NON-NLS-1$
 			if ((argumentTypes[i] = argument.resolveType(scope)) == null) {
-				argHasError = true;
+				this.argumentsHaveErrors = true;
 			}
-			if (sourceLevel >= ClassFileConstants.JDK1_8 && argument.isPolyExpression()) {
+			if (sourceLevel >= ClassFileConstants.JDK1_8 && (argument.isPolyExpression() || ((argument instanceof Invocation) && ((Invocation) argument).usesInference()))) {
 				if (this.innerInferenceHelper == null)
 					this.innerInferenceHelper = new InnerInferenceHelper();
 			}
 		}
-		if (argHasError) {
+		if (this.argumentsHaveErrors) {
 			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=345359, if arguments have errors, completely bail out in the <> case.
 			   No meaningful type resolution is possible since inference of the elided types is fully tied to argument types. Do
 			   not return the partially resolved type.

@@ -55,6 +55,12 @@ public class SingleTypeReference extends TypeReference {
 			if (typeVariable.declaringElement instanceof SourceTypeBinding) {
 				scope.tagAsAccessingEnclosingInstanceStateOf((ReferenceBinding) typeVariable.declaringElement, true /* type variable access */);
 			}
+		} else if (this.resolvedType instanceof LocalTypeBinding) {
+			LocalTypeBinding localType = (LocalTypeBinding) this.resolvedType;
+			MethodScope methodScope = scope.methodScope();
+			if (methodScope != null && !methodScope.isStatic) {
+				methodScope.tagAsAccessingEnclosingInstanceStateOf(localType, false /* ! type variable access */);
+			}
 		}
 
 		if (scope.kind == Scope.CLASS_SCOPE && this.resolvedType.isValidBinding())

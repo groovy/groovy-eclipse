@@ -1085,7 +1085,7 @@ public final class ImportRewriteAnalyzer {
 		}
 		buf.append(importName);
 		// GROOVY add
-		if (!compilationUnit.getClass().getName().contains("Groovy")) { //$NON-NLS-1$
+		if (!this.compilationUnit.getClass().getName().contains("Groovy")) { //$NON-NLS-1$
 		// GROOVY end
 		if (insertSpaceBeforeSemicolon()) buf.append(' ');
 		buf.append(';');

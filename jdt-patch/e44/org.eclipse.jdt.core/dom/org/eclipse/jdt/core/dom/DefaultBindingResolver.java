@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -92,14 +92,21 @@ class DefaultBindingResolver extends BindingResolver {
 		 */
 		Map bindingKeysToBindings;
 		/**
-		 * This map is used to keep the correspondance between new bindings and the
-		 * compiler bindings as well as new annotation instances to their internal counterpart.
-		 * This is an identity map. We should only create one object for one binding or annotation.
+		 * This map is used to keep the correspondence between new bindings and the
+		 * compiler bindings to their internal counterpart.
+		 * This is an identity map. We should only create one object for one binding.
 		 */
 		Map compilerBindingsToASTBindings;
 
+		/**
+		 * This map is used to keep the correspondence between new annotation instances to their internal counterpart.
+		 * This is an identity map. We should only create one object for one annotation.
+		 */
+		Map compilerAnnotationBindingsToASTBindings;
+
 		BindingTables() {
 			this.compilerBindingsToASTBindings = new ConcurrentHashMap();
+			this.compilerAnnotationBindingsToASTBindings = new ConcurrentHashMap();
 			this.bindingKeysToBindings = new ConcurrentHashMap();
 		}
 
@@ -506,6 +513,21 @@ class DefaultBindingResolver extends BindingResolver {
 		return null;
 	}
 
+	static class AnnotationIdentityBinding {
+		org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding internalInstance;
+		AnnotationIdentityBinding(org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding internalInstance) {
+			this.internalInstance = internalInstance;
+		}
+		@Override
+		public boolean equals(Object o) {
+			return o instanceof AnnotationIdentityBinding && this.internalInstance == ((AnnotationIdentityBinding)o).internalInstance;
+		}
+		@Override
+		public int hashCode() {
+			return this.internalInstance.hashCode();
+		}
+	}
+
 	synchronized IAnnotationBinding getAnnotationInstance(org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding internalInstance) {
 		if (internalInstance == null) return null;
 		ReferenceBinding annotationType = internalInstance.getAnnotationType();
@@ -514,13 +536,10 @@ class DefaultBindingResolver extends BindingResolver {
 				return null;
 			}
 		}
-		IAnnotationBinding domInstance =
-			(IAnnotationBinding) this.bindingTables.compilerBindingsToASTBindings.get(internalInstance);
-		if (domInstance != null)
-			return domInstance;
-		domInstance = new AnnotationBinding(internalInstance, this);
-		this.bindingTables.compilerBindingsToASTBindings.put(internalInstance, domInstance);
-		return domInstance;
+		Object key =  new AnnotationIdentityBinding(internalInstance);
+		IAnnotationBinding newDomInstance = new AnnotationBinding(internalInstance, this);
+		IAnnotationBinding domInstance = (IAnnotationBinding) ((ConcurrentHashMap)this.bindingTables.compilerAnnotationBindingsToASTBindings).putIfAbsent(key, newDomInstance);
+		return domInstance != null ? domInstance : newDomInstance;
 	}
 
 	boolean isResolvedTypeInferredFromExpectedType(MethodInvocation methodInvocation) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 GK Software AG and others.
+ * Copyright (c) 2013, 2015 GK Software AG and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -137,9 +137,9 @@ public class NullAnnotationMatching {
 	 * @return a status object representing the severity of mismatching plus optionally a supertype hint
 	 */
 	public static NullAnnotationMatching analyse(TypeBinding requiredType, TypeBinding providedType, TypeBinding providedSubstitute, int nullStatus, CheckMode mode) {
+		if (!requiredType.enterRecursiveFunction())
+			return NullAnnotationMatching.NULL_ANNOTATIONS_OK;
 		try {
-			if (!requiredType.enterRecursiveFunction())
-				return NullAnnotationMatching.NULL_ANNOTATIONS_OK;
 			int severity = 0;
 			TypeBinding superTypeHint = null;
 			NullAnnotationMatching okStatus = NullAnnotationMatching.NULL_ANNOTATIONS_OK;
@@ -206,12 +206,13 @@ public class NullAnnotationMatching {
 				}
 				if (severity < 2) {
 					TypeBinding providedSuper = providedType.findSuperTypeOriginatingFrom(requiredType);
+					TypeBinding providedSubstituteSuper = providedSubstitute != null ? providedSubstitute.findSuperTypeOriginatingFrom(requiredType) : null;
 					if (providedSuper != providedType) //$IDENTITY-COMPARISON$
 						superTypeHint = providedSuper;
 					if (requiredType.isParameterizedType()  && providedSuper instanceof ParameterizedTypeBinding) { // TODO(stephan): handle providedType.isRaw()
 						TypeBinding[] requiredArguments = ((ParameterizedTypeBinding) requiredType).arguments;
 						TypeBinding[] providedArguments = ((ParameterizedTypeBinding) providedSuper).arguments;
-						TypeBinding[] providedSubstitutes = (providedSubstitute instanceof ParameterizedTypeBinding) ? ((ParameterizedTypeBinding)providedSubstitute).arguments : null;
+						TypeBinding[] providedSubstitutes = (providedSubstituteSuper instanceof ParameterizedTypeBinding) ? ((ParameterizedTypeBinding)providedSubstituteSuper).arguments : null;
 						if (requiredArguments != null && providedArguments != null && requiredArguments.length == providedArguments.length) {
 							for (int i = 0; i < requiredArguments.length; i++) {
 								TypeBinding providedArgSubstitute = providedSubstitutes != null ? providedSubstitutes[i] : null;

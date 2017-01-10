@@ -787,19 +787,19 @@ public class InferenceContext18 {
 			}
 			return reduceAndIncorporate(ConstraintTypeFormula.create(r1, r2, ReductionResult.SUBTYPE));
 		} else if (expri instanceof ReferenceExpression && ((ReferenceExpression)expri).isExactMethodReference()) {
+			ReferenceExpression reference = (ReferenceExpression) expri;
 			for (int i = 0; i < u.length; i++) {
-				ReferenceExpression reference = (ReferenceExpression) expri;
 				if (!reduceAndIncorporate(ConstraintTypeFormula.create(u[i], v[i], ReductionResult.SAME)))
 					return false;
-				if (r2.id == TypeIds.T_void)
-					return true;
-				MethodBinding method = reference.findCompileTimeMethodTargeting(null, this.scope); // TODO directly access exactMethodBinding!
-				TypeBinding returnType = method.isConstructor() ? method.declaringClass : method.returnType;
-				if (r1.isPrimitiveType() && !r2.isPrimitiveType() && returnType.isPrimitiveType()) 
-					return true;
-				if (r2.isPrimitiveType() && !r1.isPrimitiveType() && !returnType.isPrimitiveType())
-					return true;
 			}
+			if (r2.id == TypeIds.T_void)
+				return true;
+			MethodBinding method = reference.getExactMethod();
+			TypeBinding returnType = method.isConstructor() ? method.declaringClass : method.returnType;
+			if (r1.isPrimitiveType() && !r2.isPrimitiveType() && returnType.isPrimitiveType()) 
+				return true;
+			if (r2.isPrimitiveType() && !r1.isPrimitiveType() && !returnType.isPrimitiveType())
+				return true;
 			return reduceAndIncorporate(ConstraintTypeFormula.create(r1, r2, ReductionResult.SUBTYPE));
 		} else if (expri instanceof ConditionalExpression) {
 			ConditionalExpression cond = (ConditionalExpression) expri;
@@ -1429,6 +1429,8 @@ public class InferenceContext18 {
 	public void rebindInnerPolies(BoundSet bounds, TypeBinding[] parameterTypes) {
 		// This updates all remaining poly expressions that are direct arguments of the current invocation:
 		// (handles FunctionalExpression & ConditionalExpression)
+		if (this.currentInvocation instanceof ReferenceExpression)
+			return; // no inner expressions
 		boolean isVarargs = this.inferenceKind == CHECK_VARARG;
 		acceptPendingPolyArguments(bounds, parameterTypes, isVarargs);
 		// This loops over all poly expressions for which a sub-inference was triggered:
@@ -1436,7 +1438,17 @@ public class InferenceContext18 {
 		int len = this.innerPolies.size();
 		for (int i = 0; i < len; i++) {
 			Expression inner = (Expression) this.innerPolies.get(i);
-			if (inner instanceof Invocation) {
+			if (inner instanceof ReferenceExpression) {
+				ReferenceExpression referenceExpression = (ReferenceExpression) inner;
+				MethodBinding compileTimeDecl = referenceExpression.prepareForInferenceResult(this.scope);
+				if	(compileTimeDecl != null) {
+	  				TypeVariableBinding[] variables = compileTimeDecl.typeVariables;
+					if (variables != Binding.NO_TYPE_VARIABLES) {
+						TypeBinding[] arguments = getSolutions(variables, (InvocationSite) inner, bounds);
+						referenceExpression.binding = this.environment.createParameterizedGenericMethod(compileTimeDecl, arguments);
+					}
+				}
+			} else if (inner instanceof Invocation) {
 				Invocation innerMessage = (Invocation) inner;
 				TypeBinding innerTargetType = inner.expectedType(); // may be set from acceptPendingPolyArguments
 				if (innerTargetType != null && !innerTargetType.isProperType(true))
@@ -1511,7 +1523,10 @@ public class InferenceContext18 {
 					expression.setExpectedType(targetType);
 				}
 			} else {
-				expression.checkAgainstFinalTargetType(targetType, this.scope);
+				if (this.innerPolies.contains(expression)) // may get here for ReferenceExpressions ...
+					expression.setExpectedType(targetType); // ... prepare for final inference via rebindInnerPolies
+				else
+					expression.checkAgainstFinalTargetType(targetType, this.scope);
 			}
 		}
 	}

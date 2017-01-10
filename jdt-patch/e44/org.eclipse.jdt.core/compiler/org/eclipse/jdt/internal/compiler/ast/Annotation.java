@@ -401,7 +401,7 @@ public abstract class Annotation extends Expression {
 						break;
 					} else if (valueAttribute.compilerElementPair != null) {
 						value = valueAttribute.compilerElementPair.value;
-						}
+					}
 				} else if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8) { // fetch default value  - TODO: cache it?
 					MethodBinding[] methods = annotationType.methods();
 					if (methods != null && methods.length == 1) {
@@ -414,7 +414,7 @@ public abstract class Annotation extends Expression {
 					tagBits |= nullTagBitsFromAnnotationValue(value);
 				} else {
 					// neither explicit value, nor default value from DefaultLocation (1.8)
-				tagBits |= TagBits.AnnotationNonNullByDefault;
+					tagBits |= TagBits.AnnotationNonNullByDefault;
 				}
 				break;
 		}
@@ -781,7 +781,7 @@ public abstract class Annotation extends Expression {
 			}
 		}
 		if (isSuppressingWarnings && suppressWarningIrritants != null) {
-			scope.referenceCompilationUnit().recordSuppressWarnings(suppressWarningIrritants, this, startSuppresss, endSuppress);
+			scope.referenceCompilationUnit().recordSuppressWarnings(suppressWarningIrritants, this, startSuppresss, endSuppress, scope.referenceContext());
 		}
 	}
 
@@ -890,7 +890,7 @@ public abstract class Annotation extends Expression {
 		tagBits &= ~Binding.NullnessDefaultMASK;
 
 		// record annotation positions in the compilation result
-		scope.referenceCompilationUnit().recordSuppressWarnings(IrritantSet.NLS, null, this.sourceStart, this.declarationSourceEnd);
+		scope.referenceCompilationUnit().recordSuppressWarnings(IrritantSet.NLS, null, this.sourceStart, this.declarationSourceEnd, scope.referenceContext());
 		if (this.recipient != null) {
 			int kind = this.recipient.kind();
 			if (tagBits != 0 || defaultNullness != 0) {

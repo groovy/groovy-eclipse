@@ -181,6 +181,9 @@ public IType createType(String contents, IJavaElement sibling, boolean force, IP
 }
 public boolean equals(Object o) {
 	if (!(o instanceof SourceType)) return false;
+	if (((SourceType) o).isLambda()) 
+		return false;
+
 	return super.equals(o);
 }
 /*

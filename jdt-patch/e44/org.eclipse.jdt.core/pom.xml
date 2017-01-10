@@ -10,19 +10,18 @@
      Igor Fedorenko - initial implementation
      Kris De Volder - adapted for greclipse build.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<relativePath>../../../pom.xml</relativePath>
-		<groupId>org.codehaus.groovy.eclipse</groupId>
-		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-		<version>2.9.2-SNAPSHOT</version>
-	</parent>
-	<groupId>org.codehaus.groovy.eclipse</groupId>
-	<artifactId>org.eclipse.jdt.core</artifactId>
-	<version>3.10.0-SNAPSHOT</version>
-	<packaging>eclipse-plugin</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <relativePath>../../../pom.xml</relativePath>
+    <groupId>org.codehaus.groovy.eclipse</groupId>
+    <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+    <version>2.9.2-SNAPSHOT</version>
+  </parent>
+  <groupId>org.codehaus.groovy.eclipse</groupId>
+  <artifactId>org.eclipse.jdt.core</artifactId>
+  <version>3.10.2-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
 
   <properties>
     <defaultSigning-excludeInnerJars>true</defaultSigning-excludeInnerJars>
@@ -41,7 +40,7 @@
 							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
 						</replace>
 						<replace token="bundle_version" value="${unqualifiedVersion}" dir="${project.build.directory}/classes">
-							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties" />
+							<include name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
 						</replace>
 					</tasks>
 				</configuration>
@@ -125,6 +124,7 @@
                   <directory>${project.basedir}/scripts</directory>
                   <includes>
 				    <include>about.html</include>
+				    <include>ecj.1</include>
                   </includes>
                 </fileSet>
                 <fileSet>

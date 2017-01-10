@@ -196,7 +196,10 @@ private ASTNode getExceptionType(int index) {
 	return node;
 }
 
-
+@Override
+public FlowContext getInitializationContext() {
+	return this.initializationParent;
+}
 
 public String individualToString() {
 	StringBuffer buffer = new StringBuffer("Exception flow context"); //$NON-NLS-1$

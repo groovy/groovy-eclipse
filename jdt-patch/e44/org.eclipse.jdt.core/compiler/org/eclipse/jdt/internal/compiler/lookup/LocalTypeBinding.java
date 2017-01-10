@@ -78,12 +78,19 @@ public void addInnerEmulationDependent(BlockScope dependentScope, boolean wasEnc
 	//  System.out.println("Adding dependency: "+ new String(scope.enclosingType().readableName()) + " --> " + new String(this.readableName()));
 }
 
+@Override
+public MethodBinding enclosingMethod() {
+	return this.enclosingMethod;
+}
+
 /*
  * Returns the anonymous original super type (in some error cases, superclass may get substituted with Object)
  */
 public ReferenceBinding anonymousOriginalSuperType() {
 	if (!isPrototype())
 		return ((LocalTypeBinding) this.prototype).anonymousOriginalSuperType();
+	if (this.superclass == null && this.scope != null)
+		return this.scope.getJavaLangObject();
 	
 	if (this.superInterfaces != Binding.NO_SUPERINTERFACES) {
 		return this.superInterfaces[0];

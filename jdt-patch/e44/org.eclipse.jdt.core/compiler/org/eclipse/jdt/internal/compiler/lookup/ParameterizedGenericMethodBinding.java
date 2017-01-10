@@ -19,12 +19,15 @@
  *								Bug 418743 - [1.8][null] contradictory annotations on invocation of generic method not reported
  *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *								Bug 434602 - Possible error with inferred null annotations leading to contradictory null annotations
+ *								Bug 434483 - [1.8][compiler][inference] Type inference not picked up with method reference
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.Invocation;
 import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
+import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -100,6 +103,8 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 					infCtx18 = invocationSite.freshInferenceContext(scope);
 				else if (invocationSite instanceof Invocation && originalMethod instanceof ParameterizedGenericMethodBinding)
 					infCtx18 = ((Invocation) invocationSite).getInferenceContext((ParameterizedGenericMethodBinding) originalMethod);
+				if (infCtx18 == null)
+					return originalMethod;
 			}
 			if (infCtx18 != null) {
 				try {
@@ -126,6 +131,8 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 						if (provisionalResult != null && infCtx18.isResolved(provisionalResult)) {
 							infCtx18.storedSolution = provisionalResult;
 							infCtx18.stepCompleted = InferenceContext18.APPLICABILITY_INFERRED;
+							if (invocationSite instanceof ReferenceExpression)
+								((ReferenceExpression) invocationSite).inferenceKind = infCtx18.inferenceKind;
 						}
 					} else {
 						provisionalResult = infCtx18.storedSolution;
@@ -164,12 +171,14 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 								if (compilerOptions.isAnnotationBasedNullAnalysisEnabled)
 									NullAnnotationMatching.checkForContraditions(methodSubstitute, invocationSite, scope);
 								infCtx18.rebindInnerPolies(result, methodSubstitute.parameters);
-								return methodSubstitute.boundCheck18(scope, arguments);
+								MethodBinding problemMethod = methodSubstitute.boundCheck18(scope, arguments);
+								if (problemMethod != null)
+									return problemMethod;
 							} else {
 								if (invocationSite instanceof Invocation)
 									((Invocation) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
-								return methodSubstitute;
 							}
+							return methodSubstitute;
 						}
 					}
 					return null;

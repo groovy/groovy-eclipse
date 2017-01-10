@@ -254,7 +254,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		MethodBinding functionType = t.getSingleAbstractMethod(inferenceContext.scope, true);
 		if (functionType == null)
 			return FALSE;
-		// potentially-applicable method for the method reference when targeting T (15.28.1),
+		// potentially-applicable method for the method reference when targeting T (15.13.1),
 		MethodBinding potentiallyApplicable = reference.findCompileTimeMethodTargeting(t, inferenceContext.scope);
 		if (potentiallyApplicable == null)
 			return FALSE;
@@ -285,7 +285,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			for (int i = 0; i < n; i++)
 				if (!functionType.parameters[i].isProperType(true))
 					return FALSE;
-			// Otherwise, a search for a compile-time declaration is performed, as defined in 15.28.1....
+			// Otherwise, a search for a compile-time declaration is performed, as defined in 15.13.1....
 			// Note: we currently don't distinguish search for a potentially-applicable method from searching the compiler-time declaration,
 			// hence reusing the method binding from above
 			MethodBinding compileTimeDecl = potentiallyApplicable;
@@ -295,18 +295,19 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			if (r.id == TypeIds.T_void)
 				return TRUE;
 			// ignore parameterization of resolve result and do a fresh start:
-			MethodBinding original = compileTimeDecl.original();
+			MethodBinding original = compileTimeDecl.shallowOriginal();
+			TypeBinding compileTypeReturn = original.isConstructor() ? original.declaringClass : original.returnType;
 			if (reference.typeArguments == null
-					&& ((original.typeVariables() != Binding.NO_TYPE_VARIABLES && r.mentionsAny(original.typeVariables(), -1))
+					&& ((original.typeVariables() != Binding.NO_TYPE_VARIABLES && compileTypeReturn.mentionsAny(original.typeVariables(), -1))
 						|| (original.isConstructor() && original.declaringClass.typeVariables() != Binding.NO_TYPE_VARIABLES)))
 							// not checking r.mentionsAny for constructors, because A::new resolves to the raw type
 							// whereas in fact the type of all expressions of this shape depends on their type variable (if any)
 			{
-				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, null/*no invocation arguments available*/);
+				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(functionType.parameters));
 
 				// Invocation Applicability Inference: 18.5.1 & Invocation Type Inference: 18.5.2
 				try {
-					inferInvocationApplicability(inferenceContext, original, functionType.parameters, original.isConstructor()/*mimic a diamond?*/, inferenceContext.inferenceKind);
+					inferInvocationApplicability(inferenceContext, original, functionType.parameters, original.isConstructor()/*mimic a diamond?*/, reference.inferenceKind);
 					if (!inferPolyInvocationType(inferenceContext, reference, r, original))
 						return FALSE;
 					if (!original.isConstructor() 

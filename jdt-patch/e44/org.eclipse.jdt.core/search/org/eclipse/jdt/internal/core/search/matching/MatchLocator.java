@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -11,7 +12,7 @@
  *								Bug 377883 - NPE on open Call Hierarchy
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.IOException;
@@ -1147,9 +1148,9 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 				// GROOVY: delay cleanup for groovy matches.
 				// because it clears out 'scope' backpointer that may be used later in 'completeTypeBindings'
 				// was: if (!possibleMatch.nodeSet.mustResolve)
-				 if ((!possibleMatch.nodeSet.mustResolve) && !alreadyMatched.contains(possibleMatch))
-			    // GROOVY end
-					 possibleMatch.cleanUp();
+				if ((!possibleMatch.nodeSet.mustResolve) && !alreadyMatched.contains(possibleMatch))
+				// GROOVY end
+					possibleMatch.cleanUp();
 			}
 		}
 		if (mustResolve)

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -13,7 +14,7 @@
  *								Bug 434570 - Generic type mismatch for parametrized class annotation attribute with inner class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -613,7 +614,7 @@ private Binding findImport(char[][] compoundName, int length) {
 	}
 	// GROOVY start:
 	/* old {
-    if (!type.canBeSeenBy(this.fPackage))
+	if (!type.canBeSeenBy(this.fPackage))
 	} new */
 	if (!canBeSeenBy(type,this.fPackage))
 	// GROOVY end
@@ -1017,8 +1018,6 @@ private int checkAndRecordImportBinding(
 			: referenceBinding;
 		if (importReference.isTypeUseDeprecated(typeToCheck, this))
 			problemReporter().deprecatedType(typeToCheck, importReference);
-
-
 
 		// GROOVY start: use any aliased name for lookup
 		/* old {

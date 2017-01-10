@@ -33,7 +33,7 @@ public class RecoveredLocalVariable extends RecoveredStatement {
 	public int modifiersStart;
 
 	public LocalDeclaration localDeclaration;
-	boolean alreadyCompletedLocalInitialization;
+	public boolean alreadyCompletedLocalInitialization;
 public RecoveredLocalVariable(LocalDeclaration localDeclaration, RecoveredElement parent, int bracketBalance){
 	super(localDeclaration, parent, bracketBalance);
 	this.localDeclaration = localDeclaration;

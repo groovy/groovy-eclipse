@@ -56,28 +56,28 @@ public abstract class CommitRollbackParser implements TerminalTokens, ParserBasi
 	// We get here on real syntax error or syntax error triggered by fake EOF at completion site, never due to triggered recovery.
 	protected int fallBackToSpringForward(Statement unused) {
 		int nextToken;
-		boolean atCompletionSite = false;
 		int automatonState = automatonState();
 				
 		// If triggered fake EOF at completion site, see if the real next token would have passed muster.
 		if (this.currentToken == TokenNameEOF) {
 			if (this.scanner.eofPosition < this.scanner.source.length) {
-				atCompletionSite = true;
+				shouldStackAssistNode();
 				this.scanner.eofPosition = this.scanner.source.length;
 				nextToken = getNextToken();
 				if (automatonWillShift(nextToken, automatonState)) {
 					this.currentToken = nextToken;
 					return RESUME;
 				}
+				this.scanner.ungetToken(nextToken); // spit out what has been bitten more than we can chew.
 			} else {
-				nextToken = TokenNameEOF;
+				return HALT; // don't know how to proceed.
 			}
 		} else {
 			nextToken = this.currentToken;
+			this.scanner.ungetToken(nextToken);
+			if (nextToken == TokenNameRBRACE)
+				ignoreNextClosingBrace(); // having ungotten it, recoveryTokenCheck will see this again. 
 		}
-		if (nextToken == TokenNameEOF)
-			return HALT; // don't know how to proceed.
-		this.scanner.ungetToken(nextToken); // spit out what has been bitten more than we can chew.
 		// OK, next token is no good to resume "in place", attempt some local repair. FIXME: need to make sure we don't get stuck keep reducing empty statements !!
 		for (int i = 0, length = RECOVERY_TOKENS.length; i < length; i++) {
 			if (automatonWillShift(RECOVERY_TOKENS[i], automatonState)) {
@@ -90,13 +90,20 @@ public abstract class CommitRollbackParser implements TerminalTokens, ParserBasi
 			return RESTART;
 
 		this.copyState(this.snapShot);
-		if (atCompletionSite) {
+		if (assistNodeNeedsStacking()) {
 			this.currentToken = TokenNameSEMICOLON;
-			shouldStackAssistNode();
 			return RESUME;
 		}
 		this.currentToken = this.scanner.fastForward(unused);
 		return RESUME;
+	}
+
+	protected void ignoreNextClosingBrace() {
+		return;
+	}
+
+	protected boolean assistNodeNeedsStacking() {
+		return false;
 	}
 
 	public abstract int automatonState();

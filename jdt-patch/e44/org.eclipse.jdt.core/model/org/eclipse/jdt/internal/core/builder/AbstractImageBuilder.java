@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,10 +10,11 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.resources.*;
+
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.core.util.CompilerUtils;
@@ -216,7 +218,7 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
     // determine if this is a Groovy project
     final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
     // GROOVY end
-    for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
+	for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
 		final ClasspathMultiDirectory sourceLocation = this.sourceLocations[i];
 		final char[][] exclusionPatterns = sourceLocation.exclusionPatterns;
 		final char[][] inclusionPatterns = sourceLocation.inclusionPatterns;
@@ -286,6 +288,7 @@ protected void cleanUp() {
 	this.javaBuilder = null;
 	this.nameEnvironment = null;
 	this.sourceLocations = null;
+	this.notifier = null;
 	// GROOVY start
 	if (this.compiler!=null && this.compiler.parser!=null) {
 		this.compiler.parser.reset();

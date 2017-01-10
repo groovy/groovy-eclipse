@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeDetector;
@@ -261,7 +262,7 @@ public class InternalExtendedCompletionContext {
 		LocalDeclaration local = binding.declaration;
 
 		JavaElement parent = null;
-		ReferenceContext referenceContext = binding.declaringScope.referenceContext();
+		ReferenceContext referenceContext = binding.declaringScope.isLambdaSubscope() ? binding.declaringScope.namedMethodScope().referenceContext() : binding.declaringScope.referenceContext();
 		if (referenceContext instanceof AbstractMethodDeclaration) {
 			AbstractMethodDeclaration methodDeclaration = (AbstractMethodDeclaration) referenceContext;
 			parent = this.getJavaElementOfCompilationUnit(methodDeclaration, methodDeclaration.binding);
@@ -281,7 +282,7 @@ public class InternalExtendedCompletionContext {
 				local.declarationSourceEnd,
 				local.sourceStart,
 				local.sourceEnd,
-				Util.typeSignature(local.type),
+				local.type == null ? Signature.createTypeSignature(binding.type.readableName(), true) : Util.typeSignature(local.type),
 				binding.declaration.annotations,
 				local.modifiers,
 				local.getKind() == AbstractVariableDeclaration.PARAMETER);

@@ -194,8 +194,8 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	}
 
     public boolean isProperType(boolean admitCapture18) {
-    	TypeBinding type = actualType();
-    	return type != null && type.isProperType(admitCapture18);
+    	TypeBinding actualType = actualType();
+    	return actualType != null && actualType.isProperType(admitCapture18);
     }
 
 	protected void initializeArguments() {

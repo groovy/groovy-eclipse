@@ -134,6 +134,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 	public void endVisit(QualifiedTypeReference qualifiedTypeReference, ClassScope scope) {
 		endVisit(qualifiedTypeReference);
 	}
+	@Override
+	public void endVisit(ReferenceExpression referenceExpression, BlockScope blockScope) {
+		endVisit(referenceExpression);	
+	}
 	public void endVisit(SingleNameReference singleNameReference, BlockScope scope) {
 		endVisit(singleNameReference);
 	}
@@ -253,6 +257,10 @@ public class CompletionNodeDetector extends ASTVisitor {
 	}
 	public boolean visit(QualifiedTypeReference qualifiedTypeReference, ClassScope scope) {
 		return this.visit(qualifiedTypeReference);
+	}
+	@Override
+	public boolean visit(ReferenceExpression referenceExpression, BlockScope blockScope) {
+		return this.visit(referenceExpression);
 	}
 	public boolean visit(SingleNameReference singleNameReference, BlockScope scope) {
 		return this.visit(singleNameReference);

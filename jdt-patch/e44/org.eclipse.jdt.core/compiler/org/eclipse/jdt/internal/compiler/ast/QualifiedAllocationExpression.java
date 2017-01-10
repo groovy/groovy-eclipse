@@ -370,14 +370,14 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		final boolean isDiamond = this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
 		if (this.typeArguments != null) {
 			int length = this.typeArguments.length;
-			boolean argHasError = sourceLevel < ClassFileConstants.JDK1_5;
+			this.argumentsHaveErrors = sourceLevel < ClassFileConstants.JDK1_5;
 			this.genericTypeArguments = new TypeBinding[length];
 			for (int i = 0; i < length; i++) {
 				TypeReference typeReference = this.typeArguments[i];
 				if ((this.genericTypeArguments[i] = typeReference.resolveType(scope, true /* check bounds*/)) == null) {
-					argHasError = true;
+					this.argumentsHaveErrors = true;
 				}
-				if (argHasError && typeReference instanceof Wildcard) {
+				if (this.argumentsHaveErrors && typeReference instanceof Wildcard) {
 					scope.problemReporter().illegalUsageOfWildcard(typeReference);
 				}
 			}
@@ -385,7 +385,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				scope.problemReporter().diamondNotWithExplicitTypeArguments(this.typeArguments);
 				return null;
 			}
-			if (argHasError) {
+			if (this.argumentsHaveErrors) {
 				if (this.arguments != null) { // still attempt to resolve arguments
 					for (int i = 0, max = this.arguments.length; i < max; i++) {
 						this.arguments[i].resolveType(scope);
@@ -410,7 +410,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				if ((argumentTypes[i] = argument.resolveType(scope)) == null){
 					hasError = true;
 				}
-				if (sourceLevel >= ClassFileConstants.JDK1_8 && argument.isPolyExpression()) {
+				if (sourceLevel >= ClassFileConstants.JDK1_8 && (argument.isPolyExpression() || (argument instanceof Invocation && ((Invocation)argument).usesInference()))) {
 					if (this.innerInferenceHelper == null)
 						this.innerInferenceHelper = new InnerInferenceHelper();
 				}

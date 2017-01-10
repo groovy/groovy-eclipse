@@ -43,4 +43,5 @@ public interface ProblemReasons {
 	final int ParameterizedMethodExpectedTypeProblem = 23;
 	final int ApplicableMethodOverriddenByInapplicable = 24;
 	final int ContradictoryNullAnnotations = 25;
+	final int NoSuchMethodOnArray = 26;
 }

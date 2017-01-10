@@ -272,27 +272,33 @@ public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flow
 public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBinding compileTimeType) {
 	if (runtimeTimeType == null || compileTimeType == null)
 		return;
-	if ((this.bits & Binding.FIELD) != 0 && this.binding != null && this.binding.isValidBinding()) {
-		// set the generic cast after the fact, once the type expectation is fully known (no need for strict cast)
-		FieldBinding field = (FieldBinding) this.binding;
-		FieldBinding originalBinding = field.original();
-		TypeBinding originalType = originalBinding.type;
-		// extra cast needed if field type is type variable
-		if (originalType.leafComponentType().isTypeVariable()) {
-	    	TypeBinding targetType = (!compileTimeType.isBaseType() && runtimeTimeType.isBaseType())
-	    		? compileTimeType  // unboxing: checkcast before conversion
-	    		: runtimeTimeType;
-	        this.genericCast = originalType.genericCast(scope.boxing(targetType));
-	        if (this.genericCast instanceof ReferenceBinding) {
+	if (this.binding != null && this.binding.isValidBinding()) {
+		TypeBinding originalType = null;
+		if ((this.bits & Binding.FIELD) != 0) {
+			// set the generic cast after the fact, once the type expectation is fully known (no need for strict cast)
+			FieldBinding field = (FieldBinding) this.binding;
+			FieldBinding originalBinding = field.original();
+			originalType = originalBinding.type;
+		} else if ((this.bits & Binding.LOCAL) != 0) {
+			LocalVariableBinding local = (LocalVariableBinding) this.binding;
+			originalType = local.type;
+		}
+		// extra cast needed if field/local type is type variable
+		if (originalType != null && originalType.leafComponentType().isTypeVariable()) {
+			TypeBinding targetType = (!compileTimeType.isBaseType() && runtimeTimeType.isBaseType())
+					? compileTimeType  // unboxing: checkcast before conversion
+							: runtimeTimeType;
+			this.genericCast = originalType.genericCast(scope.boxing(targetType));
+			if (this.genericCast instanceof ReferenceBinding) {
 				ReferenceBinding referenceCast = (ReferenceBinding) this.genericCast;
 				if (!referenceCast.canBeSeenBy(scope)) {
-		        	scope.problemReporter().invalidType(this,
-		        			new ProblemReferenceBinding(
-								CharOperation.splitOn('.', referenceCast.shortReadableName()),
-								referenceCast,
-								ProblemReasons.NotVisible));
+					scope.problemReporter().invalidType(this,
+							new ProblemReferenceBinding(
+									CharOperation.splitOn('.', referenceCast.shortReadableName()),
+									referenceCast,
+									ProblemReasons.NotVisible));
 				}
-	        }
+			}
 		}
 	}
 	super.computeConversion(scope, runtimeTimeType, compileTimeType);

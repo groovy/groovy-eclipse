@@ -29,6 +29,9 @@
  *								Bug 428352 - [1.8][compiler] Resolution errors don't always surface
  *								Bug 427163 - [1.8][null] bogus error "Contradictory null specification" on varags
  *								Bug 432348 - [1.8] Internal compiler error (NPE) after upgrade to 1.8
+ *								Bug 440143 - [1.8][null] one more case of contradictory null annotations regarding type variables
+ *								Bug 441693 - [1.8][null] Bogus warning for type argument annotated with @NonNull
+ *								Bug 434483 - [1.8][compiler][inference] Type inference not picked up with method reference
  *     Jesper S Moller - Contributions for
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -690,7 +693,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			final TypeBinding[] parameters = candidateMethod.parameters;
 			Expression[] innerArguments = invocation.arguments();
 			Expression [] arguments = innerArguments;
-			if (infCtx == null && variableArity && parameters.length == arguments.length) { // re-check
+			if (infCtx == null && variableArity && arguments != null && parameters.length == arguments.length) { // re-check
 				TypeBinding lastParam = parameters[parameters.length-1];
 				Expression lastArg = arguments[arguments.length-1];
 				if (lastArg.isCompatibleWith(lastParam, null)) {

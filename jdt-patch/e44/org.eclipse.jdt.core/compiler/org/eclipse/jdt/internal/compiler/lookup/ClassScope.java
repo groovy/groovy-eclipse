@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -23,7 +24,7 @@
  *                          Bug 415821 - [1.8][compiler] CLASS_EXTENDS target type annotation missing for anonymous classes
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1236,6 +1237,11 @@ public class ClassScope extends Scope {
 			// force its superclass & superinterfaces to be found... 2 possibilities exist - the source type is included in the hierarchy of:
 			//		- a binary type... this case MUST be caught & reported here
 			//		- another source type... this case is reported against the other source type
+			if (superType.problemId() != ProblemReasons.NotFound && (superType.tagBits & TagBits.HierarchyHasProblems) != 0) { 
+				sourceType.tagBits |= TagBits.HierarchyHasProblems;
+				problemReporter().hierarchyHasProblems(sourceType);
+				return true;
+			}
 			boolean hasCycle = false;
 			ReferenceBinding parentType = superType.superclass();
 			if (parentType != null) {
@@ -1365,7 +1371,7 @@ public class ClassScope extends Scope {
 	}
 
 	public String toString() {
-		if (this.referenceContext != null && this.referenceContext.binding!=null)
+		if (this.referenceContext != null)
 			return "--- Class Scope ---\n\n"  //$NON-NLS-1$
 							+ this.referenceContext.binding.toString();
 		return "--- Class Scope ---\n\n Binding not initialized" ; //$NON-NLS-1$

@@ -20,8 +20,12 @@
  *                          Bug 415399 - [1.8][compiler] Type annotations on constructor results dropped by the code generator
  *                          Bug 415470 - [1.8][compiler] Type annotations on class declaration go vanishing
  *                          Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
+ *                          Bug 434556 - Broken class file generated for incorrect annotation usage
+ *                          Bug 442416 - $deserializeLambda$ missing cases for nested lambdas
  *     Stephan Herrmann - Contribution for
  *							Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
+ *     Olivier Tardieu tardieu@us.ibm.com - Contributions for
+ *							Bug 442416 - $deserializeLambda$ missing cases for nested lambdas
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
 
@@ -873,6 +877,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		
 		// add synthetic methods infos
 		int emittedSyntheticsCount = 0;
+		SyntheticMethodBinding deserializeLambdaMethod = null;
 		boolean continueScanningSynthetics = true;
 		while (continueScanningSynthetics) {
 			continueScanningSynthetics = false;
@@ -933,13 +938,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 							addSyntheticFactoryMethod(syntheticMethod);
 							break;	
 						case SyntheticMethodBinding.DeserializeLambda:
-							// TODO [andy] do we need to do this after the loop to ensure it is done last?
-							addSyntheticDeserializeLambda(syntheticMethod,this.referenceBinding.syntheticMethods()); 
+							deserializeLambdaMethod = syntheticMethod; // delay processing
 							break;
 					}
 				}
 				emittedSyntheticsCount = currentSyntheticsCount;
 			}
+		}
+		if (deserializeLambdaMethod != null) {
+			addSyntheticDeserializeLambda(deserializeLambdaMethod,this.referenceBinding.syntheticMethods()); 
 		}
 	}
 
@@ -2258,7 +2265,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				LocalVariableBinding localVariable = annotationContext.variableBinding;
 				int actualSize = 0;
 				int initializationCount = localVariable.initializationCount;
-				actualSize += 6 * initializationCount;
+				actualSize += 2 /* for number of entries */ + (6 * initializationCount);
 				// reserve enough space
 				if (this.contentsOffset + actualSize >= this.contents.length) {
 					resizeContents(actualSize);

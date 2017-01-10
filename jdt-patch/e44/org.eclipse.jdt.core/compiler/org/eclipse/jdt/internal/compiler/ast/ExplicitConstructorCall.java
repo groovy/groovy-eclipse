@@ -394,7 +394,7 @@ public class ExplicitConstructorCall extends Statement implements Invocation {
 					if ((argumentTypes[i] = argument.resolveType(scope)) == null) {
 						argHasError = true;
 					}
-					if (sourceLevel >= ClassFileConstants.JDK1_8 && argument.isPolyExpression()) {
+					if (sourceLevel >= ClassFileConstants.JDK1_8 && (argument.isPolyExpression() || ((argument instanceof Invocation) && ((Invocation) argument).usesInference()))) {
 						if (this.innerInferenceHelper == null)
 							this.innerInferenceHelper = new InnerInferenceHelper();
 					}

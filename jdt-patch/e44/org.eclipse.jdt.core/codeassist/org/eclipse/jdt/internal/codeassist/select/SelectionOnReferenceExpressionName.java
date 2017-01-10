@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IBM Corporation and others.
+ * Copyright (c) 2013, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PolyTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class SelectionOnReferenceExpressionName extends ReferenceExpression {
@@ -41,7 +42,7 @@ public class SelectionOnReferenceExpressionName extends ReferenceExpression {
 
 	public TypeBinding resolveType(BlockScope scope) {
 		TypeBinding type = super.resolveType(scope);
-		if (type instanceof PolyTypeBinding)
+		if (type == null || type instanceof ProblemReferenceBinding || type instanceof PolyTypeBinding)
 			return type;
 		MethodBinding method = getMethodBinding();
 		if (method != null && method.isValidBinding() && !method.isSynthetic())

@@ -2426,8 +2426,17 @@ protected void consumeEmptyStatement() {
 	   decide whether to call contactNodeLists. See Parser.consumeBlockStatement(s) 
 	*/
 	if (this.shouldStackAssistNode && this.assistNode != null)
-		this.astStack[this.astPtr] = this.assistNode;
+		this.astStack[this.astPtr] = this.assistNodeParent instanceof MessageSend ? this.assistNodeParent : this.assistNode;
 	this.shouldStackAssistNode = false;
+}
+@Override
+protected void consumeBlockStatement() {
+	super.consumeBlockStatement();
+	if (this.shouldStackAssistNode && this.assistNode != null) {
+		Statement stmt = (Statement) this.astStack[this.astPtr];
+		if (stmt.sourceStart <= this.assistNode.sourceStart && stmt.sourceEnd >= this.assistNode.sourceEnd)
+			this.shouldStackAssistNode = false;
+	}
 }
 protected void consumeEnhancedForStatement() {
 	super.consumeEnhancedForStatement();
@@ -2604,7 +2613,9 @@ protected void consumeExitVariableWithInitialization() {
 	} else if (this.assistNode != null && this.assistNode == variable.initialization) {
 			this.assistNodeParent = variable;
 	}
-	triggerRecoveryUponLambdaClosure(variable, false);
+	if (triggerRecoveryUponLambdaClosure(variable, false) && !isInsideMethod()) {
+		popElement(K_FIELD_INITIALIZER_DELIMITER);
+	}
 }
 protected void consumeExitVariableWithoutInitialization() {
 	// ExitVariableWithoutInitialization ::= $empty
@@ -2787,7 +2798,7 @@ protected void consumeInsideCastExpression() {
 	}
 	Expression castType = getTypeReference(this.intStack[this.intPtr--]);
 	if (additionalBoundsLength > 0) {
-		bounds[0] = getTypeReference(this.intStack[this.intPtr--]);
+		bounds[0] = (TypeReference) castType;
 		castType = createIntersectionCastTypeReference(bounds); 
 	}
 	if(isParameterized) {
@@ -3263,6 +3274,13 @@ protected void consumeLabel() {
 	pushOnLabelStack(this.identifierStack[this.identifierPtr]);
 	this.pushOnElementStack(K_LABEL, this.labelPtr);
 }
+@Override
+protected void consumeLambdaExpression() {
+	super.consumeLambdaExpression();
+	Expression expression = this.expressionStack[this.expressionPtr];
+	if (this.assistNode == null || !(this.assistNode.sourceStart >= expression.sourceStart && this.assistNode.sourceEnd <= expression.sourceEnd))
+		popElement(K_LAMBDA_EXPRESSION_DELIMITER);
+}
 protected void consumeMarkerAnnotation(boolean isTypeAnnotation) {
 	if (this.topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_ANNOTATION_NAME_AND_RPAREN &&
 			(this.topKnownElementInfo(COMPLETION_OR_ASSIST_PARSER) & ANNOTATION_NAME_COMPLETION) != 0 ) {
@@ -3537,6 +3555,7 @@ protected void consumeToken(int token) {
 	if (token == TokenNameIdentifier
 			&& this.identifierStack[this.identifierPtr] == assistIdentifier()
 			&& this.currentElement == null
+			&& (!isIndirectlyInsideLambdaExpression() || isIndirectlyInsideLambdaBlock())
 			&& isIndirectlyInsideFieldInitialization()) {
 		this.scanner.eofPosition = this.cursorLocation < Integer.MAX_VALUE ? this.cursorLocation+1 : this.cursorLocation;
 	}
@@ -5144,6 +5163,11 @@ public void setAssistIdentifier(char[] assistIdent){
 
 protected void shouldStackAssistNode() {
 	this.shouldStackAssistNode = true;
+}
+
+@Override
+protected boolean assistNodeNeedsStacking() {
+	return this.shouldStackAssistNode;
 }
 
 public  String toString() {

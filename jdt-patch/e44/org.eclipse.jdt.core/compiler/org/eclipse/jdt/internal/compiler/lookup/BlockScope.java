@@ -938,11 +938,9 @@ public final boolean needBlankFinalFieldInitializationCheck(FieldBinding binding
 	boolean isStatic = binding.isStatic();
 	ReferenceBinding fieldDeclaringClass = binding.declaringClass;
 	// loop in enclosing context, until reaching the field declaring context
-	MethodScope methodScope = methodScope();
+	MethodScope methodScope = namedMethodScope();
 	while (methodScope != null) {
 		if (methodScope.isStatic != isStatic)
-			return false;
-		if (methodScope.isLambdaScope())
 			return false;
 		if (!methodScope.isInsideInitializer() // inside initializer
 				&& !((AbstractMethodDeclaration) methodScope.referenceContext).isInitializationMethod()) { // inside constructor or clinit
@@ -955,7 +953,7 @@ public final boolean needBlankFinalFieldInitializationCheck(FieldBinding binding
 		if (!enclosingType.erasure().isAnonymousType()) {
 			return false; // only check inside anonymous type
 		}
-		methodScope = methodScope.enclosingMethodScope();
+		methodScope = methodScope.enclosingMethodScope().namedMethodScope();
 	}
 	return false;
 }
@@ -1032,6 +1030,11 @@ public String toString(int tab) {
 private List trackingVariables; // can be null if no resources are tracked
 /** Used only during analyseCode and only for checking if a resource was closed in a finallyBlock. */
 public FlowInfo finallyInfo;
+public boolean shouldConsultShadowOriginal;
+
+public boolean shouldConsultShadowOriginal() {
+	return this.shouldConsultShadowOriginal;
+}
 /**
  * Register a tracking variable and compute its id.
  */

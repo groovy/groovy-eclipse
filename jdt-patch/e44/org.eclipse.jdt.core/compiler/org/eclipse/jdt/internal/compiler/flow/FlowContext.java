@@ -607,6 +607,13 @@ public FlowContext getTargetContextForDefaultContinue() {
 }
 
 /** 
+ * Answer flow context that corresponds to initialization. Suitably override in subtypes.
+ */
+public FlowContext getInitializationContext() {
+	return null;
+}
+
+/** 
  * Answer the parent flow context but be careful not to cross the boundary of a nested type,
  * or null if no such parent exists. 
  */

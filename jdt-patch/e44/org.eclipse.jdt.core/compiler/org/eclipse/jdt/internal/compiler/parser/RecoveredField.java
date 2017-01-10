@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
@@ -48,6 +49,14 @@ public RecoveredField(FieldDeclaration fieldDeclaration, RecoveredElement parent
 	super(parent, bracketBalance, parser);
 	this.fieldDeclaration = fieldDeclaration;
 	this.alreadyCompletedFieldInitialization = fieldDeclaration.initialization != null;
+}
+/*
+ * Record a local declaration
+ */
+public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanceValue) {
+	if (this.lambdaNestLevel > 0) // current element is really the lambda which is recovered in full elsewhere.
+		return this;
+	return super.add(localDeclaration, bracketBalanceValue);
 }
 /*
  * Record a field declaration

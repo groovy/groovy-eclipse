@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -36,7 +37,7 @@
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
+
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -1110,10 +1111,10 @@ boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations) {
 			if (nullDefault != 0)
 				return (nullDefault & location) != 0;
 		} else {
-		if ((currentType.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
-			return true;
-		if ((currentType.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
-			return false;
+			if ((currentType.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
+				return true;
+			if ((currentType.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
+				return false;
 		}
 		currentType = currentType.enclosingType();
 	}
@@ -1121,7 +1122,7 @@ boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations) {
 	if (useTypeAnnotations)
 		return (this.getPackage().defaultNullness & location) != 0;
 	else
-	return this.getPackage().defaultNullness == NONNULL_BY_DEFAULT;
+		return this.getPackage().defaultNullness == NONNULL_BY_DEFAULT;
 }
 
 int getNullDefault() {
@@ -1903,19 +1904,18 @@ private MethodBinding [] getInterfaceAbstractContracts(Scope scope) throws Inval
 			continue;
 		if (!method.isValidBinding()) 
 			throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
-		if (method.isDefaultMethod()) {
-			for (int j = 0; j < contractsCount; j++) {
-				if (contracts[j] == null)
-					continue;
-				if (MethodVerifier.doesMethodOverride(method, contracts[j], scope.environment())) {
-					contractsCount--;
-					// abstract method from super type rendered default by present interface ==> contracts[j] = null;
-					if (j < contractsCount)
-						System.arraycopy(contracts, j+1, contracts, j, contractsCount - j);
-				}
+		for (int j = 0; j < contractsCount; j++) {
+			if (contracts[j] == null)
+				continue;
+			if (MethodVerifier.doesMethodOverride(method, contracts[j], scope.environment())) {
+				contractsCount--;
+				// abstract method from super type overridden by present interface ==> contracts[j] = null;
+				if (j < contractsCount)
+					System.arraycopy(contracts, j+1, contracts, j, contractsCount - j);
 			}
-			continue; // skip default method itself
 		}
+		if (method.isDefaultMethod())
+			continue; // skip default method itself
 		if (contractsCount == contractsLength) {
 			System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength += 16], 0, contractsCount);
 		}
@@ -2066,7 +2066,7 @@ public static boolean isConsistentIntersection(TypeBinding[] intersectingTypes) 
 		TypeBinding current = intersectingTypes[i];
 		ci[i] = (current.isClass() || current.isArrayType())
 					? current : current.superclass();
-	}	
+	}
 	TypeBinding mostSpecific = ci[0];
 	for (int i = 1; i < ci.length; i++) {
 		TypeBinding current = ci[i];

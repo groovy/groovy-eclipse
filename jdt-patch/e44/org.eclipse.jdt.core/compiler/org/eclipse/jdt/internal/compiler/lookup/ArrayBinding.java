@@ -442,7 +442,14 @@ public void swapUnresolved(UnresolvedReferenceBinding unresolvedType, ReferenceB
 		/* Leaf component type is the key in the type system. If it undergoes change, the array has to be rehashed.
 		   We achieve by creating a fresh array with the new component type and equating this array's id with that.
 		   This means this array can still be found under the old key, but that is harmless (since the component type
-		   is always consulted (see TypeSystem.getArrayType())
+		   is always consulted (see TypeSystem.getArrayType()). 
+		   
+		   This also means that this array type is not a fully interned singleton: There is `this' object and there is 
+		   the array that is being created down below that gets cached by the type system and doled out for all further 
+		   array creations against the same (raw) component type, dimensions and annotations. This again is harmless, 
+		   since TypeBinding.id is consulted for (in)equality checks. 
+		   
+		   See https://bugs.eclipse.org/bugs/show_bug.cgi?id=430425 for details and a test case.
 		*/ 
 		if (this.leafComponentType != resolvedType) //$IDENTITY-COMPARISON$
 			this.id = env.createArrayType(this.leafComponentType, this.dimensions, this.typeAnnotations).id;

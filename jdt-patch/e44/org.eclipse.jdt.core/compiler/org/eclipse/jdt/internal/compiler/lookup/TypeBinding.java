@@ -251,6 +251,13 @@ public int depth() {
 	return 0;
 }
 
+/* Answer the receiver's enclosing method ... null if the receiver is not a local type.
+ */
+public MethodBinding enclosingMethod() {
+	return null;
+}
+
+
 /* Answer the receiver's enclosing type... null if the receiver is a top level type or is an array or a non reference type.
  */
 public ReferenceBinding enclosingType() {
@@ -522,6 +529,14 @@ public final boolean isArrayType() {
  */
 public final boolean isBaseType() {
 	return (this.tagBits & TagBits.IsBaseType) != 0;
+}
+
+public boolean isPertinentToApplicability(TypeVariableBinding typeVariable, MethodBinding method) {
+	return true;
+}
+
+public boolean isPertinentToApplicability(TypeBinding argument, MethodBinding method) {
+	return true;
 }
 
 /* Answer true if the receiver is a base type other than void or null

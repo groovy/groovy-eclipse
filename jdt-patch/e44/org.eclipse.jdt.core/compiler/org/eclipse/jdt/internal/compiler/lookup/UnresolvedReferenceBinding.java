@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,8 +39,8 @@ public UnresolvedReferenceBinding(UnresolvedReferenceBinding prototype) {
 }
 
 public TypeBinding clone(TypeBinding outerType) {
-	if (this.resolvedType != null || this.depth() > 0)
-		throw new IllegalStateException();
+	if (this.resolvedType != null)
+		return this.resolvedType.clone(outerType);
 	UnresolvedReferenceBinding copy = new UnresolvedReferenceBinding(this);
 	this.addWrapper(copy, null);
 	return copy;
@@ -94,9 +94,14 @@ ReferenceBinding resolve(LookupEnvironment environment, boolean convertGenericTo
 	}
 	targetType = this.resolvedType;
 	if (targetType == null) {
-		targetType = this.fPackage.getType0(this.compoundName[this.compoundName.length - 1]);
+		char[] typeName = this.compoundName[this.compoundName.length - 1];
+		targetType = this.fPackage.getType0(typeName);
 		if (targetType == this) { //$IDENTITY-COMPARISON$
 			targetType = environment.askForType(this.compoundName);
+		}
+		if ((targetType == null || targetType == this) && CharOperation.contains('.', typeName)) { //$IDENTITY-COMPARISON$
+			// bug 491354: this complements the NameLookup#seekTypes(..), which performs the same adaptation
+			targetType = environment.askForType(this.fPackage, CharOperation.replaceOnCopy(typeName, '.', '$'));
 		}
 		if (targetType == null || targetType == this) { // could not resolve any better, error was already reported against it //$IDENTITY-COMPARISON$
 			// report the missing class file first - only if not resolving a previously missing type
