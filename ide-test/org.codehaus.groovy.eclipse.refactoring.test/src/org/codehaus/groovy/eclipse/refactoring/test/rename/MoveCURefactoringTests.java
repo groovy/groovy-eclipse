@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,10 +164,10 @@ public class MoveCURefactoringTests extends AbstractRefactoringTest {
                 "Groovy.groovy",
                 "Groovy2.groovy",
         }, new String[] {
-                "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }",
-                "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }",
+                "package p1\nimport p2.Groovy2\n\npublic class Groovy { Groovy2 g }",
+                "package p2\nimport p1.Groovy\n\npublic class Groovy2 extends Groovy { }",
         }, new String[] {
-                "package p2\n\npublic class Groovy {\nGroovy2 g }",
+                "package p2\n\npublic class Groovy { Groovy2 g }",
                 "package p2\n\npublic class Groovy2 extends Groovy { }",
         });
     }

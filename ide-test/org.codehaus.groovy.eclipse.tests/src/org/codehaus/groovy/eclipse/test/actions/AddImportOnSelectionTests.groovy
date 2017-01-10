@@ -25,9 +25,11 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     @Override
     protected void setUp() {
+        super.setUp()
         // filter some type suggestions to prevent the import select dialog during tests
         setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'com.sun.*;org.omg.*')
-        super.setUp()
+        // ensure consistent ordering of imports regardless of the target platform's defaults
+        setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
     }
 
     private void addImportOnSelection(CharSequence sourceCode) {
@@ -549,8 +551,8 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
     }
 
     void testAddImportOnImportAnnotation() {
-        addImportOnSelection "@javax.annotation.G${CARET}enerated import java.lang.StringBuffer"
-        assertEditorContents "@Generated import java.lang.StringBuffer\n\nimport javax.annotation.Generated"
+        addImportOnSelection "@javax.annotation.G${CARET}enerated import java.lang.StringBuffer\n\nStringBuffer sb"
+        assertEditorContents "@Generated import java.lang.StringBuffer\n\nimport javax.annotation.Generated\n\nStringBuffer sb"
     }
 
     void testAddImportOnPackageAnnotation() {
