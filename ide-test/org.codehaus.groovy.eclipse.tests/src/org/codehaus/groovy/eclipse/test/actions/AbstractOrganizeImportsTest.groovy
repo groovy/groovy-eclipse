@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.InsertEdit
@@ -49,6 +50,9 @@ abstract class AbstractOrganizeImportsTest extends TestCase {
         EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other2')
         EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other3')
         EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other4')
+
+        // ensure consistent ordering of imports regardless of the target platform's defaults
+        EclipseTestSetup.setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
     }
 
     private static final String CONTENTS_SUPPORTING = '''

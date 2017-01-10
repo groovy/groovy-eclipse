@@ -192,31 +192,46 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testAddImportForGenerics() {
-        String contents = '''
+        String originalContents = '''
             import java.util.Map.Entry
+
             Entry<SecondClass, HTML> entry
             '''
-        doAddImportTest(contents, ['import javax.swing.text.html.HTML', 'import other.SecondClass'])
+        String expectedContents = '''
+            import java.util.Map.Entry
+
+            import javax.swing.text.html.HTML
+
+            import other.SecondClass
+
+            Entry<SecondClass, HTML> entry
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-1693
     void testAddImportForGenerics2() {
-        String contents = '''
+        createGroovyType 'p1', 'Foo', '''
             class Foo<T> {
             }
             '''
-        doAddImportTest('p1', 'Foo', contents, [])
+        createGroovyType 'p2', 'Bar', '''
+            class Bar {
+            }
+            '''
 
-        createGroovyType 'p2', 'GroovyBar', '''
-            class GroovyBar {
-            }
-            '''
-        contents = '''
+        String originalContents = '''
             import p1.Foo
-            class Boo extends Foo<GroovyBar> {
+            class Baz extends Foo<Bar> {
             }
             '''
-        doAddImportTest('p3', 'Boo', contents, ['import p2.GroovyBar'])
+        String expectedContents = '''
+            import p1.Foo
+            import p2.Bar
+            class Baz extends Foo<Bar> {
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     void testAddImportForGenerics3() {
@@ -532,7 +547,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     // GRECLISPE-823
     void testThrownExceptions() {
-        String contents = '''
+        String originalContents = '''
             import java.util.zip.ZipException
 
             def x() throws BadLocationException {
@@ -540,12 +555,22 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             def y() throws ZipException {
             }
             '''
-        doAddImportTest(contents, ['javax.swing.text.BadLocationException'])
+        String expectedContents = '''
+            import java.util.zip.ZipException
+
+            import javax.swing.text.BadLocationException
+
+            def x() throws BadLocationException {
+            }
+            def y() throws ZipException {
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-895
     void testCatchClausesExceptions() {
-        String contents = '''
+        String originalContents = '''
             import java.util.zip.ZipException
 
             try {
@@ -554,7 +579,18 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             } catch (BadLocationException e2) {
             }
             '''
-        doAddImportTest(contents, ['javax.swing.text.BadLocationException'])
+        String expectedContents = '''
+            import java.util.zip.ZipException
+
+            import javax.swing.text.BadLocationException
+
+            try {
+                nothing
+            } catch (ZipException e1) {
+            } catch (BadLocationException e2) {
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // GRECLIPSE-600
@@ -1055,8 +1091,9 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             }'''
 
         String contents = '''
-            import example2.Bar
             import groovy.transform.CompileStatic
+
+            import example2.Bar
 
             @CompileStatic
             class Foo {
