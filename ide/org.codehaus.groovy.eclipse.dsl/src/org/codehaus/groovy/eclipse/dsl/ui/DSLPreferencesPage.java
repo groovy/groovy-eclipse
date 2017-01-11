@@ -52,7 +52,6 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.PixelConverter;
 import org.eclipse.jface.preference.PreferencePage;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -237,18 +236,6 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
     private Button autoAdd;
     private Button disableDSLDs;
-
-    public DSLPreferencesPage() {
-        super("DSLD");
-    }
-
-    public DSLPreferencesPage(String title) {
-        super(title);
-    }
-
-    public DSLPreferencesPage(String title, ImageDescriptor image) {
-        super(title, image);
-    }
 
     public void init(IWorkbench workbench) {
         cache = new DisabledScriptsCache();
