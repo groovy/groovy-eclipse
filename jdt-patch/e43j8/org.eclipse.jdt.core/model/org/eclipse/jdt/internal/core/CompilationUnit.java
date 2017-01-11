@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -11,7 +12,7 @@
  *                                                            (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=71460)
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.IOException;
@@ -593,7 +594,7 @@ public ICompilationUnit findWorkingCopy(WorkingCopyOwner workingCopyOwner) {
     } new */
     CompilationUnit cu = LanguageSupportFactory.newCompilationUnit((PackageFragment)this.parent, getElementName(), workingCopyOwner);
     // GROOVY end
-    if (workingCopyOwner == DefaultWorkingCopyOwner.PRIMARY) {
+	if (workingCopyOwner == DefaultWorkingCopyOwner.PRIMARY) {
 		return cu;
 	} else {
 		// must be a working copy

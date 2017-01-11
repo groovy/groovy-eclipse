@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,7 @@
  *     Stephan Herrmann - contribution for Bug 300576 - NPE Computing type hierarchy when compliance doesn't match libraries
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.hierarchy;
-//GROOVY PATCHED
+
 /**
  * This is the public entry point to resolve type hierarchies.
  *
@@ -23,7 +24,6 @@ package org.eclipse.jdt.internal.core.hierarchy;
  * why the requestor should be informed that binary type X subclasses Y &
  * implements I & J?
  */
-
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import java.util.HashMap;
@@ -615,7 +615,11 @@ public void resolve(IGenericType suppliedType) {
 			this.superTypesOnly = true;
 			reportHierarchy(this.builder.getType(), null, binaryTypeBinding);
 		} else {
-			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
+			// GROOVY edit
+			//org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)suppliedType).getHandle().getCompilationUnit();
+			IType it = ((SourceTypeElementInfo) suppliedType).getHandle();
+			org.eclipse.jdt.core.ICompilationUnit cu = it == null ? null : it.getCompilationUnit();
+			// GROOVY end
 			if (cu != null) {
 				HashSet localTypes = new HashSet();
 				localTypes.add(cu.getPath().toString());

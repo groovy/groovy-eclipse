@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,10 +10,11 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-// GROOVY PATCHED
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.CoreException;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
@@ -114,7 +116,7 @@ public String toString() {
 		+ this.resource.getFullPath() + "]";  //$NON-NLS-1$
 }
 
-//GROOVY - GRECLIPSE-963
+// GROOVY - GRECLIPSE-963
 public static final String LINK_TO_GRAILS_PLUGINS = ".link_to_grails_plugins"; //$NON-NLS-1$
 
 public boolean isInLinkedSourceFolder() {
@@ -126,5 +128,5 @@ public boolean isInLinkedSourceFolder() {
 	}
 	return false;
 }
-//GROOVY - end
+// GROOVY end
 }

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.util.HashMap;
@@ -176,7 +177,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
-		boolean reset = true;
+		boolean reset = true; // GROOVY
 		try {
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
@@ -263,7 +264,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 			if (problemFactory != null)
 				problemFactory.monitor = null; // don't hold a reference to this external object
 			// NB: unit.cleanUp() is done by caller
-			if (problemFinder != null && !creatingAST && reset)
+			if (problemFinder != null && !creatingAST && reset) // GROOVY
 				problemFinder.lookupEnvironment.reset();
 		}
 		return unit;

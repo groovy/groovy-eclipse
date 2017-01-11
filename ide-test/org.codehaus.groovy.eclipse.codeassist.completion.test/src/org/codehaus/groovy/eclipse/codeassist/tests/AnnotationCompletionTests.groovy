@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import junit.framework.Test
-
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.tests.util.GroovyUtils
@@ -66,7 +65,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         try {
             assertThat(proposals).includes('Compiled') // java.lang.invoke.LambdaForm.Compiled is in 1.8+
             total += 1
-        } catch (notJava8) {
+        } catch (Throwable notJava8) {
         }
         assertThat(proposals).hasSize(total, 'Only @CompileStatic and @CompileDynamic should have been proposed\n')
     }

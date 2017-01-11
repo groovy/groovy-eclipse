@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -58,7 +59,7 @@
  *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
  ********************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
-// GROOVY PATCHED
+
 import java.io.CharConversionException;
 import java.io.PrintWriter;
 import java.io.StringWriter;

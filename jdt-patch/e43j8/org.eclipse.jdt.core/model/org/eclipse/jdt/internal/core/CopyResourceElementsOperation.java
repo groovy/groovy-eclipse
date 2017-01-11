@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
@@ -646,7 +646,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 				return updateNonJavaContent(cu, destPackageName, currPackageName, newName);
 			}
 		    // GROOVY end
-			
+
 			this.parser.setSource(cu);
 			CompilationUnit astCU = (CompilationUnit) this.parser.createAST(this.progressMonitor);
 			AST ast = astCU.getAST();

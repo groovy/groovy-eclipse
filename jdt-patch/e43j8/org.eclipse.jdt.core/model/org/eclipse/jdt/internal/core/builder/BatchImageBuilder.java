@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
@@ -213,7 +214,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 						if ((LanguageSupportFactory.isSourceFile(proxy.getName(), isInterestingProject) && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) ||
 							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName()))
 								return false;
-						// GROOVY end						
+						// GROOVY end
 
 						resource = proxy.requestResource();
 						if (BatchImageBuilder.this.javaBuilder.filterExtraResource(resource)) return false;

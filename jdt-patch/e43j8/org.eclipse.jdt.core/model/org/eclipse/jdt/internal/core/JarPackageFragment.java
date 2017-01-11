@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,11 +86,11 @@ private Object[] computeNonJavaResources(ArrayList entryNames) {
 		return JavaElementInfo.NO_NON_JAVA_RESOURCES;
 	HashMap jarEntries = new HashMap(); // map from IPath to IJarEntryResource
 	HashMap childrenMap = new HashMap(); // map from IPath to ArrayList<IJarEntryResource>
-	
+
 	// GROOVY start
 	boolean isInteresting = LanguageSupportFactory.isInterestingProject(this.getJavaProject().getProject());
 	// GROOVY end
-	
+
 	ArrayList topJarEntries = new ArrayList();
 	for (int i = 0; i < length; i++) {
 		String resName = (String) entryNames.get(i);

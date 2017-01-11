@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -191,7 +192,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyCustomizerClassesList = "org.eclipse.jdt.core.compiler.groovy.groovyCustomizerClassesList"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyExcludeGlobalASTScan = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude";  //$NON-NLS-1$
 	// GROOVY end
-	
+
 	/**
 	 * Possible values for configurable options
 	 */
@@ -450,7 +451,7 @@ public class CompilerOptions {
 	public String groovyTransformsToRunOnReconcile = null;
 	public String groovyExcludeGlobalASTScan = null;
 	// GROOVY end
-	
+
 	// === Support for Null Annotations: ===
 	/** Master switch for null analysis based on annotations: */
 	public boolean isAnnotationBasedNullAnalysisEnabled;
@@ -1927,7 +1928,7 @@ public class CompilerOptions {
 			sysPropConfiguredCustomizerClassesList= null;
 		}
 	}
-	
+
 	public String toString() {
 		StringBuffer buf = new StringBuffer("CompilerOptions:"); //$NON-NLS-1$
 		buf.append("\n\t- local variables debug attributes: ").append((this.produceDebugAttributes & ClassFileConstants.ATTR_VARS) != 0 ? "ON" : " OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

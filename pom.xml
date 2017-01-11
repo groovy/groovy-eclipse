@@ -15,8 +15,8 @@
 		profile automatically and will allow the 'deploy' to execute. -->
 
 	<!-- Example commands to build and deploy a milestone or a release
-		mvn clean deploy -Pe43j8 -Pmilestone
-		mvn clean deploy -Pe43j8 -Prelease
+		mvn clean deploy -Pe47 -Pmilestone
+		mvn clean deploy -Pe47 -Prelease
 
 		Before building a release also check the definition of the release profile
 		in this pom. It may need some minor edits such as the deploy location
@@ -46,8 +46,9 @@
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 
 		<!-- signing properties: Note these properties here are only 'documentation'.
-			The real values are furnished by the 'bamboo-signing' profile. When not running
-			on bamboo, singing is disabled by default -->
+			The real values are furnished by the 'bamboo-signing' profile.
+			When not running on bamboo, singing is disabled by default.
+		-->
 		<signing.skip>true</signing.skip>
 		<signing.alias>vmware</signing.alias>
 		<signing.keystore></signing.keystore>
@@ -134,8 +135,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e47/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e47/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e47/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.7</dist.target>
@@ -163,8 +164,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e46/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.6</dist.target>
@@ -192,8 +193,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e45/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e45/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e45/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.5</dist.target>
@@ -221,8 +222,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e44/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e44/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e44/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.4</dist.target>
@@ -250,8 +251,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e43j8/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e43j8/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.3-j8</dist.target>
@@ -274,8 +275,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e43/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e43/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e43/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.3</dist.target>
@@ -298,8 +299,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e42/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e42/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e42/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e4.2</dist.target>
@@ -322,8 +323,8 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e37/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e37/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e37/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
 				<dist.target>e3.7</dist.target>
@@ -538,7 +539,20 @@
 						<configuration>
 							<excludes>
 								<plugin id="org.codehaus.groovy.eclipse" />
+								<!-- When building e43j8, these will be included in JDT patch but source will not be available: -->
 								<feature id="org.eclipse.jdt.a2.java8patch" />
+								<plugin id="org.eclipse.jdt.annotation" />
+								<plugin id="org.eclipse.jdt.apt.core" />
+								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
+								<plugin id="org.eclipse.jdt.apt.ui" />
+								<plugin id="org.eclipse.jdt.compiler.apt" />
+								<plugin id="org.eclipse.jdt.compiler.tool" />
+								<plugin id="org.eclipse.jdt.debug.ui" />
+								<plugin id="org.eclipse.jdt.debug" />
+								<plugin id="org.eclipse.jdt.junit" />
+								<plugin id="org.eclipse.jdt.junit.core" />
+								<plugin id="org.eclipse.jdt.launching" />
+								<plugin id="org.eclipse.jdt.ui" />
 							</excludes>
 						</configuration>
 					</execution>

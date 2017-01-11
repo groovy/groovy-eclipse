@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -43,7 +44,7 @@ public class BinaryMethod extends BinaryMember implements IMethod {
 	 */
 	protected String[] parameterTypes;
 	protected String [] erasedParamaterTypes; // lazily initialized via call to getErasedParameterTypes
-
+	
 	/**
 	 * The parameter names for the method.
 	 */
@@ -293,7 +294,7 @@ public String[] getParameterNames() throws JavaModelException {
 				projectInfo.javadocCache.put(declaringType, BinaryType.EMPTY_JAVADOC);
 			}
 		}
-
+		
 		String methodDoc = null;
 		if (javadocContents == null) {
 			long timeOut = 50; // default value

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import junit.framework.Test;
-
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -40,6 +39,7 @@ public final class StaticImportsCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "NULL_ATTRIBUTE_VALUE"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "NULL_ATTRIBUTE_VALUE", 1);
     }
+
     public void testStaticImportMethod() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.getAttributeKey\ngetAttributeKey";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
@@ -47,6 +47,7 @@ public final class StaticImportsCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "getAttributeKey"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getAttributeKey", 1);
     }
+
     public void testStaticStarImportField() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.*\nNULL_ATTRIBUTE_VALUE";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
@@ -54,6 +55,7 @@ public final class StaticImportsCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "NULL_ATTRIBUTE_VALUE"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "NULL_ATTRIBUTE_VALUE", 1);
     }
+
     public void testStaticStarImportMethod() throws Exception {
         String contents = "import static javax.swing.text.html.HTML.*\ngetAttributeKey";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
@@ -61,6 +63,7 @@ public final class StaticImportsCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "getAttributeKey"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getAttributeKey", 1);
     }
+
     public void testStaticFieldImport() throws Exception {
         String contents = "import static java.lang.Boolean.FA";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
@@ -68,11 +71,12 @@ public final class StaticImportsCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "FA"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "FALSE", 1);
     }
+
     public void testStaticMethodImport() throws Exception {
-        String contents = "import static java.lang.Boolean.co";
+        String contents = "import static java.lang.Boolean.pa";
         ICompilationUnit unit = addGroovySource(contents, "File", "");
 
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "co"), GroovyCompletionProposalComputer.class);
-        proposalExists(proposals, "compare", 1);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "pa"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "parseBoolean", 1);
     }
 }

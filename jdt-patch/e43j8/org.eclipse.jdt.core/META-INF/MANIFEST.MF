@@ -64,4 +64,3 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-ExtensibleAPI: true
 Bundle-ActivationPolicy: lazy
 Eclipse-BuddyPolicy: registered
-Bundle-ClassPath: .

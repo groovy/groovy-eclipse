@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,7 @@
  *******************************************************************************/
 
 package org.eclipse.jdt.core.dom;
-// GROOVY PATCHED
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

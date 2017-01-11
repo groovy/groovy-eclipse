@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -48,7 +49,7 @@
  *                          	Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
+
 import java.util.*;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -1678,8 +1679,8 @@ public abstract class Scope {
 			return null;
 		}
 	}
-	// GROOVY end		
-	
+	// GROOVY end
+
 	public MethodBinding findMethod0(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite, boolean inStaticContext) {
 		ReferenceBinding currentType = receiverType;
 		boolean receiverTypeIsInterface = receiverType.isInterface();
@@ -2241,6 +2242,7 @@ public abstract class Scope {
 						for (int i = 0, length = imports.length; i < length; i++) {
 							ImportBinding importBinding = imports[i];
 							if (importBinding.isStatic() && !importBinding.onDemand) {
+								// GROOVY edit
 								//if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
 								if (CharOperation.equals(getSimpleName(importBinding), name)) {
 								// GROOVY end

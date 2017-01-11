@@ -1,3 +1,5 @@
+// GROOVY PATCHED
+
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +11,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -547,7 +549,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		return openWhenClosed(info, true, monitor);
 	}
 	// GROOVY end
-	
+
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.

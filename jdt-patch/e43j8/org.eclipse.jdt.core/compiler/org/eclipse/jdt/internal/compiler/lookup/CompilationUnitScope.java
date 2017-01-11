@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,7 @@
  *     Erling Ellingsen -  patch for bug 125570
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -583,7 +584,7 @@ private Binding findImport(char[][] compoundName, int length) {
 	}
 	// GROOVY start:
 	/* old {
-    if (!type.canBeSeenBy(this.fPackage))
+	if (!type.canBeSeenBy(this.fPackage))
 	} new */
 	if (!canBeSeenBy(type,this.fPackage))
 	// GROOVY end
@@ -988,14 +989,12 @@ private int checkAndRecordImportBinding(
 		if (importReference.isTypeUseDeprecated(typeToCheck, this))
 			problemReporter().deprecatedType(typeToCheck, importReference);
 
-
-
 		// GROOVY start: use any aliased name for lookup
 		/* old {
 		ReferenceBinding existingType = typesBySimpleNames.get(name);
 		} new */
 		ReferenceBinding existingType = typesBySimpleNames.get(importReference.getSimpleName());
-		// GROOVY end		
+		// GROOVY end
 		if (existingType != null) {
 			// duplicate test above should have caught this case, but make sure
 			if (TypeBinding.equalsEquals(existingType, referenceBinding)) {
@@ -1078,7 +1077,7 @@ private int checkAndRecordImportBinding(
 	return this.importPtr;
 }
 
-//GROOVY start: new methods
+//GROOVY add
 public void augmentTypeHierarchy() {
 	// nothing to do for standard Java
 }

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.net.URL;
@@ -89,7 +90,7 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 						&& !Util.isExcluded(child, inclusionPatterns, exclusionPatterns)) {
 					IJavaElement childElement;
 					if (kind == IPackageFragmentRoot.K_SOURCE && Util.isValidCompilationUnitName(child.getName(), sourceLevel, complianceLevel)) {
-						 // GROOVY start
+						// GROOVY start
 	                    /* old {
 						childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
 	                    } new */
@@ -230,7 +231,7 @@ public ICompilationUnit getCompilationUnit(String cuName) {
 	}
 	 // GROOVY start
     /* old {
-    return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
     } new */
 	return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
     // GROOVY end
@@ -294,7 +295,7 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 			String cuName = memento.nextToken();
 		    // GROOVY start
 		    /* old {
-		    JavaElement cu = new CompilationUnit(this, cuName, owner);
+			JavaElement cu = new CompilationUnit(this, cuName, owner);
 		    } new */
 			JavaElement cu = LanguageSupportFactory.newCompilationUnit(this, cuName, owner);
 		    // GROOVY end

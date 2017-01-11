@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -11,7 +12,7 @@
  *     Stephan Herrmann - Contribution for Bug 380048 - error popup when navigating to source files
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.IOException;
@@ -1431,12 +1432,10 @@ public class SourceMapper
 				}
 			}
 			boolean doFullParse = hasToRetrieveSourceRangesForLocalClass(fullName);
-			 // GROOVY start
-	        /* old {
-			parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals..);
-	        } new */
+			// GROOVY edit
+			//parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/);
 			parser = LanguageSupportFactory.getSourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/, true);
-	        // GROOVY end
+			// GROOVY end
 			parser.javadocParser.checkDocComment = false; // disable javadoc parsing
 			IJavaElement javaElement = this.binaryType.getCompilationUnit();
 			if (javaElement == null) javaElement = this.binaryType.getParent();
@@ -1444,8 +1443,8 @@ public class SourceMapper
 				new BasicCompilationUnit(contents, null, this.binaryType.sourceFileName(info), javaElement),
 				doFullParse,
 				null/*no progress*/);
-			// GROOVY start
-	        // if this is an interesting file in an interesting project,
+			// GROOVY add
+			// if this is an interesting file in an interesting project,
 			// then filter out all binary members that do not have a direct
 			// mapping to the source
 			IProject project = javaElement.getJavaProject().getProject();

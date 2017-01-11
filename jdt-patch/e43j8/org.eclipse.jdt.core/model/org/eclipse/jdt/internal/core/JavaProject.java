@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -12,7 +13,7 @@
  *     						Bug 346010 - [model] strange initialization dependency in OptionTests
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-//GROOVY PATCHED
+
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import java.io.*;
 import java.net.URI;

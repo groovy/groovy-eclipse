@@ -56,9 +56,7 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -86,8 +84,7 @@ class ASTConverter {
 	protected boolean resolveBindings;
 	Scanner scanner;
 	private DefaultCommentMapper commentMapper;
-
-	// GROOVY start
+	// GROOVY add
 	private boolean scannerUsable = true;
 	// GROOVY end
 	
@@ -199,14 +196,14 @@ class ASTConverter {
 				case 1 :
 					methodsIndex++;
 					if (!nextMethodDeclaration.isDefaultConstructor() && !nextMethodDeclaration.isClinit()) {
-						// GROOVY start - a little ugly, but allows the conversion of the method declaration
+						// GROOVY add -- a little ugly, but allows the conversion of the method declaration
 						// to know if it is occurring within a pure java type or not
 						boolean originalValue = this.scannerUsable;
 						try {
 							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
 							// GROOVY end
 							typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
-						// GROOVY start
+						// GROOVY add
 						} finally {
 							this.scannerUsable = originalValue;
 						}
@@ -506,6 +503,21 @@ class ASTConverter {
 		return array.getComponentType();
 	}
 
+	// GROOVY add
+	private boolean scannerAvailable(org.eclipse.jdt.internal.compiler.lookup.Scope scope) {
+		if (!this.scannerUsable) {
+			return false;
+		}
+		if (scope!=null) {
+			org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope cuScope = scope.compilationUnitScope();
+			if (cuScope!=null) {
+				return cuScope.scannerAvailable();	
+			}
+		}
+		return true;
+	}
+	// GROOVY end
+
 	public ASTNode convert(boolean isInterface, org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration methodDeclaration) {
 		checkCanceled();
 		if (methodDeclaration instanceof org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration) {
@@ -520,12 +532,11 @@ class ASTConverter {
 		final SimpleName methodName = new SimpleName(this.ast);
 		methodName.internalSetIdentifier(new String(methodDeclaration.selector));
 		int start = methodDeclaration.sourceStart;
-		// GROOVY start
-		// why does this do what it does?
-		/* old {
-		int end = retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd);
-		} new */
+		// GROOVY edit
+		//int end = retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd);
  		int end = (scannerAvailable(methodDeclaration.scope)?retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd):methodDeclaration.sourceEnd);
+		if (end < start)
+			end = start + methodDeclaration.selector.length;// naive recovery with method name
 		// GROOVY end
 		methodName.setSourceRange(start, end - start + 1);
 		methodDecl.setName(methodName);
@@ -537,7 +548,6 @@ class ASTConverter {
 				Name thrownException;
 				int i = 0;
 				do {
-				    
 					TypeReference typeRef = thrownExceptions[i++];
 					thrownException = convert(typeRef);
 					if (typeRef.annotations != null && typeRef.annotations.length > 0) {
@@ -570,23 +580,21 @@ class ASTConverter {
 			SingleVariableDeclaration parameter;
 			int i = 0;
 			do {
-				// GROOVY start
-			    // make sure the scope is available just in case it is necessary for varargs
-		        // new code
-			    BlockScope origScope = null;
-			    if (parameters[i].binding != null) {
-			        origScope = parameters[i].binding.declaringScope;
-			        parameters[i].binding.declaringScope = methodDeclaration.scope;
-			    }
-		        // GROOVY end
+				// GROOVY add
+				// make sure the scope is available just in case it is necessary for varargs
+				BlockScope origScope = null;
+				if (parameters[i].binding != null) {
+					origScope = parameters[i].binding.declaringScope;
+					parameters[i].binding.declaringScope = methodDeclaration.scope;
+				}
+				// GROOVY end
 				parameter = convert(parameters[i++]);
-				// GROOVY start
-                // unset the scope
-                // new code
+				// GROOVY add
+				// unset the scope
 				if (parameters[i-1].binding != null) {
 				    parameters[i-1].binding.declaringScope = origScope;
 				}
-                // GROOVY end
+				// GROOVY end
 				methodDecl.parameters().add(parameter);
 			} while (i < parametersLength);
 			if (thrownExceptionsLength == 0) {
@@ -652,7 +660,7 @@ class ASTConverter {
 
 			start = retrieveStartBlockPosition(methodHeaderEnd, methodDeclaration.bodyStart);
 			if (start == -1) start = methodDeclaration.bodyStart; // use recovery position for body start
-			end = retrieveRightBrace(methodDeclaration.bodyEnd, declarationSourceEnd);
+			end = retrieveRightBrace(methodDeclaration.bodyEnd + 1, declarationSourceEnd); // GROOVY +1
 			Block block = null;
 			if (start != -1 && end != -1) {
 				/*
@@ -739,21 +747,6 @@ class ASTConverter {
 		this.referenceContext = oldReferenceContext;
 		return methodDecl;
 	}
-
-	// GROOVY start
-	private boolean scannerAvailable(Scope scope) {
-		if (!this.scannerUsable) {
-			return false;
-		}
-		if (scope!=null) {
-			CompilationUnitScope cuScope = scope.compilationUnitScope();
-			if (cuScope!=null) {
-				return cuScope.scannerAvailable();	
-			}
-		}
-		return true;
-	}
-	// GROOVY end
 
 	public ClassInstanceCreation convert(org.eclipse.jdt.internal.compiler.ast.AllocationExpression expression) {
 		ClassInstanceCreation classInstanceCreation = new ClassInstanceCreation(this.ast);
@@ -968,14 +961,10 @@ class ASTConverter {
 			internalSetExtraDimensions(variableDecl, extraDimensions);
 		}
 		final boolean isVarArgs = argument.isVarArgs();
-		// GROOVY start
-		// Do not try to change source ends for var args.  Groovy assumes that
-		// all methods that have an array as the last param are varargs
-        /* old {
-        if (isVarArgs && extraDimensions == 0) {
-        } new */
+		// GROOVY edit
+		//if (isVarArgs && extraDimensions == 0) {
 		if (argument.binding != null && scannerAvailable(argument.binding.declaringScope) && isVarArgs && extraDimensions == 0) {
-	    // GROOVY end
+		// GROOVY end
 			// remove the ellipsis from the type source end
 			argument.type.sourceEnd = retrieveEllipsisStartPosition(argument.type.sourceStart, typeSourceEnd);
 		}
@@ -1398,14 +1387,10 @@ class ASTConverter {
 			this.compilationUnitSource = source;
 			this.compilationUnitSourceLength = source.length;
 			this.scanner.setSource(source, unit.compilationResult);
-			// GROOVY start
-			/* old {
-			CompilationUnit compilationUnit = new CompilationUnit(this.ast);
-		 	} new */
+			// GROOVY edit
+			//CompilationUnit compilationUnit = new CompilationUnit(this.ast);
 			CompilationUnit compilationUnit = unit.getSpecialDomCompilationUnit(this.ast);
-			if (compilationUnit==null ) {
-				compilationUnit = new CompilationUnit(this.ast);
-			}
+			if (compilationUnit==null) compilationUnit = new CompilationUnit(this.ast);
 			// GROOVY end
 			compilationUnit.setStatementsRecoveryData(unit.compilationResult.recoveryScannerData);
 	
@@ -3486,11 +3471,11 @@ class ASTConverter {
 		int start = elementType.getStartPosition();
 		int endElement = start + elementType.getLength();
 		int end = retrieveProperRightBracketPosition(dimensions.size(), endElement);
-		// GROOVY start
+		// GROOVY add
 		// retrieveProperRightBracketPosition will return -1 when start position is valid.
 		if (!this.scannerUsable) { // effectively a check for "is this groovy?"
-			if (end==-1) {
-				if (endElement>start) {
+			if (end == -1) {
+				if (endElement > start) {
 					//endElement looks valid, use it
 					end = endElement;
 				} else {
@@ -4968,42 +4953,41 @@ class ASTConverter {
 	}
 
 	protected int retrieveProperRightBracketPosition(int bracketNumber, int start) {
-		// GROOVY
+		// GROOVY add
 		if (!this.scannerUsable) { // effectively a check for "is this groovy?"
-			if (start==-1) {
+			if (start < 0) {
 				return -2;
-			}
-			else {
+			} else {
 				// Crude groovy variant of the below scanner usage to find right bracket
 				int count = 0, lParentCount = 0, balance = 0, pos = start, lines = 0;
-				int end = this.scanner.source.length;
 				char[] sourceCode = this.scanner.source;
-				while (pos<end) {
+				while (pos < sourceCode.length) {
 					char ch = sourceCode[pos];
 					switch (ch) {
-						case '(': ++lParentCount; break;
-						case ')': --lParentCount; break;
-						case '[': ++balance; break;
-						case ']': --balance; 
-							if (lParentCount>0) break; 
-							if (balance>0) break; 
-							count++; 
-							if (count == bracketNumber) {
-								return pos;
-							}
-							break;
-						// Crude check to avoid scanning long distances down big files, give up after 5 lines
-						case '\n': ++lines;
-							if (lines>5) {
-								return -1;
-							}
+					case '(': lParentCount += 1; break;
+					case ')': lParentCount -= 1; break;
+					case '[': balance += 1; break;
+					case ']': balance -= 1;
+						if (lParentCount>0) break; 
+						if (balance>0) break; 
+						count += 1;
+						if (count == bracketNumber) {
+							return pos;
+						}
+						break;
+					// Crude check to avoid scanning long distances down big files, give up after 5 lines
+					case '\n':
+						lines += 1;
+						if (lines > 5) {
+							return -1;
+						}
 					}
-					pos++;
+					pos += 1;
 				}
 				return -1;
 			}
 		}
-		// GROOVY
+		// GROOVY end
 		this.scanner.resetTo(start, this.compilationUnitSourceLength);
 		try {
 			int token, count = 0, lParentCount = 0, balance = 0;

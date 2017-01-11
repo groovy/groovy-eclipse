@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -26,7 +27,7 @@
  *								Bug 424624 - [1.8][null] if a static-object with annotation @NonNull is used, a warning is shown
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
