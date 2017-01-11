@@ -1,26 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    Copyright (c) 2011 Codehaus.org, SpringSource, and others.
-    All rights reserved. This program and the accompanying materials
-    are made available under the terms of the Eclipse Public License v1.0
-    which accompanies this distribution, and is available at
-    http://www.eclipse.org/legal/epl-v10.html
-   
-    Contributors:
-         Andrew Eisenberg - Initial implemenation
- -->
+<?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.eclipse.jdt.groovy.core.typeLookup">
-      <lookup
-            lookup="org.codehaus.groovy.eclipse.dsl.lookup.DSLDTypeLookup">
-         <appliesTo
-               projectNature="org.eclipse.jdt.groovy.core.groovyNature">
-         </appliesTo>
-      </lookup>
-   </extension>
-   <extension
-         point="org.eclipse.ui.commands">
+   <extension point="org.eclipse.ui.commands">
       <command
             categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
             description="Refresh DSLD files for the given project"
@@ -45,8 +26,7 @@
             name="Remove type checking annotations">
       </command>
    </extension>
-      <extension
-         point="org.eclipse.ui.decorators">
+   <extension point="org.eclipse.ui.decorators">
       <decorator
             adaptable="true"
             class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDClasspathContainerDecorator"
@@ -55,23 +35,11 @@
             lightweight="true"
             state="true">
          <enablement>
-            	<objectClass name="org.eclipse.jdt.internal.ui.packageview.ClassPathContainer" />
+            <objectClass name="org.eclipse.jdt.internal.ui.packageview.ClassPathContainer"/>
          </enablement>
       </decorator>
    </extension>
-   <extension
-         point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
-      <proposalProvider
-            description="Provides Groovy proposals generated from .dsld files"
-            name="Groovy DSL Proposal Provider"
-            proposalProvider="org.codehaus.groovy.eclipse.dsl.proposals.DSLDProposalProvider">
-         <appliesTo
-               projectNature="org.eclipse.jdt.groovy.core.groovyNature">
-         </appliesTo>
-      </proposalProvider>
-   </extension>
-   <extension
-         point="org.eclipse.ui.popupMenus">
+   <extension point="org.eclipse.ui.popupMenus">
       <objectContribution
             adaptable="true"
             id="org.codehaus.groovy.eclipse.dsl.objectContribution"
@@ -86,7 +54,7 @@
                tooltip="Refresh Groovy DSLs for currentl selected Groovy Project(s)">
          </action>
          <action
-               class="org.codehaus.groovy.eclipse.dsl.ui.AddDSLDContainerActtion"
+               class="org.codehaus.groovy.eclipse.dsl.ui.AddDSLDContainerAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.importlibs.action"
                label="Add DSL support"
@@ -138,26 +106,20 @@
          </visibility>
       </objectContribution>
    </extension>
-   <extension
-         point="org.eclipse.core.contenttype.contentTypes">
-      <content-type
-            base-type="org.eclipse.jdt.groovy.core.groovySource"
-            file-extensions="dsld"
-            id="org.codehaus.groovy.eclipse.dsl.dsld"
-            name="Groovy DSL Descriptor file"
-            priority="high">
-      </content-type>
+   <extension point="org.eclipse.ui.keywords">
+      <keyword
+            id="org.codehaus.groovy.eclipse.dsl.keywords"
+            label="groovy dsld dsl descriptor">
+      </keyword>
    </extension>
-   <extension
-         point="org.eclipse.ui.preferencePages">
+   <extension point="org.eclipse.ui.preferencePages">
       <page
             category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.dsl.ui.DSLPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.preferences"
             name="DSLD">
          <keywordReference
-               id="org.codehaus.groovy.eclipse.dsl.keywords">
-         </keywordReference>
+               id="org.codehaus.groovy.eclipse.dsl.keywords"/>
       </page>
       <page
             category="org.codehaus.groovy.eclipse.preferences"
@@ -166,56 +128,15 @@
             name="Inferencing Suggestions">
       </page>
    </extension>
-   <extension
-         point="org.eclipse.ui.newWizards">
-      <wizard
-            category="org.codehaus.groovy.eclipse"
-            class="org.codehaus.groovy.eclipse.dsl.ui.NewDSLDWizard"
-            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="icons/GROOVY.png"
-            id="org.codehaus.groovy.eclipse.dsld.newDsldWizard"
-            name="Groovy DSL Descriptor"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
-         <description>
-            Create a new DSL descriptor file.
-         </description>
-         <keywordReference
-               id="org.codehaus.groovy.eclipse.dsl.keywords">
-         </keywordReference>
-      </wizard>
+   <extension point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            markerSeverity="1"
+            markerType="org.codehaus.groovy.eclipse.dsl.inferencing_problem"
+            name="org.codehaus.groovy.eclipse.dsl.annotation.inferencing"
+            super="org.eclipse.jdt.ui.warning">
+      </type>
    </extension>
-   <extension
-         point="org.eclipse.ui.keywords">
-      <keyword
-            id="org.codehaus.groovy.eclipse.dsl.keywords"
-            label="groovy dsld dsl descriptor">
-      </keyword>
-   </extension>
-   <extension
-         point="org.eclipse.jdt.core.classpathContainerInitializer">
-      <classpathContainerInitializer
-            class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDContainerInitializer"
-            id="GROOVY_DSL_SUPPORT">
-      </classpathContainerInitializer>
-   </extension>
-   <extension
-         point="org.eclipse.core.runtime.preferences">
-      <initializer
-            class="org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer">
-      </initializer>
-   </extension>
-   <extension
-         id="inferencing_problem"
-         name="Groovy type checking problem"
-         point="org.eclipse.core.resources.markers">
-      <super type="org.eclipse.core.resources.textmarker"/>
-			<super type="org.eclipse.core.resources.problemmarker"/>
-      <persistent
-            value="true">
-      </persistent>
-   </extension>
-   <extension
-         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <extension point="org.eclipse.ui.editors.markerAnnotationSpecification">
       <specification
             annotationType="org.codehaus.groovy.eclipse.dsl.annotation.inferencing"
             colorPreferenceKey="typeCheckIndicationColor"
@@ -243,18 +164,34 @@
             verticalRulerPreferenceValue="true">
       </specification>
    </extension>
-   <extension
-         point="org.eclipse.ui.editors.annotationTypes">
-      <type
-            markerSeverity="1"
-            markerType="org.codehaus.groovy.eclipse.dsl.inferencing_problem"
-            name="org.codehaus.groovy.eclipse.dsl.annotation.inferencing"
-            super="org.eclipse.jdt.ui.warning">
-      </type>
+   <extension point="org.eclipse.ui.newWizards">
+      <wizard
+            category="org.codehaus.groovy.eclipse"
+            class="org.codehaus.groovy.eclipse.dsl.ui.NewDSLDWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            icon="icons/GROOVY.png"
+            id="org.codehaus.groovy.eclipse.dsld.newDsldWizard"
+            name="Groovy DSL Descriptor"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
+         <description>
+            Create a new DSL descriptor file.
+         </description>
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.dsl.keywords"/>
+      </wizard>
    </extension>
-   <extension
-         id="staticCheck"
-         point="org.eclipse.core.runtime.applications">
+
+   <extension point="org.eclipse.core.contenttype.contentTypes">
+      <content-type
+            base-type="org.eclipse.jdt.groovy.core.groovySource"
+            file-extensions="dsld"
+            id="org.codehaus.groovy.eclipse.dsl.dsld"
+            name="Groovy DSL Descriptor file"
+            priority="high">
+      </content-type>
+   </extension>
+   <extension point="org.eclipse.core.runtime.applications"
+         id="staticCheck">
       <application
             cardinality="singleton-global"
             icon="icons/GROOVY.png"
@@ -264,5 +201,44 @@
                class="org.codehaus.groovy.eclipse.dsl.checker.StaticCheckerApplication">
          </run>
       </application>
+   </extension>
+
+   <extension point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDContainerInitializer"
+            id="GROOVY_DSL_SUPPORT">
+      </classpathContainerInitializer>
+   </extension>
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer">
+      </initializer>
+   </extension>
+   <extension point="org.eclipse.core.resources.markers"
+         id="inferencing_problem"
+         name="Groovy type checking problem">
+      <super type="org.eclipse.core.resources.textmarker"/>
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+   <extension point="org.eclipse.jdt.groovy.core.typeLookup">
+      <lookup
+            lookup="org.codehaus.groovy.eclipse.dsl.lookup.DSLDTypeLookup">
+         <appliesTo
+               projectNature="org.eclipse.jdt.groovy.core.groovyNature">
+         </appliesTo>
+      </lookup>
+   </extension>
+   <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
+      <proposalProvider
+            description="Provides Groovy proposals generated from .dsld files"
+            name="Groovy DSL Proposal Provider"
+            proposalProvider="org.codehaus.groovy.eclipse.dsl.proposals.DSLDProposalProvider">
+         <appliesTo
+               projectNature="org.eclipse.jdt.groovy.core.groovyNature">
+         </appliesTo>
+      </proposalProvider>
    </extension>
 </plugin>

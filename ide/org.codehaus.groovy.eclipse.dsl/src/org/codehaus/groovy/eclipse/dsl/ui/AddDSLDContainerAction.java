@@ -24,7 +24,7 @@ import org.eclipse.jface.action.IAction;
  * @author andrew
  * @created May 24, 2011
  */
-public class AddDSLDContainerActtion extends AbstractAddClasspathContainerAction {
+public class AddDSLDContainerAction extends AbstractAddClasspathContainerAction {
 
     @Override
     protected IPath getClasspathContainerPath() {
