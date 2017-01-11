@@ -18,6 +18,8 @@
       %license
    </license>
 
+   <includes id="org.eclipse.jdt.a2.java8patch" version="0.0.0" />
+
    <requires>
       <import feature="org.eclipse.jdt" version="3.9.2.v20140221-1700" patch="true"/>
    </requires>
@@ -29,106 +31,5 @@
          version="0.0.0"
          unpack="false"
    />
-
-   <!-- we also copy these from the Eclipse Java 8 BETA patch -->
-   <!-- We do this because we can't apply our patch on top of it -->
-   <!-- Copying its various bits and pieces seems to be the only viable alternative -->
-   <!-- Note that this requires that these bits and piece be installed in the target platform -->
-   <!-- From the eclipse java8 BETA update site -->
-   <!-- When the beta is folded into master in eclipse.org, none of this will be necessary anymore -->
-
-   <!-- TODO: include PDE patch was well?  -->
-   <!-- That is not part of the eclipse java8 patch, but usually you would install it together. -->
-   <!--    <includes id="org.eclipse.pde.java8patch" version="0.0.0" />  -->
-   <!--    -->
-   
-   <includes id="org.eclipse.jdt.a2.java8patch" version="0.0.0" />
-   
-   <!-- How to force tycho to include same versions as in eclipse java 8 patch?
-        Using version '0.0.0'...
-        This now seems to work because JDT patched versions have higher minor version numbers 
-        for Java 8 patched versions of jdt.ui jdt.debug etc.
-        -->
-      
-   <plugin
-         id="org.eclipse.jdt.apt.core"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.apt.ui"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.apt.pluggable.core"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.compiler.apt"
-         download-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.compiler.tool"
-         download-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
-
-   <!-- replaced by our own greclipse patched version 
-   <plugin
-         id="org.eclipse.jdt.core"
-         download-size="0"
-         version="3.9.50.v20140317-1741"
-         unpack="false"/>
-    -->
-
-   <plugin
-         id="org.eclipse.jdt.annotation"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.debug.ui"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.debug"
-         download-size="0"
-         version="0.0.0"/>
-
-   <plugin
-         id="org.eclipse.jdt.launching"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.ui"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.junit"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.jdt.junit.core"
-         download-size="0"
-         version="0.0.0"
-         unpack="false"/>
 
 </feature>

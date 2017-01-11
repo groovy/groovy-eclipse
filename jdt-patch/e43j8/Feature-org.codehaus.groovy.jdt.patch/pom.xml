@@ -11,40 +11,4 @@
 	<artifactId>org.codehaus.groovy.jdt.patch</artifactId>
 	<version>2.9.2-SNAPSHOT</version>
 	<packaging>eclipse-feature</packaging>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho-extras-version}</version>
-				<executions>
-					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
-						<goals>
-							<goal>source-feature</goal>
-						</goals>
-						<configuration>
-							<excludes>
-								<feature id="org.eclipse.jdt.a2.java8patch" />
-								<plugin id="org.eclipse.jdt.annotation" />
-								<plugin id="org.eclipse.jdt.apt.core" />
-								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
-								<plugin id="org.eclipse.jdt.apt.ui" />
-								<plugin id="org.eclipse.jdt.compiler.apt" />
-								<plugin id="org.eclipse.jdt.compiler.tool" />
-								<plugin id="org.eclipse.jdt.debug" />
-								<plugin id="org.eclipse.jdt.debug.ui" />
-								<plugin id="org.eclipse.jdt.junit" />
-								<plugin id="org.eclipse.jdt.junit.core" />
-								<plugin id="org.eclipse.jdt.launching" />
-								<plugin id="org.eclipse.jdt.ui" />
-							</excludes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 </project>

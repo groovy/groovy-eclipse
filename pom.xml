@@ -125,7 +125,7 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.7milestones</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.7milestones</url><!-- http://download.eclipse.org/releases/oxygen -->
 				</repository>
 				<repository>
 					<id>m2e</id>
@@ -538,6 +538,7 @@
 						<configuration>
 							<excludes>
 								<plugin id="org.codehaus.groovy.eclipse" />
+								<feature id="org.eclipse.jdt.a2.java8patch" />
 							</excludes>
 						</configuration>
 					</execution>
