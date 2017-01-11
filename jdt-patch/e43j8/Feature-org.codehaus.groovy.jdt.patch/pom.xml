@@ -27,6 +27,7 @@
 						</goals>
 						<configuration>
 							<excludes>
+								<feature id="org.eclipse.jdt.a2.java8patch" />
 								<plugin id="org.eclipse.jdt.annotation" />
 								<plugin id="org.eclipse.jdt.apt.core" />
 								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
