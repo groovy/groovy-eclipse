@@ -420,7 +420,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             GroovyDSLCoreActivator.getDefault().getPreferenceStore().setValue(DSLPreferencesInitializer.DSLD_DISABLED, disableDSLDs.getSelection());
             boolean res = MessageDialog.openQuestion(getShell(), "Restart now?", "You have " +
                 (disableDSLDs.getSelection() ? "disabled" : "enabled") + " DSLDs in your worksoace." +
-                "  This setting will not coming effect until a restart has been performed.\n\nDo you want to restart now?");
+                "  This will not take effect until a restart has been performed.\n\nDo you want to restart now?");
             if (res) {
                 Workbench.getInstance().restart();
             }

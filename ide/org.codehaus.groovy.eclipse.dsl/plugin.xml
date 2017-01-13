@@ -2,17 +2,17 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension point="org.eclipse.ui.commands">
+      <category
+            description="Commands related to DSLD management"
+            id="org.codehaus.groovy.eclipse.dsl.command.category"
+            name="DSLD-related commands">
+      </category>
       <command
             categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
             description="Refresh DSLD files for the given project"
             id="org.codehaus.groovy.eclipse.dsl.command.refresh"
             name="Refresh DSLDs">
       </command>
-      <category
-            description="Commands related to DSLD management"
-            id="org.codehaus.groovy.eclipse.dsl.command.category"
-            name="DSLD-related commands">
-      </category>
       <command
             categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
             description="Perform static type checking on selected resources"
@@ -25,19 +25,6 @@
             id="org.codehaus.groovy.eclipse.dsl.command.type_check.remove"
             name="Remove type checking annotations">
       </command>
-   </extension>
-   <extension point="org.eclipse.ui.decorators">
-      <decorator
-            adaptable="true"
-            class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDClasspathContainerDecorator"
-            id="org.codehaus.groovy.eclipse.dsl.dsldClasspathContainerDecorator"
-            label="DSLD Enablement Decorator"
-            lightweight="true"
-            state="true">
-         <enablement>
-            <objectClass name="org.eclipse.jdt.internal.ui.packageview.ClassPathContainer"/>
-         </enablement>
-      </decorator>
    </extension>
    <extension point="org.eclipse.ui.popupMenus">
       <objectContribution
@@ -56,7 +43,7 @@
          <action
                class="org.codehaus.groovy.eclipse.dsl.ui.AddDSLDContainerAction"
                enablesFor="1"
-               id="org.codehaus.groovy.eclipse.importlibs.action"
+               id="org.codehaus.groovy.eclipse.dsl.action.add_container"
                label="Add DSL support"
                menubarPath="groovy/dsl"
                tooltip="Add or remove DSL support for this project">
@@ -109,7 +96,7 @@
    <extension point="org.eclipse.ui.keywords">
       <keyword
             id="org.codehaus.groovy.eclipse.dsl.keywords"
-            label="groovy dsld dsl descriptor">
+            label="dsl dsld domain descriptor groovy">
       </keyword>
    </extension>
    <extension point="org.eclipse.ui.preferencePages">
@@ -127,6 +114,19 @@
             id="org.codehaus.groovy.eclipse.dsl.inferencing.preferences"
             name="Inferencing Suggestions">
       </page>
+   </extension>
+   <extension point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="true"
+            class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDClasspathContainerDecorator"
+            id="org.codehaus.groovy.eclipse.dsl.dsldClasspathContainerDecorator"
+            label="DSLD Enablement Decorator"
+            lightweight="true"
+            state="true">
+         <enablement>
+            <objectClass name="org.eclipse.jdt.internal.ui.packageview.ClassPathContainer"/>
+         </enablement>
+      </decorator>
    </extension>
    <extension point="org.eclipse.ui.editors.annotationTypes">
       <type

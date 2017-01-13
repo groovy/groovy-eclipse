@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,12 +109,10 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 "Do not use parens around methods with arguments", getFieldEditorParent()));
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
                 "Use brackets for closure arguments", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, "Use named arguments for method calls",
-                getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS,
+                "Use named arguments for method calls", getFieldEditorParent()));
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING,
-                "Try to guess the most likely parameters to use for method invocations\n"
-                        + "(if unchecked, then the argument name is used instead)", getFieldEditorParent()));
-
+                "Try to guess the most likely parameters to use for method invocations", getFieldEditorParent()));
 
         // default launch location for scripts
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
