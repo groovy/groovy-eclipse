@@ -4,10 +4,12 @@ package org.codehaus.groovy.antlr.parser;
 
 import java.io.*;
 import java.util.*;
+
 import groovyjarjarantlr.CommonToken;
 import groovyjarjarantlr.InputBuffer;
 import groovyjarjarantlr.LexerSharedInputState;
 import groovyjarjarantlr.TokenStreamRecognitionException;
+
 import org.codehaus.groovy.antlr.*;
 import org.codehaus.groovy.ast.Comment;
 

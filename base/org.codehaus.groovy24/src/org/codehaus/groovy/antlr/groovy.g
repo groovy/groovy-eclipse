@@ -27,10 +27,12 @@ package org.codehaus.groovy.antlr.parser;
 
 import java.io.*;
 import java.util.*;
+
 import antlr.CommonToken;
 import antlr.InputBuffer;
 import antlr.LexerSharedInputState;
 import antlr.TokenStreamRecognitionException;
+
 import org.codehaus.groovy.antlr.*;
 import org.codehaus.groovy.ast.Comment;
 }
@@ -1153,7 +1155,7 @@ modifier
 annotation!  {Token first = LT(1);}
     :   AT! i:identifier nls! (options{greedy=true;}: LPAREN! ( args:annotationArguments )? RPAREN! )?
         {#annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)), i, args);}
-    // GRECLIPSE add - allow freestanding '@' for content assist
+    // GRECLIPSE add -- allow freestanding '@' for content assist
     |   AT! nls!
         {
           String type = "_";
@@ -1196,7 +1198,7 @@ annotationMemberValuePairs
     ;
 
 annotationMemberValuePair!  {Token first = LT(1);}
-    // GRECLIPSE edit - allow the pair to exist with no value initializer; user may want content assist for value
+    // GRECLIPSE edit -- allow the pair to exist with no value initializer; user may want content assist for value
     //:   i:annotationIdent ASSIGN! nls! v:annotationMemberValueInitializer
     :   i:annotationIdent ASSIGN! nls! ( v:annotationMemberValueInitializer )?
             {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)), i, v);}
@@ -2298,9 +2300,13 @@ forInClause
 /** In Java, "if", "while", and "for" statements can take random, non-braced statements as their bodies.
  *  Support this practice, even though it isn't very Groovy.
  */
-compatibleBodyStatement
+compatibleBodyStatement {Token first = LT(1);}
     :   (LCURLY)=>
         compoundStatement
+    // comma sep decl case converted to multiple statements so must be wrapped in SLIST when single statement occurs after if/while/for
+    |  (declarationStart (varInitializer)? COMMA)=>
+        de:declaration
+        {#compatibleBodyStatement = #(create(SLIST,"CBSLIST",first,LT(1)),de);}
     |
         statement[EOF]
     // GRECLIPSE add

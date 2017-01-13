@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import java.util.jar.Manifest;
  */
 public class UpdateExportedPackages {
 
-    public static final String GROOVY_ALL_PATH = "lib/groovy-all-2.4.7.jar";
+    public static final String GROOVY_ALL_PATH = "lib/groovy-all-2.4.8.jar";
     public static final String MANIFEST = "META-INF/MANIFEST.MF";
 
     public static void main(String[] args) throws Exception {

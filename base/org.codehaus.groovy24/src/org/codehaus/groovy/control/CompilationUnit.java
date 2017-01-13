@@ -35,6 +35,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
+import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.trait.TraitComposer;
 import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
@@ -252,6 +253,17 @@ public class CompilationUnit extends ProcessingUnit {
                 ecv.visitClass(classNode);
             }
         }, Phases.CANONICALIZATION);
+        addPhaseOperation(new PrimaryClassNodeOperation() {
+            @Override
+            public void call(SourceUnit source, GeneratorContext context,
+                             ClassNode classNode) throws CompilationFailedException {
+                Object callback = classNode.getNodeMetaData(StaticCompilationMetadataKeys.DYNAMIC_OUTER_NODE_CALLBACK);
+                if (callback instanceof PrimaryClassNodeOperation) {
+                    ((PrimaryClassNodeOperation) callback).call(source, context, classNode);
+                    classNode.removeNodeMetaData(StaticCompilationMetadataKeys.DYNAMIC_OUTER_NODE_CALLBACK);
+                }
+            }
+        }, Phases.INSTRUCTION_SELECTION);
 
         // apply configuration customizers if any
         if (configuration != null) {
@@ -1046,7 +1058,7 @@ public class CompilationUnit extends ProcessingUnit {
 
 
     /**
-     * An callback interface for use in the applyToSourceUnits loop driver.
+     * An callback interface for use in the applyToPrimaryClassNodes loop driver.
      */
     public abstract static class PrimaryClassNodeOperation {
         public abstract void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException;
@@ -1097,24 +1109,25 @@ public class CompilationUnit extends ProcessingUnit {
         if (!sort) return unsorted;
 
         // GRECLIPSE edit
-        //int[] indexClass = new int[unsorted.size()];
-        //int[] indexInterface = new int[unsorted.size()];
-        //{
-        //    int i = 0;
-        //    for (Iterator<ClassNode> iter = unsorted.iterator(); iter.hasNext(); i++) {
-        //        ClassNode element = iter.next();
-        //        if (element.isInterface()) {
-        //            indexInterface[i] = getSuperInterfaceCount(element);
-        //            indexClass[i] = -1;
-        //        } else {
-        //            indexClass[i] = getSuperClassCount(element);
-        //            indexInterface[i] = -1;
-        //        }
-        //    }
-        //}
-        //List<ClassNode> sorted = getSorted(indexInterface, unsorted);
-        //sorted.addAll(getSorted(indexClass, unsorted));
+        /*int[] indexClass = new int[unsorted.size()];
+        int[] indexInterface = new int[unsorted.size()];
+        {
+            int i = 0;
+            for (Iterator<ClassNode> iter = unsorted.iterator(); iter.hasNext(); i++) {
+                ClassNode element = iter.next();
+                if (element.isInterface()) {
+                    indexInterface[i] = getSuperInterfaceCount(element);
+                    indexClass[i] = -1;
+                } else {
+                    indexClass[i] = getSuperClassCount(element);
+                    indexInterface[i] = -1;
+                }
+            }
+        }
 
+        List<ClassNode> sorted = getSorted(indexInterface, unsorted);
+        sorted.addAll(getSorted(indexClass, unsorted));
+        */
         // Sort them by how many types are in their hierarchy, but all interfaces first.
         // Algorithm:
         // Create a list of integers.  Each integer captures the index into the unsorted

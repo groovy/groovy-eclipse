@@ -243,15 +243,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     private static void saveAsXML(String name, AST ast) {
         // GRECLIPSE edit
-        //XStream xstream = new XStream();
-        //try {
-        //    xstream.toXML(ast, new FileWriter(name + ".antlr.xml"));
-        //    System.out.println("Written AST to " + name + ".antlr.xml");
-        //}
-        //catch (Exception e) {
-        //    System.out.println("Couldn't write to " + name + ".antlr.xml");
-        //    e.printStackTrace();
-        //}
+        //XStreamUtils.serialize(name + ".antlr", ast);
         // GRECLIPSE end
     }
 
@@ -319,7 +311,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (statementBlock.isEmpty()) {
             return true;
         }
-        // Is it just a constant expression containing the word error? 
+        // Is it just a constant expression containing the word error?
         // do we need to change it from ERROR to something more unlikely?
         List<Statement> statements = statementBlock.getStatements();
         if (statements != null && statements.size() == 1) {
@@ -456,7 +448,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 String name = identifier(node);
                 // import is like  "import Foo"
                 ClassNode type = ClassHelper.make(name);
-                assert !(type instanceof ImmutableClassNode);
                 configureAST(type, importNode);
                 addImport(type, name, alias, annotations);
                 return;
@@ -2637,8 +2628,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         // GRECLIPSE edit
         //return CastExpression.asExpression(type, leftExpression);
-        // GRECLIPSE-768 when as expression is in nested 
-        // loop, ensure that the sloc is the start of the 
+        // GRECLIPSE-768 when as expression is in nested
+        // loop, ensure that the sloc is the start of the
         // expression and the end of the type
         CastExpression asExpr = CastExpression.asExpression(type, leftExpression);
         asExpr.setStart(leftExpression.getStart());
@@ -2930,7 +2921,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // not quite ideal -- a null node is a sign of a new call without the type being specified
         // (it is a syntax error); setting up with Object here prevents multiple downstream issues
         if (node == null) {
-            return new ConstructorCallExpression(ClassHelper.OBJECT_TYPE, new ArgumentListExpression()); 
+            return new ConstructorCallExpression(ClassHelper.OBJECT_TYPE, new ArgumentListExpression());
         }
         // GRECLIPSE end
 
@@ -3529,7 +3520,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         //}
         int startcol = ast.getColumn();
         int startline = ast.getLine();
-        int startoffset = locations.findOffset(startline,startcol);
+        int startoffset = locations.findOffset(startline, startcol);
         int lastcol;
         int lastline;
         int endoffset;
@@ -3656,7 +3647,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         output.setColumnNumber(1);
         output.setLastColumnNumber(locations.getEndColumn());
         output.setLastLineNumber(locations.getEndLine());
-        
+
         // start location should be the start of either the first method or statement
         // end location should be the end of either the last method or statement
         BlockStatement statement = output.getStatementBlock();
@@ -3680,7 +3671,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 scriptClass.setEnd(last.getEnd());
                 scriptClass.setLastLineNumber(last.getLastLineNumber());
                 scriptClass.setLastColumnNumber(last.getLastColumnNumber());
-                
+
                 // fix the run method to contain the start and end locations of the statement block
                 MethodNode runMethod = scriptClass.getDeclaredMethod("run", new Parameter[0]);
                 runMethod.setStart(first.getStart());
@@ -3718,7 +3709,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     /** Returns the last ast node in the script, either a method or a statement. */
     private ASTNode getLast(BlockStatement statement, List<MethodNode> methods) {
         Statement lastStatement = hasScriptStatements(statement) ? statement.getStatements().get(statement.getStatements().size() - 1) : null;
-        MethodNode lastMethod = hasScriptMethods(methods) ? methods.get(methods.size()-1) : null;
+        MethodNode lastMethod = hasScriptMethods(methods) ? methods.get(methods.size() - 1) : null;
         if (lastMethod == null && (lastStatement == null || (lastStatement.getStart() == 0 && lastStatement.getLength() == 0))) {
             // An empty script with no methods or statements.
             // instead make a synthetic statement from the end of the package declaration/import statements
@@ -3734,7 +3725,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Statement synthetic = ReturnStatement.RETURN_NULL_OR_VOID;
         ASTNode target = null;
         if (output.getImports() != null && !output.getImports().isEmpty()) {
-            target = output.getImports().get(output.getImports().size() -1);
+            target = output.getImports().get(output.getImports().size() - 1);
         } else if (output.hasPackage()) {
             target = output.getPackage();
         }

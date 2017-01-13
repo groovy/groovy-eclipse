@@ -314,14 +314,7 @@ public class SourceUnit extends ProcessingUnit {
 
     private static void saveAsXML(String name, ModuleNode ast) {
         // GRECLIPSE edit
-        //XStream xstream = new XStream();
-        //try {
-        //    xstream.toXML(ast, new FileWriter(name + ".xml"));
-        //    System.out.println("Written AST to " + name + ".xml");
-        //} catch (Exception e) {
-        //    System.out.println("Couldn't write to " + name + ".xml");
-        //    e.printStackTrace();
-        //}
+        //XStreamUtils.serialize(name, ast);
         // GRECLIPSE end
     }
 

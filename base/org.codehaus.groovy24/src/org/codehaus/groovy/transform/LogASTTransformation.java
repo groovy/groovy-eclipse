@@ -19,7 +19,6 @@
 package org.codehaus.groovy.transform;
 
 import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyRuntimeException;
 import groovy.transform.CompilationUnitAware;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
@@ -30,11 +29,13 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
@@ -99,6 +100,9 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                 if (exp instanceof MethodCallExpression) {
                     return transformMethodCallExpression(exp);
                 }
+                if (exp instanceof ClosureExpression) {
+                    return transformClosureExpression((ClosureExpression) exp);
+                }
                 return super.transform(exp);
             }
 
@@ -113,6 +117,14 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
                     logNode = loggingStrategy.addLoggerFieldToClass(node, logFieldName, categoryName);
                 }
                 super.visitClass(node);
+            }
+
+            private Expression transformClosureExpression(ClosureExpression exp) {
+                if (exp.getCode() instanceof BlockStatement) {
+                    BlockStatement code = (BlockStatement) exp.getCode();
+                    super.visitBlockStatement(code);
+                }
+                return exp;
             }
 
             private Expression transformMethodCallExpression(Expression exp) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,22 +65,31 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
      */
     protected String[] getDefaultClassPaths() {
         String[] cps = super.getDefaultClassPaths();
-        String[] newcps = new String[cps.length+2];
+        String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
 
-        String[] groovyVersions = {"2.4.7", "2.3.11", "2.2.2", "2.1.9", "2.0.8", "1.8.9"};
+        String[] ivyVersions = {"2.4.0", "2.3.0", "2.2.0"};
+        String[] groovyVersions = {"2.4.8", "2.3.11", "2.2.2", "2.1.9", "2.0.8", "1.8.9"};
         try {
-            URL groovyJar=null;
+            URL groovyJar = null;
             for (String groovyVer : groovyVersions) {
-                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-"+groovyVer+".jar");
-                if (groovyJar!=null) break;
+                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-" + groovyVer + ".jar");
+                if (groovyJar != null) break;
             }
-            newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
+            newcps[newcps.length-3] = FileLocator.resolve(groovyJar).getFile();
+
+            URL ivyJar = null;
+            for (String ivyVer : ivyVersions) {
+                ivyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/ivy-" + ivyVer + ".jar");
+                if (ivyJar != null) break;
+            }
+            newcps[newcps.length-2] = FileLocator.resolve(ivyJar).getFile();
+
             // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
             // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
             // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
             // classpath for just this reason, hmm.
-            newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
+            newcps[newcps.length-1] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
         } catch (IOException e) {
             fail("IOException thrown " + e.getMessage());
         }

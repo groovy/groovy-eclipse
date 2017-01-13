@@ -133,6 +133,7 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
             ret += " super "+getPrintName(lowerBound);
         }
         return ret;
+
     }
     
     private static String getPrintName(ClassNode cn) {

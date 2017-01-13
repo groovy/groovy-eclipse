@@ -70,6 +70,7 @@ public class ConstantExpression extends Expression {
                 } else {
                     setType(ClassHelper.make(value.getClass()));
                 }
+                //TODO: more cases here
             } else {
                 setType(ClassHelper.make(value.getClass()));
             }
@@ -90,7 +91,7 @@ public class ConstantExpression extends Expression {
 
     /**
      * @return the value of this constant expression
-     */
+     */    
     public Object getValue() {
         return value;
     }

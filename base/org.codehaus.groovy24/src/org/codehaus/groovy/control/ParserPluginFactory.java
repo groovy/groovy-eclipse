@@ -18,52 +18,39 @@
  */
 package org.codehaus.groovy.control;
 
-import org.codehaus.groovy.antlr.AntlrParserPluginFactory;
+//import org.codehaus.groovy.antlr.AntlrParserPluginFactory;
+import org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory;
 
 /**
  * A factory of parser plugin instances
  *
  */
 public abstract class ParserPluginFactory {
-    public static ParserPluginFactory newInstance(boolean useNewParser) {
-        if (useNewParser) {
-            Class type = null;
-            // GRECLIPSE edit
-            String name = "org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory"/*"org.codehaus.groovy.antlr.AntlrParserPluginFactory"*/;
-            // GRECLIPSE end
-            try {
-                type = Class.forName(name);
-            }
-            catch (ClassNotFoundException e) {
-                try {
-                    type = ParserPluginFactory.class.getClassLoader().loadClass(name);
-                }
-                catch (ClassNotFoundException e1) {
-                    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-                    if (contextClassLoader != null) {
-                        try {
-                            type = contextClassLoader.loadClass(name);
-                        }
-                        catch (ClassNotFoundException e2) {
-                            // ignore
-                        }
-                    }
-                }
-            }
 
-            if (type != null) {
-                try {
-                    return (ParserPluginFactory) type.newInstance();
-                }
-                catch (Exception e) {
-                    // GRECLIPSE edit
-                    throw new RuntimeException("Could not create ErrorRecoveredCSTParserPluginFactory: "/*"Could not create AntlrParserPluginFactory: "*/ + e, e);
-                    // GRECLIPSE end
-                }
-            }
-            // can't find Antlr parser, so lets use the Classic one
-        }
-        return new AntlrParserPluginFactory();
+    /**
+     * Creates a new instance of {@link ParserPluginFactory}.
+     *
+     * <p>The <code>useNewParser</code> parameter is not used, and this method
+     * is kept for backward compatibility.
+     *
+     * @param useNewParser unused.
+     * @return the new parser factory.
+     * @deprecated use {@link #newInstance()}
+     */
+    @Deprecated
+    public static ParserPluginFactory newInstance(boolean useNewParser) {
+        return newInstance();
+    }
+
+    /**
+     * Creates a new instance of {@link ParserPluginFactory}.
+     *
+     * @return the new parser factory.
+     */
+    public static ParserPluginFactory newInstance() {
+        // GRECLIPSE edit
+        return new /*AntlrParserPluginFactory*/ErrorRecoveredCSTParserPluginFactory();
+        // GRECLIPSE end
     }
 
     public abstract ParserPlugin createParserPlugin();

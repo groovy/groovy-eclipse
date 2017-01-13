@@ -104,8 +104,6 @@ import java.util.Set;
  * by the class are needed, then a call to {@link #redirect()} will help.
  *
  * @see org.codehaus.groovy.ast.ClassHelper
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @author Jochen Theodorou
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE private->package
@@ -190,21 +188,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected Class clazz;
     // only false when this classNode is constructed from a class
     // GRECLIPSE private->protected
-    protected boolean lazyInitDone = true;
+    protected boolean lazyInitDone=true;
     // not null if if the ClassNode is an array
     // GRECLIPSE private->protected
     protected ClassNode componentType = null;
     // if not null this instance is handled as proxy
     // for the redirect
     // GRECLIPSE private->protected
-    protected ClassNode redirect = null;
+    protected ClassNode redirect=null;
     // flag if the classes or its members are annotated
     private boolean annotated;
 
     // type spec for generics
     // GRECLIPSE private->protected
-    protected GenericsType[] genericsTypes = null;
-    private boolean usesGenerics = false;
+    protected GenericsType[] genericsTypes=null;
+    private boolean usesGenerics=false;
 
     // if set to true the name getGenericsTypes consists
     // of 1 element describing the name of the placeholder
@@ -299,19 +297,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                  case 'b': return "[B";//byte
                  case 'c': return "[C";//char
                  default:
-                     //case 'l': 
+                     //case 'l':
                      return "[J";//long
                  }
             } else {
                 return "[I";//int
-            }           
+            }
         } else if (componentType.isArray()) {
             // follow the pattern:
             if (n.charAt(0)=='[') {
                 return new StringBuilder("[").append(n).toString();
             } else {
-                return new StringBuilder(n).append("[]").toString();                
-            }       
+                return new StringBuilder(n).append("[]").toString();
+            }
         } else {
             // reference type:
             return new StringBuilder("[L").append(componentType.getName()).append(";").toString();
@@ -1199,11 +1197,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public MethodNode getGetterMethod(String getterName) {
+        return getGetterMethod(getterName, true);
+    }
+
+    public MethodNode getGetterMethod(String getterName, boolean searchSuperClasses) {
         MethodNode getterMethod = null;
+        boolean booleanReturnOnly = getterName.startsWith("is");
         for (MethodNode method : getDeclaredMethods(getterName)) {
             if (getterName.equals(method.getName())
                     && ClassHelper.VOID_TYPE!=method.getReturnType()
-                    && method.getParameters().length == 0) {
+                    && method.getParameters().length == 0
+                    && (!booleanReturnOnly || ClassHelper.Boolean_TYPE.equals(ClassHelper.getWrapper(method.getReturnType())))) {
                 // GROOVY-7363: There can be multiple matches for a getter returning a generic parameter type, due to
                 // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
                 // has the most specific and exact return type of the two. Picking the bridge method results in loss of
@@ -1214,8 +1218,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
         if (getterMethod != null) return getterMethod;
-        ClassNode parent = getSuperClass();
-        if (parent!=null) return parent.getGetterMethod(getterName);
+        if (searchSuperClasses) {
+            ClassNode parent = getSuperClass();
+            if (parent != null) return parent.getGetterMethod(getterName);
+        }
         return null;
     }
 
@@ -1417,10 +1423,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         } else if (arguments instanceof MapExpression) {
             count = 1;
         }
-        
+
         for (MethodNode method : getMethods(name)) {
             if(method.isStatic()) {
-                Parameter[] parameters = method.getParameters(); 
+                Parameter[] parameters = method.getParameters();
                 if (parameters.length == count) return true;
 
                 // handle varargs case
@@ -1450,7 +1456,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public boolean isResolved(){
         return redirect().isReallyResolved() || // GRECLIPSE add
-            redirect().clazz!=null || (componentType!=null && componentType.isResolved());
+            redirect().clazz!=null || (componentType != null && componentType.isResolved());
     }
 
     // GRECLIPSE hacky; rework (remove?) this if it behaves as an approach
@@ -1670,7 +1676,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         return transformInstances;
     }
-
+    
     public boolean isRedirectNode() {
         return redirect!=null;
     }

@@ -46,7 +46,13 @@ import static java.lang.reflect.Modifier.*;
 import static groovyjarjarasm.asm.Opcodes.*;
 
 /**
- * ClassCompletionVerifier
+ * Checks that a class satisfies various conditions including:
+ * <ul>
+ *     <li>Incorrect class or method access modifiers</li>
+ *     <li>No abstract methods appear in a non-abstract class</li>
+ *     <li>Existence and correct visibility for inherited members</li>
+ *     <li>Invalid attempts to override final members</li>
+ * </ul>
  */
 public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 
@@ -524,9 +530,20 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             case Types.RIGHT_SHIFT_EQUAL:
             case Types.RIGHT_SHIFT_UNSIGNED_EQUAL:
                 checkFinalFieldAccess(expression.getLeftExpression());
+                checkSuperOrThisOnLHS(expression.getLeftExpression());
                 break;
             default:
                 break;
+        }
+    }
+
+    private void checkSuperOrThisOnLHS(Expression expression) {
+        if (!(expression instanceof VariableExpression)) return;
+        VariableExpression ve = (VariableExpression) expression;
+        if (ve.isThisExpression()) {
+            addError("cannot have 'this' as LHS of an assignment", expression);
+        } else if (ve.isSuperExpression()) {
+            addError("cannot have 'super' as LHS of an assignment", expression);
         }
     }
 

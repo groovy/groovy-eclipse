@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,12 @@
  */
 package org.codehaus.groovy.antlr;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Maps Line/Columns to offsets in a text file.  Assumes that '\n' is the newline delimiter.
- * The newline character is included as the last char on the current line.
- * Both columns and lines are 1 based
+ * Maps lines/columns to offsets in a text file.  Assumes '\n' is the newline
+ * delimiter.  The newline character is included as the last char on the line.
+ * Lines and columns are both 1 based
  *
  * <ul>
  * <li> "" -> [0,0]
@@ -43,13 +42,12 @@ public class LocationSupport {
 
     private final int[] lineEndings;
 
-    // not used
-    public LocationSupport(char[] contents) {
-        if (contents != null) {
-            lineEndings = processLineEndings(contents);
-        } else {
-            lineEndings = NO_LINE_ENDINGS;
-        }
+    public LocationSupport() {
+        lineEndings = NO_LINE_ENDINGS;
+    }
+
+    public LocationSupport(int[] lineEndings) {
+        this.lineEndings = lineEndings;
     }
 
     public LocationSupport(List<StringBuffer> lines) {
@@ -60,47 +58,46 @@ public class LocationSupport {
         }
     }
 
-    public LocationSupport(int[] lineEndings) {
-        this.lineEndings = lineEndings;
-    }
-
-    public LocationSupport() {
-        lineEndings = NO_LINE_ENDINGS;
-    }
-
-    private int[] processLineEndings(List<StringBuffer> lines) {
+    private int[] processLineEndings(List<? extends CharSequence> lines) {
         int[] newLineEndings = new int[lines.size() + 1]; // last index stores end of file
         int total = 0;
         int current = 1;
-        for (StringBuffer line : lines) {
-            newLineEndings[current++] = total += (line.length());
+        for (CharSequence line : lines) {
+            newLineEndings[current++] = (total += (line.length()));
         }
         return newLineEndings;
     }
 
-    private int[] processLineEndings(char[] contents) {
-        List<Integer> l = new ArrayList<Integer>();
-        for (int i = 0; i < contents.length; i++) {
+//    public LocationSupport(char[] contents) {
+//        if (contents != null) {
+//            lineEndings = processLineEndings(contents);
+//        } else {
+//            lineEndings = NO_LINE_ENDINGS;
+//        }
+//    }
 
-            if (contents[i] == '\n') {
-                l.add(i);
-            } else if (contents[i] == '\r') {
-                l.add(i);
-                if (i < contents.length && contents[i] == '\n') {
-                    i++;
-                }
-            }
-        }
+//    private int[] processLineEndings(char[] contents) {
+//        List<Integer> l = new ArrayList<Integer>();
+//        for (int i = 0; i < contents.length; i++) {
+//
+//            if (contents[i] == '\n') {
+//                l.add(i);
+//            } else if (contents[i] == '\r') {
+//                l.add(i);
+//                if (i < contents.length && contents[i] == '\n') {
+//                    i++;
+//                }
+//            }
+//        }
+//        int[] newLineEndings = new int[l.size()];
+//        int i = 0;
+//        for (Integer integer : l) {
+//            newLineEndings[i] = integer.intValue();
+//        }
+//        return newLineEndings;
+//    }
 
-        int[] newLineEndings = new int[l.size()];
-        int i = 0;
-        for (Integer integer : l) {
-            newLineEndings[i] = integer.intValue();
-        }
-        return newLineEndings;
-    }
-
-    // TODO maybe should throw exception if out of bounds?
+    // TODO: Maybe should throw exception if out of bounds?
     public int findOffset(int row, int col) {
         return row <= lineEndings.length && row > 0 ? lineEndings[row - 1] + col - 1 : 0;
     }

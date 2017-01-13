@@ -1,14 +1,14 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy
-Bundle-Name: Groovy Runtime
+Bundle-Name: Groovy
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.4.7.qualifier
+Bundle-Version: 2.4.8.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  lib/bsf-2.4.0.jar,
  lib/ivy-2.4.0.jar,
- lib/groovy-all-2.4.7.jar
+ lib/groovy-all-2.4.8.jar
 Export-Package: groovy.beans,
  groovy.grape,
  groovy.inspect,

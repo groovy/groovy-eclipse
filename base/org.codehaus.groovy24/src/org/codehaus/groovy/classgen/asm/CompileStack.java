@@ -105,9 +105,9 @@ public class CompileStack implements Opcodes {
     private final LinkedList stateStack = new LinkedList();
 
     // handle different states for the implicit "this"
-    private LinkedList<Boolean> implicitThisStack = new LinkedList();
+    private LinkedList<Boolean> implicitThisStack = new LinkedList<Boolean>();
     // handle different states for being on the left hand side
-    private LinkedList<Boolean> lhsStack = new LinkedList();
+    private LinkedList<Boolean> lhsStack = new LinkedList<Boolean>();
     {
         implicitThisStack.add(false);
         lhsStack.add(false);
@@ -130,7 +130,7 @@ public class CompileStack implements Opcodes {
     // stores if implicit or explicit this is used.
     private boolean implicitThis;
     private WriterController controller;
-    private boolean inSpecialConstructallCall;
+    private boolean inSpecialConstructorCall;
 
     protected static class LabelRange {
         public Label start;
@@ -171,7 +171,7 @@ public class CompileStack implements Opcodes {
         final Map stackVariables;
         final Map currentBlockNamedLabels;
         final LinkedList<BlockRecorder> finallyBlocks;
-        final boolean inSpecialConstructallCall;
+        final boolean inSpecialConstructorCall;
 
         StateStackElement() {
             scope = CompileStack.this.scope;
@@ -180,7 +180,7 @@ public class CompileStack implements Opcodes {
             stackVariables = CompileStack.this.stackVariables;
             currentBlockNamedLabels = CompileStack.this.currentBlockNamedLabels;
             finallyBlocks = CompileStack.this.finallyBlocks;
-            inSpecialConstructallCall = CompileStack.this.inSpecialConstructallCall;
+            inSpecialConstructorCall = CompileStack.this.inSpecialConstructorCall;
         }
     }
 
@@ -204,7 +204,7 @@ public class CompileStack implements Opcodes {
         breakLabel = element.breakLabel;
         stackVariables = element.stackVariables;
         finallyBlocks = element.finallyBlocks;
-        inSpecialConstructallCall = element.inSpecialConstructallCall;
+        inSpecialConstructorCall = element.inSpecialConstructorCall;
     }
 
     public Label getContinueLabel() {
@@ -391,7 +391,6 @@ public class CompileStack implements Opcodes {
         usedVariables.clear();
         scope = null;
         finallyBlocks.clear();
-        mv=null;
         resetVariableIndex(false);
         superBlockNamedLabels.clear();
         currentBlockNamedLabels.clear();
@@ -574,8 +573,8 @@ public class CompileStack implements Opcodes {
     private void makeLocalVariablesOffset(Parameter[] paras,boolean isInStaticContext) {
         resetVariableIndex(isInStaticContext);
 
-        for (int i = 0; i < paras.length; i++) {
-            makeNextVariableID(paras[i].getType(),false);
+        for (Parameter para : paras) {
+            makeNextVariableID(para.getType(), false);
         }
         localVariableOffset = nextVariableIndex;
 
@@ -589,16 +588,16 @@ public class CompileStack implements Opcodes {
 
         makeLocalVariablesOffset(paras,isInStaticContext);
 
-        for (int i = 0; i < paras.length; i++) {
-            String name = paras[i].getName();
+        for (Parameter para : paras) {
+            String name = para.getName();
             BytecodeVariable answer;
-            ClassNode type = paras[i].getType();
-            if (paras[i].isClosureSharedVariable()) {
-                boolean useExistingReference = paras[i].getNodeMetaData(ClosureWriter.UseExistingReference.class) != null;
-                answer = defineVar(name, paras[i].getOriginType(), true, useExistingReference);
+            ClassNode type = para.getType();
+            if (para.isClosureSharedVariable()) {
+                boolean useExistingReference = para.getNodeMetaData(ClosureWriter.UseExistingReference.class) != null;
+                answer = defineVar(name, para.getOriginType(), true, useExistingReference);
                 answer.setStartLabel(startLabel);
                 if (!useExistingReference) {
-                    controller.getOperandStack().load(type,currentVariableIndex);
+                    controller.getOperandStack().load(type, currentVariableIndex);
                     controller.getOperandStack().box();
 
                     // GROOVY-4237, the original variable should always appear
@@ -608,7 +607,7 @@ public class CompileStack implements Opcodes {
                     // reference will be used
                     Label newStart = new Label();
                     controller.getMethodVisitor().visitLabel(newStart);
-                    BytecodeVariable var = new BytecodeVariable(currentVariableIndex, paras[i].getOriginType(), name, currentVariableIndex);
+                    BytecodeVariable var = new BytecodeVariable(currentVariableIndex, para.getOriginType(), name, currentVariableIndex);
                     var.setStartLabel(startLabel);
                     var.setEndLabel(newStart);
                     usedVariables.add(var);
@@ -661,10 +660,8 @@ public class CompileStack implements Opcodes {
     public BytecodeVariable defineVariable(Variable v, boolean initFromStack) {
         return defineVariable(v, v.getOriginType(), initFromStack);
     }
+
     public BytecodeVariable defineVariable(Variable v, ClassNode variableType, boolean initFromStack) {
-        //TODO: any usage of this method should have different operand stack handing
-        //      then the remove(1) here and there in this one can be removed and others
-        //      can be changed
         String name = v.getName();
         BytecodeVariable answer = defineVar(name, variableType, v.isClosureSharedVariable(), v.isClosureSharedVariable());
         stackVariables.put(name, answer);
@@ -675,7 +672,16 @@ public class CompileStack implements Opcodes {
         ClassNode type = answer.getType().redirect();
         OperandStack operandStack = controller.getOperandStack();
 
-        if (!initFromStack) pushInitValue(type, mv);
+        if (!initFromStack) {
+            if (ClassHelper.isPrimitiveType(v.getOriginType()) && ClassHelper.getWrapper(v.getOriginType()) == variableType) {
+                pushInitValue(v.getOriginType(), mv);
+                operandStack.push(v.getOriginType());
+                operandStack.box();
+                operandStack.remove(1);
+            } else {
+                pushInitValue(type, mv);
+            }
+        }
         operandStack.push(answer.getType());
         if (answer.isHolder())  {
             operandStack.box();
@@ -852,11 +858,11 @@ public class CompileStack implements Opcodes {
     }
 
     public boolean isInSpecialConstructorCall() {
-        return inSpecialConstructallCall;
+        return inSpecialConstructorCall;
     }
 
     public void pushInSpecialConstructorCall() {
         pushState();
-        inSpecialConstructallCall = true;
+        inSpecialConstructorCall = true;
     }
 }

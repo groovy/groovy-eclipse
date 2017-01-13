@@ -19,8 +19,9 @@
 package org.codehaus.groovy.classgen.asm;
 
 import groovy.lang.GroovyRuntimeException;
-
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.GroovyBugError;
@@ -83,6 +84,7 @@ public class WriterController {
     private int bytecodeVersion = Opcodes.V1_5;
     private int lineNumber = -1;
     private int helperMethodIndex = 0;
+    private List<String> superMethodNames = new ArrayList<String>();
 
     public void init(AsmClassGenerator asmClassGenerator, GeneratorContext gcon, ClassVisitor cv, ClassNode cn) {
         CompilerConfiguration config = cn.getCompileUnit().getConfig();
@@ -407,5 +409,9 @@ public class WriterController {
 
     public int getNextHelperMethodIndex() {
         return helperMethodIndex++;
+    }
+
+    public List<String> getSuperMethodNames() {
+        return superMethodNames;
     }
 }
