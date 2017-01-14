@@ -8,3 +8,4 @@ sp_cleanup.organize_imports=true
 sp_cleanup.remove_trailing_whitespaces=true
 sp_cleanup.remove_trailing_whitespaces_all=true
 sp_cleanup.remove_trailing_whitespaces_ignore_empty=false
+sp_cleanup.update_copyright_notice=true
