@@ -84,6 +84,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             this.knownEnclosingType = outer;
             this.isPrimaryNode = false;
         }
+        // GRECLIPSE add
+        public String getUnresolvedName() {
+            // outer class (aka knownEnclosingType) may have aliased name that should be reflected here too
+            return super.getUnresolvedName().replace(knownEnclosingType.getName(), knownEnclosingType.getUnresolvedName());
+        }
+        // GRECLIPSE end
         public boolean hasPackageName() {
             if (redirect()!=this) return super.hasPackageName();
             return knownEnclosingType.hasPackageName();
@@ -985,18 +991,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // possibly an inner class (or inherited inner class)
             ClassExpression ce = (ClassExpression) objectExpression;
             ClassNode classNode = ce.getType();
-            // GRECLIPSE add
-            if ("this".equals(pe.getPropertyAsString())) {
-                pe.getProperty().setType(classNode);
-                return pe;
-            }
-            // GRECLIPSE end
             while (classNode != null) {
                 ClassNode type = new ConstructedNestedClass(classNode, pe.getPropertyAsString());
                 if (resolve(type, false, false, false)) {
                     if (classNode == ce.getType() || isVisibleNestedClass(type, ce.getType())) {
                         Expression ret = new ClassExpression(type);
-                        ret.setSourcePosition(ce);
+                        ret.setSourcePosition(pe); // GRECLIPSE ce->pe
                         return ret;
                     }
                 }
@@ -1300,7 +1300,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 member.setValue(newValue);
                 checkAnnotationMemberValue(newValue);
             }
-            // GRECLIPSE can't do this
+            // GRECLIPSE edit -- can't do this
             //if(annType.isResolved()) {
             //    Class annTypeClass = annType.getTypeClass();
             //    Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);

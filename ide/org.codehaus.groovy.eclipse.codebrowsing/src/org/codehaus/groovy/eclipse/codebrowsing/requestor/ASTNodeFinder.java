@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -269,10 +269,8 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         // NOTE: expression.getType() may refer to ClassNode behind "this" or "super", so it may cast a very wide net
         if (expression.getEnd() > 0 && expression.getStart() == expression.getType().getStart()) {
             check(expression.getType());
-        } else {
-            check(expression);
         }
-        super.visitClassExpression(expression);
+        check(expression);
     }
 
     @Override

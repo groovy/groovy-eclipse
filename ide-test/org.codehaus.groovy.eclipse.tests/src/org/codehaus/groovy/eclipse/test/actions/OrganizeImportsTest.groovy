@@ -723,6 +723,50 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doContentsCompareTest(contents, contents)
     }
 
+    void testInnerClass5() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E
+            E x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testInnerClass5a() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F
+            F x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testInnerClass5b() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F.G
+            G x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testInnerClass5c() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import static a.b.c.d.E.F.G.H
+            def x = H
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
     void testStaticImport() {
         String contents = '''\
             import static java.lang.String.format

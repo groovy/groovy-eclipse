@@ -211,6 +211,41 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    void testAddImportOnInnerClass2() {
+        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+
+        addImportOnSelection "E${CARET}.F.G.H"
+        assertEditorContents "import a.b.c.d.E\n\nE.F.G.H"
+    }
+
+    void testAddImportOnInnerClass2a() {
+        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+
+        addImportOnSelection "a.b.c.d.E${CARET}.F.G.H"
+        assertEditorContents "import a.b.c.d.E\n\nE.F.G.H"
+    }
+
+    void testAddImportOnInnerClass2b() {
+        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+
+        addImportOnSelection "a.b.c.d.E.F${CARET}.G.H"
+        assertEditorContents "import a.b.c.d.E.F\n\nF.G.H"
+    }
+
+    void testAddImportOnInnerClass2c() {
+        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+
+        addImportOnSelection "a.b.c.d.E.F.G${CARET}.H"
+        assertEditorContents "import a.b.c.d.E.F.G\n\nG.H"
+    }
+
+    void testAddImportOnInnerClass2d() {
+        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+
+        addImportOnSelection "a.b.c.d.E.F.G.H${CARET}"
+        assertEditorContents "import static a.b.c.d.E.F.G.H\n\nH"
+    }
+
     void testAddImportOnPackageQualifier1() {
         addImportOnSelection "java.util.con${CARET}current.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
@@ -234,6 +269,13 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
     void testAddImportOnPackageQualifier3b() {
         addImportOnSelection "${CARET}java.util.concurrent.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
+    }
+
+    void testAddImportOnPackageQualifier4() {
+        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+
+        addImportOnSelection "a${CARET}.b.c.d.E.F.G.H"
+        assertEditorContents "a.b.c.d.E.F.G.H"
     }
 
     // constructors/initializers

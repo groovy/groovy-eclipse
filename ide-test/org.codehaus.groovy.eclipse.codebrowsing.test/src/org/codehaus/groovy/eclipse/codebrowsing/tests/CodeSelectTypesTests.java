@@ -394,6 +394,34 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), "Foo", "Map");
     }
 
+    public void testSelectNestedQualifiedType() {
+        addGroovySource("interface E { interface F { interface G { String H = 'I' } } }", "E", "a.b.c.d");
+        String contents = "a.b.c.d.E.F.G.H";
+        assertCodeSelect(asList(contents), "d", "a.b.c.d");
+        assertCodeSelect(asList(contents), "E");
+        assertCodeSelect(asList(contents), "F");
+        assertCodeSelect(asList(contents), "G");
+        assertCodeSelect(asList(contents), "H");
+    }
+
+    public void testSelectNestedQualifyingType() {
+        addGroovySource("interface E { interface F { interface G { String H = 'I' } } }", "E", "a.b.c.d");
+        String contents = "import a.b.c.d.E\nE.F.G.H";
+        assertCodeSelect(asList(contents), "E");
+        assertCodeSelect(asList(contents), "F");
+        assertCodeSelect(asList(contents), "G");
+        assertCodeSelect(asList(contents), "H");
+    }
+
+    public void testSelectAliasedNestedQualifyingType() {
+        addGroovySource("interface E { interface F { interface G { String H = 'I' } } }", "E", "a.b.c.d");
+        String contents = "import a.b.c.d.E as X\nX.F.G.H";
+        assertCodeSelect(asList(contents), "X", "E");
+        assertCodeSelect(asList(contents), "F");
+        assertCodeSelect(asList(contents), "G");
+        assertCodeSelect(asList(contents), "H");
+    }
+
     // GRECLIPSE-1219
     public void testSelectAnnotationOnImport() {
         String contents = "@Deprecated import java.util.List; class Type { }";

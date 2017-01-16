@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,105 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
         String contents = '''\
             import java.util.LinkedList as LL
             def list = (LL) []
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias6() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E as X
+            X x
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias6a() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E as X
+            X.F x = null
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias6b() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E as X
+            X.F.G x = null
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias6c() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E as X
+            def x = X.F.G.H
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias7() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F as X
+            X x = null
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias7a() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F as X
+            X.G x = null
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias7b() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F as X
+            def x = X.G.H
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias8() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F.G as X
+            X x = null
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainAlias8a() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import a.b.c.d.E.F.G as X
+            def x = X.H
             '''
         doContentsCompareTest(contents, contents)
     }
@@ -162,14 +261,13 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testRetainStaticAlias6() {
         createGroovyType 'other', 'Wrapper', '''
-        class Wrapper {
-          enum Feature {
-            TopRanking,
-            SomethingElse
-          }
-        }
-        '''
-
+            class Wrapper {
+              enum Feature {
+                TopRanking,
+                SomethingElse
+              }
+            }
+            '''
         String contents = '''\
             import static other.Wrapper.Feature.TopRanking as feature
             import static other.Wrapper.Feature.values as features
@@ -177,6 +275,17 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
             for (f in features()) {
               print f
             }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
+    void testRetainStaticAlias7() {
+        createGroovyType 'a.b.c.d', 'E', '''
+            interface E { interface F { interface G { String H = 'I' } } }
+            '''
+        String contents = '''\
+            import static a.b.c.d.E.F.G.H as X
+            def x = X
             '''
         doContentsCompareTest(contents, contents)
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -286,8 +286,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 // check for code selection on the type name's qualifier string
                 if (nameStart > typeStart && nameStart > selectRegion.getEnd() && selectRegion.getEnd() > typeStart) {
                     String selected = gunit.getSource().substring(typeStart, selectRegion.getEnd());
-                    selected = selected.replaceAll("\\.$", ""); // remove trailing .
-                    String qualifier = GroovyUtils.splitName(type)[0];
+                    selected = selected.replaceAll("\\.$", ""); // remove any trailing dot
+                    String qualifier = GroovyUtils.splitName(type)[0].replace('$', '.');
 
                     // check for selection in fully-qualified name like 'java.lang.String'
                     Pattern pattern = Pattern.compile("^\\Q" + selected + "\\E\\w*");
@@ -296,24 +296,22 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         return matcher.group();
                     }
                     // check for selection in qualified name like 'Map.Entry'
-                    pattern = Pattern.compile("\\b\\Q" + selected + "\\E$");
+                    pattern = Pattern.compile("\\b\\Q" + selected + "\\E(\\b|$)");
                     matcher = pattern.matcher(qualifier);
                     if (matcher.find()) {
-                        return qualifier;
+                        return qualifier.substring(0, matcher.end());
                     }
                     // check for selection in aliased name like 'Foo.Entry' with 'import java.util.Map as Foo'
                     ImportNode alias = findImportAlias(selected, enclosingElement);
                     if (alias != null) {
                         // decode 'Foo' to 'Map' and try again, because qualifier could be 'java.util.Map'
-                        selected = alias.getType().getNameWithoutPackage();
-                        pattern = Pattern.compile("\\b\\Q" + selected + "\\E$");
+                        selected = selected.replace(alias.getAlias(), alias.getType().getNameWithoutPackage());
+                        pattern = Pattern.compile("\\b\\Q" + selected + "\\E(\\b|$)");
                         matcher = pattern.matcher(qualifier);
                         if (matcher.find()) {
-                            return qualifier;
+                            return qualifier.substring(0, matcher.end());
                         }
                     }
-
-                    // TODO: Handle select on 'A' of 'A.B.C'.
                 }
             }
         }
@@ -346,7 +344,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         while (!(elem instanceof GroovyCompilationUnit)) {
             elem = elem.getParent();
         }
-        return ((GroovyCompilationUnit) elem).getModuleNode().getImport(name);
+        int dot = name.indexOf('.');
+        return ((GroovyCompilationUnit) elem).getModuleNode().getImport(dot < 0 ? name : name.substring(0, dot));
     }
 
     private ITypeParameter findTypeParam(String name, IJavaElement enclosingElement) throws JavaModelException {

@@ -52,9 +52,9 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.CorextMessages;
 import org.eclipse.jdt.internal.corext.ValidateEditException;
+import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationMessages;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.corext.util.Resources;
@@ -162,7 +162,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
 
                             Pattern pattern;
                             Matcher matcher;
-                            String qualifier = GroovyUtils.splitName(type)[0];
+                            String qualifier = GroovyUtils.splitName(type)[0].replace('$', '.');
 
                             if (prefix.length() > 0) {
                                 // check for selection in fully-qualified name like 'java.lang.String' or 'java.util.Map.Entry'
@@ -197,7 +197,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                         if (fragment.kind() == ASTFragmentKind.PROPERTY) {
                             Expression expr = fragment.getAssociatedExpression();
                             if (expr instanceof ClassExpression) {
-                                importRewrite.addStaticImport(expr.getType().getName(), node.getText(), true);
+                                importRewrite.addStaticImport(expr.getType().getName().replace('$', '.'), node.getText(), true);
                                 return new DeleteEdit(expr.getStart(), expr.getLength() + 1);
                             }
                             if (expr instanceof VariableExpression) {
@@ -211,7 +211,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                             if (call != null && !call.isUsingGenerics()) {
                                 Expression expr = call.getObjectExpression();
                                 if (expr instanceof ClassExpression) {
-                                    importRewrite.addStaticImport(expr.getType().getName(), call.getMethodAsString(), false);
+                                    importRewrite.addStaticImport(expr.getType().getName().replace('$', '.'), call.getMethodAsString(), false);
                                     return new DeleteEdit(expr.getStart(), call.getMethod().getStart() - expr.getStart());
                                 }
                                 if (expr instanceof VariableExpression) {

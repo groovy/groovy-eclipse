@@ -362,20 +362,19 @@ public class OrganizeGroovyImports {
                     missingTypes.put(name, new UnresolvedTypeData(name, isAnnotation, range));
                 }
             } else if (length < name.length()) {
-                // We don't know exactly what the
-                // text is.  We just know how it resolves
-                // This can be a problem if an inner class.
-                // We don't really know what is in the text
-                // and we don't really know what is the import
-                // So, just ensure that none are slated for removal
+                // We don't know exactly what the text is. We just know how it
+                // resolves. This can be a problem if an inner class. We don't
+                // really know what is in the text and we don't really know what
+                // is the import. So, just ensure that none are slated for removal.
                 String partialName = name.replace('$', '.');
-                int innerIndex = name.lastIndexOf('$');
-                while (innerIndex > -1) {
-                    doNotRemoveImport(partialName);
-                    partialName = partialName.substring(0, innerIndex);
-                    innerIndex = name.lastIndexOf('$', innerIndex - 1);
-                }
                 doNotRemoveImport(partialName);
+                int innerIndex = name.length();
+                while ((innerIndex = name.lastIndexOf('$', innerIndex - 1)) > -1) {
+                    // 'java.util.Map.Entry' -> 'java.util.Map' as well as
+                    // 'java.util.Map.Entry as Foo.Entry' -> 'java.util.Map as Foo'
+                    partialName = name.replaceAll("\\Q" + name.substring(innerIndex) + "\\E(\\b|$)", "").replace('$', '.');
+                    doNotRemoveImport(partialName);
+                }
 
             } else if (length > name.length()) {
                 GroovyPlugin.getDefault().logError(String.format(
@@ -391,8 +390,10 @@ public class OrganizeGroovyImports {
 
         private String getTypeName(ClassNode node) {
             ClassNode type = getBaseType(node);
-            if (!type.getName().matches(".*\\b" + type.getUnresolvedName())) {
-                return type.getName() + " as " + type.getUnresolvedName();
+            // unresolved name may have dots and/or dollars (e.g. 'a.b.C$D' or 'C$D' or even 'C.D')
+            if (!type.getName().matches(".*\\b" + type.getUnresolvedName().replace('$', '.'))) {
+                // synch up name and unresolved name (e.g. 'java.util.Map$Entry as Foo$Entry')
+                return type.getName() + " as " + type.getUnresolvedName().replace('.', '$');
             }
             return type.getName();
         }
