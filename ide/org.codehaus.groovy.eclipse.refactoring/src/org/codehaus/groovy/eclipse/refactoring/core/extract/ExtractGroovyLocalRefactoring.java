@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ASTNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -295,7 +294,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 break;
             }
             if (astNode instanceof ModuleNode) {
-                limitTo = ASTNodeCompatibilityWrapper.getScriptClassDummy((ModuleNode) astNode);
+                limitTo = ((ModuleNode) astNode).getScriptClassDummy();
             }
         }
         if (replaceAllOccurrences) {

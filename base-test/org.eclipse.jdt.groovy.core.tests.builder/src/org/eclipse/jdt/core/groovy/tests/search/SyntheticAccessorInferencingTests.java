@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,9 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import junit.framework.Test;
 
 /**
- * Tests for synthetic accessor type inferencing.  See GRECLIPSE-1331
- * @author Andrew Eisenberg
- * @created Nov 13, 2009
+ * Tests for synthetic accessor type inferencing.
  *
+ * @author Andrew Eisenberg
  */
 public class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
 
@@ -34,7 +33,8 @@ public class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
     }
 
     public void testSyntheticAccessors1() throws Exception {
-        String contents = "// yes underlines and no content assist\n" +
+        String contents =
+                "// yes underlines and no content assist\n" +
                 "String getProperty1(param){}\n" +
                 "void getProperty2(){}\n" +
                 "boolean isProperty3(param){}\n" +
@@ -59,8 +59,8 @@ public class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
                 "property7\n" +
                 "property8\n" +
                 "\n" +
-                "property1a\n" +
-                "property2a\n" +
+                "property1a = 1\n" +
+                "property2a = 2\n" +
                 "property3a\n" +
                 "property4a \n" +
                 "\n" +
@@ -126,7 +126,6 @@ public class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
         shouldBeKnown(contents, "propertyCat2a", "Cat");
         shouldBeKnown(contents, "propertyCat3a", "Cat");
     }
-
 
     private void shouldBeUnknown(String contents, String var) {
         int start = contents.indexOf(var);

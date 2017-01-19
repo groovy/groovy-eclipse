@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ASTNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -51,11 +50,10 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 
 /**
- * Various AST related helpers
- * @author mike klenk
+ * Various AST related helpers.
  *
+ * @author mike klenk
  */
-
 public class ASTTools {
 
     /**
@@ -274,16 +272,16 @@ public class ASTTools {
                 containingClassNode = scriptClass;
             } else {
                 // ensure this method never returns null
-                containingClassNode = ASTNodeCompatibilityWrapper.getScriptClassDummy(moduleNode);
+                containingClassNode = moduleNode.getScriptClassDummy();
             }
         } else {
             // look for inner classes
-            Iterator<InnerClassNode> innerClasses = ASTNodeCompatibilityWrapper.getInnerClasses(containingClassNode);
+            Iterator<InnerClassNode> innerClasses = containingClassNode.getInnerClasses();
             while (innerClasses != null && innerClasses.hasNext()) {
                 InnerClassNode inner = innerClasses.next();
                 if (inner.getStart() <= offset && inner.getEnd() >= offset) {
                     containingClassNode = inner;
-                    innerClasses = ASTNodeCompatibilityWrapper.getInnerClasses(inner);
+                    innerClasses = inner.getInnerClasses();
                 }
             }
         }

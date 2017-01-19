@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@ import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
@@ -39,22 +39,18 @@ import org.codehaus.groovy.syntax.Types;
  *
  * There are several possibilities here:
  * <ul>
- * <li>
- * If {@link DeclarationExpression}, and the declared type is not Object, use that type</li>
- * <li>
- * If {@link DeclarationExpression}, and the declared type is Object, and there is an objectExpression, use the type of the object
- * expression. Add to the variable scope, don't replace</li>
- * <li>
- * If {@link BinaryExpression} (assignment), then use the type of the objectExpression. Replace in the VariableScope, don't add</li>
+ * <li>If {@link DeclarationExpression}, and the declared type isn't Object, use that type</li>
+ * <li>If {@link DeclarationExpression}, and the declared type is Object, and there is an object
+ *     expression, use the type of the object expression; add to VariableScope, don't replace</li>
+ * <li>If {@link BinaryExpression}, use the type of the objectExpression; replace in VariableScope, don't add</li>
  * </ul>
  *
  * @author Andrew Eisenberg
- * @created Sep 25, 2009
  */
 public class AssignmentStorer {
 
     /**
-     * Store the result of the current assignment statement in the given scope
+     * Store the result of the current assignment statement in the given scope.
      *
      * @param assign assignment statement to look at
      * @param scope scope to store result in
@@ -62,55 +58,21 @@ public class AssignmentStorer {
      */
     public void storeAssignment(BinaryExpression assign, VariableScope scope, ClassNode rhsType) {
         if (assign instanceof DeclarationExpression) {
-            DeclarationExpression declExpr = (DeclarationExpression) assign;
-
-            if (declExpr.isMultipleAssignmentDeclaration()) {
-                TupleExpression tuple = (TupleExpression) declExpr.getLeftExpression();
-                handleMultiAssignment(scope, rhsType, declExpr, tuple);
+            DeclarationExpression decl = (DeclarationExpression) assign;
+            if (decl.isMultipleAssignmentDeclaration()) {
+                TupleExpression tuple = (TupleExpression) decl.getLeftExpression();
+                handleMultiAssignment(scope, rhsType, decl, tuple);
             } else {
-
-                // use the declared type if not void and not object expression
-                VariableExpression variableExpression = declExpr.getVariableExpression();
-                ClassNode varType;
-                if (variableExpression.getOriginType() != null) {
-                    varType = variableExpression.getOriginType();
-                } else {
-                    varType = variableExpression.getType();
-                }
-                ClassNode typeToStore;
-                if (!VariableScope.isVoidOrObject(varType) && !varType.equals(VariableScope.OBJECT_CLASS_NODE)) {
-                    typeToStore = varType;
-                } else if (rhsType != null) {
-                    typeToStore = rhsType;
-                } else {
-                    typeToStore = VariableScope.OBJECT_CLASS_NODE;
-                }
-                // store the variable. declaring type is always null since the
-                // variable is being declared right here.
-                scope.addVariable(variableExpression.getName(), typeToStore, null);
+                VariableExpression var = decl.getVariableExpression();
+                scope.addVariable(var.getName(), findVariableType(var, rhsType), null);
             }
-        } else {
-            // only look at assignments and can't do much if objectExpressionType is null
-            // and only re-set if we have a real type for the object expression
-            if (isInterestingOperation(assign) && !VariableScope.isVoidOrObject(rhsType)) {
-                if (assign.getLeftExpression() instanceof VariableExpression) {
-                    VariableExpression var = (VariableExpression) assign.getLeftExpression();
-                    ClassNode declaringType = findDeclaringType(var);
-
-                    // two situations here: inside of scripts, we can set variables that are not explicitly
-                    // declared, so in this case, we updateOrAdd, but in a regular type, if the
-                    // variable is not already there, we only update (and underline otherwise)
-                    if (scope.inScriptRunMethod()) {
-                        scope.updateOrAddVariable(var.getName(), rhsType, declaringType);
-                    } else {
-                        scope.updateVariable(var.getName(), rhsType, declaringType);
-                    }
-                } else if (assign.getLeftExpression() instanceof TupleExpression) {
-                    TupleExpression tuple = (TupleExpression) assign.getLeftExpression();
-                    handleMultiAssignment(scope, rhsType, assign, tuple);
-                } else {
-                    // FIXADE this is probably a property node, eg- 'foo.bar = somevalue' just do Object type
-                }
+        } else if (isInterestingOperation(assign)) {
+            Expression lhs = assign.getLeftExpression();
+            if (lhs instanceof TupleExpression) {
+                TupleExpression tuple = (TupleExpression) lhs;
+                handleMultiAssignment(scope, rhsType, assign, tuple);
+            } else {
+                handleSingleAssignment(lhs, scope, rhsType);
             }
         }
     }
@@ -168,31 +130,48 @@ public class AssignmentStorer {
         scope.addVariable(node);
     }
 
-    private void handleMultiAssignment(VariableScope scope, ClassNode objectExpressionType, BinaryExpression binaryExpr,
-            TupleExpression tuple) {
+    private void handleMultiAssignment(VariableScope scope, ClassNode objectExpressionType, BinaryExpression binaryExpr, TupleExpression tuple) {
         // the type to use if rhs is not a List literal expression
         ClassNode maybeType = findComponentType(objectExpressionType);
-        // try to associate the individual tuple expression elements
-        // with something on the rhs
-        ListExpression rhs = binaryExpr.getRightExpression() instanceof ListExpression ? (ListExpression) binaryExpr
-                .getRightExpression() : null;
-        List<Expression> lhsExprs = (tuple == null ? Collections.<Expression>emptyList() : tuple.getExpressions());
-        List<Expression> rhsExprs = (rhs == null ? Collections.<Expression>emptyList() : rhs.getExpressions());
-        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsExprs.size(); i < lhsSize; i++) {
+        // try to associate the individual tuple expression elements with something on the rhs
+        ListExpression rhs = binaryExpr.getRightExpression() instanceof ListExpression ? (ListExpression) binaryExpr.getRightExpression() : null;
+        List<Expression> lhsExprs = (tuple == null ? Collections.EMPTY_LIST : tuple.getExpressions());
+        List<Expression> rhsExprs = (rhs == null ? Collections.EMPTY_LIST : rhs.getExpressions());
+
+        for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsExprs.size(); i < lhsSize; i += 1) {
             Expression lhsExpr = lhsExprs.get(i);
             ClassNode rhsType = i < rhsSize ? rhsExprs.get(i).getType() : maybeType;
+
             if (lhsExpr instanceof VariableExpression) {
-                scope.addVariable(((Variable) lhsExpr).getName(), rhsType, null);
+                VariableExpression var = (VariableExpression) lhsExpr;
+                scope.addVariable(var.getName(), findVariableType(var, rhsType), null);
             }
         }
     }
 
-    private ClassNode findComponentType(ClassNode objectExpressionType) {
-        if (objectExpressionType == null) {
-            return VariableScope.OBJECT_CLASS_NODE;
-        } else {
-            return VariableScope.extractElementType(objectExpressionType);
-        }
+    protected void handleSingleAssignment(Expression lhs, VariableScope scope, ClassNode rhsType) {
+        if (lhs instanceof PropertyExpression) {
+            lhs = ((PropertyExpression) lhs).getProperty();
+            handleSingleAssignment(lhs, scope, rhsType);
+
+        } else if (lhs instanceof VariableExpression) {
+            VariableExpression var = (VariableExpression) lhs;
+            // two situations here: inside of scripts, we can set variables that are not explicitly
+            // declared, so in this case, we updateOrAdd, but in a regular type, if the
+            // variable is not already there, we only update (and underline otherwise)
+            if (scope.inScriptRunMethod()) {
+                scope.updateOrAddVariable(var.getName(), findVariableType(var, rhsType), findDeclaringType(var));
+            } else {
+                scope.updateVariable(var.getName(), findVariableType(var, rhsType), findDeclaringType(var));
+            }
+
+        } else if (lhs instanceof ConstantExpression) {
+            // not a variable, but save ref to help find accessor
+            scope.getWormhole().put("lhs", lhs);
+
+        }/* else {
+            System.err.println("AssignmentStorer.storeAssignment: LHS is " + lhs.getClass().getSimpleName());
+        }*/
     }
 
     /**
@@ -218,16 +197,42 @@ public class AssignmentStorer {
     }
 
     /**
-     * Finds the declaring type of the accessed variable. Will be null if this is a local variable
+     * @return {@code true} if init is of type java.lang.Object, or there is no init
      */
-    private ClassNode findDeclaringType(VariableExpression var) {
-        return var.getAccessedVariable() instanceof AnnotatedNode ? ((AnnotatedNode) var.getAccessedVariable()).getDeclaringClass() : null;
+    private boolean isObjectType(Expression init) {
+        return init == null || VariableScope.OBJECT_CLASS_NODE.equals(init.getType());
+    }
+
+    private ClassNode findComponentType(ClassNode objectExpressionType) {
+        if (objectExpressionType == null) {
+            return VariableScope.OBJECT_CLASS_NODE;
+        } else {
+            return VariableScope.extractElementType(objectExpressionType);
+        }
     }
 
     /**
-     * @return true if init is of type java.lang.Object, or there is no init
+     * Finds the declaring type of the accessed variable.
+     * Will be {@code null} if this is a local variable.
      */
-    private boolean isObjectType(Expression init) {
-        return init == null || ClassHelper.OBJECT_TYPE.equals(init.getType());
+    private ClassNode findDeclaringType(VariableExpression var) {
+        if (var.getAccessedVariable() instanceof AnnotatedNode) {
+            return ((AnnotatedNode) var.getAccessedVariable()).getDeclaringClass();
+        }
+        return null;
+    }
+
+    private ClassNode findVariableType(VariableExpression var, ClassNode rhsType) {
+        ClassNode varType = var.getOriginType();
+        if (varType == null) {
+            varType = var.getType();
+        }
+        if (varType != null && !VariableScope.isVoidOrObject(varType)) {
+            return varType;
+        }
+        if (rhsType != null && !VariableScope.isVoidOrObject(rhsType)) {
+            return rhsType;
+        }
+        return VariableScope.OBJECT_CLASS_NODE;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -528,9 +528,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
 
         if (isLazy(fieldNode)) {
-            // GRECLIPSE-578 the @Lazy annotation forces an AST transformation
-            // not sure if we get much here because I think the body of the
-            // generated method for @Lazy is filled with binary instructions
             MethodNode lazyMethod = getLazyMethod(field.getElementName());
             if (lazyMethod != null) {
                 enclosingDeclarationNode = lazyMethod;
@@ -2096,6 +2093,7 @@ assert primaryExprType != null && dependentExprType != null;
     private boolean handleParameterList(Parameter[] params) {
         if (params != null) {
             VariableScope scope = scopes.peek();
+            scope.setPrimaryNode(false);
             for (Parameter node : params) {
                 assignmentStorer.storeParameterType(node, scope);
                 TypeLookupResult result = null;
@@ -2115,9 +2113,7 @@ assert primaryExprType != null && dependentExprType != null;
                     }
                 }
                 // visit the parameter itself
-                TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node,
-                        TypeConfidence.EXACT, scope);
-                scope.setPrimaryNode(false);
+                TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node, TypeConfidence.EXACT, scope);
                 VisitStatus status = notifyRequestor(node, requestor, parameterResult);
                 switch (status) {
                     case CONTINUE:

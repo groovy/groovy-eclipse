@@ -397,7 +397,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         ((FieldNode) declaration).getAnnotations();
                     if (annos != null) {
                         for (AnnotationNode anno : annos) {
-                            if (anno.getClassNode().getNameWithoutPackage().equals("Lazy")) {
+                            if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
                                 name = name.substring(1); // strip the leading $
                             }
                         }

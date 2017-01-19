@@ -30,7 +30,6 @@ import org.osgi.framework.Version;
  * Lots of tests to see that expressions have the proper type associated with them.
  *
  * @author Andrew Eisenberg
- * @created Nov 4, 2009
  */
 public final class InferencingTests extends AbstractInferencingTest {
 
@@ -715,10 +714,10 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testAssignment3() throws Exception {
-        String contents = "String x\nx = 7\nx";
+        String contents = "String x\nx = 7\nx"; // will be a GroovyCastException at runtime
         int start = contents.lastIndexOf("x");
         int end = start + 1;
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, start, end, "java.lang.String");
     }
 
     public void testAssignment4() throws Exception {
@@ -1556,8 +1555,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         String contents = "def (x, y) = new ArrayList()\nx\ny";
         int xStart = contents.lastIndexOf("x");
         int yStart = contents.lastIndexOf("y");
-        assertType(contents, xStart, xStart+1, "java.lang.Object<E>");
-        assertType(contents, yStart, yStart+1, "java.lang.Object<E>");
+        assertType(contents, xStart, xStart+1, "java.lang.Object");
+        assertType(contents, yStart, yStart+1, "java.lang.Object");
     }
 
     public void testMultiDecl7() throws Exception {
@@ -1608,6 +1607,14 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    public void testMultiDecl13() throws Exception {
+        String contents = "def (int x, float y) = [1,2]\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Integer");
+        assertType(contents, yStart, yStart+1, "java.lang.Float");
+    }
+
     // GRECLIPSE-1174 groovy casting
     public void testAsExpression1() throws Exception {
         String contents = "(1 as int).intValue()";
@@ -1631,6 +1638,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
+
     // GRECLIPSE-1264
     public void testImplicitVar2() throws Exception {
         String contents = "class SettingUndeclaredProperty {\n" +
@@ -1641,6 +1649,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
+
     // GRECLIPSE-1264
     public void testImplicitVar3() throws Exception {
         String contents =
@@ -1648,12 +1657,14 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
+
     // GRECLIPSE-1264
     public void testImplicitVar4() throws Exception {
         String contents = "doesNotExist = 9";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
+
     // GRECLIPSE-1264
     public void testImplicitVar5() throws Exception {
         String contents =
@@ -1662,6 +1673,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
+
     // GRECLIPSE-1264
     public void testImplicitVar6() throws Exception {
         String contents =
@@ -1672,6 +1684,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
+
     // GRECLIPSE-1264
     public void testImplicitVar7() throws Exception {
         String contents =
