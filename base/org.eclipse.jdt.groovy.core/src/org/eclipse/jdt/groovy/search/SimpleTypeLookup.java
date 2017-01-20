@@ -209,7 +209,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         ClassNode nodeType = node.getType();
         if ((!isPrimaryExpression || scope.isMethodCall()) && node instanceof ConstantExpression) {
             return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
-                isStaticObjectExpression, isPrimaryExpression, (scope.getWormhole().remove("lhs") == node ? Boolean.TRUE : Boolean.FALSE));
+                isStaticObjectExpression, isPrimaryExpression, (scope.getWormhole().remove("lhs") == node));
         }
 
         // no object expression, look at the kind of expression the following
