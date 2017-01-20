@@ -427,7 +427,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             type = typeFromDeclaration(decl, declaringType);
         }
 
-        if (variableInfo != null) {
+        if (variableInfo != null && !(decl instanceof MethodNode)) {
             type = variableInfo.type;
             if (scope.isThisOrSuper(var)) decl = type;
             declaringType = getMorePreciseType(declaringType, variableInfo);

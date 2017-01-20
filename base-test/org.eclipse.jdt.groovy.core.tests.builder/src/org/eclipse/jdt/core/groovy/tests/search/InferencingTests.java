@@ -132,55 +132,55 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
-    public void testInferNumber1() throws Exception {
+    public void testNumber1() throws Exception {
         assertType("10", "java.lang.Integer");
     }
 
-    public void testInferNumber1a() throws Exception {
+    public void testNumber1a() throws Exception {
         // same as above, but test that whitespace is not included
         assertType("10 ", 0, 2, "java.lang.Integer");
     }
 
-    public void testInferNumber2() throws Exception {
+    public void testNumber2() throws Exception {
         String contents ="def x = 1+2\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    public void testInferNumber3() throws Exception {
+    public void testNumber3() throws Exception {
         assertType("10L", "java.lang.Long");
     }
 
-    public void testInferNumber4() throws Exception {
+    public void testNumber4() throws Exception {
         assertType("10++", "java.lang.Integer");
     }
 
-    public void testInferNumber5() throws Exception {
+    public void testNumber5() throws Exception {
         assertType("++10", "java.lang.Integer");
     }
 
-    public void testInferNumber6() throws Exception {
+    public void testNumber6() throws Exception {
         String contents = "(x <=> y).intValue()";
         int start = contents.indexOf("intValue");
         int end = start + "intValue".length();
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    public void testInferString1() throws Exception {
+    public void testString1() throws Exception {
         assertType("\"10\"", "java.lang.String");
     }
 
-    public void testInferString2() throws Exception {
+    public void testString2() throws Exception {
         assertType("'10'", "java.lang.String");
     }
 
-    public void testInferString3() throws Exception {
+    public void testString3() throws Exception {
         String contents = "def x = '10'";
         assertType(contents, contents.indexOf('\''), contents.lastIndexOf('\'')+1, "java.lang.String");
     }
 
-    public void testInferString4() throws Exception {
+    public void testString4() throws Exception {
         String contents = "def x = false ? '' : ''\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
@@ -208,14 +208,14 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testInferList1() throws Exception {
+    public void testList1() throws Exception {
         String contents ="def x = []\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
         assertType(contents, start, end, "java.util.List<java.lang.Object>");
     }
 
-    public void testInferList2() throws Throwable {
+    public void testList2() throws Throwable {
         String contents = "def x = [] << \"\"\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
@@ -223,29 +223,113 @@ public final class InferencingTests extends AbstractInferencingTest {
             "java.util.Collection<java.lang.Object>", "java.util.List<java.lang.Object>");
     }
 
-    public void testInferClosure1() throws Exception {
+    public void testClosure1() throws Exception {
         String contents = "def fn = { a, b -> a + b }";
         assertType(contents, 4, 6, "groovy.lang.Closure");
     }
 
-    public void testInferClosure2() throws Exception {
+    public void testClosure2() throws Exception {
         String contents = "def fn = { int a, int b -> a + b }";
         assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
     }
 
-    public void _testInferClosure3() throws Exception {
+    public void _testClosure3() throws Exception {
         String contents = "def fn = x.&y";
         assertType(contents, 4, 6, "groovy.lang.Closure");
     }
 
-    public void _testInferClosure4() throws Exception {
+    public void _testClosure4() throws Exception {
         String contents = "def fn = 'abc'.&length";
         assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
     }
 
-    public void _testInferClosure5() throws Exception {
+    public void _testClosure5() throws Exception {
         String contents = "def fn = Collections.&emptyList";
         assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.util.List>
+    }
+
+    public void testClosure6() throws Exception {
+        String contents =
+                "class Baz {\n" +
+                "  URL other\n" +
+                "  def method() {\n" +
+                "    sumthin { other }\n" +
+                "  }\n" +
+                "}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertType(contents, start, end, "java.net.URL");
+    }
+
+    public void testClosure7() throws Exception {
+        String contents =
+                "class Baz {\n" +
+                "  URL other\n" +
+                "  def method() {\n" +
+                "    sumthin {\n" +
+                "      delegate\n" +
+                "      owner\n" +
+                "      getDelegate()\n" +
+                "      getOwner()\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
+        assertType(contents, start, end, "Baz");
+        start = contents.lastIndexOf("owner");
+        end = start + "owner".length();
+        assertType(contents, start, end, "Baz");
+        start = contents.lastIndexOf("getDelegate");
+        end = start + "getDelegate".length();
+        assertType(contents, start, end, "Baz");
+        start = contents.lastIndexOf("getOwner");
+        end = start + "getOwner".length();
+        assertType(contents, start, end, "Baz");
+    }
+
+    public void testClosure8() throws Exception {
+        String contents =
+                "def x = {\n" +
+                "maximumNumberOfParameters\n" +
+                "getMaximumNumberOfParameters()\n" +
+                "thisObject\n" +
+                "getThisObject()\n" +
+                "}";
+        int start = contents.lastIndexOf("maximumNumberOfParameters");
+        int end = start + "maximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("getMaximumNumberOfParameters");
+        end = start + "getMaximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.lastIndexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void testClosure9() throws Exception {
+        String contents =
+                "def x = { def y = {\n" +
+                "maximumNumberOfParameters\n" +
+                "getMaximumNumberOfParameters()\n" +
+                "thisObject\n" +
+                "getThisObject()\n" +
+                "}}";
+        int start = contents.lastIndexOf("maximumNumberOfParameters");
+        int end = start + "maximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("getMaximumNumberOfParameters");
+        end = start + "getMaximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.lastIndexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
     }
 
     public void testSpread1() throws Exception {
@@ -335,50 +419,50 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, start + "additionalBeanInfo".length(), "java.beans.BeanInfo[]");
     }
 
-    public void testInferMap1() throws Exception {
+    public void testMap1() throws Exception {
         assertType("[:]", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
-    public void testInferBoolean1() throws Exception {
+    public void testBoolean1() throws Exception {
         assertType("!x", "java.lang.Boolean");
     }
 
-    public void testInferBoolean2() throws Exception {
+    public void testBoolean2() throws Exception {
         String contents = "(x < y).booleanValue()";
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testInferBoolean3() throws Exception {
+    public void testBoolean3() throws Exception {
         String contents = "(x <= y).booleanValue()";
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testInferBoolean4() throws Exception {
+    public void testBoolean4() throws Exception {
         String contents = "(x >= y).booleanValue()";
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testInferBoolean5() throws Exception {
+    public void testBoolean5() throws Exception {
         String contents = "(x != y).booleanValue()";
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testInferBoolean6() throws Exception {
+    public void testBoolean6() throws Exception {
         String contents = "(x == y).booleanValue()";
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testInferBoolean7() throws Exception {
+    public void testBoolean7() throws Exception {
         String contents = "(x in y).booleanValue()";
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
@@ -446,14 +530,14 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
-    public void testInferFieldWithInitializer1() throws Exception {
+    public void testFieldWithInitializer1() throws Exception {
         String contents = "class A {\ndef x = 9\n}\n new A().x";
         int start = contents.lastIndexOf('x');
         int end = start + "x".length();
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    public void testInferFieldWithInitializer2() throws Exception {
+    public void testFieldWithInitializer2() throws Exception {
         createUnit("A", "class A {\ndef x = 9\n} ");
         String contents = "new A().x";
         int start = contents.lastIndexOf('x');
@@ -744,7 +828,8 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testInClosure1() throws Exception {
         String contents =
                 "class Bar {\n" +
-                "  def meth() { } }\n" +
+                "  def meth() { }\n" +
+                "}\n" +
                 "new Bar().meth {\n delegate }";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
@@ -754,7 +839,8 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testInClosure2() throws Exception {
         String contents =
                 "class Bar {\n" +
-                "  def meth(x) { } }\n" +
+                "  def meth(x) { }\n" +
+                "}\n" +
                 "new Bar().meth(6) {\n this }";
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
@@ -764,7 +850,8 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testInClosure2a() throws Exception {
         String contents =
                 "class Bar {\n" +
-                "  def meth(x) { } }\n" +
+                "  def meth(x) { }\n" +
+                "}\n" +
                 "new Bar().meth(6) {\n delegate }";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
@@ -774,7 +861,8 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testInClosure2b() throws Exception {
         String contents =
                 "class Bar {\n" +
-                "  def meth(x) { } }\n" +
+                "  def meth(x) { }\n" +
+                "}\n" +
                 "new Bar().meth(6) {\n owner }";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
@@ -811,7 +899,6 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "''.foo {\n" +
                 "  substring" +
                 "}";
-
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
@@ -822,7 +909,6 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "''.foo {\n" +
                 "  delegate.substring()" +
                 "}";
-
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
@@ -833,7 +919,6 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "''.foo {\n" +
                 "  this.substring" +
                 "}";
-
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertUnknownConfidence(contents, start, end, "Search", false);
@@ -844,94 +929,29 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "''.foo {\n" +
                 "  this\n" +
                 "}";
-
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
         assertType(contents, start, end, "Search", false);
     }
 
-    public void testClosure4() throws Exception {
+    public void testInClosure8() throws Exception {
         String contents =
-            "class Baz {\n" +
-            "  URL other\n" +
-            "  def method() {\n" +
-            "    sumthin { other }\n" +
-            "  }\n" +
-            "}";
-        int start = contents.lastIndexOf("other");
-        int end = start + "other".length();
-        assertType(contents, start, end, "java.net.URL");
-    }
-
-    public void testClosure5() throws Exception {
-        String contents =
-                "class Baz {\n" +
-                        "  URL other\n" +
-                        "  def method() {\n" +
-                        "    sumthin {\n" +
-                        "      delegate\n" +
-                        "      owner\n" +
-                        "      getDelegate()\n" +
-                        "      getOwner()\n" +
-                        "    }\n" +
-                        "  }\n" +
-                        "}";
-        int start = contents.lastIndexOf("delegate");
-        int end = start + "delegate".length();
-        assertType(contents, start, end, "Baz");
-        start = contents.lastIndexOf("owner");
-        end = start + "owner".length();
-        assertType(contents, start, end, "Baz");
-        start = contents.lastIndexOf("getDelegate");
-        end = start + "getDelegate".length();
-        assertType(contents, start, end, "Baz");
-        start = contents.lastIndexOf("getOwner");
-        end = start + "getOwner".length();
-        assertType(contents, start, end, "Baz");
-    }
-
-    public void testClosure6() throws Exception {
-        String contents =
-                "def x = {\n" +
-                "maximumNumberOfParameters\n" +
-                "getMaximumNumberOfParameters()\n" +
-                "thisObject\n" +
-                "getThisObject()\n" +
+                "new Date().with {\n" +
+                "  def t = time\n" +
                 "}";
-        int start = contents.lastIndexOf("maximumNumberOfParameters");
-        int end = start + "maximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("getMaximumNumberOfParameters");
-        end = start + "getMaximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.lastIndexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+        int start = contents.lastIndexOf("time");
+        int end = start + "time".length();
+        assertType(contents, start, end, "java.lang.Long", false);
     }
 
-    public void testClosure7() throws Exception {
+    public void testInClosure9() throws Exception {
         String contents =
-                "def x = { def y = {\n" +
-                "maximumNumberOfParameters\n" +
-                "getMaximumNumberOfParameters()\n" +
-                "thisObject\n" +
-                "getThisObject()\n" +
-                "}}";
-        int start = contents.lastIndexOf("maximumNumberOfParameters");
-        int end = start + "maximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("getMaximumNumberOfParameters");
-        end = start + "getMaximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.lastIndexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+                "new Date().with {\n" +
+                "  time = 0L\n" +
+                "}";
+        int start = contents.lastIndexOf("time");
+        int end = start + "time".length();
+        assertType(contents, start, end, "java.lang.Void", false);
     }
 
     // the declaring type of things inside of a closure should be the declaring

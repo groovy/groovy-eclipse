@@ -1056,7 +1056,6 @@ final class SemanticHighlightingTests extends TestCase {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('getReadOnly'), 11, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('value'),        5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('X'),        1, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),         4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('val'),      3, VARIABLE),
