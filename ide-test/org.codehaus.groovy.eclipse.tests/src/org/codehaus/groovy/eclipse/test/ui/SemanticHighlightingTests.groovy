@@ -1040,6 +1040,54 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 
+    void testWithBlock4() {
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class X {
+              def getReadOnly() {}
+              static {
+                new X().with {
+                  def val = readOnly
+                  readOnly = []
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getReadOnly'), 11, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('value'),        5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'),        1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),         4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'),      3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('readOnly'),     8, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('readOnly'), 8, UNKNOWN))
+    }
+
+    void testWithBlock5() {
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class X {
+              void setWriteOnly(value) {}
+              static {
+                new X().with {
+                  def val = writeOnly
+                  writeOnly = []
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('setWriteOnly'), 12, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('value'),         5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'),         1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),          4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'),       3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('writeOnly'),     9, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('writeOnly'), 9, METHOD_CALL))
+    }
+
     void testLazyInitExpr() {
         String contents = '''\
             class X {

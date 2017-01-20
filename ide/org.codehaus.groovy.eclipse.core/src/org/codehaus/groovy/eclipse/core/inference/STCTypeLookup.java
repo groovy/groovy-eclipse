@@ -25,8 +25,10 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
@@ -47,28 +49,38 @@ public class STCTypeLookup implements ITypeLookup {
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
     }
 
-    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
+    public TypeLookupResult lookupType(Expression expr, VariableScope scope, ClassNode objectExpressionType) {
         if (!isEnabled) {
             return null;
         }
-        Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
-        if (inferredType instanceof ClassNode) {
-            TypeConfidence confidence = TypeConfidence.INFERRED;
-            ASTNode decl = node;
-            if (node instanceof VariableExpression) {
-                Variable accessedVariable = ((VariableExpression) node).getAccessedVariable();
-                if (accessedVariable instanceof ASTNode) {
-                    decl = (ASTNode) accessedVariable;
-                } else if (accessedVariable instanceof DynamicVariable) {
-                    // defer to other type lookup impls
-                    confidence = TypeConfidence.UNKNOWN;
-                }
-            } else if (node instanceof FieldExpression) {
-                decl = ((FieldExpression) node).getField();
-            } else if (node instanceof ClassExpression) {
-                decl = node.getType();
+        Object inferredType = expr.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+        TypeConfidence confidence = TypeConfidence.INFERRED;
+        ASTNode declaration = expr;
+
+        if (expr instanceof VariableExpression) {
+            Variable accessedVariable = ((VariableExpression) expr).getAccessedVariable();
+            if (accessedVariable instanceof ASTNode) {
+                declaration = (ASTNode) accessedVariable;
+            } else if (accessedVariable instanceof DynamicVariable) {
+                // defer to other type lookup impls
+                confidence = TypeConfidence.UNKNOWN;
             }
-            return new TypeLookupResult((ClassNode) inferredType, objectExpressionType, decl, confidence, scope);
+        } else if (!(inferredType instanceof ClassNode) && // check for VariableExpressionTransformer's substitution
+                expr instanceof ConstantExpression && (declaration = scope.getEnclosingNode()) instanceof PropertyExpression) {
+            Object call = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (call instanceof MethodNode) {
+                declaration = (MethodNode) call;
+                inferredType = ((MethodNode) call).getReturnType();
+                objectExpressionType = ((MethodNode) call).getDeclaringClass();
+            }
+        } else if (expr instanceof FieldExpression) {
+            declaration = ((FieldExpression) expr).getField();
+        } else if (expr instanceof ClassExpression) {
+            declaration = expr.getType();
+        }
+
+        if (inferredType instanceof ClassNode) {
+            return new TypeLookupResult((ClassNode) inferredType, objectExpressionType, declaration, confidence, scope);
         }
         return null;
     }

@@ -41,6 +41,13 @@ public final class InferencingTests extends AbstractInferencingTest {
         super(name);
     }
 
+    // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
+    // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
+    private static boolean isAccessorPreferredForSTCProperty() {
+        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
+        return (version.compareTo(new Version(2, 4, 6)) >= 0);
+    }
+
     public void testLocalVar1() throws Exception {
         String contents ="def x\nthis.x";
         int start = contents.lastIndexOf("x");
@@ -1271,7 +1278,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         start = contents.indexOf("foo", end);
         end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void": "java.lang.String");
     }
 
     // Test 'with' operator. @CompileStatic annotation.
@@ -1298,24 +1305,19 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "p.D");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
-        // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
-        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
-        if (version.compareTo(new Version(2, 4, 6)) < 0) {
-            start = contents.indexOf("foo", end);
-            end = start + "foo".length();
-            assertType(contents, start, end, "java.lang.String");
-        }
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
     }
 
     // Another test 'with' operator. @CompileStatic annotation.
@@ -1341,20 +1343,15 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
-        // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
-        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
-        if (version.compareTo(new Version(2, 4, 6)) < 0) {
-            start = contents.indexOf("foo", end);
-            end = start + "foo".length();
-            assertType(contents, start, end, "java.lang.String");
-        }
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
     }
 
     // Unknown references should have the declaring type of the enclosing closure

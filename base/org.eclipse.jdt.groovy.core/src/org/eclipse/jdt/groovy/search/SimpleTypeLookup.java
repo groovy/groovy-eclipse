@@ -60,7 +60,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 /**
- * Determines types from the AST.
+ * Determines types using AST inspection.
  *
  * @author Andrew Eisenberg
  */
@@ -408,21 +408,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (decl instanceof FieldNode ||
                 decl instanceof MethodNode ||
                 decl instanceof PropertyNode) {
-                // use field/method/property type info
+                // use field/method/property info
                 variableInfo = null;
+                type = typeFromDeclaration(decl, ((AnnotatedNode) decl).getDeclaringClass());
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            // this is likely a reference to a field or method in a type in the hierarchy find the declaration
-            ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo),
+            // likely a reference to a field or method in a type in the hierarchy; find the declaration
+            ASTNode candidate = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo),
                 scope.containsInThisScope(accessedVar.getName()), scope.getMethodCallArgumentTypes());
-            if (maybeDeclaration != null) {
-                decl = maybeDeclaration;
-                // declaring type may have changed
+            if (candidate != null) {
+                decl = candidate;
                 declaringType = declaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
             } else {
                 newConfidence = UNKNOWN;
+                // dynamic variables are not allowed outside of script mainline
                 if (variableInfo != null && !scope.inScriptRunMethod()) variableInfo = null;
             }
+            type = typeFromDeclaration(decl, declaringType);
         }
 
         if (variableInfo != null) {
@@ -430,8 +432,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (scope.isThisOrSuper(var)) decl = type;
             declaringType = getMorePreciseType(declaringType, variableInfo);
             newConfidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
-        } else if (accessedVar instanceof DynamicVariable) {
-            type = typeFromDeclaration(decl, declaringType);
         }
 
         return new TypeLookupResult(type, declaringType, decl, newConfidence, scope);

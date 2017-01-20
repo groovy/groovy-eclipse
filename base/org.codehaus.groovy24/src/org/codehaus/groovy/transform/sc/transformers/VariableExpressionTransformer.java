@@ -20,7 +20,6 @@ package org.codehaus.groovy.transform.sc.transformers;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -54,19 +53,15 @@ public class VariableExpressionTransformer {
         Object val = expr.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
         if (val == null) return null;
         VariableExpression implicitThis = new VariableExpression("this");
+        PropertyExpression pexp = new PropertyExpression(implicitThis, expr.getName());
+        pexp.copyNodeMetaData(expr);
+        pexp.setImplicitThis(true);
         // GRECLIPSE add
-        // Expressions positions should be added to make it possible to recognize correct AST nodes later
-        ConstantExpression ce = new ConstantExpression(expr.getName());
-        ce.setStart(expr.getStart());
-        ce.setEnd(expr.getEnd());
-        // GRECLIPSE end
-        PropertyExpression pexp = new PropertyExpression(implicitThis, ce/*expr.getName()*/);
-        // GRECLIPSE add
+        pexp.getProperty().setStart(expr.getStart());
+        pexp.getProperty().setEnd(expr.getEnd());
         pexp.setStart(expr.getStart());
         pexp.setEnd(expr.getEnd());
         // GRECLIPSE end
-        pexp.copyNodeMetaData(expr);
-        pexp.setImplicitThis(true);
         ClassNode owner = expr.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
         if (owner != null) {
             implicitThis.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, owner);
