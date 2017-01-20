@@ -11,12 +11,12 @@ indentation=space
 tabsize=4
 ###src
 List l = [1,2,3]
-def sum = 0
+int sum = 0
 sum = l[1]
 print sum
 ###exp
 List l = [1,2,3]
-def sum = 0
+int sum = 0
 sum = meth(sum, l)
 print sum
 

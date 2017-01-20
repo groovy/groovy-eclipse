@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,15 +38,14 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * @author Andrew Eisenberg
- * @created 2013-02-25
  */
 public class STCTypeLookup implements ITypeLookup {
 
-    // only enabled for Groovy 2.1 or greater
-    private static final boolean isEnabled = CompilerUtils.getActiveGroovyBundle().getVersion().getMajor() >= 2
-            && CompilerUtils.getActiveGroovyBundle().getVersion().getMinor() > -1;
+    // only enabled for Groovy 2.0 or greater
+    private static final boolean isEnabled = (CompilerUtils.getActiveGroovyBundle().getVersion().getMajor() >= 2);
 
-    public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {}
+    public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+    }
 
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
         if (!isEnabled) {
@@ -61,9 +60,8 @@ public class STCTypeLookup implements ITypeLookup {
                 if (accessedVariable instanceof ASTNode) {
                     decl = (ASTNode) accessedVariable;
                 } else if (accessedVariable instanceof DynamicVariable) {
-                    // Give a chance for other lookups to find more adequate
-                    // declaration for dynamic variables
-                    confidence = TypeConfidence.LOOSELY_INFERRED;
+                    // defer to other type lookup impls
+                    confidence = TypeConfidence.UNKNOWN;
                 }
             } else if (node instanceof FieldExpression) {
                 decl = ((FieldExpression) node).getField();

@@ -156,12 +156,11 @@ public class AssignmentStorer {
 
         } else if (lhs instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) lhs;
-            // two situations here: inside of scripts, we can set variables that are not explicitly
-            // declared, so in this case, we updateOrAdd, but in a regular type, if the
-            // variable is not already there, we only update (and underline otherwise)
-            if (scope.inScriptRunMethod()) {
+            if (scope.inScriptRunMethod() || scope.getEnclosingClosure() != null) {
+                // undeclared variables are allowed in scripts and may resolve to something in closures
                 scope.updateOrAddVariable(var.getName(), findVariableType(var, rhsType), findDeclaringType(var));
             } else {
+                // undeclared variables are not allowed, so don't add just update
                 scope.updateVariable(var.getName(), findVariableType(var, rhsType), findDeclaringType(var));
             }
 

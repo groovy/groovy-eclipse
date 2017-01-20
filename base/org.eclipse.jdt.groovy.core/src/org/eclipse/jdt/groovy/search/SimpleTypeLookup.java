@@ -421,9 +421,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 declaringType = declaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
             } else {
                 newConfidence = UNKNOWN;
+                if (variableInfo != null && !scope.inScriptRunMethod()) variableInfo = null;
             }
-        } else {
-            assert accessedVar == null;
         }
 
         if (variableInfo != null) {

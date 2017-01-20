@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,6 @@ import org.eclipse.jface.text.Position;
  * Find all unknown references, regex expressions, field references, and static references.
  *
  * @author Andrew Eisenberg
- * @created Oct 29, 2009
  */
 public class SemanticHighlightingReferenceRequestor extends SemanticReferenceRequestor {
 
@@ -136,11 +135,14 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             pos = handleVariableExpression((Parameter) node, result.scope);
 
         } else if (node instanceof VariableExpression) {
-            pos = handleVariableExpression((VariableExpression) node, result.scope, enclosingElement);
-
+            if (result.declaration instanceof MethodNode) {
+                pos = handleMethodReference((Expression) node, result, false);
+            } else {
+                pos = handleVariableExpression((VariableExpression) node, result.scope, enclosingElement);
+            }
         } else if (node instanceof ConstantExpression) {
             if (result.declaration instanceof MethodNode) {
-                pos = handleMethodReference((ConstantExpression) node, result, (enclosingElement instanceof ImportDeclaration));
+                pos = handleMethodReference((Expression) node, result, (enclosingElement instanceof ImportDeclaration));
             } else {
                 pos = handleConstantExpression((ConstantExpression) node);
             }
@@ -262,7 +264,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         return new HighlightedTypedPosition(offset, length, kind);
     }
 
-    private HighlightedTypedPosition handleMethodReference(ConstantExpression expr, TypeLookupResult result, boolean isStaticImport) {
+    private HighlightedTypedPosition handleMethodReference(Expression expr, TypeLookupResult result, boolean isStaticImport) {
         MethodNode meth = (MethodNode) result.declaration;
 
         HighlightKind kind = null;

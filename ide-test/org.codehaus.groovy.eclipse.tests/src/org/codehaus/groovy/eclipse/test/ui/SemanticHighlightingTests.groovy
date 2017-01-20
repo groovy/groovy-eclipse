@@ -968,10 +968,14 @@ final class SemanticHighlightingTests extends TestCase {
 
     void testWithBlock1() {
         String contents = '''\
-            new Date().with {
-              setTime(1234L)
-              hours
-            }
+            class X { static {
+              new Date().with {
+                setTime(1234L)
+                time = 5678L
+                not1
+                not2 = hours
+              }
+            }}
             '''.stripIndent()
 
         assertHighlighting(contents,
@@ -979,20 +983,24 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 
     void testWithBlock2() {
         String contents = '''\
-            @groovy.transform.CompileStatic
-            class X {
-              static {
-                new Date().with {
-                  setTime(1234L)
-                  hours
-                }
+            @groovy.transform.TypeChecked
+            class X { static {
+              new Date().with {
+                setTime(1234L)
+                time = 5678L
+                not1
+                not2 = hours
               }
-            }
+            }}
             '''.stripIndent()
 
         assertHighlighting(contents,
@@ -1000,6 +1008,35 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+    }
+
+    void testWithBlock3() {
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class X { static {
+              new Date().with {
+                setTime(1234L)
+                time = 5678L
+                not1
+                not2 = hours
+              }
+            }}
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 

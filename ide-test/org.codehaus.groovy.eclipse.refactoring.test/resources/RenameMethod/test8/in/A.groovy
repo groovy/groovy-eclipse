@@ -8,7 +8,7 @@ class myOtherClass{
     def m(){
     }
 }
-B a = new B()
-a.m()
-a = new myOtherClass()
-a.m()
+def x = new B()
+x.m()
+x = new myOtherClass()
+x.m()
