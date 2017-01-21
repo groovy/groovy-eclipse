@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -41,7 +42,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
@@ -1510,13 +1510,11 @@ assert primaryExprType != null && dependentExprType != null;
         scopes.peek().setCurrentNode(node);
         completeExpressionStack.push(node);
         node.getKeyExpression().visit(this);
-
-        // use the types of the key and value expressions
         ClassNode k = primaryTypeStack.pop();
         node.getValueExpression().visit(this);
         ClassNode v = primaryTypeStack.pop();
         completeExpressionStack.pop();
-        // really, we don't need to do this if not the first entry of a map literal
+
         ClassNode exprType;
         if (isPrimaryExpression(node)) {
             exprType = createParameterizedMap(k, v);
@@ -1532,58 +1530,58 @@ assert primaryExprType != null && dependentExprType != null;
         if (isDependentExpression(node)) {
             primaryTypeStack.pop();
         }
-        ClassNode newType;
+        ClassNode ctorType = null;
         if (enclosingConstructorCall != null) {
-            newType = enclosingConstructorCall.getType();
+            // map expr within ctor call indicates use of map constructor or default constructor + property setters
+            ctorType = enclosingConstructorCall.getType();
             enclosingConstructorCall = null;
-        } else {
-            newType = null;
-        }
 
+            for (ConstructorNode ctor : ctorType.getDeclaredConstructors()) {
+                Parameter[] ctorParams = ctor.getParameters();
+                // TODO: What about ctorParams[0].getType().declaresInterface(VariableScope.MAP_CLASS_NODE)?
+                // TODO: Do the generics of the Map matter?  Probably should be String (or Object?) for key.
+                if (ctorParams.length == 1 && ctorParams[0].getType().equals(VariableScope.MAP_CLASS_NODE)) {
+                    ctorType = null; // a map constructor exists; shut down key type lookups
+                }
+            }
+        }
         scopes.peek().setCurrentNode(node);
         completeExpressionStack.push(node);
-        if (newType == null) {
-            // do a regular visit
-            for (MapEntryExpression entry : node.getMapEntryExpressions()) {
+
+        for (MapEntryExpression entry : node.getMapEntryExpressions()) {
+            Expression key = entry.getKeyExpression(), val = entry.getValueExpression();
+            if (ctorType != null && key instanceof ConstantExpression && !"*".equals(key.getText())) {
+
+                VariableScope scope = scopes.peek();
+                // look for a non-synthetic setter followed by a property or field
+                scope.setMethodCallArgumentTypes(Collections.singletonList(val.getType()));
+                String setterName = AccessorSupport.SETTER.createAccessorName(key.getText());
+                TypeLookupResult result = lookupExpressionType(new ConstantExpression(setterName), ctorType, false, scope);
+                if (result.confidence == TypeConfidence.UNKNOWN || !(result.declaration instanceof MethodNode) ||
+                        ((MethodNode) result.declaration).isSynthetic()) {
+                    scope.getWormhole().put("lhs", key);
+                    scope.setMethodCallArgumentTypes(null);
+                    result = lookupExpressionType(key, ctorType, false, scope);
+                }
+
+                // pre-visit entry so keys are highlighted as keys, not fields/methods/properties
+                ClassNode mapType = isPrimaryExpression(entry) ?
+                    createParameterizedMap(key.getType(), val.getType()) : primaryTypeStack.peek();
+                scope.setCurrentNode(entry);
+                handleCompleteExpression(entry, mapType, null);
+                scope.forgetCurrentNode();
+
+                handleRequestor(key, ctorType, result);
+                val.visit(this);
+            } else {
                 entry.visit(this);
             }
-        } else {
-            for (MapEntryExpression entry : node.getMapEntryExpressions()) {
-                // visit the key as a field reference if we can find the field
-                Expression key = entry.getKeyExpression();
-                if (key instanceof ConstantExpression) {
-                    String fieldName = key.getText();
-                    FieldNode field = newType.getField(fieldName);
-                    if (field == null) {
-                        PropertyNode property = newType.getProperty(fieldName);
-                        if (property == null) {
-                            handleSimpleExpression(key);
-                        } else {
-                            TypeLookupResult result = new TypeLookupResult(property.getType(), property.getDeclaringClass(),
-                                    property, TypeConfidence.EXACT, scopes.peek());
-                            handleRequestor(key, newType, result);
-                        }
-                    } else {
-                        TypeLookupResult result = new TypeLookupResult(field.getType(), field.getDeclaringClass(), field,
-                                TypeConfidence.EXACT, scopes.peek());
-                        handleRequestor(key, newType, result);
-                    }
-                } else {
-                    handleSimpleExpression(key);
-                }
-                // and visit the value as normal
-                entry.getValueExpression().visit(this);
-
-                // handleSimpleExpression(entry.getValueExpression());
-            }
         }
+
         completeExpressionStack.pop();
 
-        // we can only have a parameterization for a non-empty map
-        // also, if this map is part of a constructor call, then
-        // we cannot parameterize since we did not perform the visit in the right way
         ClassNode exprType;
-        if (node.getMapEntryExpressions().size() > 0 && newType == null) {
+        if (isNotEmpty(node.getMapEntryExpressions())) {
             exprType = primaryTypeStack.pop();
         } else {
             exprType = createParameterizedMap(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE);
@@ -2508,12 +2506,9 @@ assert primaryExprType != null && dependentExprType != null;
             } else if (complete instanceof ImportNode) {
                 ImportNode imp = (ImportNode) complete;
                 return node == imp.getAliasExpr() || node == imp.getFieldNameExpr();
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**

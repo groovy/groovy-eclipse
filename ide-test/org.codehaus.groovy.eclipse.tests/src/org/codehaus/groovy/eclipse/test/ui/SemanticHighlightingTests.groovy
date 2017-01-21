@@ -326,7 +326,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('i)'), 1, VARIABLE))
     }
 
-    void testNamedParams() {
+    void testNamedParams1() {
         String contents = '''\
             class Person { String firstName, lastName }
             def p = new Person(firstName: 'John', lastName: 'Doe')
@@ -337,8 +337,31 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('lastName'), 'lastName'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('p'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('Person'), 'Person'.length(), CTOR_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), FIELD), // TODO: MAP_KEY?
-            new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), FIELD)) // TODO: MAP_KEY?
+            new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY))
+    }
+
+    void testNamedParams1a() {
+        String contents = '''\
+            class Person {
+              String firstName, lastName
+
+              Person() {}
+              Person(Map m) {} // trumps default+setters
+            }
+            def p = new Person(firstName: 'John', lastName: 'Doe')
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('firstName'), 'firstName'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('lastName'), 'lastName'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Person', contents.indexOf('lastName')), 'Person'.length(), CTOR),
+            new HighlightedTypedPosition(contents.indexOf('Person', contents.indexOf('() {}')), 'Person'.length(), CTOR),
+            new HighlightedTypedPosition(contents.indexOf('m)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('p ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 'Person'.length(), CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY))
     }
 
     void testNamedParams2() {

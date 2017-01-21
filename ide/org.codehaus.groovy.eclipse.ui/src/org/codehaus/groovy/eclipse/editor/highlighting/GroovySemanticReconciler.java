@@ -51,10 +51,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPartSite;
 
-/**
- * @author Andrew Eisenberg
- * @created Oct 13, 2009
- */
 public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     private static final String GROOVY_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR.replaceFirst("\\.color$", "");

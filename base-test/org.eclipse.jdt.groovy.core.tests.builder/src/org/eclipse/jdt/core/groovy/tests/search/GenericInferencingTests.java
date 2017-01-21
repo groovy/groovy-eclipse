@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
-/**
- *
- * @author Andrew Eisenberg
- * @author Andy Clement
- * @created Sep 10, 2010
- */
-public class GenericInferencingTests extends AbstractInferencingTest {
+public final class GenericInferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(GenericInferencingTests.class);
@@ -202,7 +196,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.Integer,java.lang.Integer>>");
     }
 
-
     public void testMap9() throws Exception {
         String contents = "Map<Integer, Integer> x() { }\ndef f = x()\nf";
         String toFind = "f";
@@ -233,8 +226,34 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // GRECLIPSE-941
+    public void testMapOfList3() throws Exception {
+        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().key";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    // not working yet since our approach to determining the type of a map only looks at the static types of the
+    // first elements.  It does not try to infer the type of these elements.
     public void testMapOfList4() throws Exception {
+        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
+        String toFind = "next";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    public void testMapOfList5() throws Exception {
+        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
+        String toFind = "next";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    // GRECLIPSE-941
+    public void testMapOfList6() throws Exception {
         String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndef x = dataTyped      ['foo'][5][2]\nx";
         String toFind = "x";
         int start = contents.lastIndexOf(toFind);
@@ -268,6 +287,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     private static final String XX = "class XX {\nXX[] xx\nXX yy\n}";
+
     public void testArray4() throws Exception {
         createUnit("XX", XX);
         String contents = "new XX().xx";
@@ -303,6 +323,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "XX");
     }
+
     public void testArray8() throws Exception {
         createUnit("XX", XX);
         String contents = "new XX().xx[0].xx[9].yy";
@@ -355,32 +376,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
         assertType(contents, start, end, "XX[]");
-    }
-
-    public void testMapOfList3() throws Exception {
-        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().key";
-        String toFind = "key";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    // not working yet since our approach to determining the type of a map only looks at the static types of the
-    // first elements.  It does not try to infer the type of these elements.
-    public void _testMapOfList4() throws Exception {
-        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
-        String toFind = "next";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    public void testMapOfList5() throws Exception {
-        String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
-        String toFind = "next";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
     }
 
     public void testForLoop1() throws Exception {
@@ -466,7 +461,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
-
     public void testForLoop11() throws Exception {
         // @formatter:off
         String contents =
@@ -484,6 +478,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.String");
     }
+
     // all testing for GRECLIPSE-833
     public void testDGMClosure1() throws Exception {
         String contents = "[''].each { it }";
@@ -492,6 +487,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.String");
     }
+
     public void testDGMClosure2() throws Exception {
         String contents = "[''].reverseEach { val -> val }";
         String toFind = "val";
@@ -499,6 +495,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.String");
     }
+
     public void testDGMClosure3() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
@@ -509,6 +506,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+
     public void testDGMClosure4() throws Exception {
         String contents = "['a':1].unique { it.key }";
         String toFind = "key";
@@ -516,6 +514,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.String");
     }
+
     public void testDGMClosure5() throws Exception {
         String contents = "['a':1].collect { it.value }";
         String toFind = "value";
@@ -531,6 +530,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+
     // Integer is explicit, so should use that as a type
     public void testDGMClosure8() throws Exception {
         String contents = "[''].reverseEach { Integer it -> it }";
@@ -539,6 +539,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+
     public void testDGMClosure9() throws Exception {
         String contents = "[new Date()].eachWithIndex { val, i -> val }";
         String toFind = "val";
@@ -659,9 +660,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Float");
     }
 
-
-
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics1() throws Exception {
         String contents = "class MyMap extends HashMap<String,Class> { }\n" +
                 "MyMap m\n" +
@@ -672,7 +671,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Class");
     }
 
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics2() throws Exception {
         String contents = "class MyMap extends HashMap<String,Class> { }\n" +
                 "MyMap m\n" +
@@ -683,7 +682,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
     }
 
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics3() throws Exception {
         String contents = "import java.lang.ref.WeakReference\n" +
                 "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
@@ -694,7 +693,8 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
-    // See GRECLIPSE-997
+
+    // GRECLIPSE-997
     public void testNestedGenerics4() throws Exception {
         String contents = "import java.lang.ref.WeakReference\n" +
         "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
@@ -707,7 +707,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics5() throws Exception {
         String contents = "import java.lang.ref.WeakReference\n" +
         "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
@@ -722,7 +722,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Class>");
     }
 
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics6() throws Exception {
         String contents = "import java.lang.ref.WeakReference\n" +
         "class MyMap<K,V> extends HashMap<K,WeakReference<List<K>>>{ }\n" +
@@ -735,7 +735,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
     }
 
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics7() throws Exception {
         String contents = "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
         "MyMap<Integer,Class> m\n" +
@@ -746,7 +746,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // See GRECLIPSE-997
+    // GRECLIPSE-997
     public void testNestedGenerics8() throws Exception {
         String contents = "class MyMap<K,V> extends HashMap<K,V>{\n" +
                 "Map<V,Class<K>> val}\n" +
@@ -758,7 +758,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
     }
 
-    // See GRECLIPSE-1131
+    // GRECLIPSE-1131
     public void testEachOnNonIterables1() throws Exception {
         String contents = "1.each { it }";
         String toFind = "it";
@@ -766,7 +766,8 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
-    // See GRECLIPSE-1131
+
+    // GRECLIPSE-1131
     public void testEachOnNonIterables2() throws Exception {
         String contents = "each { it }";
         String toFind = "it";
@@ -774,7 +775,8 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "Search");
     }
-    // See GRECLIPSE-1131
+
+    // GRECLIPSE-1131
     public void testEachOnNonIterables3() throws Exception {
         String contents = "1.reverseEach { it }";
         String toFind = "it";
@@ -790,6 +792,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
+
     public void testInferringList2() throws Exception {
         String contents = "def x = 9\ndef xxx = [x, '']\nxxx";
         String toFind = "xxx";
@@ -797,6 +800,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
+
     public void testInferringList3() throws Exception {
         String contents = "def x = 9\ndef xxx = [x+9*8, '']\nxxx";
         String toFind = "xxx";
@@ -804,6 +808,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
+
     public void testInferringRange1() throws Exception {
         String contents = "def x = 9\ndef xxx = x..x\nxxx";
         String toFind = "xxx";
@@ -811,6 +816,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
     }
+
     public void testInferringRange2() throws Exception {
         String contents = "def x = 9\ndef xxx = (x*1)..x\nxxx";
         String toFind = "xxx";
@@ -818,6 +824,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
     }
+
     public void testInferringMap1() throws Exception {
         String contents = "def x = 9\ndef y = false\ndef xxx = [(x):y]\nxxx";
         String toFind = "xxx";
@@ -825,6 +832,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
     }
+
     public void testInferringMap2() throws Exception {
         String contents = "def x = 9\ndef y = false\ndef xxx = [(x+x):!y]\nxxx";
         String toFind = "xxx";
@@ -832,6 +840,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
     }
+
     public void testInferringMap3() throws Exception {
         String contents = "def x = 9\ndef y = false\ndef xxx = [(x+x):!y, a:'a', b:'b']\nxxx";
         String toFind = "xxx";
@@ -839,6 +848,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
     }
+
     public void testInferringMap4() throws Exception {
         String contents = "def x = 9\ndef y = false\ndef xxx = [[(x+x):!y, a:'a', b:'b']]\nxxx";
         String toFind = "xxx";
@@ -846,6 +856,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.util.Map<java.lang.Integer,java.lang.Boolean>>");
     }
+
     public void testInferringMap5() throws Exception {
         String contents = "def x = [ ['a':11, 'b':12] : ['a':21, 'b':22] ]\n" +
                 "def xxx = x\n" +
@@ -864,110 +875,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
-    }
-/*
-class O {
-  def  aa
-  def bb
-}
-
-new O([8: 1, bb:8])
-
-def h = [8: 1, bb:8]
-*/
-    // this next section is not really generic inferencing, but it does involve maps, so I'll put it here
-    // GRECLIPSE-1229 constructors with map parameters
-    public void testConstructor1() throws Exception {
-        String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O(aa: 1, bb:8)";
-        int start = contents.lastIndexOf("aa");
-        int end = start + "aa".length();
-        assertType(contents, start, end, "java.lang.Boolean");
-        assertDeclaration(contents, start, end, "O", "aa", DeclarationKind.FIELD);
-        start = contents.lastIndexOf("bb");
-        end = start + "bb".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.FIELD);
-    }
-    public void testConstructor2() throws Exception {
-        String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O([aa: 1, bb:8])";
-        int start = contents.lastIndexOf("aa");
-        int end = start + "aa".length();
-        assertType(contents, start, end, "java.lang.Boolean");
-        assertDeclaration(contents, start, end, "O", "aa", DeclarationKind.FIELD);
-        start = contents.lastIndexOf("bb");
-        end = start + "bb".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.FIELD);
-    }
-    public void testConstructor3() throws Exception {
-        String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O([8: 1, bb:8])";
-        int start = contents.lastIndexOf("bb");
-        int end = start + "bb".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.FIELD);
-    }
-    public void testConstructor4() throws Exception {
-        String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O([aa: 1, bb:8], 9)";
-        int start = contents.lastIndexOf("aa");
-        int end = start + "aa".length();
-        assertType(contents, start, end, "java.lang.String");
-        assertDeclaringType(contents, start, end, "null");
-        start = contents.lastIndexOf("bb");
-        end = start + "bb".length();
-        assertType(contents, start, end, "java.lang.String");
-        assertDeclaringType(contents, start, end, "null");
-    }
-    public void testConstructor5() throws Exception {
-        String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O(9, [aa: 1, bb:8])";
-        int start = contents.lastIndexOf("aa");
-        int end = start + "aa".length();
-        assertType(contents, start, end, "java.lang.String");
-        assertDeclaringType(contents, start, end, "null");
-        start = contents.lastIndexOf("bb");
-        end = start + "bb".length();
-        assertType(contents, start, end, "java.lang.String");
-        assertDeclaringType(contents, start, end, "null");
-    }
-    public void testConstructor6() throws Exception {
-        String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "def g = [aa: 1, bb:8]";
-        int start = contents.lastIndexOf("aa");
-        int end = start + "aa".length();
-        assertType(contents, start, end, "java.lang.String");
-        assertDeclaringType(contents, start, end, "null");
-        start = contents.lastIndexOf("bb");
-        end = start + "bb".length();
-        assertType(contents, start, end, "java.lang.String");
-        assertDeclaringType(contents, start, end, "null");
     }
 
     // GRECLIPSE-1696
@@ -1161,31 +1068,7 @@ def h = [8: 1, bb:8]
         assertType(contents, start, end, "java.lang.Object");
     }
 
-    private class ProblemRequestor implements IProblemRequestor {
-
-        List<IProblem> problems = new ArrayList<IProblem>();
-
-        public ProblemRequestor() {
-            super();
-        }
-
-        public void acceptProblem(IProblem problem) {
-            problems.add(problem);
-        }
-
-        public void beginReporting() {
-        }
-
-        public void endReporting() {
-        }
-
-        public boolean isActive() {
-            return true;
-        }
-
-    }
-
-    public void xtestJira1718() throws Exception {
+    public void _testJira1718() throws Exception {
 
         // the type checking script
         IPath robotPath = env.addPackage(
@@ -1265,5 +1148,19 @@ def h = [8: 1, bb:8]
                 problemRequestor.problems.size());
         // Discard the working copy to free up caches
         cu.discardWorkingCopy();
+    }
+
+    private class ProblemRequestor implements IProblemRequestor {
+        List<IProblem> problems = new ArrayList<IProblem>();
+        public void acceptProblem(IProblem problem) {
+            problems.add(problem);
+        }
+        public void beginReporting() {
+        }
+        public void endReporting() {
+        }
+        public boolean isActive() {
+            return true;
+        }
     }
 }

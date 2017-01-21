@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,7 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import org.eclipse.jface.text.Position;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 10, 2010
- */
-public class HighlightedTypedPosition extends Position implements Comparable<HighlightedTypedPosition> {
+public class HighlightedTypedPosition extends Position implements Comparable<Position> {
 
     public static enum HighlightKind {
         FIELD, STATIC_FIELD, STATIC_VALUE, PARAMETER, VARIABLE, NUMBER, REGEXP, MAP_KEY, TAG_KEY,
@@ -31,8 +27,8 @@ public class HighlightedTypedPosition extends Position implements Comparable<Hig
 
     public final HighlightKind kind;
 
-    public HighlightedTypedPosition(Position p, HighlightKind kind) {
-        super(p.getOffset(), p.getLength());
+    public HighlightedTypedPosition(Position pos, HighlightKind kind) {
+        super(pos.getOffset(), pos.getLength());
         this.kind = kind;
     }
 
@@ -46,35 +42,29 @@ public class HighlightedTypedPosition extends Position implements Comparable<Hig
         this.kind = kind;
     }
 
+    public int compareTo(Position that) {
+        return (that == null ? 1 : this.offset - that.offset);
+    }
+
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(Object that) {
+        if (this == that)
             return true;
-        if (!super.equals(obj))
+        if (!super.equals(that) || !(that instanceof HighlightedTypedPosition))
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        HighlightedTypedPosition other = (HighlightedTypedPosition) obj;
-        if (kind != other.kind)
-            return false;
-        return true;
+        return (kind == ((HighlightedTypedPosition) that).kind);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((kind == null) ? 0 : kind.hashCode());
+        result = prime * result + (kind == null ? 0 : kind.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
         return "HighlightedTypedPosition[kind=" + kind + ", offset=" + offset + ", length=" + length + "]";
-    }
-
-    public int compareTo(HighlightedTypedPosition o) {
-        if (o == null) return 1;
-        return this.offset - o.offset;
     }
 }

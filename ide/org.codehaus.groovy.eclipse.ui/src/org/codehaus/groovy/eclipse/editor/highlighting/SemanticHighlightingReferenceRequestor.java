@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,9 +53,8 @@ import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
 
 /**
- * Find all unknown references, regex expressions, field references, and static references.
- *
- * @author Andrew Eisenberg
+ * Finds deprecated/unknown references, GString expressions, regular expressions,
+ * field/method/property references, static references, etc.
  */
 public class SemanticHighlightingReferenceRequestor extends SemanticReferenceRequestor {
 
@@ -66,16 +65,12 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private char[] contents;
-    private Position lastGString = NO_POSITION;
     private final GroovyCompilationUnit unit;
+    private Position lastGString = NO_POSITION;
     private static final boolean DEBUG = false;
 
-    /**
-     * Contains positions in a non-overlapping, increasing lexical order
-     * but the inferencing visitor does not always search in a lexical order.
-     * TODO: This should be changed to an ordered list.
-     */
-    protected final Set<HighlightedTypedPosition> typedPosition = new TreeSet<HighlightedTypedPosition>();
+    /** Positions of interesting syntax elements within {@link #unit} in increasing lexical order. */
+    protected final SortedSet<HighlightedTypedPosition> typedPosition = new TreeSet<HighlightedTypedPosition>();
 
     public SemanticHighlightingReferenceRequestor(GroovyCompilationUnit unit) {
         this.unit = unit;
@@ -159,8 +154,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         if (pos != null && ((pos.getOffset() > 0 || pos.getLength() > 1) ||
-                // Expression nodes can still be valid and have an offset of 0 and a
-                // length of 1 whereas field/method nodes, this is not allowed.
+                // expression nodes can still be valid and have an offset of 0 and
+                // a length of 1, whereas for field/method nodes this is not allowed
                 node instanceof Expression)) {
             typedPosition.add(pos);
         }
