@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -38,10 +37,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 13, 2009
- */
 public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
 
     public AbstractInferencingTest(String name) {
@@ -52,13 +47,11 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         assertType(contents, 0, contents.length(), expectedType, false);
     }
 
-    protected void assertType(String contents, int exprStart, int exprEnd,
-            String expectedType) {
+    protected void assertType(String contents, int exprStart, int exprEnd, String expectedType) {
         assertType(contents, exprStart, exprEnd, expectedType, false);
     }
 
-    protected void assertTypeOneOf(String contents, int start, int end,
-            String... expectedTypes) throws Throwable {
+    protected void assertTypeOneOf(String contents, int start, int end, String... expectedTypes) throws Throwable {
         boolean ok = false;
         Throwable error = null;
         for (int i = 0; !ok && i < expectedTypes.length; i++) {
@@ -89,14 +82,12 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     protected void assertType(String contents, int exprStart, int exprEnd, String expectedType, boolean forceWorkingCopy) {
         assertType(contents, exprStart, exprEnd, expectedType, null, forceWorkingCopy);
     }
-    public static void assertType(GroovyCompilationUnit contents, int exprStart,
-            int exprEnd, String expectedType, boolean forceWorkingCopy) {
+
+    public static void assertType(GroovyCompilationUnit contents, int exprStart, int exprEnd, String expectedType, boolean forceWorkingCopy) {
         assertType(contents, exprStart, exprEnd, expectedType, null, forceWorkingCopy);
     }
 
-    public static void assertType(GroovyCompilationUnit unit,
-            int exprStart, int exprEnd, String expectedType, String extraDocSnippet,
-            boolean forceWorkingCopy) {
+    public static void assertType(GroovyCompilationUnit unit, int exprStart, int exprEnd, String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
         assertNotNull("Did not find expected ASTNode", requestor.node);
@@ -131,8 +122,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
      * @param assumeNoUnknowns
      * @return null if all is OK, or else returns an error message specifying the problem
      */
-    public static String checkType(GroovyCompilationUnit unit, int exprStart,
-            int exprEnd, String expectedType, String expectedDeclaringType, boolean assumeNoUnknowns, boolean forceWorkingCopy) {
+    public static String checkType(GroovyCompilationUnit unit, int exprStart, int exprEnd, String expectedType, String expectedDeclaringType, boolean assumeNoUnknowns, boolean forceWorkingCopy) {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
         if (requestor.node == null) {
             return "Did not find expected ASTNode.  (Start:" + exprStart + ", End:" + exprEnd + ")\n" +
@@ -178,8 +168,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         return null;
     }
 
-    protected void assertType(String contents, int exprStart, int exprEnd,
-            String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
+    protected void assertType(String contents, int exprStart, int exprEnd, String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         assertType(unit, exprStart, exprEnd, expectedType, extraDocSnippet, forceWorkingCopy);
     }
@@ -236,50 +225,41 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
     }
 
-    protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
-            String expectedDeclaringType) {
+    protected void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false);
     }
 
     protected enum DeclarationKind { FIELD, METHOD, PROPERTY, CLASS }
 
-    protected void assertDeclaration(String contents, int exprStart, int exprEnd,
-            String expectedDeclaringType, String declarationName, DeclarationKind kind) {
+    protected void assertDeclaration(String contents, int exprStart, int exprEnd, String expectedDeclaringType, String declarationName, DeclarationKind kind) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false, false);
         GroovyCompilationUnit unit = createUnit("Search", contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
 
         switch (kind) {
             case FIELD:
-                assertTrue("Expecting field, but was " + requestor.result.declaration,
-                        requestor.result.declaration instanceof FieldNode);
+                assertTrue("Expecting field, but was " + requestor.result.declaration, requestor.result.declaration instanceof FieldNode);
                 assertEquals("Wrong field name", declarationName, ((FieldNode) requestor.result.declaration).getName());
                 break;
             case METHOD:
-                assertTrue("Expecting method, but was " + requestor.result.declaration,
-                        requestor.result.declaration instanceof MethodNode);
+                assertTrue("Expecting method, but was " + requestor.result.declaration, requestor.result.declaration instanceof MethodNode);
                 assertEquals("Wrong method name", declarationName, ((MethodNode) requestor.result.declaration).getName());
                 break;
             case PROPERTY:
-                assertTrue("Expecting property, but was " + requestor.result.declaration,
-                        requestor.result.declaration instanceof PropertyNode);
+                assertTrue("Expecting property, but was " + requestor.result.declaration, requestor.result.declaration instanceof PropertyNode);
                 assertEquals("Wrong property name", declarationName, ((PropertyNode) requestor.result.declaration).getName());
                 break;
             case CLASS:
-                assertTrue("Expecting class, but was " + requestor.result.declaration,
-                        requestor.result.declaration instanceof ClassNode);
+                assertTrue("Expecting class, but was " + requestor.result.declaration, requestor.result.declaration instanceof ClassNode);
                 assertEquals("Wrong class name", declarationName, ((ClassNode) requestor.result.declaration).getName());
         }
     }
 
-    protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
-            String expectedDeclaringType, boolean forceWorkingCopy) {
-
+    protected void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean forceWorkingCopy) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, forceWorkingCopy, false);
     }
 
-    protected void assertDeclaringType(String contents, int exprStart, int exprEnd,
-            String expectedDeclaringType, boolean forceWorkingCopy, boolean expectingUnknown) {
+    protected void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean forceWorkingCopy, boolean expectingUnknown) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
@@ -316,8 +296,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
     }
 
-    protected void assertUnknownConfidence(String contents, int exprStart, int exprEnd,
-            String expectedDeclaringType, boolean forceWorkingCopy) {
+    protected void assertUnknownConfidence(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean forceWorkingCopy) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
@@ -363,7 +342,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         return sb.toString();
     }
 
-    public class UnknownTypeRequestor  implements ITypeRequestor {
+    public class UnknownTypeRequestor implements ITypeRequestor {
         private List<ASTNode> unknownNodes = new ArrayList<ASTNode>();
 
         public List<ASTNode> getUnknownNodes() {
@@ -390,7 +369,6 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         public final List<ASTNode> unknowns = new ArrayList<ASTNode>();
 
         public SearchRequestor(int start, int end) {
-            super();
             this.start = start;
             this.end = end;
         }

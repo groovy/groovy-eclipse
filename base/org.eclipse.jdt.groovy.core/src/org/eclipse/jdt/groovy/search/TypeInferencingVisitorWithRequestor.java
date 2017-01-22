@@ -16,7 +16,6 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2072,18 +2071,11 @@ assert primaryExprType != null && dependentExprType != null;
         if (peek instanceof MethodCallExpression) {
             MethodCallExpression call = (MethodCallExpression) peek;
             Expression arguments = call.getArguments();
+            // TODO: Might be useful also to look into TupleExpression
             if (arguments instanceof ArgumentListExpression) {
-                ArgumentListExpression list = (ArgumentListExpression) arguments;
-                List<Expression> expressions = list.getExpressions();
-                List<ClassNode> types = new ArrayList<ClassNode>();
-                for (Expression expression : expressions) {
-                    types.add(expression.getType());
-                }
-                return types;
-            } else {
-                // TODO Might be useful also to look into TupleExpressions like in ArgumentListExpressions
-                return new ArrayList<ClassNode>();
+                return GroovyUtils.getArgumentTypes((ArgumentListExpression) arguments);
             }
+            return Collections.emptyList();
         }
         return null;
     }

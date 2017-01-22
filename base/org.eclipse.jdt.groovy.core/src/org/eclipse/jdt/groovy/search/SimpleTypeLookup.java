@@ -41,6 +41,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -56,6 +57,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
@@ -262,19 +264,42 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return new TypeLookupResult(nodeType, declaringType, nodeType, confidence, scope);
             }
         } else if (node instanceof StaticMethodCallExpression) {
-            StaticMethodCallExpression expr = (StaticMethodCallExpression) node;
-            List<MethodNode> methods = expr.getOwnerType().getMethods(expr.getMethod());
-            if (methods.size() > 0) {
-                MethodNode method = methods.get(0);
+            StaticMethodCallExpression staticMethodCall = (StaticMethodCallExpression) node;
+            MethodNode method;
+
+//            method = staticMethodCall.getOwnerType().tryFindPossibleMethod(staticMethodCall.getMethod(), staticMethodCall.getArguments());
+//            if (method != null && method.isStatic()) {
+//                return new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope);
+//            }
+
+            List<MethodNode> methods = staticMethodCall.getOwnerType().getMethods(staticMethodCall.getMethod());
+            if (!methods.isEmpty()) {
+                method = methods.get(0);
                 return new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope);
             }
         } else if (node instanceof ConstructorCallExpression) {
-            List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
-            if (declaredConstructors != null && declaredConstructors.size() > 0) {
-                // FIXADE we can do better here and at least match on number of arguments
-                return new TypeLookupResult(nodeType, declaringType, declaredConstructors.get(0), confidence, scope);
+            ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
+            if (constructorCall.isThisCall()) {
+                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
+            } else if (constructorCall.isSuperCall()) {
+                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass().getUnresolvedSuperClass();
             }
-            return new TypeLookupResult(nodeType, declaringType, declaringType, confidence, scope);
+
+            // try to find best match if there is more than one constructor to choose from
+            List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
+            if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
+                List<ClassNode> callTypes = GroovyUtils.getArgumentTypes((ArgumentListExpression) constructorCall.getArguments());
+                for (ConstructorNode ctor : declaredConstructors) {
+                    List<ClassNode> declTypes = GroovyUtils.getParameterTypes(ctor.getParameters());
+                    if (callTypes.equals(declTypes)) {
+                        return new TypeLookupResult(nodeType, declaringType, ctor, TypeConfidence.EXACT, scope);
+                    }
+                }
+                // TODO: Perform fuzzy match if no exact match exists. See ClassNode.tryFindPossibleMethod.
+            }
+
+            ASTNode declaration = !declaredConstructors.isEmpty() ? declaredConstructors.get(0) : declaringType;
+            return new TypeLookupResult(nodeType, declaringType, declaration, confidence, scope);
         }
 
         // if we get here, then we can't infer the type. Set to unknown if required.

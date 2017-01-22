@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.eclipse.jdt.core.Signature.getSimpleName;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -30,6 +31,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -142,6 +144,26 @@ public abstract class GroovyUtils {
         int index = name.lastIndexOf('$');
         if (index == -1) index = name.lastIndexOf('.');
         return new String[] {name.substring(0, Math.max(0, index)), name.substring(index + 1)};
+    }
+
+    public static List<ClassNode> getArgumentTypes(ArgumentListExpression list) {
+        final int n = list.getExpressions().size();
+        if (n == 0) return Collections.emptyList();
+        List<ClassNode> types = new ArrayList<ClassNode>(n);
+        for (Expression expression : list.getExpressions()) {
+            types.add(expression.getType());
+        }
+        return types;
+    }
+
+    public static List<ClassNode> getParameterTypes(Parameter... params) {
+        final int n = params.length;
+        if (n == 0) return Collections.emptyList();
+        List<ClassNode> types = new ArrayList<ClassNode>(n);
+        for (Parameter param : params) {
+            types.add(param.getType());
+        }
+        return types;
     }
 
     /**
