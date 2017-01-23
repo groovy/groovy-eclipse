@@ -258,22 +258,25 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
 
     public void testCodeSelectConstuctorJavaFile() throws Exception {
         addJavaSource("class Foo { Foo() { } }", "Foo", "p");
-        String contents = "new Foo()";
-        assertConstructor("p", "Foo2", "Foo", contents);
+        assertConstructor("p", "Foo2", "Foo", "new Foo()");
     }
 
     public void testCodeSelectConstuctorMultipleConstructors() throws Exception {
         addGroovySource("class Foo { Foo() { }\nFoo(a) { } }", "Foo", "p");
-        String contents = "new Foo()";
-        IMethod method = assertConstructor("p", "Foo2", "Foo", contents);
-        assertEquals("Should have found constructor with no args", 0, method.getParameterNames().length);
+        IMethod method = assertConstructor("p", "Foo2", "Foo", "new Foo()");
+        assertEquals("Should have found constructor with no args", 0, method.getParameters().length);
     }
 
     public void testCodeSelectConstuctorMultipleConstructors2() throws Exception {
-        addGroovySource("class Foo { Foo() { }  Foo(a) { } }", "Foo", "p");
-        String contents = "new Foo(0)";
-        IMethod method = assertConstructor("p", "Foo2", "Foo", contents);
-        assertEquals("Should have found constructor with 1 arg", 1, method.getParameterNames().length);
+        addGroovySource("class Foo { Foo() { } \n Foo(a) { } }", "Foo", "p");
+        IMethod method = assertConstructor("p", "Foo2", "Foo", "new Foo(0)");
+        assertEquals("Should have found constructor with 1 arg", 1, method.getParameters().length);
+    }
+
+    public void testCodeSelectConstuctorMultipleConstructors3() throws Exception {
+        IMethod method = assertConstructor("p", "Foo", "Date", "new Date(0)");
+        assertEquals("Should have found constructor with 1 arg", 1, method.getParameters().length);
+        assertEquals("Should have found constructor Date(long)", "J", method.getParameterTypes()[0]);
     }
 
     private IMethod assertConstructor(String packName, String className, String toSearch, String contents) throws Exception {
@@ -282,7 +285,8 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
 
         IJavaElement[] elt = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length());
         assertEquals("Should have found a selection", 1, elt.length);
-        assertEquals("Should have found constructor 'Foo'", "Foo", elt[0].getElementName());
+        String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1);
+        assertEquals("Should have found constructor '" + elementName + "'", elementName, elt[0].getElementName());
         assertTrue("Should be a constructor", ((IMethod) elt[0]).isConstructor());
         return (IMethod) elt[0];
     }

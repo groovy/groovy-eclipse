@@ -54,6 +54,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -720,21 +721,42 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return false;
     }
 
-    // TODO: Can anything be learned from org.codehaus.groovy.ast.ClassNode.tryFindPossibleMethod(String, Expression)?
+    /**
+     * Determines if the given argument types are compatible with the declaration parameters.
+     *
+     * @return {@link Boolean#TRUE true} for exact match, {@code null} for fuzzy match, and {@link Boolean#FALSE false} for not a match
+     */
     protected static Boolean isTypeCompatible(List<ClassNode> arguments, Parameter[] parameters) {
+        // TODO: Add handling for variadic methods/constructors.
+        // TODO: Can anything be learned from org.codehaus.groovy.ast.ClassNode.tryFindPossibleMethod(String, Expression)?
+
         Boolean result = Boolean.TRUE;
         for (int i = 0, n = parameters.length; i < n; i += 1) {
-            if (!parameters[i].getType().equals(arguments.get(i))) {
+            ClassNode parameter = parameters[i].getType(), argument = arguments.get(i);
+
+            // test parameter and argument for exact and fuzzy match
+
+            if (!parameter.equals(argument)) {
                 result = null; // not an exact match
-            }
-            if (parameters[i].getType().isInterface()) {
-                if (!arguments.get(i).declaresInterface(parameters[i].getType())) {
-                    return Boolean.FALSE;
-                }
-            } else {
-                // TODO 'null' literal argument should be correctly resolved
-                if (!arguments.get(i).isDerivedFrom(parameters[i].getType())) {
-                    return Boolean.FALSE;
+
+                try { // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
+                    if (!MetaClassHelper.isAssignableFrom(parameter.getTypeClass(), argument.getTypeClass())) {
+                        result = Boolean.FALSE;
+                        break;
+                    }
+                } catch (Throwable boo) {
+                    if (parameter.isInterface()) {
+                        if (!argument.declaresInterface(parameter)) {
+                            result = Boolean.FALSE;
+                            break;
+                        }
+                    } else {
+                        // TODO 'null' literal argument should be correctly resolved
+                        if (!argument.isDerivedFrom(parameter)) {
+                            result = Boolean.FALSE;
+                            break;
+                        }
+                    }
                 }
             }
         }
