@@ -17,19 +17,16 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
 import static java.util.Arrays.asList;
 
+import junit.framework.Test;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 3, 2009
- */
 public final class CodeSelectMethodsTests extends BrowsingTestCase {
 
-    public static junit.framework.Test suite() {
+    public static Test suite() {
         return newTestSuite(CodeSelectMethodsTests.class);
     }
 
@@ -229,54 +226,57 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
     }
 
     public void testCodeSelectConstuctorSimple() throws Exception {
-        String contents = "class Foo { Foo() { } }\nnew Foo()";
-        assertConstructor("p", "Foo2", "Foo", contents);
+        assertConstructor("p", "Bar", "Foo", "class Foo { Foo() { } }\nnew Foo()");
     }
 
     public void testCodeSelectConstuctorQualName() throws Exception {
-        String contents = "class Foo { Foo() { } }\nnew p.Foo()";
-        assertConstructor("p", "Foo2", "p.Foo", contents);
+        assertConstructor("p", "Bar", "p.Foo", "class Foo { Foo() { } }\nnew p.Foo()");
     }
 
     public void testCodeSelectConstuctorOtherFile() throws Exception {
         addGroovySource("class Foo { Foo() { } }", "Foo", "p");
-        String contents = "new Foo()";
-        assertConstructor("p", "Foo2", "Foo", contents);
+        assertConstructor("p", "Bar", "Foo", "new Foo()");
     }
 
     public void testCodeSelectConstuctorOtherFile2() throws Exception {
         addGroovySource("class Foo {\nFoo(a) { } }", "Foo", "p");
-        String contents = "new Foo()";
-        assertConstructor("p", "Foo2", "Foo", contents);
+        assertConstructor("p", "Bar", "Foo", "new Foo()");
     }
 
     public void testCodeSelectConstuctorOtherFile3() throws Exception {
         addGroovySource("class Foo { Foo() { }\nFoo(a) { } }", "Foo", "p");
-        String contents = "new Foo()";
-        assertConstructor("p", "Foo2", "Foo", contents);
+        assertConstructor("p", "Bar", "Foo", "new Foo()");
     }
 
     public void testCodeSelectConstuctorJavaFile() throws Exception {
         addJavaSource("class Foo { Foo() { } }", "Foo", "p");
-        assertConstructor("p", "Foo2", "Foo", "new Foo()");
+        assertConstructor("p", "Bar", "Foo", "new Foo()");
     }
 
     public void testCodeSelectConstuctorMultipleConstructors() throws Exception {
         addGroovySource("class Foo { Foo() { }\nFoo(a) { } }", "Foo", "p");
-        IMethod method = assertConstructor("p", "Foo2", "Foo", "new Foo()");
+        IMethod method = assertConstructor("p", "Bar", "Foo", "new Foo()");
         assertEquals("Should have found constructor with no args", 0, method.getParameters().length);
     }
 
     public void testCodeSelectConstuctorMultipleConstructors2() throws Exception {
         addGroovySource("class Foo { Foo() { } \n Foo(a) { } }", "Foo", "p");
-        IMethod method = assertConstructor("p", "Foo2", "Foo", "new Foo(0)");
+        IMethod method = assertConstructor("p", "Bar", "Foo", "new Foo(0)");
         assertEquals("Should have found constructor with 1 arg", 1, method.getParameters().length);
     }
 
     public void testCodeSelectConstuctorMultipleConstructors3() throws Exception {
-        IMethod method = assertConstructor("p", "Foo", "Date", "new Date(0)");
+        IMethod method = assertConstructor("p", "Bar", "Date", "new Date(0)");
         assertEquals("Should have found constructor with 1 arg", 1, method.getParameters().length);
         assertEquals("Should have found constructor Date(long)", "J", method.getParameterTypes()[0]);
+    }
+
+    public void testCodeSelectConstuctorMultipleConstructors4() throws Exception {
+        // single-arg constructor is defined last and use of constant reference in ctor call means arg types not resolved at time of ctor selection
+        addGroovySource("class Foo { Foo(String s1, String s2) { } \n Foo(String s1) { } }", "Foo", "p");
+        addGroovySource("interface Bar { String CONST = 'whatever' }", "Bar", "p");
+        IMethod method = assertConstructor("p", "Baz", "Foo", "new Foo(Bar.CONST)");
+        assertEquals("Should have found constructor with 1 arg", 1, method.getParameters().length);
     }
 
     private IMethod assertConstructor(String packName, String className, String toSearch, String contents) throws Exception {

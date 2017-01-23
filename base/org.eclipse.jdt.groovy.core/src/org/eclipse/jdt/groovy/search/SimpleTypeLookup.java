@@ -15,11 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXACT;
-import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
-import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
-
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -80,7 +76,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
-        TypeConfidence[] confidence = new TypeConfidence[] {EXACT};
+        TypeConfidence[] confidence = new TypeConfidence[] {TypeConfidence.EXACT};
         if (ClassHelper.isPrimitiveType(objectExpressionType)) {
             objectExpressionType = ClassHelper.getWrapper(objectExpressionType);
         }
@@ -92,26 +88,25 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
-        return new TypeLookupResult(node.getType(), node.getDeclaringClass(), node, EXACT, scope);
+        return new TypeLookupResult(node.getType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
     }
 
     public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-        return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, EXACT, scope);
+        return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
     }
 
     public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         ClassNode baseType = node.getClassNode();
-        return new TypeLookupResult(baseType, baseType, baseType, EXACT, scope);
+        return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
     public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         ClassNode baseType = node.getType();
         if (baseType != null) {
-            return new TypeLookupResult(baseType, baseType, baseType, EXACT, scope);
+            return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
         } else {
             // this is a * import
-            return new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE,
-                VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, INFERRED, scope);
+            return new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, TypeConfidence.INFERRED, scope);
         }
     }
 
@@ -128,7 +123,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             resultType = node;
         }
-        return new TypeLookupResult(resultType, resultType, node, EXACT, scope);
+        return new TypeLookupResult(resultType, resultType, node, TypeConfidence.EXACT, scope);
     }
 
     public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
@@ -141,7 +136,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             type = node.getType();
         }
-        return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT, scope);
+        return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, TypeConfidence.EXACT, scope);
     }
 
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
@@ -189,7 +184,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 } else {
                     type = getDeclaringTypeFromDeclaration(declaration, var.getType());
                 }
-                confidence[0] = TypeConfidence.findLessPrecise(confidence[0], INFERRED);
+                confidence[0] = TypeConfidence.findLessPrecise(confidence[0], TypeConfidence.INFERRED);
                 return type;
             } else if (var instanceof FieldNode) {
                 return ((FieldNode) var).getDeclaringClass();
@@ -241,7 +236,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 // likely a proper quoted string constant
                 return new TypeLookupResult(nodeType, null, node, confidence, scope);
             } else {
-                return new TypeLookupResult(nodeType, null, null, UNKNOWN, scope);
+                return new TypeLookupResult(nodeType, null, null, TypeConfidence.UNKNOWN, scope);
             }
 
         } else if (node instanceof BooleanExpression || node instanceof NotExpression) {
@@ -290,25 +285,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
             if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
-                ConstructorNode candidate = null;
+                List<ConstructorNode> looseMatches = new ArrayList<ConstructorNode>();
                 List<ClassNode> callTypes = GroovyUtils.getArgumentTypes((ArgumentListExpression) constructorCall.getArguments());
                 for (ConstructorNode ctor : declaredConstructors) {
-                    //List<ClassNode> declTypes = GroovyUtils.getParameterTypes(ctor.getParameters());
-                    //if (callTypes.equals(declTypes)) {
-                    //    return new TypeLookupResult(nodeType, declaringType, ctor, TypeConfidence.EXACT, scope);
-                    //}
                     if (callTypes.size() == ctor.getParameters().length) {
-                        Boolean suitable = isTypeCompatible(callTypes, ctor.getParameters());
-                        if (suitable == Boolean.TRUE) {
+                        if (isTypeCompatible(callTypes, ctor.getParameters()) == Boolean.TRUE) {
                             return new TypeLookupResult(nodeType, declaringType, ctor, TypeConfidence.EXACT, scope);
                         }
-                        if (suitable == null) { // null is loosely compatible, FALSE is not compatible
-                            candidate = ctor;
-                        }
+                        // argument types may not be fully resolved; at least the number of arguments matched
+                        looseMatches.add(ctor);
                     }
                 }
-                if (candidate != null) {
-                    declaredConstructors = Collections.singletonList(candidate);
+                if (!looseMatches.isEmpty()) {
+                    declaredConstructors = looseMatches;
                 }
             }
 
@@ -318,7 +307,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // if we get here, then we can't infer the type. Set to unknown if required.
         if (!(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
-            confidence = UNKNOWN;
+            confidence = TypeConfidence.UNKNOWN;
         }
 
         // don't know
@@ -375,33 +364,33 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             declaration = realDeclaringType.getMethods("call").get(0);
         } else {
             realDeclaringType = declaringType;
-            confidence = UNKNOWN;
+            confidence = TypeConfidence.UNKNOWN;
         }
 
         // now check to see if the object expression is static, but the declaration is not
         if (declaration != null && !realDeclaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
             if (declaration instanceof FieldNode) {
                 if (isStaticObjectExpression && !((FieldNode) declaration).isStatic()) {
-                    confidence = UNKNOWN;
+                    confidence = TypeConfidence.UNKNOWN;
                 }
             } else if (declaration instanceof PropertyNode) {
                 FieldNode underlyingField = ((PropertyNode) declaration).getField();
                 if (underlyingField != null) {
                     // prefer looking at the underlying field
                     if (isStaticObjectExpression && !underlyingField.isStatic()) {
-                        confidence = UNKNOWN;
+                        confidence = TypeConfidence.UNKNOWN;
                     }
                 } else if (isStaticObjectExpression && !((PropertyNode) declaration).isStatic()) {
-                    confidence = UNKNOWN;
+                    confidence = TypeConfidence.UNKNOWN;
                 }
             } else if (declaration instanceof MethodNode) {
                 if (isStaticObjectExpression && !((MethodNode) declaration).isStatic()) {
-                    confidence = UNKNOWN;
+                    confidence = TypeConfidence.UNKNOWN;
                 }
             }
         }
 
-        if (confidence == UNKNOWN && realDeclaringType.getName().equals(VariableScope.CLASS_CLASS_NODE.getName())) {
+        if (confidence == TypeConfidence.UNKNOWN && realDeclaringType.getName().equals(VariableScope.CLASS_CLASS_NODE.getName())) {
             // GRECLIPSE-1544
             // check the type parameter for this class node reference
             // likely a type coming in from STC
@@ -441,7 +430,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
             } else {
-                newConfidence = UNKNOWN;
+                newConfidence = TypeConfidence.UNKNOWN;
                 // dynamic variables are not allowed outside of script mainline
                 if (variableInfo != null && !scope.inScriptRunMethod()) variableInfo = null;
             }
@@ -452,7 +441,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             type = variableInfo.type;
             if (scope.isThisOrSuper(var)) decl = type;
             declaringType = getMorePreciseType(declaringType, variableInfo);
-            newConfidence = TypeConfidence.findLessPrecise(confidence, INFERRED);
+            newConfidence = TypeConfidence.findLessPrecise(confidence, TypeConfidence.INFERRED);
         }
 
         return new TypeLookupResult(type, declaringType, decl, newConfidence, scope);
