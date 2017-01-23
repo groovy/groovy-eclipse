@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ public class CategoryTypeLookup implements ITypeLookup {
         Parameter[] params = method.getParameters();
         if (params != null && params.length > 0 && isAssignableFrom(normalizedType, params[0].getType())) {
             ClassNode declaringClass = method.getDeclaringClass();
-            ClassNode returnType = SimpleTypeLookup.typeFromDeclaration(method, expectedType);
+            ClassNode returnType = SimpleTypeLookup.getTypeFromDeclaration(method, expectedType);
             TypeConfidence confidence = getConfidence(declaringClass);
             if (confidence == TypeConfidence.LOOSELY_INFERRED) {
                 confidence = checkParameters(params, scope.getMethodCallArgumentTypes());

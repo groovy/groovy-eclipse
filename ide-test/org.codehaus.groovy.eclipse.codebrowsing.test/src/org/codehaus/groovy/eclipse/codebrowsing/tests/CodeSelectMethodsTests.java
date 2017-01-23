@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -266,16 +266,14 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
         addGroovySource("class Foo { Foo() { }\nFoo(a) { } }", "Foo", "p");
         String contents = "new Foo()";
         IMethod method = assertConstructor("p", "Foo2", "Foo", contents);
-        // should have arbitrarily found the first method
-        assertEquals("Should have found a constructor with no args", 0, method.getParameterNames().length);
+        assertEquals("Should have found constructor with no args", 0, method.getParameterNames().length);
     }
 
     public void testCodeSelectConstuctorMultipleConstructors2() throws Exception {
-        addGroovySource("class Foo { Foo() { }\nFoo(a) { } }", "Foo", "p");
+        addGroovySource("class Foo { Foo() { }  Foo(a) { } }", "Foo", "p");
         String contents = "new Foo(0)";
         IMethod method = assertConstructor("p", "Foo2", "Foo", contents);
-        // should have arbitrarily found the first method
-        assertEquals("Should have found a constructor with no args", 0, method.getParameterNames().length);
+        assertEquals("Should have found constructor with 1 arg", 1, method.getParameterNames().length);
     }
 
     private IMethod assertConstructor(String packName, String className, String toSearch, String contents) throws Exception {
