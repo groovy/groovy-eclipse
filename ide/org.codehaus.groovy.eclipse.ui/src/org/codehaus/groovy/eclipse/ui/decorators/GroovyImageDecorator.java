@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,16 +95,16 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
         if (image != null && image.getBounds().width > 16) {
             size = JavaElementImageProvider.BIG_SIZE;
         }
-        ImageDescriptor desc = GroovyPluginImages.DESC_GROOVY_FILE_NO_BUILD;
+        ImageDescriptor desc = GroovyPluginImages.DESC_GROOVY_FILE;
         try {
             if (isGroovyProject(resource.getProject())) {
                 if (isRuntimeCompiled(resource)) {
-                    desc = GroovyPluginImages.DESC_GROOVY_FILE;
-                    //flags |= JavaElementImageDescriptor.STATIC;
+                    // display "circle slash" in lower left corner
                     flags |= 0x8000/*JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS*/; // TODO: Restore when e37 is no longer supported.
-                } else {
-                    desc = GroovyPluginImages.DESC_GROOVY_FILE;
                 }
+            } else {
+                // display "red exclamation" in lower left corner
+                flags |= JavaElementImageDescriptor.BUILDPATH_ERROR;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -113,6 +113,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
     }
 
     private boolean isGroovyProject(IProject project) throws CoreException {
+        // do not link to static constant to prevent activation of bundle
         return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature");
     }
 
