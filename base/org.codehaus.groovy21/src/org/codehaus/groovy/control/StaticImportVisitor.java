@@ -214,7 +214,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                         name += " as " + alias;
                     }
                     // store the qualified name to facilitate organizing static imports
-                    constant.setNodeMetaData("static.import", name);
+                    constant.putNodeMetaData("static.import", name);
 
                     return constant;
                 }
@@ -260,7 +260,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                     // GRECLIPSE add
                     if (!((MethodCall) ret).getMethodAsString().equals(method.getText())) {
                         // store the identifier to facilitate organizing static imports
-                        ret.setNodeMetaData("static.import.alias", method.getText());
+                        ret.putNodeMetaData("static.import.alias", method.getText());
                     }
                     // GRECLIPSE end
                     setSourcePosition(ret, mce);
@@ -428,7 +428,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE add
             } finally {
                 // store the identifier to facilitate organizing static imports
-                if (expression != null) expression.setNodeMetaData("static.import.alias", name);
+                if (expression != null) expression.putNodeMetaData("static.import.alias", name);
             }
             // GRECLIPSE end
         }

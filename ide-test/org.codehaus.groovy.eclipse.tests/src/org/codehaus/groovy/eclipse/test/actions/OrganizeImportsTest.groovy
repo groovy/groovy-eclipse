@@ -884,6 +884,22 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doContentsCompareTest(contents, contents)
     }
 
+    void testStaticImport8() {
+        createGroovyType 'a.b.c.d', 'E', '''\
+            interface E { String F = 'G.H' }
+            '''
+        String contents = '''\
+            import static a.b.c.d.E.F
+            class Foo {
+              @SuppressWarnings(F)
+              def one() {}
+              @SuppressWarnings(F)
+              def two() {}
+            }
+            '''
+        doContentsCompareTest(contents, contents)
+    }
+
     void testRepeatStaticImport() {
         String originalContents = '''\
             import static java.util.Collections.emptyList

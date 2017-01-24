@@ -68,7 +68,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias6() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -79,7 +79,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias6a() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -90,7 +90,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias6b() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -101,7 +101,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias6c() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -112,7 +112,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias7() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -123,7 +123,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias7a() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -134,7 +134,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias7b() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -145,7 +145,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias8() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
@@ -156,7 +156,7 @@ final class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
 
     void testRetainAlias8a() {
-        createGroovyType 'a.b.c.d', 'E', '''
+        createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
         String contents = '''\
