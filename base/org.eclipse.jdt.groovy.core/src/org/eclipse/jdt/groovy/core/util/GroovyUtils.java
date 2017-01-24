@@ -113,7 +113,7 @@ public abstract class GroovyUtils {
      */
     public static int startOffset(AnnotationNode node) {
         int start = -1;
-        Long offsets = node.getNodeMetaData("source.offsets");
+        Long offsets = (Long) node.getNodeMetaData("source.offsets");
         if (offsets != null) {
             start = (int) (offsets >> 32);
         } else if (node.getEnd() > 0) {
@@ -127,7 +127,7 @@ public abstract class GroovyUtils {
      */
     public static int endOffset(AnnotationNode node) {
         int end = -1;
-        Long offsets = node.getNodeMetaData("source.offsets");
+        Long offsets = (Long) node.getNodeMetaData("source.offsets");
         if (offsets != null) {
             end = (int) (offsets & 0xFFFFFFFF);
         } else {

@@ -17,16 +17,13 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
 import static java.util.Arrays.asList;
 
+import junit.framework.Test;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 14, 2009
- */
 public final class CodeSelectTypesTests extends BrowsingTestCase {
 
-    public static junit.framework.Test suite() {
+    public static Test suite() {
         return newTestSuite(CodeSelectTypesTests.class);
     }
 
@@ -319,21 +316,21 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), "List");
     }
 
-    // GRECLIPSE-548
     public void testSelectThis1() {
-        String contents = "class AClass { def x() { this } }";
-        assertCodeSelect(asList(contents), "this", "AClass");
+        // Java Editor doesn't code select on 'this' variable expression
+        String contents = "class C { def x() { this } }";
+        assertCodeSelect(asList(contents), "this", null);
     }
 
-    // GRECLIPSE-548
     public void testSelectThis2() {
-        String contents = "class AClass { def x() { this.toString() } }";
-        assertCodeSelect(asList(contents), "this", "AClass");
+        // Java Editor doesn't code select on 'this' variable expression
+        String contents = "class C { def x() { this.toString() } }";
+        assertCodeSelect(asList(contents), "this", null);
     }
 
     // GRECLIPSE-548
     public void testSelectSuper1() {
-        String contents = "class Super { } \n class AClass extends Super { def x() { super } }";
+        String contents = "class Super { } \n class C extends Super { def x() { super } }";
         assertCodeSelect(asList(contents), "super", "Super");
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
@@ -57,7 +58,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Object[] result = findNodeForRegion(module, select);
                 ASTNode node = (ASTNode) result[0];
                 Region region = (Region) result[1];
-                if (node != null) {
+                if (node != null && !(node instanceof VariableExpression && ((VariableExpression) node).isThisExpression())) {
                     // shortcut: check to see if we are looking for this type itself
                     if (isTypeDeclaration(module, node)) {
                         return returnThisNode(unit, node);
