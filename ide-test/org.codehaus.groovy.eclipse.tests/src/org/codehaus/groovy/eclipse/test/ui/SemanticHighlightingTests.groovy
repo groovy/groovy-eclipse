@@ -241,14 +241,17 @@ final class SemanticHighlightingTests extends TestCase {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('grep'), 4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL))
+            new HighlightedTypedPosition(contents.indexOf('grep'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('first'), 5, METHOD_CALL))
     }
 
     void testDefaultGroovyMethods2() {
         String contents = '(["one", "two"] as String[]).first()'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL))
+            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('first'), 5, METHOD_CALL))
     }
 
     void testUseCategoryMethods() {
@@ -260,8 +263,10 @@ final class SemanticHighlightingTests extends TestCase {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('use'), 3, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('use'), 3, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), GROOVY_CALL))
+            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), METHOD_CALL))
     }
 
     void testNotCategoryMethod() {
@@ -323,6 +328,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('i +'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('f('), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('f('), 1, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('i)'), 1, VARIABLE))
     }
 
@@ -338,7 +344,9 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('p'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('Person'), 'Person'.length(), CTOR_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), MAP_KEY),
-            new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY))
+            new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), FIELD))
     }
 
     void testNamedParams1a() {
@@ -981,8 +989,10 @@ final class SemanticHighlightingTests extends TestCase {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('use'),                      3, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('use'),                      3, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('Date'),                     4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 24, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 24, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1'),                        1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('minute'),                   6, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('from'),                     4, METHOD_CALL),
@@ -1004,6 +1014,7 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
@@ -1029,6 +1040,7 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
@@ -1054,6 +1066,7 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
@@ -1081,6 +1094,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('getReadOnly'), 11, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('X'),        1, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),         4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),         4, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('val'),      3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('readOnly'),     8, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('readOnly'), 8, UNKNOWN))
@@ -1105,6 +1119,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('value'),         5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('X'),         1, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),          4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),          4, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('val'),       3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('writeOnly'),     9, UNKNOWN),
             new HighlightedTypedPosition(contents.lastIndexOf('writeOnly'), 9, METHOD_CALL))

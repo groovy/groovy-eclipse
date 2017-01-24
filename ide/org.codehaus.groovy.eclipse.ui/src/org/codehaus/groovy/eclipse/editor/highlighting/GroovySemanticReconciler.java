@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.DEPRECATED;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.UNKNOWN;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -169,9 +172,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         int style = SWT.NONE;
 
         if (!prefs.contains(which + ".enabled") || prefs.getBoolean(which + ".enabled")) {
-
-            if (prefs.getBoolean(which + ".bold") ||
-                    prefs.getBoolean(which + ".color_bold"))
+            if (prefs.getBoolean(which + ".bold") || prefs.getBoolean(which + ".color_bold"))
                 style |= SWT.BOLD;
             if (prefs.getBoolean(which + ".italic"))
                 style |= SWT.ITALIC;
@@ -229,9 +230,22 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 List<Position> oldPositions = new LinkedList<Position>(getHighlightedPositions());
                 if (update(monitor, 1)) return;
 
+                HighlightedTypedPosition last = null;
                 for (HighlightedTypedPosition ref : semanticReferences) {
-                    Position pos = newHighlightedPosition(ref);
-                    tryAddPosition(newPositions, oldPositions, pos);
+                    if (ref.compareTo(last) != 0) {
+                        Position pos = newHighlightedPosition(ref);
+                        tryAddPosition(newPositions, oldPositions, pos);
+
+                    } else if (GET_HIGHLIGHTING != null && (ref.kind == DEPRECATED || ref.kind == UNKNOWN)) {
+                        // this and last cover same source range and this indicates deprecated or unknown
+                        Position pos = newPositions.get(newPositions.size() - 1);
+                        Object style = GET_HIGHLIGHTING.invoke(pos);
+                        TextAttribute one = getTextAttribute(style);
+                        TextAttribute two = getTextAttribute(ref.kind == DEPRECATED ? deprecatedRefHighlighting : undefinedRefHighlighting);
+                        // merge the text styling assigned to deprecated or unknown (usually strikethrough for deprecated and underline for unknown)
+                        ReflectionUtils.setPrivateField(pos.getClass(), "fStyle", pos, newHighlightingStyle(one.getForeground(), one.getStyle() | two.getStyle()));
+                    }
+                    last = ref;
                 }
                 if (update(monitor, 2)) return;
 
@@ -347,6 +361,11 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             }
         }
         return true;
+    }
+
+    private TextAttribute getTextAttribute(Object highlightingStyle) {
+        // return highlightingStyle.getTextAttribute();
+        return (TextAttribute) ReflectionUtils.executeNoArgPrivateMethod(highlightingStyle.getClass(), "getTextAttribute", highlightingStyle);
     }
 
     /**

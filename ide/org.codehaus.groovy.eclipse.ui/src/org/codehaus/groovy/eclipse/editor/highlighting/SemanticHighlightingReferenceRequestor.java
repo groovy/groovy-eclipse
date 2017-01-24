@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 
+import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -70,7 +71,17 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private static final boolean DEBUG = false;
 
     /** Positions of interesting syntax elements within {@link #unit} in increasing lexical order. */
-    protected final SortedSet<HighlightedTypedPosition> typedPosition = new TreeSet<HighlightedTypedPosition>();
+    protected final SortedSet<HighlightedTypedPosition> typedPosition = new TreeSet<HighlightedTypedPosition>(new Comparator<HighlightedTypedPosition>() {
+        public int compare(HighlightedTypedPosition p1, HighlightedTypedPosition p2) {
+            int result = p1.compareTo(p2);
+            if (result == 0) {
+                // order matching positions by highlighting style
+                int x = p1.kind.ordinal(), y = p2.kind.ordinal();
+                result = (x < y) ? -1 : ((x == y) ? 0 : 1);
+            }
+            return result;
+        }
+    });
 
     public SemanticHighlightingReferenceRequestor(GroovyCompilationUnit unit) {
         this.unit = unit;
