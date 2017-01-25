@@ -272,6 +272,83 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    public void testLocalAnnotationConstant3() {
+        String[] sources = {
+            "Main.groovy",
+            "@SuppressWarnings(Main.VALUE)\n" +
+            "class Main {\n" +
+            "  public static final String VALUE = 'nls'\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testLocalAnnotationConstant3a() {
+        String[] sources = {
+            "Main.groovy",
+            "@SuppressWarnings(VALUE)\n" +
+            "class Main {\n" +
+            "  public static final String VALUE = 'nls'\n" +
+            "}"
+        };
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\r\n" +
+            "\t@SuppressWarnings(VALUE)\r\n" +
+            "\t                  ^^^^^\n" +
+            "VALUE cannot be resolved\n" +
+            "----------\n");
+    }
+
+    public void testLocalAnnotationConstant4() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(Main.Inner)\n" +
+            "class Main {\n" +
+            "  static class Inner {}\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testLocalAnnotationConstant4a() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(Inner)\n" +
+            "class Main {\n" +
+            "  static class Inner {}\n" +
+            "}"
+        };
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\r\n" +
+            "\t@Anno(Inner)\r\n" +
+            "\t      ^^^^^\n" +
+            "Inner cannot be resolved\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 1)\r\n" +
+            "\t@Anno(Inner)\r\n" +
+            "\t      ^^^^^\n" +
+            "Inner cannot be resolved or is not a field\n" +
+            "----------\n");
+    }
+
     public void testImportedAnnotationConstant1() {
         String[] sources = {
             "p/I.java",

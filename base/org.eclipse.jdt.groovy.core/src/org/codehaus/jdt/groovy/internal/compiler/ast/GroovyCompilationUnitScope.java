@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -92,11 +93,9 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected ImportBinding[] getDefaultImports() {
-        ImportBinding[] defaultImports = super.getDefaultImports(); // picks up 'java.lang'
-
         List<ImportBinding> importBindings = new ArrayList<ImportBinding>();
 
-        importBindings.add(defaultImports[0]);
+        Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
 
         // augment with the groovy additional automatic imports
         Binding importBinding = environment.createPackage(javaIo);
@@ -114,7 +113,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         importBinding = environment.createPackage(groovyUtil);
         importBindings.add(new ImportBinding(groovyUtil, true, importBinding, null));
 
-        // And specific imports for BigDecimal and BigInteger
+        // and specific imports for BigDecimal and BigInteger
         Binding jmBigDecimal = environment.getType(javaMathBigDecimal);
         importBindings.add(new ImportBinding(javaMathBigDecimal, false, jmBigDecimal, null));
 
@@ -127,7 +126,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         // TODO need to refactor (code is copied in JDTResolver)
         if (extraImports != null) {
             try {
-                String filename = new String(this.referenceContext.getFileName());
+                String filename = new String(referenceContext.getFileName());
                 // may be something to do
                 StringTokenizer st = new StringTokenizer(extraImports, ";");
                 // Form would be 'com.foo.*,com.bar.MyType;.gradle=com.this.*,com.foo.Type"
@@ -186,6 +185,20 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             }
         }
 
+        /* See https://github.com/groovy/groovy-eclipse/issues/256 and https://issues.apache.org/jira/browse/GROOVY-8063
+         *
+         * @interface Anno { Class value() }
+         *
+         * @Anno(value=Inner) // Inner cannot be resolved -- I think this is correct behavior; below enables resolution
+         * class Outer {
+         *   static class Inner {}
+         * }
+         */
+        //for (SourceTypeBinding topLevelType : topLevelTypes) {
+        //    if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
+        //        importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
+        //}
+
         return importBindings.toArray(new ImportBinding[importBindings.size()]);
     }
 
@@ -199,8 +212,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
      */
     @Override
     public void augmentTypeHierarchy() {
-        for (int i = 0, length = topLevelTypes.length; i < length; i++) {
-            augmentTypeHierarchy(topLevelTypes[i]);
+        for (SourceTypeBinding topLevelType : topLevelTypes) {
+            augmentTypeHierarchy(topLevelType);
         }
     }
 
