@@ -14,8 +14,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
-import java.util.Arrays;
-
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -63,7 +61,7 @@ public class MemberValuePair extends ASTNode {
 	}
 
 	// GROOVY add
-	private boolean isClass(TypeBinding requiredType) {
+	private static boolean isClass(TypeBinding requiredType) {
 		if (requiredType.isArrayType()) {
 			requiredType = requiredType.leafComponentType();
 		}
@@ -72,30 +70,24 @@ public class MemberValuePair extends ASTNode {
 		return isClass;
 	}
 
-	private boolean isGroovy(Scope scope) {
+	private static boolean isGroovy(Scope scope) {
 		while (scope.parent != null) {
 			scope = scope.parent;
 		}
 		return scope.getClass().getSimpleName().startsWith("Groovy"); //$NON-NLS-1$
 	}
 
-	private Expression repairClassLiteralReference(Expression exp, BlockScope scope, TypeBinding[] valueType) {
-		TypeBinding vtb = null;
+	private static Expression repairClassLiteralReference(Expression exp, BlockScope scope) {
 		if (exp instanceof SingleNameReference) {
-			vtb = exp.resolveType(scope);
+			if (exp.resolveType(scope) != null) {
 			SingleNameReference ref = (SingleNameReference) exp;
-			if (vtb != null && Arrays.equals(ref.token, vtb.sourceName())) {
 				return new ClassLiteralAccess(ref.sourceEnd, new SingleTypeReference(ref.token, ((long) ref.sourceStart) << 32 | ref.sourceEnd));
 			}
-		} else if (this.value instanceof QualifiedNameReference) {
-			vtb = exp.resolveType(scope);
+		} else if (exp instanceof QualifiedNameReference) {
+			if (exp.resolveType(scope) != null) {
 			QualifiedNameReference ref = (QualifiedNameReference) exp;
-			if (vtb != null && Arrays.equals(ref.tokens[ref.tokens.length - 1], vtb.sourceName())) {
 				return new ClassLiteralAccess(ref.sourceEnd, new QualifiedTypeReference(ref.tokens, ref.sourcePositions));
 			}
-		}
-		if (valueType != null) {
-			valueType[0] = vtb;
 		}
 		return exp;
 	}
@@ -118,17 +110,15 @@ public class MemberValuePair extends ASTNode {
 			return;
 		}
 
-		// GROOVY add - handling for class literals that do not end in '.class'
-		TypeBinding[] vtb = null;
+		// GROOVY add -- handling for class literals that do not end in '.class'
 		if (isClass(requiredType) && isGroovy(scope)) {
 			if (this.value instanceof ArrayInitializer) {
 				Expression[] values = ((ArrayInitializer) this.value).expressions;
 				for (int i = 0, n = values.length; i < n; i += 1) {
-					values[i] = repairClassLiteralReference(values[i], scope, null);
+					values[i] = repairClassLiteralReference(values[i], scope);
 				}
 			} else {
-				vtb = new TypeBinding[1]; // need resolved type if value is resolved but unchanged
-				this.value = repairClassLiteralReference(this.value, scope, vtb);
+				this.value = repairClassLiteralReference(this.value, scope);
 			}
 		}
 		// GROOVY end
@@ -143,10 +133,7 @@ public class MemberValuePair extends ASTNode {
 			this.value.resolveType(scope);
 			valueType = null; // no need to pursue
 		} else {
-			// GROOVY edit -- returns null if called 2x
-			//valueType = this.value.resolveType(scope);
-			valueType = (vtb != null && vtb[0] != null) ? vtb[0] : this.value.resolveType(scope);
-			// GROOVY end
+			valueType = this.value.resolveType(scope);
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=248897
 			ASTVisitor visitor = new ASTVisitor() {
 				public boolean visit(SingleNameReference reference, BlockScope scop) {

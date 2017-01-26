@@ -301,7 +301,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    public void testLocalAnnotationConstant4() {
+    public void testLocalAnnotationClassLiteral() {
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -320,7 +320,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
-    public void testLocalAnnotationConstant4a() {
+    public void testLocalAnnotationClassLiteral2() {
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -423,6 +423,48 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "  @SuppressWarnings(value=[FOO])\n" +
             "  def method() {\n" +
             "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testAliasedAnnotationClassLiteral() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "import java.lang.Class as Trash\n" +
+            "@Anno(Trash)\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testAliasedAnnotationClassLiteral2() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+            
+            "p/Outer.java",
+            "package p;\n" +
+            "public class Outer { public static class Inner { } }",
+
+            "Main.groovy",
+            "import p.Outer as Retou\n" +
+            "@Anno(Retou.Inner)\n" +
+            "class Main {\n" +
             "}"
         };
 
