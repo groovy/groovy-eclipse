@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -276,10 +276,11 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 		}
 		SourceTypeBinding sourceType = currentScope.enclosingSourceType();
 		if (this.receiverType.isArrayType()) {
+			char [] lambdaName = CharOperation.concat(TypeConstants.ANONYMOUS_METHOD, Integer.toString(this.ordinal).toCharArray());
 			if (isConstructorReference()) {
-				this.actualMethodBinding = this.binding = sourceType.addSyntheticArrayMethod((ArrayBinding) this.receiverType, SyntheticMethodBinding.ArrayConstructor);
+				this.actualMethodBinding = this.binding = sourceType.addSyntheticArrayMethod((ArrayBinding) this.receiverType, SyntheticMethodBinding.ArrayConstructor, lambdaName);
 			} else if (CharOperation.equals(this.selector, TypeConstants.CLONE)) {
-				this.actualMethodBinding = this.binding = sourceType.addSyntheticArrayMethod((ArrayBinding) this.receiverType, SyntheticMethodBinding.ArrayClone);
+				this.actualMethodBinding = this.binding = sourceType.addSyntheticArrayMethod((ArrayBinding) this.receiverType, SyntheticMethodBinding.ArrayClone, lambdaName);
 			}
 		} else if (this.syntheticAccessor != null) {
 			if (this.lhs.isSuper() || isMethodReference())
@@ -337,7 +338,8 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 					}
 				}
 				if (this.syntheticAccessor != null) {
-					this.binding = sourceType.addSyntheticFactoryMethod(this.binding, this.syntheticAccessor, enclosingInstances);
+					char [] lambdaName = CharOperation.concat(TypeConstants.ANONYMOUS_METHOD, Integer.toString(this.ordinal).toCharArray());
+					this.binding = sourceType.addSyntheticFactoryMethod(this.binding, this.syntheticAccessor, enclosingInstances, lambdaName);
 					this.syntheticAccessor = null; // add only once
 				}
 			}
@@ -453,7 +455,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
     		this.constant = Constant.NotAConstant;
     		this.enclosingScope = scope;
     		if (this.original == this)
-    			recordFunctionalType(scope);
+    			this.ordinal = recordFunctionalType(scope);
 
     		this.lhs.bits |= ASTNode.IgnoreRawTypeCheck;
     		lhsType = this.lhs.resolveType(scope);
@@ -755,11 +757,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 		CompilerOptions compilerOptions = scope.compilerOptions();
 		if (compilerOptions.isAnnotationBasedNullAnalysisEnabled) {
         	if (this.expectedType == null || !NullAnnotationMatching.hasContradictions(this.expectedType)) { // otherwise assume it has been reported and we can do nothing here
-        		if ((this.binding.tagBits & TagBits.IsNullnessKnown) == 0) {
-        			// not interested in reporting problems against this.binding:
-        			new ImplicitNullAnnotationVerifier(scope.environment(), compilerOptions.inheritNullAnnotations)
-        					.checkImplicitNullAnnotations(this.binding, null/*srcMethod*/, false, scope);
-        		}
+        		ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(this.binding, scope);
 	        	// TODO: simplify by using this.freeParameters?
 	        	int len;
 	        	int expectedlen = this.binding.parameters.length;

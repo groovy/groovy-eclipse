@@ -716,16 +716,18 @@ public FlowInfo copy() {
 		System.arraycopy(this.extra[1], 0,
 			(copy.extra[1] = new long[length]), 0, length);
 		if (hasNullInfo) {
-			for (int j = 2; j < extraLength; j++) {
+			for (int j = 2; j < 6; j++) {
 				System.arraycopy(this.extra[j], 0,
 					(copy.extra[j] = new long[length]), 0, length);
 			}
 		}
 		else {
-			for (int j = 2; j < extraLength; j++) {
+			for (int j = 2; j < 6; j++) {
 				copy.extra[j] = new long[length];
 			}
 		}
+		System.arraycopy(this.extra[IN], 0, (copy.extra[IN] = new long[length]), 0, length);
+		System.arraycopy(this.extra[INN], 0, (copy.extra[INN] = new long[length]), 0, length);
 	}
 	return copy;
 }

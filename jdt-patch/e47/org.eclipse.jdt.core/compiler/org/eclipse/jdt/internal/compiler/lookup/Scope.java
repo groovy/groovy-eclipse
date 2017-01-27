@@ -1573,9 +1573,8 @@ public abstract class Scope {
 		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
 		if (extraMethods != null) {
 			return extraMethods[0];
-		} else {
-			return null;
 		}
+		return null;
 	}
 	// GROOVY end
 	

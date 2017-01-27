@@ -62,6 +62,9 @@ org.eclipse.jdt.core/debug/javamodel/insertions=false
 # Records information about the invalid archive cache
 org.eclipse.jdt.core/debug/javamodel/invalid_archives=false
 
+# Runs self-diagnostics on the large chunk free space tree
+org.eclipse.jdt.core/debug/index/largechunks=false
+
 # Prints information about when the indexer runs and what files are being indexed
 org.eclipse.jdt.core/debug/index/indexer=false
 

@@ -15,14 +15,14 @@ import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
 public class NdTypeAnnotationInMethod extends NdTypeAnnotation {
-	public static final FieldManyToOne<NdMethod> OWNER;
+	public static final FieldManyToOne<NdMethodAnnotationData> OWNER;
 
 	@SuppressWarnings("hiding")
 	public static final StructDef<NdTypeAnnotationInMethod> type;
 
 	static {
 		type = StructDef.create(NdTypeAnnotationInMethod.class, NdTypeAnnotation.type);
-		OWNER = FieldManyToOne.createOwner(type, NdMethod.TYPE_ANNOTATIONS);
+		OWNER = FieldManyToOne.createOwner(type, NdMethodAnnotationData.TYPE_ANNOTATIONS);
 		type.done();
 	}
 
@@ -30,10 +30,10 @@ public class NdTypeAnnotationInMethod extends NdTypeAnnotation {
 		super(nd, address);
 	}
 
-	public NdTypeAnnotationInMethod(Nd nd, NdMethod variable) {
+	public NdTypeAnnotationInMethod(Nd nd, NdMethod method) {
 		super(nd);
 
-		OWNER.put(getNd(), this.address, variable);
+		OWNER.put(getNd(), this.address, method.createAnnotationData());
 	}
 
 }

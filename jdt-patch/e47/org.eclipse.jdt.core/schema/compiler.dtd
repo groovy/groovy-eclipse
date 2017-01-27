@@ -39,6 +39,7 @@
 <!ATTLIST problems problems CDATA #REQUIRED
 				   errors   CDATA #REQUIRED
 				   warnings CDATA #REQUIRED
+				   infos CDATA #REQUIRED
 >
 <!ATTLIST tasks tasks CDATA #REQUIRED>
 <!ATTLIST problem charEnd    CDATA #REQUIRED
@@ -73,6 +74,7 @@
 <!ATTLIST problem_summary problems CDATA #REQUIRED
                           errors   CDATA #REQUIRED
                           warnings CDATA #REQUIRED
+                          infos CDATA #REQUIRED
                           tasks    CDATA #REQUIRED
 >
 <!ATTLIST number_of_classfiles value CDATA #REQUIRED>

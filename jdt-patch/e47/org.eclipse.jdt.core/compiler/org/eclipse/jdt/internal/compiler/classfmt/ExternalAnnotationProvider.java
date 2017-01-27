@@ -118,7 +118,7 @@ public class ExternalAnnotationProvider {
 				}
 				if (rawSig == null || annotSig == null) {
 					if (errLine == -1) errLine = reader.getLineNumber();
-					throw new IOException("Illegal format for annotation file at line "+errLine); //$NON-NLS-1$
+					throw new IOException("Illegal format in annotation file for "+this.typeName+" at line "+errLine); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				// discard optional meta data (separated by whitespace):
 				annotSig = trimTail(annotSig);
@@ -146,7 +146,7 @@ public class ExternalAnnotationProvider {
 		if (line != null && line.startsWith(CLASS_PREFIX)) {
 			line = line.substring(CLASS_PREFIX.length());
 		} else {
-			throw new IOException("missing class header in annotation file"); //$NON-NLS-1$
+			throw new IOException("missing class header in annotation file for "+typeName); //$NON-NLS-1$
 		}
 		if (!trimTail(line).equals(typeName)) {
 			throw new IOException("mismatching class name in annotation file, expected "+typeName+", but header said "+line); //$NON-NLS-1$ //$NON-NLS-2$

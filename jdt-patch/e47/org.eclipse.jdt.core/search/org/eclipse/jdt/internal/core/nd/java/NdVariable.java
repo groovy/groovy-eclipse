@@ -45,7 +45,7 @@ public class NdVariable extends NdBinding {
 		TYPE = FieldManyToOne.create(type, NdTypeSignature.VARIABLES_OF_TYPE);
 		VARIABLE_ID = type.addInt();
 		DECLARING_METHOD = FieldManyToOne.create(type, NdMethod.DECLARED_VARIABLES);
-		PARENT = FieldManyToOne.create(type, NdBinding.VARIABLES);
+		PARENT = FieldManyToOne.createOwner(type, NdBinding.VARIABLES);
 		NAME = type.addString();
 		CONSTANT = FieldOneToOne.create(type, NdConstant.class, NdConstant.PARENT_VARIABLE);
 		TAG_BITS = type.addLong();
@@ -60,7 +60,7 @@ public class NdVariable extends NdBinding {
 	}
 
 	public NdVariable(NdBinding parent) {
-		super(parent.getNd(), parent.getFile());
+		super(parent.getNd());
 
 		PARENT.put(getNd(), this.address, parent);
 	}

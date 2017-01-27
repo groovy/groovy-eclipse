@@ -101,6 +101,7 @@
 	<builder>
 		<run class="org.eclipse.jdt.internal.core.builder.JavaBuilder">
 		</run>
+		<dynamicReference class="org.eclipse.jdt.internal.core.DynamicProjectReferences"/>
 	</builder>
 </extension>
 

@@ -75,7 +75,8 @@ public ReadManager(ICompilationUnit[] files, int length) {
 }
 
 public char[] getContents(ICompilationUnit unit) throws Error {
-	if (this.readingThreads == null || this.units.length == 0) {
+	Thread[] rThreads = this.readingThreads;
+	if (rThreads == null || this.units.length == 0) {
 		if (this.caughtException != null) {
 			// rethrow the caught exception from the readingThreads in the main compiler thread
 			if (this.caughtException instanceof Error)
@@ -85,7 +86,7 @@ public char[] getContents(ICompilationUnit unit) throws Error {
 		return unit.getContents();
 	}
 
-	boolean yield = false;
+	boolean yield = this.sleepingThreadCount == rThreads.length;
 	char[] result = null;
 	synchronized (this) {
 		if (unit == this.filesRead[this.readyToReadPosition]) {
@@ -115,7 +116,6 @@ public char[] getContents(ICompilationUnit unit) throws Error {
 				//System.out.print('+');
 				//System.out.print(this.nextFileToRead);
 				notify();
-				yield = this.sleepingThreadCount == this.readingThreads.length;
 			}
 		} else {
 			// must make sure we're reading ahead of the unit

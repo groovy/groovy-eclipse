@@ -32,6 +32,15 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ImplicitNullAnnotationVerifier {
+	public static void ensureNullnessIsKnown(MethodBinding methodBinding, Scope scope) {
+		if ((methodBinding.tagBits & TagBits.IsNullnessKnown) == 0) {
+			LookupEnvironment environment2 = scope.environment();
+			// ensure nullness of methodBinding is known (but we are not interested in reporting problems against methodBinding)
+			new ImplicitNullAnnotationVerifier(environment2, environment2.globalOptions.inheritNullAnnotations)
+					.checkImplicitNullAnnotations(methodBinding, null/*srcMethod*/, false, scope);
+		}
+	}
+
 
 	/**
 	 * Simple record to store nullness info for one argument or return type

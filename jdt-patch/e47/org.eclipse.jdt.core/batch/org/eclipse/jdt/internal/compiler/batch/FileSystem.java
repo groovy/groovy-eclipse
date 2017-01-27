@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -270,20 +270,28 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 			Classpath classpathEntry = this.classpaths[i];
 			if (classpathEntry.hasAnnotationFileFor(qualifiedTypeName)) {
 				// in case of 'this.annotationsFromClasspath' we indeed search for .eea entries inside the main zipFile of the entry:
-				@SuppressWarnings("resource")
 				ZipFile zip = classpathEntry instanceof ClasspathJar ? ((ClasspathJar) classpathEntry).zipFile : null;
+				boolean shouldClose = false; // don't close classpathEntry.zipFile, which we don't own
 				try {
 					if (zip == null) {
 						zip = ExternalAnnotationDecorator.getAnnotationZipFile(classpathEntry.getPath(), null);
+						shouldClose = true;
 					}
 					answer.setBinaryType(ExternalAnnotationDecorator.create(answer.getBinaryType(), classpathEntry.getPath(), 
 							qualifiedTypeName, zip));
-					break;
+					return answer;
 				} catch (IOException e) {
 					// ignore broken entry, keep searching
+				} finally {
+					if (shouldClose && zip != null)
+						try {
+							zip.close();
+						} catch (IOException e) { /* nothing */ }
 				}
 			}
 		}
+		// globally configured (annotationsFromClasspath), but no .eea found, decorate in order to answer NO_EEA_FILE:
+		answer.setBinaryType(new ExternalAnnotationDecorator(answer.getBinaryType(), null));
 	}
 	return answer;
 }

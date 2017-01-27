@@ -67,10 +67,16 @@ public class FieldOneToOne<T extends NdNode> implements IField, IDestructableFie
 	}
 
 	public void put(Nd nd, long address, T target) {
+		Database db = nd.getDB();
 		cleanup(nd, address);
-		nd.getDB().putRecPtr(address + this.offset, target == null ? 0 : target.address);
-		if (target == null && this.pointsToOwner) {
-			nd.scheduleDeletion(address);
+		if (target == null) {
+			db.putRecPtr(address + this.offset, 0);
+			if (this.pointsToOwner) {
+				nd.scheduleDeletion(address);
+			}
+		} else {
+			db.putRecPtr(address + this.offset, target.address);
+			db.putRecPtr(target.address + this.backPointer.offset, address);
 		}
 	}
 

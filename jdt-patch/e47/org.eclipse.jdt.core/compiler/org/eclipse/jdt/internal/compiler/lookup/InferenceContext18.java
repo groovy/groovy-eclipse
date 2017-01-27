@@ -162,6 +162,8 @@ public class InferenceContext18 {
 	private BoundSet innerInbox; 
 	/** Not per JLS: signal when current is ready to directly merge all bounds from inner. */
 	private boolean directlyAcceptingInnerBounds = false;
+	/** Not per JLS: pushing bounds from inner to outer may have to be deferred till after overload resolution, store here a runnable to perform the push. */
+	private Runnable pushToOuterJob = null;
 	
 	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
@@ -475,13 +477,29 @@ public class InferenceContext18 {
 	private void pushBoundsToOuter() {
 		InferenceContext18 outer = this.outerContext;
 		if (outer != null && outer.stepCompleted >= APPLICABILITY_INFERRED) {
-			if (outer.directlyAcceptingInnerBounds) {
-				outer.currentBounds.addBounds(this.currentBounds, this.environment);
-			} else if (outer.innerInbox == null) {
-				outer.innerInbox = this.currentBounds.copy();
+			boolean deferred = outer.currentInvocation instanceof Invocation; // need to wait till after overload resolution?
+			BoundSet toPush = deferred ? this.currentBounds.copy() : this.currentBounds;
+			Runnable job = () -> {
+				if (outer.directlyAcceptingInnerBounds) {
+					outer.currentBounds.addBounds(toPush, this.environment);
+				} else if (outer.innerInbox == null) {
+					outer.innerInbox = deferred ? toPush : toPush.copy(); // copy now, unless already copied on behalf of 'deferred'
+				} else {
+					outer.innerInbox.addBounds(toPush, this.environment);
+				}
+			};
+			if (deferred) {
+				this.pushToOuterJob = job;
 			} else {
-				outer.innerInbox.addBounds(this.currentBounds, this.environment);
+				job.run(); // TODO(stephan): ever reached? for ReferenceExpression? (would need a corresponding new call to flushBoundOutbox()).
 			}
+		}
+	}
+	/** Not JLS: after overload resolution is done, perform the push of type bounds to outer inference, if any. */
+	public void flushBoundOutbox() {
+		if (this.pushToOuterJob != null) {
+			this.pushToOuterJob.run();
+			this.pushToOuterJob = null;
 		}
 	}
 	/** Not JLS: merge pending bounds of inner inference into current. */

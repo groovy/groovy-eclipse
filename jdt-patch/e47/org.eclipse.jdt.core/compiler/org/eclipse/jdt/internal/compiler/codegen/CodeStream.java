@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2729,8 +2729,8 @@ public void generateSyntheticBodyForDeserializeLambda(SyntheticMethodBinding met
 				invoke(Opcodes.OPC_invokevirtual, 1, 1,
 						ConstantPool.JavaLangInvokeSerializedLambdaConstantPoolName,
 						ConstantPool.GetCapturedArg, ConstantPool.GetCapturedArgSignature);
-				checkcast(mb.declaringClass);
-				sig.append(mb.declaringClass.signature());
+				checkcast(receiverType);
+				sig.append(receiverType.signature());
 			}
 			for (int p = 0, max = outerLocalVariables == null ? 0 : outerLocalVariables.length; p < max; p++) {
 				TypeBinding varType = outerLocalVariables[p].type;

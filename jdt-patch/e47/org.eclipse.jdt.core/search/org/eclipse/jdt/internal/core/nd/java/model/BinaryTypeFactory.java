@@ -57,8 +57,6 @@ public class BinaryTypeFactory {
 		public NotInIndexException() {
 		}
 	}
-	
-	private final static char[] PACKAGE_INFO = "package-info".toCharArray(); //$NON-NLS-1$
 
 	/**
 	 * Returns a descriptor for the given class within the given package fragment, or null if the fragment doesn't have
@@ -201,54 +199,49 @@ public class BinaryTypeFactory {
 	 * able to determine that the requested class does not exist in that file.
 	 */
 	public static IBinaryType readFromIndex(JavaIndex index, BinaryTypeDescriptor descriptor, IProgressMonitor monitor) throws JavaModelException, NotInIndexException {
-		char[] className = JavaNames.fieldDescriptorToSimpleName(descriptor.fieldDescriptor);
-
 		// If the new index is enabled, check if we have this class file cached in the index already		
 		char[] fieldDescriptor = descriptor.fieldDescriptor;
 
-		if (!CharArrayUtils.equals(PACKAGE_INFO, className)) {
-			Nd nd = index.getNd();
+		Nd nd = index.getNd();
 
-			// We don't currently cache package-info files in the index
-			if (descriptor.location != null) {
-				// Acquire a read lock on the index
-				try (IReader lock = nd.acquireReadLock()) {
-					try {
-						TypeRef typeRef = TypeRef.create(nd, descriptor.location, fieldDescriptor);
-						NdType type = typeRef.get();
+		if (descriptor.location != null) {
+			// Acquire a read lock on the index
+			try (IReader lock = nd.acquireReadLock()) {
+				try {
+					TypeRef typeRef = TypeRef.create(nd, descriptor.location, fieldDescriptor);
+					NdType type = typeRef.get();
 
-						if (type == null) {
-							// If we couldn't find the type in the index, determine whether the cause is
-							// that the type is known not to exist or whether the resource just hasn't
-							// been indexed yet
+					if (type == null) {
+						// If we couldn't find the type in the index, determine whether the cause is
+						// that the type is known not to exist or whether the resource just hasn't
+						// been indexed yet
 
-							NdResourceFile resourceFile = index.getResourceFile(descriptor.location);
-							if (index.isUpToDate(resourceFile)) {
-								return null;
-							}
-							throw new NotInIndexException();
-						}
-						NdResourceFile resourceFile = type.getResourceFile();
+						NdResourceFile resourceFile = index.getResourceFile(descriptor.location);
 						if (index.isUpToDate(resourceFile)) {
-							IndexBinaryType result = new IndexBinaryType(typeRef, descriptor.indexPath);
-
-							// We already have the database lock open and have located the element, so we may as
-							// well prefetch the inexpensive attributes.
-							result.initSimpleAttributes();
-
-							return result;
+							return null;
 						}
 						throw new NotInIndexException();
-					} catch (CoreException e) {
-						throw new JavaModelException(e);
 					}
-				} catch (IndexException e) {
-					Package.log("Index corruption detected. Rebuilding index.", e); //$NON-NLS-1$
-					Indexer.getInstance().requestRebuildIndex();
+					NdResourceFile resourceFile = type.getResourceFile();
+					if (index.isUpToDate(resourceFile)) {
+						IndexBinaryType result = new IndexBinaryType(typeRef, descriptor.indexPath);
+
+						// We already have the database lock open and have located the element, so we may as
+						// well prefetch the inexpensive attributes.
+						result.initSimpleAttributes();
+
+						return result;
+					}
+					throw new NotInIndexException();
+				} catch (CoreException e) {
+					throw new JavaModelException(e);
 				}
+			} catch (IndexException e) {
+				Package.log("Index corruption detected. Rebuilding index.", e); //$NON-NLS-1$
+				Indexer.getInstance().requestRebuildIndex();
 			}
 		}
-		
+
 		throw new NotInIndexException();
 	}
 }

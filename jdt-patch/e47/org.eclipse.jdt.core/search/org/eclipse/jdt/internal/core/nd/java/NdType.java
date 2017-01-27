@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.core.nd.field.StructDef;
 import org.eclipse.jdt.internal.core.nd.util.CharArrayUtils;
 
 public class NdType extends NdBinding {
+	public static final FieldManyToOne<NdResourceFile> FILE;
 	public static final FieldManyToOne<NdTypeId> TYPENAME;
 	public static final FieldManyToOne<NdTypeSignature> SUPERCLASS;
 	public static final FieldOneToMany<NdTypeInterface> INTERFACES;
@@ -50,6 +51,7 @@ public class NdType extends NdBinding {
 
 	static {
 		type = StructDef.create(NdType.class, NdBinding.type);
+		FILE = FieldManyToOne.createOwner(type, NdResourceFile.TYPES);
 		TYPENAME = FieldManyToOne.create(type, NdTypeId.TYPES);
 		DECLARING_TYPE = FieldManyToOne.create(type, NdTypeId.DECLARED_TYPES);
 		INTERFACES = FieldOneToMany.create(type, NdTypeInterface.APPLIES_TO);
@@ -77,7 +79,9 @@ public class NdType extends NdBinding {
 	}
 
 	public NdType(Nd nd, NdResourceFile resource) {
-		super(nd, resource);
+		super(nd);
+
+		FILE.put(nd, this.address, resource);
 	}
 
 	/**
@@ -93,6 +97,14 @@ public class NdType extends NdBinding {
 
 	public void setTypeId(NdTypeId typeId) {
 		TYPENAME.put(getNd(), this.address, typeId);
+	}
+
+	public void setFile(NdResourceFile file) {
+		FILE.put(getNd(), this.address, file);
+	}
+
+	public NdResourceFile getFile() {
+		return FILE.get(getNd(), this.address);
 	}
 
 	/**

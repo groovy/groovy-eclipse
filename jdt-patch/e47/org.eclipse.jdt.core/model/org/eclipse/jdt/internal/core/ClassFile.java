@@ -372,9 +372,6 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 	}
 
 	// TODO(sxenos): setup the external annotation provider if the IBinaryType came from the index
-	// TODO(sxenos): the old code always passed null as the third argument to setupExternalAnnotationProvider,
-	// but this looks like a bug. I've preserved it for now but we need to figure out what was supposed to go
-	// there.
 	PackageFragment pkg = (PackageFragment) getParent();
 	IJavaElement grandparent = pkg.getParent();
 	if (grandparent instanceof JarPackageFragmentRoot) {
@@ -389,7 +386,7 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 				IProject project = javaProject.getProject();
 				IPath externalAnnotationPath = ClasspathEntry.getExternalAnnotationPath(entry, project, false); // unresolved for use in ExternalAnnotationTracker
 				if (externalAnnotationPath != null) {
-					result = setupExternalAnnotationProvider(project, externalAnnotationPath, null, result, 
+					result = setupExternalAnnotationProvider(project, externalAnnotationPath, result, 
 						entryName.substring(0, entryName.length() - SuffixConstants.SUFFIX_CLASS.length));
 				} else if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 					result = new ExternalAnnotationDecorator(result, true);
@@ -402,7 +399,7 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 }
 
 private IBinaryType setupExternalAnnotationProvider(IProject project, final IPath externalAnnotationPath,
-		ZipFile annotationZip, IBinaryType reader, final String typeName)
+		IBinaryType reader, final String typeName)
 {
 	IBinaryType result = reader;
 	// try resolve path within the workspace:
@@ -426,17 +423,16 @@ private IBinaryType setupExternalAnnotationProvider(IProject project, final IPat
 	} else {
 		resolvedPath = externalAnnotationPath.toString(); // not in workspace, use as is
 	}
+	ZipFile annotationZip = null;
 	try {
-		if (annotationZip == null) {
-			annotationZip = ExternalAnnotationDecorator.getAnnotationZipFile(resolvedPath, new ExternalAnnotationDecorator.ZipFileProducer() {
-				@Override public ZipFile produce() throws IOException {
-					try {
-						return JavaModelManager.getJavaModelManager().getZipFile(externalAnnotationPath); // use (absolute, but) unresolved path here
-					} catch (CoreException e) {
-						throw new IOException("Failed to read annotation file for "+typeName+" from "+externalAnnotationPath.toString(), e); //$NON-NLS-1$ //$NON-NLS-2$
-					}
-				}});
-		}
+		annotationZip = ExternalAnnotationDecorator.getAnnotationZipFile(resolvedPath, new ExternalAnnotationDecorator.ZipFileProducer() {
+			@Override public ZipFile produce() throws IOException {
+				try {
+					return JavaModelManager.getJavaModelManager().getZipFile(externalAnnotationPath); // use (absolute, but) unresolved path here
+				} catch (CoreException e) {
+					throw new IOException("Failed to read annotation file for "+typeName+" from "+externalAnnotationPath.toString(), e); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			}});
 
 		ExternalAnnotationProvider annotationProvider = ExternalAnnotationDecorator
 				.externalAnnotationProvider(resolvedPath, typeName, annotationZip);
@@ -444,6 +440,9 @@ private IBinaryType setupExternalAnnotationProvider(IProject project, final IPat
 	} catch (IOException e) {
 		Util.log(e);
 		return result;
+	} finally {
+		if (annotationZip != null)
+			JavaModelManager.getJavaModelManager().closeZipFile(annotationZip);
 	}
 	if (annotationZip == null) {
 		// Additional change listening for individual types only when annotations are in individual files.

@@ -27,6 +27,7 @@ import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany.Visitor;
 import org.eclipse.jdt.internal.core.nd.field.FieldSearchIndex.IResultRank;
 import org.eclipse.jdt.internal.core.nd.field.FieldSearchIndex.SearchCriteria;
 import org.eclipse.jdt.internal.core.nd.field.FieldSearchKey;
+import org.eclipse.jdt.internal.core.nd.field.FieldShort;
 import org.eclipse.jdt.internal.core.nd.field.FieldString;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
@@ -35,13 +36,22 @@ import org.eclipse.jdt.internal.core.nd.field.StructDef;
  */
 public class NdResourceFile extends NdTreeNode {
 	public static final FieldSearchKey<JavaIndex> FILENAME;
-	public static final FieldOneToMany<NdBinding> ALL_NODES;
+	public static final FieldOneToMany<NdType> TYPES;
 	public static final FieldLong TIME_LAST_USED;
 	public static final FieldLong TIME_LAST_SCANNED;
 	public static final FieldLong SIZE_LAST_SCANNED;
 	public static final FieldLong HASHCODE_LAST_SCANNED;
 	public static final FieldOneToMany<NdWorkspaceLocation> WORKSPACE_MAPPINGS;
 	public static final FieldString JAVA_ROOT;
+	public static final FieldLong JDK_LEVEL;
+	public static final FieldOneToMany<NdZipEntry> ZIP_ENTRIES;
+	public static final FieldString MANIFEST_CONTENT;
+	public static final FieldShort FILE_FLAGS;
+
+	/**
+	 * Flag indicating that this is a corrupted zip file.
+	 */
+	public static final int FLG_CORRUPT_ZIP_FILE = 0x0001;
 
 	@SuppressWarnings("hiding")
 	public static final StructDef<NdResourceFile> type;
@@ -49,15 +59,22 @@ public class NdResourceFile extends NdTreeNode {
 	static {
 		type = StructDef.create(NdResourceFile.class, NdTreeNode.type);
 		FILENAME = FieldSearchKey.create(type, JavaIndex.FILES);
-		ALL_NODES = FieldOneToMany.create(type, NdBinding.FILE, 16);
+		TYPES = FieldOneToMany.create(type, NdType.FILE, 16);
 		TIME_LAST_USED = type.addLong();
 		TIME_LAST_SCANNED = type.addLong();
 		SIZE_LAST_SCANNED = type.addLong();
 		HASHCODE_LAST_SCANNED = type.addLong();
 		WORKSPACE_MAPPINGS = FieldOneToMany.create(type, NdWorkspaceLocation.RESOURCE);
 		JAVA_ROOT = type.addString();
+		JDK_LEVEL = type.addLong();
+		ZIP_ENTRIES = FieldOneToMany.create(type, NdZipEntry.JAR_FILE);
+		MANIFEST_CONTENT = type.addString();
+		FILE_FLAGS = type.addShort();
+
 		type.done();
 	}
+
+	private long jdkLevel; 
 
 	public NdResourceFile(Nd dom, long address) {
 		super(dom, address);
@@ -65,6 +82,62 @@ public class NdResourceFile extends NdTreeNode {
 
 	public NdResourceFile(Nd nd) {
 		super(nd, null);
+	}
+
+	public boolean isCorruptedZipFile() {
+		return hasAllFlags(FLG_CORRUPT_ZIP_FILE);
+	}
+
+	public int getFlags() {
+		return FILE_FLAGS.get(getNd(), this.address);
+	}
+
+	public boolean hasAllFlags(int flags) {
+		int ourFlags = getFlags();
+
+		return (ourFlags & flags) == flags;
+	}
+
+	public void setFlags(int flags) {
+		FILE_FLAGS.put(getNd(), this.address, (short) (getFlags() | flags));
+	}
+
+	/**
+	 * Returns the set of all leaf zip entries that are not .class files. Does not include non-empty directories
+	 * or .class files, but will contain all other zip entries from the original jar file. Returns the empty list
+	 * for non-jar files.
+	 */
+	public List<NdZipEntry> getZipEntries() {
+		return ZIP_ENTRIES.asList(getNd(), getAddress());
+	}
+
+	/**
+	 * Returns the content of the JAR's MANIFEST.MF file, or null if either this isn't a .JAR file or it didn't contain
+	 * a MANIFEST.MF file.
+	 */
+	public IString getManifestContent() {
+		return MANIFEST_CONTENT.get(getNd(), getAddress());
+	}
+
+	/**
+	 * Stores the content of the JAR's MANIFEST.MF file. This should only be invoked on resources that correspond to JAR
+	 * files.
+	 */
+	public void setManifestContent(char[] newContent) {
+		MANIFEST_CONTENT.put(getNd(), getAddress(), newContent);
+	}
+
+	public long getJdkLevel() {
+		if (this.jdkLevel == 0) {
+			this.jdkLevel = JDK_LEVEL.get(getNd(), this.address);
+		}
+		return this.jdkLevel;
+	}
+
+	public void setJdkLevel(long jdkLevel) {
+		if (getJdkLevel() != jdkLevel) {
+			JDK_LEVEL.put(getNd(), this.address, jdkLevel);
+		}
 	}
 
 	public List<NdTreeNode> getChildren() {
@@ -236,16 +309,16 @@ public class NdResourceFile extends NdTreeNode {
 		TIME_LAST_SCANNED.put(getNd(), this.address, 0);
 	}
 
-	public int getBindingCount() {
-		return ALL_NODES.size(getNd(), this.address);
+	public int getTypeCount() {
+		return TYPES.size(getNd(), this.address);
 	}
 
-	public List<NdBinding> getBindings() {
-		return ALL_NODES.asList(getNd(), this.address);
+	public List<NdType> getTypes() {
+		return TYPES.asList(getNd(), this.address);
 	}
 
-	public NdBinding getBinding(int index) {
-		return ALL_NODES.get(getNd(), this.address, index);
+	public NdType getType(int index) {
+		return TYPES.get(getNd(), this.address, index);
 	}
 
 	public String toString() {

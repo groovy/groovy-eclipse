@@ -16,6 +16,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import static org.eclipse.jdt.internal.compiler.util.Util.UTF_8;
+import static org.eclipse.jdt.internal.compiler.util.Util.getInputStreamAsCharArray;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +65,9 @@ import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
+import org.eclipse.jdt.internal.core.nd.IReader;
+import org.eclipse.jdt.internal.core.nd.java.JavaIndex;
+import org.eclipse.jdt.internal.core.nd.java.NdResourceFile;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.w3c.dom.DOMException;
@@ -348,8 +354,15 @@ public class ClasspathEntry implements IClasspathEntry {
 			int lenRefer = referringExtraAttributes.length;
 			if (lenRefer > 0) {
 				int lenEntry = combinedAttributes.length;
-				System.arraycopy(combinedAttributes, 0, combinedAttributes=new IClasspathAttribute[lenEntry+lenRefer], lenRefer, lenEntry);
-				System.arraycopy(referringExtraAttributes, 0, combinedAttributes, 0, lenRefer);
+				if (referringEntry.path.isPrefixOf(this.path)) {
+					// consider prefix location as less specific, put to back (e.g.: referring to a library via a project):
+					System.arraycopy(combinedAttributes, 0, combinedAttributes=new IClasspathAttribute[lenEntry+lenRefer], 0, lenEntry);
+					System.arraycopy(referringExtraAttributes, 0, combinedAttributes, lenEntry, lenRefer);
+				} else {
+					// otherwise consider the referring entry as more specific than the referee:
+					System.arraycopy(combinedAttributes, 0, combinedAttributes=new IClasspathAttribute[lenEntry+lenRefer], lenRefer, lenEntry);
+					System.arraycopy(referringExtraAttributes, 0, combinedAttributes, 0, lenRefer);
+				}
 			}
 			return new ClasspathEntry(
 								getContentKind(),
@@ -965,23 +978,60 @@ public class ClasspathEntry implements IClasspathEntry {
 		}
 	}
 
+	private static char[] getManifestContents(IPath jarPath) throws CoreException, IOException {
+		// Try to read a cached manifest from the index
+		if (JavaIndex.isEnabled()) {
+			JavaIndex index = JavaIndex.getIndex();
+			String location = JavaModelManager.getLocalFile(jarPath).getAbsolutePath();
+			try (IReader reader = index.getNd().acquireReadLock()) {
+				NdResourceFile resourceFile = index.getResourceFile(location.toCharArray());
+				if (index.isUpToDate(resourceFile)) {
+					char[] manifestContent = resourceFile.getManifestContent().getChars();
+					if (manifestContent.length == 0) {
+						return null;
+					}
+					return manifestContent;
+				}
+			}
+		}
+
+		ZipFile zip = null;
+		InputStream inputStream = null;
+		JavaModelManager manager = JavaModelManager.getJavaModelManager();
+		try {
+			zip = manager.getZipFile(jarPath);
+			ZipEntry manifest = zip.getEntry("META-INF/MANIFEST.MF"); //$NON-NLS-1$
+			if (manifest == null) {
+				return null;
+			}
+			inputStream = zip.getInputStream(manifest);
+			char[] chars = getInputStreamAsCharArray(inputStream, -1, UTF_8);
+			return chars;
+		} finally {
+			if (inputStream != null) {
+				try {
+					inputStream.close();
+				} catch (IOException e) {
+					// best effort
+				}
+			}
+			manager.closeZipFile(zip);
+		}
+	}
+
 	private static List getCalledFileNames(IPath jarPath) {
 		Object target = JavaModel.getTarget(jarPath, true/*check existence, otherwise the manifest cannot be read*/);
 		if (!(target instanceof IFile || target instanceof File))
 			return null;
-		JavaModelManager manager = JavaModelManager.getJavaModelManager();
-		ZipFile zip = null;
-		InputStream inputStream = null;
+
 		List calledFileNames = null;
 		try {
-			zip = manager.getZipFile(jarPath);
-			ZipEntry manifest = zip.getEntry("META-INF/MANIFEST.MF"); //$NON-NLS-1$
-			if (manifest == null) 
+			char[] manifestContents = getManifestContents(jarPath);
+			if (manifestContents == null) 
 				return null;
 			// non-null implies regular file
 			ManifestAnalyzer analyzer = new ManifestAnalyzer();
-			inputStream = zip.getInputStream(manifest);
-			boolean success = analyzer.analyzeManifestContents(inputStream);
+			boolean success = analyzer.analyzeManifestContents(manifestContents);
 			calledFileNames = analyzer.getCalledFileNames();
 			if (!success || analyzer.getClasspathSectionsCount() == 1 && calledFileNames == null) {
 				if (JavaModelManager.CP_RESOLVE_VERBOSE_FAILURE) {
@@ -1006,19 +1056,10 @@ public class ClasspathEntry implements IClasspathEntry {
 				Util.verbose("Could not read Class-Path header in manifest of jar file: " + jarPath.toOSString()); //$NON-NLS-1$
 				e.printStackTrace();
 			}
-		} finally {
-			if (inputStream != null) {
-				try {
-					inputStream.close();
-				} catch (IOException e) {
-					// best effort
-				}
-			}
-			manager.closeZipFile(zip);
 		}
 		return calledFileNames;
 	}
-	
+
 	/*
 	 * Resolves the ".." in the given path. Returns the given path if it contains no ".." segment.
 	 */

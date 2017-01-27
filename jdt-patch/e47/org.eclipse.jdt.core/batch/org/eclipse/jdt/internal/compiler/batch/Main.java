@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -135,6 +135,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private static final String NUMBER_OF_PROBLEMS = "problems"; //$NON-NLS-1$
 		private static final String NUMBER_OF_TASKS = "tasks"; //$NON-NLS-1$
 		private static final String NUMBER_OF_WARNINGS = "warnings"; //$NON-NLS-1$
+		private static final String NUMBER_OF_INFOS = "infos"; //$NON-NLS-1$
 		private static final String OPTION = "option"; //$NON-NLS-1$
 		private static final String OPTIONS = "options"; //$NON-NLS-1$
 		private static final String OUTPUT = "output"; //$NON-NLS-1$
@@ -168,8 +169,10 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private static final String TIME = "time"; //$NON-NLS-1$
 		private static final String VALUE = "value"; //$NON-NLS-1$
 		private static final String WARNING = "WARNING"; //$NON-NLS-1$
+		private static final String INFO = "INFO"; //$NON-NLS-1$
+
 		public static final int XML = 1;
-		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.004 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_004.dtd\">"; //$NON-NLS-1$
+		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.005 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_005.dtd\">"; //$NON-NLS-1$
 		static {
 			try {
 				Class c = IProblem.class;
@@ -587,26 +590,24 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			char[] originatingFileName = problem.getOriginatingFileName();
 			if (originatingFileName == null) {
 				// simplified message output
-				if (problem.isError()) {
-					printErr(this.main.bind(
-								"requestor.extraerror", //$NON-NLS-1$
+				String severity = problem.isError() ? "requestor.extraerror" //$NON-NLS-1$
+						: problem.isInfo() ? "requestor.extrainfo" : "requestor.extrawarning"; //$NON-NLS-1$ //$NON-NLS-2$
+				printErr(this.main.bind(
+								severity,
 								Integer.toString(globalErrorCount)));
-				} else {
-					// warning / mandatory warning / other
-					printErr(this.main.bind(
-							"requestor.extrawarning", //$NON-NLS-1$
-							Integer.toString(globalErrorCount)));
-				}
 				printErr(" "); //$NON-NLS-1$
 				this.printlnErr(problem.getMessage());
 			} else {
 				String fileName = new String(originatingFileName);
 				if ((this.tagBits & Logger.EMACS) != 0) {
+					String severity = problem.isError() ? "output.emacs.error" : //$NON-NLS-1$
+										problem.isInfo() ? "output.emacs.info" //$NON-NLS-1$
+													: "output.emacs.warning"; //$NON-NLS-1$
 					String result = fileName
 							+ ":" //$NON-NLS-1$
 							+ problem.getSourceLineNumber()
 							+ ": " //$NON-NLS-1$
-							+ (problem.isError() ? this.main.bind("output.emacs.error") : this.main.bind("output.emacs.warning")) //$NON-NLS-1$ //$NON-NLS-2$
+							+ this.main.bind(severity)
 							+ ": " //$NON-NLS-1$
 							+ problem.getMessage();
 					this.printlnErr(result);
@@ -616,15 +617,12 @@ public class Main implements ProblemSeverities, SuffixConstants {
 					if (localErrorCount == 0) {
 						this.printlnErr("----------"); //$NON-NLS-1$
 					}
-					printErr(problem.isError() ?
-							this.main.bind(
-									"requestor.error", //$NON-NLS-1$
-									Integer.toString(globalErrorCount),
-									new String(fileName))
-									: this.main.bind(
-											"requestor.warning", //$NON-NLS-1$
-											Integer.toString(globalErrorCount),
-											new String(fileName)));
+					String severity = problem.isError() ? "requestor.error" //$NON-NLS-1$
+							: problem.isInfo() ? "requestor.info" : "requestor.warning"; //$NON-NLS-1$ //$NON-NLS-2$
+					printErr(this.main.bind(
+								severity,
+								Integer.toString(globalErrorCount),
+								new String(fileName)));
 					final String errorReportSource = errorReportSource(problem, null, 0);
 					this.printlnErr(errorReportSource);
 					this.printlnErr(problem.getMessage());
@@ -640,6 +638,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			if (count != 0) {
 				int errors = 0;
 				int warnings = 0;
+				int infos = 0;
 				for (int i = 0; i < count; i++) {
 					CategorizedProblem problem = (CategorizedProblem) problems.get(i);
 					if (problem != null) {
@@ -649,14 +648,17 @@ public class Main implements ProblemSeverities, SuffixConstants {
 						if (problem.isError()) {
 							errors++;
 							currentMain.globalErrorsCount++;
-						} else if (problem.isWarning()) {
+						} else if (problem.isInfo()) {
+							currentMain.globalInfoCount++;
+							infos++;
+						} else {
 							currentMain.globalWarningsCount++;
 							warnings++;
 						}
 					}
 				}
 				if ((this.tagBits & Logger.XML) != 0) {
-					if ((errors + warnings) != 0) {
+					if ((errors + warnings + infos) != 0) {
 						startLoggingExtraProblems(count);
 						for (int i = 0; i < count; i++) {
 							CategorizedProblem problem = (CategorizedProblem) problems.get(i);
@@ -776,11 +778,14 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private void logProblem(CategorizedProblem problem, int localErrorCount,
 			int globalErrorCount, char[] unitSource) {
 			if ((this.tagBits & Logger.EMACS) != 0) {
+				String severity = problem.isError() ? "output.emacs.error" : //$NON-NLS-1$
+									problem.isInfo() ? "output.emacs.info" //$NON-NLS-1$
+											: "output.emacs.warning"; //$NON-NLS-1$
 				String result = (new String(problem.getOriginatingFileName())
 						+ ":" //$NON-NLS-1$
 						+ problem.getSourceLineNumber()
 						+ ": " //$NON-NLS-1$
-						+ (problem.isError() ? this.main.bind("output.emacs.error") : this.main.bind("output.emacs.warning")) //$NON-NLS-1$ //$NON-NLS-2$
+						+ (this.main.bind(severity))
 						+ ": " //$NON-NLS-1$
 						+ problem.getMessage());
 				this.printlnErr(result);
@@ -790,13 +795,8 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				if (localErrorCount == 0) {
 					this.printlnErr("----------"); //$NON-NLS-1$
 				}
-				printErr(problem.isError() ?
-						this.main.bind(
-								"requestor.error", //$NON-NLS-1$
-								Integer.toString(globalErrorCount),
-								new String(problem.getOriginatingFileName()))
-								: this.main.bind(
-										"requestor.warning", //$NON-NLS-1$
+				String severity = problem.isError() ? "requestor.error" : problem.isInfo() ? "requestor.info" : "requestor.warning";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+				printErr(this.main.bind(severity,
 										Integer.toString(globalErrorCount),
 										new String(problem.getOriginatingFileName())));
 				try {
@@ -818,6 +818,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			if (count != 0) {
 				int errors = 0;
 				int warnings = 0;
+				int infos = 0;
 				int tasks = 0;
 				for (int i = 0; i < count; i++) {
 					CategorizedProblem problem = problems[i];
@@ -832,6 +833,9 @@ public class Main implements ProblemSeverities, SuffixConstants {
 						} else if (problem.getID() == IProblem.Task) {
 							currentMain.globalTasksCount++;
 							tasks++;
+						} else if (problem.isInfo()) {
+							currentMain.globalInfoCount++;
+							infos++;
 						} else {
 							currentMain.globalWarningsCount++;
 							warnings++;
@@ -839,8 +843,8 @@ public class Main implements ProblemSeverities, SuffixConstants {
 					}
 				}
 				if ((this.tagBits & Logger.XML) != 0) {
-					if ((errors + warnings) != 0) {
-						startLoggingProblems(errors, warnings);
+					if ((errors + warnings + infos) != 0) {
+						startLoggingProblems(errors, warnings, infos);
 						for (int i = 0; i < count; i++) {
 							CategorizedProblem problem = problems[i];
 							if (problem!= null) {
@@ -874,12 +878,13 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		 * @param globalWarningsCount
 		 */
 		public void logProblemsSummary(int globalProblemsCount,
-			int globalErrorsCount, int globalWarningsCount, int globalTasksCount) {
+			int globalErrorsCount, int globalWarningsCount, int globalInfoCount, int globalTasksCount) {
 			if ((this.tagBits & Logger.XML) != 0) {
 				// generate xml
 				this.parameters.put(Logger.NUMBER_OF_PROBLEMS, Integer.valueOf(globalProblemsCount));
 				this.parameters.put(Logger.NUMBER_OF_ERRORS, Integer.valueOf(globalErrorsCount));
 				this.parameters.put(Logger.NUMBER_OF_WARNINGS, Integer.valueOf(globalWarningsCount));
+				this.parameters.put(Logger.NUMBER_OF_INFOS, Integer.valueOf(globalInfoCount));
 				this.parameters.put(Logger.NUMBER_OF_TASKS, Integer.valueOf(globalTasksCount));
 				printTag(Logger.PROBLEM_SUMMARY, this.parameters, true, true);
 			}
@@ -887,6 +892,8 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				String message = null;
 				if (globalErrorsCount == 1) {
 					message = this.main.bind("compile.oneError"); //$NON-NLS-1$
+				} else if (globalInfoCount == 1) {
+					message = this.main.bind("compile.oneInfo"); //$NON-NLS-1$
 				} else {
 					message = this.main.bind("compile.oneWarning"); //$NON-NLS-1$
 				}
@@ -894,6 +901,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			} else {
 				String errorMessage = null;
 				String warningMessage = null;
+				String infoMessage = null;
 				if (globalErrorsCount > 0) {
 					if (globalErrorsCount == 1) {
 						errorMessage = this.main.bind("compile.oneError"); //$NON-NLS-1$
@@ -909,26 +917,42 @@ public class Main implements ProblemSeverities, SuffixConstants {
 						warningMessage = this.main.bind("compile.severalWarnings", String.valueOf(warningsNumber)); //$NON-NLS-1$
 					}
 				}
-				if (errorMessage == null || warningMessage == null) {
-					if (errorMessage == null) {
-						printErr(this.main.bind(
-							"compile.severalProblemsErrorsOrWarnings", //$NON-NLS-1$
-							String.valueOf(globalProblemsCount),
-							warningMessage));
-					} else {
-						printErr(this.main.bind(
-							"compile.severalProblemsErrorsOrWarnings", //$NON-NLS-1$
-							String.valueOf(globalProblemsCount),
-							errorMessage));
-					}
-				} else {
+				if (globalInfoCount == 1) {
+					infoMessage = this.main.bind("compile.oneInfo"); //$NON-NLS-1$
+				} else if (globalInfoCount > 1) {
+					infoMessage = this.main.bind("compile.severalInfos", String.valueOf(warningsNumber)); //$NON-NLS-1$					
+				}
+				if (globalProblemsCount == globalInfoCount || globalProblemsCount == globalErrorsCount || globalProblemsCount == globalWarningsCount) {
+					String msg = errorMessage != null ? errorMessage : warningMessage != null ? warningMessage : infoMessage;
 					printErr(this.main.bind(
-						"compile.severalProblemsErrorsAndWarnings", //$NON-NLS-1$
-						new String[] {
-							String.valueOf(globalProblemsCount),
-							errorMessage,
-							warningMessage
-						}));
+						"compile.severalProblemsErrorsOrWarnings", //$NON-NLS-1$
+						String.valueOf(globalProblemsCount),
+						msg));
+				} else {
+					if (globalInfoCount == 0) {
+						printErr(this.main.bind(
+								"compile.severalProblemsErrorsAndWarnings", //$NON-NLS-1$
+								new String[] {
+									String.valueOf(globalProblemsCount),
+									errorMessage,
+									warningMessage
+								}));
+					} else {
+						if (errorMessage == null) {
+							errorMessage  = this.main.bind("compile.severalErrors", String.valueOf(globalErrorsCount)); //$NON-NLS-1$
+						}
+						if (warningMessage == null) {
+							warningMessage  = this.main.bind("compile.severalWarnings", String.valueOf(warningsNumber)); //$NON-NLS-1$
+						}
+						printErr(this.main.bind(
+								"compile.severalProblems", //$NON-NLS-1$
+								new String[] {
+									String.valueOf(globalProblemsCount),
+									errorMessage,
+									warningMessage,
+									infoMessage
+								}));
+					}
 				}
 			}
 			if ((this.tagBits & Logger.XML) == 0) {
@@ -1049,7 +1073,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			final int sourceStart = problem.getSourceStart();
 			final int sourceEnd = problem.getSourceEnd();
 			boolean isError = problem.isError();
-			this.parameters.put(Logger.PROBLEM_SEVERITY, isError ? Logger.ERROR : Logger.WARNING);
+			this.parameters.put(Logger.PROBLEM_SEVERITY, isError ? Logger.ERROR : (problem.isInfo() ? Logger.INFO : Logger.WARNING));
 			this.parameters.put(Logger.PROBLEM_LINE, Integer.valueOf(problem.getSourceLineNumber()));
 			this.parameters.put(Logger.PROBLEM_SOURCE_START, Integer.valueOf(sourceStart));
 			this.parameters.put(Logger.PROBLEM_SOURCE_END, Integer.valueOf(sourceEnd));
@@ -1073,7 +1097,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			this.parameters.put(Logger.PROBLEM_ID, Integer.valueOf(id)); // ID as numeric value
 			boolean isError = problem.isError();
 			int severity = isError ? ProblemSeverities.Error : ProblemSeverities.Warning;
-			this.parameters.put(Logger.PROBLEM_SEVERITY, isError ? Logger.ERROR : Logger.WARNING);
+			this.parameters.put(Logger.PROBLEM_SEVERITY, isError ? Logger.ERROR : (problem.isInfo() ? Logger.INFO : Logger.WARNING));
 			this.parameters.put(Logger.PROBLEM_LINE, Integer.valueOf(problem.getSourceLineNumber()));
 			this.parameters.put(Logger.PROBLEM_SOURCE_START, Integer.valueOf(sourceStart));
 			this.parameters.put(Logger.PROBLEM_SOURCE_END, Integer.valueOf(sourceEnd));
@@ -1171,7 +1195,8 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				logTiming(compilerStats);
 			}
 			if (this.main.globalProblemsCount > 0) {
-				logProblemsSummary(this.main.globalProblemsCount, this.main.globalErrorsCount, this.main.globalWarningsCount, this.main.globalTasksCount);
+				logProblemsSummary(this.main.globalProblemsCount, this.main.globalErrorsCount, this.main.globalWarningsCount, 
+						this.main.globalInfoCount, this.main.globalTasksCount);
 			}
 			if (this.main.exportedClassFilesCounter != 0
 					&& (this.main.showProgress || isTimed || this.main.verbose)) {
@@ -1231,10 +1256,11 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		 * Used to start logging problems.
 		 * Only use in xml mode.
 		 */
-		private void startLoggingProblems(int errors, int warnings) {
+		private void startLoggingProblems(int errors, int warnings, int infos) {
 			this.parameters.put(Logger.NUMBER_OF_PROBLEMS, Integer.valueOf(errors + warnings));
 			this.parameters.put(Logger.NUMBER_OF_ERRORS, Integer.valueOf(errors));
 			this.parameters.put(Logger.NUMBER_OF_WARNINGS, Integer.valueOf(warnings));
+			this.parameters.put(Logger.NUMBER_OF_INFOS, Integer.valueOf(infos));
 			printTag(Logger.PROBLEMS, this.parameters, true, false);
 		}
 
@@ -1340,6 +1366,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	public int globalProblemsCount;
 	public int globalTasksCount;
 	public int globalWarningsCount;
+	public int globalInfoCount;
 
 	private File javaHomeCache;
 
@@ -1702,6 +1729,7 @@ public boolean compile(String[] argv) {
 				this.globalProblemsCount = 0;
 				this.globalErrorsCount = 0;
 				this.globalWarningsCount = 0;
+				this.globalInfoCount = 0;
 				this.globalTasksCount = 0;
 				this.exportedClassFilesCounter = 0;
 

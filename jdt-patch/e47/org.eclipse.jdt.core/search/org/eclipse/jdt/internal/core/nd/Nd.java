@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -36,6 +37,11 @@ public final class Nd {
 	private final int currentVersion;
 	private final int maxVersion;
 	private final int minVersion;
+
+	/**
+	 * Stores data that has been stored via {@link #setData}. Synchronize on {@link #cookies} before accessing.
+	 */
+	private final Map<Class<?>, Object> cookies = new HashMap<>();
 
 	public static int version(int major, int minor) {
 		return (major << 16) + minor;
@@ -151,6 +157,45 @@ public final class Nd {
 
 			this.pendingDeletions.remove(next);
 		}
+	}
+
+	/**
+	 * Inserts a cookie that can be later retrieved via getData(String). 
+	 */
+	public <T> void setData(Class<T> key, T value) {
+		synchronized (this.cookies) {
+			this.cookies.put(key, value);
+		}
+	}
+
+	/**
+	 * Returns a cookie that was previously attached using {@link #setData(Class, Object)}. If no such cookie
+	 * exists, it is computed using the given function and remembered for later. The function may return null.
+	 * If it does, this method will also return null and no cookie will be stored.
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T getData(Class<T> key, Supplier<T> defaultValue) {
+		T result;
+		synchronized (this.cookies) {
+			result = (T) this.cookies.get(key);
+		}
+
+		if (result == null) {
+			result = defaultValue.get();
+
+			if (result != null) {
+				synchronized (this.cookies) {
+					T newResult = (T) this.cookies.get(key);
+					if (newResult == null) {
+						this.cookies.put(key, result);
+					} else {
+						result = newResult;
+					}
+				}
+			}
+		}
+
+		return result;
 	}
 
 	/**
@@ -617,6 +662,6 @@ public final class Nd {
 	}
 
 	public boolean isValidAddress(long address) {
-		return address > 0 && address < getDB().getChunkCount() * Database.CHUNK_SIZE;
+		return address > 0 && address < (long) getDB().getChunkCount() * Database.CHUNK_SIZE;
 	}
 }

@@ -107,6 +107,7 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 	try {
 		IBinaryType reader = ClassFileReader.read(this.zipFile, qualifiedBinaryFileName);
 		if (reader != null) {
+			searchPaths:
 			if (this.annotationPaths != null) {
 				String qualifiedClassName = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length()-SuffixConstants.EXTENSION_CLASS.length()-1);
 				for (String annotationPath : this.annotationPaths) {
@@ -117,12 +118,14 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 						reader = ExternalAnnotationDecorator.create(reader, annotationPath, qualifiedClassName, this.annotationZipFile);
 
 						if (reader.getExternalAnnotationStatus() == ExternalAnnotationStatus.TYPE_IS_ANNOTATED) {
-							break;
+							break searchPaths;
 						}
 					} catch (IOException e) {
 						// don't let error on annotations fail class reading
 					}
 				}
+				// location is configured for external annotations, but no .eea found, decorate in order to answer NO_EEA_FILE:
+				reader = new ExternalAnnotationDecorator(reader, null);
 			}
 			return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName));
 		}

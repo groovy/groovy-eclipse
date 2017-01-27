@@ -61,10 +61,8 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	public static MethodBinding computeCompatibleMethod(MethodBinding originalMethod, TypeBinding[] arguments, Scope scope,	InvocationSite invocationSite)
 	{
 		LookupEnvironment environment = scope.environment();
-		if ((originalMethod.tagBits & TagBits.IsNullnessKnown) == 0) {
-			// ensure nullness of originalMethod is known (but we are not interested in reporting problems against originalMethod)
-			new ImplicitNullAnnotationVerifier(environment, environment.globalOptions.inheritNullAnnotations)
-					.checkImplicitNullAnnotations(originalMethod, null/*srcMethod*/, false, scope);
+		if(environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+			ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(originalMethod, scope);
 		}
 		ParameterizedGenericMethodBinding methodSubstitute;
 		TypeVariableBinding[] typeVariables = originalMethod.typeVariables;

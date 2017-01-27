@@ -31,7 +31,7 @@ public class ManifestAnalyzer {
 	private ArrayList calledFilesNames;
 	
 	/**
-	 * Analyze the manifest contents. The given input stream is read using a UTF-8 encoded reader.
+	 * Analyzes the manifest contents. The given input stream is read using a UTF-8 encoded reader.
 	 * If the contents of the input stream is not encoded using a UTF-8 encoding, the analysis will fail.
 	 * 
 	 * @param inputStream the given input stream.
@@ -41,6 +41,17 @@ public class ManifestAnalyzer {
 	 */
 	public boolean analyzeManifestContents(InputStream inputStream) throws IOException {
 		char[] chars = Util.getInputStreamAsCharArray(inputStream, -1, Util.UTF_8);
+		return analyzeManifestContents(chars);
+	}
+
+	/**
+	 * Analyzes the manifest contents.
+	 * 
+	 * @param chars the content of the manifest
+	 * 
+	 * @return <code>true</code> if the analysis is successful, <code>false</code> otherwise.
+	 */
+	public boolean analyzeManifestContents(char[] chars) {
 		int state = START, substate = 0;
 		StringBuffer currentJarToken = new StringBuffer();
 		int currentChar;

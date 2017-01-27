@@ -17,7 +17,6 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.NdNode;
 import org.eclipse.jdt.internal.core.nd.field.FieldInt;
-import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
@@ -28,7 +27,6 @@ import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
 public abstract class NdBinding extends NdNode implements IAdaptable {
 	public static final FieldInt MODIFIERS;
 	public static final FieldOneToMany<NdTypeParameter> TYPE_PARAMETERS;
-	public static final FieldManyToOne<NdResourceFile> FILE;
 	public static final FieldOneToMany<NdVariable> VARIABLES;
 
 	@SuppressWarnings("hiding")
@@ -38,7 +36,6 @@ public abstract class NdBinding extends NdNode implements IAdaptable {
 		type = StructDef.create(NdBinding.class, NdNode.type);
 		MODIFIERS = type.addInt();
 		TYPE_PARAMETERS = FieldOneToMany.create(type, NdTypeParameter.PARENT);
-		FILE = FieldManyToOne.createOwner(type, NdResourceFile.ALL_NODES);
 		VARIABLES = FieldOneToMany.create(type, NdVariable.PARENT);
 		type.done();
 	}
@@ -47,10 +44,8 @@ public abstract class NdBinding extends NdNode implements IAdaptable {
 		super(nd, address);
 	}
 
-	public NdBinding(Nd nd, NdResourceFile resource) {
+	public NdBinding(Nd nd) {
 		super(nd);
-
-		FILE.put(nd, this.address, resource);
 	}
 
 	public List<NdVariable> getVariables() {
@@ -86,14 +81,6 @@ public abstract class NdBinding extends NdNode implements IAdaptable {
 
 	public final int getBindingConstant() {
 		return getNodeType();
-	}
-
-	public void setFile(NdResourceFile file) {
-		FILE.put(getNd(), this.address, file);
-	}
-
-	public NdResourceFile getFile() {
-		return FILE.get(getNd(), this.address);
 	}
 
 	public char[][] getTypeParameterSignatures() {

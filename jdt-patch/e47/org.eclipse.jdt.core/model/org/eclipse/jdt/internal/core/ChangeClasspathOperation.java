@@ -54,10 +54,7 @@ public abstract class ChangeClasspathOperation extends JavaModelOperation {
 			// delta, indexing and classpath markers are going to be created by the delta processor
 			// while handling the resource change (either .classpath change, or project touched)
 
-			// however ensure project references are updated
-			// since some clients rely on the project references when run inside an IWorkspaceRunnable
-			new ProjectReferenceChange(project, change.oldResolvedClasspath).updateProjectReferencesIfNecessary();
-
+			project.getProject().clearCachedDynamicReferences();
 			// and ensure that external folders are updated as well
 			new ExternalFolderChange(project, change.oldResolvedClasspath).updateExternalFoldersIfNecessary(refreshExternalFolder, null);
 
@@ -80,7 +77,8 @@ public abstract class ChangeClasspathOperation extends JavaModelOperation {
 			}
 			if ((result & ClasspathChange.HAS_PROJECT_CHANGE) != 0) {
 				// ensure project references are updated on next build
-				state.addProjectReferenceChange(project, change.oldResolvedClasspath);
+				project.getProject().clearCachedDynamicReferences();
+				state.addProjectReferenceChange(project);
 			}
 			if ((result & ClasspathChange.HAS_LIBRARY_CHANGE) != 0) {
 				// ensure external folders are updated on next build

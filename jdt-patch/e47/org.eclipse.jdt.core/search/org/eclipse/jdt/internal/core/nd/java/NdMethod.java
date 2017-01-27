@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.nd.java;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
-import org.eclipse.jdt.internal.core.nd.field.FieldLong;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToOne;
@@ -31,9 +31,7 @@ public class NdMethod extends NdBinding {
 	public static final FieldOneToOne<NdConstant> DEFAULT_VALUE;
 	public static final FieldOneToMany<NdMethodException> EXCEPTIONS;
 	public static final FieldManyToOne<NdTypeSignature> RETURN_TYPE;
-	public static final FieldLong TAG_BITS;
-	public static final FieldOneToMany<NdAnnotationInMethod> ANNOTATIONS;
-	public static final FieldOneToMany<NdTypeAnnotationInMethod> TYPE_ANNOTATIONS;
+	public static final FieldOneToOne<NdMethodAnnotationData> ANNOTATION_DATA;
 
 	@SuppressWarnings("hiding")
 	public static final StructDef<NdMethod> type;
@@ -42,15 +40,13 @@ public class NdMethod extends NdBinding {
 		type = StructDef.create(NdMethod.class, NdBinding.type);
 		METHOD_ID = FieldManyToOne.create(type, NdMethodId.METHODS);
 		METHOD_FLAGS = type.addShort();
-		PARENT = FieldManyToOne.create(type, NdType.METHODS);
+		PARENT = FieldManyToOne.createOwner(type, NdType.METHODS);
 		PARAMETERS = FieldOneToMany.create(type, NdMethodParameter.PARENT);
 		DECLARED_VARIABLES = FieldOneToMany.create(type, NdVariable.DECLARING_METHOD);
 		DEFAULT_VALUE = FieldOneToOne.create(type, NdConstant.class, NdConstant.PARENT_METHOD);
 		EXCEPTIONS = FieldOneToMany.create(type, NdMethodException.PARENT);
 		RETURN_TYPE = FieldManyToOne.create(type, NdTypeSignature.USED_AS_RETURN_TYPE);
-		TAG_BITS = type.addLong();
-		ANNOTATIONS = FieldOneToMany.create(type, NdAnnotationInMethod.OWNER);
-		TYPE_ANNOTATIONS = FieldOneToMany.create(type, NdTypeAnnotationInMethod.OWNER);
+		ANNOTATION_DATA = FieldOneToOne.create(type, NdMethodAnnotationData.class, NdMethodAnnotationData.METHOD);
 		type.done();
 	}
 
@@ -62,7 +58,7 @@ public class NdMethod extends NdBinding {
 	}
 
 	public NdMethod(NdType parent) {
-		super(parent.getNd(), parent.getFile());
+		super(parent.getNd());
 
 		PARENT.put(getNd(), this.address, parent);
 	}
@@ -95,7 +91,11 @@ public class NdMethod extends NdBinding {
 	}
 
 	public List<NdAnnotationInMethod> getAnnotations() {
-		return ANNOTATIONS.asList(getNd(), this.address);
+		NdMethodAnnotationData annotationData = getAnnotationData();
+		if (annotationData != null) {
+			return annotationData.getAnnotations();
+		}
+		return Collections.emptyList();
 	}
 
 	public void setDefaultValue(NdConstant value) {
@@ -115,7 +115,11 @@ public class NdMethod extends NdBinding {
 	}
 
 	public List<NdTypeAnnotationInMethod> getTypeAnnotations() {
-		return TYPE_ANNOTATIONS.asList(getNd(), this.address);
+		NdMethodAnnotationData annotationData = getAnnotationData();
+		if (annotationData != null) {
+			return annotationData.getTypeAnnotations();
+		}
+		return Collections.emptyList();
 	}
 
 	public List<NdMethodException> getExceptions() {
@@ -144,11 +148,22 @@ public class NdMethod extends NdBinding {
 	}
 
 	public void setTagBits(long bits) {
-		TAG_BITS.put(getNd(), this.address, bits);
+		if (bits != 0) {
+			createAnnotationData().setTagBits(bits);
+		} else {
+			NdMethodAnnotationData annotationData = getAnnotationData();
+			if (annotationData != null) {
+				annotationData.setTagBits(bits);
+			}
+		}
 	}
 
 	public long getTagBits() {
-		return TAG_BITS.get(getNd(), this.address);
+		NdMethodAnnotationData annotations = getAnnotationData();
+		if (annotations == null) {
+			return 0;
+		}
+		return annotations.getTagBits();
 	}
 
 	public String toString() {
@@ -188,5 +203,21 @@ public class NdMethod extends NdBinding {
 				next.getExceptionType().getSignature(result);
 			}
 		}
+	}
+
+	/**
+	 * Creates the {@link NdMethodAnnotationData} struct for this method if it does not already exist. Returns
+	 * the existing or newly-created struct. 
+	 */
+	public NdMethodAnnotationData createAnnotationData() {
+		NdMethodAnnotationData result = getAnnotationData();
+		if (result == null) {
+			result = new NdMethodAnnotationData(this);
+		}
+		return result;
+	}
+
+	private NdMethodAnnotationData getAnnotationData() {
+		return ANNOTATION_DATA.get(getNd(), getAddress());
 	}
 }

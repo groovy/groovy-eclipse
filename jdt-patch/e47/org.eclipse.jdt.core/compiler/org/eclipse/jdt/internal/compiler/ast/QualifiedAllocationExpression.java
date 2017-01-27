@@ -49,6 +49,7 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ImplicitNullAnnotationVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
@@ -288,10 +289,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		if (result != null && !result.isPolyType() && this.binding != null) {
 			final CompilerOptions compilerOptions = scope.compilerOptions();
 			if (compilerOptions.isAnnotationBasedNullAnalysisEnabled) {
-				if ((this.binding.tagBits & TagBits.IsNullnessKnown) == 0) {
-					new ImplicitNullAnnotationVerifier(scope.environment(), compilerOptions.inheritNullAnnotations)
-							.checkImplicitNullAnnotations(this.binding, null/*srcMethod*/, false, scope);
-				}
+				ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(this.binding, scope);
 				if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8) {
 					if (this.binding instanceof ParameterizedGenericMethodBinding && this.typeArguments != null) {
 						TypeVariableBinding[] typeVariables = this.binding.original().typeVariables();
@@ -307,7 +305,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		}
 		return result;
 	}
-	
+
 	private TypeBinding resolveTypeForQualifiedAllocationExpression(BlockScope scope) {
 		// Propagate the type checking to the arguments, and checks if the constructor is defined.
 		// ClassInstanceCreationExpression ::= Primary '.' 'new' SimpleName '(' ArgumentListopt ')' ClassBodyopt
@@ -542,6 +540,11 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 					scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(inheritedBinding, this.genericTypeArguments, this.typeArguments);
 				}
 				// Update the anonymous inner class : superclass, interface
+				LookupEnvironment environment=scope.environment();
+				if (environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+					ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(inheritedBinding, scope);
+				}
+
 				this.binding = this.anonymousType.createDefaultConstructorWithBinding(inheritedBinding, 	(this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null);
 				return this.resolvedType;
 			}

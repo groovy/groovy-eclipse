@@ -386,7 +386,7 @@ public final class Messages extends NLS {
 	public static String disassembler_frame_full_frame;
 	public static String disassembler_frame_same_frame;
 	public static String disassembler_frame_same_locals_1_stack_item;
-	public static String code_assist_internal_error;
+	public static String internal_error;
 	
 	public static String disassembler_method_type_ref_getfield;
 	public static String disassembler_method_type_ref_putfield;

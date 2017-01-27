@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -145,6 +145,12 @@ private IMemberValuePair[] getTargetElementTypes(long tagBits) {
 	}
 	if ((tagBits & TagBits.AnnotationForPackage) != 0) {
 		values.add(elementType + new String(TypeConstants.UPPER_PACKAGE));
+	}
+	if ((tagBits & TagBits.AnnotationForTypeUse) != 0) {
+		values.add(elementType + new String(TypeConstants.TYPE_USE_TARGET));
+	}
+	if ((tagBits & TagBits.AnnotationForTypeParameter) != 0) {
+		values.add(elementType + new String(TypeConstants.TYPE_PARAMETER_TARGET));
 	}
 	final Object value;
 	if (values.size() == 0) {

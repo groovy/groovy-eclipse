@@ -100,7 +100,7 @@ public abstract class NdNode implements IDestructable {
 		return this.nd.getDB();
 	}
 
-	public Nd getNd() {
+	public final Nd getNd() {
 		return this.nd;
 	}
 

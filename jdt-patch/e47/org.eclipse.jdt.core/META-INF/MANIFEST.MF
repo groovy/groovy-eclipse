@@ -4,10 +4,10 @@ Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.jdt.core; singleton:=true
 Bundle-Version: 3.13.0.qualifier
-Bundle-Activator: org.eclipse.jdt.core.JavaCore
-Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.eclipse.jdt.core.JavaCore
 Export-Package: org.codehaus.jdt.groovy.integration,
  org.codehaus.jdt.groovy.internal,
  org.eclipse.jdt.core,
@@ -66,10 +66,10 @@ Export-Package: org.codehaus.jdt.groovy.integration,
  org.eclipse.jdt.internal.formatter;x-internal:=true,
  org.eclipse.jdt.internal.formatter.linewrap;x-internal:=true,
  org.eclipse.jdt.internal.formatter.old;x-internal:=true
-Require-Bundle: org.eclipse.core.resources;bundle-version="[3.3.0,4.0.0)",
- org.eclipse.core.runtime;bundle-version="[3.3.0,4.0.0)",
- org.eclipse.core.filesystem;bundle-version="[1.0.0,2.0.0)",
- org.eclipse.text;bundle-version="[3.1.0,4.0.0)",
+Require-Bundle: org.eclipse.core.resources;bundle-version="[3.12.0,4.0.0)",
+ org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)",
+ org.eclipse.core.filesystem;bundle-version="[1.7.0,2.0.0)",
+ org.eclipse.text;bundle-version="[3.6.0,4.0.0)",
  org.eclipse.team.core;bundle-version="[3.1.0,4.0.0)";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BuddyPolicy: registered

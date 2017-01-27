@@ -1273,9 +1273,8 @@ public class GroovyEditor extends CompilationUnitEditor {
             fMarkOccurrenceModificationStamp_set(currentModificationStamp);
         }
 
-        GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
-        finder.initialize(astRoot, selection.getOffset(), selection.getLength());
-        Object locations = finder.getOccurrences();
+        Object locations = GroovyOccurrencesFinder.findOccurrences(
+                astRoot, selection.getOffset(), selection.getLength());
 
         if (locations == null || getLength(locations) == 0) {
             if (!fStickyOccurrenceAnnotations_get())

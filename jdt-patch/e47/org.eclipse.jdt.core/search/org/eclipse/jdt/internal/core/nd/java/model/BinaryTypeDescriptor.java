@@ -48,4 +48,16 @@ public final class BinaryTypeDescriptor {
 	public boolean isInJarFile() {
 		return CharArrayUtils.indexOf(IDependent.JAR_FILE_ENTRY_SEPARATOR, this.indexPath) != -1;
 	}
+
+	/**
+	 * For debugging purposes only.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(this.workspacePath);
+		builder.append('|');
+		builder.append(this.fieldDescriptor);
+		return builder.toString();
+	}
 }

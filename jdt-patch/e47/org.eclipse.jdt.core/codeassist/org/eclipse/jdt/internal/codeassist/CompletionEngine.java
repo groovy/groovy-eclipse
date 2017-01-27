@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -3410,6 +3410,15 @@ public final class CompletionEngine
 			}
 		} else if (this.expectedTypesPtr > -1 && this.expectedTypes[0].isAnnotationType()) {
 			findTypesAndPackages(this.completionToken, scope, false, false, new ObjectVector());
+			if (scope instanceof BlockScope && !this.requestor.isIgnored(CompletionProposal.LOCAL_VARIABLE_REF)) {
+				findVariablesAndMethods(
+					this.completionToken,
+					scope,
+					singleNameReference,
+					scope,
+					insideTypeAnnotation,
+					singleNameReference.isInsideAnnotationAttribute);
+			}
 		} else {
 			if (this.expectedTypesPtr > -1) {
 				this.assistNodeIsEnum = true;

@@ -102,7 +102,7 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 	private HashMap classpathValidations = new HashMap();
 
 	/* A table from JavaProject to ProjectReferenceChange */
-	private HashMap projectReferenceChanges = new HashMap();
+	private HashSet<IJavaProject> projectReferenceChanges = new HashSet<>();
 
 	/* A table from JavaProject to ExternalFolderChange */
 	private HashMap externalFolderChanges = new HashMap();
@@ -228,15 +228,11 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 		if (change == null) {
 			change = new ExternalFolderChange(project, oldResolvedClasspath);
 			this.externalFolderChanges.put(project, change);
-	    }
+		}
 	}
 
-	public synchronized void addProjectReferenceChange(JavaProject project, IClasspathEntry[] oldResolvedClasspath) {
-		ProjectReferenceChange change = (ProjectReferenceChange) this.projectReferenceChanges.get(project);
-		if (change == null) {
-			change = new ProjectReferenceChange(project, oldResolvedClasspath);
-			this.projectReferenceChanges.put(project, change);
-	    }
+	public synchronized void addProjectReferenceChange(IJavaProject project) {
+		this.projectReferenceChanges.add(project);
 	}
 
 	public void initializeRoots(boolean initAfterLoad) {
@@ -387,13 +383,10 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 	    return updates;
 	}
 
-	public synchronized ProjectReferenceChange[] removeProjectReferenceChanges() {
-	    int length = this.projectReferenceChanges.size();
-	    if (length == 0) return null;
-	    ProjectReferenceChange[]  updates = new ProjectReferenceChange[length];
-	    this.projectReferenceChanges.values().toArray(updates);
-	    this.projectReferenceChanges.clear();
-	    return updates;
+	public synchronized Set<IJavaProject> removeProjectReferenceChanges() {
+		Set<IJavaProject> result = this.projectReferenceChanges;
+		this.projectReferenceChanges = new HashSet<>();
+		return result;
 	}
 
 	public synchronized HashSet removeExternalElementsToRefresh() {
@@ -656,5 +649,4 @@ public class DeltaProcessingState implements IResourceChangeListener, Indexer.Li
 			this.deltaProcessors.set(null);
 		}
 	}
-
 }

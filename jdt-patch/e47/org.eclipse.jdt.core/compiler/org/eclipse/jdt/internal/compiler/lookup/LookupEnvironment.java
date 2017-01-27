@@ -38,6 +38,8 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -688,6 +690,15 @@ public ArrayBinding createArrayType(TypeBinding leafComponentType, int dimension
 }
 
 public TypeBinding createIntersectionType18(ReferenceBinding[] intersectingTypes) {
+	if (!intersectingTypes[0].isClass()) {
+		Arrays.sort(intersectingTypes, new Comparator<TypeBinding>() {
+			@Override
+			public int compare(TypeBinding o1, TypeBinding o2) {
+				//
+				return o1.isClass() ? -1 : (o2.isClass() ? 1 : 0);
+			}
+		});
+	}
 	return this.typeSystem.getIntersectionType18(intersectingTypes);
 }	
 
@@ -1020,6 +1031,8 @@ public TypeBinding createAnnotatedType(TypeBinding type, AnnotationBinding[] new
 		for (int i = 0; i < newbies.length; i++) {
 			if (newbies[i] == null) {
 				filtered[count++] = null;
+				// reset tagBitsSeen for next array dimension
+				tagBitsSeen = 0;
 				continue;
 			}
 			long tagBits = 0;
