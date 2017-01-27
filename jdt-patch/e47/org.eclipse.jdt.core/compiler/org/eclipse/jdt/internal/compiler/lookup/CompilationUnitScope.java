@@ -241,31 +241,27 @@ void checkAndSetImports() {
 	//ImportBinding[] resolvedImports = new ImportBinding[numberOfImports];
 	//resolvedImports[0] = getDefaultImports()[0];
 	//int index = 1;
-	ImportBinding[] resolvedImports = null;
-	int index = -1;
-	ImportBinding[] defaultImportBindings = getDefaultImports();
-	if (defaultImportBindings.length == 1) {
-		resolvedImports = new ImportBinding[numberOfImports];
-		resolvedImports[0] = getDefaultImports()[0];
-		index = 1;
-	} else {
-		resolvedImports = new ImportBinding[numberOfImports + defaultImportBindings.length - 1];
-		index = 0;
-		for (int i = 0; i < defaultImportBindings.length; i++) {
-			resolvedImports[index++] = defaultImportBindings[i];
-		}
-	}
+	ImportBinding[] defaultImports = getDefaultImports();
+	int index = defaultImports.length;
+	ImportBinding[] resolvedImports = new ImportBinding[numberOfImports + defaultImports.length-1];
+	System.arraycopy(defaultImports, 0, resolvedImports, 0, index);
 	// GROOVY end
 
 	nextImport : for (int i = 0; i < numberOfStatements; i++) {
 		ImportReference importReference = this.referenceContext.imports[i];
-		char[][] compoundName = importReference.tokens;
+		// GROOVY edit
+		//char[][] compoundName = importReference.tokens;
+		char[][] compoundName = importReference.getImportName();
+		// GROOVY end
 
 		// skip duplicates or imports of the current package
 		for (int j = 0; j < index; j++) {
 			ImportBinding resolved = resolvedImports[j];
 			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic())
-				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName))
+				// GROOVY edit
+				//if (CharOperation.equals(compoundName, resolvedImports[j].compoundName))
+				if (CharOperation.equals(compoundName, resolvedImports[j].compoundName) && CharOperation.equals(importReference.getSimpleName(), getSimpleName(resolvedImports[j])))
+				// GROOVY end
 					continue nextImport;
 		}
 
@@ -421,20 +417,10 @@ void faultInImports() {
 	//this.tempImports = new ImportBinding[numberOfImports];
 	//this.tempImports[0] = getDefaultImports()[0];
 	//this.importPtr = 1;
-	this.tempImports = null;
-	this.importPtr = -1;
-	ImportBinding[] defaultImportBindings = getDefaultImports();
-	if (defaultImportBindings.length == 1) {
-		this.tempImports = new ImportBinding[numberOfImports];
-		this.tempImports[0] = getDefaultImports()[0];
-		this.importPtr = 1;
-	} else {
-		this.tempImports = new ImportBinding[numberOfImports + defaultImportBindings.length - 1];
-		this.importPtr = 0;
-		for (int i = 0; i < defaultImportBindings.length; i++) {
-			this.tempImports[this.importPtr++] = defaultImportBindings[i];
-		}
-	}
+	ImportBinding[] defaultImports = getDefaultImports();
+	this.importPtr = defaultImports.length;
+	this.tempImports = new ImportBinding[numberOfImports + this.importPtr-1];
+	System.arraycopy(defaultImports, 0, this.tempImports, 0, this.importPtr);
 	// GROOVY end
 
 	// keep static imports with normal imports until there is a reason to split them up
@@ -442,13 +428,19 @@ void faultInImports() {
 	// single imports change from being just types to types or fields
 	nextImport : for (int i = 0; i < numberOfStatements; i++) {
 		ImportReference importReference = this.referenceContext.imports[i];
-		char[][] compoundName = importReference.tokens;
+		// GROOVY edit
+		//char[][] compoundName = importReference.tokens;
+		char[][] compoundName = importReference.getImportName();
+		// GROOVY end
 
 		// skip duplicates or imports of the current package
 		for (int j = 0; j < this.importPtr; j++) {
 			ImportBinding resolved = this.tempImports[j];
 			if (resolved.onDemand == ((importReference.bits & ASTNode.OnDemand) != 0) && resolved.isStatic() == importReference.isStatic()) {
-				if (CharOperation.equals(compoundName, resolved.compoundName)) {
+				// GROOVY edit
+				//if (CharOperation.equals(compoundName, resolved.compoundName)) {
+				if (CharOperation.equals(compoundName, resolved.compoundName) && CharOperation.equals(importReference.getSimpleName(), getSimpleName(resolved))) {
+				// GROOVY end
 					problemReporter().unusedImport(importReference); // since skipped, must be reported now
 					continue nextImport;
 				}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 
 /**
- * Represents a groovy aliased import, something like 'import a.b.c.D as Foo' where Foo will be the alias. JDT creates a map from
- * the simple name for the import to the full type and for a normal import the simple name is the final part of the import. An
- * aliased import can simply return a different simple name to JDT when it is building this map.
+ * Represents a groovy aliased import, something like 'import a.b.c.D as Foo'
+ * where Foo will be the alias.  The JDT creates a map from the simple name for
+ * the import to the full type and for a normal import the simple name is the
+ * final part of the import.  An aliased import can simply return a different
+ * simple name to JDT when it is building this map.
  *
- * @author Andy Clement
+ * @see org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope#checkAndSetImports()
+ * @see org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope#faultInImports()
  */
 public class AliasImportReference extends ImportReference {
 
@@ -32,6 +35,11 @@ public class AliasImportReference extends ImportReference {
     public AliasImportReference(char[] alias, char[][] tokens, long[] sourcePositions, boolean onDemand, int modifiers) {
         super(tokens, sourcePositions, onDemand, modifiers);
         this.alias = alias;
+    }
+
+    @Override
+    public char[][] getImportName() {
+        return super.getImportName();
     }
 
     @Override

@@ -456,6 +456,26 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "@interface Anno {\n" +
             "  Class<?> value();\n" +
             "}",
+
+            "Main.groovy",
+            "import java.util.regex.Pattern\n" +
+            "import java.util.regex.Pattern as Regex\n" +
+            "@Anno(Regex)\n" +
+            "class Main {\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    public void testAliasedAnnotationClassLiteral3() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
             
             "p/Outer.java",
             "package p;\n" +
