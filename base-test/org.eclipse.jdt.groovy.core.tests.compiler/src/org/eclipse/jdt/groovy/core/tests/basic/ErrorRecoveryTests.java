@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,6 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 /**
  * Tests error recovery from the parser. All tests in this class are failing, so
  * do not add to build.  When a test starts passing, remove from this class.
- *
- * @author Andrew Eisenberg
- * @created May 17, 2011
  */
 public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
 
@@ -548,8 +545,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void _testParsingMissingCurlyRecovery1_GRE468() {
-        if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
-
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
                 "class F { int y() }\n"
@@ -571,8 +566,6 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
     }
 
     public void _testParsingMissingCurlyRecovery2_GRE468() {
-        if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
-
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
                 "class F { int y() { }\n"

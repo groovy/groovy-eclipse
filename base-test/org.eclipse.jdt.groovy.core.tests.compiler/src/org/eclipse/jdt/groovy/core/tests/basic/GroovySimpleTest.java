@@ -52,52 +52,28 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testClosureSyntax() {
-        // demonstrates the incorrect use of closure syntax on groovy 1.6 that compiles OK.
-        // On 1.7 it is recognized as incorrect (it is too similar to the inner class syntax)
-        if (GroovyUtils.isGroovy16()) {
-            runConformTest(new String[]{
-                "Foo.groovy",
-                "class A {\n"+
-                "  A(closure) {\n"+
-                "    closure()\n"+
-                "  }\n"+
-                "}\n"+
-                "abc = {println 'abc'\n"+
-                "}\n"+
-
-                "new A({\n"+
-                "  abc()\n"+
-                "}) //works properly\n"+
-
-                "new A() {   \n"+
-                "  abc()\n"+
-                "} // throw error: unexpected token: abc at line: 13, column: 3\n"},
-                "abc\n" +
-                "abc");
-        } else {
-            runNegativeTest(new String[]{
-                "Foo.groovy",
-                "class A {\n"+
-                "    A(closure) {\n"+
-                "        closure()\n"+
-                "    }\n"+
-                "}\n"+
-                "abc = {println 'abc'\n"+
-                "}\n"+
-                "new A({\n"+
-                "    abc()\n"+
-                "}) //works properly\n"+
-                "new A() {   \n"+
-                "    abc()\n"+
-                "} // throw error: unexpected token: abc at line: 13, column: 3\n"
-            },
-            "----------\n" +
-            "1. ERROR in Foo.groovy (at line 12)\n" +
-            "\tabc()\n" +
-            "\t^\n" +
-            "Groovy:unexpected token: abc @ line 12, column 5.\n" +
-            "----------\n");
-        }
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class A {\n"+
+            "    A(closure) {\n"+
+            "        closure()\n"+
+            "    }\n"+
+            "}\n"+
+            "abc = {println 'abc'\n"+
+            "}\n"+
+            "new A({\n"+
+            "    abc()\n"+
+            "}) //works properly\n"+
+            "new A() {   \n"+
+            "    abc()\n"+
+            "} // throw error: unexpected token: abc at line: 13, column: 3\n"
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 12)\n" +
+        "\tabc()\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: abc @ line 12, column 5.\n" +
+        "----------\n");
     }
 
     public void testGreclipse1521_pre() {
@@ -141,7 +117,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testDuplicateClassesUnnecessaryExceptions() {
-        runNegativeTest(new String[]{
+        runNegativeTest(new String[] {
             "A.groovy",
             "class Foo {}\n"+
             "class Foo {}"
@@ -648,7 +624,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testPrimitiveLikeTypeNames_GRE891() {
-            runConformTest(new String[]{
+            runConformTest(new String[] {
                     "Foo.java",
                     "public class Foo {\n"+
                     "public static void main(String[] args) {\n"+
@@ -665,7 +641,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_2() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "Foo.java",
                 "public class Foo {\n"+
                 "public static void main(String[] args) {\n"+
@@ -682,7 +658,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_3() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "Foo.java",
                 "public class Foo {\n"+
                 "public static void main(String[] args) {\n"+
@@ -699,7 +675,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testAnonymousClasses_GE1531() {
-        runNegativeTest(new String[]{
+        runNegativeTest(new String[] {
                 "Foo.groovy",
                 "class Foo {\n"+
                 "  def foo () {\n"+
@@ -718,7 +694,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_4() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "pkg/Foo.java",
                 "package pkg;\n"+
                 "public class Foo {\n"+
@@ -741,7 +717,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_5() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "pkg/Foo.java",
                 "package pkg;\n"+
                 "public class Foo {\n"+
@@ -762,36 +738,29 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
          assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
-    /**
-     * Find the named file (which should have just been compiled) and for the named method determine
-     * the ClassNode for the return type and return the name of the classnode.
-     */
-    public String getReturnTypeOfMethod(String filename,String methodname) {
-        ModuleNode mn = getModuleNode(filename);
-        ClassNode cn = mn.getClasses().get(0);
-        assertNotNull(cn);
-        MethodNode methodNode = cn.getMethod(methodname,new Parameter[]{});
-        assertNotNull(methodNode);
-        ClassNode returnType = methodNode.getReturnType();
-        return returnType.getName();
-    }
-
-    public void _testOverridingFinalMethod() {
-        runConformTest(new String[]{
-                "Base.groovy",
-                "class Base {\n"+
-                "  final getFinalProperty() { 1 }\n"+
-                " }\n"+
-                "class Child extends Base {\n"+
-                "  def finalProperty = 32 \n"+
-                "  public static void main(String []argv) {\n"+
-                "    print new Child().getFinalProperty();\n"+
-                " }\n"+
-                "}\n"},"");
+    public void testOverridingFinalMethod() {
+        runNegativeTest(new String[] {
+            "Base.groovy",
+            "class Base {\n"+
+            "  final getFinalProperty() { 1 }\n"+
+            "}\n"+
+            "class Child extends Base {\n"+
+            "  def finalProperty = 32 \n"+
+            "  public static void main(String []argv) {\n"+
+            "    print new Child().getFinalProperty();\n"+
+            "  }\n"+
+            "}"
+        },
+        "----------\n" +
+        "1. ERROR in Base.groovy (at line 4)\n" +
+        "\tclass Child extends Base {\n" +
+        "\t      ^^^^^\n" +
+        "Cannot override the final method from Base\n" +
+        "----------\n");
     }
 
     public void testMixedModeInnerProperties_GRE597() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "groovy/JoinGroovy.groovy",
                 "package groovy\n"+
                 "\n"+
@@ -819,7 +788,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testMixedModeInnerProperties2_GRE597() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "groovy/JoinGroovy.groovy",
                 "package groovy\n"+
                 "\n"+
@@ -851,7 +820,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 //    	if (isGroovy16()) { // FIXASC should also break in 17b2
         if (GroovyUtils.GROOVY_LEVEL<18) {
             // Why no duplicate type exception here on < 1.8? (Move enum and Move for script name)
-            runNegativeTest(new String[]{
+            runNegativeTest(new String[] {
                     "Move.groovy",
                     "enum Move { ROCK, PAPER, SCISSORS }\n"+
                     "\n"+
@@ -868,7 +837,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" +
             "----------\n");
         } else {
-            runNegativeTest(new String[]{
+            runNegativeTest(new String[] {
                     "Move2.groovy",
                     "enum Move { ROCK, PAPER, SCISSORS }\n"+
                     "\n"+
@@ -1121,7 +1090,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
-    public void testInnerTypes_1() {
+    public void testInnerTypes() {
         runConformTest(new String[] {
                 "p/X.groovy",
                 "package p;\n" +
@@ -1161,77 +1130,74 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
-    // can be uncommented when we have picked up the fix for GROOVY-4219
-    public void _testGRE637() {
-        runConformTest(new String[]{
-                "de/brazzy/nikki/Texts.java",
-                "package de.brazzy.nikki;\n"+
-                "\n"+
-                "public final class Texts { \n"+
-                "	public static class Image {\n"+
-                "		public static final String ORDERED_BY_FILENAME = \"image.sortedby.filename\";\n"+
-                "		public static final String ORDERED_BY_TIME = \"image.sortedby.time\";\n"+
-                "}}\n",
-                "de/brazzy/nikki/model/Image.groovy",
-                "package de.brazzy.nikki.model;\n"+
-                "\n"+
-                "class Image implements Serializable{\n"+
-                "    def fileName\n"+
-                "    def time\n"+
-                "}\n",
-                "de/brazzy/nikki/model/ImageSortField.groovy",
-                "package de.brazzy.nikki.model\n"+
-                "\n"+
-                "import de.brazzy.nikki.Texts\n"+
-                "import de.brazzy.nikki.model.Image\n"+
-                "\n"+
-                "enum ImageSortField {\n"+
-                "    FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n"+
-                "    TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n"+
-                "\n"+
-                "    def field\n"+
-                "    def name\n"+
-                "\n"+
-                "    public String toString(){\n"+
-                "        name\n"+
-                "    }\n"+
-                "}\n"
+    // GROOVY-4219
+    public void testGRE637() {
+        runConformTest(new String[] {
+            "de/brazzy/nikki/Texts.java",
+            "package de.brazzy.nikki;\n"+
+            "\n"+
+            "public final class Texts { \n"+
+            "	public static class Image {\n"+
+            "		public static final String ORDERED_BY_FILENAME = \"image.sortedby.filename\";\n"+
+            "		public static final String ORDERED_BY_TIME = \"image.sortedby.time\";\n"+
+            "}}\n",
+            "de/brazzy/nikki/model/Image.groovy",
+            "package de.brazzy.nikki.model;\n"+
+            "\n"+
+            "class Image implements Serializable{\n"+
+            "    def fileName\n"+
+            "    def time\n"+
+            "}\n",
+            "de/brazzy/nikki/model/ImageSortField.groovy",
+            "package de.brazzy.nikki.model\n"+
+            "\n"+
+            "import de.brazzy.nikki.Texts\n"+
+            "import de.brazzy.nikki.model.Image\n"+
+            "\n"+
+            "enum ImageSortField {\n"+
+            "    FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n"+
+            "    TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n"+
+            "\n"+
+            "    def field\n"+
+            "    def name\n"+
+            "\n"+
+            "    public String toString(){\n"+
+            "        name\n"+
+            "    }\n"+
+            "}\n"
         });
     }
 
-    public void _testOverriding_GRE440() {
-        if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
+    public void testOverriding_GRE440() {
+        runConformTest(new String[] {
+            "Foo.groovy",
+            "class Foo { \n"+
+            "  static void main(args) {}\n"+
+            "}",
 
-        runNegativeTest(new String[] {
-                "Foo.groovy",
-                "class Foo { \n"+
-                " static void main(args) {}\n"+
-                "}\n",
-                "Goo.java",
-                "class Goo extends Foo { \n"+
-                "  public static void main(String[] argv) {}\n"+
-                "}\n",
-                },
-                "xxxx");
-        checkGCUDeclaration("Foo.groovy",
-                "yyy");
+            "Goo.java",
+            "class Goo extends Foo { \n"+
+            "  public static void main(String[] argv) {}\n"+
+            "}",
+        });
+
+        //checkGCUDeclaration("Foo.groovy", "yyy");
     }
 
-    public void _testOverriding_GRE440_2() {
-        if (GroovyUtils.isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
-        runNegativeTest(new String[] {
-                "Foo.java",
-                "class Foo { \n"+
-                " void main(String... ss) {}\n"+
-                "}\n",
-                "Goo.java",
-                "class Goo extends Foo { \n"+
-                "  void main(String[] ss) {}\n"+
-                "}\n",
-                },
-                "xxxx");
-        checkGCUDeclaration("Foo.groovy",
-                "yyy");
+    public void testOverriding_GRE440_2() {
+        runConformTest(new String[] {
+            "Foo.java",
+            "class Foo { \n"+
+            "  void main(String... ss) {}\n"+
+            "}",
+
+            "Goo.java",
+            "class Goo extends Foo { \n"+
+            "  void main(String[] ss) {}\n"+
+            "}",
+        });
+
+        //checkGCUDeclaration("Foo.java", "yyy");
     }
 
     public void testAliasing_GRE473() {
@@ -1334,7 +1300,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testEnumValues_GRE1071() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "X.groovy",
                 "enum H {\n"+
                 "  RED,\n"+
@@ -1342,16 +1308,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "}"},"");
 
         assertEquals("[LH;",getReturnTypeOfMethod("X.groovy", "values"));
-    }
-
-    private String stringifyFieldDecl(FieldDeclaration fDecl) {
-        StringBuffer sb = new StringBuffer();
-        sb.append(fDecl.name);
-        sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);
-        sb.append(" declSourceStart>declSourceEnd:"+fDecl.declarationSourceStart+">"+fDecl.declarationSourceEnd);
-        sb.append(" modifiersSourceStart="+fDecl.modifiersSourceStart); // first char of decls modifiers
-        sb.append(" endPart1Position:"+fDecl.endPart1Position); // char after type decl ('int x,y' is space)
-        return sb.toString();
     }
 
     public void testAbstractCovariance_GRE272() {
@@ -2234,7 +2190,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testNotSeriousEnough_GRE396() {
-        runNegativeTest(new String[]{
+        runNegativeTest(new String[] {
 
             "TrivialBugTest.groovy",
             "package org.sjb.sjblib.cmdline;\n"+
@@ -2260,7 +2216,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testNotSeriousEnough_GRE396_2() {
-        runNegativeTest(new String[]{
+        runNegativeTest(new String[] {
             "TrivialBug.groovy",
             "package org.sjb.sjblib.cmdline;\n"+
             "public class TrivialBug {\n"+
@@ -2285,7 +2241,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testStarImports_GRE421() {
-        runConformTest(new String[]{
+        runConformTest(new String[] {
                 "Wibble.groovy",
                 "import a.b.c.*;\n"+
                 "class Wibble {\n"+
@@ -2462,7 +2418,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             JDTResolver.recordInstances=false;
         }
 
-        runConformTest(new String[]{
+        runConformTest(new String[] {
             "Foo.groovy",
             "class Foo<E extends Foo<E>> implements Comparable<E> {" +
             "  int compareTo(Object b) { return 0;}\n"+
@@ -2901,7 +2857,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // FIXASC poor positional error for invalid field name - this test needs sorting out
-    public void _testFieldPositioning02() {
+    public void testFieldPositioning02() {
         runNegativeTest(new String[] {
             "p/C.groovy",
             "package p;\n" +
@@ -2909,6 +2865,11 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "  List<String> class;\n"+
             "}\n",
         },
+        "----------\n" +
+        "1. ERROR in p\\C.groovy (at line 3)\n" +
+        "\tList<String> class;\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: List @ line 3, column 3.\n" +
         "----------\n");
     }
 
@@ -3690,11 +3651,8 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "abc");
     }
 
-    // It seems groovyc doesn't allow this - fails to generate the setProp(H)...
-    public void _testGroovyPropertyAccessors_ErrorCases5() {
-        // although there is a setProp already defined, it takes a parameter
-        // of a different type to the property type
-        runConformTest(new String[] {
+    public void testGroovyPropertyAccessors_ErrorCases5() {
+        runNegativeTest(new String[] {
             "p/C.java",
             "package p;\n" +
             "public class C {\n"+
@@ -3720,30 +3678,39 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "  void setProp(J b) { }\n"+
             "}\n",
         },
-        "abc");
+        "----------\n" +
+        "1. ERROR in p\\C.java (at line 5)\n" +
+        "\to.setProp(new H());\n" +
+        "\t  ^^^^^^^\n" +
+        "The method setProp(J) in the type G is not applicable for the arguments (H)\n" +
+        "----------\n");
     }
 
-    public void _testGroovyPropertyAccessors_ErrorCases6() {
-        // although there is a setProp already defined, it takes a parameter of a different type to the property type
-        runConformTest(new String[] {
-                "p/C.java",
-                "package p;\n" +
-                "public class C {\n"+
-                "  public static void main(String[] argv) {\n"+
-                "    G o = new G();\n"+
-                "    o.setProp(\"abc\");\n"+
-                "    System.out.print(\"abc\");\n"+
-                "  }\n"+
-                "}\n",
+    public void testGroovyPropertyAccessors_ErrorCases6() {
+        runNegativeTest(new String[] {
+            "p/C.java",
+            "package p;\n" +
+            "public class C {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    G o = new G();\n"+
+            "    o.setProp(\"abc\");\n"+
+            "    System.out.print(\"abc\");\n"+
+            "  }\n"+
+            "}\n",
 
-                "p/G.groovy",
-                "package p;\n"+
-                "public class G {\n" +
-                "  String prop = 'foo'\n"+
-                "  void setProp(boolean b) { }\n"+
-                "}\n",
-            },
-            "abc");
+            "p/G.groovy",
+            "package p;\n"+
+            "public class G {\n" +
+            "  String prop = 'foo'\n"+
+            "  void setProp(boolean b) { }\n"+
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in p\\C.java (at line 5)\n" +
+        "\to.setProp(\"abc\");\n" +
+        "\t  ^^^^^^^\n" +
+        "The method setProp(boolean) in the type G is not applicable for the arguments (String)\n" +
+        "----------\n");
     }
 
     public void testGroovyPropertyAccessors() {
@@ -3940,8 +3907,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
     }
 
-    // FIXASC groovy bug? Crashes groovy, it doesn't seem to correctly handle clashing constructor variants
-    public void _testDefaultValueConstructors02() {
+    public void testDefaultValueConstructors02() {
         runConformTest(new String[] {
             "p/C.java",
             "package p;\n" +
@@ -3962,8 +3928,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "  public G(Integer i, String m=\"abc\") {this.msg = m;}\n"+
             "  public void print(int i=3) { print msg }\n"+
             "}\n",
-        },
-        "abc");
+        });
     }
 
     public void testClashingMethodsWithDefaultParams() {
@@ -5517,5 +5482,29 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         if (!found) {
             fail("Expected event '"+eventText+"'\nEvents:\n"+listener.toString());
         }
+    }
+
+    /**
+     * Find the named file (which should have just been compiled) and for the named method determine
+     * the ClassNode for the return type and return the name of the classnode.
+     */
+    public String getReturnTypeOfMethod(String filename,String methodname) {
+        ModuleNode mn = getModuleNode(filename);
+        ClassNode cn = mn.getClasses().get(0);
+        assertNotNull(cn);
+        MethodNode methodNode = cn.getMethod(methodname,new Parameter[]{});
+        assertNotNull(methodNode);
+        ClassNode returnType = methodNode.getReturnType();
+        return returnType.getName();
+    }
+
+        private String stringifyFieldDecl(FieldDeclaration fDecl) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(fDecl.name);
+        sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);
+        sb.append(" declSourceStart>declSourceEnd:"+fDecl.declarationSourceStart+">"+fDecl.declarationSourceEnd);
+        sb.append(" modifiersSourceStart="+fDecl.modifiersSourceStart); // first char of decls modifiers
+        sb.append(" endPart1Position:"+fDecl.endPart1Position); // char after type decl ('int x,y' is space)
+        return sb.toString();
     }
 }

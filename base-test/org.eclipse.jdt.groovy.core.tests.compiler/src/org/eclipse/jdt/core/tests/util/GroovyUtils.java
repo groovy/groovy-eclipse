@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,12 @@ package org.eclipse.jdt.core.tests.util;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Version;
 
-/**
- * @author Andrew Eisenberg
- * @created Mar 17, 2011
- */
 public abstract class GroovyUtils {
 
     public static final int GROOVY_LEVEL;
     static {
         Version ver = Platform.getBundle("org.codehaus.groovy").getVersion();
         GROOVY_LEVEL = ver.getMajor() * 10 + ver.getMinor();
-    }
-
-    public static boolean isGroovy16() {
-        return GROOVY_LEVEL == 16;
-    }
-
-    public static boolean isGroovy17() {
-        return GROOVY_LEVEL == 17;
     }
 
     public static boolean isGroovy18() {
