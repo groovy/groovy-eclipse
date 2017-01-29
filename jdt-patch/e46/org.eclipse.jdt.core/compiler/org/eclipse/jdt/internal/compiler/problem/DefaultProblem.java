@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -53,6 +54,37 @@ public DefaultProblem(
 	this.line = line;
 	this.column = column;
 }
+
+// GROOVY add
+public boolean equals(Object obj) {
+	if (obj == this) return true;
+	if (!(obj instanceof DefaultProblem)) return false;
+	DefaultProblem that = (DefaultProblem) obj;
+	return  this.getID() == that.getID() &&
+			this.severity == that.severity &&
+			this.getSourceStart() == that.getSourceStart() &&
+			this.getSourceEnd() == that.getSourceEnd() &&
+			this.getSourceLineNumber() == that.getSourceLineNumber() &&
+			this.getSourceColumnNumber() == that.getSourceColumnNumber() &&
+			java.util.Objects.equals(this.getMessage(), that.getMessage()) &&
+			java.util.Arrays.equals(this.getArguments(), that.getArguments()) &&
+			java.util.Arrays.equals(this.getOriginatingFileName(), that.getOriginatingFileName())
+		;
+}
+public int hashCode() {
+	return java.util.Arrays.hashCode(new Object[] {
+		this.id,
+		this.severity,
+		this.line,
+		this.column,
+		this.startPosition,
+		this.endPosition,
+		this.message,
+		java.util.Arrays.hashCode(this.arguments),
+		java.util.Arrays.hashCode(this.fileName)
+	});
+}
+// GROOVY end
 
 public String errorReportSource(char[] unitSource) {
 	//extra from the source the innacurate     token

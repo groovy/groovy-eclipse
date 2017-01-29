@@ -10,8 +10,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -64,7 +66,6 @@ import org.eclipse.jdt.internal.core.JavaProject;
 public class TestingEnvironment {
 
 	private boolean fIsOpen = false;
-
 	private IWorkspace fWorkspace = null;
 	private Hashtable<String, IProject> fProjects = null;
 
@@ -200,7 +201,6 @@ public class TestingEnvironment {
 		return addGroovyClassExtension(packagePath, className, suffix, contents, suffix);
 	}
 
-
 	/** Adds a groovy class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
@@ -224,7 +224,6 @@ public class TestingEnvironment {
 		return classPath;
 	}
 
-
 	/** Adds a class with the given contents to the given
 	 * package in the workspace.  The package is created
 	 * if necessary.  If a class with the same name already
@@ -241,7 +240,6 @@ public class TestingEnvironment {
 		}
 		return addClass(packageFragmentRootPath, className, contents);
 	}
-
 
 	/** Adds a groovy class with the given contents to the given
 	 * package in the workspace.  The package is created
@@ -276,12 +274,12 @@ public class TestingEnvironment {
 		return addGroovyClassExtension(packageFragmentRootPath, className, contents, fileExtension);
 	}
 
-/**
- * Add a class folder to the classpath of a project.
- */
-public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isExported) throws JavaModelException {
-	addEntry(projectPath, JavaCore.newLibraryEntry(classFolderPath, null, null, isExported));
-}
+	/**
+	 * Add a class folder to the classpath of a project.
+	 */
+	public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isExported) throws JavaModelException {
+		addEntry(projectPath, JavaCore.newLibraryEntry(classFolderPath, null, null, isExported));
+	}
 
 	/** Adds a package to the given package fragment root
 	 * in the workspace.  The package fragment root is created
@@ -548,6 +546,25 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		fIsOpen = false;
 	}
 
+	public String readTextFile(IPath path) {
+		IFile file = getWorkspace().getRoot().getFile(path);
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents(), file.getCharset()));
+			StringBuilder sb = new StringBuilder(300);
+			try {
+				int read = 0;
+				while ((read = br.read()) != -1)
+					sb.append((char) read);
+			} finally {
+				br.close();
+			}
+			return sb.toString();
+		} catch (Exception ex) {
+			handle(ex);
+			return null;
+		}
+	}
+
 	private IFile createFile(IPath path, byte[] contents) {
 		try {
 			IFile file = fWorkspace.getRoot().getFile(path);
@@ -748,6 +765,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	public Problem[] getProblemsFor(IPath path){
 		return getProblemsFor(path, null);
 	}
+
 	/**
 	 * Return all problems with the specified element.
 	 */
@@ -987,7 +1005,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		close();
 		openWorkspace();
 		fProjects = new Hashtable<String, IProject>(10);
-		setup();
+		fIsOpen = true;
 	}
 
 	/** Close a project from the workspace.
@@ -1282,10 +1300,6 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 			checkAssertion("JavaModelException", false);
 		}
 		return outputPath;
-	}
-
-	private void setup() {
-		fIsOpen = true;
 	}
 
 	/**

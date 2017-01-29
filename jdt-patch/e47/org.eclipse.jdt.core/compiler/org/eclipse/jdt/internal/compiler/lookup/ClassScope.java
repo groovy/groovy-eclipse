@@ -55,7 +55,7 @@ public class ClassScope extends Scope {
 
 	public TypeDeclaration referenceContext;
 	public TypeReference superTypeReference;
-	java.util.ArrayList<Object> deferredBoundChecks; // contains TypeReference or Runnable. TODO consider making this a List<Runnable>
+	ArrayList<Object> deferredBoundChecks; // contains TypeReference or Runnable. TODO consider making this a List<Runnable>
 
 	public ClassScope(Scope parent, TypeDeclaration context) {
 		super(Scope.CLASS_SCOPE, parent);
@@ -181,8 +181,8 @@ public class ClassScope extends Scope {
 		sourceType.setFields(fieldBindings);
 	}
 
-	// GROOVY package->public
-	public void buildFieldsAndMethods() {
+	// GROOVY package->protected
+	protected void buildFieldsAndMethods() {
 		buildFields();
 		buildMethods();
 

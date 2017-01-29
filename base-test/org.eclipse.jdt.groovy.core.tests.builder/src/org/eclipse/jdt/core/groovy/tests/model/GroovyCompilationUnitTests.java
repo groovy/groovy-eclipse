@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 4, 2009
- */
-public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
+public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
 
     public static Test suite() {
         return buildTestSuite(GroovyCompilationUnitTests.class);
@@ -177,7 +173,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         unit1.discardWorkingCopy();
         unit2.discardWorkingCopy();
 
-        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());
+        assertTrue("ModuleNodeMapper should be empty when there are no working copies", moduleNodeMapperCacheSize >= ModuleNodeMapper.size());
     }
 
     public void testGetModuleNode_8() throws Exception {

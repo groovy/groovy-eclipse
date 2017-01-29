@@ -34,15 +34,57 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
 /**
  * Base class for Java image builder tests
  */
-public class BuilderTests extends TestCase {
+public abstract class BuilderTests extends TestCase {
 	protected static boolean DEBUG = false;
+	protected int moduleNodeMapperCacheSize = 0;
 	protected static TestingEnvironment env = null;
 	protected EfficiencyCompilerRequestor debugRequestor = null;
 
-	private int moduleNodeMapperCacheSize = 0;
-
 	public BuilderTests(String name) {
 		super(name);
+	}
+
+	protected void setUp() throws Exception {
+		super.setUp();
+		System.out.println("----------------------------------------");
+		System.out.println("Starting: " + getName());
+
+		debugRequestor = new EfficiencyCompilerRequestor();
+		Compiler.DebugRequestor = debugRequestor;
+		if (env == null) {
+			env = new TestingEnvironment();
+			env.openEmptyWorkspace();
+		}
+		env.resetWorkspace();
+		env.setAutoBuilding(false);
+		this.moduleNodeMapperCacheSize = ModuleNodeMapper.size();
+	}
+
+	protected void tearDown() throws Exception {
+		env.resetWorkspace();
+		// Discard primary working copies and copies with owner left from failed tests
+		ICompilationUnit[] wcs = null;
+		int i = 0;
+		do {
+			wcs = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
+			if (wcs != null) {
+				for (ICompilationUnit workingCopy : wcs) {
+					try {
+						workingCopy.discardWorkingCopy();
+						workingCopy.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			i++;
+			if (i > 20 && wcs != null) {
+				fail("Could not delete working copies " + wcs);
+			}
+		} while (wcs != null && wcs.length > 0);
+		assertTrue("ModuleNodeMapper should be empty when there are no working copies", moduleNodeMapperCacheSize >= ModuleNodeMapper.size());
+		JavaCore.setOptions(JavaCore.getDefaultOptions());
+		super.tearDown();
 	}
 
 	protected void cleanBuild() {
@@ -71,19 +113,19 @@ public class BuilderTests extends TestCase {
 			String ext = c.getFileExtension();
 			if (ext != null && (ext.equals("zip") || ext.equals("jar"))) {
 
-			    // this doesn't work on mac/*nix because device is usually (always?) null
+				// this doesn't work on mac/*nix because device is usually (always?) null
 //				if (c.getDevice() == null) {
 //					classpath.addElement(workspacePath.append(c).toOSString());
 //				} else {
 //					classpath.addElement(c.toOSString());
 //				}
 
-			    // this will work as long as the jar is contained in the same project
-			    if (projectPath.isPrefixOf(c)) {
-			        classpath.addElement(workspacePath.append(c).toOSString());
-			    } else {
-			        classpath.addElement(c.toOSString());
-			    }
+				// this will work as long as the jar is contained in the same project
+				if (projectPath.isPrefixOf(c)) {
+					classpath.addElement(workspacePath.append(c).toOSString());
+				} else {
+					classpath.addElement(c.toOSString());
+				}
 			}
 		}
 
@@ -508,58 +550,6 @@ public class BuilderTests extends TestCase {
 		return buffer.toString();
 	}
 
-	/** Sets up this test.
-	 */
-	protected void setUp() throws Exception {
-		super.setUp();
-        System.out.println("----------------------------------------");
-        System.out.println("Starting: " + getName());
-
-		debugRequestor = new EfficiencyCompilerRequestor();
-		Compiler.DebugRequestor = debugRequestor;
-		if (env == null) {
-			env = new TestingEnvironment();
-			env.openEmptyWorkspace();
-		}
-		env.resetWorkspace();
-		env.setAutoBuilding(false);
-		this.moduleNodeMapperCacheSize = ModuleNodeMapper.size();
-	}
-
-	final protected int getInitialModuleNodeMapperSize() {
-		return moduleNodeMapperCacheSize;
-	}
-
-	/**
-	 * @see junit.framework.TestCase#tearDown()
-	 */
-	protected void tearDown() throws Exception {
-		env.resetWorkspace();
-        // Discard primary working copies and copies with owner left from failed tests
-        ICompilationUnit[] wcs = null;
-        int i = 0;
-        do {
-            wcs = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
-            if (wcs != null) {
-	            for (ICompilationUnit workingCopy : wcs) {
-	                try {
-	                    workingCopy.discardWorkingCopy();
-	                    workingCopy.close();
-	                } catch (Exception e) {
-	                    e.printStackTrace();
-	                }
-	            }
-            }
-            i++;
-            if (i > 20 && wcs != null) {
-                fail("Could not delete working copies " + wcs);
-            }
-        } while (wcs != null && wcs.length > 0);
-        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());
-		JavaCore.setOptions(JavaCore.getDefaultOptions());
-		super.tearDown();
-	}
-
 	/**
 	 * Concatenate and sort all problems for given root paths.
 	 *
@@ -604,5 +594,4 @@ public class BuilderTests extends TestCase {
 			fail(msg.toString());
 		}
 	}
-
 }

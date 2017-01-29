@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -374,7 +375,7 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 
 public void record(CategorizedProblem newProblem, ReferenceContext referenceContext, boolean mandatoryError) {
 	//new Exception("VERBOSE PROBLEM REPORTING").printStackTrace();
-	if(newProblem.getID() == IProblem.Task) {
+	if (newProblem.getID() == IProblem.Task) {
 		recordTask(newProblem);
 		return;
 	}
@@ -383,8 +384,11 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 	} else if (this.problemCount == this.problems.length) {
 		System.arraycopy(this.problems, 0, (this.problems = new CategorizedProblem[this.problemCount * 2]), 0, this.problemCount);
 	}
+	// GROOVY add
+	if (this.problemsMap != null && this.problemsMap.containsKey(newProblem)) return;
+	// GROOVY end
 	this.problems[this.problemCount++] = newProblem;
-	if (referenceContext != null){
+	if (referenceContext != null) {
 		if (this.problemsMap == null) this.problemsMap = new HashMap(5);
 		if (this.firstErrors == null) this.firstErrors = new HashSet(5);
 		if (newProblem.isError() && !referenceContext.hasErrors()) this.firstErrors.add(newProblem);

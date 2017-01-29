@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -383,6 +384,9 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 	} else if (this.problemCount == this.problems.length) {
 		System.arraycopy(this.problems, 0, (this.problems = new CategorizedProblem[this.problemCount * 2]), 0, this.problemCount);
 	}
+	// GROOVY add
+	if (this.problemsMap != null && this.problemsMap.containsKey(newProblem)) return;
+	// GROOVY end
 	this.problems[this.problemCount++] = newProblem;
 	if (referenceContext != null){
 		if (this.problemsMap == null) this.problemsMap = new HashMap(5);

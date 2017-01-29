@@ -1700,11 +1700,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "\tfinal moo = processMoo(moo)\n" +
         "\t      ^^^\n" +
         "Groovy:The current scope already contains a variable of the name moo\n" +
-        "----------\n"+
-        "2. ERROR in Moo.groovy (at line 4)\n" +
-        "\tfinal moo = processMoo(moo)\n" +
-        "\t      ^^^\n" +
-        "Groovy:The current scope already contains a variable of the name moo\n" +
         "----------\n"
         );
     }
