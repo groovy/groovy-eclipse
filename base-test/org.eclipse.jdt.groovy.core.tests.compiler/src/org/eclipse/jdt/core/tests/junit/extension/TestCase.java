@@ -218,13 +218,13 @@ public static void assertStringEquals(String expected, String actual, boolean sh
 public static void assertStringEquals(String message, String expected, String actual, boolean showLineSeparators) {
 	if (expected == null && actual == null)
 		return;
-	if (expected != null && expected.equals(actual))
+	if (expected != null && actual.matches("\\Q" + expected.replace("##", "\\E.*\\Q") + "\\E"))
 		return;
-	final StringBuffer formatted;
+	final StringBuilder formatted;
 	if (message != null) {
-		formatted = new StringBuffer(message).append('.');
+		formatted = new StringBuilder(message).append('.');
 	} else {
-		formatted = new StringBuffer();
+		formatted = new StringBuilder();
 	}
 	if (showLineSeparators) {
 		final String expectedWithLineSeparators = showLineSeparators(expected);
@@ -234,15 +234,15 @@ public static void assertStringEquals(String message, String expected, String ac
 		formatted.append("\n------------ but was ------------\n");
 		formatted.append(actualWithLineSeparators);
 		formatted.append("\n--------- Difference is ----------\n");
-		throw new ComparisonFailure(formatted.toString(),
-				expectedWithLineSeparators,
-				actualWithLineSeparators);
+
+		throw new ComparisonFailure(formatted.toString(), expectedWithLineSeparators, actualWithLineSeparators);
 	} else {
 		formatted.append("\n----------- Expected ------------\n");
 		formatted.append(expected);
 		formatted.append("\n------------ but was ------------\n");
 		formatted.append(actual);
 		formatted.append("\n--------- Difference is ----------\n");
+
 		throw new ComparisonFailure(formatted.toString(),  expected, actual);
 	}
 }

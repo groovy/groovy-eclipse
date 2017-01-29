@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IProblemRequestor;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
+import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -49,11 +50,8 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  * </ul>
  * <p>
  * Once setup like that it is usable for testing here.
- *
- * @author Andy CLement
- * @since 2.5.1
  */
-public class FullProjectTests extends GroovierBuilderTests {
+public class FullProjectTests extends BuilderTests {
 
     public FullProjectTests(String name) {
         super(name);

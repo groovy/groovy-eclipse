@@ -44,6 +44,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -53,10 +54,9 @@ import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.osgi.framework.Version;
 
 /**
- * Basic tests for the builder - compiling and running some very simple java and
- * groovy code
+ * Basic tests for the builder - compiling and running some very simple java and groovy code
  */
-public class BasicGroovyBuildTests extends GroovierBuilderTests {
+public final class BasicGroovyBuildTests extends BuilderTests {
 
     public BasicGroovyBuildTests(String name) {
         super(name);
@@ -150,12 +150,12 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 new IPath[] {}/* exclude none */, true);
 
         // incrementalBuild(projectAPath);
-        // expectingCompiledClassesV("p1.Hello");
+        // expectingCompiledClasses("p1.Hello");
         // expectingNoProblems();
         // executeClass(projectAPath, "p1.Hello", "Hello world", "");
 
         incrementalBuild(projectDPath);
-        expectingCompiledClassesV("p1.Hello");
+        expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
 //		executeClass(projectDPath, "p1.Hello", "Hello world", "");
 
@@ -247,7 +247,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p1.Hello");
+        expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello world", "");
 
@@ -279,7 +279,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p1.Demo","p1.SomeGroovyHelper");
+        expectingCompiledClasses("p1.Demo","p1.SomeGroovyHelper");
         expectingNoProblems();
     }
 
@@ -303,14 +303,14 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "}");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Anno", "Const");
+        expectingCompiledClasses("Anno", "Const");
         expectingNoProblems();
 
         IPath pathToSecond = env.addGroovyClass(root, "", "A", "@Anno(Const.instance)\n" +
                 "class A {}");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("A");
+        expectingCompiledClasses("A");
     }
 
     public void _testCompileStatic_1505() throws Exception {
@@ -349,7 +349,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                     );
 
             incrementalBuild(projectPath);
-//			expectingCompiledClassesV("Foo","List2");
+//			expectingCompiledClasses("Foo","List2");
             expectingNoProblems();
 
             // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
@@ -391,7 +391,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
             // + "  { new Outer.Inner(); }\n" + "}\n");
             // incrementalBuild(projectPath);
             // expectingNoProblems();
-            // expectingCompiledClassesV("Client");
+            // expectingCompiledClasses("Client");
         } finally {
             JDTResolver.recordInstances = false;
         }
@@ -432,7 +432,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 //					);
 //
 //			incrementalBuild(projectPath);
-////			expectingCompiledClassesV("Foo","List2");
+////			expectingCompiledClasses("Foo","List2");
 //			expectingNoProblems();
 //
 //			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
@@ -475,7 +475,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 //			// + "  { new Outer.Inner(); }\n" + "}\n");
 //			// incrementalBuild(projectPath);
 //			// expectingNoProblems();
-//			// expectingCompiledClassesV("Client");
+//			// expectingCompiledClasses("Client");
 //		} finally {
 //			JDTResolver.recordInstances = false;
 //		}
@@ -517,7 +517,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("IChooseImportQuery","ISourceRange","NoChoiceQuery","TypeNameMatch");
+        expectingCompiledClasses("IChooseImportQuery","ISourceRange","NoChoiceQuery","TypeNameMatch");
     }
 
     public void testCompileStatic_FileAddAll() throws Exception {
@@ -551,7 +551,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
             incrementalBuild(projectPath);
             expectingNoProblems();
-            expectingCompiledClassesV("Foo");
+            expectingCompiledClasses("Foo");
 
             // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
         } finally {
@@ -592,7 +592,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
             incrementalBuild(projectPath);
             expectingNoProblems();
-            expectingCompiledClassesV("Foo");
+            expectingCompiledClasses("Foo");
 
             // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
         } finally {
@@ -631,7 +631,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
             incrementalBuild(projectPath);
             expectingNoProblems();
-            expectingCompiledClassesV("Foo");
+            expectingCompiledClasses("Foo");
 
             // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
         } finally {
@@ -673,7 +673,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
             incrementalBuild(projectPath);
             expectingNoProblems();
-            expectingCompiledClassesV("BuildSettings");
+            expectingCompiledClasses("BuildSettings");
 
             // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
         } finally {
@@ -827,13 +827,13 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "  { new Outer.Inner(); }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Client", "Outer", "Outer$Inner");
+        expectingCompiledClasses("Client", "Outer", "Outer$Inner");
         expectingNoProblems();
         env.addClass(root, "", "Client", "public class Client {\n"
                 + "  { new Outer.Inner(); }\n" + "}\n");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("Client");
+        expectingCompiledClasses("Client");
 
     }
 
@@ -864,13 +864,13 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         // );
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Outer");
+        expectingCompiledClasses("Outer");
         expectingNoProblems();
         // env.addClass(root, "", "Client", "public class Client {\n"
         // + "  { new Outer.Inner(); }\n" + "}\n");
         // incrementalBuild(projectPath);
         // expectingNoProblems();
-        // expectingCompiledClassesV("Client");
+        // expectingCompiledClasses("Client");
 
     }
 
@@ -896,7 +896,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("A");
+        expectingCompiledClasses("A");
         expectingNoProblems();
 
         env.addGroovyClass(root, "", "B",
@@ -911,7 +911,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "\n"+
                 "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("B","B$_foo_closure1");
+        expectingCompiledClasses("B","B$_foo_closure1");
         expectingNoProblems();
     }
 
@@ -939,7 +939,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("Foo");
+        expectingCompiledClasses("Foo");
     }
 
     public void testCompileStatic_MapEachClosure() throws Exception {
@@ -1003,7 +1003,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                         + "  public T compute();\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("brooklyn.event.adapter.Foo",
+        expectingCompiledClasses("brooklyn.event.adapter.Foo",
                 "brooklyn.event.adapter.HttpSensorAdapter",
                 "brooklyn.event.adapter.ValueProvider");
         expectingNoProblems();
@@ -1020,7 +1020,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                         + "}\n" + "}");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("brooklyn.event.adapter.Foo",
+        expectingCompiledClasses("brooklyn.event.adapter.Foo",
                 "brooklyn.event.adapter.HttpSensorAdapter");
 
     }
@@ -1051,7 +1051,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
     //
     // incrementalBuild(projectPath);
     // // No compiled output as it was a script
-    // expectingCompiledClassesV("");
+    // expectingCompiledClasses("");
     // expectingNoProblems();
     // }
 
@@ -1165,7 +1165,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         expectingSpecificProblemFor(cuPath, new Problem("",
                 "The type Foo collides with a package", cuPath, 31, 34,
                 CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_WARNING));
-        expectingCompiledClassesV("com.acme.Foo", "xyz");
+        expectingCompiledClasses("com.acme.Foo", "xyz");
         executeClass(projectPath, "xyz", "abc", null);
     }
 
@@ -1737,7 +1737,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         // lots of errors on the missing static imports
-        expectingCompiledClassesV("a.b.c.d.e.f.Helper1,a.b.c.d.e.f.Helper2,a.b.c.d.e.f.Helper3,a.b.c.d.e.f.Helper4,a.b.c.d.e.f.Helper5,a.b.c.d.e.f.Helper6,a.b.c.d.e.f.Helper7,a.b.c.d.e.f.Helper8,a.b.c.d.e.f.Helper9,a.b.c.d.e.f.HelperBase,a.b.c.d.e.f.SomeHelper,a.b.c.d.e.f.SomeTests");
+        expectingCompiledClasses("a.b.c.d.e.f.Helper1,a.b.c.d.e.f.Helper2,a.b.c.d.e.f.Helper3,a.b.c.d.e.f.Helper4,a.b.c.d.e.f.Helper5,a.b.c.d.e.f.Helper6,a.b.c.d.e.f.Helper7,a.b.c.d.e.f.Helper8,a.b.c.d.e.f.Helper9,a.b.c.d.e.f.HelperBase,a.b.c.d.e.f.SomeHelper,a.b.c.d.e.f.SomeTests");
 
     }
 
@@ -1773,7 +1773,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         // lots of errors on the missing static imports
-        expectingCompiledClassesV("Foo", "Test1");
+        expectingCompiledClasses("Foo", "Test1");
 
     }
 
@@ -1850,7 +1850,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         // lots of errors on the missing static imports
-        expectingCompiledClassesV("Test1");
+        expectingCompiledClasses("Test1");
 
     }
 
@@ -1876,7 +1876,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         // GroovyClass(name=Coroutine$_iterate_closure2 bytes=3178)
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Coroutine", "Coroutine$_run_closure1",
+        expectingCompiledClasses("Coroutine", "Coroutine$_run_closure1",
                 "Coroutine$_iterate_closure2");
         expectingNoProblems();
         executeClass(projectPath, "Coroutine", "246", "");
@@ -2050,7 +2050,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "		}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Book","Length","NotNull","ISBN");
+        expectingCompiledClasses("Book","Length","NotNull","ISBN");
         expectingNoProblems();
         executeClass(projectPath, "Book", "@NotNull()\n@Length()\n", "");
 
@@ -2072,7 +2072,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "		}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Book");
+        expectingCompiledClasses("Book");
         expectingNoProblems();
         executeClass(projectPath, "Book", "@NotNull()\n@Length()\n", "");
     }
@@ -2109,7 +2109,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                         + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("OtherGroovy",
+        expectingCompiledClasses("OtherGroovy",
                 "OtherGroovy$_iterate_closure1", "Runner",
                 "Runner$_run_closure1", "Launch");
         expectingNoProblems();
@@ -2122,7 +2122,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "  }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Runner", "Runner$_run_closure1");
+        expectingCompiledClasses("Runner", "Runner$_run_closure1");
         expectingNoProblems();
         executeClass(projectPath, "Launch", "1234", "");
 
@@ -2133,7 +2133,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                         "    closure(it);\n" + "  }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("OtherGroovy",
+        expectingCompiledClasses("OtherGroovy",
                 "OtherGroovy$_iterate_closure1");
         expectingNoProblems();
         executeClass(projectPath, "Launch", "12345678", "");
@@ -2146,7 +2146,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                         "    closure(it);\n" + "  }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("OtherGroovy",
+        expectingCompiledClasses("OtherGroovy",
                 "OtherGroovy$_iterate_closure1", "Runner",
                 "Runner$_run_closure1");
         expectingNoProblems();
@@ -2196,7 +2196,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("MyTest");
+        expectingCompiledClasses("MyTest");
         executeClass(projectPath, "MyTest", "success", null);
     }
 
@@ -2232,7 +2232,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "def baz = 42\n" + "//def quux = 36\n" + "\n" + "}\n");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("Foobar", "FoobarSpec");
+        expectingCompiledClasses("Foobar", "FoobarSpec");
 
         IPath workspacePath = env.getWorkspaceRootPath();
         File f = new File(workspacePath.append(
@@ -2244,7 +2244,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "def baz = 42\n" + "def quux = 36\n" + "\n" + "}\n");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("Foobar", "FoobarSpec");
+        expectingCompiledClasses("Foobar", "FoobarSpec");
 
         long filesizeNow = f.length(); // drops to 7002 if transform did not run
         assertEquals(filesize, filesizeNow);
@@ -2286,7 +2286,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "def baz = 42\n" + "//def quux = 36\n" + "\n" + "}\n");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("Foobar", "FoobarSpec");
+        expectingCompiledClasses("Foobar", "FoobarSpec");
 
         // IPath workspacePath = env.getWorkspaceRootPath();
         // File f = new
@@ -2297,7 +2297,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "def baz = 42\n" + "def quux = 36\n" + "\n" + "}\n");
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("Foobar", "FoobarSpec");
+        expectingCompiledClasses("Foobar", "FoobarSpec");
 
         // long filesizeNow = f.length(); // drops to 7002 if transform did not
         // run
@@ -2322,7 +2322,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "      print \"Hello Groovy world\"\n" + "   }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p1.Hello");
+        expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
     }
@@ -2345,7 +2345,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "      print \"Hello Groovy world\"\n" + "   }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p1.Hello");
+        expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
     }
@@ -2371,7 +2371,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "}\n");
 
         incrementalBuild(projectPath);
-        // expectingCompiledClassesV("Foo","Bar");
+        // expectingCompiledClasses("Foo","Bar");
         expectingNoProblems();
     }
 
@@ -2393,7 +2393,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "      print \"Hello Groovy world\"\n" + "   }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p1.Hello");
+        expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
         // IJavaProject javaProject = env.getJavaProject(projectPath);
@@ -2449,7 +2449,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "interface Hello extends java.util.List {\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p1.Hello");
+        expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
     }
 
@@ -2518,7 +2518,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "   public int run() { return 12; }\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.Hello", "pkg.GHello");
+        expectingCompiledClasses("pkg.Hello", "pkg.GHello");
         expectingNoProblems();
         executeClass(projectPath, "pkg.Hello", "12", "");
 
@@ -2527,7 +2527,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "public class GHello {\n" + "  \n" + // new blank line
                 "   public int run() { return 12; }\n" + "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.GHello");
+        expectingCompiledClasses("pkg.GHello");
         expectingNoProblems();
 
         // structural change to groovy file - did the java file record its
@@ -2539,7 +2539,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                                                                     // String
                 "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.GHello", "pkg.Hello");
+        expectingCompiledClasses("pkg.GHello", "pkg.Hello");
         expectingNoProblems();
 
     }
@@ -2580,7 +2580,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("testpkg.AllTests", "testpkg.TestCaseChannelPersistentStore","testpkg.TestCaseChannelPersistentStore$1");
+        expectingCompiledClasses("testpkg.AllTests", "testpkg.TestCaseChannelPersistentStore","testpkg.TestCaseChannelPersistentStore$1");
         expectingNoProblems();
         executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "running", "");
 
@@ -2613,7 +2613,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 //				+ "public class GHello {\n" + "  \n" + // new blank line
 //				"   public int run() { return 12; }\n" + "}\n");
         incrementalBuild(projectPath);
-//		expectingCompiledClassesV("pkg.GHello");
+//		expectingCompiledClasses("pkg.GHello");
         expectingNoProblems();
     }
 
@@ -2647,7 +2647,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "class GExtender extends Jaas{\n" + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.Event", "pkg.EventImpl", "pkg.Intface",
+        expectingCompiledClasses("pkg.Event", "pkg.EventImpl", "pkg.Intface",
                 "pkg.Jaas", "pkg.GExtender");
         expectingNoProblems();
 
@@ -2656,7 +2656,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         expectingNoProblems();
-        expectingCompiledClassesV("pkg.GExtender");
+        expectingCompiledClasses("pkg.GExtender");
     }
 
     public void testIncrementalCompilationTheBasics2_changingJavaDependedUponByGroovy()
@@ -2683,7 +2683,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.Hello", "pkg.GHello");
+        expectingCompiledClasses("pkg.Hello", "pkg.GHello");
         expectingNoProblems();
         executeClass(projectPath, "pkg.GHello", "12", "");
 
@@ -2692,7 +2692,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 + "public class Hello {\n" + "  \n" + // new blank line
                 "  public int run() { return 12; }\n" + "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.Hello");
+        expectingCompiledClasses("pkg.Hello");
         expectingNoProblems();
 
         // structural change to groovy file - did the java file record its
@@ -2704,7 +2704,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                                                                     // String
                 "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("pkg.GHello", "pkg.Hello");
+        expectingCompiledClasses("pkg.GHello", "pkg.Hello");
         expectingNoProblems();
         executeClass(projectPath, "pkg.GHello", "abc", "");
 
@@ -2729,7 +2729,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
         incrementalBuild(projectPath);
         try { Thread.sleep(1000); } catch (Exception e) {}
-        expectingCompiledClassesV("Outer", "Outer$Inner", "script");
+        expectingCompiledClasses("Outer", "Outer$Inner", "script");
         expectingNoProblems();
         executeClass(projectPath, "script", "value", "");
 
@@ -2737,7 +2737,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         env.addGroovyClass(root, "", "script", "print Outer.Inner.VAR \n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("script");
+        expectingCompiledClasses("script");
         expectingNoProblems();
         executeClass(projectPath, "script", "value", null);
 
@@ -3497,7 +3497,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Named", "Named$Trait$Helper");
+        expectingCompiledClasses("Named", "Named$Trait$Helper");
         expectingNoProblems();
     }
 
@@ -3534,7 +3534,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "print named.name()\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "q.NamedClass", "Runner");
+        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "q.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "name", "");
 
@@ -3547,7 +3547,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "p.Named$Trait$FieldHelper", "q.NamedClass", "Runner");
+        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "p.Named$Trait$FieldHelper", "q.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "null", "");
 
@@ -3558,7 +3558,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "print named.name()\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("Runner");
+        expectingCompiledClasses("Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "name", "");
 
@@ -3569,7 +3569,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "    String name() { \"Hello, ${name}!\" }\n" +
                 "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("q.NamedClass", "Runner");
+        expectingCompiledClasses("q.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "Hello, name!", "");
     }
@@ -3613,7 +3613,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "print named.name()\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "q.DefaultNamed", "r.NamedClass", "Runner");
+        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "q.DefaultNamed", "r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "name", "");
 
@@ -3626,7 +3626,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("r.NamedClass", "Runner");
+        expectingCompiledClasses("r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "new name", "");
 
@@ -3637,7 +3637,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "public class NamedClass extends DefaultNamed implements Named {}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("r.NamedClass", "Runner");
+        expectingCompiledClasses("r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "name", "");
 
@@ -3656,7 +3656,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "r.NamedClass", "Runner");
+        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(projectPath, "Runner", "new name", "");
     }
@@ -3687,7 +3687,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "public class MyClass implements MyTrait {}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
+        expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
         expectingNoProblems();
 
         // modify the body of the trait
@@ -3698,7 +3698,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
+        expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
         expectingNoProblems();
 
         // modify again the body of the trait
@@ -3709,7 +3709,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
+        expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
         expectingNoProblems();
     }
 
@@ -3758,7 +3758,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("test.Class1", "test.Class2", "test.Class3");
+        expectingCompiledClasses("test.Class1", "test.Class2", "test.Class3");
         expectingNoProblems();
 
         // modify the body of the abstract class to break build
@@ -3807,7 +3807,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
                 "}");
 
         incrementalBuild(projectPath);
-        expectingCompiledClassesV("test.Class1", "test.Class2", "test.Class3");
+        expectingCompiledClasses("test.Class1", "test.Class2", "test.Class3");
         expectingNoProblems();
     }
 
@@ -4099,7 +4099,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
     // );
     //
     // incrementalBuild(projectPath);
-    // expectingCompiledClassesV("StackTester");
+    // expectingCompiledClasses("StackTester");
     // expectingNoProblems();
     // executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" +
     // "Hello world\r\n", "");
@@ -4116,10 +4116,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
     // );
     //
     // incrementalBuild(projectPath);
-    // expectingCompiledClassesV("StackTester");
+    // expectingCompiledClasses("StackTester");
     // expectingNoProblems();
     // executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" +
     // "Hello world\r\n", "");
     // }
-
 }

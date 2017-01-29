@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.Test;
-
 import groovy.lang.GroovyClassLoader;
+
+import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -38,14 +38,12 @@ import org.codehaus.groovy.ast.stmt.AssertStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
-import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
+import org.eclipse.jdt.core.tests.builder.BuilderTests;
 /**
  * Test the source locations of ASTNodes to ensure they are correct, especially
  * look into the changes that we force into them.
- * @author andrew
- * @created Jun 9, 2010
  */
-public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
+public class ASTNodeSourceLocationsTests  extends BuilderTests {
 
     public ASTNodeSourceLocationsTests(String name) {
         super(name);

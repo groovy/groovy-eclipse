@@ -173,7 +173,7 @@ public class BuilderTests extends TestCase {
 
 	/** Verifies that given classes have been compiled.
 	 */
-	protected void expectingCompiledClasses(String[] expected) {
+	protected void expectingCompiledClasses(String... expected) {
 		String[] actual = debugRequestor.getCompiledClasses();
 		org.eclipse.jdt.internal.core.util.Util.sort(actual);
 		org.eclipse.jdt.internal.core.util.Util.sort(expected);

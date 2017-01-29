@@ -72,7 +72,7 @@ public class TestingEnvironment {
 		try {
 			IProject project = getProject(projectName);
 			IProjectDescription description = project.getDescription();
-			description.setNatureIds(new String[] { JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE });
+			description.setNatureIds(new String[] { GroovyNature.GROOVY_NATURE, JavaCore.NATURE_ID });
 			project.setDescription(description, null);
 		} catch (CoreException e) {
 			handleCoreException(e);
@@ -565,7 +565,7 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		return null;
 	}
 
-	private IFolder createFolder(IPath path) {
+	public IFolder createFolder(IPath path) {
 		checkAssertion("root", !path.isRoot());
 
 		/* don't create folders for projects */

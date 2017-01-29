@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
+import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
@@ -57,11 +57,8 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
  * markers /*m1en* / /*f1en* / /*t1en* / indicate end of method, field and type names
  * markers /*m1sb* / indicate the start of a method body
  * NOTE: the start of a type body is not being calculated correctly
- *
- * @author Andrew Eisenberg
- * @created Jun 29, 2009
  */
-public class SourceLocationsTests extends GroovierBuilderTests {
+public class SourceLocationsTests extends BuilderTests {
     public SourceLocationsTests(String name) {
         super(name);
     }
