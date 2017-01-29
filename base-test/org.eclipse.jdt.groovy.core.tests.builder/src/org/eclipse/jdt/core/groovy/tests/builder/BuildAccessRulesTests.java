@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.Test;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
@@ -64,25 +67,143 @@ public final class BuildAccessRulesTests extends BuilderTests {
         env.createFolder(src);
     }
 
-    //
-
-    public void testAccessForExtends() {
-        env.addGroovyClass(src, "Foo",
-            "import java.beans.*\n" +
-            "class Foo extends BeanDescriptor {}");
+    private void assertAccessRestriction(String source, String... types) {
+        IPath foo = env.addGroovyClass(src, "Foo", source);
         fullBuild();
 
-        expectingProblemsFor(src.append("Foo.groovy"), "Problem : Access restriction: The type 'BeanDescriptor' is not API" +
-            " (restriction on required library '##') [ resource : </Project/src/Foo.groovy> range : <38,52> category : <150> severity : <2>]");
+        // read back contents in case of line delimeters change or package statement addition or ...
+        source = env.readTextFile(foo);
+
+        List<String> problems = new ArrayList<String>();
+        for (String type : types) {
+            int offset = -1;
+            while ((offset = source.indexOf(type.trim(), offset + 1)) != -1) {
+                problems.add("Problem : Access restriction: The type '" + type.trim() + "' is not API (restriction on required library '##')" +
+                    " [ resource : </Project/src/Foo.groovy> range : <" + offset + "," + (offset + type.length()) + "> category : <150> severity : <2>]");
+            }
+        }
+
+        expectingProblemsFor(foo, problems);
+    }
+
+    //--------------------------------------------------------------------------
+
+    public void testAccessForImport() {
+        String source = "import java.beans.BeanDescriptor";
+
+        assertAccessRestriction(source, "BeanDescriptor");
+    }
+
+    public void testAccessForExtends() {
+        String source = "import java.beans.*\n" +
+            "class Foo extends BeanDescriptor {}";
+
+        assertAccessRestriction(source, "BeanDescriptor");
     }
 
     public void testAccessForImplements() {
-        env.addGroovyClass(src, "Foo",
-            "import java.beans.*\n" +
-            "abstract class Foo implements BeanInfo {}");
-        fullBuild();
+        String source = "import java.beans.*\n" +
+            "abstract class Foo implements BeanInfo {}";
 
-        expectingProblemsFor(src.append("Foo.groovy"), "Problem : Access restriction: The type 'BeanInfo' is not API" +
-            " (restriction on required library '##') [ resource : </Project/src/Foo.groovy> range : <50,59> category : <150> severity : <2>]");
+        assertAccessRestriction(source, "BeanInfo "); // interface has +1 sloc...
+    }
+
+    public void testAccessForExtendsGenerics() {
+        String source = "import java.beans.*\n" +
+            "class Foo extends ArrayList<BeanDescriptor> {}";
+
+        assertAccessRestriction(source, "BeanDescriptor");
+    }
+
+    public void testAccessForImplementsGenerics() {
+        String source = "import java.beans.*\n" +
+            "abstract class Foo implements List<BeanInfo> {}";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForField() {
+        String source = "import java.beans.*\n" +
+            "class Foo { private BeanInfo info }";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForProperty() {
+        String source = "import java.beans.*\n" +
+            "class Foo { BeanInfo info }";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForFieldGenerics() {
+        String source = "import java.beans.*\n" +
+            "class Foo { private List<BeanInfo> info }";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForPropertyGenerics() {
+        String source = "import java.beans.*\n" +
+            "class Foo { List<BeanInfo> info }";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForLazyProperty() {
+        String source = "import java.beans.*\n" +
+            "abstract class Foo {\n" +
+            "  @Lazy BeanInfo info = init()\n" +
+            "  abstract def init()\n" +
+            "}";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForMethodParameter() {
+        String source = "import java.beans.*\n" +
+            "class Foo {\n" +
+            "  def meth(BeanInfo info) { }\n" +
+            "}";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForMethodReturnType() {
+        String source = "import java.beans.*\n" +
+            "class Foo {\n" +
+            "  BeanInfo meth() { }\n" +
+            "}";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForMethodParameterGenerics() {
+        String source = "import java.beans.*\n" +
+            "class Foo {\n" +
+            "  def meth(List<BeanInfo> info) { }\n" +
+            "  }";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForMethodReturnTypeGenerics() {
+        String source = "import java.beans.*\n" +
+            "class Foo {\n" +
+            "  List<BeanInfo> meth() { }\n" +
+            "}";
+
+        assertAccessRestriction(source, "BeanInfo");
+    }
+
+    public void testAccessForLocalVariable() {
+        String source = "import java.beans.*\n" +
+            "class Foo {\n" +
+            "  def meth() {\n" +
+            "    BeanInfo info = null\n" +
+            "  }\n" +
+            "}";
+
+        assertAccessRestriction(source, "BeanInfo");
     }
 }

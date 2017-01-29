@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,18 +68,16 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
 /**
- * Groovy can use these to ask questions of JDT bindings. They are only built as required (as groovy references to java files are
- * resolved). They remain uninitialized until groovy starts digging into them - at that time the details are filled in (eg.
- * members).
- *
- * @author Andy Clement
+ * Groovy can use these to ask questions of JDT bindings. They are only built as
+ * required (as groovy references to java files are resolved). They remain
+ * uninitialized until groovy starts digging into them - at that time the details
+ * are filled in (eg. members).
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
 
     private static final Parameter[] NO_PARAMETERS = new Parameter[0];
 
-    // arbitrary choice of first eight. Maintaining these as a constant array prevents 10000 strings called 'arg0' consuming
-    // memory
+    // arbitrary choice of first eight; maintaining these as a constant array prevents 10000 strings called 'arg0' consuming memory
     private final static String[] argNames = new String[] { "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7" };
 
     // The binding which this JDTClassNode represents
@@ -402,25 +400,17 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     /**
-     *
-     * @param type
-     * @param cl erasure of type
-     * @return
+     * @param t type
+     * @param c erasure of type
      */
     private ClassNode makeClassNode(TypeBinding t, TypeBinding c) {
-        // was:
-        // return resolver.convertToClassNode(type);
-        ClassNode back = null;
-        // This line would check the compile unit
-        // if (cu != null) back = cu.getClass(c.getName());
-        if (back == null)
-            back = resolver.convertToClassNode(c);// ClassHelper.make(c);
+        ClassNode back = resolver.convertToClassNode(c);
         if (!((t instanceof BinaryTypeBinding) || (t instanceof SourceTypeBinding))) {
             ClassNode front = JDTClassNodeBuilder.build(this.resolver, t);
             front.setRedirect(back);
             return front;
         }
-        return back;// .getPlainNodeReference();
+        return back;
     }
 
     public GenericsType[] getGenericsTypes() {
@@ -455,7 +445,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
         }
         ctorNode = new ConstructorNode(modifiers, parameters, thrownExceptions, null);
-
         ctorNode.setGenericsTypes(generics);
         return ctorNode;
     }
@@ -502,8 +491,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         FieldNode fNode = new JDTFieldNode(fieldBinding, resolver, name, modifiers, fieldType, this, initializerExpression);
         return fNode;
     }
-
-    // FIXASC Need to override anything else from the supertype?
 
     @Override
     public boolean isReallyResolved() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,9 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser.GrapeAwareGroovyClassLoader;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
@@ -153,6 +155,16 @@ public class JDTResolver extends ResolveVisitor {
         recordDependency(type.getName());
         if (DEBUG) {
             log("resolveFromModule", type, foundit);
+        }
+        if (foundit) {
+            if (type.redirect() instanceof JDTClassNode && ((JDTClassNode) type.redirect()).getJdtBinding().hasRestrictedAccess()) {
+                TypeBinding binding = ((JDTClassNode) type.redirect()).getJdtBinding();
+                AccessRestriction restriction = activeScope.environment().getAccessRestriction(binding.erasure());
+                if (restriction != null) {
+                    SingleTypeReference ref = new SingleTypeReference(type.getNameWithoutPackage().toCharArray(), ((long) type.getStart() << 32 | (long) type.getEnd() - 1));
+                    activeScope.problemReporter().forbiddenReference(binding, ref, restriction.classpathEntryType, restriction.classpathEntryName, restriction.getProblemId());
+                }
+            }
         }
         return foundit;
     }
@@ -435,11 +447,12 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     /**
-     * Creates a Groovy ClassNode that represents the JDT TypeBinding. Build the basic structure, mark it as 'in progress' and then
-     * continue with initialization. This allows self referential generic declarations.
+     * Creates a Groovy ClassNode that represents the JDT TypeBinding. Steps
+     * include building the basic structure, marking node as 'in progress' and
+     * continuing with initialization. This allows self-referential generics.
      *
      * @param jdtBinding the JDT binding for which to create a ClassNode
-     * @return the new ClassNode, of type JDTClassNode
+     * @return a {@link JDTClassNode}
      */
     private ClassNode createJDTClassNode(TypeBinding jdtBinding) {
         JDTClassNodeBuilder cnb = new JDTClassNodeBuilder(this);
@@ -449,7 +462,8 @@ public class JDTResolver extends ResolveVisitor {
             assert !inProgress.containsKey(jdtBinding);
             inProgress.put(jdtBinding, jdtNode);
 
-            jdtNode.setupGenerics(); // for a BinaryTypeBinding this fixes up those generics
+            // fix up generics for BinaryTypeBinding
+            jdtNode.setupGenerics();
 
             assert nodeCache.get(jdtBinding) == null : "not unique";
             nodeCache.put(jdtBinding, jdtNode);
