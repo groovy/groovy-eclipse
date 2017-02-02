@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,54 +19,52 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-/**
- * @author Andrew Eisenberg
- * @created Dec 10, 2009
- */
-public class PackageCompletionProcessor extends AbstractGroovyCompletionProcessor {
+public class PackageCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
-    public PackageCompletionProcessor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    protected JDTResolver resolver;
+
+    public PackageCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
+    }
+
+    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.resolver = resolver;
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         char[] packageCompletionText = getPackageCompletionText(context.fullCompletionExpression);
-        if(mightBePackage(packageCompletionText)) {
-
-            int expressionStart = context.completionLocation
-                    - context.fullCompletionExpression.trim().length();
-            GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-                    context, getJavaContext(), expressionStart,
-                    context.completionEnd - expressionStart,
-                    getNameEnvironment().nameLookup, monitor);
+        if (mightBePackage(packageCompletionText)) {
+            int expressionStart = context.completionLocation - context.fullCompletionExpression.trim().length();
+            GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(//
+                context, getJavaContext(), expressionStart, context.completionEnd - expressionStart,
+                getNameEnvironment().nameLookup, monitor);
             getNameEnvironment().findPackages(packageCompletionText, requestor);
             List<ICompletionProposal> typeProposals = requestor.processAcceptedPackages();
 
             boolean alsoLookForTypes = shouldLookForTypes(packageCompletionText);
             if (alsoLookForTypes) {
-                getNameEnvironment().findTypes(packageCompletionText, true
-                        /* find all member types, should be false when
-                           in constructor*/,
-                        true /* camel case match */,
-                        getSearchFor(), requestor, monitor);
-                typeProposals.addAll(requestor.processAcceptedTypes());
+                getNameEnvironment().findTypes(packageCompletionText,
+                    true /* find all member types, should be false when in constructor*/,
+                    true /* camel case match */, getSearchFor(), requestor, monitor);
+                typeProposals.addAll(requestor.processAcceptedTypes(resolver));
             }
             return typeProposals;
-        } else {
-            return Collections.emptyList();
         }
+        return Collections.emptyList();
     }
 
     /**
@@ -104,8 +102,6 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
 
     /**
      * removes whitespace and does a fail-fast if a non-java identifier is found
-     * @param fullCompletionExpression
-     * @return
      */
     private char[] getPackageCompletionText(String fullCompletionExpression) {
         List<Character> chars = new LinkedList<Character>();
@@ -132,9 +128,6 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         return res;
     }
 
-    /**
-     * @return
-     */
     private int getSearchFor() {
         switch(getContext().location) {
             case EXTENDS:

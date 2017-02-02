@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,25 @@
 package org.codehaus.groovy.eclipse.codebrowsing.elements;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Variable;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedBinaryType;
 
 /**
- * A resolved java element suitable for hovers.  Includes
- * extra javaDoc information to appear in the hover
- * @author Andrew Eisenberg
- * @created Nov 22, 2010
+ * A resolved IType/IMember suitable for hovers. May include extra Javadoc
+ * information to appear in the hover.
  */
 public class GroovyResolvedBinaryType extends ResolvedBinaryType implements IGroovyResolvedElement {
 
     private final String extraDoc;
     private ASTNode inferredElement;
-    
-    public GroovyResolvedBinaryType(JavaElement parent, String name,
-            String uniqueKey, String extraDoc, ASTNode inferredElement) {
+    private Boolean isAnnotationCollector;
+
+    public GroovyResolvedBinaryType(JavaElement parent, String name, String uniqueKey, String extraDoc, ASTNode inferredElement) {
         super(parent, name, uniqueKey);
         this.extraDoc = extraDoc;
         this.inferredElement = inferredElement;
@@ -43,6 +43,16 @@ public class GroovyResolvedBinaryType extends ResolvedBinaryType implements IGro
     public String getExtraDoc() {
         return extraDoc;
     }
+
+    public int getFlags() throws JavaModelException {
+        // a compiled collector (aka BinaryType) is actually a final class; adjust flags so it appears as an annotation
+        return super.getFlags() ^ (isAnnotationCollector() ? 0x00002010 /*aka Modifier.ANNOTATION and Modifier.FINAL*/ : 0);
+    }
+
+    public ASTNode getInferredElement() {
+        return inferredElement;
+    }
+
     public String getInferredElementName() {
         if (inferredElement instanceof Variable) {
             return ((Variable) inferredElement).getName();
@@ -55,7 +65,11 @@ public class GroovyResolvedBinaryType extends ResolvedBinaryType implements IGro
         }
     }
 
-    public ASTNode getInferredElement() {
-        return inferredElement;
+    protected boolean isAnnotationCollector() {
+        if (isAnnotationCollector == null) {
+            isAnnotationCollector = (inferredElement instanceof ClassNode && !((ClassNode) inferredElement)
+                .redirect().getAnnotations(ClassHelper.make("groovy.transform.AnnotationCollector")).isEmpty());
+        }
+        return isAnnotationCollector;
     }
 }

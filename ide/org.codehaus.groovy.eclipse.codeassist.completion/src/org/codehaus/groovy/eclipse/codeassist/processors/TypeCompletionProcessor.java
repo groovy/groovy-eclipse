@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,41 +15,41 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder.NameAndLocation;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 10, 2009
- */
-public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
+public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
-    private static final Set<String> FIELD_MODIFIERS = new HashSet<String>();
-    static {
-        FIELD_MODIFIERS.add("private");
-        FIELD_MODIFIERS.add("protected");
-        FIELD_MODIFIERS.add("public");
-        FIELD_MODIFIERS.add("static");
-        FIELD_MODIFIERS.add("final");
-    }
+    private static final Set<String> FIELD_MODIFIERS = Collections.unmodifiableSet(
+        new HashSet<String>(Arrays.asList("private", "protected", "public", "static", "final")));
+
+    protected JDTResolver resolver;
 
     public TypeCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
+    }
+
+    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.resolver = resolver;
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
@@ -70,7 +70,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
                 true, // camel case match
                 getSearchFor(), requestor, monitor);
 
-        List<ICompletionProposal> typeProposals = requestor.processAcceptedTypes();
+        List<ICompletionProposal> typeProposals = requestor.processAcceptedTypes(resolver);
 
         return typeProposals;
     }

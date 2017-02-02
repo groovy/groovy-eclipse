@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,35 +23,36 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 10, 2009
- *
- */
-public abstract class AbstractGroovyCompletionProcessor implements
-        IGroovyCompletionProcessor {
-
+public abstract class AbstractGroovyCompletionProcessor implements IGroovyCompletionProcessor {
 
     private final ContentAssistContext context;
     private final SearchableEnvironment nameEnvironment;
     private final JavaContentAssistInvocationContext javaContext;
-    
+
     public AbstractGroovyCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         this.context = context;
         this.nameEnvironment = nameEnvironment;
         this.javaContext = javaContext;
     }
-    
-    public SearchableEnvironment getNameEnvironment() {
-        return nameEnvironment;
-    }
-    
+
     public ContentAssistContext getContext() {
         return context;
     }
-    
+
+    public SearchableEnvironment getNameEnvironment() {
+        return nameEnvironment;
+    }
+
     public JavaContentAssistInvocationContext getJavaContext() {
         return javaContext;
+    }
+
+    protected IProposalCreator[] getAllProposalCreators() {
+        return new IProposalCreator[] {
+            new MethodProposalCreator(),
+            new FieldProposalCreator(),
+            new CategoryProposalCreator(),
+        };
     }
 
     protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {
@@ -59,12 +60,4 @@ public abstract class AbstractGroovyCompletionProcessor implements
         proposal.setNameLookup(this.nameEnvironment.nameLookup);
         return proposal;
     }
-    
-    protected IProposalCreator[] getAllProposalCreators() {
-        return new IProposalCreator[] { 
-                new MethodProposalCreator(), 
-                new FieldProposalCreator(), 
-                new CategoryProposalCreator() };
-    }
-
 }

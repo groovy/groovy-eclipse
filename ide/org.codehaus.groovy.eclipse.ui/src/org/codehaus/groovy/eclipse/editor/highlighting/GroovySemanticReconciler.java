@@ -236,7 +236,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                         Position pos = newHighlightedPosition(ref);
                         tryAddPosition(newPositions, oldPositions, pos);
 
-                    } else if (GET_HIGHLIGHTING != null && (ref.kind == DEPRECATED || ref.kind == UNKNOWN)) {
+                    } else if (GET_HIGHLIGHTING != null && (ref.kind == DEPRECATED || ref.kind == UNKNOWN) && !newPositions.isEmpty()) {
                         // this and last cover same source range and this indicates deprecated or unknown
                         Position pos = newPositions.get(newPositions.size() - 1);
                         Object style = GET_HIGHLIGHTING.invoke(pos);
