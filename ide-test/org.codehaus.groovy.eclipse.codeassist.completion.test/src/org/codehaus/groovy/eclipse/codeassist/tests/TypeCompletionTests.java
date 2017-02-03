@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import junit.framework.Test;
+import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED;
 
+import junit.framework.Test;
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * Tests that type completions are working properly.
- *
- * @author Andrew Eisenberg
- * @created Jun 5, 2009
  */
 public final class TypeCompletionTests extends CompletionTestCase {
 
@@ -33,8 +32,6 @@ public final class TypeCompletionTests extends CompletionTestCase {
 
     private static final String HTML = "HTML";
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
-    private static final String HTML_ANCHOR = "HTMLAnchorElement";
-    private static final String HTML_ANCHOR_PROPOSAL = "HTMLAnchorElement - org.w3c.dom.html";
 
     public void testCompletionTypesInScript() throws Exception {
         String contents = HTML;
@@ -97,9 +94,9 @@ public final class TypeCompletionTests extends CompletionTestCase {
     }
 
     public void testCompletionTypesInImplements() throws Exception {
-        String contents = "class Foo implements HTMLAnchorElement { }";
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML_ANCHOR));
-        proposalExists(proposals, HTML_ANCHOR_PROPOSAL, 1);
+        String contents = "class Foo implements HTMLAnchElem { }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "HTMLAnchElem"));
+        proposalExists(proposals, "HTMLAnchorElement - org.w3c.dom.html", 1);
     }
 
     public void testCompleteFullyQualifiedTypeInScript() throws Exception {
@@ -192,42 +189,62 @@ public final class TypeCompletionTests extends CompletionTestCase {
     public void testField1() throws Exception {
         String contents = "class Foo {\n	JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
     }
 
     public void testField2() throws Exception {
         String contents = "class Foo {\n	private JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
     }
 
     public void testField3() throws Exception {
         String contents = "class Foo {\n	public JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
     }
 
     public void testField4() throws Exception {
         String contents = "class Foo {\n	protected JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
     }
 
     public void testField5() throws Exception {
         String contents = "class Foo {\n	public static JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
     }
 
     public void testField6() throws Exception {
         String contents = "class Foo {\n	public final JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
     }
 
     public void testField7() throws Exception {
         String contents = "class Foo {\n	public static final JFr\n}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
-        proposalExists(proposals, "JFrame", 1, true);
+        proposalExists(proposals, "JFrame - javax.swing", 1, true);
+    }
+
+    public void testTypeFilter1() throws Exception {
+        try {
+            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "javax.swing.JFrame");
+            ICompletionProposal[] proposals = createProposalsAtOffset("JFr", 2);
+            proposalExists(proposals, "JFrame - javax.swing", 0, true);
+        } finally {
+            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "");
+        }
+    }
+
+    public void testTypeFilter2() throws Exception {
+        try {
+            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "javax.swing.*");
+            ICompletionProposal[] proposals = createProposalsAtOffset("JFr", 2);
+            proposalExists(proposals, "JFrame - javax.swing", 0, true);
+        } finally {
+            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "");
+        }
     }
 }

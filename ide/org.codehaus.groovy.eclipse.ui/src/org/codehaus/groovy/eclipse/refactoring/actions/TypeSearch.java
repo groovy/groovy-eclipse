@@ -34,13 +34,6 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 
-/**
- * Use a SearchEngine to look for the Java types
- * This will not find inner types, however
- *
- * @author Andrew Eisenberg
- * @author Nieraj Singh
- */
 public class TypeSearch {
     /**
      * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
@@ -104,13 +97,12 @@ public class TypeSearch {
     }
 
     /**
-     * If looking for an annotation, then filter out non-annoations,
-     * otherwise everything is acceptable.
+     * If looking for an annotation, then filter out non-annoations, otherwise everything is acceptable.
      */
     protected boolean isOfKind(TypeNameMatch match, boolean isAnnotation) {
         boolean isRegularAnnotation = isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
 
-        //Annotations that are annotated with {@link AnnotationCollector} are not treated as annotations, so additional check is required
+        // annotations that are annotated with {@link AnnotationCollector} are not treated as annotations, so additional check is required
         boolean isCollectedByAnnotationCollector = (match.getType().getAnnotation("AnnotationCollector") != null);
 
         return isRegularAnnotation || isCollectedByAnnotationCollector;

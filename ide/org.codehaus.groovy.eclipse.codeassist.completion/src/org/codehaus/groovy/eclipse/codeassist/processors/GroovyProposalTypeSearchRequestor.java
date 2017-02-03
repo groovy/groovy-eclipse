@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.NameLookup;
+import org.eclipse.jdt.internal.corext.util.TypeFilter;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
@@ -78,7 +79,8 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, RelevanceConstants {
 
-    private final static int CHECK_CANCEL_FREQUENCY = 50;
+    private static final char[] NO_TYPE_NAME = {'.'};
+    private static final int CHECK_CANCEL_FREQUENCY = 50;
 
     private int foundTypesCount = 0;
     private int foundConstructorsCount = 0;
@@ -154,6 +156,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
 
     public void acceptPackage(char[] packageName) {
         checkCancel();
+
+        if (TypeFilter.isFiltered(packageName, NO_TYPE_NAME)) {
+            return;
+        }
+
         if (acceptedPackages == null)
             acceptedPackages = new HashSet<String>();
         acceptedPackages.add(String.valueOf(packageName));
@@ -172,6 +179,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             // do not propose enum constructors
             if ((typeModifiers & ClassFileConstants.AccEnum) != 0)
                 return;
+
+            if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
+                return;
+            }
 
             int accessibility = IAccessRule.K_ACCESSIBLE;
             if (accessRestriction != null) {
@@ -206,6 +217,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         // do not propose synthetic types
         if (CharOperation.contains('$', simpleTypeName))
             return;
+
+        if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
+            return;
+        }
 
         int accessibility = IAccessRule.K_ACCESSIBLE;
         if (accessRestriction != null) {

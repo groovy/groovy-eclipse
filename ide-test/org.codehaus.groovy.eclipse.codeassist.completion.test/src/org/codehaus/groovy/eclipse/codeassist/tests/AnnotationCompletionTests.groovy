@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
+
 import junit.framework.Test
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.ICompilationUnit
@@ -25,6 +27,13 @@ final class AnnotationCompletionTests extends CompletionTestCase {
 
     static Test suite() {
         newTestSuite(AnnotationCompletionTests)
+    }
+
+    @Override
+    protected void setUp() {
+        super.setUp()
+        // filter some legacy packages
+        EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, 'com.sun.*;org.omg.*')
     }
 
     void testAnno0() {
