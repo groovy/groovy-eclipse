@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.quickfix.proposals;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -122,12 +121,12 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         try {
             String simpleTypeName = getUnresolvedSimpleName();
             if (simpleTypeName != null) {
-                Map<String, UnresolvedTypeData> unresolvedTypes = Collections.singletonMap(
-                    simpleTypeName, new UnresolvedTypeData(simpleTypeName, false, new SourceRange(offset, simpleTypeName.length())));
-                new TypeSearch().searchForTypes(getGroovyCompilationUnit(), unresolvedTypes, null);
+                boolean isAnnotation = getQuickFixProblem().getProblemDescriptor().getMarkerMessages()[0].contains("@" + simpleTypeName);
+                UnresolvedTypeData data = new UnresolvedTypeData(simpleTypeName, isAnnotation, new SourceRange(offset, simpleTypeName.length()));
 
-                UnresolvedTypeData foundData = unresolvedTypes.get(simpleTypeName);
-                List<TypeNameMatch> matches = foundData.getFoundInfos();
+                new TypeSearch().searchForTypes(getGroovyCompilationUnit(), Collections.singletonMap(simpleTypeName, data), null);
+
+                List<TypeNameMatch> matches = data.getFoundInfos();
                 if (matches != null && !matches.isEmpty()) {
                     List<IType> suggestions = new ArrayList<IType>(matches.size());
                     for (TypeNameMatch match : matches) {
