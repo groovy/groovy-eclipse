@@ -56,6 +56,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
@@ -168,12 +169,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
                 ClassNode delegate = scope.getDelegate();
                 if (delegate != null) {
-                    declaration = findDeclaration(var.getName(), delegate, scope.containsInThisScope(var.getName()), scope.getMethodCallArgumentTypes());
+                    declaration = findDeclaration(var.getName(), delegate, scope.containsInThisScope(var.getName()), false, scope.getMethodCallArgumentTypes());
                 }
 
                 ClassNode thiz = scope.getThis();
                 if (declaration == null && thiz != null && (delegate == null || !thiz.equals(delegate))) {
-                    declaration = findDeclaration(var.getName(), thiz, scope.containsInThisScope(var.getName()), scope.getMethodCallArgumentTypes());
+                    declaration = findDeclaration(var.getName(), thiz, scope.containsInThisScope(var.getName()), false, scope.getMethodCallArgumentTypes());
                 }
 
                 ClassNode type;
@@ -324,20 +325,20 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         ClassNode realDeclaringType;
         VariableInfo varInfo;
         TypeConfidence origConfidence = confidence;
-        ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, scope.getMethodCallArgumentTypes());
+        ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, scope.getMethodCallArgumentTypes());
 
         if (declaration == null && isPrimaryExpression) {
             ClassNode thiz = scope.getThis();
             if (thiz != null && !thiz.equals(declaringType)) {
                 // probably in a closure where the delegate has changed
-                declaration = findDeclaration(name, thiz, isLhsExpression, scope.getMethodCallArgumentTypes());
+                declaration = findDeclaration(name, thiz, isLhsExpression, isStaticObjectExpression, scope.getMethodCallArgumentTypes());
             }
         }
 
         // GRECLIPSE-1079
         if (declaration == null && isStaticObjectExpression) {
             // we might have a reference to a property/method defined on java.lang.Class
-            declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, isLhsExpression, scope.getMethodCallArgumentTypes());
+            declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, isLhsExpression, isStaticObjectExpression, scope.getMethodCallArgumentTypes());
         }
 
         if (declaration != null) {
@@ -355,7 +356,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // now try to find the declaration again
             type = varInfo.type;
             realDeclaringType = varInfo.declaringType;
-            declaration = findDeclaration(name, realDeclaringType, isLhsExpression, scope.getMethodCallArgumentTypes());
+            declaration = findDeclaration(name, realDeclaringType, isLhsExpression, isStaticObjectExpression, scope.getMethodCallArgumentTypes());
             if (declaration == null) {
                 declaration = varInfo.declaringType;
             }
@@ -425,8 +426,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         } else if (accessedVar instanceof DynamicVariable) {
             // likely a reference to a field or method in a type in the hierarchy; find the declaration
-            ASTNode candidate = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo),
-                scope.containsInThisScope(accessedVar.getName()), scope.getMethodCallArgumentTypes());
+            ASTNode candidate = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo), scope.containsInThisScope(accessedVar.getName()), false, scope.getMethodCallArgumentTypes());
             if (candidate != null) {
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
@@ -454,16 +454,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @param name the name of the field, method, constant or property to find
      * @param declaringType the type in which the named member's declaration resides
      * @param isLhsExpression {@code true} if named member is being assigned a value
+     * @param isStaticExpression {@code true} if member is being accessed statically
      * @param methodCallArgumentTypes types of arguments to the associated method call (or {@code null} if not a method call)
      */
-    protected ASTNode findDeclaration(String name, ClassNode declaringType, boolean isLhsExpression, List<ClassNode> methodCallArgumentTypes) {
+    protected ASTNode findDeclaration(String name, ClassNode declaringType, boolean isLhsExpression, boolean isStaticExpression, List<ClassNode> methodCallArgumentTypes) {
         if (declaringType.isArray()) {
             // only length exists on arrays
             if (name.equals("length")) {
                 return createLengthField(declaringType);
             }
             // otherwise search on object
-            return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, methodCallArgumentTypes);
+            return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, methodCallArgumentTypes);
         }
 
         if (methodCallArgumentTypes != null) {
@@ -472,6 +473,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return method;
             }
             // name may still map to something that is callable; keep looking
+        }
+
+        // look for canonical accessor method
+        MethodNode accessor = AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false, !isLhsExpression ? READER : WRITER);
+        if (accessor != null && !isSynthetic(accessor) && (accessor.isStatic() == isStaticExpression)) {
+            return accessor;
         }
 
         LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<ClassNode>();
@@ -483,12 +490,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (property != null) {
                 return property;
             }
-        }
-
-        // look for canonical getter or setter
-        MethodNode accessor = AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false, !isLhsExpression ? READER : WRITER);
-        if (accessor instanceof JDTMethodNode && !accessor.isStatic() && !accessor.isSynthetic()) {
-            return accessor;
         }
 
         // look for field
@@ -531,10 +532,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @param checkSuperInterfaces potentially look through super interfaces for a declaration to this method
      */
     protected MethodNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
-        // if this is an interface, then we also need to check super interfaces
-        // super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
-        // do this piece first since findAllInterfaces will return the current interface as well and this will avoid running this
-        // method on the same interface twice.
+        // if this is an interface, then we also need to check super interfaces;
+        // super interface methods on an interface are not returned by getMethods(),
+        // so must explicitly look for them -- do this first since findAllInterfaces
+        // will return the current interface as well and this will avoid running this
+        // method on the same interface twice
         if (declaringType.isInterface()) {
             LinkedHashSet<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
             VariableScope.findAllInterfaces(declaringType, allInterfaces, true);
@@ -668,8 +670,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // travel up the hierarchy and look for more generics
         // also look for generics on methods...(not doing this yet...)
         GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedType, declaringType.redirect());
-        ClassNode resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(mapper,
-                VariableScope.clone(typeOfDeclaration));
+        ClassNode resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(typeOfDeclaration));
         return resolvedTypeOfDeclaration;
     }
 
@@ -709,6 +710,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         return false;
+    }
+
+    /**
+     * Determines if the specified method node is synthetic (i.e. generated or
+     * implicit in some sense).
+     */
+    protected static boolean isSynthetic(MethodNode method) {
+        // TODO: What about 'method.getDeclaringClass().equals(ClassHelper.GROOVY_OBJECT_TYPE)'?
+        return method.isSynthetic() || method.getDeclaringClass().equals(ClassHelper.CLOSURE_TYPE) ||
+            (method instanceof JDTMethodNode && ((JDTMethodNode) method).getJdtBinding() instanceof LazilyResolvedMethodBinding);
     }
 
     /**

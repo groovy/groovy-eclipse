@@ -28,8 +28,6 @@ import org.osgi.framework.Version;
 
 /**
  * Lots of tests to see that expressions have the proper type associated with them.
- *
- * @author Andrew Eisenberg
  */
 public final class InferencingTests extends AbstractInferencingTest {
 
@@ -39,6 +37,17 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public InferencingTests(String name) {
         super(name);
+    }
+
+    private void assertNoUnknowns(String contents) {
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+        visitor.DEBUG = true;
+        UnknownTypeRequestor requestor = new UnknownTypeRequestor();
+        visitor.visitCompilationUnit(requestor);
+        List<ASTNode> unknownNodes = requestor.getUnknownNodes();
+        assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
 
     // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
@@ -676,7 +685,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testFieldWithInitializer2() {
-        createUnit("A", "class A {\ndef x = 9\n} ");
+        createUnit("A", "class A {\ndef x = 9\n}");
         String contents = "new A().x";
         int start = contents.lastIndexOf('x');
         int end = start + "x".length();
@@ -1012,11 +1021,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         String contents = "first {\n second {\n owner } }";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
-        if (GroovyUtils.GROOVY_LEVEL > 17) {
-            assertType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>");
-        } else {
-            assertType(contents, start, end, "groovy.lang.Closure");
-        }
+        assertType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>");
     }
 
     public void testInClosure3() {
@@ -1162,19 +1167,16 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     // 'delegate' always has declaring type of closure
     public void testInClosureDeclaringType5() {
-        // failing on 1.7
-        if (GroovyUtils.GROOVY_LEVEL > 17) {
-            String contents =
-                    "class Bar {\n" +
-                    "  def method() { }\n" +
-                    "}\n" +
-                    "new Bar().method {\n " +
-                    "  delegate\n" +
-                    "}";
-            int start = contents.lastIndexOf("delegate");
-            int end = start + "delegate".length();
-            assertDeclaringType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>", false);
-        }
+        String contents =
+                "class Bar {\n" +
+                "  def method() { }\n" +
+                "}\n" +
+                "new Bar().method {\n " +
+                "  delegate\n" +
+                "}";
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
+        assertDeclaringType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>", false);
     }
 
     // Unknown references should have the declaring type of the enclosing method
@@ -1621,16 +1623,27 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1013
-    public void testCategoryMethodAsField() {
+    public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
 
-        int textStart = contents.indexOf("text");
-        int textEnd = textStart + "text".length();
+        int start = contents.indexOf("text");
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
+            assertDeclaringType(contents, start, start + 4, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
         } else {
-            assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+            assertDeclaringType(contents, start, start + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
         }
+    }
+
+    public void testInterfaceMethodsAsProperty() throws Exception {
+        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
+        createUnit("foo", "Baz", "package foo; interface Baz extends Bar { def getTwo() }");
+
+        String contents = "def meth(foo.Baz b) { b.one + b.two }";
+
+        int start = contents.indexOf("one");
+        assertDeclaringType(contents, start, start + 3, "foo.Bar");
+        start = contents.indexOf("two");
+        assertDeclaringType(contents, start, start + 3, "foo.Baz");
     }
 
     public void testClassReference1() {
@@ -1776,6 +1789,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("intValue");
         assertType(contents, start, start+"intValue".length(), "java.lang.Integer");
     }
+
     // GRECLIPSE-1174 groovy casting
     public void testAsExpression2() {
         String contents = "class Flar { int x\n }\n(null as Flar).x";
@@ -1872,8 +1886,8 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // nested expressions of various forms
-    public void testNested4() throws Exception {
-        createUnit("", "Foo", "class Foo { int prop }");
+    public void testNested4() {
+        createUnit("Foo", "class Foo { int prop }");
         String contents = "(new Foo().@prop) + (8 ?: 7)";
         assertType(contents, "java.lang.Integer");
     }
@@ -2170,16 +2184,5 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("foo");
         int end = start + "foo".length();
         assertType(contents, start, end, "java.lang.String");
-    }
-
-    protected void assertNoUnknowns(String contents) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
-
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        visitor.DEBUG = true;
-        UnknownTypeRequestor requestor = new UnknownTypeRequestor();
-        visitor.visitCompilationUnit(requestor);
-        List<ASTNode> unknownNodes = requestor.getUnknownNodes();
-        assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
 }

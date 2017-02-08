@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 /**
- * Tests that the inferred declaration is correct
- * @author Andrew Eisenberg
- * @created Apr 28, 2011
+ * Tests that the inferred declaration is correct.
  */
 public class DeclarationInferencingTests extends AbstractInferencingTest {
 
@@ -26,8 +24,7 @@ public class DeclarationInferencingTests extends AbstractInferencingTest {
         super(name);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField1() throws Exception {
+    public void testGettersAndField1() {
         createUnit("Other",
                 "class Other {\n" +
                 "  String xxx\n" +
@@ -35,54 +32,49 @@ public class DeclarationInferencingTests extends AbstractInferencingTest {
                 "}");
 
         String contents = "new Other().xxx";
-        int start =  contents.indexOf("xxx");
+        int start = contents.indexOf("xxx");
         int end = start + "xxx".length();
-        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField2() throws Exception {
+    public void testGettersAndField2() {
         createUnit("Other",
                 "class Other {\n" +
                 "  String xxx\n" +
                 "  public getXxx() { xxx }\n" +
-        "}");
+                "}");
 
         String contents = "new Other().getXxx";
-        int start =  contents.indexOf("getXxx");
+        int start = contents.indexOf("getXxx");
         int end = start + "getXxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField3() throws Exception {
+    public void testGettersAndField3() {
         createUnit("Other",
                 "class Other {\n" +
                 "  String xxx\n" +
-        "}");
+                "}");
 
         String contents = "new Other().getXxx";
-        int start =  contents.indexOf("getXxx");
+        int start = contents.indexOf("getXxx");
         int end = start + "getXxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
-
-    // GRECLIPSE-1042
-    public void testGettersAndField4() throws Exception {
+    public void testGettersAndField4() {
         createUnit("Other",
                 "class Other {\n" +
                 "  public getXxx() { xxx }\n" +
                 "}");
 
         String contents = "new Other().xxx";
-        int start =  contents.indexOf("xxx");
+        int start = contents.indexOf("xxx");
         int end = start + "xxx".length();
-        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField5() throws Exception {
+    public void testGettersAndField5() {
         createUnit("Other",
                 "class Other {\n" +
                 "  String xxx\n" +
@@ -90,174 +82,181 @@ public class DeclarationInferencingTests extends AbstractInferencingTest {
                 "}");
 
         String contents = "class Other {\n" +
-        "  String xxx\n" +
-        "  public getXxx() { xxx }\n" +
-        "}\n" +
-        "new Other().xxx";
-        int start =  contents.lastIndexOf("xxx");
+                "  String xxx\n" +
+                "  public getXxx() { xxx }\n" +
+                "}\n" +
+                "new Other().xxx";
+        int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
-        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField6() throws Exception {
+    public void testGettersAndField6() {
         createUnit("Other",
                 "class Other {\n" +
                 "  public String xxx\n" +
                 "  public getXxx() { xxx }\n" +
-        "}");
+                "}");
 
         String contents = "class Other {\n" +
-        "  String xxx\n" +
-        "  public getXxx() { xxx }\n" +
-        "}\n" +
-        "new Other().xxx";
-        int start =  contents.lastIndexOf("xxx");
+                "  String xxx\n" +
+                "  public getXxx() { xxx }\n" +
+                "}\n" +
+                "new Other().xxx";
+        int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
-        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.PROPERTY);
+        assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName1() throws Exception {
+    public void testMethodAndFieldWithSameName1() {
         createUnit("A",
                 "class A {\n" +
-                "    String field;\n" +
-                "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
                 "a.field('')";
-        int start =  contents.lastIndexOf("field");
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName2() throws Exception {
+    public void testMethodAndFieldWithSameName2() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
-                        "a.field('').field";
-        int start =  contents.lastIndexOf("field");
+                "a.field('').field";
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName3() throws Exception {
+    public void testMethodAndFieldWithSameName3() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
-                        "a.field";
-        int start =  contents.lastIndexOf("field");
+                "a.field";
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName4() throws Exception {
+    public void testMethodAndFieldWithSameName4() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
-                        "a.field.field";
-        int start =  contents.lastIndexOf("field");
+                "a.field.field";
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertUnknownConfidence(contents, start, end, "A", false);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName5() throws Exception {
+    public void testMethodAndFieldWithSameName5() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
-                        "a.getField()";
-        int start =  contents.lastIndexOf("getField");
+                "a.getField()";
+        int start = contents.lastIndexOf("getField");
         int end = start + "getField".length();
         assertDeclaration(contents, start, end, "A", "getField", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName6() throws Exception {
+    public void testMethodAndFieldWithSameName6() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
                 "a.setField('')";
-        int start =  contents.lastIndexOf("setField");
+        int start = contents.lastIndexOf("setField");
         int end = start + "setField".length();
         assertDeclaration(contents, start, end, "A", "setField", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName7() throws Exception {
+    public void testMethodAndFieldWithSameName7() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
                 "a.field = a.field";
-        int start =  contents.lastIndexOf("field");
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName8() throws Exception {
+    public void testMethodAndFieldWithSameName8() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
                 "a.field = a.field()";
-        int start =  contents.lastIndexOf("field");
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.METHOD);
     }
 
-    // GRECLIPSE-1105
-    public void testMethodAndFieldWithSameName9() throws Exception {
+    public void testMethodAndFieldWithSameName9() {
         createUnit("A",
                 "class A {\n" +
-                        "    String field;\n" +
-                        "    public A field(){}\n" +
+                "  String field\n" +
+                "  public A field(){}\n" +
                 "}");
 
         String contents =
                 "A a = new A()\n" +
                 "a.field(a.field)";
-        int start =  contents.lastIndexOf("field");
+        int start = contents.lastIndexOf("field");
         int end = start + "field".length();
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
+    }
+
+    // GRECLIPSE-1105
+    public void testFluentInterfaceWithFieldNameConflicts() {
+        createUnit("A",
+                "class A {\n" +
+                "  String field, other\n" +
+                "  String getField() { return this.field }\n" +
+                "  A field(String f){this.field = f; return this;}\n" +
+                "  A other(String x){this.other = x; return this;}\n" +
+                "}");
+
+        // field('f') should be the fluent method, not field property or getField method
+        String contents = "new A().field('f').other('x').toString()";
+        int start = contents.indexOf("other");
+        int end = start + "other".length();
+        assertDeclaration(contents, start, end, "A", "other", DeclarationKind.METHOD);
     }
 }

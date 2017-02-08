@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,9 +82,17 @@ public enum AccessorSupport {
                 if (kind == NONE) continue;
                 String methodName = kind.prefix + suffix;
                 List<MethodNode> methods = declaringType.getMethods(methodName);
-                for (MethodNode maybeMethod : methods) {
-                    if (kind == findAccessorKind(maybeMethod, isCategory)) {
-                        return maybeMethod;
+                for (MethodNode meth : methods) {
+                    if (kind == findAccessorKind(meth, isCategory)) {
+                        return meth;
+                    }
+                }
+                if (declaringType.isInterface()) {
+                    for (ClassNode face : declaringType.getUnresolvedInterfaces()) {
+                        MethodNode meth = findAccessorMethodForPropertyName(name, face, isCategory, kind);
+                        if (meth != null) {
+                            return meth;
+                        }
                     }
                 }
             }

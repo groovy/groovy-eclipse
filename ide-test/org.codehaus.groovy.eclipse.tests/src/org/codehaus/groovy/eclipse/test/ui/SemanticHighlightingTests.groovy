@@ -87,9 +87,9 @@ final class SemanticHighlightingTests extends TestCase {
 
     void testStaticFinals() {
         String contents = '''\
-        Math.PI
-        ObjectStreamConstants.STREAM_MAGIC
-        '''.stripIndent()
+            Math.PI
+            ObjectStreamConstants.STREAM_MAGIC
+            '''.stripIndent()
 
         // Math is a class, ObjectStreamConstants is an interface
 
@@ -100,9 +100,9 @@ final class SemanticHighlightingTests extends TestCase {
 
     void testStaticFinals2() {
         String contents = '''\
-        import static java.lang.Math.PI
-        def pi = PI
-        '''.stripIndent()
+            import static java.lang.Math.PI
+            def pi = PI
+            '''.stripIndent()
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('pi'), 2, VARIABLE),
@@ -234,6 +234,45 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('inputArguments'), 'inputArguments'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('getRuntimeMXBean'), 'getRuntimeMXBean'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.indexOf('getInputArguments'), 'getInputArguments'.length(), METHOD_CALL))
+    }
+
+    void testMethodsAsProperties2() {
+        EclipseTestSetup.addGroovySource '''\
+            class Foo {
+              private static final String value = ''
+              static String getValue() {
+                return value
+              }
+            }
+            '''.stripIndent()
+
+        String contents = 'Foo.value'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, STATIC_CALL))
+    }
+
+    void testMethodsAsProperties3() {
+        EclipseTestSetup.addGroovySource '''\
+            interface Bar { def getOne() }
+            interface Baz extends Bar { def getTwo() }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Foo {
+              def meth(Baz b) {
+                b.one + b.two
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('b)'),   1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('b.o'),  1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('b.t'),  1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('one'),  3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('two'),  3, METHOD_CALL))
     }
 
     void testDefaultGroovyMethods() {
@@ -999,34 +1038,31 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('now'),                      3, METHOD_CALL))
     }
 
-    void testWithBlock1() {
+    void testWithBlock() {
+        EclipseTestSetup.addGroovySource '''\
+            class Foo {
+              String val
+            }
+            '''.stripIndent()
+
         String contents = '''\
-            class X { static {
-              new Date().with {
-                setTime(1234L)
-                time = 5678L
-                not1
-                not2 = hours
-              }
-            }}
+            new Foo().with {
+              val = ''
+              val.length()
+            }
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Foo'),     3, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('val'),     3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('length'),  6, METHOD_CALL))
     }
 
     void testWithBlock2() {
         String contents = '''\
-            @groovy.transform.TypeChecked
             class X { static {
               new Date().with {
                 setTime(1234L)
@@ -1052,7 +1088,7 @@ final class SemanticHighlightingTests extends TestCase {
 
     void testWithBlock3() {
         String contents = '''\
-            @groovy.transform.CompileStatic
+            @groovy.transform.TypeChecked
             class X { static {
               new Date().with {
                 setTime(1234L)
@@ -1079,6 +1115,32 @@ final class SemanticHighlightingTests extends TestCase {
     void testWithBlock4() {
         String contents = '''\
             @groovy.transform.CompileStatic
+            class X { static {
+              new Date().with {
+                setTime(1234L)
+                time = 5678L
+                not1
+                not2 = hours
+              }
+            }}
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+    }
+
+    void testWithBlock5() {
+        String contents = '''\
+            @groovy.transform.CompileStatic
             class X {
               def getReadOnly() {}
               static {
@@ -1100,7 +1162,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('readOnly'), 8, UNKNOWN))
     }
 
-    void testWithBlock5() {
+    void testWithBlock6() {
         String contents = '''\
             @groovy.transform.CompileStatic
             class X {

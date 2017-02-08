@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,34 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
 import static java.util.Arrays.asList;
 
-/**
- * @author Andrew Eisenberg
- * @created Apr 29, 2011
- */
 public final class CodeSelectPropertiesTests extends BrowsingTestCase {
 
     public static junit.framework.Test suite() {
-        return newTestSuite(CodeSelectCategoriesTests.class);
+        return newTestSuite(CodeSelectPropertiesTests.class);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField1() throws Exception {
-        addGroovySource("class Other {\n" + "  String xxx\n" + "  public getXxx() { xxx }\n" + "}", "Other");
+    public void testGettersAndField1() {
+        addGroovySource(
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  public getXxx() { xxx }\n" +
+            "}",
+        "Other");
 
         String contents = "new Other().xxx";
         String toFind = "xxx";
-        String elementName = toFind;
+        String elementName = "getXxx";
         assertCodeSelect(asList(contents), toFind, elementName);
 
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField2() throws Exception {
-        addGroovySource("class Other {\n" + "  String xxx\n" + "  public getXxx() { xxx }\n" + "}", "Other");
+    public void testGettersAndField2() {
+        addGroovySource(
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  public getXxx() { xxx }\n" +
+            "}",
+        "Other");
 
         String contents = "new Other().getXxx()";
         String toFind = "getXxx";
@@ -48,9 +52,12 @@ public final class CodeSelectPropertiesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), toFind, elementName);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField3() throws Exception {
-        addGroovySource("class Other {\n" + "  String xxx\n" + "}", "Other");
+    public void testGettersAndField3() {
+        addGroovySource(
+            "class Other {\n" +
+            "  String xxx\n" +
+            "}",
+        "Other");
 
         String contents = "new Other().getXxx()";
         String toFind = "getXxx";
@@ -58,9 +65,12 @@ public final class CodeSelectPropertiesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), toFind, elementName);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField4() throws Exception {
-        addGroovySource("class Other {\n" + "  public getXxx() { xxx }\n" + "}", "Other");
+    public void testGettersAndField4() {
+        addGroovySource(
+            "class Other {\n" +
+            "  public getXxx() { xxx }\n" +
+            "}",
+        "Other");
 
         String contents = "new Other().xxx";
         String toFind = "xxx";
@@ -68,43 +78,59 @@ public final class CodeSelectPropertiesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), toFind, elementName);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField5() throws Exception {
-        String contents = "class Other {\n" + "  String xxx\n" + "  public getXxx() { xxx }\n" + "}\n"
-                + "new Other().xxx";
-        String toFind = "xxx";
-        String elementName = toFind;
-        assertCodeSelect(asList(contents), toFind, elementName);
-    }
-
-    // GRECLIPSE-1042
-    public void testGettersAndField6() throws Exception {
-        String contents = "class Other {\n" + "  String xxx\n" + "  public getXxx() { xxx }\n" + "}\n"
-                + "new Other().getXxx";
-        String toFind = "getXxx";
-        String elementName = toFind;
-        assertCodeSelect(asList(contents), toFind, elementName);
-    }
-
-    // GRECLIPSE-1042
-    public void testGettersAndField7() throws Exception {
-        String contents = "class Other {\n" + "  public getXxx() { xxx }\n" + "}\n" + "new Other().xxx";
+    public void testGettersAndField5() {
+        String contents =
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  public getXxx() { xxx }\n" +
+            "}\n" +
+            "new Other().xxx";
         String toFind = "xxx";
         String elementName = "getXxx";
         assertCodeSelect(asList(contents), toFind, elementName);
     }
 
-    // GRECLIPSE-1042
-    public void testGettersAndField8() throws Exception {
-        String contents = "class Other {\n" + "  String xxx\n" + "}\n" + "new Other().getXxx";
+    public void testGettersAndField6() {
+        String contents =
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  public getXxx() { xxx }\n" +
+            "}\n" +
+            "new Other().getXxx";
+        String toFind = "getXxx";
+        String elementName = toFind;
+        assertCodeSelect(asList(contents), toFind, elementName);
+    }
+
+    public void testGettersAndField7() {
+        String contents =
+            "class Other {\n" +
+            "  public getXxx() { xxx }\n" +
+            "}\n" +
+            "new Other().xxx";
+        String toFind = "xxx";
+        String elementName = "getXxx";
+        assertCodeSelect(asList(contents), toFind, elementName);
+    }
+
+    public void testGettersAndField8() {
+        String contents =
+            "class Other {\n" +
+            "  String xxx\n" +
+            "}\n" +
+            "new Other().getXxx";
         String toFind = "getXxx";
         String elementName = "xxx";
         assertCodeSelect(asList(contents), toFind, elementName);
     }
 
     // GRECLIPSE-1162
-    public void testIsGetter1() throws Exception {
-        String contents = "class Other {\n" + "  boolean xxx\n" + "}\n" + "new Other().isXxx";
+    public void testIsGetter1() {
+        String contents =
+            "class Other {\n" +
+            "  boolean xxx\n" +
+            "}\n" +
+            "new Other().isXxx";
         String toFind = "isXxx";
         String elementName = "xxx";
         assertCodeSelect(asList(contents), toFind, elementName);
