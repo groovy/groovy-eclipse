@@ -26,10 +26,7 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
- * Tests for {@link GroovyOccurrencesFinder}
- *
- * @author Andrew Eisenberg
- * @created Jan 2, 2011
+ * Tests for {@link GroovyOccurrencesFinder}.
  */
 public final class FindOccurrencesTests extends AbstractGroovySearchTest {
 
@@ -377,87 +374,72 @@ public final class FindOccurrencesTests extends AbstractGroovySearchTest {
     public void testOverloaded1() throws Exception {
         String contents =
                 "class LotsOfMethods { \n" +
-                "    def meth() { }\n" +
-                "    def meth(int a) { }\n" +
-                "    def meth(String a, LotsOfMethods b) { }\n" +
+                "  def meth() { }\n" +
+                "  def meth(int a) { }\n" +
+                "  def meth(String a, LotsOfMethods b) { }\n" +
                 "}\n" +
                 "new LotsOfMethods().meth(1)\n" +
                 "new LotsOfMethods().meth(\"\", null)\n" +
                 "new LotsOfMethods().meth()";
-        int start = contents.indexOf("meth");
-        int len = "meth".length();
-        int start1 = start;
-        int start2 = contents.lastIndexOf("meth");
-        doTest(contents, start, len, start1, len, start2, len);
+        int start = contents.indexOf("meth()");
+        doTest(contents, start, 4, start, 4, contents.lastIndexOf("meth()"), 4);
     }
 
     public void testOverloaded2() throws Exception {
         String contents =
                 "class LotsOfMethods { \n" +
-                        "    def meth() { }\n" +
-                        "    def meth(int a) { }\n" +
-                        "    def meth(String a, LotsOfMethods b) { }\n" +
-                        "}\n" +
-                        "new LotsOfMethods().meth()\n" +
-                        "new LotsOfMethods().meth(\"\", null)\n" +
-                        "new LotsOfMethods().meth(1)\n";
-        int start = contents.indexOf("meth", contents.indexOf("meth")+1);
-        int len = "meth".length();
-        int start1 = start;
-        int start2 = contents.lastIndexOf("meth");
-        doTest(contents, start, len, start1, len, start2, len);
+                "  def meth() { }\n" +
+                "  def meth(int a) { }\n" +
+                "  def meth(String a, LotsOfMethods b) { }\n" +
+                "}\n" +
+                "new LotsOfMethods().meth()\n" +
+                "new LotsOfMethods().meth(\"\", null)\n" +
+                "new LotsOfMethods().meth(1)\n";
+        int start = contents.indexOf("meth(int");
+        doTest(contents, start, 4, start, 4, contents.indexOf("meth(1)"), 4);
     }
 
     public void testOverloaded3() throws Exception {
         String contents =
                 "class LotsOfMethods { \n" +
-                        "    def meth() { }\n" +
-                        "    def meth(int a) { }\n" +
-                        "    def meth(String a, LotsOfMethods b) { }\n" +
-                        "}\n" +
-                        "new LotsOfMethods().meth(1)\n" +
-                        "new LotsOfMethods().meth()\n" +
-                        "new LotsOfMethods().meth(\"\", null)\n";
-        int start = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
-        int len = "meth".length();
-        int start1 = start;
-        int start2 = contents.lastIndexOf("meth");
-        doTest(contents, start, len, start1, len, start2, len);
+                "  def meth() { }\n" +
+                "  def meth(int a) { }\n" +
+                "  def meth(String a, LotsOfMethods b) { }\n" +
+                "}\n" +
+                "new LotsOfMethods().meth(1)\n" +
+                "new LotsOfMethods().meth()\n" +
+                "new LotsOfMethods().meth(\"\", null)\n";
+        int start = contents.indexOf("meth(S");
+        doTest(contents, start, 4, start, 4, contents.lastIndexOf("meth"), 4);
     }
 
-    //GRECLIPSE-1573
+    // GRECLIPSE-1573
     public void testOverloaded4() throws Exception {
         String contents =
                 "class LotsOfMethods { \n" +
-                        "    def meth() { }\n" +
-                        "    def meth(int a) { }\n" +
-                        "    def meth(String a) { }\n" +
-                        "}\n" +
-                        "new LotsOfMethods().meth(1)\n" +
-                        "new LotsOfMethods().meth()\n" +
-                        "new LotsOfMethods().meth(\"\")\n";
+                "  def meth() { }\n" +
+                "  def meth(int a) { }\n" +
+                "  def meth(String a) { }\n" +
+                "}\n" +
+                "new LotsOfMethods().meth(1)\n" +
+                "new LotsOfMethods().meth()\n" +
+                "new LotsOfMethods().meth(\"\")\n";
         int start = contents.lastIndexOf("meth");
-        int len = "meth".length();
-        int start1 = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
-        int start2 = start;
-        doTest(contents, start2, len, start1, len, start2, len);
+        doTest(contents, start, 4, contents.indexOf("meth(S"), 4, start, 4);
     }
 
     public void testOverloaded5() throws Exception {
         String contents =
                 "class LotsOfMethods { \n" +
-                        "    def meth() { }\n" +
-                        "    def meth(int a) { }\n" +
-                        "    def meth(String a) { }\n" +
-                        "}\n" +
-                        "new LotsOfMethods().meth(1)\n" +
-                        "new LotsOfMethods().meth()\n" +
-                        "new LotsOfMethods().meth(null)\n";
+                "  def meth() { }\n" +
+                "  def meth(int a) { }\n" +
+                "  def meth(String a) { }\n" +
+                "}\n" +
+                "new LotsOfMethods().meth(1)\n" +
+                "new LotsOfMethods().meth()\n" +
+                "new LotsOfMethods().meth(null)\n";
         int start = contents.lastIndexOf("meth");
-        int len = "meth".length();
-        int start1 = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
-        int start2 = start;
-        doTest(contents, start2, len, start1, len, start2, len);
+        doTest(contents, start, 4, contents.indexOf("meth(S"), 4, start, 4);
     }
 
     public void testDefaultParameters1() throws Exception {

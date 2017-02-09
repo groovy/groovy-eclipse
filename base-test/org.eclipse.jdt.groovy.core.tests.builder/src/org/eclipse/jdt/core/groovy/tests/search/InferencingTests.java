@@ -671,6 +671,34 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
     }
 
+    public void testStaticMethodCall7() throws Exception {
+        createUnit("foo", "Bar", "package foo\n" +
+                "import java.util.regex.*\n" +
+                "class Bar {\n" +
+                "  static Object meth(Object o) { return o }\n" +
+                "  static Pattern meth(Pattern p) { return p }\n" +
+                "  static Collection meth(Collection c) { return c }\n" +
+                "}");
+
+        String staticCall = "meth([])";
+        String contents = "import static foo.Bar.*; " + staticCall;
+        assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.Collection");
+    }
+
+    public void _testStaticMethodCall8() throws Exception {
+        createUnit("foo", "Bar", "package foo\n" +
+                "import java.util.regex.*\n" +
+                "class Bar {\n" +
+                "  static Object meth(Object o) { return o }\n" +
+                "  static Pattern meth(Pattern p) { return p }\n" +
+                "  static Collection meth(Collection c) { return c }\n" +
+                "}");
+
+        String staticCall = "meth(~/abc/)";
+        String contents = "import static foo.Bar.*; " + staticCall;
+        assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.regex.Pattern");
+    }
+
     public void testSuperFieldReference() {
         String contents = "class B extends A {\n def other() { \n myOther } } \n class A { String myOther } ";
         String expr = "myOther";

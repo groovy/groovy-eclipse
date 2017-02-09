@@ -30,8 +30,10 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -146,12 +148,16 @@ public abstract class GroovyUtils {
         return new String[] {name.substring(0, Math.max(0, index)), name.substring(index + 1)};
     }
 
+    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
+
     public static List<ClassNode> getArgumentTypes(ArgumentListExpression list) {
         final int n = list.getExpressions().size();
         if (n == 0) return Collections.emptyList();
         List<ClassNode> types = new ArrayList<ClassNode>(n);
         for (Expression expression : list.getExpressions()) {
-            types.add(expression.getType());
+            boolean isNull = expression instanceof ConstantExpression &&
+                    ((ConstantExpression) expression).isNullExpression();
+            types.add(isNull ? NULL_TYPE : expression.getType());
         }
         return types;
     }

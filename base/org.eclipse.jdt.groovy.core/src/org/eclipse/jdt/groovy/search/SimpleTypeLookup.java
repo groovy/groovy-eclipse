@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import groovyjarjarasm.asm.Opcodes;
@@ -257,23 +258,39 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (node instanceof ClassExpression) {
             // check for special case...a bit crude...determine if the actual reference is to Foo.class or to Foo
             if (isNodeDotClassReference(node, unit)) {
-                return new TypeLookupResult(VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE,
-                        VariableScope.CLASS_CLASS_NODE, TypeConfidence.EXACT, scope);
+                return new TypeLookupResult(VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE, TypeConfidence.EXACT, scope);
             } else {
                 return new TypeLookupResult(nodeType, declaringType, nodeType, confidence, scope);
             }
         } else if (node instanceof StaticMethodCallExpression) {
-            StaticMethodCallExpression staticMethodCall = (StaticMethodCallExpression) node;
+            String methodName = ((StaticMethodCallExpression) node).getMethod();
+            ClassNode ownerType = ((StaticMethodCallExpression) node).getOwnerType();
+            Expression methodArgs = ((StaticMethodCallExpression) node).getArguments();
 
-            MethodNode method = staticMethodCall.getOwnerType().tryFindPossibleMethod(staticMethodCall.getMethod(), staticMethodCall.getArguments());
-            if (method != null && method.isStatic()) {
-                return new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, TypeConfidence.INFERRED, scope);
+            List<MethodNode> candidates = new LinkedList<MethodNode>();
+            if (!ownerType.isInterface()) {
+                candidates.addAll(ownerType.getMethods(methodName));
+            } else {
+                LinkedHashSet<ClassNode> faces = new LinkedHashSet<ClassNode>();
+                VariableScope.findAllInterfaces(ownerType, faces, false);
+                for (ClassNode face : faces) {
+                    candidates.addAll(face.getMethods(methodName));
+                }
+            }
+            for (Iterator<MethodNode> it = candidates.iterator(); it.hasNext();) {
+                if (!it.next().isStatic()) it.remove();
             }
 
-            List<MethodNode> methods = staticMethodCall.getOwnerType().getMethods(staticMethodCall.getMethod());
-            if (!methods.isEmpty()) {
-                method = methods.get(0);
-                return new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope);
+            if (!candidates.isEmpty()) {
+                MethodNode closestMatch;
+                if (methodArgs instanceof ArgumentListExpression) {
+                    closestMatch = findMethodDeclaration0(candidates, GroovyUtils.getArgumentTypes((ArgumentListExpression) methodArgs));
+                    confidence = TypeConfidence.INFERRED;
+                } else {
+                    closestMatch = candidates.get(0);
+                    confidence = TypeConfidence.LOOSELY_INFERRED;
+                }
+                return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
             }
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
@@ -598,18 +615,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return maybeMethod.getOriginal();
             }
             if (parameters.length == arguments.size()) {
-                closestMatch = maybeMethod.getOriginal();
-
                 Boolean suitable = isTypeCompatible(arguments, parameters);
-                if (suitable == Boolean.FALSE) {
-                    iterator.remove();
-                }
                 if (suitable == Boolean.TRUE) {
-                    return closestMatch;
+                    return maybeMethod.getOriginal();
                 }
-            } else {
-                iterator.remove();
+                if (suitable != Boolean.FALSE) {
+                    closestMatch = maybeMethod.getOriginal();
+                    continue; // don't remove
+                }
             }
+            iterator.remove();
         }
         return closestMatch;
     }
@@ -737,7 +752,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
             // test parameter and argument for exact and fuzzy match
 
-            if (!parameter.equals(argument)) {
+            if (!parameter.equals(argument) &&
+                    !(argument == GroovyUtils.NULL_TYPE && !parameter.isPrimitive()) &&
+                    !(argument.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(parameter))) {
+
                 result = null; // not an exact match
 
                 try { // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
