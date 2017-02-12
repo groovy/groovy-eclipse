@@ -34,7 +34,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     private void addImportOnSelection(CharSequence sourceCode) {
         makeEditor(sourceCode.stripIndent().toString())
-        new AddImportOnSelectionAction(editor).run()
+        editor.getAction('AddImport').run()
     }
 
     void testAddImportOnScriptVarType1() {

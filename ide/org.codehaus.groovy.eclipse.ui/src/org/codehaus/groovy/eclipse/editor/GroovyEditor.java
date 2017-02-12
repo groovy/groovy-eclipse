@@ -16,13 +16,27 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import static java.lang.reflect.Array.getLength;
+import static java.util.regex.Pattern.compile;
+
+import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR;
+import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Matcher;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
+import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
+import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
+import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.editor.actions.ExpandSelectionAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyConvertLocalToFieldAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractConstantAction;
@@ -39,9 +53,11 @@ import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatKind;
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.StringUtils;
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -62,8 +78,8 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
-import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
 import org.eclipse.jdt.internal.ui.actions.CompositeActionGroup;
 import org.eclipse.jdt.internal.ui.actions.SurroundWithActionGroup;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
@@ -76,6 +92,7 @@ import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
+import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
@@ -83,7 +100,9 @@ import org.eclipse.jdt.ui.actions.RefactorActionGroup;
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
@@ -111,13 +130,15 @@ import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionGroup;
@@ -131,7 +152,6 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 public class GroovyEditor extends CompilationUnitEditor {
 
     public static final String EDITOR_ID = "org.codehaus.groovy.eclipse.editor.GroovyEditor";
-    private static final String INDENT_ON_TAB = "IndentOnTab";
 
     /**
      * Borrowed from {@link CompilationUnitEditor.ExclusivePositionUpdater}
@@ -622,8 +642,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     private GroovySemanticReconciler semanticReconciler;
 
     private final GroovyBracketInserter groovyBracketInserter = new GroovyBracketInserter();
-    // visible only for testing!
-    public VerifyKeyListener getGroovyBracketInserter() {
+    /* visible only for testing! */ public VerifyKeyListener getGroovyBracketInserter() {
         return groovyBracketInserter;
     }
 
@@ -635,9 +654,8 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     @Override
     protected void setPreferenceStore(IPreferenceStore store) {
-        ChainedPreferenceStore newStore = new ChainedPreferenceStore(new IPreferenceStore[] { store,
-                GroovyPlugin.getDefault().getPreferenceStore() });
-        super.setPreferenceStore(newStore);
+        super.setPreferenceStore(new ChainedPreferenceStore(
+            new IPreferenceStore[] {store, GroovyPlugin.getDefault().getPreferenceStore()}));
 
         // now create a new configuration to overwrite the Java-centric one
         setSourceViewerConfiguration(createJavaSourceViewerConfiguration());
@@ -681,16 +699,10 @@ public class GroovyEditor extends CompilationUnitEditor {
     public void dispose() {
         super.dispose();
         uninstallGroovySemanticHighlighting();
-
-        ISourceViewer sourceViewer= getSourceViewer();
+        ISourceViewer sourceViewer = getSourceViewer();
         if (sourceViewer instanceof ITextViewerExtension) {
             ((ITextViewerExtension) sourceViewer).removeVerifyKeyListener(groovyBracketInserter);
         }
-    }
-
-    @Override
-    public IEditorInput getEditorInput() {
-        return super.getEditorInput();
     }
 
     public int getCaretOffset() {
@@ -719,34 +731,33 @@ public class GroovyEditor extends CompilationUnitEditor {
                 int offset;
                 int length;
                 ISourceRange range = reference.getSourceRange();
-                String content= reference.getSource();
+                String content = reference.getSource();
                 if (content != null) {
                     int start = Math.max(content.indexOf("import") + 6, 7);
                     while (start < content.length() && content.charAt(start) == ' ')
                         start++;
 
-                    int end= content.trim().length();
+                    int end = content.trim().length();
                     do {
                         end--;
                     } while (end >= 0 && (content.charAt(end) == ' ' || content.charAt(end) == ';'));
 
-                    offset= range.getOffset() + start;
-                    length= end - start + 1;  // Note, original JDT code has 8 here
+                    offset = range.getOffset() + start;
+                    length = end - start + 1; // Note, original JDT code has 8 here
 
                     // just in case...
                     int docLength = ((IImportDeclaration) reference).getOpenable().getBuffer().getLength();
-                    if (docLength < offset+length) {
+                    if (docLength < offset + length) {
                         offset = docLength;
                     }
                 } else {
                     // fallback
-                    offset= range.getOffset()+1;
-                    length= range.getLength()-2;
+                    offset = range.getOffset() + 1;
+                    length = range.getLength() - 2;
                 }
 
                 if (offset > -1 && length > 0) {
-
-                    try  {
+                    try {
                         getSourceViewer().getTextWidget().setRedraw(false);
                         getSourceViewer().revealRange(offset, length);
                         getSourceViewer().setSelectedRange(offset, length);
@@ -761,174 +772,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         } catch (JavaModelException e) {
             GroovyPlugin.getDefault().logError("Error selecting import statement", e);
         }
-    }
-
-    @Override
-    protected void createActions() {
-        super.createActions();
-
-        GenerateActionGroup group = getGenerateActionGroup();
-
-        // use our Add Import instead
-        IAction addImportOnSelectionAction = new AddImportOnSelectionAction(this);
-        addImportOnSelectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.ADD_IMPORT);
-        setAction("AddImport", addImportOnSelectionAction);
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddImport", group, addImportOnSelectionAction);
-
-        // use our Organize Imports instead
-        IAction organizeGroovyImportsAction = new OrganizeGroovyImportsAction(this);
-        organizeGroovyImportsAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
-        setAction("OrganizeImports", organizeGroovyImportsAction);
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, organizeGroovyImportsAction);
-
-        // use our Format All instead
-        IAction formatAllAction = new FormatAllGroovyAction(getEditorSite(), FormatKind.FORMAT);
-        // setActionDefinitionId?
-        // setAction?
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group, formatAllAction);
-
-        // use our Format instead
-        IAction formatAction = new FormatGroovyAction(getEditorSite(), FormatKind.FORMAT);
-        formatAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
-        setAction("Format", formatAction);
-        PlatformUI.getWorkbench().getHelpSystem().setHelp(formatAction, IJavaHelpContextIds.FORMAT_ACTION);
-
-        // use our Indent instead
-        IAction indentAction = new FormatGroovyAction(getEditorSite(), FormatKind.INDENT_ONLY);
-        indentAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
-        setAction("Indent", indentAction);
-        PlatformUI.getWorkbench().getHelpSystem().setHelp(indentAction, IJavaHelpContextIds.INDENT_ACTION);
-
-        // use our IndentOnTab instead
-        IAction indentOnTabAction = new GroovyTabAction(this);
-        setAction(INDENT_ON_TAB, indentOnTabAction);
-        markAsStateDependentAction(INDENT_ON_TAB, true);
-        markAsSelectionDependentAction(INDENT_ON_TAB, true);
-
-        AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
-        // GRECLIPSE-966 must dispose action to avoid memory leak
-        if (acua != null) {
-            acua.dispose();
-            ReflectionUtils.setPrivateField(CleanUpAction.class, "fEditor", acua, null);
-        }
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, new NoopCleanUpsAction(getEditorSite()));
-
-        // remove most refactorings since they are not yet really supported
-        removeRefactoringAction("fSelfEncapsulateField");
-        removeRefactoringAction("fMoveAction");
-        //removeRefactoringAction("fRenameAction");
-        removeRefactoringAction("fModifyParametersAction");
-        // fPullUpAction
-        // fPushDownAction
-        removeRefactoringAction("fIntroduceParameterAction");
-        removeRefactoringAction("fIntroduceParameterObjectAction");
-        removeRefactoringAction("fIntroduceFactoryAction");
-        removeRefactoringAction("fExtractMethodAction");
-        removeRefactoringAction("fExtractInterfaceAction");
-        removeRefactoringAction("fExtractClassAction");
-        removeRefactoringAction("fExtractSupertypeAction");
-        removeRefactoringAction("fExtractTempAction");
-        removeRefactoringAction("fExtractConstantAction");
-        removeRefactoringAction("fChangeTypeAction");
-        removeRefactoringAction("fConvertNestedToTopAction");
-        removeRefactoringAction("fInferTypeArgumentsAction");
-        removeRefactoringAction("fInlineAction");
-        // fConvertLocalToFieldAction
-        removeRefactoringAction("fConvertAnonymousToNestedAction");
-        removeRefactoringAction("fIntroduceIndirectionAction");
-        // fInlineAction
-        removeRefactoringAction("fUseSupertypeAction");
-
-        // use our Rename action instead
-        GroovyRenameAction renameAction = new GroovyRenameAction(this);
-        renameAction.setActionDefinitionId(IGroovyEditorActionDefinitionIds.GROOVY_RENAME_ACTION);
-        setAction("RenameElement", renameAction);
-        replaceRefactoringAction("fRenameAction", renameAction);
-
-        // use our Extract constant action instead
-        GroovyExtractConstantAction extractConstantAction = new GroovyExtractConstantAction(this);
-        extractConstantAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_CONSTANT);
-        setAction("ExtractConstant", extractConstantAction);
-        replaceRefactoringAction("fExtractConstantAction", extractConstantAction);
-
-        // use our Extract method action instead
-        GroovyExtractMethodAction extractMethodAction = new GroovyExtractMethodAction(this);
-        extractMethodAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_METHOD);
-        setAction("ExtractMethod", extractMethodAction);
-        replaceRefactoringAction("fExtractMethodAction", extractMethodAction);
-
-        // use our Extract local instead
-        GroovyExtractLocalAction extractLocalAction = new GroovyExtractLocalAction(this);
-        extractLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_LOCAL_VARIABLE);
-        setAction("ExtractLocalVariable", extractLocalAction);
-        replaceRefactoringAction("fExtractTempAction", extractLocalAction);
-
-        // use our Convert local instead
-        GroovyConvertLocalToFieldAction convertLocalAction = new GroovyConvertLocalToFieldAction(this);
-        convertLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.PROMOTE_LOCAL_VARIABLE);
-        setAction("ConvertLocalToField", convertLocalAction);
-        replaceRefactoringAction("fConvertLocalToFieldAction", convertLocalAction);
-
-        // use our SurroundWith quick menu instead
-        // for now set to null until we find a way to instantiate it
-        //        setAction("org.eclipse.jdt.internal.ui.actions.SurroundWithTemplateMenuAction", null);
-
-        // selections
-        ExpandSelectionAction selectionAction= new ExpandSelectionAction(this, (SelectionHistory) ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
-        selectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING);
-        selectionAction.getDescription();
-        setAction(StructureSelectionAction.ENCLOSING, selectionAction);
-        setAction(StructureSelectionAction.NEXT, null);
-        setAction(StructureSelectionAction.PREVIOUS, null);
-
-        // Now stick our own SurroundWith actions in the menu
-        // TODO how can we avoid using fully qualified name in a string here???
-        ISurroundWithFactory surroundWithFactory = (ISurroundWithFactory) Platform.getAdapterManager().loadAdapter(this, "org.codehaus.groovy.eclipse.quickfix.templates.SurroundWithAdapterFactory");
-        if (surroundWithFactory != null) {
-            CompositeActionGroup compositActions = (CompositeActionGroup) ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fContextMenuGroup", this);
-            ActionGroup[] groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", compositActions);
-            boolean found = false;
-            ActionGroup surroundWithGroup = surroundWithFactory.createSurrundWithGroup(this, ITextEditorActionConstants.GROUP_EDIT);
-            for (int i = 0; i < groups.length; i++) {
-                if (groups[i] instanceof SurroundWithActionGroup) {
-                    found = true;
-                    groups[i] = surroundWithGroup;
-                    break;
-                }
-            }
-            if (!found) {
-                GroovyPlugin.trace("Oops...surroundWithActionGroup not found in context menus");
-            }
-
-            found = false;
-            groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", fActionGroups);
-            for (int i = 0; i < groups.length; i++) {
-                if (groups[i] instanceof SurroundWithActionGroup) {
-                    found = true;
-                    groups[i] = surroundWithGroup;
-                    break;
-                }
-            }
-            if (!found) {
-                GroovyPlugin.trace("Oops...surroundWithActionGroup not found");
-            }
-        } else {
-            GroovyPlugin.trace("Oops...surroundWithFactory not initialized");
-        }
-    }
-
-    private void removeRefactoringAction(String actionFieldName) {
-        replaceRefactoringAction(actionFieldName, null);
-    }
-
-    private void replaceRefactoringAction(String actionFieldName, SelectionDispatchAction newAction) {
-        RefactorActionGroup group = getRefactorActionGroup();
-        ISelectionChangedListener action = (ISelectionChangedListener) ReflectionUtils.
-            getPrivateField(RefactorActionGroup.class, actionFieldName, group);
-        if (action != null) {
-            getSite().getSelectionProvider().removeSelectionChangedListener(action);
-        }
-        ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, newAction);
     }
 
     private IFile getFile() {
@@ -1232,6 +1075,316 @@ public class GroovyEditor extends CompilationUnitEditor {
             }
         }
         return super.createOutlinePage();
+    }
+
+    //--------------------------------------------------------------------------
+
+    private Action toPropertyAction;
+
+    @Override
+    protected void createActions() {
+        super.createActions();
+        updateSourceActions();
+        updateRefactorActions();
+
+        // indent on tab action
+        setAction("IndentOnTab", new GroovyTabAction(this));
+        markAsSelectionDependentAction("IndentOnTab", true);
+        markAsStateDependentAction("IndentOnTab", true);
+
+        // selection history actions
+        ExpandSelectionAction selectionAction = new ExpandSelectionAction(this,
+            (SelectionHistory) ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
+        selectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING);
+        setAction(StructureSelectionAction.ENCLOSING, selectionAction);
+        setAction(StructureSelectionAction.PREVIOUS, null);
+        setAction(StructureSelectionAction.NEXT, null);
+
+        // surround with actions
+        // TODO: How can we avoid using full-qualified name in a string here?
+        ISurroundWithFactory surroundWithFactory = (ISurroundWithFactory) Platform.getAdapterManager()
+            .loadAdapter(this, "org.codehaus.groovy.eclipse.quickfix.templates.SurroundWithAdapterFactory");
+        if (surroundWithFactory != null) {
+            CompositeActionGroup compositActions = (CompositeActionGroup) ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fContextMenuGroup", this);
+            ActionGroup[] groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", compositActions);
+            boolean found = false;
+            ActionGroup surroundWithGroup = surroundWithFactory.createSurrundWithGroup(this, ITextEditorActionConstants.GROUP_EDIT);
+            for (int i = 0, n = groups.length; i < n; i += 1) {
+                if (groups[i] instanceof SurroundWithActionGroup) {
+                    found = true;
+                    groups[i] = surroundWithGroup;
+                    break;
+                }
+            }
+            if (!found) {
+                GroovyPlugin.trace("Oops...surroundWithActionGroup not found in context menus");
+            }
+
+            found = false;
+            groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", fActionGroups);
+            for (int i = 0, n = groups.length; i < n; i += 1) {
+                if (groups[i] instanceof SurroundWithActionGroup) {
+                    found = true;
+                    groups[i] = surroundWithGroup;
+                    break;
+                }
+            }
+            if (!found) {
+                GroovyPlugin.trace("Oops...surroundWithActionGroup not found");
+            }
+        } else {
+            GroovyPlugin.trace("Oops...surroundWithFactory not initialized");
+        }
+
+        // to property action
+        toPropertyAction = new Action("Replace Accessor call with Property read/write") {{
+                setActionDefinitionId("org.codehaus.groovy.eclipse.ui.convertToProperty");
+            }
+            @Override
+            public void run() {
+                if (!ActionUtil.isEditable(GroovyEditor.this))
+                    return;
+                ISelection selection = getSelectionProvider().getSelection();
+                if (!(selection instanceof ITextSelection))
+                    return;
+                GroovyCompilationUnit gcu = getGroovyCompilationUnit();
+                if (!ElementValidator.checkValidateEdit(gcu, getSite().getShell(), "Convert to Property"))
+                    return;
+                try {
+                    ModuleNodeInfo info = gcu.getModuleInfo(true);
+                    if (info.isEmpty())
+                        return;
+
+                    org.codehaus.groovy.eclipse.codebrowsing.requestor.Region selectRegion =
+                        new org.codehaus.groovy.eclipse.codebrowsing.requestor.Region(((ITextSelection) selection).getOffset(), ((ITextSelection) selection).getLength());
+                    ASTNodeFinder nodeFinder = new ASTNodeFinder(selectRegion);
+                    ASTNode node = nodeFinder.doVisit(info.module);
+                    if (node instanceof ConstantExpression) {
+                        IASTFragment fragment = new FindSurroundingNode(new org.codehaus.groovy.eclipse.codebrowsing.requestor.Region(node)).doVisitSurroundingNode(info.module);
+                        if (fragment.kind() == ASTFragmentKind.METHOD_CALL) {
+                            MethodCallExpression call = (MethodCallExpression) fragment.getAssociatedNode();
+                            if (call != null && !call.isUsingGenerics() && call.getArguments() instanceof ArgumentListExpression) {
+                                ArgumentListExpression args = (ArgumentListExpression) call.getArguments();
+
+                                Matcher match; // check for accessor or mutator
+                                if (args.getExpressions().isEmpty() && (match = compile("(?:get|is)(\\w+)").matcher(call.getMethodAsString())).matches()) {
+                                    int offset = node.getStart(),
+                                        length = call.getEnd() - offset;
+                                    String propertyName = match.group(1);
+
+                                    // replace "getPropertyName()" with "propertyName"
+                                    gcu.applyTextEdit(new ReplaceEdit(offset, length, StringUtils.uncapitalize(propertyName)), null);
+
+                                } else if (args.getExpressions().size() == 1 && (match = compile("set(\\w+)").matcher(call.getMethodAsString())).matches()) {
+                                    int offset = node.getStart(),
+                                        length = args.getStart() - offset;
+                                    String propertyName = match.group(1);
+
+                                    // replace "setPropertyName(value_expression)" or "setPropertyName value_expression"
+                                    // with "propertyName = value_expression" (check prefs for spaces around assignment)
+                                    MultiTextEdit edits = new MultiTextEdit();
+                                    Map<String, String> options = gcu.getJavaProject().getOptions(true);
+                                    StringBuilder replacement = new StringBuilder(StringUtils.uncapitalize(propertyName));
+                                    if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR)))
+                                        replacement.append(' ');
+                                    replacement.append('=');
+                                    if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR)))
+                                        replacement.append(' ');
+
+                                    edits.addChild(new ReplaceEdit(offset, length, replacement.toString()));
+                                    if (gcu.getContents()[args.getEnd()] == ')') edits.addChild(new DeleteEdit(args.getEnd(), 1));
+
+                                    gcu.applyTextEdit(edits, null);
+                                }
+                            }
+                        }
+                    }
+                } catch (Throwable t) {
+                    GroovyPlugin.getDefault().logError("Failure in convert to property", t);
+                }
+            }
+        };
+        setAction(toPropertyAction.getActionDefinitionId(), toPropertyAction);
+    }
+
+    /** Modifies, replaces, or disables actions managed by the {@link GenerateActionGroup}. */
+    protected void updateSourceActions() {
+        GenerateActionGroup group = getGenerateActionGroup();
+        // see also GenerateActionGroup.setGlobalActionHandlers
+
+        //editor context menu > 'Source' submenu
+        // GROUP_COMMENT
+        //  "ToggleComment"                                                          -- works
+        //  "AddBlockComment"                                                        -- works
+        //  "RemoveBlockComment"                                                     -- works
+        //  fAddJavaDocStub: AddJavaDocStubAction                                    -- works
+        // GROUP_EDIT
+        //  "Indent"                                                                 -- replace
+        //  "Format"                                                                 -- replace
+        //  "QuickFormat"                                                            -- TODO
+        // GROUP_IMPORT
+        //  fAddImport: AddImportOnSelectionAction                                   -- replace
+        //  fOrganizeImports: OrganizeImportsAction                                  -- replace
+        //  fSortMembers: MultiSortMembersAction                                     -- works
+        //  fCleanUp: AllCleanUpsAction                                              -- disable
+        // GROUP_GENERATE
+        //  fOverrideMethods: OverrideMethodsAction                                  -- works
+        //  fAddGetterSetter: AddGetterSetterAction                                  -- works
+        //  fAddDelegateMethods: AddDelegateMethodsAction                            -- works
+        //  fHashCodeEquals GenerateHashCodeEqualsAction                             -- works
+        //  fToString: GenerateToStringAction                                        -- works
+        //  fGenerateConstructorUsingFields: GenerateNewConstructorUsingFieldsAction -- works
+        //  fAddUnimplementedConstructors: AddUnimplementedConstructorsAction        -- works
+        // GROUP_CODE
+        // GROUP_EXTERNALIZE
+        //  fExternalizeStrings: ExternalizeStringsAction                            -- TODO
+
+        //view context menu > 'Source' submenu
+        // GROUP_COMMENT
+        //  fAddJavaDocStub: AddJavaDocStubAction                                    -- works
+        // GROUP_EDIT
+        //  fFormatAll: FormatAllAction                                              -- replace
+        // GROUP_IMPORT
+        //  fAddImport: AddImportOnSelectionAction                                   -- replace
+        //  fOrganizeImports: OrganizeImportsAction                                  -- replace
+        //  fSortMembers: MultiSortMembersAction                                     -- works
+        //  fCleanUp: AllCleanUpsAction                                              -- disable
+        // GROUP_GENERATE
+        //  fOverrideMethods: OverrideMethodsAction                                  -- works
+        //  fAddGetterSetter: AddGetterSetterAction                                  -- works
+        //  fAddDelegateMethods: AddDelegateMethodsAction                            -- works
+        //  fHashCodeEquals GenerateHashCodeEqualsAction                             -- works
+        //  fToString: GenerateToStringAction                                        -- works
+        //  fGenerateConstructorUsingFields: GenerateNewConstructorUsingFieldsAction -- works
+        //  fAddUnimplementedConstructors: AddUnimplementedConstructorsAction        -- works
+        // GROUP_CODE
+        // GROUP_EXTERNALIZE
+        //  fExternalizeStrings: ExternalizeStringsAction                            -- TODO
+        //  fFindNLSProblems: FindBrokenNLSKeysAction                                -- TODO
+
+
+        // replace Indent
+        IAction indentAction = new FormatGroovyAction(getEditorSite(), FormatKind.INDENT_ONLY);
+        indentAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
+        setAction("Indent", indentAction);
+        PlatformUI.getWorkbench().getHelpSystem().setHelp(indentAction, IJavaHelpContextIds.INDENT_ACTION);
+
+        // replace Format
+        IAction formatAction = new FormatGroovyAction(getEditorSite(), FormatKind.FORMAT);
+        formatAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
+        setAction("Format", formatAction);
+        PlatformUI.getWorkbench().getHelpSystem().setHelp(formatAction, IJavaHelpContextIds.FORMAT_ACTION);
+
+        // replace Format All
+        IAction formatAllAction = new FormatAllGroovyAction(getEditorSite(), FormatKind.FORMAT);
+        // setActionDefinitionId?
+        // setAction?
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fFormatAll", group, formatAllAction);
+
+        // replace Add Import
+        IAction addImportOnSelectionAction = new AddImportOnSelectionAction(this);
+        addImportOnSelectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.ADD_IMPORT);
+        setAction("AddImport", addImportOnSelectionAction);
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddImport", group, addImportOnSelectionAction);
+
+        // replace Organize Imports
+        IAction organizeGroovyImportsAction = new OrganizeGroovyImportsAction(this);
+        organizeGroovyImportsAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
+        setAction("OrganizeImports", organizeGroovyImportsAction);
+        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, organizeGroovyImportsAction);
+
+        // disable Clean Ups...
+        AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
+        acua.setEnabled(false);
+//        // GRECLIPSE-966 must dispose action to avoid memory leak
+//        if (acua != null) {
+//            acua.dispose();
+//            ReflectionUtils.setPrivateField(CleanUpAction.class, "fEditor", acua, null);
+//        }
+//        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, new NoopCleanUpsAction(getEditorSite()));
+    }
+
+    /** Modifies, replaces, or disables actions managed by the {@link RefactorActionGroup}. */
+    protected void updateRefactorActions() {
+        // remove most refactorings since they are not yet really supported
+        removeRefactoringAction("fSelfEncapsulateField");
+        removeRefactoringAction("fMoveAction");
+        //removeRefactoringAction("fRenameAction");
+        removeRefactoringAction("fModifyParametersAction");
+        // fPullUpAction
+        // fPushDownAction
+        removeRefactoringAction("fIntroduceParameterAction");
+        removeRefactoringAction("fIntroduceParameterObjectAction");
+        removeRefactoringAction("fIntroduceFactoryAction");
+        removeRefactoringAction("fExtractMethodAction");
+        removeRefactoringAction("fExtractInterfaceAction");
+        removeRefactoringAction("fExtractClassAction");
+        removeRefactoringAction("fExtractSupertypeAction");
+        removeRefactoringAction("fExtractTempAction");
+        removeRefactoringAction("fExtractConstantAction");
+        removeRefactoringAction("fChangeTypeAction");
+        removeRefactoringAction("fConvertNestedToTopAction");
+        removeRefactoringAction("fInferTypeArgumentsAction");
+        removeRefactoringAction("fInlineAction");
+        // fConvertLocalToFieldAction
+        removeRefactoringAction("fConvertAnonymousToNestedAction");
+        removeRefactoringAction("fIntroduceIndirectionAction");
+        // fInlineAction
+        removeRefactoringAction("fUseSupertypeAction");
+
+        // use our Rename action instead
+        GroovyRenameAction renameAction = new GroovyRenameAction(this);
+        renameAction.setActionDefinitionId(IGroovyEditorActionDefinitionIds.GROOVY_RENAME_ACTION);
+        setAction("RenameElement", renameAction);
+        replaceRefactoringAction("fRenameAction", renameAction);
+
+        // use our Extract constant action instead
+        GroovyExtractConstantAction extractConstantAction = new GroovyExtractConstantAction(this);
+        extractConstantAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_CONSTANT);
+        setAction("ExtractConstant", extractConstantAction);
+        replaceRefactoringAction("fExtractConstantAction", extractConstantAction);
+
+        // use our Extract method action instead
+        GroovyExtractMethodAction extractMethodAction = new GroovyExtractMethodAction(this);
+        extractMethodAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_METHOD);
+        setAction("ExtractMethod", extractMethodAction);
+        replaceRefactoringAction("fExtractMethodAction", extractMethodAction);
+
+        // use our Extract local instead
+        GroovyExtractLocalAction extractLocalAction = new GroovyExtractLocalAction(this);
+        extractLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_LOCAL_VARIABLE);
+        setAction("ExtractLocalVariable", extractLocalAction);
+        replaceRefactoringAction("fExtractTempAction", extractLocalAction);
+
+        // use our Convert local instead
+        GroovyConvertLocalToFieldAction convertLocalAction = new GroovyConvertLocalToFieldAction(this);
+        convertLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.PROMOTE_LOCAL_VARIABLE);
+        setAction("ConvertLocalToField", convertLocalAction);
+        replaceRefactoringAction("fConvertLocalToFieldAction", convertLocalAction);
+    }
+
+    protected final void removeRefactoringAction(String actionFieldName) {
+        replaceRefactoringAction(actionFieldName, null);
+    }
+
+    protected final void replaceRefactoringAction(String actionFieldName, SelectionDispatchAction newAction) {
+        RefactorActionGroup group = getRefactorActionGroup();
+        SelectionDispatchAction action = (SelectionDispatchAction) ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
+        if (action != null) {
+            getSite().getSelectionProvider().removeSelectionChangedListener(action);
+        }
+        ReflectionUtils.setPrivateField(RefactorActionGroup.class, actionFieldName, group, newAction);
+    }
+
+    @Override
+    public void editorContextMenuAboutToShow(IMenuManager contextMenu) {
+        super.editorContextMenuAboutToShow(contextMenu);
+
+        // inject to property action into the source submenu
+        IMenuManager sourceMenu = contextMenu.findMenuUsingPath(GenerateActionGroup.MENU_ID);
+        if (sourceMenu != null) {
+            sourceMenu.appendToGroup(GenerateActionGroup.GROUP_CODE, toPropertyAction);
+        }
     }
 
     //--------------------------------------------------------------------------
