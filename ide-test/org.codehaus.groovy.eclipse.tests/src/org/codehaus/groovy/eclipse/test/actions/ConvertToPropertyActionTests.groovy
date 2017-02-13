@@ -59,9 +59,19 @@ final class ConvertToPropertyActionTests extends GroovyEditorTest {
         assertEditorContents "Calendar.getInstance().timeZone = null"
     }
 
+    void testGStringGetterProperty() {
+        convertToProperty "\"Time: \${new Date().get${CARET}Time()}\""
+        assertEditorContents "\"Time: \${new Date().time}\""
+    }
+
+    void testGStringIsserProperty() {
+        convertToProperty "def list = []; \"Empty?: \${list.is${CARET}Empty()}\""
+        assertEditorContents "def list = []; \"Empty?: \${list.empty}\""
+    }
+
     void testImplicitGetterToProperty() {
-        convertToProperty "new Date().with {\n get${CARET}Hours()\n}"
-        assertEditorContents "new Date().with {\n hours\n}"
+        convertToProperty "new Date().with { get${CARET}Hours() }"
+        assertEditorContents "new Date().with { hours }"
     }
 
     void testImplicitIsserToProperty() {
@@ -81,8 +91,9 @@ final class ConvertToPropertyActionTests extends GroovyEditorTest {
     }
 
     void testStaticIsserToProperty() {
-        convertToProperty ""
-        assertEditorContents ""
+        testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { static void isSomething() {} }'
+        convertToProperty "Foo.isSome${CARET}thing();"
+        assertEditorContents "Foo.something;"
     }
 
     void testStaticSetterToProperty() {

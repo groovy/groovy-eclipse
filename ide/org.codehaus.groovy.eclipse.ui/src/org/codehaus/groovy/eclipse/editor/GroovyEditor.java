@@ -1169,7 +1169,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                                 Matcher match; // check for accessor or mutator
                                 if (args.getExpressions().isEmpty() && (match = compile("(?:get|is)(\\w+)").matcher(call.getMethodAsString())).matches()) {
                                     int offset = node.getStart(),
-                                        length = call.getEnd() - offset;
+                                        length = (args.getEnd() + 1) - offset;
                                     String propertyName = match.group(1);
 
                                     // replace "getPropertyName()" with "propertyName"
