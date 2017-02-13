@@ -168,12 +168,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
                 ClassNode delegate = scope.getDelegate();
                 if (delegate != null) {
-                    declaration = findDeclaration(var.getName(), delegate, scope.containsInThisScope(var.getName()), false, scope.getMethodCallArgumentTypes());
+                    declaration = findDeclaration(var.getName(), delegate, (scope.getWormhole().get("lhs") == node), false, scope.getMethodCallArgumentTypes());
                 }
 
                 ClassNode thiz = scope.getThis();
                 if (declaration == null && thiz != null && (delegate == null || !thiz.equals(delegate))) {
-                    declaration = findDeclaration(var.getName(), thiz, scope.containsInThisScope(var.getName()), false, scope.getMethodCallArgumentTypes());
+                    declaration = findDeclaration(var.getName(), thiz, (scope.getWormhole().get("lhs") == node), false, scope.getMethodCallArgumentTypes());
                 }
 
                 ClassNode type;
@@ -441,7 +441,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         } else if (accessedVar instanceof DynamicVariable) {
             // likely a reference to a field or method in a type in the hierarchy; find the declaration
-            ASTNode candidate = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo), scope.containsInThisScope(accessedVar.getName()), false, scope.getMethodCallArgumentTypes());
+            ASTNode candidate = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo), (scope.getWormhole().remove("lhs") == var), false, scope.getMethodCallArgumentTypes());
             if (candidate != null) {
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);

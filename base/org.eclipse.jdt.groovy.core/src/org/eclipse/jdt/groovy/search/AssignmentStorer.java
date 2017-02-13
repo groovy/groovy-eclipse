@@ -163,6 +163,7 @@ public class AssignmentStorer {
                 // undeclared variables are not allowed, so don't add just update
                 scope.updateVariable(var.getName(), findVariableType(var, rhsType), findDeclaringType(var));
             }
+            scope.getWormhole().put("lhs", lhs);
 
         } else if (lhs instanceof ConstantExpression) {
             // not a variable, but save ref to help find accessor

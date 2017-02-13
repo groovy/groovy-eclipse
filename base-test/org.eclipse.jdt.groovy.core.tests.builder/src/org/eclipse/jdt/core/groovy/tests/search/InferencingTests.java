@@ -1139,6 +1139,17 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Void", false);
     }
 
+    public void testInClosure10() {
+        String contents =
+                "new Date().with {\n" +
+                "  time = 0L\n" +
+                "  def t = time\n" + // this 'time' property should not be seen as setTime()
+                "}";
+        int start = contents.lastIndexOf("time");
+        int end = start + "time".length();
+        assertType(contents, start, end, "java.lang.Long", false);
+    }
+
     // the declaring type of things inside of a closure should be the declaring
     // type of the method that calls the closure
     public void testInClosureDeclaringType1() {
