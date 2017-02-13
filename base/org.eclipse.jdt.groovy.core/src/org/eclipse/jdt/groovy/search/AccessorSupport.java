@@ -15,11 +15,13 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
@@ -76,25 +78,40 @@ public enum AccessorSupport {
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {
         if (name != null && name.length() > 0 && kinds != null && kinds.length > 0) {
-            String suffix = Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
+            String suffix = Character.toUpperCase(name.charAt(0)) + name.substring(1);
 
             for (AccessorSupport kind : kinds) {
                 if (kind == NONE) continue;
                 String methodName = kind.prefix + suffix;
-                List<MethodNode> methods = declaringType.getMethods(methodName);
-                for (MethodNode meth : methods) {
-                    if (kind == findAccessorKind(meth, isCategory)) {
-                        return meth;
-                    }
+                MethodNode meth = findAccessorMethodForMethodName(methodName, declaringType, isCategory, kind);
+                if (meth != null) {
+                    return meth;
                 }
+                // interfaces do not return super interface methods from getMethods(String)
                 if (declaringType.isInterface()) {
-                    for (ClassNode face : declaringType.getUnresolvedInterfaces()) {
-                        MethodNode meth = findAccessorMethodForPropertyName(name, face, isCategory, kind);
+                    LinkedHashSet<ClassNode> faces = new LinkedHashSet<ClassNode>();
+                    VariableScope.findAllInterfaces(declaringType, faces, false);
+                    for (ClassNode face : faces) {
+                        meth = findAccessorMethodForMethodName(methodName, face, isCategory, kind);
                         if (meth != null) {
                             return meth;
                         }
                     }
+                    // one implicit accessor exists in Object
+                    if (!isCategory && kind == GETTER && methodName.equals("getClass")) {
+                        return ClassHelper.OBJECT_TYPE.getMethod("getClass", new Parameter[0]);
+                    }
                 }
+            }
+        }
+        return null;
+    }
+
+    private static MethodNode findAccessorMethodForMethodName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport kind) {
+        List<MethodNode> methods = declaringType.getMethods(name);
+        for (MethodNode meth : methods) {
+            if (kind == findAccessorKind(meth, isCategory)) {
+                return meth;
             }
         }
         return null;

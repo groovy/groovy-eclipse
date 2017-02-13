@@ -57,6 +57,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         return (version.compareTo(new Version(2, 4, 6)) >= 0);
     }
 
+    //--------------------------------------------------------------------------
+
     public void testLocalVar1() {
         String contents ="def x\nthis.x";
         int start = contents.lastIndexOf("x");
@@ -210,7 +212,14 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testPattern() {
+    public void testPattern1() {
+        String contents ="def x = ~/pattern/\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.regex.Pattern");
+    }
+
+    public void testPattern2() {
         String contents ="def x = \"\" ==~ /pattern/\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
@@ -819,14 +828,15 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testConstantFromSuper() {
-        String contents = "public interface Constants {\n" +
-                          "int FIRST = 9;\n" +
-                          "}\n" +
-                          "class UsesConstants implements Constants {\n" +
-                          "def x() {\n" +
-                          "FIRST\n" +
-                          "}\n" +
-                          "}";
+        String contents =
+                "public interface Constants {\n" +
+                "  int FIRST = 9;\n" +
+                "}\n" +
+                "class UsesConstants implements Constants {\n" +
+                "  def x() {\n" +
+                "    FIRST\n" +
+                "  }\n" +
+                "}";
         int start = contents.lastIndexOf("FIRST");
         int end = start + "FIRST".length();
         assertType(contents, start, end, "java.lang.Integer");
@@ -916,15 +926,19 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testGRECLIPSE1720() {
-        String contents = "import groovy.transform.CompileStatic\n" +
-                    "@CompileStatic\n" +
-                    "public class Bug {\n" +
-                    "enum Letter { A,B,C }\n" +
-                    "boolean bug(Letter l) {\n" +
-                    "boolean isEarly = l in [Letter.A,Letter.B]\n" +
-                    "isEarly\n" +
-                    "}\n" +
-                    "}";
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
+        String contents =
+                "import groovy.transform.CompileStatic\n" +
+                "@CompileStatic\n" +
+                "public class Bug {\n" +
+                "  enum Letter { A,B,C }\n" +
+                "  boolean bug(Letter l) {\n" +
+                "    boolean isEarly = l in [Letter.A,Letter.B]\n" +
+                "    isEarly\n" +
+                "  }\n" +
+                "}";
         int start = contents.lastIndexOf("isEarly");
         int end = start + "isEarly".length();
         assertType(contents, start, end, "java.lang.Boolean");
@@ -1672,6 +1686,22 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "foo.Bar");
         start = contents.indexOf("two");
         assertDeclaringType(contents, start, start + 3, "foo.Baz");
+    }
+
+    public void testObjectMethodOnInterface() {
+        // Object is not in explicit type hierarchy of List
+        String contents = "def meth(List list) { list.getClass() }";
+
+        String target = "getClass", source = "java.lang.Object";
+        assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
+    }
+
+    public void testObjectMethodOnInterfaceAsProperty() {
+        // Object is not in explicit type hierarchy of List
+        String contents = "def meth(List list) { list.class }";
+
+        String target = "class", source = "java.lang.Object";
+        assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
     }
 
     public void testClassReference1() {

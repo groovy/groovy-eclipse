@@ -62,8 +62,6 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
  * Determines types using AST inspection.
- *
- * @author Andrew Eisenberg
  */
 public class SimpleTypeLookup implements ITypeLookupExtension {
 
@@ -543,10 +541,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * Finds a method with the given name in the declaring type. Will prioritize methods with the same number of arguments,
-     * but if multiple methods exist with same name, then will return an arbitrary one.
-     *
-     * @param checkSuperInterfaces potentially look through super interfaces for a declaration to this method
+     * Finds a method with the given name in the declaring type.  Prioritizes methods
+     * with the same number of arguments, but if multiple methods exist with same name,
+     * then will return an arbitrary one.
      */
     protected MethodNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
         // if this is an interface, then we also need to check super interfaces;
@@ -555,21 +552,20 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // will return the current interface as well and this will avoid running this
         // method on the same interface twice
         if (declaringType.isInterface()) {
-            LinkedHashSet<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
-            VariableScope.findAllInterfaces(declaringType, allInterfaces, true);
+            LinkedHashSet<ClassNode> superTypes = new LinkedHashSet<ClassNode>();
+            VariableScope.findAllInterfaces(declaringType, superTypes, true);
+            superTypes.add(ClassHelper.OBJECT_TYPE); // implicit super type
 
             MethodNode outerCandidate = null;
-            interfacesSearch: for (ClassNode interf : allInterfaces) {
+            for (ClassNode superType : superTypes) {
                 MethodNode innerCandidate = null;
-                List<MethodNode> candidates = interf.getMethods(name);
+                List<MethodNode> candidates = superType.getMethods(name);
                 if (!candidates.isEmpty()) {
                     innerCandidate = findMethodDeclaration0(candidates, methodCallArgumentTypes);
                     if (outerCandidate == null) {
                         outerCandidate = innerCandidate;
                     }
                 }
-
-                // should we try to find more precise match or stop here?
                 if (innerCandidate != null && methodCallArgumentTypes != null) {
                     Parameter[] methodParameters = innerCandidate.getParameters();
                     if (methodCallArgumentTypes.isEmpty() && methodParameters.length == 0) {
@@ -580,7 +576,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
                         Boolean suitable = isTypeCompatible(methodCallArgumentTypes, methodParameters);
                         if (suitable == Boolean.FALSE) {
-                            continue interfacesSearch;
+                            continue;
                         }
                         if (suitable == Boolean.TRUE) {
                             return innerCandidate;
