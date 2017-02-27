@@ -50,9 +50,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
     //
 
     public void testAnnotationCollector() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         String[] sources = {
             "Book.groovy",
@@ -505,7 +503,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     public void testTypeChecked3() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         String[] sources = {
             "Foo.groovy",
@@ -523,7 +521,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     // https://issues.apache.org/jira/browse/GROOVY-8033
     public void _testTypeChecked4() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
         String[] sources = {
             "Foo.groovy",
