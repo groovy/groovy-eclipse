@@ -245,7 +245,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         String originalContents = '''\
             import other.SecondClass
             '''
-        String expectedContents = '\n'
+        String expectedContents = ''
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1042,7 +1042,7 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             @Deprecated
             import javax.swing.text.html.HTML
             '''
-        String expectedContents = '\n'
+        String expectedContents = ''
         doContentsCompareTest(originalContents, expectedContents)
     }
 

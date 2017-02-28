@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,8 +9,11 @@
  *     IBM Corporation - initial API and implementation
  *     Luiz-Otavio Zorzella <zorzella at gmail dot com> - Improve CamelCase algorithm
  *     Gábor Kövesdán - Contribution for Bug 350000 - [content assist] Include non-prefix matches in auto-complete suggestions
+ *     Stefan Xenos <sxenos@gmail.com> (Google) - Bug 501283 - Lots of hash collisions during indexing
  *******************************************************************************/
 package org.eclipse.jdt.core.compiler;
+
+import java.util.Arrays;
 
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
@@ -2281,19 +2284,9 @@ public static final boolean fragmentEquals(
  *
  * @param array the array for which a hashcode is required
  * @return the hashcode
- * @throws NullPointerException if array is null
  */
 public static final int hashCode(char[] array) {
-	int length = array.length;
-	int hash = length == 0 ? 31 : array[0];
-	if (length < 8) {
-		for (int i = length; --i > 0;)
-			hash = (hash * 31) + array[i];
-	} else {
-		// 8 characters is enough to compute a decent hash code, don't waste time examining every character
-		for (int i = length - 1, last = i > 16 ? i - 16 : 0; i > last; i -= 2)
-			hash = (hash * 31) + array[i];
-	}
+	int hash = Arrays.hashCode(array);
 	return hash & 0x7FFFFFFF;
 }
 

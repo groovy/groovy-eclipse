@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2014 IBM Corporation and others.
+ * Copyright (c) 2016 Till Brychcy and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *     IBM Corporation - initial API and implementation
+ *     Till Brychcy - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -15,12 +15,15 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 
 /**
- * Reflects the context of code analysis, keeping track of enclosing
- * try statements, exception handlers, etc...
+ * For instances of this class,
+ * {@link FlowContext#getInitsForFinalBlankInitializationCheck(org.eclipse.jdt.internal.compiler.lookup.TypeBinding, FlowInfo)}
+ * will returns a {@link FlowInfo#DEAD_END}, which for which
+ * {@link FlowInfo#isDefinitelyAssigned(org.eclipse.jdt.internal.compiler.lookup.FieldBinding)} returns true for all
+ * fields.
  */
 
-public class ExceptionInferenceFlowContext extends FieldInitsFakingFlowContext {
-	public ExceptionInferenceFlowContext(
+public class FieldInitsFakingFlowContext extends ExceptionHandlingFlowContext {
+	public FieldInitsFakingFlowContext(
 			FlowContext parent,
 			ASTNode associatedNode,
 			ReferenceBinding[] handledExceptions,

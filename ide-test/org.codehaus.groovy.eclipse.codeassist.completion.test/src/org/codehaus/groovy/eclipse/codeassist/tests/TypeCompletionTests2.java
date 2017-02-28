@@ -16,11 +16,12 @@
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import junit.framework.Test;
-
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.osgi.framework.Version;
 
 /**
  * Ensures type completion is working and that the resulting document remains well-formed.
@@ -40,8 +41,6 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     private void checkProposal(String source, String target, String proposalSite, String proposalName) {
         try {
             checkProposalApplicationType(source, target, getIndexOf(source, proposalSite), proposalName);
-        } catch (RuntimeException e) {
-            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -175,6 +174,10 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     public void testTypeCompletionInBrokenScript2() {
         String contents = "package f\n\ndef x(HTML";
         String expected = "package f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
+        // deal with some variance in JDT Core adding first import between package and script body
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+            expected = expected.replace("\n\n\n", "\n\n");
+        }
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -182,6 +185,10 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     public void testTypeCompletionInBrokenScript2a() {
         String contents = "package f;\n\ndef x(HTML";
         String expected = "package f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
+        // deal with some variance in JDT Core adding first import between package and script body
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+            expected = expected.replace("\n\n\n", "\n\n");
+        }
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -189,6 +196,10 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     public void testTypeCompletionInBrokenScript3() {
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
+        // deal with some variance in JDT Core adding first import between package and script body
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+            expected = expected.replace("\n\n\n", "\n\n");
+        }
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
@@ -196,6 +207,10 @@ public final class TypeCompletionTests2 extends CompletionTestCase {
     public void testTypeCompletionInBrokenScript3a() {
         String contents = "/**some stuff*/\npackage f;\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML";
+        // deal with some variance in JDT Core adding first import between package and script body
+        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+            expected = expected.replace("\n\n\n", "\n\n");
+        }
 
         checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }

@@ -160,9 +160,11 @@ public class InferenceContext18 {
 	public BoundSet b2;
 	private BoundSet b3;
 	/** Not per JLS: inbox for emulation of how javac passes type bounds from inner to outer */
-	private BoundSet innerInbox; 
+	BoundSet innerInbox; 
 	/** Not per JLS: signal when current is ready to directly merge all bounds from inner. */
-	private boolean directlyAcceptingInnerBounds = false;
+	boolean directlyAcceptingInnerBounds = false;
+	/** Not per JLS: pushing bounds from inner to outer may have to be deferred till after overload resolution, store here a runnable to perform the push. */
+	private Runnable pushToOuterJob = null;
 	
 	// InferenceVariable interning:
 	private InferenceVariable[] internedVariables;
@@ -495,15 +497,33 @@ public class InferenceContext18 {
 	// ---  not per JLS: emulate how javac passes type bounds from inner to outer: ---
 	/** Not per JLS: push current bounds to outer inference if outer is ready for it. */
 	private void pushBoundsToOuter() {
-		InferenceContext18 outer = this.outerContext;
+		final InferenceContext18 outer = this.outerContext;
 		if (outer != null && outer.stepCompleted >= APPLICABILITY_INFERRED) {
-			if (outer.directlyAcceptingInnerBounds) {
-				outer.currentBounds.addBounds(this.currentBounds, this.environment);
-			} else if (outer.innerInbox == null) {
-				outer.innerInbox = this.currentBounds.copy();
+			final boolean deferred = outer.currentInvocation instanceof Invocation; // need to wait till after overload resolution?
+			final BoundSet toPush = deferred ? this.currentBounds.copy() : this.currentBounds;
+			Runnable job = new Runnable() {
+				public void run() {
+					if (outer.directlyAcceptingInnerBounds) {
+						outer.currentBounds.addBounds(toPush, InferenceContext18.this.environment);
+					} else if (outer.innerInbox == null) {
+						outer.innerInbox = deferred ? toPush : toPush.copy(); // copy now, unless already copied on behalf of 'deferred'
+					} else {
+						outer.innerInbox.addBounds(toPush, InferenceContext18.this.environment);
+					}
+				}
+			};
+			if (deferred) {
+				this.pushToOuterJob = job;
 			} else {
-				outer.innerInbox.addBounds(this.currentBounds, this.environment);
+				job.run(); // TODO(stephan): ever reached? for ReferenceExpression? (would need a corresponding new call to flushBoundOutbox()).
 			}
+		}
+	}
+	/** Not JLS: after overload resolution is done, perform the push of type bounds to outer inference, if any. */
+	public void flushBoundOutbox() {
+		if (this.pushToOuterJob != null) {
+			this.pushToOuterJob.run();
+			this.pushToOuterJob = null;
 		}
 	}
 	/** Not JLS: merge pending bounds of inner inference into current. */

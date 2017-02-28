@@ -138,7 +138,15 @@ abstract class AbstractOrganizeImportsTest extends TestCase {
         Document doc = new Document(prefix + normalizeLineEndings(originalContents))
         if (edit != null) edit.apply(doc)
 
-        assertEquals(prefix + normalizeLineEndings(expectedContents), normalizeLineEndings(doc.get()))
+        // deal with some variance in JDT Core handling of package only
+        String expect = prefix + normalizeLineEndings(expectedContents)
+        String actual = normalizeLineEndings(doc.get())
+        if (expectedContents.toString().isEmpty()) {
+            expect = expect.trim()
+            actual = actual.trim()
+        }
+
+        assertEquals(expect, actual)
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
