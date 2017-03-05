@@ -51,10 +51,12 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
@@ -111,7 +113,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * always return the passed in node, unless the declaration of an InnerClassNode
+     * Returns the passed in node, unless the declaration of an InnerClassNode.
      */
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
         ClassNode resultType;
@@ -202,6 +204,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected TypeLookupResult findType(Expression node, ClassNode declaringType, VariableScope scope,
             TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 
+        MethodNode target; // use value from node metadata if it is available
+        if (scope.isMethodCall() && (target = getMethodTarget(node)) != null) {
+            return new TypeLookupResult(target.getReturnType(), target.getDeclaringClass(), target, confidence, scope);
+        }
+
         if (node instanceof VariableExpression) {
             return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
         }
@@ -209,32 +216,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         ClassNode nodeType = node.getType();
         if ((!isPrimaryExpression || scope.isMethodCall()) && node instanceof ConstantExpression) {
             return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
-                isStaticObjectExpression, isPrimaryExpression, (scope.getWormhole().remove("lhs") == node));
+                isStaticObjectExpression, isPrimaryExpression, /*isLhsExpression:*/(scope.getWormhole().remove("lhs") == node));
         }
 
-        // no object expression, look at the kind of expression the following
-        // expressions have a type that is constant no matter what their contents are
         if (node instanceof ConstantExpression) {
-            // here, we know that since there is no object expression, this is not part
-            // of a dotted anything, so we can safely assume that it is a quoted string or
-            // some other constant
-            ConstantExpression constExpr = (ConstantExpression) node;
-
-            if (constExpr.isTrueExpression() || constExpr.isFalseExpression()) {
-                return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
-            } else if (constExpr.isNullExpression()) {
+            ConstantExpression cexp = (ConstantExpression) node;
+            if (cexp.isNullExpression()) {
                 return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence, scope);
-            } else if (constExpr.isEmptyStringExpression()) {
-                return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
-            } else if (ClassHelper.isNumberType(nodeType) || nodeType == ClassHelper.BigDecimal_TYPE
-                    || nodeType == ClassHelper.BigInteger_TYPE) {
-                if (ClassHelper.isPrimitiveType(nodeType)) {
-                    return new TypeLookupResult(ClassHelper.getWrapper(nodeType), null, null, confidence, scope);
-                }
-                return new TypeLookupResult(nodeType, null, null, confidence, scope);
-            } else if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
-                // likely a proper quoted string constant
-                return new TypeLookupResult(nodeType, null, node, confidence, scope);
+            } else if (cexp.isTrueExpression() || cexp.isFalseExpression()) {
+                return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
+            } else if (cexp.isEmptyStringExpression() || VariableScope.STRING_CLASS_NODE.equals(nodeType)) {
+                return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, node, confidence, scope);
+            } else if (ClassHelper.isNumberType(nodeType) || ClassHelper.BigDecimal_TYPE.equals(nodeType) || ClassHelper.BigInteger_TYPE.equals(nodeType)) {
+                return new TypeLookupResult(ClassHelper.isPrimitiveType(nodeType) ? ClassHelper.getWrapper(nodeType) : nodeType, null, null, confidence, scope);
             } else {
                 return new TypeLookupResult(nodeType, null, null, TypeConfidence.UNKNOWN, scope);
             }
@@ -243,16 +237,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
 
         } else if (node instanceof GStringExpression) {
-            // note that we return String type here, not GString so that DGMs will apply
+            // return String not GString so that DGMs will apply
             return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
 
         } else if (node instanceof BitwiseNegationExpression) {
             ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
-            if (type.getName().equals(VariableScope.STRING_CLASS_NODE.getName())) {
+            // check for ~/.../ (a.k.a. Pattern literal)
+            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
                 return new TypeLookupResult(VariableScope.PATTERN_CLASS_NODE, null, null, confidence, scope);
-            } else {
-                return new TypeLookupResult(type, null, null, confidence, scope);
             }
+            return new TypeLookupResult(type, null, null, confidence, scope);
+
         } else if (node instanceof ClassExpression) {
             // check for special case...a bit crude...determine if the actual reference is to Foo.class or to Foo
             if (isNodeDotClassReference(node, unit)) {
@@ -260,10 +255,41 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else {
                 return new TypeLookupResult(nodeType, declaringType, nodeType, confidence, scope);
             }
+
+        } else if (node instanceof ConstructorCallExpression) {
+            ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
+            if (constructorCall.isThisCall()) {
+                MethodNode constructorDecl = scope.getEnclosingMethodDeclaration(); // watch for initializers but no constructor
+                declaringType = constructorDecl != null ? constructorDecl.getDeclaringClass() : scope.getEnclosingTypeDeclaration();
+            } else if (constructorCall.isSuperCall()) {
+                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass().getUnresolvedSuperClass();
+            }
+
+            // try to find best match if there is more than one constructor to choose from
+            List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
+            if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
+                List<ConstructorNode> looseMatches = new ArrayList<ConstructorNode>();
+                List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
+                for (ConstructorNode ctor : declaredConstructors) {
+                    if (callTypes.size() == ctor.getParameters().length) {
+                        if (Boolean.TRUE.equals(isTypeCompatible(callTypes, ctor.getParameters()))) {
+                            return new TypeLookupResult(nodeType, declaringType, ctor, confidence, scope);
+                        }
+                        // argument types may not be fully resolved; at least the number of arguments matched
+                        looseMatches.add(ctor);
+                    }
+                }
+                if (!looseMatches.isEmpty()) {
+                    declaredConstructors = looseMatches;
+                }
+            }
+
+            ASTNode declaration = !declaredConstructors.isEmpty() ? declaredConstructors.get(0) : declaringType;
+            return new TypeLookupResult(nodeType, declaringType, declaration, confidence, scope);
+
         } else if (node instanceof StaticMethodCallExpression) {
             String methodName = ((StaticMethodCallExpression) node).getMethod();
             ClassNode ownerType = ((StaticMethodCallExpression) node).getOwnerType();
-            Expression methodArgs = ((StaticMethodCallExpression) node).getArguments();
 
             List<MethodNode> candidates = new LinkedList<MethodNode>();
             if (!ownerType.isInterface()) {
@@ -281,8 +307,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
             if (!candidates.isEmpty()) {
                 MethodNode closestMatch;
-                if (methodArgs instanceof ArgumentListExpression) {
-                    closestMatch = findMethodDeclaration0(candidates, GroovyUtils.getArgumentTypes((ArgumentListExpression) methodArgs));
+                if (scope.isMethodCall()) {
+                    closestMatch = findMethodDeclaration0(candidates, scope.getMethodCallArgumentTypes());
                     confidence = TypeConfidence.INFERRED;
                 } else {
                     closestMatch = candidates.get(0);
@@ -290,44 +316,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
                 return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
             }
-        } else if (node instanceof ConstructorCallExpression) {
-            ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
-            if (constructorCall.isThisCall()) {
-                MethodNode constructorDecl = scope.getEnclosingMethodDeclaration(); // watch for initializers but no constructor
-                declaringType = constructorDecl != null ? constructorDecl.getDeclaringClass() : scope.getEnclosingTypeDeclaration();
-            } else if (constructorCall.isSuperCall()) {
-                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass().getUnresolvedSuperClass();
-            }
-
-            // try to find best match if there is more than one constructor to choose from
-            List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
-            if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
-                List<ConstructorNode> looseMatches = new ArrayList<ConstructorNode>();
-                List<ClassNode> callTypes = GroovyUtils.getArgumentTypes((ArgumentListExpression) constructorCall.getArguments());
-                for (ConstructorNode ctor : declaredConstructors) {
-                    if (callTypes.size() == ctor.getParameters().length) {
-                        if (isTypeCompatible(callTypes, ctor.getParameters()) == Boolean.TRUE) {
-                            return new TypeLookupResult(nodeType, declaringType, ctor, TypeConfidence.EXACT, scope);
-                        }
-                        // argument types may not be fully resolved; at least the number of arguments matched
-                        looseMatches.add(ctor);
-                    }
-                }
-                if (!looseMatches.isEmpty()) {
-                    declaredConstructors = looseMatches;
-                }
-            }
-
-            ASTNode declaration = !declaredConstructors.isEmpty() ? declaredConstructors.get(0) : declaringType;
-            return new TypeLookupResult(nodeType, declaringType, declaration, confidence, scope);
         }
 
-        // if we get here, then we can't infer the type. Set to unknown if required.
         if (!(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
             confidence = TypeConfidence.UNKNOWN;
         }
 
-        // don't know
         return new TypeLookupResult(nodeType, declaringType, null, confidence, scope);
     }
 
@@ -575,10 +569,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         outerCandidate = innerCandidate;
 
                         Boolean suitable = isTypeCompatible(methodCallArgumentTypes, methodParameters);
-                        if (suitable == Boolean.FALSE) {
+                        if (Boolean.FALSE.equals(suitable)) {
                             continue;
                         }
-                        if (suitable == Boolean.TRUE) {
+                        if (Boolean.TRUE.equals(suitable)) {
                             return innerCandidate;
                         }
                     }
@@ -612,10 +606,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
             if (parameters.length == arguments.size()) {
                 Boolean suitable = isTypeCompatible(arguments, parameters);
-                if (suitable == Boolean.TRUE) {
+                if (Boolean.TRUE.equals(suitable)) {
                     return maybeMethod.getOriginal();
                 }
-                if (suitable != Boolean.FALSE) {
+                if (!Boolean.FALSE.equals(suitable)) {
                     closestMatch = maybeMethod.getOriginal();
                     continue; // don't remove
                 }
@@ -636,6 +630,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
         lengthField.setDeclaringClass(declaringType);
         return lengthField;
+    }
+
+    /**
+     * @return target of method call expression if available or {@code null}
+     */
+    protected static MethodNode getMethodTarget(Expression expr) {
+        StatementMeta meta = (StatementMeta) expr.getNodeMetaData(StatementMeta.class);
+        if (meta != null) {
+            MethodNode target = (MethodNode) ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
+            return target;
+        }
+        // TODO: Is "((StaticMethodCallExpression) expr).getMetaMethod()" helpful?
+        return null;
     }
 
     protected static ClassNode getMorePreciseType(ClassNode declaringType, VariableInfo info) {

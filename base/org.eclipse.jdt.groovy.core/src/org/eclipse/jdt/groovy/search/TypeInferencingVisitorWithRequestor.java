@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1995,17 +1996,18 @@ assert primaryExprType != null && dependentExprType != null;
         ClassNode primaryType;
         boolean isStatic;
         VariableScope scope = scopes.peek();
-        if (isDependentExpression(node)) {
+        if (!isDependentExpression(node)) {
+            primaryType = null;
+            isStatic = false;
+            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
+        } else {
             primaryType = primaryTypeStack.pop();
             // implicit this expressions do not have a primary type
             if (isImplicitThis()) {
                 primaryType = null;
             }
             isStatic = hasStaticObjectExpression(node);
-            scope.setMethodCallArgumentTypes(getMethodCallArgs());
-        } else {
-            primaryType = null;
-            isStatic = false;
+            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(completeExpressionStack.peek()));
         }
         scope.setPrimaryNode(primaryType == null);
 
@@ -2013,9 +2015,46 @@ assert primaryExprType != null && dependentExprType != null;
         return handleRequestor(node, primaryType, result);
     }
 
+    private List<ClassNode> getMethodCallArgumentTypes(ASTNode node) {
+        // TODO: Check for MethodCall once 2.1 is the minimum supported Groovy runtime
+        Expression arguments = null;
+        if (node instanceof MethodCallExpression) {
+            arguments = ((MethodCallExpression) node).getArguments();
+        } else if (node instanceof ConstructorCallExpression) {
+            arguments = ((ConstructorCallExpression) node).getArguments();
+        } else if (node instanceof StaticMethodCallExpression) {
+            arguments = ((StaticMethodCallExpression) node).getArguments();
+        }
+
+        if (arguments != null) {
+            if (arguments instanceof ArgumentListExpression) {
+                List<Expression> expressions = ((ArgumentListExpression) arguments).getExpressions();
+                if (!expressions.isEmpty()) {
+                    List<ClassNode> types = new ArrayList<ClassNode>(expressions.size());
+                    for (Expression expression : expressions) {
+                        if (expression instanceof ConstantExpression &&
+                            ((ConstantExpression) expression).isNullExpression()) {
+
+                            types.add(GroovyUtils.NULL_TYPE); // non-void sentinel value
+                        } else {
+                            scopes.peek().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
+                            TypeLookupResult tlr = lookupExpressionType(expression, null, false, scopes.peek());
+
+                            types.add(tlr.type);
+                        }
+                    }
+                    return types;
+                }
+            }
+            // TODO: Might be useful to look into TupleExpression
+            return Collections.emptyList();
+        }
+        return null;
+    }
+
     protected boolean isImplicitThis() {
-        return completeExpressionStack.peek() instanceof MethodCallExpression
-                && ((MethodCallExpression) completeExpressionStack.peek()).isImplicitThis();
+        return completeExpressionStack.peek() instanceof MethodCallExpression &&
+            ((MethodCallExpression) completeExpressionStack.peek()).isImplicitThis();
     }
 
     private void handleCompleteExpression(Expression node, ClassNode exprType, ClassNode exprDeclaringType) {
@@ -2061,23 +2100,6 @@ assert primaryExprType != null && dependentExprType != null;
             result = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope);
         }
         return result;
-    }
-
-    /**
-     * Finds argument types of the current method call. Returns null if not a method call.
-     */
-    private List<ClassNode> getMethodCallArgs() {
-        ASTNode peek = completeExpressionStack.peek();
-        if (peek instanceof MethodCallExpression) {
-            MethodCallExpression call = (MethodCallExpression) peek;
-            Expression arguments = call.getArguments();
-            // TODO: Might be useful also to look into TupleExpression
-            if (arguments instanceof ArgumentListExpression) {
-                return GroovyUtils.getArgumentTypes((ArgumentListExpression) arguments);
-            }
-            return Collections.emptyList();
-        }
-        return null;
     }
 
     private boolean handleParameterList(Parameter[] params) {
@@ -2213,7 +2235,7 @@ assert primaryExprType != null && dependentExprType != null;
                 return constructors.get(0);
             } else {
                 List<MethodNode> methods = clazz.getMethods(method.getElementName());
-                if (methods.size() == 0) {
+                if (methods.isEmpty()) {
                     return null;
                 }
                 String[] jdtParamTypes = method.getParameterTypes() == null ? NO_PARAMS : method.getParameterTypes();

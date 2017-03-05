@@ -694,7 +694,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.Collection");
     }
 
-    public void _testStaticMethodCall8() throws Exception {
+    public void testStaticMethodCall8() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
                 "import java.util.regex.*\n" +
                 "class Bar {\n" +
@@ -705,6 +705,20 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         String staticCall = "meth(~/abc/)";
         String contents = "import static foo.Bar.*; " + staticCall;
+        assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.regex.Pattern");
+    }
+
+    public void testStaticMethodCall9() throws Exception {
+        createUnit("foo", "Bar", "package foo\n" +
+                "import java.util.regex.*\n" +
+                "class Bar {\n" +
+                "  static Object meth(Object o) { return o }\n" +
+                "  static Pattern meth(Pattern p) { return p }\n" +
+                "  static Collection meth(Collection c) { return c }\n" +
+                "}");
+
+        String staticCall = "meth(compile('abc'))";
+        String contents = "import static foo.Bar.*; import static java.util.regex.Pattern.*; " + staticCall;
         assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.regex.Pattern");
     }
 

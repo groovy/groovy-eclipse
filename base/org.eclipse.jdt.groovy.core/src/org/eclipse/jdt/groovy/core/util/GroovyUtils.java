@@ -32,8 +32,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -42,6 +40,8 @@ import org.eclipse.jdt.internal.core.util.Util;
  * Helper methods - can be made more eclipse friendly or replaced if the groovy infrastructure provides the information.
  */
 public abstract class GroovyUtils {
+
+    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
 
     public static char[] readSourceRange(SourceUnit unit, int offset, int length) {
         Reader reader = null;
@@ -146,20 +146,6 @@ public abstract class GroovyUtils {
         int index = name.lastIndexOf('$');
         if (index == -1) index = name.lastIndexOf('.');
         return new String[] {name.substring(0, Math.max(0, index)), name.substring(index + 1)};
-    }
-
-    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
-
-    public static List<ClassNode> getArgumentTypes(ArgumentListExpression list) {
-        final int n = list.getExpressions().size();
-        if (n == 0) return Collections.emptyList();
-        List<ClassNode> types = new ArrayList<ClassNode>(n);
-        for (Expression expression : list.getExpressions()) {
-            boolean isNull = expression instanceof ConstantExpression &&
-                    ((ConstantExpression) expression).isNullExpression();
-            types.add(isNull ? NULL_TYPE : expression.getType());
-        }
-        return types;
     }
 
     public static List<ClassNode> getParameterTypes(Parameter... params) {
