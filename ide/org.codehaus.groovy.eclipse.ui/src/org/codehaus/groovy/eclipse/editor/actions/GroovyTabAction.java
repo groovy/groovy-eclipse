@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,9 @@ import java.util.ResourceBundle;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -41,28 +40,12 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.texteditor.ITextEditorExtension3;
 import org.eclipse.ui.texteditor.TextEditorAction;
 
-/**
- *
- * @author kdvolder
- * @created 2010-06-08
- */
 public class GroovyTabAction extends TextEditorAction {
 
     public GroovyTabAction(ITextEditor editor) {
         super(fgBundleForConstructedKeys, "Indent.", editor);
     }
 
-    public GroovyIndentationService getIndentor() {
-        return GroovyIndentationService.get(getJavaProject());
-    }
-
-    /**
-     * This method is called when the action is invoked. I believe the specific
-     * circumstances
-     * under which this happens should only be when single line tab in the
-     * "smart tab" region
-     * of a line.
-     */
     @Override
     public void run() {
         // update has been called by the framework
@@ -77,28 +60,31 @@ public class GroovyTabAction extends TextEditorAction {
                 int offset = selection.getOffset();
 
                 // We are making a few assumptions about the circumstances under
-                // which we get to
-                // this point in the code:
+                // which we get to this point in the code:
                 Assert.isTrue(selection.getLength() == 0);
                 Assert.isTrue(isInSmartTabRegion(d, offset));
 
+                @SuppressWarnings("cast")
+                GroovyIndentationService indentation = GroovyIndentationService.get(JavaCore.create(
+                    ((IFile) getTextEditor().getEditorInput().getAdapter(IFile.class)).getProject()));
+
                 int tabLine = d.getLineOfOffset(offset);
-                int newIndentLevel = getIndentor().computeIndentForLine(d, tabLine);
+                int newIndentLevel = indentation.computeIndentForLine(d, tabLine);
                 String lineStartText = getLineTextUpto(d, offset);
-                int cursorIndent = getIndentor().indentLevel(lineStartText);
+                int cursorIndent = indentation.indentLevel(lineStartText);
 
                 if (cursorIndent < newIndentLevel) {
                     // Smart tab should apply
                     String leadingWhiteSpace = getLineLeadingWhiteSpace(d, tabLine);
                     int editOffset = d.getLineOffset(tabLine);
                     int editLength = leadingWhiteSpace.length();
-                    String editText = getIndentor().createIndentation(newIndentLevel);
+                    String editText = indentation.createIndentation(newIndentLevel);
                     d.replace(editOffset, editLength, editText);
                     selectAndReveal(editOffset + editText.length(), 0);
                 } else {
                     // Just indent one tab size using whatever style
                     // dictated by preferences (i.e. maybe use tabs or spaces)
-                    String editText = getIndentor().getTabString();
+                    String editText = indentation.getTabString();
                     d.replace(offset, 0, editText);
                     selectAndReveal(offset + editText.length(), 0);
                 }
@@ -114,8 +100,6 @@ public class GroovyTabAction extends TextEditorAction {
      * whitespace only at the beginning of line. (Only position for which this
      * method returns true
      * should be subjected to "smart tab" processing).
-     *
-     * @throws BadLocationException
      */
     private boolean isInSmartTabRegion(IDocument d, int offset) throws BadLocationException {
         String lineStartText = GroovyIndentationService.getLineTextUpto(d, offset);
@@ -137,9 +121,6 @@ public class GroovyTabAction extends TextEditorAction {
      * Tom Eicher (Avaloq Evolution AG) - block selection mode
      *******************************************************************************/
 
-    /*
-     * @see org.eclipse.ui.texteditor.IUpdate#update()
-     */
     @Override
     public void update() {
         super.update();
@@ -153,8 +134,7 @@ public class GroovyTabAction extends TextEditorAction {
      * the caret in the
      * whitespace at the start of a line, or covers multiple lines.
      *
-     * @return <code>true</code> if the selection is valid for an indent
-     *         operation
+     * @return <code>true</code> if the selection is valid for an indent operation
      */
     private boolean isValidSelection() {
         ITextSelection selection = getSelection();
@@ -189,8 +169,7 @@ public class GroovyTabAction extends TextEditorAction {
     /**
      * Returns the smart preference state.
      *
-     * @return <code>true</code> if smart mode is on, <code>false</code>
-     *         otherwise
+     * @return <code>true</code> if smart mode is on, <code>false</code> otherwise
      */
     private boolean isSmartMode() {
         ITextEditor editor = getTextEditor();
@@ -203,8 +182,7 @@ public class GroovyTabAction extends TextEditorAction {
 
     /**
      * Returns the document currently displayed in the editor, or
-     * <code>null</code> if none can be
-     * obtained.
+     * <code>null</code> if none can be obtained.
      *
      * @return the current document or <code>null</code>
      */
@@ -220,25 +198,6 @@ public class GroovyTabAction extends TextEditorAction {
 
         }
         return null;
-    }
-
-    /**
-     * Returns the <code>IJavaProject</code> of the current editor input, or
-     * <code>null</code> if it cannot be found.
-     *
-     * @return the <code>IJavaProject</code> of the current editor input, or
-     *         <code>null</code> if it cannot be found
-     * @since 3.1
-     */
-    private IJavaProject getJavaProject() {
-        ITextEditor editor = getTextEditor();
-        if (editor == null)
-            return null;
-
-        ICompilationUnit cu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(editor.getEditorInput());
-        if (cu == null)
-            return null;
-        return cu.getJavaProject();
     }
 
     /**

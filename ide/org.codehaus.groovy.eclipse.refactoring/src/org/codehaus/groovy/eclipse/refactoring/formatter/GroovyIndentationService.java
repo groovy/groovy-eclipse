@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
 import static org.codehaus.greclipse.GroovyTokenTypeBridge.*;
-import groovyjarjarantlr.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import groovyjarjarantlr.Token;
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
@@ -78,12 +78,12 @@ public class GroovyIndentationService {
      * The same object will be returned if the javaProject is the same as the one from the
      * last request, but a new instance will be created if the project has changed.
      */
-    public static synchronized GroovyIndentationService get(IJavaProject javaProject) {
-        if (lastIndenter != null && lastIndenter.getJavaProject() != javaProject) {
+    public static synchronized GroovyIndentationService get(IJavaProject project) {
+        if (lastIndenter != null && !lastIndenter.project.equals(project)) {
             disposeLastImpl();
         }
         if (lastIndenter == null) {
-            lastIndenter = new GroovyIndentationService(javaProject);
+            lastIndenter = new GroovyIndentationService(project);
         }
         return lastIndenter;
     }
@@ -184,9 +184,10 @@ public class GroovyIndentationService {
      */
     private GroovyDocumentScanner cachedScanner;
     private IFormatterPreferences prefs;
-    private IJavaProject project;
+    private final IJavaProject project;
 
     public GroovyIndentationService(IJavaProject project) {
+        assert project != null;
         this.project = project;
     }
 
@@ -241,10 +242,8 @@ public class GroovyIndentationService {
      * different from its actual indentation level.
      */
     public int computeIndentForLine(IDocument d, int line) {
-        try {
-            if (line == 0) {
-                return 0;
-            } else {
+        if (line != 0) {
+            try {
                 Token nextToken = getTokenFrom(d, d.getLineOffset(line));
                 if (isCloserOfPair(nextToken)) {
                     // Don't use the newline mechanism! Line up the with
@@ -254,11 +253,11 @@ public class GroovyIndentationService {
                     IRegion prevLine = d.getLineInformation(line - 1);
                     return computeIndentAfterNewline(d, prevLine.getOffset() + prevLine.getLength());
                 }
+            } catch (BadLocationException e) {
+                GroovyCore.logException("internal error", e);
             }
-        } catch (BadLocationException e) {
-            GroovyCore.logException("internal error", e);
-            return 0;
         }
+        return 0;
     }
 
     /**
@@ -269,8 +268,25 @@ public class GroovyIndentationService {
         return createIndentation(getPrefs(), spaces);
     }
 
+    public static String createIndentation(IFormatterPreferences pref, int spaces) {
+        StringBuilder b = new StringBuilder();
+
+        int tab;
+        if (spaces > 0 && pref != null && pref.useTabs() && (tab = pref.getTabSize()) > 0) {
+            while (spaces >= tab) {
+                b.append('\t');
+                spaces -= tab;
+            }
+        }
+        while (spaces > 0) {
+            b.append(' ');
+            spaces -= 1;
+        }
+
+        return b.toString();
+    }
+
     public void dispose() {
-        this.project = null;
         disposeScanner();
         disposePrefs();
     }
@@ -363,18 +379,6 @@ public class GroovyIndentationService {
     }
 
     /**
-     * Indentation service behavior is dependent on project preferences, so
-     * there is
-     * a javaProject associated with an {@link GroovyIndentationService}. This
-     * method
-     * returns the associated IJavaProject. This instance
-     * may be null, in which case the core java preferences should be used.
-     */
-    public IJavaProject getJavaProject() {
-        return project;
-    }
-
-    /**
      * This does the same as the getLineDelimeter method on Document, except it
      * returns "" instead of null when there is no line delimiter for this line.
      *
@@ -402,6 +406,25 @@ public class GroovyIndentationService {
 
     private List<Token> getLineTokensUpto(IDocument d, int offset) {
         return getGroovyDocumentScanner(d).getLineTokensUpto(offset);
+    }
+
+    protected int getOpenVersusCloseBalance(List<Token> tokens) {
+        int adjust = 0;
+
+        // if line starts with closer, assume adjustment has already been made
+        // examples include "} else {" and "} while ()" (end of do-while loop)
+        if (!tokens.isEmpty() && jumpOut.contains(tokens.get(0).getType())) {
+            adjust += 1;
+        }
+
+        for (Token tok : tokens) {
+            if (jumpIn.contains(tok.getType()))
+                adjust += 1;
+            if (jumpOut.contains(tok.getType()))
+                adjust -= 1;
+        }
+
+        return adjust;
     }
 
     public IFormatterPreferences getPrefs() {
@@ -435,17 +458,16 @@ public class GroovyIndentationService {
     }
 
     /**
-     * Determine the current indentation level of a given line of text.
+     * Determines the current indentation level of a given line of text.
      *
-     * @return The number of spaces equivalent to the leading white space of the
-     *         lineText
+     * @return The number of spaces equivalent to the leading white space of the lineText
      */
     public int indentLevel(String lineText) {
         int level = 0;
-        for (int i = 0; i < lineText.length(); i++) {
+        for (int i = 0, n = lineText.length(); i < n; i += 1) {
             switch (lineText.charAt(i)) {
                 case ' ':
-                    level++;
+                    level += 1;
                     break;
                 case '\t':
                     level += getPrefs().getTabSize();
@@ -514,16 +536,32 @@ public class GroovyIndentationService {
     }
 
     /**
-     * Get default line delimiter for a given document.
+     * @param offset offset into document
+     * @return the length from the insert location to the start of the curly
+     */
+    public int lengthToNextCurly(IDocument d, int offset) throws BadLocationException {
+        Token token = getTokenFrom(d, offset);
+        // must make sure there is no newline
+        if (!isEndOfLine(d, offset) && RCURLY == token.getType()) {
+            return token.getColumn() - offset + d.getLineOffset(d.getLineOfOffset(offset));
+        }
+        return 0;
+    }
+
+    public boolean moreOpenThanCloseBefore(IDocument d, int offset) {
+        return getOpenVersusCloseBalance(getLineTokensUpto(d, offset)) > 0;
+    }
+
+    /**
+     * Gets default line delimiter for a given document.
      */
     public String newline(IDocument d) {
         return TextUtilities.getDefaultLineDelimiter(d);
     }
 
     /**
-     * This method can be called to ensure prefs are up to date.
-     * Typically this gets called before performing a series of
-     * indentation related stuff on a document.
+     * Ensures prefs are up to date.  Typically this gets called before performing
+     * a series of indentation related stuff on a document.
      * <p>
      * It will also be called automatically when you ask for the preferences the
      * first time, or the first time after having called disposePrefs.
@@ -533,7 +571,7 @@ public class GroovyIndentationService {
     }
 
     /**
-     * Compute an adjusted indentation level for the next line, based on
+     * Computes an adjusted indentation level for the next line, based on
      * some simple heuristics about the types of tokens seen only in the
      * previous line.
      */
@@ -545,69 +583,5 @@ public class GroovyIndentationService {
             indentLevel -= getPrefs().getIndentationSize();
         }
         return indentLevel;
-    }
-
-    protected int getOpenVersusCloseBalance(List<Token> tokens) {
-        int adjust = 0;
-
-        // if line starts with closer, assume adjustment has already been made
-        // examples include "} else {" and "} while ()" (end of do-while loop)
-        if (!tokens.isEmpty() && jumpOut.contains(tokens.get(0).getType())) {
-            adjust += 1;
-        }
-
-        for (Token tok : tokens) {
-            if (jumpIn.contains(tok.getType()))
-                adjust += 1;
-            if (jumpOut.contains(tok.getType()))
-                adjust -= 1;
-        }
-
-        return adjust;
-    }
-
-    public static String createIndentation(IFormatterPreferences pref, int spaces) {
-        StringBuilder gap = new StringBuilder();
-        if (pref.useTabs()) {
-            // Using tabs and possible some trailing space to make up the rest
-            int tabSize = pref.getTabSize();
-            while (spaces >= tabSize) {
-                // Keep using tabs until the remaining spaces is less than a tab
-                gap.append('\t');
-                spaces -= tabSize;
-            }
-            while (spaces > 0) {
-                gap.append(' ');
-                spaces--;
-            }
-        } else {
-            // Only use spaces
-            for (int i = 0; i < spaces; i++) {
-                gap.append(' ');
-            }
-        }
-        return gap.toString();
-    }
-
-    public boolean moreOpenThanCloseBefore(IDocument d, int offset) {
-        return getOpenVersusCloseBalance(getLineTokensUpto(d, offset)) > 0;
-    }
-
-    /**
-     *
-     * @param d
-     * @param offset offset into document
-     * @return the length from the insert location to the start of the curly
-     *         else 0 if the next token is not a close curly
-     * @throws BadLocationException
-     */
-    public int lengthToNextCurly(IDocument d, int offset) throws BadLocationException {
-        Token token = getTokenFrom(d, offset);
-        // must make sure there is no newline
-        if (!isEndOfLine(d, offset) && RCURLY == token.getType()) {
-            return token.getColumn() - offset + d.getLineOffset(d.getLineOfOffset(offset));
-        } else {
-            return 0;
-        }
     }
 }
