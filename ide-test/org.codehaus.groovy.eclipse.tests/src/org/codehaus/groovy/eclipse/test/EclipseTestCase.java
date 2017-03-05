@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * Provides a fresh Groovy project to each test method.
@@ -59,9 +58,9 @@ public abstract class EclipseTestCase extends TestCase {
             options.put(key, val);
             JavaCore.setOptions(options);
 
-        } else if (key.startsWith(JavaPlugin.getPluginId())) {
-            IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore();
-            prefs.setValue(key, val);
+        } else if (key.startsWith(JavaPlugin.getPluginId()) ||
+                JavaPlugin.getDefault().getPreferenceStore().contains(key)) {
+            JavaPlugin.getDefault().getPreferenceStore().setValue(key, val);
 
         } else {
             System.err.println("Unexpected preference: " + key);

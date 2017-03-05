@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,24 +50,16 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
     public void customizeDocumentCommand(IDocument d, DocumentCommand c) {
         if (c.doit)
         try {
-            if (c.length == 0 && c.text != null && isNewline(d, c.text)) {
+            if (c.length == 0 && isNewline(d, c.text)) {
                 autoEditAfterNewline(d, c);
-            } else {
-                if (c.text.length() > 2) {
-                    smartPaste(d, c);
-                }
-                if ("}".equals(c.text)) {
-                    // We know that the javaStrategy works reasonably well for "}"
-                    // so just use that disable smartness for anything else by not
-                    // passing the command on to the javaStrategy.
-                    // Note that this also disables "smart paste".
-                    javaStrategy.customizeDocumentCommand(d, c);
-                }
+            } else if (c.text.length() > 2) {
+                smartPaste(d, c);
+            } else if ("{".equals(c.text) || "}".equals(c.text)) {
+                // delegate for some simple cases like braces
+                javaStrategy.customizeDocumentCommand(d, c);
             }
         } finally {
-            // This ensures that we will refresh prefs each time we need them,
-            // also
-            // it saves a little bit of memory.
+            // ensures that prefs will refresh each time they are needed; also saves a little bit of memory
             indentService.disposePrefs();
         }
     }
@@ -145,7 +137,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
     }
 
     /**
-     * Applies autoedits upon newline presses.
+     * Applies edits upon newline presses.
      */
     private void autoEditAfterNewline(IDocument d, DocumentCommand c) {
         try {
@@ -154,7 +146,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
             // Add indentation
             int indentLevel = indentService.computeIndentAfterNewline(d, c.offset);
             String indentation = indentService.createIndentation(indentLevel);
-            c.text = c.text + indentation;
+            c.text += indentation;
 
             // Add closing brace
             if (closeBraces) {
@@ -163,12 +155,11 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
                     // munch all chars from the insertion point to the curly brace (if one already exists)
                     c.length = lengthToCurly;
                     int newCaret = c.offset + c.text.length();
-                    c.text = c.text + indentService.newline(d) + indentService.createIndentation(orgIndentLevel) + "}";
+                    c.text += indentService.newline(d) + indentService.createIndentation(orgIndentLevel) + "}";
                     c.caretOffset = newCaret;
                     c.shiftsCaret = false;
                 }
             }
-
         } catch (Throwable e) {
             // This is a fail safe, in case anything goes wrong. We should
             // return normally. This way the edit should still be able to

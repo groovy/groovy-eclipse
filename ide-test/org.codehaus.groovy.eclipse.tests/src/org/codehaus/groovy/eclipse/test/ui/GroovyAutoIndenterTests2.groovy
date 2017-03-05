@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
+import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
+import static org.eclipse.jdt.ui.PreferenceConstants.*
+
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
+import org.eclipse.jface.preference.IPreferenceStore
 
 /**
  * Some additional tests for the GroovyAutoIndenter. There is no particular
@@ -32,9 +35,9 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
     protected void setUp() {
         super.setUp()
 
-        // tests are sensitive to tab/space settings so ensure they are set to predictable default values
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
+        setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.TRUE)
+        setJavaPreference(FORMATTER_TAB_CHAR, JavaCore.SPACE)
+        setJavaPreference(FORMATTER_TAB_SIZE, '4')
     }
 
     // GRECLIPSE-786
@@ -451,211 +454,211 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
     }
 
     void testGRE620() {
-        makeEditor('''\
+        makeEditor("""\
             class Bagaga {
-            <***>
+            ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
 
         sendPaste('\tstatic final String RESULTS = "results"\n')
         sendPaste('\tstatic final String RESULTS = "results"\n')
         sendPaste('\tstatic final String RESULTS = "results"\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             class Bagaga {
                 static final String RESULTS = "results"
                 static final String RESULTS = "results"
                 static final String RESULTS = "results"
-                <***>
+                ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
     }
 
     void testGRE295() {
-        makeEditor('''\
+        makeEditor("""\
             class BracketBug {
                 String name
                 static constratins = {
-                    date(validator: {<***>)
+                    date(validator: {${CARET})
                 }
             }
-            ''')
+            """)
 
         send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             class BracketBug {
                 String name
                 static constratins = {
                     date(validator: {
-                        <***>)
+                        ${CARET})
                 }
             }
-            ''')
+            """)
     }
 
     void testGRE761() {
-        makeEditor('''\
+        makeEditor("""\
             def dodo()
             {
                 def x "abx"
-                x.each<***>{
-            '''.stripIndent())
+                x.each${CARET}{
+            """.stripIndent())
 
         send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             def dodo()
             {
                 def x "abx"
                 x.each
-                <***>{
-            '''.stripIndent())
+                ${CARET}{
+            """.stripIndent())
     }
 
     void testEnterPressedAtEndOfFile() {
-        makeEditor('''\
+        makeEditor("""\
             def dodo()
             {
                 def x "abx"
-                x.each<***>'''.stripIndent())
+                x.each${CARET}""".stripIndent())
 
         send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             def dodo()
             {
                 def x "abx"
                 x.each
-                <***>'''.stripIndent())
+                ${CARET}""".stripIndent())
     }
 
     void testEnterPressedInEmptyFile() {
-        makeEditor('')
+        makeEditor("${CARET}")
 
         send('\n')
 
-        assertEditorContents('\n<***>')
+        assertEditorContents("\n${CARET}")
     }
 
     void testEnterPressedAtBeginningOfFile() {
-        makeEditor('''<***>
+        makeEditor("""${CARET}
             def foo() {
-            }'''.stripIndent(12))
+            }""".stripIndent(12))
 
         send('\n')
 
-        assertEditorContents('''
-            <***>
+        assertEditorContents("""
+            ${CARET}
             def foo() {
-            }'''.stripIndent(12))
+            }""".stripIndent(12))
     }
 
     void testEnterPressedAfterLongCommentAtBeginningOfFile() {
-        makeEditor('''\
+        makeEditor("""\
             /*
              * A longer comment
              * spanning several
-             * lines */<***>'''.stripIndent())
+             * lines */${CARET}""".stripIndent())
 
         send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             /*
              * A longer comment
              * spanning several
              * lines */
-            <***>'''.stripIndent())
+            ${CARET}""".stripIndent())
     }
 
     void testEnterAfterHalfAComment() {
-        makeEditor('''\
+        makeEditor("""\
             /*
              * A longer comment
-             * got started<***>
-            '''.stripIndent())
+             * got started${CARET}
+            """.stripIndent())
 
         send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             /*
              * A longer comment
              * got started
-             * <***>
-            '''.stripIndent())
+             * ${CARET}
+            """.stripIndent())
     }
 
     void testEnterInWhiteSpaceFile() {
-        makeEditor('''
+        makeEditor("""
 
 
 
-<***>''')
+${CARET}""")
 
         send('\n')
 
-        assertEditorContents('''
+        assertEditorContents("""
 
 
 
 
-<***>''')
+${CARET}""")
     }
 
     void testEnterPressedInsideToken() {
-        makeEditor('''\
+        makeEditor("""\
             def dodo() {
-                def x = ab<***>cde
+                def x = ab${CARET}cde
             }
-            '''.stripIndent())
+            """.stripIndent())
 
         send('\n')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             def dodo() {
                 def x = ab
-                <***>cde
+                ${CARET}cde
             }
-            '''.stripIndent())
+            """.stripIndent())
     }
 
     // GRECLIPSE-763
     void testSmartPaste1() {
-        makeEditor('''\
+        makeEditor("""\
             def doit() {
-                <***>
+                ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
 
-        sendPaste('''\
+        sendPaste("""\
             def x = 10
-            def y = 20'''.stripIndent(8))
+            def y = 20""".stripIndent(8))
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             def doit() {
                 def x = 10
-                def y = 20<***>
+                def y = 20${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
     }
 
     void testSmartPaste2() {
-        makeEditor('''\
+        makeEditor("""\
             def doit() {
-            <***>
+            ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
 
-        sendPaste('''\
+        sendPaste("""\
             def foo(int x) {
               if (x>0)
                 println "pos"
               else
                 println "neg"
             }
-            '''.stripIndent())
+            """.stripIndent())
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             def doit() {
                 def foo(int x) {
                     if (x>0)
@@ -663,28 +666,28 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                     else
                       println "neg"
                   }
-                  <***>
+                  ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
     }
 
     void testSmartPasteWrongFirstLine() {
-        makeEditor('''\
+        makeEditor("""\
             def doit() {
-            <***>
+            ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
 
-        sendPaste('''\
+        sendPaste("""\
             def foo(int x) {
                  if (x>0)
                      println "pos"
                  else
                      println "neg"
             }
-            '''.stripIndent())
+            """.stripIndent())
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             def doit() {
                 def foo(int x) {
                     if (x>0)
@@ -692,85 +695,85 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                     else
                         println "neg"
                }
-               <***>
+               ${CARET}
             }
-            '''.stripIndent())
+            """.stripIndent())
         // Indent is only 3 on caret line and previous; is this a bug?
     }
 
     // GRECLIPSE-767
     void testSmartTab() {
-        makeEditor('''\
+        makeEditor("""\
             package com.kameleoon.pixel
             public class InlineTest extends BaseTest {
                 public Map setupInlineTest() {
                     def inlineDivDecoration = createDecoration()
                     inlineDivDecoration.properties = ["cssId": "inlineDiv", "backgroundColor": java.lang.Integer.parseInt("55dad8", 16)]
-            <***>        inlineDivDecoration.tagName = HTMLElement.DIV
+            ${CARET}        inlineDivDecoration.tagName = HTMLElement.DIV
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
 
         send('\t')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             package com.kameleoon.pixel
             public class InlineTest extends BaseTest {
                 public Map setupInlineTest() {
                     def inlineDivDecoration = createDecoration()
                     inlineDivDecoration.properties = ["cssId": "inlineDiv", "backgroundColor": java.lang.Integer.parseInt("55dad8", 16)]
-                    <***>inlineDivDecoration.tagName = HTMLElement.DIV
+                    ${CARET}inlineDivDecoration.tagName = HTMLElement.DIV
                 }
             }
-            '''.stripIndent())
+            """.stripIndent())
     }
 
     void testSmartTabMiddleOfWhiteSpace() {
-        makeEditor('''\
+        makeEditor("""\
             public class Blah {
                 def foo() {
-               <***>       blah()
-            '''.stripIndent())
+               ${CARET}       blah()
+            """.stripIndent())
 
         send('\t')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             public class Blah {
                 def foo() {
-                    <***>blah()
-            '''.stripIndent())
+                    ${CARET}blah()
+            """.stripIndent())
     }
 
     void testSmartTabEndOfWhiteSpace() {
-        makeEditor('''\
+        makeEditor("""\
             public class Blah {
                 def foo() {
-                      <***>blah()
-            '''.stripIndent())
+                      ${CARET}blah()
+            """.stripIndent())
 
         send('\t')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             public class Blah {
                 def foo() {
-                          <***>blah()
-            '''.stripIndent())
+                          ${CARET}blah()
+            """.stripIndent())
     }
 
     void testSmartTabOnCloseBrace() {
-        makeEditor('''\
+        makeEditor("""\
             public class Blah {
                 def foo() {
-              <***>                 }
-            '''.stripIndent())
+              ${CARET}                 }
+            """.stripIndent())
 
         send('\t')
 
-        assertEditorContents('''\
+        assertEditorContents("""\
             public class Blah {
                 def foo() {
-                <***>}
-            '''.stripIndent())
+                ${CARET}}
+            """.stripIndent())
     }
 
     void testAutoCloseBracesInGString1() {
@@ -984,6 +987,36 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                     <***>  )
             }
             '''.stripIndent())
+    }
+
+    void testAutoIndentCurly5() {
+        setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.FALSE)
+        makeEditor("""\
+            if (something)${CARET}
+            """.stripIndent())
+
+        send('\n{\n}')
+
+        assertEditorContents("""\
+            if (something)
+            {
+            }${CARET}
+            """.stripIndent())
+    }
+
+    void testAutoIndentCurly6() {
+        makeEditor("""\
+            if (something)${CARET}
+            """.stripIndent())
+
+        send('\n{\n')
+
+        assertEditorContents("""\
+            if (something)
+            {
+                ${CARET}
+            }
+            """.stripIndent())
     }
 
     void testMuliLineCommentPaste1() {
