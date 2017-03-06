@@ -77,9 +77,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testGreclipse1521_pre() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         runConformTest(new String[] {
             "Foo.groovy",
             "enum Color { R,G,B;}\n"
@@ -514,46 +512,27 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testStaticOuter_GRE944_2() {
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            runConformTest(new String[] {
-                "B.java",
-                "public class B {\n"+
-                "  public static void main(String[] argv) {\n" +
-                "    new A.C().foo();\n" +
-                "  }\n" +
-                "}\n",
+        runNegativeTest(new String[] {
+            "B.java",
+            "public class B {\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new A.C().foo();\n" +
+            "  }\n" +
+            "}\n",
 
-                "A.groovy",
-                "static class A {\n"+
-                "  static class C {\n"+
-                "  public void foo() {print 'abcd';}\n"+
-                "  }\n"+
-                "}\n",
-            },
-            "abcd");
-        } else {
-            runNegativeTest(new String[] {
-                "B.java",
-                "public class B {\n"+
-                "  public static void main(String[] argv) {\n" +
-                "    new A.C().foo();\n" +
-                "  }\n" +
-                "}\n",
-
-                "A.groovy",
-                "static class A {\n"+
-                "  static class C {\n"+
-                "  public void foo() {print 'abcd';}\n"+
-                "  }\n"+
-                "}\n",
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\tstatic class A {\n" +
-            "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
-            "----------\n");
-        }
+            "A.groovy",
+            "static class A {\n"+
+            "  static class C {\n"+
+            "  public void foo() {print 'abcd';}\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\tstatic class A {\n" +
+        "\t             ^\n" +
+        "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+        "----------\n");
     }
 
     public void testEnumStatic_GRE974() {
@@ -625,69 +604,69 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     public void testPrimitiveLikeTypeNames_GRE891() {
             runConformTest(new String[] {
-                    "Foo.java",
-                    "public class Foo {\n"+
-                    "public static void main(String[] args) {\n"+
-                    "  Z[][] zs = new Z().zzz();\n"+
-                    "  System.out.println(\"works\");\n"+
-                    "  }\n"+
-                    "}",
-                    "Z.groovy",
-                    "class Z {\n"+
-                    "   Z[][] zzz() { null }\n"+
-                    "}\n"},"works");
+                "Foo.java",
+                "public class Foo {\n"+
+                "public static void main(String[] args) {\n"+
+                "  Z[][] zs = new Z().zzz();\n"+
+                "  System.out.println(\"works\");\n"+
+                "  }\n"+
+                "}",
+                "Z.groovy",
+                "class Z {\n"+
+                "   Z[][] zzz() { null }\n"+
+                "}\n"},"works");
         // return type is a single char type (not in package and not primitive)
         assertEquals("[[LZ;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_2() {
         runConformTest(new String[] {
-                "Foo.java",
-                "public class Foo {\n"+
-                "public static void main(String[] args) {\n"+
-                "  int[][] zs = new Z().zzz();\n"+
-                "  System.out.println(\"works\");\n"+
-                "  }\n"+
-                "}",
-                "Z.groovy",
-                "class Z {\n"+
-                "   int[][] zzz() { null }\n"+
-                "}\n"},"works");
+            "Foo.java",
+            "public class Foo {\n"+
+            "public static void main(String[] args) {\n"+
+            "  int[][] zs = new Z().zzz();\n"+
+            "  System.out.println(\"works\");\n"+
+            "  }\n"+
+            "}",
+            "Z.groovy",
+            "class Z {\n"+
+            "   int[][] zzz() { null }\n"+
+            "}\n"},"works");
         // return type is a primitive
         assertEquals("[[I",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testPrimitiveLikeTypeNames_GRE891_3() {
         runConformTest(new String[] {
-                "Foo.java",
-                "public class Foo {\n"+
-                "public static void main(String[] args) {\n"+
-                "  java.lang.String[][] zs = new Z().zzz();\n"+
-                "  System.out.println(\"works\");\n"+
-                "  }\n"+
-                "}",
-                "Z.groovy",
-                "class Z {\n"+
-                "   java.lang.String[][] zzz() { null }\n"+
-                "}\n"},"works");
+            "Foo.java",
+            "public class Foo {\n"+
+            "public static void main(String[] args) {\n"+
+            "  java.lang.String[][] zs = new Z().zzz();\n"+
+            "  System.out.println(\"works\");\n"+
+            "  }\n"+
+            "}",
+            "Z.groovy",
+            "class Z {\n"+
+            "   java.lang.String[][] zzz() { null }\n"+
+            "}\n"},"works");
         // return type is a qualified java built in type
         assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
     public void testAnonymousClasses_GE1531() {
         runNegativeTest(new String[] {
-                "Foo.groovy",
-                "class Foo {\n"+
-                "  def foo () {\n"+
-                "    new java.lang.Runnable () {}//<--quick fix here\n"+
-                "  }\n"+
-                "}"},
-                "----------\n" +
-                "1. ERROR in Foo.groovy (at line 3)\n" +
-                "\tnew java.lang.Runnable () {}//<--quick fix here\n" +
-                "\t    ^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" +
-                "----------\n");
+            "Foo.groovy",
+            "class Foo {\n"+
+            "  def foo () {\n"+
+            "    new java.lang.Runnable () {}//<--quick fix here\n"+
+            "  }\n"+
+            "}"},
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 3)\n" +
+            "\tnew java.lang.Runnable () {}//<--quick fix here\n" +
+            "\t    ^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" +
+            "----------\n");
         // return type is a qualified java built in type
         ModuleNode mn = getModuleNode("Foo$1.class");
         System.out.println(mn);
@@ -695,22 +674,22 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     public void testPrimitiveLikeTypeNames_GRE891_4() {
         runConformTest(new String[] {
-                "pkg/Foo.java",
-                "package pkg;\n"+
-                "public class Foo {\n"+
-                "public static void main(String[] args) {\n"+
-                "  pkg.H[][] zs = new Z().zzz();\n"+
-                "  System.out.println(\"works\");\n"+
-                "  }\n"+
-                "}",
-                "Y.groovy",
-                "package pkg\n"+
-                "class H {}\n",
-                "Z.groovy",
-                "package pkg\n"+
-                "class Z {\n"+
-                "   H[][] zzz() { null }\n"+
-                "}\n"},"works");
+            "pkg/Foo.java",
+            "package pkg;\n"+
+            "public class Foo {\n"+
+            "public static void main(String[] args) {\n"+
+            "  pkg.H[][] zs = new Z().zzz();\n"+
+            "  System.out.println(\"works\");\n"+
+            "  }\n"+
+            "}",
+            "Y.groovy",
+            "package pkg\n"+
+            "class H {}\n",
+            "Z.groovy",
+            "package pkg\n"+
+            "class Z {\n"+
+            "   H[][] zzz() { null }\n"+
+            "}\n"},"works");
 
         // return type is a single char groovy type from a package
         assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
@@ -718,22 +697,22 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     public void testPrimitiveLikeTypeNames_GRE891_5() {
         runConformTest(new String[] {
-                "pkg/Foo.java",
-                "package pkg;\n"+
-                "public class Foo {\n"+
-                "public static void main(String[] args) {\n"+
-                "  H[][] zs = new Z().zzz();\n"+
-                "  System.out.println(\"works\");\n"+
-                "  }\n"+
-                "}",
-                "Y.java",
-                "package pkg;\n"+
-                "class H {}\n",
-                "Z.groovy",
-                "package pkg;\n"+
-                "class Z {\n"+
-                "   H[][] zzz() { null }\n"+
-                "}\n"},"works");
+            "pkg/Foo.java",
+            "package pkg;\n"+
+            "public class Foo {\n"+
+            "public static void main(String[] args) {\n"+
+            "  H[][] zs = new Z().zzz();\n"+
+            "  System.out.println(\"works\");\n"+
+            "  }\n"+
+            "}",
+            "Y.java",
+            "package pkg;\n"+
+            "class H {}\n",
+            "Z.groovy",
+            "package pkg;\n"+
+            "class Z {\n"+
+            "   H[][] zzz() { null }\n"+
+            "}\n"},"works");
            // return type is a single char java type from a package
          assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
@@ -761,99 +740,79 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     public void testMixedModeInnerProperties_GRE597() {
         runConformTest(new String[] {
-                "groovy/JoinGroovy.groovy",
-                "package groovy\n"+
-                "\n"+
-                "class JointGroovy {\n"+
-                "StaticInner property\n"+
-                "\n"+
-                " static class StaticInner {\n"+
-                "  NonStaticInner property2\n"+
-                "\n"+
-                "  class NonStaticInner {\n"+
-                "    Closure property3 = {}\n"+
-                "  }\n"+
-                " }\n"+
-                "}",
-                "groovy/JointJava.java",
-                "package groovy;\n"+
-                "\n"+
-                "import groovy.lang.Closure;\n"+
-                "\n"+
-                "public class JointJava {\n"+
-                "    public void method() {\n"+
-                "        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
-                "    }\n"+
-                "}\n"},"");
+            "groovy/JoinGroovy.groovy",
+            "package groovy\n"+
+            "\n"+
+            "class JointGroovy {\n"+
+            "StaticInner property\n"+
+            "\n"+
+            " static class StaticInner {\n"+
+            "  NonStaticInner property2\n"+
+            "\n"+
+            "  class NonStaticInner {\n"+
+            "    Closure property3 = {}\n"+
+            "  }\n"+
+            " }\n"+
+            "}",
+            "groovy/JointJava.java",
+            "package groovy;\n"+
+            "\n"+
+            "import groovy.lang.Closure;\n"+
+            "\n"+
+            "public class JointJava {\n"+
+            "    public void method() {\n"+
+            "        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
+            "    }\n"+
+            "}"});
     }
 
     public void testMixedModeInnerProperties2_GRE597() {
         runConformTest(new String[] {
-                "groovy/JoinGroovy.groovy",
-                "package groovy\n"+
-                "\n"+
-                "class JointGroovy {\n"+
-                "StaticInner property\n"+
-                "\n"+
-                " }\n"+
-                // now the inner is not an inner (like the previous test) but the property3 still is
-                " class StaticInner {\n"+
-                "  NonStaticInner property2\n"+
-                "\n"+
-                "  class NonStaticInner {\n"+
-                "    Closure property3 = {}\n"+
-                "  }\n"+
-                "}",
-                "groovy/JointJava.java",
-                "package groovy;\n"+
-                "\n"+
-                "import groovy.lang.Closure;\n"+
-                "\n"+
-                "public class JointJava {\n"+
-                "    public void method() {\n"+
-                "        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
-                "    }\n"+
-                "}\n"},"");
+            "groovy/JoinGroovy.groovy",
+            "package groovy\n"+
+            "\n"+
+            "class JointGroovy {\n"+
+            "StaticInner property\n"+
+            "\n"+
+            " }\n"+
+            // now the inner is not an inner (like the previous test) but the property3 still is
+            " class StaticInner {\n"+
+            "  NonStaticInner property2\n"+
+            "\n"+
+            "  class NonStaticInner {\n"+
+            "    Closure property3 = {}\n"+
+            "  }\n"+
+            "}",
+            "groovy/JointJava.java",
+            "package groovy;\n"+
+            "\n"+
+            "import groovy.lang.Closure;\n"+
+            "\n"+
+            "public class JointJava {\n"+
+            "    public void method() {\n"+
+            "        Closure closure = new JointGroovy().getProperty().getProperty2().getProperty3();\n"+
+            "    }\n"+
+            "}"});
     }
 
     public void testNewRuleInLatestGroovy() {
-//    	if (isGroovy16()) { // FIXASC should also break in 17b2
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            // Why no duplicate type exception here on < 1.8? (Move enum and Move for script name)
-            runNegativeTest(new String[] {
-                    "Move.groovy",
-                    "enum Move { ROCK, PAPER, SCISSORS }\n"+
-                    "\n"+
-                    "final static BEATS = [\n"+
-                    "   [Move.ROCK,     Move.SCISSORS],\n"+
-                    "   [Move.PAPER,    Move.ROCK],\n"+
-                    "   [Move.SCISSORS, Move.PAPER]\n"+
-                    "].asImmutable()"
-            },
-            "----------\n" +
-            "1. ERROR in Move.groovy (at line 3)\n" +
-            "\tfinal static BEATS = [\n" +
-            "\t             ^^^^^\n" +
-            "Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" +
-            "----------\n");
-        } else {
-            runNegativeTest(new String[] {
-                    "Move2.groovy",
-                    "enum Move { ROCK, PAPER, SCISSORS }\n"+
-                    "\n"+
-                    "final static BEATS = [\n"+
-                    "   [Move.ROCK,     Move.SCISSORS],\n"+
-                    "   [Move.PAPER,    Move.ROCK],\n"+
-                    "   [Move.SCISSORS, Move.PAPER]\n"+
-                    "].asImmutable()"
-            },
-            "----------\n" +
-            "1. ERROR in Move2.groovy (at line 3)\n" +
-            "\tfinal static BEATS = [\n" +
-            "\t             ^^^^^\n" +
-            "Groovy:Modifier 'static' not allowed here.\n" +
-            "----------\n");
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        runNegativeTest(new String[] {
+            "Move.groovy",
+            "enum Move { ROCK, PAPER, SCISSORS }\n"+
+            "\n"+
+            "final static BEATS = [\n"+
+            "   [Move.ROCK,     Move.SCISSORS],\n"+
+            "   [Move.PAPER,    Move.ROCK],\n"+
+            "   [Move.SCISSORS, Move.PAPER]\n"+
+            "].asImmutable()"
+        },
+        "----------\n" +
+        "1. ERROR in Move.groovy (at line 3)\n" +
+        "\tfinal static BEATS = [\n" +
+        "\t             ^^^^^\n" +
+        "Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" +
+        "----------\n");
     }
 
     // WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
@@ -1061,7 +1020,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "  public X() {\n" +
                 "  }\n" +
                 // for: public static void main(String[] args) {
-//				"  public static void main(public String... args) {\n" +
+                //"  public static void main(public String... args) {\n" +
                 // for: static main(args) {
                 "  public static void main(public java.lang.String... args) {\n" +
                 "  }\n" +
@@ -1080,8 +1039,35 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "}\n",
         },"success");
         checkGCUDeclaration("X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public static void main(public java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n"
+        );
+    }
+
+    public void testInnerTypes() {
+        runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            " class Inner {}\n"+
+            "  static main(args) {\n"+
+            "    print \"success\"\n" +
+            "  }\n"+
+            "}\n",
+        },"success");
+
+        checkGCUDeclaration("X.groovy",
                 "package p;\n" +
                 "public class X {\n" +
+                "  public class Inner {\n" +
+                "    public Inner() {\n"+
+                "    }\n"+
+                "  }\n"+
                 "  public X() {\n" +
                 "  }\n" +
                 "  public static void main(public java.lang.String... args) {\n" +
@@ -1090,48 +1076,22 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
-    public void testInnerTypes() {
-        runConformTest(new String[] {
-                "p/X.groovy",
-                "package p;\n" +
-                "public class X {\n" +
-                " class Inner {}\n"+
-                "  static main(args) {\n"+
-                "    print \"success\"\n" +
-                "  }\n"+
-                "}\n",
-            },"success");
-
-            checkGCUDeclaration("X.groovy",
-                    "package p;\n" +
-                    "public class X {\n" +
-                    "  public class Inner {\n" +
-                    "    public Inner() {\n"+
-                    "    }\n"+
-                    "  }\n"+
-                    "  public X() {\n" +
-                    "  }\n" +
-                    "  public static void main(public java.lang.String... args) {\n" +
-                    "  }\n" +
-                    "}\n"
-            );
-    }
-
     public void testBrokenPackage() {
         runNegativeTest(new String[] {
-                "Foo.groovy",
-                "package \n"+
-                "class Name { }\n"},
-                "----------\n" +
-                "1. ERROR in Foo.groovy (at line 1)\n" +
-                "\tpackage \n" +
-                "\t ^\n" +
-                "Groovy:Invalid package specification @ line 1, column 1.\n" +
-                "----------\n");
+            "Foo.groovy",
+            "package \n"+
+            "class Name { }\n"},
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tpackage \n" +
+            "\t ^\n" +
+            "Groovy:Invalid package specification @ line 1, column 1.\n" +
+            "----------\n");
     }
 
     // GROOVY-4219
     public void testGRE637() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
         runConformTest(new String[] {
             "de/brazzy/nikki/Texts.java",
             "package de.brazzy.nikki;\n"+

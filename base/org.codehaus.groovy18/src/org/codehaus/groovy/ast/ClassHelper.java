@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.lang.ref.SoftReference;
+import java.lang.reflect.Modifier;
 import java.lang.annotation.Annotation;
 
 /**
@@ -388,6 +389,64 @@ public class ClassHelper {
     static class ClassHelperCache {
         static ManagedConcurrentMap<Class, SoftReference<ClassNode>> classCache = new ManagedConcurrentMap<Class, SoftReference<ClassNode>>(ReferenceBundle.getWeakBundle());
     }
+
+    // GRECLIPSE add -- backported from Groovy 2.2
+
+    public static boolean isSAMType(ClassNode type) {
+        return findSAM(type) != null;
+    }
+
+    /**
+     * Returns the single abstract method of a class node, if it is a SAM type, or null otherwise.
+     * @param type a type for which to search for a single abstract method
+     * @return the method node if type is a SAM type, null otherwise
+     */
+    public static MethodNode findSAM(ClassNode type) {
+        if (!Modifier.isAbstract(type.getModifiers())) return null;
+        if (type.isInterface()) {
+            List<MethodNode> methods = type.getMethods();
+            MethodNode found=null;
+            for (MethodNode mi : methods) {
+                // ignore methods, that are not abstract and from Object
+                if (!Modifier.isAbstract(mi.getModifiers())) continue;
+                if (mi.getDeclaringClass().equals(OBJECT_TYPE)) continue;
+                if (OBJECT_TYPE.getDeclaredMethod(mi.getName(), mi.getParameters())!=null) continue;
+
+                // we have two methods, so no SAM
+                if (found!=null) return null;
+                found = mi;
+            }
+            return found;
+
+        } else {
+
+            List<MethodNode> methods = type.getAbstractMethods();
+            MethodNode found = null;
+            if (methods!=null) {
+                for (MethodNode mi : methods) {
+                    if (!hasUsableImplementation(type, mi)) {
+                        if (found!=null) return null;
+                        found = mi;
+                    }
+                }
+            }
+            return found;
+        }
+    }
+
+    private static boolean hasUsableImplementation(ClassNode c, MethodNode m) {
+        if (c==m.getDeclaringClass()) return false;
+        MethodNode found = c.getDeclaredMethod(m.getName(), m.getParameters());
+        if (found==null) return false;
+        int asp = found.getModifiers() & ABSTRACT_STATIC_PRIVATE;
+        int visible = found.getModifiers() & VISIBILITY;
+        if (visible !=0 && asp == 0) return true;
+        if (c.equals(OBJECT_TYPE)) return false;
+        return hasUsableImplementation(c.getSuperClass(), m);
+    }
+
+    private static final int ABSTRACT_STATIC_PRIVATE = Modifier.ABSTRACT|Modifier.PRIVATE|Modifier.STATIC;
+    private static final int VISIBILITY = 5; // public|protected
 
     // GRECLIPSE add -- backported from Groovy 2.3
     /**
