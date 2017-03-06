@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 GK Software AG, and others.
+ * Copyright (c) 2013, 2017 GK Software AG, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,7 +130,6 @@ public class InferenceContext18 {
 	
 	/** The inference variables for which as solution is sought. */
 	InferenceVariable[] inferenceVariables;
-	int nextVarId;
 
 	/** Constraints that have not yet been reduced and incorporated. */
 	ConstraintFormula[] initialConstraints;
@@ -165,39 +164,13 @@ public class InferenceContext18 {
 	boolean directlyAcceptingInnerBounds = false;
 	/** Not per JLS: pushing bounds from inner to outer may have to be deferred till after overload resolution, store here a runnable to perform the push. */
 	private Runnable pushToOuterJob = null;
-	
-	// InferenceVariable interning:
-	private InferenceVariable[] internedVariables;
-	
-	private InferenceVariable getInferenceVariable(TypeBinding typeParameter, int rank, InvocationSite site) {
-		InferenceContext18 outermostContext = this.environment.currentInferenceContext;
-		if (outermostContext == null)
-			outermostContext = this;
-		int i = 0;
-		InferenceVariable[] interned = outermostContext.internedVariables;
-		if (interned == null) {
-			outermostContext.internedVariables = new InferenceVariable[10];
-		} else {
-			int len = interned.length;
-			for (i = 0; i < len; i++) {
-				InferenceVariable var = interned[i];
-				if (var == null)
-					break;
-				if (var.typeParameter == typeParameter && var.rank == rank && isSameSite(var.site, site)) //$IDENTITY-COMPARISON$
-					return var;
-			}
-			if (i >= len)
-				System.arraycopy(interned, 0, outermostContext.internedVariables = new InferenceVariable[len+10], 0, len);
-		}
-		return outermostContext.internedVariables[i] = new InferenceVariable(typeParameter, rank, this.nextVarId++, site, this.environment, this.object);
-	}
-	
-	boolean isSameSite(InvocationSite site1, InvocationSite site2) {
+
+	public static boolean isSameSite(InvocationSite site1, InvocationSite site2) {
 		if (site1 == site2)
 			return true;
 		if (site1 == null || site2 == null)
 			return false;
-		if (site1.sourceStart() == site2.sourceStart() && site1.sourceEnd() == site2.sourceEnd() && site1.toString().equals(site2.toString()))
+		if (site1.sourceStart() == site2.sourceStart() && site1.sourceEnd() == site2.sourceEnd())
 			return true;
 		return false;
 	}
@@ -333,7 +306,7 @@ public class InferenceContext18 {
 		}
 		InferenceVariable[] newVariables = new InferenceVariable[len];
 		for (int i = 0; i < len; i++)
-			newVariables[i] = getInferenceVariable(typeVariables[i], i, this.currentInvocation);
+			newVariables[i] = InferenceVariable.get(typeVariables[i], i, this.currentInvocation, this.scope, this.object);
 		if (this.inferenceVariables == null || this.inferenceVariables.length == 0) {
 			this.inferenceVariables = newVariables;
 		} else {
@@ -356,7 +329,7 @@ public class InferenceContext18 {
 				newVariables[i] = (InferenceVariable) typeVariables[i]; // prevent double substitution of an already-substituted inferenceVariable
 			else
 				toAdd[numToAdd++] =
-					newVariables[i] = getInferenceVariable(typeVariables[i], i, this.currentInvocation);
+					newVariables[i] = InferenceVariable.get(typeVariables[i], i, this.currentInvocation, this.scope, this.object);
 		}
 		if (numToAdd > 0) {
 			int start = 0;
@@ -430,7 +403,7 @@ public class InferenceContext18 {
 			}
 
 			if (SHOULD_WORKAROUND_BUG_JDK_8153748) { // "before 18.5.2", but should not spill into b3 ... (heuristically)
-				ReductionResult jdk8153748result = addJDK_8153748ConstraintsFromInvocation(this.invocationArguments, method);
+				ReductionResult jdk8153748result = addJDK_8153748ConstraintsFromInvocation(this.invocationArguments, method, new InferenceSubstitution(this));
 				if (jdk8153748result != null) {
 					this.currentBounds.incorporate(this);
 				}
@@ -548,15 +521,17 @@ public class InferenceContext18 {
 	}
 	// ---
 
-	private ReductionResult addJDK_8153748ConstraintsFromInvocation(Expression[] arguments, MethodBinding method) throws InferenceFailureException {
+	private ReductionResult addJDK_8153748ConstraintsFromInvocation(Expression[] arguments, MethodBinding method, InferenceSubstitution substitution)
+			throws InferenceFailureException
+	{
 		// not per JLS, trying to mimic javac behavior
 		boolean constraintAdded = false;
 		if (arguments != null) {
 			for (int i = 0; i < arguments.length; i++) {
 				Expression argument = arguments[i];
 				TypeBinding parameter = getParameter(method.parameters, i, method.isVarargs());
-				parameter = this.substitute(parameter);
-				ReductionResult result = addJDK_8153748ConstraintsFromExpression(argument, parameter, method);
+				parameter = substitution.substitute(substitution, parameter); 
+				ReductionResult result = addJDK_8153748ConstraintsFromExpression(argument, parameter, method, substitution);
 				if (result == ReductionResult.FALSE)
 					return ReductionResult.FALSE;
 				if (result == ReductionResult.TRUE)
@@ -566,7 +541,10 @@ public class InferenceContext18 {
 		return constraintAdded ? ReductionResult.TRUE : null;
 	}
 
-	private ReductionResult addJDK_8153748ConstraintsFromExpression(Expression argument, TypeBinding parameter, MethodBinding method) throws InferenceFailureException {
+	private ReductionResult addJDK_8153748ConstraintsFromExpression(Expression argument, TypeBinding parameter, MethodBinding method,
+			InferenceSubstitution substitution)
+			throws InferenceFailureException
+	{
 		if (argument instanceof FunctionalExpression) {
 			return addJDK_8153748ConstraintsFromFunctionalExpr((FunctionalExpression) argument, parameter, method);
 		} else if (argument instanceof Invocation && argument.isPolyExpression(method)) {
@@ -574,13 +552,14 @@ public class InferenceContext18 {
 			Expression[] innerArgs = invocation.arguments();
 			MethodBinding innerMethod = invocation.binding();
 			if (innerMethod != null && innerMethod.isValidBinding()) {
-				return addJDK_8153748ConstraintsFromInvocation(innerArgs, innerMethod.original());
+				substitution = enrichSubstitution(substitution, invocation, innerMethod);
+				return addJDK_8153748ConstraintsFromInvocation(innerArgs, innerMethod.original(), substitution);
 			}
 		} else if (argument instanceof ConditionalExpression) {
 			ConditionalExpression ce = (ConditionalExpression) argument;
-			if (addJDK_8153748ConstraintsFromExpression(ce.valueIfTrue, parameter, method) == ReductionResult.FALSE)
+			if (addJDK_8153748ConstraintsFromExpression(ce.valueIfTrue, parameter, method, substitution) == ReductionResult.FALSE)
 				return ReductionResult.FALSE;
-			return addJDK_8153748ConstraintsFromExpression(ce.valueIfFalse, parameter, method);
+			return addJDK_8153748ConstraintsFromExpression(ce.valueIfFalse, parameter, method, substitution);
 		}
 		return null;
 	}
@@ -613,6 +592,15 @@ public class InferenceContext18 {
 			}
 		}
 		return null;
+	}
+	
+	InferenceSubstitution enrichSubstitution(InferenceSubstitution substitution, Invocation innerInvocation, MethodBinding innerMethod) {
+		if (innerMethod instanceof ParameterizedGenericMethodBinding) {
+			InferenceContext18 innerContext = innerInvocation.getInferenceContext((ParameterizedMethodBinding) innerMethod);
+			if (innerContext != null)
+				return substitution.addContext(innerContext);
+		}
+		return substitution;
 	}
 
 	private boolean addConstraintsToC(Expression[] exprs, Set<ConstraintFormula> c, MethodBinding method, int inferenceKindForMethod, InvocationSite site)
@@ -1587,8 +1575,6 @@ public class InferenceContext18 {
 		if (!isSameSite(innerCtx.currentInvocation, this.currentInvocation))
 			innerCtx.outerContext = this;
 		this.usesUncheckedConversion = innerCtx.usesUncheckedConversion;
-		for (InferenceVariable variable : this.inferenceVariables)
-			variable.updateSourceName(this.nextVarId++);
 	}
 
 	public void resumeSuspendedInference(SuspendedInferenceRecord record) {
