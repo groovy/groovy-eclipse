@@ -795,10 +795,9 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "}"});
     }
 
-    public void testNewRuleInLatestGroovy() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+    public void testStaticVariableInScript() {
         runNegativeTest(new String[] {
-            "Move.groovy",
+            "Script.groovy",
             "enum Move { ROCK, PAPER, SCISSORS }\n"+
             "\n"+
             "final static BEATS = [\n"+
@@ -808,10 +807,10 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "].asImmutable()"
         },
         "----------\n" +
-        "1. ERROR in Move.groovy (at line 3)\n" +
+        "1. ERROR in Script.groovy (at line 3)\n" +
         "\tfinal static BEATS = [\n" +
         "\t             ^^^^^\n" +
-        "Groovy:Variable definition has an incorrect modifier \'static\'. at line: 3 column: 1. File: Move.groovy @ line 3, column 1.\n" +
+        "Groovy:Modifier 'static' not allowed here.\n" +
         "----------\n");
     }
 
