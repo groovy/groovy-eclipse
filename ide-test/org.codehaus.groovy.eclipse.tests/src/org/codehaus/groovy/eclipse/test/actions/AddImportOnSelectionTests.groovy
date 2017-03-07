@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import static org.junit.Assert.*
 
-import org.codehaus.groovy.eclipse.refactoring.actions.AddImportOnSelectionAction
 import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTest
 import org.eclipse.jdt.ui.PreferenceConstants
 
@@ -279,6 +278,16 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
     }
 
     // constructors/initializers
+
+    void testAddImportOnConstructorCall1() {
+        addImportOnSelection "def d = new java.util.Da${CARET}te(123L)"
+        assertEditorContents "import java.util.Date\n\ndef d = new Date(123L)"
+    }
+
+    void testAddImportOnConstructorCall2() {
+        addImportOnSelection "def l = new java.util.Array${CARET}List<String>()"
+        assertEditorContents "import java.util.ArrayList\n\ndef l = new ArrayList<String>()"
+    }
 
     void testAddImportOnConstructorParam() {
         addImportOnSelection """\

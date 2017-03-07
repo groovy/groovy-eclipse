@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -122,10 +123,10 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                         importRewrite.addImport(choice.getFullyQualifiedName());
                         return new RangeMarker(node.getStart(), node.getLength());
                     }
-                    if (node instanceof ClassExpression || node instanceof ClassNode) {
+                    if (node instanceof ClassNode || node instanceof ClassExpression || node instanceof ConstructorCallExpression) {
                         // simple name like "List", partially-qualified name like "Map.Entry", or fully-qualified name like "java.util.regex.Pattern"
                         ClassNode type = componentType(node);
-                        int typeStart = startOffset(node, nodeFinder);
+                        int typeStart = startOffset(!(node instanceof ConstructorCallExpression) ? node : type, nodeFinder);
                         if (moduleNode.getClasses().contains(type)) {
                             return null; // skip type in same unit
                         }
