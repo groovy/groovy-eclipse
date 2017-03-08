@@ -1216,6 +1216,6 @@ public abstract class Annotation extends Expression {
 		return (f != null);
 	}
 
-	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$callSiteArray".toCharArray(); //$NON-NLS-1$
+	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$staticClassInfo".toCharArray(); //$NON-NLS-1$
 	// GROOVY end
 }
