@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.codehaus.jdt.groovy.model;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -49,7 +50,6 @@ import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
-import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
@@ -185,44 +185,47 @@ public class GroovyCompilationUnit extends CompilationUnit {
      * working copy info is about to be discared if useCount <= 1
      */
     private boolean workingCopyInfoWillBeDiscarded(PerWorkingCopyInfo info) {
-        return info != null
-                && ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1;
+        return info != null && ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1;
     }
 
     /**
-     * Track how deep we are in recursive calls to buildStructure
+     * Tracks how deep we are in recursive calls to {@link #buildStructure}.
      */
-    static MyThreadLocal depth = new MyThreadLocal();
-
-    static class MyThreadLocal extends ThreadLocal<Integer> {
+    private static final ThreadLocalAtomicInteger depth = new ThreadLocalAtomicInteger();
+    private static class ThreadLocalAtomicInteger extends ThreadLocal<AtomicInteger> {
         @Override
-        protected Integer initialValue() {
-            return 0;
+        protected AtomicInteger initialValue() {
+            return new AtomicInteger();
+        }
+        int intValue() {
+            return get().get();
+        }
+        void increment() {
+            get().incrementAndGet();
+        }
+        void decrement() {
+            get().decrementAndGet();
         }
     }
 
     @Override
     protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
             throws JavaModelException {
+        depth.increment();
         try {
-            depth.set(depth.get() + 1);
-
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.COMPILER, "Build Structure starting for " + this.name);
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, "Build Structure starting for " + name);
                 GroovyLogManager.manager.logStart("Build structure: " + name + " : " + Thread.currentThread().getName());
             }
-
-            CompilationUnitElementInfo unitInfo = (CompilationUnitElementInfo) info;
 
             // ensure buffer is opened
             IBuffer buffer = getBufferManager().getBuffer(this);
             if (buffer == null) {
-                openBuffer(pm, unitInfo); // open buffer independently from the
-                // info, since we are building the info
+                openBuffer(pm, info); // open buffer independently from the info, since we are building the info
             }
 
             // generate structure and compute syntax problems if needed
-            GroovyCompilationUnitStructureRequestor requestor = new GroovyCompilationUnitStructureRequestor(this, unitInfo, newElements);
+            GroovyCompilationUnitStructureRequestor requestor = new GroovyCompilationUnitStructureRequestor(this, (CompilationUnitElementInfo) info, newElements);
             JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = getPerWorkingCopyInfo();
             JavaProject project = (JavaProject) getJavaProject();
 
@@ -244,9 +247,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 problems = null;
             }
 
-            boolean computeProblems = perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() &&
-                    project != null && JavaProject.hasJavaNature(project.getProject());
-            IProblemFactory problemFactory = new DefaultProblemFactory();
+            boolean computeProblems = perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null && JavaProject.hasJavaNature(project.getProject());
 
             // compiler options
             Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
@@ -255,23 +256,19 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 options.put(JavaCore.COMPILER_TASK_TAGS, "");
             }
 
-            // FIXASC deal with the case of project==null to reduce duplication in this next line and call to setGroovyClasspath
-            // Required for Groovy, but not for Java
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 
             CompilerOptions compilerOptions = new CompilerOptions(options);
-
             if (project != null) {
                 CompilerUtils.setGroovyClasspath(compilerOptions, project);
             }
 
-            // Required for Groovy, but not for Java
             ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions, new DefaultProblemFactory());
 
             SourceElementParser parser = new MultiplexingSourceElementRequestorParser(
                     reporter,
                     requestor, // not needed if computing groovy only
-                    problemFactory,
+                    reporter.problemFactory,
                     compilerOptions,
                     true, // report local declarations
                     !createAST // optimize string literals only if not creating a DOM AST
@@ -291,7 +288,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
             }
             // underlying resource is null in the case of a working copy on a class file in a jar
             if (underlyingResource != null) {
-                ReflectionUtils.setPrivateField(CompilationUnitElementInfo.class, "timestamp", unitInfo, underlyingResource.getModificationStamp());
+                ReflectionUtils.setPrivateField(CompilationUnitElementInfo.class, "timestamp", info, underlyingResource.getModificationStamp());
             }
 
             GroovyCompilationUnitDeclaration compilationUnitDeclaration = null;
@@ -311,12 +308,19 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 // this buildStructure for each one. The 'full' parse (with bindings) is only required for
                 // the top most (regardless of the computeProblems setting) and so we track how many recursive
                 // calls we have made - if we are at depth 2 we do what JDT was going to do (the quick thing).
-                if (computeProblems || depth.get() < 2) {
+                if (computeProblems || depth.intValue() < 2) {
                     if (problems == null) {
                         // report problems to the problem requestor
                         problems = new HashMap<String, CategorizedProblem[]>();
-                        compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
-                                source, parser, this.owner, problems, createAST, reconcileFlags, pm);
+                        compilationUnitDeclaration =
+                            (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
+                                source,
+                                parser,
+                                this.owner,
+                                problems,
+                                createAST,
+                                reconcileFlags,
+                                pm);
                         if (computeProblems) {
                             try {
                                 perWorkingCopyInfo.beginReporting();
@@ -324,7 +328,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                                     CategorizedProblem[] categorizedProblems = iteraror.next();
                                     if (categorizedProblems == null)
                                         continue;
-                                    for (int i = 0, length = categorizedProblems.length; i < length; i++) {
+                                    for (int i = 0, n = categorizedProblems.length; i < n; i += 1) {
                                         perWorkingCopyInfo.acceptProblem(categorizedProblems[i]);
                                     }
                                 }
@@ -333,13 +337,22 @@ public class GroovyCompilationUnit extends CompilationUnit {
                             }
                         }
                     } else {
-                        // collect problems
-                        compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
-                                source, parser, this.owner, problems, createAST, reconcileFlags, pm);
+                        compilationUnitDeclaration =
+                            (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
+                                source,
+                                parser,
+                                this.owner,
+                                problems,
+                                createAST,
+                                reconcileFlags,
+                                pm);
                     }
                 } else {
-                    compilationUnitDeclaration = (GroovyCompilationUnitDeclaration) parser
-                            .parseCompilationUnit(source, true /* full parse to find local elements */, pm);
+                    compilationUnitDeclaration =
+                        (GroovyCompilationUnitDeclaration) parser.parseCompilationUnit(
+                            source,
+                            true /* full parse to find local elements */,
+                            pm);
                 }
 
                 // GROOVY
@@ -358,8 +371,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                         throw e;
                     } catch (IllegalArgumentException e) {
                         // if necessary, we can do some better reporting here.
-                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in "
-                                + this.getParent().getElementName() + "." + getElementName());
+                        Util.log(e, "Problem with build structure: Offset for AST node is incorrect in " + this.getParent().getElementName() + "." + getElementName());
                     } catch (Exception e) {
                         Util.log(e, "Problem with build structure for " + this.getElementName());
                     }
@@ -384,22 +396,16 @@ public class GroovyCompilationUnit extends CompilationUnit {
                     compilationUnitDeclaration.cleanUp();
                 }
             }
-            return unitInfo.isStructureKnown();
+            return info.isStructureKnown();
         } finally {
-            depth.set(depth.get() - 1);
+            depth.decrement();
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.logEnd("Build structure: " + name + " : " + Thread.currentThread().getName(),
-                        TraceCategory.COMPILER);
+                GroovyLogManager.manager.logEnd("Build structure: " + name + " : " + Thread.currentThread().getName(), TraceCategory.COMPILER);
             }
         }
     }
 
-    /**
-     * @param perWorkingCopyInfo
-     * @param compilationUnitDeclaration
-     */
-    protected void maybeCacheModuleNode(JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
-            GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
+    protected void maybeCacheModuleNode(JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo, GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
         ModuleNodeMapper.getInstance().maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
     }
 
@@ -407,23 +413,21 @@ public class GroovyCompilationUnit extends CompilationUnit {
      * Copied from super class, but changed so that a custom ReconcileWorkingCopyOperation can be run
      */
     @Override
-    public org.eclipse.jdt.core.dom.CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner workingCopyOwner,
-            IProgressMonitor monitor) throws JavaModelException {
+    public org.eclipse.jdt.core.dom.CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner workingCopyOwner, IProgressMonitor monitor)
+            throws JavaModelException {
         if (!isWorkingCopy())
-            return null; // Reconciling is not supported on non working copies
+            return null; // reconciling is not supported on non-working copies
         if (workingCopyOwner == null)
             workingCopyOwner = DefaultWorkingCopyOwner.PRIMARY;
-
         PerformanceStats stats = null;
         if (ReconcileWorkingCopyOperation.PERF) {
             stats = PerformanceStats.getStats(JavaModelManager.RECONCILE_PERF, this);
-            stats.startRun(new String(this.getFileName()));
+            stats.startRun(String.valueOf(getFileName()));
         }
         ReconcileWorkingCopyOperation op = new GroovyReconcileWorkingCopyOperation(this, astLevel, reconcileFlags, workingCopyOwner);
         JavaModelManager manager = JavaModelManager.getJavaModelManager();
         try {
-            manager.cacheZipFiles(this); // cache zip files for performance (see
-            // https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
+            manager.cacheZipFiles(this); // cache zip files for performance (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=134172)
             op.runOperation(monitor);
         } finally {
             manager.flushZipFiles(this);

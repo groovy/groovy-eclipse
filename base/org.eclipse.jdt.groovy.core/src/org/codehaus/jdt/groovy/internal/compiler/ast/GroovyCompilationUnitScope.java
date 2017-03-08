@@ -27,8 +27,6 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -47,83 +45,63 @@ import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 
 /**
- * A subtype of CompilationUnitScope that allows us to override some methods and prevent JDT doing some checks that groovy will be
- * doing anyway (or that JDT should be prevented from doing on groovy type declarations)
- *
- * @author Andy Clement
+ * A subtype of CompilationUnitScope that allows us to override some methods and
+ * prevents JDT doing some checks that groovy will be doing anyway (or that JDT
+ * should be prevented from doing on groovy type declarations).
  */
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
-    private static final char[][] javaLang;
+    private static final char[][] javaLang = CharOperation.splitOn('.', "java.lang".toCharArray());
     // Matches ResolveVisitor - these are the additional automatic imports for groovy files
-    private static final char[][] javaIo;
-    private static final char[][] javaNet;
-    private static final char[][] javaUtil;
-    private static final char[][] groovyLang;
-    private static final char[][] groovyUtil;
+    private static final char[][] javaIo = CharOperation.splitOn('.', "java.io".toCharArray());
+    private static final char[][] javaNet = CharOperation.splitOn('.', "java.net".toCharArray());
+    private static final char[][] javaUtil = CharOperation.splitOn('.', "java.util".toCharArray());
+    private static final char[][] groovyLang = CharOperation.splitOn('.', "groovy.lang".toCharArray());
+    private static final char[][] groovyUtil = CharOperation.splitOn('.', "groovy.util".toCharArray());
 
-    private static final char[][] javaMathBigDecimal;
-    private static final char[][] javaMathBigInteger;
-
-    static {
-        javaLang = CharOperation.splitOn('.', "java.lang".toCharArray());
-        javaIo = CharOperation.splitOn('.', "java.io".toCharArray());
-        javaNet = CharOperation.splitOn('.', "java.net".toCharArray());
-        javaUtil = CharOperation.splitOn('.', "java.util".toCharArray());
-        groovyLang = CharOperation.splitOn('.', "groovy.lang".toCharArray());
-        groovyUtil = CharOperation.splitOn('.', "groovy.util".toCharArray());
-
-        javaMathBigDecimal = CharOperation.splitOn('.', "java.math.BigDecimal".toCharArray());
-        javaMathBigInteger = CharOperation.splitOn('.', "java.math.BigInteger".toCharArray());
-    }
-
-    private final static char[] GROOVY = "groovy".toCharArray();
-    private final static char[] LANG = "lang".toCharArray();
-    private final static char[][] GROOVY_LANG_GROOVYOBJECT = { GROOVY, LANG, "GroovyObject".toCharArray() };
-
-    private boolean isScript = false;
+    private static final char[][] javaMathBigDecimal = CharOperation.splitOn('.', "java.math.BigDecimal".toCharArray());
+    private static final char[][] javaMathBigInteger = CharOperation.splitOn('.', "java.math.BigInteger".toCharArray());
+    private static final char[][] GROOVY_LANG_GROOVYOBJECT = CharOperation.splitOn('.', "groovy.lang.GroovyObject".toCharArray());
 
     public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
         super(compilationUnitDeclaration, lookupEnvironment);
-        INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
-        if (nameEnvironment instanceof NameEnvironment) {
-            ((NameEnvironment) nameEnvironment).avoidAdditionalGroovyAnswers = true;
+        if (lookupEnvironment.nameEnvironment instanceof NameEnvironment) {
+            ((NameEnvironment) lookupEnvironment.nameEnvironment).avoidAdditionalGroovyAnswers = true;
         }
     }
 
+    private boolean isScript;
+
+    public boolean isScript() {
+        return isScript;
+    }
+
+    public void setIsScript(boolean isScript) {
+        this.isScript = isScript;
+    }
+
+    private ImportBinding[] defaultGroovyImports;
+
     @Override
     protected ImportBinding[] getDefaultImports() {
+        if (defaultGroovyImports != null) return defaultGroovyImports;
         List<ImportBinding> importBindings = new ArrayList<ImportBinding>();
-
         Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
 
-        // augment with the groovy additional automatic imports
-        Binding importBinding = environment.createPackage(javaIo);
-        importBindings.add(new ImportBinding(javaIo, true, importBinding, null));
-
-        importBinding = environment.createPackage(javaNet);
-        importBindings.add(new ImportBinding(javaNet, true, importBinding, null));
-
-        importBinding = environment.createPackage(javaUtil);
-        importBindings.add(new ImportBinding(javaUtil, true, importBinding, null));
-
-        importBinding = environment.createPackage(groovyLang);
-        importBindings.add(new ImportBinding(groovyLang, true, importBinding, null));
-
-        importBinding = environment.createPackage(groovyUtil);
-        importBindings.add(new ImportBinding(groovyUtil, true, importBinding, null));
+        // augment with the Groovy on-demand imports
+        importBindings.add(new ImportBinding(javaIo, true, environment.createPackage(javaIo), null));
+        importBindings.add(new ImportBinding(javaNet, true, environment.createPackage(javaNet), null));
+        importBindings.add(new ImportBinding(javaUtil, true, environment.createPackage(javaUtil), null));
+        importBindings.add(new ImportBinding(groovyLang, true, environment.createPackage(groovyLang), null));
+        importBindings.add(new ImportBinding(groovyUtil, true, environment.createPackage(groovyUtil), null));
 
         // and specific imports for BigDecimal and BigInteger
-        Binding jmBigDecimal = environment.getType(javaMathBigDecimal);
-        importBindings.add(new ImportBinding(javaMathBigDecimal, false, jmBigDecimal, null));
+        importBindings.add(new ImportBinding(javaMathBigDecimal, false, createTypeRef(javaMathBigDecimal), null));
+        importBindings.add(new ImportBinding(javaMathBigInteger, false, createTypeRef(javaMathBigInteger), null));
 
-        Binding jmBigInteger = environment.getType(javaMathBigInteger);
-        importBindings.add(new ImportBinding(javaMathBigInteger, false, jmBigInteger, null));
-
-        CompilerOptions co = compilerOptions();
-        String extraImports = co.groovyExtraImports;
         // TODO support static imports
         // TODO need to refactor (code is copied in JDTResolver)
+        String extraImports = compilerOptions().groovyExtraImports;
         if (extraImports != null) {
             try {
                 String filename = new String(referenceContext.getFileName());
@@ -155,9 +133,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
                         if (nextElement.endsWith(".*")) {
                             char[] withoutDotStar = nextElement.substring(0, nextElement.length() - 2).toCharArray();
                             char[][] cs = CharOperation.splitOn('.', withoutDotStar);
-                            importBinding = environment.createPackage(cs);
-                            // TODO verify binding exists!
-                            importBindings.add(new ImportBinding(cs, true, importBinding, null));
+                            // TODO Verify binding exists!
+                            importBindings.add(new ImportBinding(cs, true, environment.createPackage(cs), null));
                         } else {
                             int asIndex = nextElement.indexOf(" as ");
                             String asName = null;
@@ -168,17 +145,15 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
                             }
                             char[] type = nextElement.toCharArray();
                             char[][] cs = CharOperation.splitOn('.', type);
-                            Binding typeBinding = environment.getType(cs);
-                            importBindings.add(new ImportBinding(cs, false, typeBinding, null));
+                            importBindings.add(new ImportBinding(cs, false, createTypeRef(cs), null));
                             if (asName != null) {
                                 char[] asNameChars = asName.toCharArray();
                                 char[][] cs2 = new char[1][];
                                 cs2[0] = asNameChars;
-                                importBindings.add(new ImportBinding(cs2, false, typeBinding, null));
+                                importBindings.add(new ImportBinding(cs2, false, createTypeRef(cs), null));
                             }
                         }
                     }
-
                 }
             } catch (Exception e) {
                 new RuntimeException("Problem processing extraImports: " + extraImports, e).printStackTrace();
@@ -199,8 +174,24 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         //        importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
         //}
 
-        return importBindings.toArray(new ImportBinding[importBindings.size()]);
+        return defaultGroovyImports = importBindings.toArray(new ImportBinding[importBindings.size()]);
     }
+
+    private ReferenceBinding createTypeRef(char[][] compoundName) {
+        // was: return environment.getType(compoundName); -- performs full/slow type resolution
+        try {
+            if (getTypeFromCompoundName == null) {
+                getTypeFromCompoundName = LookupEnvironment.class.getDeclaredMethod(
+                    "getTypeFromCompoundName", char[][].class, boolean.class, boolean.class);
+                getTypeFromCompoundName.setAccessible(true);
+            }
+            return (ReferenceBinding) getTypeFromCompoundName.invoke(
+                environment, new Object[] {compoundName, Boolean.FALSE, Boolean.FALSE});
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private static java.lang.reflect.Method getTypeFromCompoundName;
 
     @Override
     protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
@@ -388,14 +379,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     @Override
     public boolean scannerAvailable() {
         return false;
-    }
-
-    public void setIsScript(boolean isScript) {
-        this.isScript = isScript;
-    }
-
-    public boolean isScript() {
-        return isScript;
     }
 
     /**
