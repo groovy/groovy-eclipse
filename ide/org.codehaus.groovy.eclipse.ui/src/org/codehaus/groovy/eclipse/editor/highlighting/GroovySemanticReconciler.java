@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -53,6 +54,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPartSite;
+import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 
 public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
@@ -94,8 +96,8 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     }
 
     private volatile GroovyEditor editor;
-    private final Semaphore lock = new Semaphore(1);
     private SemanticHighlightingPresenter presenter;
+    private final Semaphore lock = new Semaphore(1, true);
 
     // make these configurable
     private Object mapKeyHighlighting;
@@ -120,40 +122,40 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     public GroovySemanticReconciler() {
         // TODO: Reload colors and styles when preferences are changed.
-        IPreferenceStore javaPrefs = JavaPlugin.getDefault().getPreferenceStore();
-        IPreferenceStore groovyPrefs = GroovyPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore prefs = new ChainedPreferenceStore(new IPreferenceStore[] {
+            GroovyPlugin.getDefault().getPreferenceStore(), JavaPlugin.getDefault().getPreferenceStore()});
 
-        Color groovyColor      = loadColorFrom(groovyPrefs, GROOVY_HIGHLIGHT_PREFERENCE);
-        Color numberColor      = loadColorFrom(javaPrefs, NUMBER_HIGHLIGHT_PREFERENCE);
-        Color stringColor      = loadColorFrom(groovyPrefs, STRING_HIGHLIGHT_PREFERENCE);
-        Color tagKeyColor      = loadColorFrom(javaPrefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
-        Color parameterColor   = loadColorFrom(javaPrefs, PARAMETER_HIGHLIGHT_PREFERENCE);
-        Color variableColor    = loadColorFrom(javaPrefs, VARIABLE_HIGHLIGHT_PREFERENCE);
-        Color objectFieldColor = loadColorFrom(javaPrefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE);
-        Color staticFieldColor = loadColorFrom(javaPrefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE);
-        Color staticValueColor = loadColorFrom(javaPrefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE);
-        Color staticCallColor  = loadColorFrom(javaPrefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE);
-        Color methodCallColor  = loadColorFrom(javaPrefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE);
-        Color methodDeclColor  = loadColorFrom(javaPrefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE);
+        Color groovyColor      = loadColorFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE);
+        Color numberColor      = loadColorFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE);
+        Color stringColor      = loadColorFrom(prefs, STRING_HIGHLIGHT_PREFERENCE);
+        Color tagKeyColor      = loadColorFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
+        Color parameterColor   = loadColorFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE);
+        Color variableColor    = loadColorFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE);
+        Color objectFieldColor = loadColorFrom(prefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE);
+        Color staticFieldColor = loadColorFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE);
+        Color staticValueColor = loadColorFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE);
+        Color staticCallColor  = loadColorFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE);
+        Color methodCallColor  = loadColorFrom(prefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE);
+        Color methodDeclColor  = loadColorFrom(prefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE);
 
         mapKeyHighlighting = newHighlightingStyle(stringColor);
-        tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(javaPrefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
-        numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(javaPrefs, NUMBER_HIGHLIGHT_PREFERENCE));
-        regexpRefHighlighting = newHighlightingStyle(stringColor, SWT.ITALIC | loadStyleFrom(groovyPrefs, STRING_HIGHLIGHT_PREFERENCE));
-        deprecatedRefHighlighting = newHighlightingStyle(null, loadStyleFrom(javaPrefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
+        tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
+        numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE));
+        regexpRefHighlighting = newHighlightingStyle(stringColor, SWT.ITALIC | loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE));
+        deprecatedRefHighlighting = newHighlightingStyle(null, loadStyleFrom(prefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
         undefinedRefHighlighting = newHighlightingStyle(null, TextAttribute.UNDERLINE);
 
-        localHighlighting = newHighlightingStyle(variableColor, loadStyleFrom(javaPrefs, VARIABLE_HIGHLIGHT_PREFERENCE));
-        paramHighlighting = newHighlightingStyle(parameterColor, loadStyleFrom(javaPrefs, PARAMETER_HIGHLIGHT_PREFERENCE));
+        localHighlighting = newHighlightingStyle(variableColor, loadStyleFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE));
+        paramHighlighting = newHighlightingStyle(parameterColor, loadStyleFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE));
 
-        objectFieldHighlighting = newHighlightingStyle(objectFieldColor, loadStyleFrom(javaPrefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE));
-        staticFieldHighlighting = newHighlightingStyle(staticFieldColor, loadStyleFrom(javaPrefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE));
-        staticValueHighlighting = newHighlightingStyle(staticValueColor, loadStyleFrom(javaPrefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE));
+        objectFieldHighlighting = newHighlightingStyle(objectFieldColor, loadStyleFrom(prefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE));
+        staticFieldHighlighting = newHighlightingStyle(staticFieldColor, loadStyleFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE));
+        staticValueHighlighting = newHighlightingStyle(staticValueColor, loadStyleFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE));
 
-        methodDefHighlighting = newHighlightingStyle(methodDeclColor, loadStyleFrom(javaPrefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE));
-        methodUseHighlighting = newHighlightingStyle(methodCallColor, loadStyleFrom(javaPrefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE));
-        groovyMethodUseHighlighting = newHighlightingStyle(groovyColor, loadStyleFrom(groovyPrefs, GROOVY_HIGHLIGHT_PREFERENCE));
-        staticMethodUseHighlighting = newHighlightingStyle(staticCallColor, loadStyleFrom(javaPrefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE));
+        methodDefHighlighting = newHighlightingStyle(methodDeclColor, loadStyleFrom(prefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE));
+        methodUseHighlighting = newHighlightingStyle(methodCallColor, loadStyleFrom(prefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE));
+        groovyMethodUseHighlighting = newHighlightingStyle(groovyColor, loadStyleFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE));
+        staticMethodUseHighlighting = newHighlightingStyle(staticCallColor, loadStyleFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE));
     }
 
     protected static Color loadColorFrom(IPreferenceStore prefs, String which) {
@@ -197,7 +199,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
         this.editor = editor;
-        this.presenter = new SemanticHighlightingPresenter();
+        presenter = new SemanticHighlightingPresenter();
         presenter.install(viewer, (JavaPresentationReconciler) editor.getGroovyConfiguration().getPresentationReconciler(viewer));
     }
 
@@ -208,12 +210,10 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     }
 
     public void aboutToBeReconciled() {
-        // anything to do here?
     }
 
     public void reconciled(CompilationUnit ast, boolean forced, IProgressMonitor monitor) {
-        // ensure that only one thread performs this task
-        if (ast != null && lock.tryAcquire())
+        if (ast != null && synchronize())
         try {
             if (editor == null) return; // uninstalled?
             monitor.beginTask("Groovy semantic highlighting", 10);
@@ -261,8 +261,19 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         } catch (Exception e) {
             GroovyCore.logException("Semantic highlighting failed", e);
         } finally {
-            monitor.done();
             lock.release();
+            monitor.done();
+        }
+    }
+
+    /**
+     * Ensures that only one thread at a time performs this task.
+     */
+    private boolean synchronize() {
+        try {
+            return lock.tryAcquire(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
