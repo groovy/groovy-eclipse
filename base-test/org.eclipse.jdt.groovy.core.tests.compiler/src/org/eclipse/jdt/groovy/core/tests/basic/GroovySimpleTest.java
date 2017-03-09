@@ -4083,60 +4083,105 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     public void testImportsBigDecimal1() {
         runConformTest(new String[] {
-                "p/First.groovy",
-                "package p;\n"+
-                "import java.util.regex.Pattern\n"+
-                "public class First {\n"+
-                "  public static void main(String[] argv) {\n"+
-                "    print \"success\"\n"+
-                "  }\n"+
-                "  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
-                "}\n",
-            },"success");
+            "p/Main.java",
+            "package p;\n" +
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Big().getAmount().toString());\n" + // https://github.com/groovy/groovy-eclipse/issues/268
+            "  }\n" +
+            "}",
+
+            "p/Big.groovy",
+            "package p\n" +
+            "class Big {\n" +
+            "  BigDecimal amount = 3.14\n" +
+            "}"
+        }, "3.14");
     }
 
-    // this version has no imports of its own, that can make a difference
     public void testImportsBigDecimal2() {
         runConformTest(new String[] {
-                "p/First.groovy",
-                "package p;\n"+
-                "public class First {\n"+
-                "  public static void main(String[] argv) {\n"+
-                "    print \"success\"\n"+
-                "  }\n"+
-                "  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
-                "}\n",
-            },"success");
+            "p/Big.groovy",
+            "package p\n" +
+            "class Big {\n" +
+            "  static void main(String[] args) {\n" +
+            "    print 'success'\n" +
+            "  }\n" +
+            "  BigDecimal getAmount() { return 0 }\n" +
+            "}"
+        }, "success");
+    }
+
+    public void testImportsBigDecimal3() {
+        // this version has an import; that can make a difference...
+        runConformTest(new String[] {
+            "p/Big.groovy",
+            "package p\n" +
+            "import java.util.regex.Pattern\n" +
+            "class Big {\n" +
+            "  static void main(String[] args) {\n" +
+            "    print 'success'\n" +
+            "  }\n" +
+            "  BigDecimal getAmount() { return 0 }\n" +
+            "}"
+        }, "success");
+    }
+
+    public void testImportsBigDecimal4() {
+        runConformTest(new String[] {
+            "p/Big.groovy",
+            "package p\n" +
+            "class Big {\n" +
+            "  static void main(String[] args) {\n" +
+            "    print 'success'\n" +
+            "  }\n" +
+            "  private static final BigDecimal FIXED_AMOUNT = BigDecimal.TEN\n" +
+            "}"
+        }, "success");
     }
 
     public void testImportsBigInteger1() {
         runConformTest(new String[] {
-                "p/First.groovy",
-                "package p;\n"+
-                "import java.util.regex.Pattern\n"+
-                "public class First {\n"+
-                "  public static void main(String[] argv) {\n"+
-                "    print \"success\"\n"+
-                "  }\n"+
-                "  public BigInteger getFile() { return null;}\n"+ // java.io.File should be picked up magically
-                "}\n",
-            },"success");
+            "p/Main.java",
+            "package p;\n" +
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(new Big().getAmount().toString());\n" +
+            "  }\n" +
+            "}",
+
+            "p/Big.groovy",
+            "package p\n" +
+            "class Big {\n" +
+            "  BigInteger amount = 10\n" +
+            "}"
+        }, "10");
     }
 
-    // Check we can refer to BigInteger from a static constant
+    public void testImportsBigInteger2() {
+        runConformTest(new String[] {
+            "p/Big.groovy",
+            "package p\n" +
+            "class Big {\n" +
+            "  static void main(String[] args) {\n" +
+            "    print 'success'\n" +
+            "  }\n" +
+            "  BigInteger getAmount() { return 0 }\n" +
+            "}"
+        }, "success");
+    }
+
     public void testImportsBigInteger3() {
         runConformTest(new String[] {
-                "p/First.groovy",
-                "package p;\n"+
-                "import java.util.regex.Pattern\n"+
-                "public class First {\n"+
-                "  private final static BigInteger bd = new BigInteger(\"3\");\n"+
-                "  public static void main(String[] argv) {\n"+
-                "    print bd+\"success\"\n"+
-                "  }\n"+
-                "  public BigDecimal getFile() { return null;}\n"+ // java.io.File should be picked up magically
-                "}\n",
-            },"3success");
+            "p/Big.groovy",
+            "package p\n" +
+            "class Big {\n" +
+            "  static void main(String[] args) {\n" +
+            "    print 'success'\n" +
+            "  }\n" +
+            "  private static final BigInteger FIXED_AMOUNT = BigInteger.TEN\n" +
+            "}"
+        }, "success");
     }
 
     public void testMultipleTypesInOneFile01() {
@@ -4198,19 +4243,6 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "  }\n"+
                 "}\n"+
                 "class Goo {}\n"
-            },"success");
-    }
-
-    public void testImportsBigInteger2() {
-        runConformTest(new String[] {
-                "p/First.groovy",
-                "package p;\n"+
-                "public class First {\n"+
-                "  public static void main(String[] argv) {\n"+
-                "    print \"success\"\n"+
-                "  }\n"+
-                "  public BigInteger getFile() { return null;}\n"+
-                "}\n",
             },"success");
     }
 

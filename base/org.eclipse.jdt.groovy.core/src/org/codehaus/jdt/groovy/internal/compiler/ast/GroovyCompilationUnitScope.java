@@ -178,20 +178,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     }
 
     private ReferenceBinding createTypeRef(char[][] compoundName) {
-        // was: return environment.getType(compoundName); -- performs full/slow type resolution
-        try {
-            if (getTypeFromCompoundName == null) {
-                getTypeFromCompoundName = LookupEnvironment.class.getDeclaredMethod(
-                    "getTypeFromCompoundName", char[][].class, boolean.class, boolean.class);
-                getTypeFromCompoundName.setAccessible(true);
-            }
-            return (ReferenceBinding) getTypeFromCompoundName.invoke(
-                environment, new Object[] {compoundName, Boolean.FALSE, Boolean.FALSE});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return environment.getType(compoundName);
     }
-    private static java.lang.reflect.Method getTypeFromCompoundName;
 
     @Override
     protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
