@@ -940,9 +940,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testGRECLIPSE1720() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
         String contents =
                 "import groovy.transform.CompileStatic\n" +
                 "@CompileStatic\n" +
@@ -1380,9 +1378,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1748
     // Closure type inference with @CompileStatic
     public void testClosureTypeInference1() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 22) return;
         String contents =
                 "import groovy.beans.Bindable\n" +
                 "import groovy.transform.CompileStatic\n" +
@@ -1407,9 +1403,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     // Closure type inference without @CompileStatic
     public void testClosureTypeInference2() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 22) return;
         String contents =
                 "import groovy.beans.Bindable\n" +
                 "class A {\n" +
@@ -1976,15 +1970,12 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testPostfix() {
-        // failing for groovy 1.7
-        if (GroovyUtils.GROOVY_LEVEL > 17) {
-            String contents =
-                    "int i = 0\n" +
-                    "def list = [0]\n" +
-                    "list[i]++";
-            int start = contents.lastIndexOf('i');
-            assertType(contents, start, start +1, "java.lang.Integer");
-        }
+        String contents =
+                "int i = 0\n" +
+                "def list = [0]\n" +
+                "list[i]++";
+        int start = contents.lastIndexOf('i');
+        assertType(contents, start, start +1, "java.lang.Integer");
     }
 
     // GRECLIPSE-1302

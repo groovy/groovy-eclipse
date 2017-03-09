@@ -1090,7 +1090,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     // GROOVY-4219
     public void testGRE637() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        if (GroovyUtils.GROOVY_LEVEL < 22) return;
         runConformTest(new String[] {
             "de/brazzy/nikki/Texts.java",
             "package de.brazzy.nikki;\n"+
