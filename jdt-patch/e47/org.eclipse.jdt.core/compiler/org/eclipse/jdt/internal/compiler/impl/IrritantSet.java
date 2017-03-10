@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@
  *								bug 374605 - Unreasonable warning for enum-based switch statements
  *								bug 381443 - [compiler][null] Allow parameter widening from @NonNull to unannotated
  *								Bug 441208 - [1.8][null]SuppressWarnings("null") does not suppress / marked Unnecessary
+ *								Bug 410218 - Optional warning for arguments of "unexpected" types to Map#get(Object), Collection#remove(Object) et al.
  *******************************************************************************/
 
 package org.eclipse.jdt.internal.compiler.impl;
@@ -67,12 +68,18 @@ public class IrritantSet {
 	public static final IrritantSet UNCHECKED = new IrritantSet(CompilerOptions.UncheckedTypeOperation);
 	public static final IrritantSet UNQUALIFIED_FIELD_ACCESS = new IrritantSet(CompilerOptions.UnqualifiedFieldAccess);
 	public static final IrritantSet RESOURCE = new IrritantSet(CompilerOptions.UnclosedCloseable);
+	public static final IrritantSet UNLIKELY_ARGUMENT_TYPE = new IrritantSet(CompilerOptions.UnlikelyCollectionMethodArgumentType);
 
 	public static final IrritantSet JAVADOC = new IrritantSet(CompilerOptions.InvalidJavadoc);
 	public static final IrritantSet COMPILER_DEFAULT_ERRORS = new IrritantSet(0); // no optional error by default	
 	public static final IrritantSet COMPILER_DEFAULT_WARNINGS = new IrritantSet(0); // see static initializer below
 	public static final IrritantSet COMPILER_DEFAULT_INFOS = new IrritantSet(0); // As of now, no default values
 	static {
+		COMPILER_DEFAULT_INFOS
+		// group-2 infos enabled by default
+		.set(
+			CompilerOptions.UnlikelyEqualsArgumentType);
+		
 		COMPILER_DEFAULT_WARNINGS
 			// group-0 warnings enabled by default
 			.set(
@@ -117,7 +124,8 @@ public class IrritantSet {
 				|CompilerOptions.RedundantNullAnnotation
 				|CompilerOptions.NonnullParameterAnnotationDropped
 				|CompilerOptions.PessimisticNullAnalysisForFreeTypeVariables
-				|CompilerOptions.NonNullTypeVariableFromLegacyInvocation);
+				|CompilerOptions.NonNullTypeVariableFromLegacyInvocation
+				|CompilerOptions.UnlikelyCollectionMethodArgumentType);
 		// default errors IF AnnotationBasedNullAnalysis is enabled:
 		COMPILER_DEFAULT_ERRORS.set(
 				CompilerOptions.NullSpecViolation
@@ -169,6 +177,9 @@ public class IrritantSet {
 		JAVADOC
 			.set(CompilerOptions.MissingJavadocComments)
 			.set(CompilerOptions.MissingJavadocTags);
+
+		UNLIKELY_ARGUMENT_TYPE
+			.set(CompilerOptions.UnlikelyEqualsArgumentType);
 	}
 
 	// Internal state

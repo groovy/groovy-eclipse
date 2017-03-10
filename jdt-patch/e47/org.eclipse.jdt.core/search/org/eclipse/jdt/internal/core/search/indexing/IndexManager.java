@@ -85,7 +85,6 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	// key = indexLocation path, value = index state integer
 	private SimpleLookupTable indexStates = null;
 	private File indexNamesMapFile = new File(getSavedIndexesDirectory(), "indexNamesMap.txt"); //$NON-NLS-1$
-	private File savedIndexNamesFile = new File(getSavedIndexesDirectory(), "savedIndexNames.txt"); //$NON-NLS-1$
 	private File participantIndexNamesFile = new File(getSavedIndexesDirectory(), "participantsIndexNames.txt"); //$NON-NLS-1$
 	private boolean javaLikeNamesChanged = true;
 	public static final Integer SAVED_STATE = 0;
@@ -93,7 +92,9 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	public static final Integer UNKNOWN_STATE = 2;
 	public static final Integer REBUILDING_STATE = 3;
 	public static final Integer REUSE_STATE = 4;
-	
+
+	private final IndexNamesRegistry nameRegistry = new IndexNamesRegistry(new File(getSavedIndexesDirectory(), 
+			"savedIndexNames.txt"), getJavaPluginWorkingLocation()); //$NON-NLS-1$
 	// search participants who register indexes with the index manager
 	private SimpleLookupTable participantsContainers = null;
 	private boolean participantUpdated = false;
@@ -228,7 +229,7 @@ public final void deleteIndexFiles() {
 public void deleteIndexFiles(IProgressMonitor monitor) {
 	if (DEBUG)
 		Util.verbose("Deleting index files"); //$NON-NLS-1$
-	this.savedIndexNamesFile.delete(); // forget saved indexes & delete each index file
+	this.nameRegistry.delete(); // forget saved indexes & delete each index file
 	deleteIndexFiles(null, monitor);
 }
 private void deleteIndexFiles(SimpleSet pathsToKeep, IProgressMonitor monitor) {
@@ -461,7 +462,7 @@ private SimpleLookupTable getIndexStates() {
 
 	this.indexStates = new SimpleLookupTable();
 	File indexesDirectoryPath = getSavedIndexesDirectory();
-	char[][] savedNames = readIndexState(getJavaPluginWorkingLocation().toOSString());
+	char[][] savedNames = this.nameRegistry.read(null);
 	if (savedNames != null) {
 		for (int i = 1, l = savedNames.length; i < l; i++) { // first name is saved signature, see readIndexState()
 			char[] savedName = savedNames[i];
@@ -1087,24 +1088,6 @@ private void readIndexMap() {
 	}
 	return;
 }
-private char[][] readIndexState(String dirOSString) {
-	try {
-		char[] savedIndexNames = org.eclipse.jdt.internal.compiler.util.Util.getFileCharContent(this.savedIndexNamesFile, null);
-		if (savedIndexNames.length > 0) {
-			char[][] names = CharOperation.splitOn('\n', savedIndexNames);
-			if (names.length > 1) {
-				// First line is DiskIndex signature + saved plugin working location (see writeSavedIndexNamesFile())
-				String savedSignature = DiskIndex.SIGNATURE + "+" + dirOSString; //$NON-NLS-1$
-				if (savedSignature.equals(new String(names[0])))
-					return names;
-			}
-		}
-	} catch (IOException ignored) {
-		if (VERBOSE)
-			Util.verbose("Failed to read saved index file names"); //$NON-NLS-1$
-	}
-	return null;
-}
 private void readParticipantsIndexNamesFile() {
 	SimpleLookupTable containers = new SimpleLookupTable(3);
 	try {
@@ -1284,33 +1267,23 @@ private void writeParticipantsIndexNamesFile() {
 	}
 }
 private void writeSavedIndexNamesFile() {
-	BufferedWriter writer = null;
-	try {
-		writer = new BufferedWriter(new FileWriter(this.savedIndexNamesFile));
-		writer.write(DiskIndex.SIGNATURE);
-		writer.write('+');
-		writer.write(getJavaPluginWorkingLocation().toOSString());
-		writer.write('\n');
-		Object[] keys = this.indexStates.keyTable;
-		Object[] states = this.indexStates.valueTable;
-		for (int i = 0, l = states.length; i < l; i++) {
-			IndexLocation key = (IndexLocation) keys[i];
-			if (key != null && states[i] == SAVED_STATE) {
-				writer.write(key.fileName());
-				writer.write('\n');
-			}
-		}
-	} catch (IOException ignored) {
-		if (VERBOSE)
-			Util.verbose("Failed to write saved index file names", System.err); //$NON-NLS-1$
-	} finally {
-		if (writer != null) {
-			try {
-				writer.close();
-			} catch (IOException e) {
-				// ignore
-			}
+	Object[] keys = this.indexStates.keyTable;
+	Object[] states = this.indexStates.valueTable;
+	int numToSave = 0;
+	for (int i = 0, l = states.length; i < l; i++) {
+		IndexLocation key = (IndexLocation) keys[i];
+		if (key != null && states[i] == SAVED_STATE) {
+			numToSave++;
 		}
 	}
+	char[][] arrays = new char[numToSave][];
+	int idx = 0;
+	for (int i = 0, l = states.length; i < l; i++) {
+		IndexLocation key = (IndexLocation) keys[i];
+		if (key != null && states[i] == SAVED_STATE) {
+			arrays[idx++] = key.fileName().toCharArray();
+		}
+	}
+	this.nameRegistry.write(arrays);
 }
 }

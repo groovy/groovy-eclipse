@@ -237,10 +237,10 @@ public final class WorkspaceSnapshot {
 		for (IJavaElement child : nextRoot.getChildren()) {
 			try {
 				int type = child.getElementType();
-				if (!child.exists()) {
+				if (type == IJavaElement.COMPILATION_UNIT) {
 					continue;
 				}
-				if (type == IJavaElement.COMPILATION_UNIT) {
+				if (!child.exists()) {
 					continue;
 				}
 

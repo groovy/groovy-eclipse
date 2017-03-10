@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -211,12 +211,14 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 		CompilerOptions compilerOptions = scope.compilerOptions();
 		boolean invocationTypeInferred = false;
 		boolean requireBoxing = false;
+		boolean allArgumentsAreProper = true;
 		
 		// See if we should start in loose inference mode.
 		TypeBinding [] argumentsCopy = new TypeBinding[arguments.length];
 		for (int i = 0, length = arguments.length, parametersLength = parameters.length ; i < length; i++) {
 			TypeBinding parameter = i < parametersLength ? parameters[i] : parameters[parametersLength - 1];
 			final TypeBinding argument = arguments[i];
+			allArgumentsAreProper &= argument.isProperType(true);
 			if (argument.isPrimitiveType() != parameter.isPrimitiveType()) { // Scope.cCM incorrectly but harmlessly uses isBaseType which answers true for null.
 				argumentsCopy[i] = scope.environment().computeBoxingType(argument);
 				requireBoxing = true; // can't be strict mode, needs at least loose.
@@ -262,7 +264,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 				// ---- 18.5.2 (Invocation type): ----
 				provisionalResult = result;
 				result = infCtx18.inferInvocationType(expectedType, invocationSite, originalMethod);
-				invocationTypeInferred = true;
+				invocationTypeInferred = infCtx18.stepCompleted == InferenceContext18.TYPE_INFERRED_FINAL;
 				hasReturnProblem |= result == null;
 				if (hasReturnProblem)
 					result = provisionalResult; // let's prefer a type error regarding the return type over reporting no match at all
@@ -272,7 +274,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 				TypeBinding[] solutions = infCtx18.getSolutions(typeVariables, invocationSite, result);
 				if (solutions != null) {
 					methodSubstitute = scope.environment().createParameterizedGenericMethod(originalMethod, solutions, infCtx18.usesUncheckedConversion, hasReturnProblem);
-					if (invocationSite instanceof Invocation)
+					if (invocationSite instanceof Invocation && allArgumentsAreProper)
 						infCtx18.forwardResults(result, (Invocation) invocationSite, methodSubstitute, expectedType);
 					try {
 						if (hasReturnProblem) { // illegally working from the provisional result?
@@ -292,10 +294,12 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 							methodSubstitute = new PolyParameterizedGenericMethodBinding(methodSubstitute);
 						}
 					} finally {
-						if (invocationSite instanceof Invocation)
-							((Invocation) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
-						else if (invocationSite instanceof ReferenceExpression)
-							((ReferenceExpression) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
+						if (allArgumentsAreProper) {
+							if (invocationSite instanceof Invocation)
+								((Invocation) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
+							else if (invocationSite instanceof ReferenceExpression)
+								((ReferenceExpression) invocationSite).registerInferenceContext(methodSubstitute, infCtx18); // keep context so we can finish later
+						}
 					}
 					return methodSubstitute; 
 				}

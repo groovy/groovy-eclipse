@@ -31,6 +31,14 @@ public final class Nd {
 	private static final int BLOCKED_WRITE_LOCK_OUTPUT_INTERVAL = 30000;
 	private static final int LONG_WRITE_LOCK_REPORT_THRESHOLD = 1000;
 	private static final int LONG_READ_LOCK_WAIT_REPORT_THRESHOLD = 1000;
+
+	/**
+	 * Controls the number of pages that are allowed to be dirty before a
+	 * flush will occur. Specified as a ratio of the total cache size. For
+	 * example, a ration of 0.5 would mean that a flush is forced if half
+	 * of the cache is dirty.
+	 */
+	private static final double MAX_DIRTY_CACHE_RATIO = 0.25;
 	public static boolean sDEBUG_LOCKS= false;
 	public static boolean DEBUG_DUPLICATE_DELETIONS = false;
 
@@ -348,7 +356,7 @@ public final class Nd {
 	}
 
 	public final void releaseWriteLock() {
-		releaseWriteLock(0, true);
+		releaseWriteLock(0, false);
 	}
 
 	@SuppressWarnings("nls")
@@ -360,37 +368,71 @@ public final class Nd {
 			}
 			this.writeLockOwner = null;
 		}
+		RuntimeException exception = null;
 		boolean wasInterrupted = false;
-		// When all locks are released we can clear the result cache.
-		if (establishReadLocks == 0) {
-			processDeletions();
-			this.db.putLong(Database.WRITE_NUMBER_OFFSET, ++this.fWriteNumber);
-			clearResultCache();
-		}
 		try {
-			wasInterrupted = this.db.giveUpExclusiveLock(flush) || wasInterrupted;
-		} catch (IndexException e) {
-			Package.log(e);
-		}
-		assert this.lockCount == -1;
-		this.lastWriteAccess= System.currentTimeMillis();
-		synchronized (this.mutex) {
-			if (sDEBUG_LOCKS) {
-				long timeHeld = this.lastWriteAccess - this.timeWriteLockAcquired;
-				if (timeHeld >= LONG_WRITE_LOCK_REPORT_THRESHOLD) {
-					System.out.println("Index write lock held for " + timeHeld + " ms");
-				}
-				decWriteLock(establishReadLocks);
+			// When all locks are released we can clear the result cache.
+			if (establishReadLocks == 0) {
+				clearResultCache();
 			}
-
-			if (this.lockCount < 0)
-				this.lockCount= establishReadLocks;
-			this.mutex.notifyAll();
-			this.db.setLocked(this.lockCount != 0);
+			this.db.putLong(Database.WRITE_NUMBER_OFFSET, ++this.fWriteNumber);
+			// Process any outstanding deletions now
+			processDeletions();
+		} catch (RuntimeException e) {
+			exception = e;
+		} finally {
+			this.db.giveUpExclusiveLock();
+			assert this.lockCount == -1;
+			this.lastWriteAccess = System.currentTimeMillis();
+			try {
+				releaseWriteLockAndFlush(establishReadLocks, flush);
+			} catch (RuntimeException e) {
+				if (exception != null) {
+					e.addSuppressed(exception);
+				}
+				throw e;
+			}
 		}
 
 		if (wasInterrupted) {
 			throw new OperationCanceledException();
+		}
+	}
+
+	private void releaseWriteLockAndFlush(int establishReadLocks, boolean flush) throws AssertionError {
+		int dirtyPages = this.getDB().getDirtyChunkCount();
+
+		// If there are too many dirty pages, force a flush now.
+		int totalCacheSize = (int) (this.db.getCache().getMaxSize() / Database.CHUNK_SIZE);
+		if (dirtyPages > totalCacheSize * MAX_DIRTY_CACHE_RATIO) {
+			flush = true;
+		}
+
+		int initialReadLocks = flush ? establishReadLocks + 1 : establishReadLocks;
+		// Convert this write lock to a read lock while we flush the page cache to disk. That will prevent
+		// other writers from dirtying more pages during the flush but will allow reads to proceed.
+		synchronized (this.mutex) {
+			if (sDEBUG_LOCKS) {
+				long timeHeld = this.lastWriteAccess - this.timeWriteLockAcquired;
+				if (timeHeld >= LONG_WRITE_LOCK_REPORT_THRESHOLD) {
+					System.out.println("Index write lock held for " + timeHeld + " ms");  //$NON-NLS-1$//$NON-NLS-2$
+				}
+				decWriteLock(initialReadLocks);
+			}
+
+			if (this.lockCount < 0) {
+				this.lockCount = initialReadLocks;
+			}
+			this.mutex.notifyAll();
+			this.db.setLocked(initialReadLocks != 0);
+		}
+
+		if (flush) {
+			try {
+				this.db.flush();
+			} finally {
+				releaseReadLock();
+			}
 		}
 	}
 
@@ -658,6 +700,7 @@ public final class Nd {
 	}
 
 	public void clear(IProgressMonitor monitor) {
+		this.pendingDeletions.clear();
 		getDB().clear(getDefaultVersion());
 	}
 

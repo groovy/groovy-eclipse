@@ -129,8 +129,10 @@ public class ExternalAnnotationTracker implements IResourceChangeListener {
 	
 	/** Stop listening & clean up. */
 	static void shutdown(IWorkspace workspace) {
-		workspace.removeResourceChangeListener(singleton);
-		singleton.tree.children = null;
+		if (singleton != null) {
+			workspace.removeResourceChangeListener(singleton);
+			singleton.tree.children = null;
+		}
 	}
 
 	/**

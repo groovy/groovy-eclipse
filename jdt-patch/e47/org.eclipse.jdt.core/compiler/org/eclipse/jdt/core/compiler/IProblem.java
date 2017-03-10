@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -196,6 +196,8 @@
  *									IllegalParameterNullityRedefinition
  *									ContradictoryNullAnnotationsInferredFunctionType
  *									IllegalReturnNullityRedefinitionFreeTypeVariable
+ *									UnlikelyCollectionMethodArgumentType
+ *									UnlikelyEqualsArgumentType
  *      Jesper S Moller  - added the following constants
  *									TargetTypeNotAFunctionalInterface
  *									OuterLocalMustBeEffectivelyFinal
@@ -1875,6 +1877,12 @@ void setSourceStart(int sourceStart);
 	/** @since 3.13 */
 	int NullAnnotationAtQualifyingType = Internal + Syntax + 1061;
 
+	/** @since 3.13 */
+	int RedundantNullDefaultAnnotationLocal = Internal + 1062;
+	
+	/** @since 3.13 */
+	int RedundantNullDefaultAnnotationField = Internal + 1063;
+	
 	/** @since 3.10 */
 	int GenericInferenceError = 1100; 	// FIXME: This is just a stop-gap measure, be more specific via https://bugs.eclipse.org/404675
 	
@@ -1883,4 +1891,9 @@ void setSourceStart(int sourceStart);
 	int LambdaShapeComputationError = 1101;
 	/** @since 3.13 */
 	int ProblemNotAnalysed = 1102;
+	
+	/** @since 3.13 */
+	int UnlikelyCollectionMethodArgumentType = 1200;
+	/** @since 3.13 */
+	int UnlikelyEqualsArgumentType = 1201;
 }

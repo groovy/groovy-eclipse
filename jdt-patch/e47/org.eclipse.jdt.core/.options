@@ -65,6 +65,9 @@ org.eclipse.jdt.core/debug/javamodel/invalid_archives=false
 # Runs self-diagnostics on the large chunk free space tree
 org.eclipse.jdt.core/debug/index/largechunks=false
 
+# Logs every time a page is allocated, flushed, or inserted/removed from the page cache (very verbose)
+org.eclipse.jdt.core/debug/index/pagecache=false
+
 # Prints information about when the indexer runs and what files are being indexed
 org.eclipse.jdt.core/debug/index/indexer=false
 

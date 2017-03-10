@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2016 GK Software AG.
+ * Copyright (c) 2014, 2017 GK Software AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,15 +24,19 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  */
 public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalker {
 
-	private int defaultNullness;
-	private boolean atDefaultLocation;
+	private final int defaultNullness;
+	private final boolean atDefaultLocation;
+	private final boolean atTypeBound;
+	private final boolean currentArrayContentIsNonNull;
+	private final boolean isEmpty;
+	private final IBinaryAnnotation nonNullAnnotation;
+	private final LookupEnvironment environment;
+	
 	private boolean nextIsDefaultLocation;
-	private boolean atTypeBound;
 	private boolean nextIsTypeBound;
-	private boolean isEmpty;
-	IBinaryAnnotation nonNullAnnotation;
-	LookupEnvironment environment;
+	private boolean nextArrayContentIsNonNull;
 
+	
 	/** Create initial walker with non-empty type annotations. */
 	public NonNullDefaultAwareTypeAnnotationWalker(IBinaryTypeAnnotation[] typeAnnotations,
 						int defaultNullness, LookupEnvironment environment) {
@@ -40,28 +44,34 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		this.nonNullAnnotation = getNonNullAnnotation(environment);
 		this.defaultNullness = defaultNullness;
 		this.environment = environment;
+		this.atDefaultLocation = false;
+		this.atTypeBound = false;
+		this.isEmpty = false;
+		this.currentArrayContentIsNonNull = false;
 	}
 	
 	/** Create an initial walker without 'real' type annotations, but with a nonnull default. */
 	public NonNullDefaultAwareTypeAnnotationWalker(int defaultNullness, LookupEnvironment environment) {
-		this(defaultNullness, getNonNullAnnotation(environment), false, false, environment);
+		this(defaultNullness, getNonNullAnnotation(environment), false, false, environment, false);
 	}
 
 	/** Get restricted walker, still with non-empty type annotations. */
 	NonNullDefaultAwareTypeAnnotationWalker(IBinaryTypeAnnotation[] typeAnnotations, long newMatches, int newPathPtr,
 						int defaultNullness, IBinaryAnnotation nonNullAnnotation, boolean atDefaultLocation, boolean atTypeBound,
-						LookupEnvironment environment) {
+						LookupEnvironment environment, boolean currentArrayContentIsNonNull) {
 		super(typeAnnotations, newMatches, newPathPtr);
 		this.defaultNullness = defaultNullness;
 		this.nonNullAnnotation = nonNullAnnotation;
 		this.atDefaultLocation = atDefaultLocation;
 		this.atTypeBound = atTypeBound;
 		this.environment = environment;
+		this.currentArrayContentIsNonNull = this.nextArrayContentIsNonNull = currentArrayContentIsNonNull;
+		this.isEmpty = false;
 	}
 
 	/** Create a restricted walker without 'real' type annotations, but with a nonnull default. */
 	NonNullDefaultAwareTypeAnnotationWalker(int defaultNullness, IBinaryAnnotation nonNullAnnotation,
-						boolean atDefaultLocation, boolean atTypeBound, LookupEnvironment environment) {
+						boolean atDefaultLocation, boolean atTypeBound, LookupEnvironment environment, boolean currentArrayContentIsNonNull) {
 		super(null, 0, 0);
 		this.nonNullAnnotation = nonNullAnnotation;
 		this.defaultNullness = defaultNullness;
@@ -69,6 +79,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		this.atTypeBound = atTypeBound;
 		this.isEmpty = true;
 		this.environment = environment;
+		this.currentArrayContentIsNonNull = this.nextArrayContentIsNonNull = currentArrayContentIsNonNull;
 	}
 	
 	private static IBinaryAnnotation getNonNullAnnotation(LookupEnvironment environment) {
@@ -92,19 +103,20 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		try {
 			// do we have any change at all?
 			if (this.matches == newMatches && this.pathPtr == newPathPtr
-					&& this.atDefaultLocation == this.nextIsDefaultLocation && this.atTypeBound == this.nextIsTypeBound)
+					&& this.atDefaultLocation == this.nextIsDefaultLocation && this.atTypeBound == this.nextIsTypeBound && this.currentArrayContentIsNonNull == this.nextArrayContentIsNonNull)
 				return this;
 			// are we running out of real type annotations?
 			if (newMatches == 0 || this.typeAnnotations == null || this.typeAnnotations.length == 0)
 				return new NonNullDefaultAwareTypeAnnotationWalker(this.defaultNullness, this.nonNullAnnotation, 
-												this.nextIsDefaultLocation, this.nextIsTypeBound, this.environment);
+												this.nextIsDefaultLocation, this.nextIsTypeBound, this.environment, this.nextArrayContentIsNonNull);
 			// proceed as normal, but pass on our specific fields, too:
 			return new NonNullDefaultAwareTypeAnnotationWalker(this.typeAnnotations, newMatches, newPathPtr,
 												this.defaultNullness, this.nonNullAnnotation, this.nextIsDefaultLocation,
-												this.nextIsTypeBound, this.environment);
+												this.nextIsTypeBound, this.environment, this.nextArrayContentIsNonNull);
 		} finally {
 			this.nextIsDefaultLocation = false; // expire
 			this.nextIsTypeBound = false;
+			this.nextArrayContentIsNonNull = this.currentArrayContentIsNonNull;
 		}
 	}
 	
@@ -139,6 +151,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	public ITypeAnnotationWalker toTypeBound(short boundIndex) {
 		this.nextIsDefaultLocation = (this.defaultNullness & Binding.DefaultLocationTypeBound) != 0;
 		this.nextIsTypeBound = true;
+		this.nextArrayContentIsNonNull = false;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toTypeBound(boundIndex);
 	}
@@ -147,6 +160,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	public ITypeAnnotationWalker toWildcardBound() {
 		this.nextIsDefaultLocation = (this.defaultNullness & Binding.DefaultLocationTypeBound) != 0;
 		this.nextIsTypeBound = true;
+		this.nextArrayContentIsNonNull = false;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toWildcardBound();
 	}
@@ -155,6 +169,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	public ITypeAnnotationWalker toTypeParameterBounds(boolean isClassTypeParameter, int parameterRank) {
 		this.nextIsDefaultLocation = (this.defaultNullness & Binding.DefaultLocationTypeBound) != 0;
 		this.nextIsTypeBound = true;
+		this.nextArrayContentIsNonNull = false;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toTypeParameterBounds(isClassTypeParameter, parameterRank);
 	}
@@ -163,6 +178,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	public ITypeAnnotationWalker toTypeArgument(int rank) {
 		this.nextIsDefaultLocation = (this.defaultNullness & Binding.DefaultLocationTypeArgument) != 0;
 		this.nextIsTypeBound = false;
+		this.nextArrayContentIsNonNull = false;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toTypeArgument(rank);
 	}
@@ -171,6 +187,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	public ITypeAnnotationWalker toTypeParameter(boolean isClassTypeParameter, int rank) {
 		this.nextIsDefaultLocation = (this.defaultNullness & Binding.DefaultLocationTypeParameter) != 0;
 		this.nextIsTypeBound = false;
+		this.nextArrayContentIsNonNull = false;
 		if (this.isEmpty) return restrict(this.matches, this.pathPtr);
 		return super.toTypeParameter(isClassTypeParameter, rank);
 	}
@@ -182,9 +199,9 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 	}
 
 	@Override
-	public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId) {
-		IBinaryAnnotation[] normalAnnotations = this.isEmpty ? NO_ANNOTATIONS : super.getAnnotationsAtCursor(currentTypeId);
-		if (this.atDefaultLocation &&
+	public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId, boolean mayApplyArrayContentsDefaultNullness) {
+		IBinaryAnnotation[] normalAnnotations = this.isEmpty ? NO_ANNOTATIONS : super.getAnnotationsAtCursor(currentTypeId, mayApplyArrayContentsDefaultNullness);
+		if ((this.atDefaultLocation || (mayApplyArrayContentsDefaultNullness && this.currentArrayContentIsNonNull)) &&
 				!(currentTypeId == -1) && // never apply default on type variable use or wildcard
 				!(this.atTypeBound && currentTypeId == TypeIds.T_JavaLangObject)) // for CLIMB-to-top consider a j.l.Object type bound as no explicit type bound
 		{
@@ -203,5 +220,18 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 			}
 		}
 		return normalAnnotations;
+	}
+	
+	@Override
+	public ITypeAnnotationWalker toNextArrayDimension() {
+		boolean hasNNBDForArrayContents = (this.defaultNullness & Binding.DefaultLocationArrayContents) != 0;
+		if (hasNNBDForArrayContents) {
+			this.nextArrayContentIsNonNull = true;
+		}
+		this.nextIsDefaultLocation = false;
+		this.nextIsTypeBound = false;
+		if (this.isEmpty)
+			return restrict(this.matches, this.pathPtr);
+		return super.toNextArrayDimension();
 	}
 }

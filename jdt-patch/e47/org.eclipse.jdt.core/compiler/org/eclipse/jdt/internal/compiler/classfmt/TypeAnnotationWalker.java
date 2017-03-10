@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2015 GK Software AG.
+ * Copyright (c) 2013, 2017 GK Software AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -235,7 +235,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 	protected ITypeAnnotationWalker toNextDetail(int detailKind) {
 		long newMatches = this.matches;
 		if (newMatches == 0)
-			return EMPTY_ANNOTATION_WALKER;
+			return restrict(newMatches, this.pathPtr+2);
 		int length = this.typeAnnotations.length;
 		long mask = 1;
 		for (int i = 0; i < length; i++, mask = mask << 1) {
@@ -251,7 +251,7 @@ public class TypeAnnotationWalker implements ITypeAnnotationWalker {
 	// ==== leaves: the actual annotations: ====
 	
 	@Override
-	public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId) {
+	public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId, boolean mayApplyArrayContentsDefaultNullness) {
 		int length = this.typeAnnotations.length;
 		IBinaryAnnotation[] filtered = new IBinaryAnnotation[length];
 		long ptr = 1;

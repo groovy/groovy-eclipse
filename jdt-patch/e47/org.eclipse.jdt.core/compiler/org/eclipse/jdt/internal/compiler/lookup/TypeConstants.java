@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,6 +17,7 @@
  *								Bug 427199 - [1.8][resource] avoid resource leak warnings on Streams that have no resource
  *								Bug 425183 - [1.8][inference] make CaptureBinding18 safe
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *								Bug 410218 - Optional warning for arguments of "unexpected" types to Map#get(Object), Collection#remove(Object) et al.
  *    Jesper S Moller - Contributions for
  *								Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -26,6 +27,8 @@
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
+
+import org.eclipse.jdt.core.compiler.CharOperation;
 
 // TODO should rename into TypeNames (once extracted last non name constants)
 public interface TypeConstants {
@@ -160,6 +163,7 @@ public interface TypeConstants {
 	char[][] JAVA_UTIL_COLLECTION = {JAVA, UTIL, "Collection".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_UTIL_ITERATOR = {JAVA, UTIL, "Iterator".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_UTIL_OBJECTS = {JAVA, UTIL, "Objects".toCharArray()}; //$NON-NLS-1$
+	char[][] JAVA_UTIL_LIST = {JAVA, UTIL, "List".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_DEPRECATED = {JAVA, LANG, "Deprecated".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_ANNOTATION_DOCUMENTED = {JAVA, LANG, ANNOTATION, "Documented".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_ANNOTATION_INHERITED = {JAVA, LANG, ANNOTATION, "Inherited".toCharArray()}; //$NON-NLS-1$
@@ -333,6 +337,75 @@ public interface TypeConstants {
 	char[][] COM_GOOGLE_INJECT_INJECT = new char[][] {COM, GOOGLE, INJECT_PACKAGE, INJECT_TYPE };
 	//    detail for the above:
 	char[] OPTIONAL = "optional".toCharArray(); //$NON-NLS-1$
+	
+	// well-known methods with "dangerous" signatures:
+	char[][] JAVA_UTIL_MAP = new char[][] { JAVA, UTIL, "Map".toCharArray() }; //$NON-NLS-1$
+	char[] GET = "get".toCharArray(); //$NON-NLS-1$
+	char[] REMOVE = "remove".toCharArray(); //$NON-NLS-1$
+	char[] REMOVE_ALL = "removeAll".toCharArray(); //$NON-NLS-1$
+	char[] CONTAINS_ALL = "containsAll".toCharArray(); //$NON-NLS-1$
+	char[] RETAIN_ALL = "retainAll".toCharArray(); //$NON-NLS-1$
+	char[] CONTAINS_KEY = "containsKey".toCharArray(); //$NON-NLS-1$
+	char[] CONTAINS_VALUE = "containsValue".toCharArray(); //$NON-NLS-1$
+	// for Collection.contains:
+	char[] CONTAINS = "contains".toCharArray(); //$NON-NLS-1$
+	// for List.*indexOf:
+	char[] INDEX_OF = "indexOf".toCharArray(); //$NON-NLS-1$
+	char[] LAST_INDEX_OF = "lastIndexOf".toCharArray(); //$NON-NLS-1$
+	enum DangerousMethod {
+		// Collection:
+		Contains, Remove, RemoveAll, ContainsAll, RetainAll,
+		// Map:
+		Get, ContainsKey, ContainsValue,
+		// List:
+		IndexOf, LastIndexOf,
+		// Object:
+		Equals;
+
+		public static DangerousMethod detectSelector(char[] selector) {
+			switch (selector[0]) {
+				case 'r':
+					if (CharOperation.prefixEquals(TypeConstants.REMOVE, selector)) {
+						if (CharOperation.equals(selector, TypeConstants.REMOVE))
+							return DangerousMethod.Remove;
+						else if (CharOperation.equals(selector, TypeConstants.REMOVE_ALL))
+							return DangerousMethod.RemoveAll;
+					} else if (CharOperation.equals(selector, TypeConstants.RETAIN_ALL)) {
+						return DangerousMethod.RetainAll;
+					}
+					break;
+				case 'c':
+					if (CharOperation.prefixEquals(TypeConstants.CONTAINS, selector)) {
+						if (CharOperation.equals(selector, TypeConstants.CONTAINS))
+							return DangerousMethod.Contains;
+						else if (CharOperation.equals(selector, TypeConstants.CONTAINS_ALL))
+							return DangerousMethod.ContainsAll;
+						else if (CharOperation.equals(selector, TypeConstants.CONTAINS_KEY))
+							return DangerousMethod.ContainsKey;
+						else if (CharOperation.equals(selector, TypeConstants.CONTAINS_VALUE))
+							return DangerousMethod.ContainsValue;
+					}
+					break;
+				case 'g':
+					if (CharOperation.equals(selector, TypeConstants.GET))
+						return DangerousMethod.Get;
+					break;
+				case 'i':
+					if (CharOperation.equals(selector, TypeConstants.INDEX_OF))
+						return DangerousMethod.IndexOf;
+					break;
+				case 'l':
+					if (CharOperation.equals(selector, TypeConstants.LAST_INDEX_OF))
+						return DangerousMethod.LastIndexOf;
+					break;
+				case 'e':
+					if (CharOperation.equals(selector, TypeConstants.EQUALS))
+						return DangerousMethod.Equals;
+					break;
+			}
+			return null;
+		}
+	}
 
 	// Spring @Autowired annotation
 	char [] AUTOWIRED = "Autowired".toCharArray();  //$NON-NLS-1$

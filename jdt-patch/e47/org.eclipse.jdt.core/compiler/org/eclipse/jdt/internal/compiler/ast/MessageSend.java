@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -53,6 +53,7 @@
  *								Bug 407414 - [compiler][null] Incorrect warning on a primitive type being null
  *								Bug 472618 - [compiler][null] assertNotNull vs. Assert.assertNotNull
  *								Bug 470958 - [1.8] Unable to convert lambda 
+ *								Bug 410218 - Optional warning for arguments of "unexpected" types to Map#get(Object), Collection#remove(Object) et al.
  *     Jesper S Moller - Contributions for
  *								Bug 378674 - "The method can be declared as static" is wrong
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
@@ -75,6 +76,7 @@ import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -163,6 +165,27 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				}
 			}
 		}
+	}
+	if (compilerOptions.isAnyEnabled(IrritantSet.UNLIKELY_ARGUMENT_TYPE) && this.binding.isValidBinding()
+			&& this.arguments != null) {
+		if (this.arguments.length == 1 && !this.binding.isStatic()) {
+			UnlikelyArgumentCheck argumentChecks = UnlikelyArgumentCheck.determineCheckForNonStaticSingleArgumentMethod(
+				this.argumentTypes[0], currentScope, this.selector, this.actualReceiverType, this.binding.parameters);
+
+			if (argumentChecks != null && argumentChecks.isDangerous(currentScope)) {
+				currentScope.problemReporter().unlikelyArgumentType(this.arguments[0], this.binding,
+						this.argumentTypes[0], argumentChecks.typeToReport, argumentChecks.dangerousMethod);
+			}
+ 		} else if (this.arguments.length == 2 && this.binding.isStatic()) {
+			UnlikelyArgumentCheck argumentChecks = UnlikelyArgumentCheck.determineCheckForStaticTwoArgumentMethod(
+				this.argumentTypes[1], currentScope, this.selector, this.argumentTypes[0],
+				this.binding.parameters, this.actualReceiverType);
+
+			if (argumentChecks != null && argumentChecks.isDangerous(currentScope)) {
+				currentScope.problemReporter().unlikelyArgumentType(this.arguments[1], this.binding,
+						this.argumentTypes[1], argumentChecks.typeToReport, argumentChecks.dangerousMethod);
+			}
+ 		}
 	}
 
 	if (nonStatic) {
@@ -301,6 +324,7 @@ private int detectAssertionUtility(int argumentIdx) {
 	}
 	return 0;
 }
+
 private FlowInfo analyseBooleanAssertion(BlockScope currentScope, Expression argument,
 		FlowContext flowContext, FlowInfo flowInfo, boolean wasInsideAssert, boolean passOnTrue)
 {

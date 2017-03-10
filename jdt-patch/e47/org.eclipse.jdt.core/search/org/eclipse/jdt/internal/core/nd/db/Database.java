@@ -11,6 +11,7 @@
  *     Markus Schorn (Wind River Systems)
  *     IBM Corporation
  *     Sergey Prigogin (Google)
+ *     Stefan Xenos (Google)
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.nd.db;
 
@@ -22,10 +23,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
@@ -111,7 +113,7 @@ public class Database {
 	public static final int WRITE_NUMBER_OFFSET = FREE_BLOCK_OFFSET + PTR_SIZE;
 	public static final int MALLOC_STATS_OFFSET = WRITE_NUMBER_OFFSET + LONG_SIZE;
 	public static final int DATA_AREA_OFFSET = MALLOC_STATS_OFFSET + MemoryStats.SIZE;
-	private static final int NUM_HEADER_CHUNKS = 1;
+	public static final int NUM_HEADER_CHUNKS = 1;
 
 	// Malloc pool IDs (used for classifying memory allocations and recording statistics about them)
 	/** Misc pool -- may be used for any purpose that doesn't fit the IDs below. */
@@ -126,10 +128,38 @@ public class Database {
 	/** Id for the first node type. All node types will record their stats in a pool whose ID is POOL_FIRST_NODE_TYPE + node_id*/
 	public static final short POOL_FIRST_NODE_TYPE	= 0x0100;
 
+	public static class ChunkStats {
+		public final int totalChunks;
+		public final int chunksInMemory;
+		public final int dirtyChunks;
+		public final int nonDirtyChunksNotInCache;
+
+		public ChunkStats(int totalChunks, int chunksInMemory, int dirtyChunks, int nonDirtyChunksNotInCache) {
+			this.totalChunks = totalChunks;
+			this.chunksInMemory = chunksInMemory;
+			this.dirtyChunks = dirtyChunks;
+			this.nonDirtyChunksNotInCache = nonDirtyChunksNotInCache;
+		}
+
+		public String toString() {
+			return "Chunks: total = " + this.totalChunks + ", in memory = " + this.chunksInMemory //$NON-NLS-1$//$NON-NLS-2$
+					+ ", dirty = " + this.dirtyChunks + ", not in cache = " + this.nonDirtyChunksNotInCache;  //$NON-NLS-1$//$NON-NLS-2$
+		}
+	}
+
+	/**
+	 * For loops that scan through the chunks list, this imposes a maximum number of iterations before the loop must
+	 * release the chunk cache mutex.
+	 */
+	private static final int MAX_ITERATIONS_PER_LOCK = 256;
+	private static final int WRITE_BUFFER_SIZE = CHUNK_SIZE * 32;
+
 	/**
 	 * True iff large chunk self-diagnostics should be enabled.
 	 */
 	public static boolean DEBUG_LARGE_CHUNKS;
+
+	public static boolean DEBUG_PAGE_CACHE;
 
 	private final File fLocation;
 	private final boolean fReadOnly;
@@ -144,12 +174,7 @@ public class Database {
 	 * Stores the {@link Chunk} associated with each page number or null if the chunk isn't loaded. Synchronize on
 	 * {@link #fCache} before accessing.
 	 */
-	private Chunk[] fChunks;
-
-	/**
-	 * Holds all the non-null entries from {@link #fChunks}. Synchronize on {@link #fCache} before accessing.
-	 */
-	private HashSet<Chunk> allocatedChunks = new HashSet<>();
+	Chunk[] fChunks;
 	private int fChunksUsed;
 	private ChunkCache fCache;
 
@@ -157,8 +182,21 @@ public class Database {
 	private long freed;
 	private long cacheHits;
 	private long cacheMisses;
+	private long bytesWritten;
+	private long totalReadTimeMs;
 
 	private MemoryStats memoryUsage;
+	public Chunk fMostRecentlyFetchedChunk;
+	/**
+	 * Contains the set of Chunks in this Database for which the Chunk.dirty flag is set to true.
+	 * Protected by the database write lock. This set does not contain the header chunk, which is
+	 * always handled as a special case by the code that flushes chunks.
+	 */
+	private HashSet<Chunk> dirtyChunkSet = new HashSet<>();
+	private long totalFlushTime;
+	private long totalWriteTimeMs;
+	private long pageWritesBytes;
+	public static final double MIN_BYTES_PER_MILLISECOND = 20480.0;
 
 	/**
 	 * Construct a new Database object, creating a backing file if necessary.
@@ -177,7 +215,6 @@ public class Database {
 
 			int nChunksOnDisk = (int) (this.fFile.length() / CHUNK_SIZE);
 			this.fHeaderChunk= new Chunk(this, 0);
-			this.fHeaderChunk.fLocked= true;		// Never makes it into the cache, needed to satisfy assertions.
 			if (nChunksOnDisk <= 0) {
 				this.fVersion= version;
 				this.fChunks= new Chunk[1];
@@ -236,6 +273,7 @@ public class Database {
 	 * @throws IOException
 	 */
 	boolean write(ByteBuffer buf, long position) throws IOException {
+		this.bytesWritten += buf.limit();
 		return performUninterruptableWrite(() -> {this.fFile.getChannel().write(buf, position);});
 	}
 
@@ -314,12 +352,14 @@ public class Database {
 		this.fHeaderChunk.clear(0, CHUNK_SIZE);
 		// Chunks have been removed from the cache, so we may just reset the array of chunks.
 		this.fChunks = new Chunk[] {null};
+		this.dirtyChunkSet.clear();
 		this.fChunksUsed = this.fChunks.length;
 		try {
 			wasCanceled = this.fHeaderChunk.flush() || wasCanceled; // Zero out header chunk.
 			wasCanceled = performUninterruptableWrite(() -> {
 				this.fFile.getChannel().truncate(CHUNK_SIZE);
 			}) || wasCanceled;
+			this.bytesWritten += CHUNK_SIZE;
 		} catch (IOException e) {
 			Package.log(e);
 		}
@@ -344,13 +384,21 @@ public class Database {
 	}
 
 	private void removeChunksFromCache() {
-		synchronized (this.fCache) {
-			for (Iterator<Chunk> next = this.allocatedChunks.iterator(); next.hasNext();) {
-				Chunk chunk = next.next();
-				if (chunk.fSequenceNumber >= NUM_HEADER_CHUNKS) {
-					this.fCache.remove(chunk);
-					this.fChunks[chunk.fSequenceNumber] = null;
-					next.remove();
+		int scanIndex = NUM_HEADER_CHUNKS;
+		while (scanIndex < this.fChunksUsed) {
+			synchronized (this.fCache) {
+				int countMax = Math.min(MAX_ITERATIONS_PER_LOCK, this.fChunksUsed - scanIndex);
+				for (int count = 0; count < countMax; count++) {
+					Chunk chunk = this.fChunks[scanIndex++];
+					if (chunk != null) {
+						this.fCache.remove(chunk);
+						if (DEBUG_PAGE_CACHE) {
+							System.out.println("CHUNK " + chunk.fSequenceNumber //$NON-NLS-1$
+									+ ": removing from vector in removeChunksFromCache - instance " //$NON-NLS-1$
+									+ System.identityHashCode(chunk));
+						}
+						this.fChunks[chunk.fSequenceNumber] = null;
+					}
 				}
 			}
 		}
@@ -358,35 +406,69 @@ public class Database {
 
 	/**
 	 * Return the Chunk that contains the given offset.
+	 * 
 	 * @throws IndexException
 	 */
 	public Chunk getChunk(long offset) throws IndexException {
 		assertLocked();
 		if (offset < CHUNK_SIZE) {
+			this.fMostRecentlyFetchedChunk = this.fHeaderChunk;
 			return this.fHeaderChunk;
 		}
 		long long_index = offset / CHUNK_SIZE;
 		assert long_index < Integer.MAX_VALUE;
 
+		final int index = (int) long_index;
+		Chunk chunk;
 		synchronized (this.fCache) {
 			assert this.fLocked;
-			final int index = (int) long_index;
 			if (index < 0 || index >= this.fChunks.length) {
 				databaseCorruptionDetected();
 			}
-			Chunk chunk= this.fChunks[index];
-			if (chunk == null) {
+			chunk = this.fChunks[index];
+		}
+
+		long readStartMs = 0;
+		long readEndMs = 0;
+		// Read the new chunk outside of any synchronized block (this allows parallel reads and prevents background
+		// threads from retaining a lock that blocks the UI while the background thread performs I/O).
+		boolean cacheMiss = (chunk == null);
+		if (cacheMiss) {
+			readStartMs = System.currentTimeMillis();
+			chunk = new Chunk(this, index);
+			chunk.read();
+			readEndMs = System.currentTimeMillis();
+		}
+
+		synchronized (this.fCache) {
+			if (cacheMiss) {
 				this.cacheMisses++;
-				chunk = new Chunk(this, index);
-				chunk.read();
-				this.fChunks[index] = chunk;
-				this.allocatedChunks.add(chunk);
+				this.totalReadTimeMs += (readEndMs - readStartMs);
 			} else {
 				this.cacheHits++;
 			}
-			this.fCache.add(chunk, this.fExclusiveLock);
-			return chunk;
+			Chunk newChunk = this.fChunks[index];
+			if (newChunk != chunk && newChunk != null) {
+				// Another thread fetched this chunk in the meantime. In this case, we should use the chunk fetched
+				// by the other thread.
+				if (DEBUG_PAGE_CACHE) {
+					System.out.println("CHUNK " + chunk.fSequenceNumber //$NON-NLS-1$
+							+ ": already fetched by another thread - instance " //$NON-NLS-1$
+							+ System.identityHashCode(chunk));
+				}
+				chunk = newChunk;
+			} else if (cacheMiss) {
+				if (DEBUG_PAGE_CACHE) {
+					System.out.println("CHUNK " + chunk.fSequenceNumber + ": inserted into vector - instance " //$NON-NLS-1$//$NON-NLS-2$
+							+ System.identityHashCode(chunk));
+				}
+				this.fChunks[index] = chunk;
+			}
+			this.fCache.add(chunk);
+			this.fMostRecentlyFetchedChunk = chunk;
 		}
+
+		return chunk;
 	}
 
 	public void assertLocked() {
@@ -454,6 +536,7 @@ public class Database {
 				chunk = getChunk(freeBlock);
 			} else {
 				chunk = getChunk(freeBlock);
+				chunk.makeDirty();
 				removeBlock(chunk, useDeltas * BLOCK_SIZE_DELTA, freeBlock);
 			}
 
@@ -754,6 +837,10 @@ public class Database {
 			int nextChildChunkNum = getInt(
 					chunkStart + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * PTR_SIZE));
 
+			if (nextChildChunkNum == 0) {
+				continue;
+			}
+
 			int nextSize = getBlockHeaderForChunkNum(nextChildChunkNum);
 			int sizeDifference = nextSize ^ numChunks;
 			int firstDifference = LargeBlock.SIZE_OF_SIZE_FIELD * 8 - Integer.numberOfLeadingZeros(
@@ -888,7 +975,6 @@ public class Database {
 			final int lastChunkIndex = firstChunkIndex + numChunks - 1;
 
 			final Chunk lastChunk = new Chunk(this, lastChunkIndex);
-			lastChunk.fDirty = true;
 
 			if (lastChunkIndex >= this.fChunks.length) {
 				int increment = Math.max(1024, this.fChunks.length / 20);
@@ -899,9 +985,14 @@ public class Database {
 			}
 
 			this.fChunksUsed = lastChunkIndex + 1;
+			if (DEBUG_PAGE_CACHE) {
+				System.out.println("CHUNK " + lastChunk.fSequenceNumber + ": inserted into vector - instance "  //$NON-NLS-1$//$NON-NLS-2$
+						+ System.identityHashCode(lastChunk));
+			}
 			this.fChunks[lastChunkIndex] = lastChunk;
-			this.allocatedChunks.add(lastChunk);
-			this.fCache.add(lastChunk, true);
+			this.fMostRecentlyFetchedChunk = lastChunk;
+			lastChunk.makeDirty();
+			this.fCache.add(lastChunk);
 			long result = (long) firstChunkIndex * CHUNK_SIZE;
 
 			/*
@@ -1201,10 +1292,10 @@ public class Database {
 	 * For debugging purposes, only.
 	 */
 	public void reportFreeBlocks() throws IndexException {
-		System.out.println("Allocated size: " + getDatabaseSize() + " bytes"); //$NON-NLS-1$ //$NON-NLS-2$
-		System.out.println("malloc'ed: " + this.malloced); //$NON-NLS-1$
-		System.out.println("free'd: " + this.freed); //$NON-NLS-1$
-		System.out.println("wasted: " + (getDatabaseSize() - (this.malloced - this.freed))); //$NON-NLS-1$
+		System.out.println("Allocated size: " + formatByteString(getDatabaseSize())); //$NON-NLS-1$
+		System.out.println("malloc'ed: " + formatByteString(this.malloced)); //$NON-NLS-1$
+		System.out.println("free'd: " + formatByteString(this.freed)); //$NON-NLS-1$
+		System.out.println("wasted: " + formatByteString((getDatabaseSize() - (this.malloced - this.freed)))); //$NON-NLS-1$
 		System.out.println("Free blocks"); //$NON-NLS-1$
 		for (int bs = MIN_BLOCK_DELTAS*BLOCK_SIZE_DELTA; bs <= CHUNK_SIZE; bs += BLOCK_SIZE_DELTA) {
 			int count = 0;
@@ -1233,6 +1324,7 @@ public class Database {
 		this.fHeaderChunk.clear(0, CHUNK_SIZE);
 		this.memoryUsage.refresh();
 		this.fHeaderChunk.fDirty= false;
+		this.dirtyChunkSet.clear();
 		this.fChunks= new Chunk[] { null };
 		this.fChunksUsed = this.fChunks.length;
 		try {
@@ -1252,11 +1344,29 @@ public class Database {
 	/**
 	 * Called from any thread via the cache, protected by {@link #fCache}.
 	 */
-	void releaseChunk(final Chunk chunk) {
-		if (!chunk.fLocked) {
+	void checkIfChunkReleased(final Chunk chunk) {
+		if (!chunk.fDirty && chunk.fCacheIndex < 0) {
+			if (DEBUG_PAGE_CACHE) {
+				System.out.println("CHUNK " + chunk.fSequenceNumber //$NON-NLS-1$
+						+ ": removing from vector in releaseChunk - instance " + System.identityHashCode(chunk)); //$NON-NLS-1$
+			}
 			this.fChunks[chunk.fSequenceNumber]= null;
-			this.allocatedChunks.remove(chunk);
 		}
+	}
+
+	void chunkDirtied(final Chunk chunk) {
+		if (chunk.fSequenceNumber < NUM_HEADER_CHUNKS) {
+			return;
+		}
+		this.dirtyChunkSet.add(chunk);
+	}
+
+	void chunkCleaned(final Chunk chunk) {
+		if (chunk.fSequenceNumber < NUM_HEADER_CHUNKS) {
+			return;
+		}
+		this.dirtyChunkSet.remove(chunk);
+		checkIfChunkReleased(chunk);
 	}
 
 	/**
@@ -1280,79 +1390,30 @@ public class Database {
 		this.fLocked= val;
 	}
 
-	public boolean giveUpExclusiveLock(final boolean flush) throws IndexException {
-		boolean wasInterrupted = false;
-		if (this.fExclusiveLock) {
-			try {
-				ArrayList<Chunk> dirtyChunks= new ArrayList<>();
-				synchronized (this.fCache) {
-					for (Iterator<Chunk> iter = this.allocatedChunks.iterator(); iter.hasNext();) {
-						Chunk chunk = iter.next();
-						if (chunk.fSequenceNumber >= NUM_HEADER_CHUNKS) {
-							if (chunk.fCacheIndex < 0) {
-								// Locked chunk that has been removed from cache.
-								if (chunk.fDirty) {
-									dirtyChunks.add(chunk); // Keep in fChunks until it is flushed.
-								} else {
-									chunk.fLocked= false;
-									this.fChunks[chunk.fSequenceNumber]= null;
-									iter.remove();
-								}
-							} else if (chunk.fLocked) {
-								// Locked chunk, still in cache.
-								if (chunk.fDirty) {
-									if (flush) {
-										dirtyChunks.add(chunk);
-									}
-								} else {
-									chunk.fLocked= false;
-								}
-							} else {
-								assert !chunk.fDirty; // Dirty chunks must be locked.
-							}
-						}
-					}
-				}
-				sortBySequenceNumber(dirtyChunks);
-				// Also handles header chunk.
-				wasInterrupted = flushAndUnlockChunks(dirtyChunks, flush) || wasInterrupted;
-			} finally {
-				this.fExclusiveLock= false;
-			}
-		}
-		return wasInterrupted;
-	}
-
-	private void sortBySequenceNumber(ArrayList<Chunk> dirtyChunks) {
-		dirtyChunks.sort((a, b) -> {return a.fSequenceNumber - b.fSequenceNumber;});
+	public void giveUpExclusiveLock() {
+		this.fExclusiveLock = false;
 	}
 
 	public boolean flush() throws IndexException {
 		boolean wasInterrupted = false;
 		assert this.fLocked;
-		if (this.fExclusiveLock) {
-			try {
-				wasInterrupted = giveUpExclusiveLock(true) || wasInterrupted;
-			} finally {
-				setExclusiveLock();
-			}
-			return wasInterrupted;
-		}
-
-		// Be careful as other readers may access chunks concurrently.
 		ArrayList<Chunk> dirtyChunks= new ArrayList<>();
 		synchronized (this.fCache) {
-			for (Chunk chunk : this.allocatedChunks) {
-				if (chunk.fSequenceNumber >= 1 && chunk.fDirty) {
-					dirtyChunks.add(chunk);
-				}
-			}
+			dirtyChunks.addAll(this.dirtyChunkSet);
 		}
-
 		sortBySequenceNumber(dirtyChunks);
 
+		long startTime = System.currentTimeMillis();
 		// Also handles header chunk.
-		return flushAndUnlockChunks(dirtyChunks, true) || wasInterrupted;
+		wasInterrupted = flushAndUnlockChunks(dirtyChunks, true) || wasInterrupted;
+		long elapsedTime = System.currentTimeMillis() - startTime;
+		this.totalFlushTime += elapsedTime;
+
+		return wasInterrupted;
+	}
+
+	private void sortBySequenceNumber(ArrayList<Chunk> dirtyChunks) {
+		dirtyChunks.sort((a, b) -> {return a.fSequenceNumber - b.fSequenceNumber;});
 	}
 
 	/**
@@ -1364,36 +1425,56 @@ public class Database {
 	private boolean flushAndUnlockChunks(final ArrayList<Chunk> dirtyChunks, boolean isComplete) throws IndexException {
 		boolean wasInterrupted = false;
 		assert !Thread.holdsLock(this.fCache);
-		synchronized (this.fHeaderChunk) {
-			final boolean haveDirtyChunks = !dirtyChunks.isEmpty();
-			if (haveDirtyChunks || this.fHeaderChunk.fDirty) {
-				wasInterrupted = markFileIncomplete() || wasInterrupted;
+		final boolean haveDirtyChunks = !dirtyChunks.isEmpty();
+		if (haveDirtyChunks || this.fHeaderChunk.fDirty) {
+			wasInterrupted = markFileIncomplete() || wasInterrupted;
+		}
+		if (haveDirtyChunks) {
+			double desiredWriteBytesPerMs = Database.MIN_BYTES_PER_MILLISECOND;
+			synchronized (this.fCache) {
+				if (this.cacheMisses > 100) {
+					double measuredReadBytesPerMs = getAverageReadBytesPerMs();
+					if (measuredReadBytesPerMs > 0) {
+						desiredWriteBytesPerMs = measuredReadBytesPerMs / 2;
+					}
+				}
 			}
-			if (haveDirtyChunks) {
+			desiredWriteBytesPerMs = Math.max(desiredWriteBytesPerMs, Database.MIN_BYTES_PER_MILLISECOND);
+			ChunkWriter writer = new ChunkWriter(WRITE_BUFFER_SIZE, desiredWriteBytesPerMs, this::write);
+			try {
 				for (Chunk chunk : dirtyChunks) {
 					if (chunk.fDirty) {
-						wasInterrupted = chunk.flush() || wasInterrupted;
-					}
-				}
-
-				// Only after the chunks are flushed we may unlock and release them.
-				synchronized (this.fCache) {
-					for (Chunk chunk : dirtyChunks) {
-						chunk.fLocked= false;
-						if (chunk.fCacheIndex < 0) {
-							this.fChunks[chunk.fSequenceNumber]= null;
-							this.allocatedChunks.remove(chunk);
+						boolean wasCanceled = false;
+						if (DEBUG_PAGE_CACHE) {
+							System.out.println("CHUNK " + chunk.fSequenceNumber + ": flushing - instance " //$NON-NLS-1$//$NON-NLS-2$
+									+ System.identityHashCode(chunk));
 						}
+						byte[] nextBytes;
+						synchronized (this.fCache) {
+							nextBytes = chunk.getBytes();
+							chunk.fDirty = false;
+							chunkCleaned(chunk);
+						}
+						wasCanceled = writer.write((long) chunk.fSequenceNumber * Database.CHUNK_SIZE, nextBytes);
+
+						wasInterrupted = wasCanceled || wasInterrupted;
 					}
 				}
-			}
-
-			if (isComplete) {
-				if (this.fHeaderChunk.fDirty || this.fIsMarkedIncomplete) {
-					this.fHeaderChunk.putInt(VERSION_OFFSET, this.fVersion);
-					wasInterrupted = this.fHeaderChunk.flush() || wasInterrupted;
-					this.fIsMarkedIncomplete= false;
+				writer.flush();
+				synchronized (this.fCache) {
+					this.pageWritesBytes += writer.getBytesWritten();
+					this.totalWriteTimeMs += writer.getTotalWriteTimeMs();
 				}
+			} catch (IOException e) {
+				throw new IndexException(new DBStatus(e));
+			}
+		}
+
+		if (isComplete) {
+			if (this.fHeaderChunk.fDirty || this.fIsMarkedIncomplete) {
+				this.fHeaderChunk.putInt(VERSION_OFFSET, this.fVersion);
+				wasInterrupted = this.fHeaderChunk.flush() || wasInterrupted;
+				this.fIsMarkedIncomplete= false;
 			}
 		}
 		return wasInterrupted;
@@ -1406,6 +1487,7 @@ public class Database {
 			try {
 				final ByteBuffer buf= ByteBuffer.wrap(new byte[4]);
 				wasInterrupted = performUninterruptableWrite(() -> this.fFile.getChannel().write(buf, 0));
+				this.bytesWritten += 4;
 			} catch (IOException e) {
 				throw new IndexException(new DBStatus(e));
 			}
@@ -1414,7 +1496,39 @@ public class Database {
 	}
 
 	public void resetCacheCounters() {
-		this.cacheHits= this.cacheMisses= 0;
+		this.cacheHits = 0;
+		this.cacheMisses = 0;
+		this.bytesWritten = 0;
+		this.totalFlushTime = 0;
+		this.pageWritesBytes = 0;
+		this.totalWriteTimeMs = 0;
+		this.totalReadTimeMs = 0;
+	}
+
+	public long getBytesWritten() {
+		return this.bytesWritten;
+	}
+
+	public double getAverageReadBytesPerMs() {
+		long reads = this.cacheMisses;
+		long time = this.totalReadTimeMs;
+
+		if (time == 0) {
+			return 0;
+		}
+
+		return (double)(reads * CHUNK_SIZE) / (double) time;
+	}
+
+	public double getAverageWriteBytesPerMs() {
+		long time = this.totalWriteTimeMs;
+		long writes = this.pageWritesBytes;
+
+		return ((double) writes / (double) time);
+	}
+
+	public long getBytesRead() {
+		return this.cacheMisses * CHUNK_SIZE;
 	}
 
 	public long getCacheHits() {
@@ -1423,6 +1537,10 @@ public class Database {
 
 	public long getCacheMisses() {
 		return this.cacheMisses;
+	}
+
+	public long getCumulativeFlushTimeMs() {
+		return this.totalFlushTime;
 	}
 
 	public long getSizeBytes() throws IOException {
@@ -1469,5 +1587,46 @@ public class Database {
 	public static int getChunksNeededForBytes(long datasize) {
 		return divideRoundingUp(datasize + BLOCK_HEADER_SIZE + LargeBlock.HEADER_SIZE + LargeBlock.FOOTER_SIZE,
 				CHUNK_SIZE);
+	}
+
+	public ChunkCache getCache() {
+		return this.fCache;
+	}
+
+	public int getDirtyChunkCount() {
+		return this.dirtyChunkSet.size();
+	}
+
+	public static String formatByteString(long valueInBytes) {
+		final double MB = 1024 * 1024;
+		double value = valueInBytes;
+		String suffix = "B"; //$NON-NLS-1$
+
+		if (value > 1024) {
+			suffix = "MiB"; //$NON-NLS-1$
+			value /= MB;
+		}
+
+		DecimalFormat mbFormat = new DecimalFormat("#0.###"); //$NON-NLS-1$
+		return mbFormat.format(value) + suffix;
+	}
+
+	public ChunkStats getChunkStats() {
+		synchronized (this.fCache) {
+			int count = 0;
+			int dirtyChunks = 0;
+			int nonDirtyChunksNotInCache = 0;
+			for (Chunk next : this.fChunks) {
+				if (next != null) {
+					count++;
+					if (next.fDirty) {
+						dirtyChunks++;
+					} else if (next.fCacheIndex < 0) {
+						nonDirtyChunksNotInCache++;
+					}
+				}
+			}
+			return new ChunkStats(this.fChunks.length, count, dirtyChunks, nonDirtyChunksNotInCache);
+		}
 	}
 }

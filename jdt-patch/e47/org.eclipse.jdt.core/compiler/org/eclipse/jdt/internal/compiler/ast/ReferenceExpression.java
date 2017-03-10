@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -432,6 +433,33 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 				}
 			}
 		}
+		if (currentScope.compilerOptions().isAnyEnabled(IrritantSet.UNLIKELY_ARGUMENT_TYPE) && this.binding.isValidBinding()
+				&& this.binding != null && this.binding.parameters != null) {
+			if (this.binding.parameters.length == 1
+					&& this.descriptor.parameters.length == (this.receiverPrecedesParameters ? 2 : 1)
+					&& !this.binding.isStatic()) {
+				final TypeBinding argumentType = this.descriptor.parameters[this.receiverPrecedesParameters ? 1 : 0];
+				final TypeBinding actualReceiverType = this.receiverPrecedesParameters ? this.descriptor.parameters[0] : this.binding.declaringClass;
+				UnlikelyArgumentCheck argumentCheck = UnlikelyArgumentCheck
+						.determineCheckForNonStaticSingleArgumentMethod(argumentType, currentScope, this.selector,
+								actualReceiverType, this.binding.parameters);
+				if (argumentCheck != null && argumentCheck.isDangerous(currentScope)) {
+					currentScope.problemReporter().unlikelyArgumentType(this, this.binding, argumentType,
+							argumentCheck.typeToReport, argumentCheck.dangerousMethod);
+				}
+			} else if (this.binding.parameters.length == 2 && this.descriptor.parameters.length == 2 && this.binding.isStatic()) {
+				final TypeBinding argumentType1 = this.descriptor.parameters[0];
+				final TypeBinding argumentType2 = this.descriptor.parameters[1];
+				UnlikelyArgumentCheck argumentCheck = UnlikelyArgumentCheck
+						.determineCheckForStaticTwoArgumentMethod(argumentType2, currentScope, this.selector,
+								argumentType1, this.binding.parameters, this.receiverType);
+				if (argumentCheck != null && argumentCheck.isDangerous(currentScope)) {
+					currentScope.problemReporter().unlikelyArgumentType(this, this.binding, argumentType2,
+							argumentCheck.typeToReport, argumentCheck.dangerousMethod);
+				}			
+			}
+		}
+		
 		manageSyntheticAccessIfNecessary(currentScope, flowInfo);
 		return flowInfo;
 	}

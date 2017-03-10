@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -572,12 +572,33 @@ void resolveTypeParameter(TypeParameter typeParameter) {
 	typeParameter.resolve(this);
 }
 @Override
-public boolean hasDefaultNullnessFor(int location) {
-	if (this.referenceContext instanceof AbstractMethodDeclaration) {
-		MethodBinding binding = ((AbstractMethodDeclaration) this.referenceContext).binding;
-		if (binding != null && binding.defaultNullness != 0)
-			return (binding.defaultNullness & location) != 0;
+public boolean hasDefaultNullnessFor(int location, int sourceStart) {
+	int nonNullByDefaultValue = localNonNullByDefaultValue(sourceStart);
+	if(nonNullByDefaultValue != 0) {
+		return (nonNullByDefaultValue & location) != 0;
 	}
-	return this.parent.hasDefaultNullnessFor(location);
+	AbstractMethodDeclaration referenceMethod = referenceMethod();
+	if (referenceMethod != null) {
+		MethodBinding binding = referenceMethod.binding;
+		if (binding != null && binding.defaultNullness != 0) {
+			return (binding.defaultNullness & location) != 0;
+		}
+	}
+	return this.parent.hasDefaultNullnessFor(location, sourceStart);
+}
+@Override
+public Binding checkRedundantDefaultNullness(int nullBits, int sourceStart) {
+	Binding target = localCheckRedundantDefaultNullness(nullBits, sourceStart);
+	if (target != null) {
+		return target;
+	}
+	AbstractMethodDeclaration referenceMethod = referenceMethod();
+	if (referenceMethod != null) {
+		MethodBinding binding = referenceMethod.binding;
+		if (binding != null && binding.defaultNullness != 0) {
+			return (binding.defaultNullness == nullBits) ? binding : null;
+		}
+	}
+	return this.parent.checkRedundantDefaultNullness(nullBits, sourceStart);
 }
 }

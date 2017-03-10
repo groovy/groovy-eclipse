@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -258,7 +259,7 @@ public final class ImportRewriteAnalyzer {
 	}
 
 	private static RewriteSite determineRewriteSite(
-			CompilationUnit compilationUnit, List<OriginalImportEntry> originalImports) {
+			CompilationUnit compilationUnit, List<OriginalImportEntry> originalImports) throws JavaModelException {
 		IRegion importsRegion = determineImportsRegion(originalImports);
 
 		IRegion surroundingRegion = determineSurroundingRegion(compilationUnit, importsRegion);
@@ -299,7 +300,7 @@ public final class ImportRewriteAnalyzer {
 	 * Determines the region to be occupied by imports, their associated comments, and surrounding
 	 * whitespace.
 	 */
-	private static IRegion determineSurroundingRegion(CompilationUnit compilationUnit, IRegion importsRegion) {
+	private static IRegion determineSurroundingRegion(CompilationUnit compilationUnit, IRegion importsRegion) throws JavaModelException {
 		NavigableMap<Integer, ASTNode> nodesTreeMap = mapTopLevelNodes(compilationUnit);
 
 		int surroundingStart;
@@ -327,8 +328,12 @@ public final class ImportRewriteAnalyzer {
 			positionAfterImports = importsRegion.getOffset() + importsRegion.getLength();
 		}
 
-		Integer ceilingKey = nodesTreeMap.ceilingKey(positionAfterImports);
-		int surroundingEnd = ceilingKey != null ? ceilingKey : compilationUnit.getLength();
+		int surroundingEnd = positionAfterImports;
+		IBuffer buffer = compilationUnit.getTypeRoot().getBuffer();
+		int length = buffer.getLength();
+		while (surroundingEnd < length && Character.isWhitespace(buffer.getChar(surroundingEnd))) {
+			surroundingEnd++;
+		}
 
 		return new Region(surroundingStart, surroundingEnd - surroundingStart);
 	}

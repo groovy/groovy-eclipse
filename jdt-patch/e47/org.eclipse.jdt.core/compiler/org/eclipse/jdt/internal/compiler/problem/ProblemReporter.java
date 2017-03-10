@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -60,6 +60,7 @@
  *								Bug 458361 - [1.8][null] reconciler throws NPE in ProblemReporter.illegalReturnRedefinition()
  *								Bug 459967 - [null] compiler should know about nullness of special methods like MyEnum.valueOf()
  *								Bug 461878 - [1.7][1.8][compiler][null] ECJ compiler does not allow to use null annotations on annotations
+ *								Bug 410218 - Optional warning for arguments of "unexpected" types to Map#get(Object), Collection#remove(Object) et al.
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
@@ -178,6 +179,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SyntheticArgumentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.DangerousMethod;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
@@ -451,6 +453,8 @@ public static int getIrritant(int problemID) {
 		case IProblem.RedundantNullDefaultAnnotationPackage:
 		case IProblem.RedundantNullDefaultAnnotationType:
 		case IProblem.RedundantNullDefaultAnnotationMethod:
+		case IProblem.RedundantNullDefaultAnnotationLocal:
+		case IProblem.RedundantNullDefaultAnnotationField:
 			return CompilerOptions.RedundantNullAnnotation;
 
 		case IProblem.BoxingConversion :
@@ -608,6 +612,11 @@ public static int getIrritant(int problemID) {
 			
 		case IProblem.UnusedTypeParameter:
 			return CompilerOptions.UnusedTypeParameter;
+
+		case IProblem.UnlikelyCollectionMethodArgumentType:
+			return CompilerOptions.UnlikelyCollectionMethodArgumentType;
+		case IProblem.UnlikelyEqualsArgumentType:
+			return CompilerOptions.UnlikelyEqualsArgumentType;
 }
 	return 0;
 }
@@ -667,6 +676,8 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.PotentiallyUnclosedCloseable :
 			case CompilerOptions.PessimisticNullAnalysisForFreeTypeVariables :
 			case CompilerOptions.NonNullTypeVariableFromLegacyInvocation :
+			case CompilerOptions.UnlikelyCollectionMethodArgumentType :
+			case CompilerOptions.UnlikelyEqualsArgumentType:
 				return CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM;
 			
 			case CompilerOptions.OverriddenPackageDefaultMethod :
@@ -9744,6 +9755,8 @@ public void nullAnnotationIsRedundant(FieldDeclaration sourceField) {
 }
 
 public void nullDefaultAnnotationIsRedundant(ASTNode location, Annotation[] annotations, Binding outer) {
+	if (outer == Scope.NOT_REDUNDANT)
+		return;
 	Annotation annotation = findAnnotation(annotations, TypeIds.BitNonNullByDefaultAnnotation);
 	int start = annotation != null ? annotation.sourceStart : location.sourceStart;
 	int end = annotation != null ? annotation.sourceEnd : location.sourceStart;
@@ -9760,6 +9773,10 @@ public void nullDefaultAnnotationIsRedundant(ASTNode location, Annotation[] anno
 		problemId = IProblem.RedundantNullDefaultAnnotationType;
 	} else if (outer instanceof MethodBinding) {
 		problemId = IProblem.RedundantNullDefaultAnnotationMethod;
+	} else if (outer instanceof LocalVariableBinding) {
+		problemId = IProblem.RedundantNullDefaultAnnotationLocal;
+	} else if (outer instanceof FieldBinding) {
+		problemId = IProblem.RedundantNullDefaultAnnotationField;
 	}
 	this.handle(problemId, args, shortArgs, start, end);
 }
@@ -10502,5 +10519,24 @@ public void invalidTypeArguments(TypeReference[] typeReference) {
 			NoArgument, NoArgument,
 			typeReference[0].sourceStart,
 			typeReference[typeReference.length - 1].sourceEnd);
+}
+
+public void unlikelyArgumentType(Expression argument, MethodBinding method, TypeBinding argumentType,
+							TypeBinding receiverType, DangerousMethod dangerousMethod)
+{
+	this.handle(
+			dangerousMethod == DangerousMethod.Equals ? IProblem.UnlikelyEqualsArgumentType : IProblem.UnlikelyCollectionMethodArgumentType,
+			new String[] {
+				new String(argumentType.readableName()),
+				new String(method.readableName()),
+				new String(receiverType.readableName())
+			}, 
+			new String[] {
+				new String(argumentType.shortReadableName()),
+				new String(method.shortReadableName()),
+				new String(receiverType.shortReadableName())
+			}, 
+			argument.sourceStart, 
+			argument.sourceEnd);
 }
 }

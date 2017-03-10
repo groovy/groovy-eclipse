@@ -45,4 +45,8 @@ import org.eclipse.jdt.core.JavaCore;
 	public static void log(IStatus status) {
 		JavaCore.getPlugin().getLog().log(status);
 	}
+
+	public static void logInfo(String string) {
+		log(new Status(IStatus.INFO, PLUGIN_ID, string, null));
+	}
 }

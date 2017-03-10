@@ -962,10 +962,10 @@ class ASTConverter {
 			internalSetExtraDimensions(variableDecl, extraDimensions);
 		}
 		final boolean isVarArgs = argument.isVarArgs();
-		// GROOVY edit
-		//if (isVarArgs && extraDimensions == 0) {
-		if (argument.binding != null && scannerAvailable(argument.binding.declaringScope) && isVarArgs && extraDimensions == 0) {
+		// GROOVY add
+		if (argument.binding != null && scannerAvailable(argument.binding.declaringScope))
 		// GROOVY end
+		if (isVarArgs && extraDimensions == 0) {
 			// remove the ellipsis from the type source end
 			argument.type.sourceEnd = retrieveEllipsisStartPosition(argument.type.sourceStart, typeSourceEnd);
 		}
@@ -3127,6 +3127,9 @@ class ASTConverter {
 		final char[][] tokens = importReference.tokens;
 		int length = importReference.tokens.length;
 		final long[] positions = importReference.sourcePositions;
+		// GROOVY add
+		if (positions.length > 0 && positions[0] > -1)
+		// GROOVY end
 		if (length > 1) {
 			importDeclaration.setName(setQualifiedNameNameAndSourceRanges(tokens, positions, importReference));
 		} else {
@@ -4952,7 +4955,7 @@ class ASTConverter {
 			if (start < 0) {
 				return -2;
 			} else {
-				// Crude groovy variant of the below scanner usage to find right bracket
+				// crude groovy variant of the below scanner usage to find right bracket
 				int count = 0, lParentCount = 0, balance = 0, pos = start, lines = 0;
 				int end2 = this.scanner.source.length;
 				char[] sourceCode = this.scanner.source;
@@ -4960,33 +4963,30 @@ class ASTConverter {
 					char ch = sourceCode[pos];
 					switch (ch) {
 					case '(':
-						++lParentCount;
+						lParentCount += 1;
 						break;
 					case ')':
-						--lParentCount;
+						lParentCount -= 1;
 						break;
 					case '[':
-						++balance;
+						balance += 1;
 						break;
 					case ']':
-						--balance;
-						if (lParentCount > 0)
+						balance -= 1;
+						if (lParentCount > 0 || balance > 0)
 							break;
-						if (balance > 0)
-							break;
-						count++;
-						if (count == bracketNumber) {
+						count += 1;
+						if (count == bracketNumber)
 							return pos;
-						}
 						break;
-					// Crude check to avoid scanning long distances down big files, give up after 5 lines
+					// crude check to avoid scanning long distances down big files, give up after 5 lines
 					case '\n':
-						++lines;
+						lines += 1;
 						if (lines > 5) {
 							return -1;
 						}
 					}
-					pos++;
+					pos += 1;
 				}
 				return -1;
 			}

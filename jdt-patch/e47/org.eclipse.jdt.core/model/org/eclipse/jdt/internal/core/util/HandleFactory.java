@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
+import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.search.AbstractJavaSearchScope;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -60,6 +61,8 @@ public class HandleFactory {
 	private HashtableOfArrayToObject packageHandles;
 
 	private JavaModel javaModel;
+
+	private HashtableOfObjectToInt localOccurrenceCounts = new HashtableOfObjectToInt(5);
 
 	public HandleFactory() {
 		this.javaModel = JavaModelManager.getJavaModelManager().getJavaModel();
@@ -167,6 +170,21 @@ public class HandleFactory {
 	public IJavaElement createLambdaTypeElement(LambdaExpression expression, ICompilationUnit unit, HashSet existingElements, HashMap knownScopes) {
 		return createElement(expression.scope, expression.sourceStart(), unit, existingElements, knownScopes).getParent();
 	}
+	protected void resolveDuplicates(IJavaElement handle) {
+
+		// For anonymous source types, the occurrence count should be in the context
+		// of the enclosing type.
+		if (handle instanceof SourceType && ((SourceType) handle).isAnonymous()) {
+			Object key = handle.getParent().getAncestor(IJavaElement.TYPE);
+			int occurenceCount = this.localOccurrenceCounts.get(key);
+			if (occurenceCount == -1)
+				this.localOccurrenceCounts.put(key, 1);
+			else {
+				this.localOccurrenceCounts.put(key, ++occurenceCount);
+				((SourceType)handle).localOccurrenceCount = occurenceCount;
+			}
+		}
+	}
 	/**
 	 * Create handle by adding child to parent obtained by recursing into parent scopes.
 	 */
@@ -257,6 +275,7 @@ public class HandleFactory {
 				newElement = createElement(scope.parent, elementPosition, unit, existingElements, knownScopes);
 				break;
 		}
+		resolveDuplicates(newElement);
 		return newElement;
 	}
 	/**

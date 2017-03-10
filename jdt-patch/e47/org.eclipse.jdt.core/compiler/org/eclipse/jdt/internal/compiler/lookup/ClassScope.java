@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,7 +55,7 @@ public class ClassScope extends Scope {
 
 	public TypeDeclaration referenceContext;
 	public TypeReference superTypeReference;
-	ArrayList<Object> deferredBoundChecks; // contains TypeReference or Runnable. TODO consider making this a List<Runnable>
+	java.util.ArrayList<Object> deferredBoundChecks; // contains TypeReference or Runnable. TODO consider making this a List<Runnable>
 
 	public ClassScope(Scope parent, TypeDeclaration context) {
 		super(Scope.CLASS_SCOPE, parent);
@@ -1386,16 +1386,37 @@ public class ClassScope extends Scope {
 	}
 
 	@Override
-	public boolean hasDefaultNullnessFor(int location) {
+	public boolean hasDefaultNullnessFor(int location, int sourceStart) {
+		int nonNullByDefaultValue = localNonNullByDefaultValue(sourceStart);
+		if (nonNullByDefaultValue != 0) {
+			return (nonNullByDefaultValue & location) != 0;
+		}
 		SourceTypeBinding binding = this.referenceContext.binding;
 		if (binding != null) {
 			int nullDefault = binding.getNullDefault();
-			if (nullDefault != 0)
+			if (nullDefault != 0) {
 				return (nullDefault & location) != 0;
+			}
 		}
-		return this.parent.hasDefaultNullnessFor(location);
+		return this.parent.hasDefaultNullnessFor(location, sourceStart);
 	}
 
+	@Override
+	public /* @Nullable */ Binding checkRedundantDefaultNullness(int nullBits, int sourceStart) {
+		Binding target = localCheckRedundantDefaultNullness(nullBits, sourceStart);
+		if (target != null) {
+			return target;
+		}
+		SourceTypeBinding binding = this.referenceContext.binding;
+		if (binding != null) {
+			int nullDefault = binding.getNullDefault();
+			if (nullDefault != 0) {
+				return (nullDefault == nullBits) ? binding : null;
+			}
+		}
+		return this.parent.checkRedundantDefaultNullness(nullBits, sourceStart);
+	}
+	
 	public String toString() {
 		if (this.referenceContext != null)
 			return "--- Class Scope ---\n\n"  //$NON-NLS-1$

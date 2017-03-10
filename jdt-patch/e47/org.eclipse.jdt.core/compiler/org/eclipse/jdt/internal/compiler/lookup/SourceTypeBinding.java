@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
@@ -70,6 +71,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -1799,7 +1801,7 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 					// enum constants neither have a type declaration nor can they be null
 					field.tagBits |= TagBits.AnnotationNonNull;
 				} else {
-					if (hasNonNullDefaultFor(DefaultLocationField, this.environment.usesNullTypeAnnotations())) {
+					if (hasNonNullDefaultFor(DefaultLocationField, this.environment.usesNullTypeAnnotations(), fieldDecl.sourceStart)) {
 						field.fillInDefaultNonNullness(fieldDecl, initializationScope);
 					}
 					// validate null annotation:
@@ -1817,8 +1819,18 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 	}
 	return null; // should never reach this point
 }
+
 public MethodBinding resolveTypesFor(MethodBinding method) {
-	
+	ProblemReporter problemReporter = this.scope.problemReporter();
+	IErrorHandlingPolicy suspendedPolicy = problemReporter.suspendTempErrorHandlingPolicy();
+	try {
+		return resolveTypesWithSuspendedTempErrorHandlingPolicy(method);
+	} finally {
+		problemReporter.resumeTempErrorHandlingPolicy(suspendedPolicy);
+	}
+}
+
+private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBinding method) {
 	if (!isPrototype())
 		return this.prototype.resolveTypesFor(method);
 	
@@ -2147,7 +2159,10 @@ public void evaluateNullAnnotations() {
 				pkg.defaultNullness = this.defaultNullness;
 			} else {
 				TypeDeclaration typeDecl = this.scope.referenceContext;
-				checkRedundantNullnessDefaultRecurse(typeDecl, typeDecl.annotations, this.defaultNullness, true);
+				Binding target = this.scope.parent.checkRedundantDefaultNullness(this.defaultNullness, typeDecl.declarationSourceStart);
+				if(target != null) {
+					this.scope.problemReporter().nullDefaultAnnotationIsRedundant(typeDecl, typeDecl.annotations, target);
+				}
 			}
 		} else if (isPackageInfo || (isInDefaultPkg && !(this instanceof NestedTypeBinding))) {
 			this.scope.problemReporter().missingNonNullByDefaultAnnotation(this.scope.referenceContext);
@@ -2191,10 +2206,10 @@ public void evaluateNullAnnotations() {
 }
 
 private void maybeMarkTypeParametersNonNull() {
-	// when creating type variables we didn't yet have the defaultNullness, fill it in now:
-	if (this.scope == null || !this.scope.hasDefaultNullnessFor(DefaultLocationTypeParameter))
-		return;
 	if (this.typeVariables != null && this.typeVariables.length > 0) {
+	// when creating type variables we didn't yet have the defaultNullness, fill it in now:
+		if (this.scope == null || !this.scope.hasDefaultNullnessFor(DefaultLocationTypeParameter, this.sourceStart()))
+		return;
 		AnnotationBinding[] annots = new AnnotationBinding[]{ this.environment.getNonNullAnnotation() };
 		for (int i = 0; i < this.typeVariables.length; i++) {
 			TypeVariableBinding tvb = this.typeVariables[i];
@@ -2247,7 +2262,8 @@ protected boolean checkRedundantNullnessDefaultOne(ASTNode location, Annotation[
 	return true;
 }
 
-boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations) {
+@Override
+boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations, int sourceStart) {
 	
 	if (!isPrototype()) throw new IllegalStateException();
 	
@@ -2256,7 +2272,10 @@ boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations) {
 		if (this.scope == null) {
 			return (this.defaultNullness & location) != 0;
 		}
-		return this.scope.hasDefaultNullnessFor(location);
+		Scope skope = this.scope.referenceContext.initializerScope; // for @NNBD on a field
+		if (skope == null)
+			skope = this.scope;
+		return skope.hasDefaultNullnessFor(location, sourceStart);
 	}
 
 	// find the applicable default inside->out:

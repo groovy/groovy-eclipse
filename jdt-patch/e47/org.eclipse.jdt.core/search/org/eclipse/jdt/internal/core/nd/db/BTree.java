@@ -187,6 +187,7 @@ public class BTree {
 				// Found it, never mind.
 				return median;
 			} else {
+				chunk.makeDirty();
 				// Split it.
 				// Create the new node and move the larger records over.
 				long newnode = allocateNode();
@@ -211,11 +212,15 @@ public class BTree {
 					for (int i = this.maxRecords - 2; i >= iParent; --i) {
 						long r = getRecord(pChunk, parent, i);
 						if (r != 0) {
+							// Re-fetch pChunk since we can only dirty the page that was fetched most recently from
+							// the database (anything fetched earlier may have been paged out)
+							pChunk = pChunk.getWritableChunk();
 							putRecord(pChunk, parent, i + 1, r);
 							putChild(pChunk, parent, i + 2, getChild(pChunk, parent, i + 1));
 						}
 					}
 				}
+				pChunk = pChunk.getWritableChunk();
 				putRecord(pChunk, parent, iParent, median);
 				putChild(pChunk, parent, iParent + 1, newnode);
 
@@ -253,6 +258,9 @@ public class BTree {
 				}
 			}
 		}
+
+		// Note that the call to compare, above, may have paged out and reallocated the chunk so fetch it again now.
+		chunk = this.db.getChunk(node);
 		final int i= lower;
 		long child = getChild(chunk, node, i);
 		if (child != 0) {
@@ -318,7 +326,7 @@ public class BTree {
 	private class BTNode {
 		final long node;
 		final int keyCount;
-		final Chunk chunk;
+		Chunk chunk;
 
 		BTNode(long node) throws IndexException {
 			this.node = node;
@@ -336,6 +344,10 @@ public class BTree {
 					return new BTNode(child);
 			}
 			return null;
+		}
+
+		public void makeWritable() {
+			this.chunk = this.chunk.getWritableChunk();
 		}
 	}
 
@@ -391,6 +403,7 @@ public class BTree {
 
 				BTNode succ = node.getChild(keyIndexInNode + 1);
 				if (succ != null && succ.keyCount > this.minRecords) {
+					node.makeWritable();
 					/* Case 2a: Delete key by overwriting it with its successor (which occurs in a leaf node) */
 					long subst = deleteImp(-1, succ.node, DELMODE_DELETE_MINIMUM);
 					putRecord(node.chunk, node.node, keyIndexInNode, subst);
@@ -399,6 +412,7 @@ public class BTree {
 
 				BTNode pred = node.getChild(keyIndexInNode);
 				if (pred != null && pred.keyCount > this.minRecords) {
+					node.makeWritable();
 					/* Case 2b: Delete key by overwriting it with its predecessor (which occurs in a leaf node) */
 					long subst = deleteImp(-1, pred.node, DELMODE_DELETE_MAXIMUM);
 					putRecord(node.chunk, node.node, keyIndexInNode, subst);
@@ -408,6 +422,9 @@ public class BTree {
 				/* Case 2c: Merge successor and predecessor */
 				// assert(pred != null && succ != null);
 				if (pred != null) {
+					succ.makeWritable();
+					node.makeWritable();
+					pred.makeWritable();
 					mergeNodes(succ, node, keyIndexInNode, pred);
 					return deleteImp(key, pred.node, mode);
 				}
@@ -440,8 +457,11 @@ public class BTree {
 				if (child.keyCount > this.minRecords) {
 					return deleteImp(key, child.node, mode);
 				} else {
+					child.makeWritable();
+					node.makeWritable();
 					BTNode sibR = node.getChild(subtreeIndex + 1);
 					if (sibR != null && sibR.keyCount > this.minRecords) {
+						sibR.makeWritable();
 						/* Case 3a (i): child will underflow upon deletion, take a key from rightSibling */
 						long rightKey = getRecord(node.chunk, node.node, subtreeIndex);
 						long leftmostRightSiblingKey = getRecord(sibR.chunk, sibR.node, 0);
@@ -453,6 +473,7 @@ public class BTree {
 
 					BTNode sibL = node.getChild(subtreeIndex - 1);
 					if (sibL != null && sibL.keyCount > this.minRecords) {
+						sibL.makeWritable();
 						/* Case 3a (ii): child will underflow upon deletion, take a key from leftSibling */
 						long leftKey = getRecord(node.chunk, node.node, subtreeIndex - 1);
 						prepend(child, leftKey, getChild(sibL.chunk, sibL.node, sibL.keyCount));

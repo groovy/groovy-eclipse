@@ -67,6 +67,11 @@ public class NdNodeTypeRegistry<R> {
 	public R createNode(Nd nd, long address, short nodeType) throws IndexException {
 		ITypeFactory<? extends R> typeFactory = this.types.get(nodeType);
 
+		if (typeFactory == null) {
+			throw new IndexException("Index corruption detected. Unknown node type: " + nodeType + " at address "  //$NON-NLS-1$//$NON-NLS-2$
+					+ address);
+		}
+
 		return typeFactory.create(nd, address);
 	}
 

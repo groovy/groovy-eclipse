@@ -975,21 +975,21 @@ public class SpacePreparator extends ASTVisitor {
 	}
 
 	private void handleTokenAfter(ASTNode node, int tokenType, boolean spaceBefore, boolean spaceAfter) {
-		if (spaceBefore || spaceAfter) {
-			if (tokenType == TokenNameGREATER) {
-				// there could be ">>" or ">>>" instead, get rid of them
-				int index = this.tm.lastIndexIn(node, -1);
-				for (int i = index; i < index + 2; i++) {
-					Token token = this.tm.get(i);
-					if (token.tokenType == TokenNameRIGHT_SHIFT || token.tokenType == TokenNameUNSIGNED_RIGHT_SHIFT) {
-						this.tm.remove(i);
-						for (int j = 0; j < (token.tokenType == TokenNameRIGHT_SHIFT ? 2 : 3); j++) {
-							this.tm.insert(i + j, new Token(token.originalStart + j, token.originalStart + j,
-									TokenNameGREATER));
-						}
+		if (tokenType == TokenNameGREATER) {
+			// there could be ">>" or ">>>" instead, get rid of them
+			int index = this.tm.lastIndexIn(node, -1);
+			for (int i = index; i < index + 2; i++) {
+				Token token = this.tm.get(i);
+				if (token.tokenType == TokenNameRIGHT_SHIFT || token.tokenType == TokenNameUNSIGNED_RIGHT_SHIFT) {
+					this.tm.remove(i);
+					for (int j = 0; j < (token.tokenType == TokenNameRIGHT_SHIFT ? 2 : 3); j++) {
+						this.tm.insert(i + j, new Token(token.originalStart + j, token.originalStart + j,
+								TokenNameGREATER));
 					}
 				}
 			}
+		}
+		if (spaceBefore || spaceAfter) {
 			Token token = this.tm.firstTokenAfter(node, tokenType);
 			handleToken(token, spaceBefore, spaceAfter);
 		}

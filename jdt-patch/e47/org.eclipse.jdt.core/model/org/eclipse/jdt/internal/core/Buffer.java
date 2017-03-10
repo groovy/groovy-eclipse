@@ -13,7 +13,7 @@ package org.eclipse.jdt.internal.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -21,6 +21,7 @@ import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ISafeRunnable;
+import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.SafeRunner;
 import org.eclipse.core.runtime.content.IContentDescription;
 import org.eclipse.jdt.core.*;
@@ -34,7 +35,7 @@ public class Buffer implements IBuffer {
 	protected IFile file;
 	protected int flags;
 	protected char[] contents;
-	protected ArrayList changeListeners;
+	protected ListenerList<IBufferChangedListener> changeListeners;
 	protected IOpenable owner;
 	protected int gapStart = -1;
 	protected int gapEnd = -1;
@@ -60,11 +61,9 @@ protected Buffer(IFile file, IOpenable owner, boolean readOnly) {
  */
 public synchronized void addBufferChangedListener(IBufferChangedListener listener) {
 	if (this.changeListeners == null) {
-		this.changeListeners = new ArrayList(5);
+		this.changeListeners = new ListenerList();
 	}
-	if (!this.changeListeners.contains(listener)) {
-		this.changeListeners.add(listener);
-	}
+	this.changeListeners.add(listener);
 }
 /**
  * Append the <code>text</code> to the actual content, the gap is moved
@@ -255,10 +254,11 @@ protected void moveAndResizeGap(int position, int size) {
  * To avoid deadlock, this should not be called in a synchronized block.
  */
 protected void notifyChanged(final BufferChangedEvent event) {
-	ArrayList listeners = this.changeListeners;
+	ListenerList<IBufferChangedListener> listeners = this.changeListeners;
 	if (listeners != null) {
-		for (int i = 0, size = listeners.size(); i < size; ++i) {
-			final IBufferChangedListener listener = (IBufferChangedListener) listeners.get(i);
+		Iterator<IBufferChangedListener> iterator = listeners.iterator();
+		while (iterator.hasNext()) {
+			final IBufferChangedListener listener = iterator.next();
 			SafeRunner.run(new ISafeRunnable() {
 				public void handleException(Throwable exception) {
 					Util.log(exception, "Exception occurred in listener of buffer change notification"); //$NON-NLS-1$
@@ -267,7 +267,6 @@ protected void notifyChanged(final BufferChangedEvent event) {
 					listener.bufferChanged(event);
 				}
 			});
-
 		}
 	}
 }

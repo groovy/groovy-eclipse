@@ -90,8 +90,8 @@ public class MemoryStats {
 			builder.append(" "); //$NON-NLS-1$
 			builder.append(next.numAllocations);
 			builder.append(" allocations, "); //$NON-NLS-1$
-			builder.append(next.totalSize);
-			builder.append(" bytes\n"); //$NON-NLS-1$
+			builder.append(Database.formatByteString(next.totalSize));
+			builder.append("\n"); //$NON-NLS-1$
 		}
 		System.out.println(builder.toString());
 	}

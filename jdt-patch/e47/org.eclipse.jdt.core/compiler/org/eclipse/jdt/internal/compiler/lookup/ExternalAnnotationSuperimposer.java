@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 GK Software AG.
+ * Copyright (c) 2016, 2017 GK Software AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -179,7 +179,7 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 			AnnotationBinding[][] annotsOnDims = new AnnotationBinding[dims][];
 			ITypeAnnotationWalker walker = this.currentWalker;
 			for (int i = 0; i < dims; i++) {
-				IBinaryAnnotation[] binaryAnnotations = walker.getAnnotationsAtCursor(arrayBinding.id);
+				IBinaryAnnotation[] binaryAnnotations = walker.getAnnotationsAtCursor(arrayBinding.id, false);
 				if (binaryAnnotations != ITypeAnnotationWalker.NO_ANNOTATIONS) {
 					annotsOnDims[i] = BinaryTypeBinding.createAnnotations(binaryAnnotations, this.environment, null);
 					this.isReplacing = true;
@@ -209,7 +209,7 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 	public boolean visit(ParameterizedTypeBinding parameterizedTypeBinding) {
 		ExternalAnnotationSuperimposer memento = snapshot();
 		try {
-			IBinaryAnnotation[] binaryAnnotations = this.currentWalker.getAnnotationsAtCursor(parameterizedTypeBinding.id);
+			IBinaryAnnotation[] binaryAnnotations = this.currentWalker.getAnnotationsAtCursor(parameterizedTypeBinding.id, false);
 			AnnotationBinding[] annotations = Binding.NO_ANNOTATIONS;
 			if (binaryAnnotations != ITypeAnnotationWalker.NO_ANNOTATIONS) {
 				annotations = BinaryTypeBinding.createAnnotations(binaryAnnotations, this.environment, null);
@@ -234,7 +234,7 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 	}
 	@Override
 	public boolean visit(ReferenceBinding referenceBinding) {
-		IBinaryAnnotation[] binaryAnnotations = this.currentWalker.getAnnotationsAtCursor(referenceBinding.id);
+		IBinaryAnnotation[] binaryAnnotations = this.currentWalker.getAnnotationsAtCursor(referenceBinding.id, false);
 		if (binaryAnnotations != ITypeAnnotationWalker.NO_ANNOTATIONS)
 			this.typeReplacement = this.environment.createAnnotatedType(referenceBinding, BinaryTypeBinding.createAnnotations(binaryAnnotations, this.environment, null));
 		return false;
@@ -251,7 +251,7 @@ class ExternalAnnotationSuperimposer extends TypeBindingVisitor {
 			if (bound != null) {
 				bound = goAndSuperimpose(memento.currentWalker.toWildcardBound(), bound);
 			}
-			IBinaryAnnotation[] binaryAnnotations = memento.currentWalker.getAnnotationsAtCursor(-1); 
+			IBinaryAnnotation[] binaryAnnotations = memento.currentWalker.getAnnotationsAtCursor(-1, false); 
 			if (this.isReplacing || binaryAnnotations != ITypeAnnotationWalker.NO_ANNOTATIONS) {
 				TypeBinding[] otherBounds = wildcardBinding.otherBounds;
 				if (binaryAnnotations != ITypeAnnotationWalker.NO_ANNOTATIONS) {

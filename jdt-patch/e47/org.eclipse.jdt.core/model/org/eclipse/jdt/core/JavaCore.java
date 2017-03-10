@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -98,6 +98,8 @@
  *									COMPILER_INHERIT_NULL_ANNOTATIONS
  *									COMPILER_PB_NONNULL_PARAMETER_ANNOTATION_DROPPED
  *									COMPILER_PB_SYNTACTIC_NULL_ANALYSIS_FOR_FIELDS
+ *									COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE
+ *									COMPILER_PB_UNLIKELY_EQUALS_ARGUMENT_TYPE
  *     Jesper S Moller   - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
  *                       - added the following constants:
  *									COMPILER_CODEGEN_METHOD_PARAMETERS_ATTR
@@ -1514,6 +1516,60 @@ public final class JavaCore extends Plugin {
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE = PLUGIN_ID + ".compiler.problem.explicitlyClosedAutoCloseable"; //$NON-NLS-1$
+
+	/**
+	 * Compiler option ID: Reporting a method invocation providing an argument of an unlikely type.
+	 * <p>When enabled, the compiler will issue an error or warning when certain well-known Collection methods
+	 *    that take an 'Object', like e.g. {@link Map#get(Object)}, are used with an argument type
+	 *    that seems to be not related to the corresponding type argument of the Collection.</p>
+	 * <p>By default, this analysis will apply some heuristics to determine whether or not two
+	 *    types may or may not be related, which can be changed via option
+	 *    {@link #COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE_STRICT}.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unlikelyCollectionMethodArgumentType"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * @since 3.13
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE = PLUGIN_ID + ".compiler.problem.unlikelyCollectionMethodArgumentType"; //$NON-NLS-1$
+
+	/**
+	 * Compiler option ID: Perform strict analysis against the expected type of collection methods.
+	 * <p>This is a sub-option of {@link #COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE},
+	 *    which will replace the heuristics with strict compatibility checks,
+	 *    i.e., each argument that is not strictly compatible with the expected type will trigger an error or warning.</p>
+	 * <p>This option has no effect if {@link #COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE} is set to <code>"ignore"</code>.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unlikelyCollectionMethodArgumentTypeStrict"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>
+	 * </dl>
+	 * @since 3.13
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_UNLIKELY_COLLECTION_METHOD_ARGUMENT_TYPE_STRICT = PLUGIN_ID + ".compiler.problem.unlikelyCollectionMethodArgumentTypeStrict"; //$NON-NLS-1$
+
+	/**
+	 * Compiler option ID: Reporting a method invocation providing an argument of an unlikely type to method 'equals'.
+	 * <p>
+	 * When enabled, the compiler will issue an error or warning when {@link java.lang.Object#equals(Object)} is used with an argument type 
+	 * that seems to be not related to the receiver's type, or correspondingly when the arguments of {@link java.util.Objects#equals(Object, Object)}
+	 * have types that seem to be not related to each other.
+	 * </p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unlikelyEqualsArgumentType"</code></dd>
+	 * <dt>Possible values:</dt>
+	 * <dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"info"</code></dd>
+	 * </dl>
+	 * 
+	 * @since 3.13
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_UNLIKELY_EQUALS_ARGUMENT_TYPE = PLUGIN_ID + ".compiler.problem.unlikelyEqualsArgumentType"; //$NON-NLS-1$
+
 	/**
 	 * Compiler option ID: Annotation-based Null Analysis.
 	 * <p>This option controls whether the compiler will use null annotations for
@@ -5471,10 +5527,10 @@ public final class JavaCore extends Plugin {
 	public static void rebuildIndex(IProgressMonitor monitor) throws CoreException {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, 100);
 		IndexManager manager = JavaModelManager.getIndexManager();
-		manager.deleteIndexFiles(subMonitor.split(3));
+		manager.deleteIndexFiles(subMonitor.split(1));
 		manager.reset();
-		Indexer.getInstance().rebuildIndex(subMonitor.split(90));
-		updateLegacyIndex(subMonitor.split(7));
+		Indexer.getInstance().rebuildIndex(subMonitor.split(95));
+		updateLegacyIndex(subMonitor.split(4));
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,6 +101,134 @@ import org.eclipse.text.edits.TextEdit;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public final class ImportRewrite {
+	/**
+	 * Used to determine how a type will be used, so that unwanted annotations can be filtered,
+	 * which is in particular relevant for avoiding redundant null annotations in the scope of {@code @NonNullByDefault}. 
+	 * This enum is a superset of org.eclipse.jdt.annotation.DefaultLocation, and roughly corresponds
+	 * to the classification of type locations as introduced by JSR 308.
+	 *
+	 * @since 3.13
+	 */
+	public enum TypeLocation {
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.PARAMETER
+		 * 
+		 * @since 3.13
+		 */
+		PARAMETER,
+
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.RETURN_TYPE
+		 * 
+		 * @since 3.13
+		 */
+		RETURN_TYPE,
+
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.FIELD
+		 * 
+		 * @since 3.13
+		 */
+		FIELD,
+
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.TYPE_PARAMETER
+		 * 
+		 * @since 3.13
+		 */
+		TYPE_PARAMETER,
+
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.TYPE_BOUND
+		 * 
+		 * @since 3.13
+		 */
+		TYPE_BOUND,
+
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.TYPE_ARGUMENT
+		 * 
+		 * @since 3.13
+		 */
+		TYPE_ARGUMENT,
+
+		/**
+		 * see org.eclipse.jdt.annotation.DefaultLocation.ARRAY_CONTENTS
+		 * 
+		 * @since 3.13
+		 */
+		ARRAY_CONTENTS,
+
+		/**
+		 * The special value {@link #LOCAL_VARIABLE} is used for local variables: their nullness is determines by flow analysis,
+		 * so top level nullness annotations are usually not needed for local variables (unless their type is a free
+		 * type variable). Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		LOCAL_VARIABLE,
+
+		/**
+		 * The special value {@link #CAST} is used for casts.
+		 * Casts are never affected by {@code @NonNullByDefault}
+		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		CAST,
+		
+		/**
+		 * The special value {@link #INSTANCEOF} is used for {@code instanceof} expressions.
+		 * Null annotations are not supported in this location.
+		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		INSTANCEOF,
+
+		/**
+		 * The special value {@link #NEW} is used for {@code new} expressions (object allocations). 
+		 * Null annotations are not supported in this location.
+		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		NEW,
+
+		/**
+		 * The special value {@link #RECEIVER} is used for the receiver type in a method declaration or method reference.
+		 * Null annotations are not supported in this location.
+		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		RECEIVER,
+
+		/**
+		 * The special value {@link #EXCEPTION} is used for exception types in catch and throws declarations, which are
+		 * implicitly non-null. Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		EXCEPTION,
+
+		/**
+		 * The special value {@link #OTHER} is used for locations where type annotations are illegal, like type literals
+		 * (X.class), annotations, or as scope for static field accesses. Does not correspond to a value in
+		 * org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		OTHER,
+
+		/**
+		 * The special value {@link #UNKNOWN} is used for invocations that don't specify the intended type usage. Does not
+		 * correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
+		 * 
+		 * @since 3.13
+		 */
+		UNKNOWN,
+	}
 
 	/**
 	 * A {@link ImportRewrite.ImportRewriteContext} can optionally be used in e.g. {@link ImportRewrite#addImport(String, ImportRewrite.ImportRewriteContext)} to
@@ -167,6 +295,18 @@ public final class ImportRewrite {
 		 * {@link #RES_NAME_CONFLICT}, or {@link #RES_NAME_UNKNOWN_NEEDS_EXPLICIT_IMPORT}.
 		 */
 		public abstract int findInContext(String qualifier, String name, int kind);
+
+		/**
+		 * This method can be overridden in subclasses to remove annotations that are redundant, e.g. because of NonNullByDefault.
+		 * @param annotations The array of type annotations to be filtered.
+		 * @param location Specifies how the type being annotated will be used.
+		 * @param type the type being annotated
+		 * @return Returns the annotations that should be added to the type.
+		 * @since 3.13
+		 */
+		public IAnnotationBinding[] removeRedundantTypeAnnotations(IAnnotationBinding[] annotations, TypeLocation location, ITypeBinding type) {
+			return annotations;
+		}
 	}
 
 	private static final char STATIC_PREFIX= 's';
@@ -529,7 +669,7 @@ public final class ImportRewrite {
 	 * @since 3.10
 	 */
 	public Annotation addAnnotation(IAnnotationBinding annotation, AST ast, ImportRewriteContext context) {
-		Type type = addImport(annotation.getAnnotationType(), ast, context);
+		Type type = addImport(annotation.getAnnotationType(), ast, context, TypeLocation.OTHER);
 		Name name;
 		if (type instanceof SimpleType) {
 			SimpleType simpleType = (SimpleType) type;
@@ -827,7 +967,7 @@ public final class ImportRewrite {
 	 * or else qualified names if an import conflict prevented an import.
 	 */
 	public Type addImport(ITypeBinding binding, AST ast) {
-		return addImport(binding, ast, this.defaultContext);
+		return addImport(binding, ast, this.defaultContext, TypeLocation.UNKNOWN);
 	}
 
 	/**
@@ -852,10 +992,37 @@ public final class ImportRewrite {
 	 * or else qualified names if an import conflict prevented an import.
 	 */
 	public Type addImport(ITypeBinding binding, AST ast, ImportRewriteContext context) {
+		return addImport(binding, ast, context, TypeLocation.UNKNOWN);
+	}
+
+	/**
+	 * Adds a new import to the rewriter's record and returns a {@link Type} that can be used
+	 * in the code. The type binding can be an array binding, type variable or wildcard.
+	 * If the binding is a generic type, the type parameters are ignored. For parameterized types, also the type
+	 * arguments are processed and imports added if necessary. Anonymous types inside type arguments are normalized to their base type, wildcard
+	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and 
+	 * the type is retained from that point with type annotations and type arguments
+	 * 	<p>
+ 	 * No imports are added for types that are already known. If a import for a type is recorded to be removed, this record is discarded instead.
+	 * </p>
+	 * <p>
+	 * The content of the compilation unit itself is actually not modified
+	 * in any way by this method; rather, the rewriter just records that a new import has been added.
+	 * </p>
+	 * @param binding the signature of the type to be added.
+	 * @param ast the AST to create the returned type for.
+	 * @param context an optional context that knows about types visible in the current scope or <code>null</code>
+	 * to use the default context only using the available imports.
+	 * @param location where the type will be used. This information is needed to filter unwanted (nullness) type annotations.
+	 * @return a type node for the given type binding. Type names are simple names if an import could be used,
+	 * or else qualified names if an import conflict prevented an import.
+	 * @since 3.13
+	 */
+	public Type addImport(ITypeBinding binding, AST ast, ImportRewriteContext context, TypeLocation location) {	
 		ITypeBinding bindingPoint = checkAnnotationAndGenerics(binding);
-		Type type = internalAddImport(bindingPoint == null ? binding : bindingPoint, ast, context, null, /* getBase */ true);
+		Type type = internalAddImport(bindingPoint == null ? binding : bindingPoint, ast, context, null, /* getBase */ true, bindingPoint != null && !bindingPoint.equals(binding) ? TypeLocation.OTHER : location);
 		if (bindingPoint != null && !bindingPoint.equals(binding)) {
-			type = buildType(binding, bindingPoint, ast, context, type);
+			type = buildType(binding, bindingPoint, ast, context, type, location);
 		}
 		return type;
 	}
@@ -1291,28 +1458,30 @@ public final class ImportRewrite {
 		return res.toArray(new String[res.size()]);
 	}
 
-	private void annotateList(List annotations, IAnnotationBinding [] annotationBindings, AST ast, ImportRewriteContext context) {
+	private void annotateList(List annotations, IAnnotationBinding [] annotationBindings, AST ast,
+						ImportRewriteContext context, TypeLocation location, ITypeBinding type) {
+		annotationBindings = context.removeRedundantTypeAnnotations(annotationBindings, location, type);
 		for (int i = 0; i< annotationBindings.length; i++) {
 			Annotation annotation = addAnnotation(annotationBindings[i], ast, context);
 			if (annotation != null) annotations.add(annotation);
 		}
 	}
 
-	private Type annotateType(ITypeBinding binding, AST ast, ImportRewriteContext context, Type type) {
+	private Type annotateType(ITypeBinding binding, AST ast, ImportRewriteContext context, Type type, TypeLocation location) {
 		IAnnotationBinding [] annotationBindings = binding.getTypeAnnotations();
 		if (annotationBindings != null && annotationBindings.length > 0 && type instanceof AnnotatableType) {
-			annotateList(((AnnotatableType) type).annotations(), annotationBindings, ast, context);
+			annotateList(((AnnotatableType) type).annotations(), annotationBindings, ast, context, location, binding);
 		}
 		return type;
 	}
 
-	private Type buildType(ITypeBinding binding, ITypeBinding bindingPoint, AST ast, ImportRewriteContext context, Type qualifier) {
+	private Type buildType(ITypeBinding binding, ITypeBinding bindingPoint, AST ast, ImportRewriteContext context, Type qualifier, TypeLocation location) {
 		if (binding.equals(bindingPoint)) {
 			return qualifier;
 		}
 		// build the type recursively from left to right
-		Type type = binding.isMember() ? buildType(binding.getDeclaringClass(), bindingPoint, ast, context, qualifier) : null;
-		type = internalAddImport(binding, ast, context, type, false);
+		Type type = binding.isMember() ? buildType(binding.getDeclaringClass(), bindingPoint, ast, context, qualifier, TypeLocation.OTHER) : null;
+		type = internalAddImport(binding, ast, context, type, false, location);
 		return type;
 	}
 
@@ -1334,7 +1503,7 @@ public final class ImportRewrite {
 		return bindingPoint;
 	}
 
-	private Type createBaseType(AST ast, ImportRewriteContext context, ITypeBinding normalizedBinding) {
+	private Type createBaseType(AST ast, ImportRewriteContext context, ITypeBinding normalizedBinding, TypeLocation location) {
 		Type type;
 		IAnnotationBinding annotationBinding [] = normalizedBinding.getTypeAnnotations();
 		boolean annotsPresent = annotationBinding != null && annotationBinding.length > 0;
@@ -1351,14 +1520,14 @@ public final class ImportRewrite {
 			} else {
 				type = ast.newSimpleType(ast.newName(res));
 			}
-			annotateList(((AnnotatableType) type).annotations(), annotationBinding, ast, context);
+			annotateList(((AnnotatableType) type).annotations(), annotationBinding, ast, context, location, normalizedBinding);
 		} else {
 			type = ast.newSimpleType(ast.newName(res));
 		}
 		return type;
 	}
 
-	private Type getArrayType(Type elementType, AST ast, ImportRewriteContext context, ITypeBinding normalizedBinding) {
+	private Type getArrayType(Type elementType, AST ast, ImportRewriteContext context, ITypeBinding normalizedBinding, TypeLocation location) {
 		int noDimensions = normalizedBinding.getDimensions();
 		ArrayType arrayType = ast.newArrayType(elementType, noDimensions);
 		if (ast.apiLevel() >= AST.JLS8) {
@@ -1366,7 +1535,8 @@ public final class ImportRewrite {
 				IAnnotationBinding[] typeAnnotations = normalizedBinding.getTypeAnnotations();
 				if (typeAnnotations.length > 0) {
 					Dimension dimension = (Dimension) arrayType.dimensions().get(i);
-					annotateList(dimension.annotations(), typeAnnotations, ast, context);
+					annotateList(dimension.annotations(), typeAnnotations, ast, context,
+							i == 0 ? location : TypeLocation.ARRAY_CONTENTS, normalizedBinding);
 				}
 				normalizedBinding = normalizedBinding.getComponentType();
 			}
@@ -1374,7 +1544,7 @@ public final class ImportRewrite {
 		return arrayType;
 	}
 
-	private Type internalAddImport(ITypeBinding binding, AST ast, ImportRewriteContext context, Type currentType, boolean getBase) {
+	private Type internalAddImport(ITypeBinding binding, AST ast, ImportRewriteContext context, Type currentType, boolean getBase, TypeLocation location) {
 		Type type = null;
 		ITypeBinding normalizedBinding = null;
 		
@@ -1392,26 +1562,26 @@ public final class ImportRewrite {
 				WildcardType wcType= ast.newWildcardType();
 				ITypeBinding bound= normalizedBinding.getBound();
 				if (bound != null && !bound.isWildcardType() && !bound.isCapture()) { // bug 96942
-					Type boundType= addImport(bound, ast, context);
+					Type boundType= addImport(bound, ast, context, TypeLocation.TYPE_BOUND);
 					wcType.setBound(boundType, normalizedBinding.isUpperbound());
 				}
 				type = wcType;
 			} else if (normalizedBinding.isArray()) {
-				Type elementType= addImport(normalizedBinding.getElementType(), ast, context);
-				type = getArrayType(elementType, ast, context, normalizedBinding);
+				Type elementType= addImport(normalizedBinding.getElementType(), ast, context, TypeLocation.ARRAY_CONTENTS);
+				type = getArrayType(elementType, ast, context, normalizedBinding, location);
 			}
 		}
 
 		if (type != null) {
-			return annotateType(normalizedBinding, ast, context, type);
+			return annotateType(normalizedBinding, ast, context, type, location);
 		}
 
 		if (getBase) {
-			type = createBaseType(ast, context, normalizedBinding);
+			type = createBaseType(ast, context, normalizedBinding, location);
 		} else  {
 			type = currentType != null ? (Type) ast.newQualifiedType(currentType, ast.newSimpleName(getRawName(normalizedBinding))) : 
 				ast.newSimpleType(ast.newName(getRawName(normalizedBinding)));
-			type = annotateType(normalizedBinding, ast, context, type);
+			type = annotateType(normalizedBinding, ast, context, type, location);
 		}
 
 		ITypeBinding[] typeArguments = normalizedBinding.getTypeArguments();
@@ -1423,7 +1593,7 @@ public final class ImportRewrite {
 				if (containsNestedCapture(curr, false)) { // see bug 103044
 					arguments.add(ast.newWildcardType());
 				} else {
-					arguments.add(addImport(curr, ast, context));
+					arguments.add(addImport(curr, ast, context, TypeLocation.TYPE_ARGUMENT));
 				}
 			}
 			type = paramType;
@@ -1443,7 +1613,7 @@ public final class ImportRewrite {
 			return result;
 		} else if (value instanceof ITypeBinding) {
 			TypeLiteral result = ast.newTypeLiteral();
-			result.setType(addImport((ITypeBinding) value, ast, context));
+			result.setType(addImport((ITypeBinding) value, ast, context, TypeLocation.OTHER));
 			return result;
 		} else if (value instanceof String) {
 			StringLiteral result = ast.newStringLiteral();
@@ -1454,7 +1624,7 @@ public final class ImportRewrite {
 
 			FieldAccess result = ast.newFieldAccess();
 			result.setName(ast.newSimpleName(variable.getName()));
-			Type type = addImport(variable.getType(), ast, context);
+			Type type = addImport(variable.getType(), ast, context, TypeLocation.OTHER); // ignore annotations, type will discarded
 			Name name;
 			if (type instanceof SimpleType) {
 				SimpleType simpleType = (SimpleType) type;

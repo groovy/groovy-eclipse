@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1064,6 +1064,17 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.1
 	 */
 	public final static String FORMATTER_COMMENT_LINE_LENGTH = "org.eclipse.jdt.core.formatter.comment.line_length"; //$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control whether comments' line length will be counted from their starting position
+	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.count_line_length_from_starting_position"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           FALSE
+	 * </pre>
+	 * @since 3.13
+	 */
+	public final static String FORMATTER_COMMENT_COUNT_LINE_LENGTH_FROM_STARTING_POSITION = "org.eclipse.jdt.core.formatter.comment.count_line_length_from_starting_position"; //$NON-NLS-1$
 
 	/**
 	 * <pre>

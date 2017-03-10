@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,6 +21,7 @@
  *								bug 381443 - [compiler][null] Allow parameter widening from @NonNull to unannotated
  *								bug 383368 - [compiler][null] syntactic null analysis for field references
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
+ *								Bug 410218 - Optional warning for arguments of "unexpected" types to Map#get(Object), Collection#remove(Object) et al.
  *     Jesper Steen Moller - Contributions for
  *								bug 404146 - [1.7][compiler] nested try-catch-finally-blocks leads to unrunnable Java byte code
  *								bug 407297 - [1.8][compiler] Control generation of parameter names by option
@@ -162,9 +163,11 @@ public class CompilerOptions {
 	public static final String OPTION_ReportMethodCanBeStatic = "org.eclipse.jdt.core.compiler.problem.reportMethodCanBeStatic";  //$NON-NLS-1$
 	public static final String OPTION_ReportMethodCanBePotentiallyStatic = "org.eclipse.jdt.core.compiler.problem.reportMethodCanBePotentiallyStatic";  //$NON-NLS-1$
 	public static final String OPTION_ReportRedundantSpecificationOfTypeArguments =  "org.eclipse.jdt.core.compiler.problem.redundantSpecificationOfTypeArguments"; //$NON-NLS-1$
+
 	public static final String OPTION_ReportUnclosedCloseable = "org.eclipse.jdt.core.compiler.problem.unclosedCloseable"; //$NON-NLS-1$
 	public static final String OPTION_ReportPotentiallyUnclosedCloseable = "org.eclipse.jdt.core.compiler.problem.potentiallyUnclosedCloseable"; //$NON-NLS-1$
 	public static final String OPTION_ReportExplicitlyClosedAutoCloseable = "org.eclipse.jdt.core.compiler.problem.explicitlyClosedAutoCloseable"; //$NON-NLS-1$
+
 	public static final String OPTION_ReportNullSpecViolation = "org.eclipse.jdt.core.compiler.problem.nullSpecViolation";  //$NON-NLS-1$
 	public static final String OPTION_ReportNullAnnotationInferenceConflict = "org.eclipse.jdt.core.compiler.problem.nullAnnotationInferenceConflict";  //$NON-NLS-1$
 	public static final String OPTION_ReportNullUncheckedConversion = "org.eclipse.jdt.core.compiler.problem.nullUncheckedConversion";  //$NON-NLS-1$
@@ -187,6 +190,11 @@ public class CompilerOptions {
 	public static final String OPTION_ReportNonnullParameterAnnotationDropped = "org.eclipse.jdt.core.compiler.problem.nonnullParameterAnnotationDropped";  //$NON-NLS-1$
 	public static final String OPTION_PessimisticNullAnalysisForFreeTypeVariables = "org.eclipse.jdt.core.compiler.problem.pessimisticNullAnalysisForFreeTypeVariables";  //$NON-NLS-1$
 	public static final String OPTION_ReportNonNullTypeVariableFromLegacyInvocation = "org.eclipse.jdt.core.compiler.problem.nonnullTypeVariableFromLegacyInvocation"; //$NON-NLS-1$
+	
+	public static final String OPTION_ReportUnlikelyCollectionMethodArgumentType = "org.eclipse.jdt.core.compiler.problem.unlikelyCollectionMethodArgumentType"; //$NON-NLS-1$
+	public static final String OPTION_ReportUnlikelyCollectionMethodArgumentTypeStrict = "org.eclipse.jdt.core.compiler.problem.unlikelyCollectionMethodArgumentTypeStrict"; //$NON-NLS-1$
+	public static final String OPTION_ReportUnlikelyEqualsArgumentType = "org.eclipse.jdt.core.compiler.problem.unlikelyEqualsArgumentType"; //$NON-NLS-1$
+
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
@@ -199,7 +207,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyCustomizerClassesList = "org.eclipse.jdt.core.compiler.groovy.groovyCustomizerClassesList"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyExcludeGlobalASTScan = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude";  //$NON-NLS-1$
 	// GROOVY end
-	
+
 	/**
 	 * Possible values for configurable options
 	 */
@@ -322,6 +330,8 @@ public class CompilerOptions {
 	public static final int UnusedExceptionParameter = IrritantSet.GROUP2 | ASTNode.Bit19;
 	public static final int PessimisticNullAnalysisForFreeTypeVariables = IrritantSet.GROUP2 | ASTNode.Bit20;
 	public static final int NonNullTypeVariableFromLegacyInvocation = IrritantSet.GROUP2 | ASTNode.Bit21;
+	public static final int UnlikelyCollectionMethodArgumentType = IrritantSet.GROUP2 | ASTNode.Bit22;
+	public static final int UnlikelyEqualsArgumentType = IrritantSet.GROUP2 | ASTNode.Bit23;
 
 	// Severity level for handlers
 	/** 
@@ -341,12 +351,12 @@ public class CompilerOptions {
 	protected IrritantSet infoThreshold;
 	
 	/**
-	 * Default settings are to be defined in {@lnk CompilerOptions#resetDefaults()}
+	 * Default settings are to be defined in {@link CompilerOptions#resetDefaults()}
 	 */
 	
 	/** Classfile debug information, may contain source file name, line numbers, local variable tables, etc... */
 	public int produceDebugAttributes; 
-	/** Classfile method patameters information as per JEP 118... */
+	/** Classfile method parameters information as per JEP 118... */
 	public boolean produceMethodParameters;
 	/** Indicates whether generic signature should be generated for lambda expressions */
 	public boolean generateGenericSignatureForLambdaExpressions;
@@ -492,6 +502,9 @@ public class CompilerOptions {
 	/** Should missing enum cases be reported even if a default case exists in the same switch? */
 	public boolean reportMissingEnumCaseDespiteDefault;
 	
+	/** When checking for unlikely argument types of of Map.get() et al, perform strict analysis against the expected type */
+	public boolean reportUnlikelyCollectionMethodArgumentTypeStrict;
+
 	/** Should the compiler tolerate illegal ambiguous varargs invocation in compliance < 1.7 
 	 * to be bug compatible with javac? (bug 383780) */
 	public static boolean tolerateIllegalAmbiguousVarargsInvocation;
@@ -517,7 +530,6 @@ public class CompilerOptions {
 
 	/** Not directly configurable, derived from other options by LookupEnvironment.usesNullTypeAnnotations() */
 	public Boolean useNullTypeAnnotations = null;
-	
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
@@ -543,6 +555,7 @@ public class CompilerOptions {
 		"synthetic-access", //$NON-NLS-1$
 		"sync-override",	//$NON-NLS-1$
 		"unchecked", //$NON-NLS-1$
+		"unlikely-arg-type", //$NON-NLS-1$
 		"unqualified-field-access", //$NON-NLS-1$
 		"unused", //$NON-NLS-1$
 	};
@@ -738,6 +751,10 @@ public class CompilerOptions {
 				return OPTION_PessimisticNullAnalysisForFreeTypeVariables;
 			case NonNullTypeVariableFromLegacyInvocation:
 				return OPTION_ReportNonNullTypeVariableFromLegacyInvocation;
+			case UnlikelyCollectionMethodArgumentType:
+				return OPTION_ReportUnlikelyCollectionMethodArgumentType;
+			case UnlikelyEqualsArgumentType:
+				return OPTION_ReportUnlikelyEqualsArgumentType;
 		}
 		return null;
 	}
@@ -929,7 +946,9 @@ public class CompilerOptions {
 			OPTION_SyntacticNullAnalysisForFields,
 			OPTION_ReportUnusedTypeParameter,
 			OPTION_InheritNullAnnotations,
-			OPTION_ReportNonnullParameterAnnotationDropped
+			OPTION_ReportNonnullParameterAnnotationDropped,
+			OPTION_ReportUnlikelyCollectionMethodArgumentType,
+			OPTION_ReportUnlikelyEqualsArgumentType,
 		};
 		return result;
 	}
@@ -1021,6 +1040,9 @@ public class CompilerOptions {
 				return "javadoc"; //$NON-NLS-1$
 			case MissingSynchronizedModifierInInheritedMethod:
 				return "sync-override";	 //$NON-NLS-1$
+			case UnlikelyEqualsArgumentType:
+			case UnlikelyCollectionMethodArgumentType:
+				return "unlikely-arg-type"; //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -1101,6 +1123,8 @@ public class CompilerOptions {
 					return IrritantSet.UNCHECKED;
 				if ("unqualified-field-access".equals(warningToken)) //$NON-NLS-1$
 					return IrritantSet.UNQUALIFIED_FIELD_ACCESS;
+				if ("unlikely-arg-type".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.UNLIKELY_ARGUMENT_TYPE;
 				break;
 		}
 		return null;
@@ -1246,6 +1270,9 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUninternedIdentityComparison, this.complainOnUninternedIdentityComparison ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_PessimisticNullAnalysisForFreeTypeVariables, getSeverityString(PessimisticNullAnalysisForFreeTypeVariables));
 		optionsMap.put(OPTION_ReportNonNullTypeVariableFromLegacyInvocation, getSeverityString(NonNullTypeVariableFromLegacyInvocation));
+		optionsMap.put(OPTION_ReportUnlikelyCollectionMethodArgumentType, getSeverityString(UnlikelyCollectionMethodArgumentType));
+		optionsMap.put(OPTION_ReportUnlikelyCollectionMethodArgumentTypeStrict, this.reportUnlikelyCollectionMethodArgumentTypeStrict ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_ReportUnlikelyEqualsArgumentType, getSeverityString(UnlikelyEqualsArgumentType));
 		// GROOVY add
 		// if not supplied here it isn't seen as something that can be set from elsewhere
 		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile, ""); //$NON-NLS-1$
@@ -1754,6 +1781,11 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportPotentiallyUnclosedCloseable)) != null) updateSeverity(PotentiallyUnclosedCloseable, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportExplicitlyClosedAutoCloseable)) != null) updateSeverity(ExplicitlyClosedAutoCloseable, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedTypeParameter)) != null) updateSeverity(UnusedTypeParameter, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportUnlikelyCollectionMethodArgumentType)) != null) updateSeverity(UnlikelyCollectionMethodArgumentType, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportUnlikelyCollectionMethodArgumentTypeStrict)) != null) {
+			this.reportUnlikelyCollectionMethodArgumentTypeStrict = ENABLED.equals(optionValue);
+		}
+		if ((optionValue = optionsMap.get(OPTION_ReportUnlikelyEqualsArgumentType)) != null) updateSeverity(UnlikelyEqualsArgumentType, optionValue);
 		if (getSeverity(UnclosedCloseable) == ProblemSeverities.Ignore
 				&& getSeverity(PotentiallyUnclosedCloseable) == ProblemSeverities.Ignore
 				&& getSeverity(ExplicitlyClosedAutoCloseable) == ProblemSeverities.Ignore) {
@@ -2153,6 +2185,9 @@ public class CompilerOptions {
 		buf.append("\n\t- Unused Type Parameter: ").append(getSeverityString(UnusedTypeParameter)); //$NON-NLS-1$
 		buf.append("\n\t- pessimistic null analysis for free type variables: ").append(getSeverityString(PessimisticNullAnalysisForFreeTypeVariables)); //$NON-NLS-1$
 		buf.append("\n\t- report unsafe nonnull return from legacy method: ").append(getSeverityString(NonNullTypeVariableFromLegacyInvocation)); //$NON-NLS-1$
+		buf.append("\n\t- unlikely argument type for collection methods: ").append(getSeverityString(UnlikelyCollectionMethodArgumentType)); //$NON-NLS-1$
+		buf.append("\n\t- unlikely argument type for collection methods, strict check against expected type: ").append(this.reportUnlikelyCollectionMethodArgumentTypeStrict ? ENABLED : DISABLED); //$NON-NLS-1$
+		buf.append("\n\t- unlikely argument types for equals(): ").append(getSeverityString(UnlikelyEqualsArgumentType)); //$NON-NLS-1$
 		// GROOVY add
 		buf.append("\n\t- build groovy files: ").append((this.buildGroovyFiles == 0) ? "dontknow" : (this.buildGroovyFiles == 1 ? "no" : "yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(this.groovyFlags)); //$NON-NLS-1$

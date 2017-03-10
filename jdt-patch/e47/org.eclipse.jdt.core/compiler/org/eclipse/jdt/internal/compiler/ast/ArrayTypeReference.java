@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,18 +14,26 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import java.util.function.Consumer;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 public class ArrayTypeReference extends SingleTypeReference {
 	public int dimensions;
 	private Annotation[][] annotationsOnDimensions; // jsr308 style type annotations on dimensions.
 	public int originalSourceEnd;
 	public int extendedDimensions;
+	public TypeBinding leafComponentTypeWithoutDefaultNullness;
 
 	/**
 	 * ArrayTypeReference constructor comment.
@@ -179,7 +187,73 @@ public class ArrayTypeReference extends SingleTypeReference {
 
 	protected TypeBinding internalResolveType(Scope scope, int location) {
 		TypeBinding internalResolveType = super.internalResolveType(scope, location);
+		internalResolveType = maybeMarkArrayContentsNonNull(scope, internalResolveType, this.sourceStart, this.dimensions,
+									leafType -> this.leafComponentTypeWithoutDefaultNullness = leafType);
+
 		return internalResolveType;
+	}
+
+	static TypeBinding maybeMarkArrayContentsNonNull(Scope scope, TypeBinding typeBinding, int sourceStart, int dimensions, Consumer<TypeBinding> leafConsumer) {
+		LookupEnvironment environment = scope.environment();
+		if (environment.usesNullTypeAnnotations()
+				&& scope.hasDefaultNullnessFor(Binding.DefaultLocationArrayContents, sourceStart)) {
+			AnnotationBinding nonNullAnnotation = environment.getNonNullAnnotation();
+			typeBinding = addNonNullToDimensions(scope, typeBinding, nonNullAnnotation, dimensions);
+
+			TypeBinding leafComponentType = typeBinding.leafComponentType();
+			if ((leafComponentType.tagBits & TagBits.AnnotationNullMASK) == 0 && leafComponentType.acceptsNonNullDefault()) {
+				if (leafConsumer != null)
+					leafConsumer.accept(leafComponentType);
+				TypeBinding nonNullLeafComponentType = scope.environment().createAnnotatedType(leafComponentType,
+						new AnnotationBinding[] { nonNullAnnotation });
+				typeBinding = scope.createArrayType(nonNullLeafComponentType, typeBinding.dimensions(),
+						typeBinding.getTypeAnnotations());
+			}
+		}
+		return typeBinding;
+	}
+
+	static TypeBinding addNonNullToDimensions(Scope scope, TypeBinding typeBinding,
+			AnnotationBinding nonNullAnnotation, int dimensions2) {
+		AnnotationBinding[][] newAnnots = new AnnotationBinding[dimensions2][];
+		AnnotationBinding[] oldAnnots = typeBinding.getTypeAnnotations();
+		if (oldAnnots == null) {
+			for (int i = 1; i < dimensions2; i++) {
+				newAnnots[i] = new AnnotationBinding[] { nonNullAnnotation };
+			}
+		} else {
+			int j = 0;
+			for (int i = 0; i < dimensions2; i++) {
+				if (j >= oldAnnots.length || oldAnnots[j] == null) {
+					if (i != 0) {
+						newAnnots[i] = new AnnotationBinding[] { nonNullAnnotation };
+					}
+					j++;
+				} else {
+					int k = j;
+					boolean seen = false;
+					while (oldAnnots[k] != null) {
+						seen |= oldAnnots[k].getAnnotationType()
+								.hasNullBit(TypeIds.BitNonNullAnnotation | TypeIds.BitNullableAnnotation);
+						k++;
+					}
+					if (seen || i == 0) {
+						if (k > j) {
+							AnnotationBinding[] annotationsForDimension = new AnnotationBinding[k - j];
+							System.arraycopy(oldAnnots, j, annotationsForDimension, 0, k - j);
+							newAnnots[i] = annotationsForDimension;
+						}
+					} else {
+						AnnotationBinding[] annotationsForDimension = new AnnotationBinding[k - j + 1];
+						annotationsForDimension[0] = nonNullAnnotation;
+						System.arraycopy(oldAnnots, j, annotationsForDimension, 1, k - j);
+						newAnnots[i] = annotationsForDimension;
+					}
+					j = k + 1;
+				}
+			}
+		}
+		return scope.environment().createAnnotatedType(typeBinding, newAnnots);
 	}
 	
 	@Override

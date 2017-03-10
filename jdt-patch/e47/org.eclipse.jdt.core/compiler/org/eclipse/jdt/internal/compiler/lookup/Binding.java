@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -97,7 +97,6 @@ public abstract class Binding {
 	public static final int DefaultLocationTypeBound = ASTNode.Bit9;
 	/**
 	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#ARRAY_CONTENTS
-	 * TODO: this constant is not yet used, due to difficulty to discern these annotations between SE5 / SE8
 	 */
 	public static final int DefaultLocationArrayContents = ASTNode.Bit10;
 

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -422,7 +422,7 @@ void faultInImports() {
 	this.tempImports = new ImportBinding[numberOfImports + this.importPtr-1];
 	System.arraycopy(defaultImports, 0, this.tempImports, 0, this.importPtr);
 	// GROOVY end
-
+	
 	// keep static imports with normal imports until there is a reason to split them up
 	// on demand imports continue to be packages & types. need to check on demand type imports for fields/methods
 	// single imports change from being just types to types or fields
@@ -1071,11 +1071,29 @@ private int checkAndRecordImportBinding(
 	return this.importPtr;
 }
 @Override
-public boolean hasDefaultNullnessFor(int location) {
+public boolean hasDefaultNullnessFor(int location, int sourceStart) {
+	int nonNullByDefaultValue = localNonNullByDefaultValue(sourceStart);
+	if (nonNullByDefaultValue != 0) {
+		return (nonNullByDefaultValue & location) != 0;
+	}
 	if (this.fPackage != null)
 		return (this.fPackage.defaultNullness & location) != 0;
 	return false;
 }
+
+@Override
+public /* @Nullable */ Binding checkRedundantDefaultNullness(int nullBits, int sourceStart) {
+	Binding target = localCheckRedundantDefaultNullness(nullBits, sourceStart);
+	if (target != null) {
+		return target;
+	}
+	if (this.fPackage != null) {
+		return (this.fPackage.defaultNullness == nullBits) ? this.fPackage : null;
+	}
+
+	return null;
+}
+
 public void registerInferredInvocation(Invocation invocation) {
 	if (this.inferredInvocations == null)
 		this.inferredInvocations = new ArrayList<>();
