@@ -510,11 +510,15 @@ public class CompilationUnitResolver extends Compiler {
 					compilerOptions,
 					new DefaultProblemFactory()),
 			false);*/
-		Parser parser = LanguageSupportFactory.getParser(null, compilerOptions, new ProblemReporter(
+		Parser parser = LanguageSupportFactory.getParser(
+				null,
+				compilerOptions,
+				new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,
 					new DefaultProblemFactory()),
-				false, 2 /* comment recorder parser */);
+				false,
+				2 /* comment recorder parser */);
 		// GROOVY end
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);

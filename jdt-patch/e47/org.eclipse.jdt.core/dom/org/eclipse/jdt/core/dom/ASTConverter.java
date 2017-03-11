@@ -3795,7 +3795,6 @@ class ASTConverter {
 									Name name = ((SimpleType) type2).getName();
 									// TODO: If there are previous type args, use their positional info or lengths...
 									end += name.toString().length() + 1; // ballpark it
-									System.err.println("SimpleType with no position info"); //$NON-NLS-1$
 								} else {
 									System.err.println("Type with no position info"); //$NON-NLS-1$
 								}

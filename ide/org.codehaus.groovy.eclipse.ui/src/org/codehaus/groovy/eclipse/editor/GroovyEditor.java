@@ -177,7 +177,6 @@ public class GroovyEditor extends CompilationUnitEditor {
          * @see org.eclipse.jface.text.IPositionUpdater#update(org.eclipse.jface.text.DocumentEvent)
          */
         public void update(DocumentEvent event) {
-
             int eventOffset= event.getOffset();
             int eventOldLength= event.getLength();
             int eventNewLength= event.getText() == null ? 0 : event.getText().length();
@@ -202,8 +201,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                         // after change - shift
                         position.setOffset(offset + deltaLength);
                     else if (end <= eventOffset) {
-                        // position comes way before change -
-                        // leave alone
+                        // position comes way before change - leave alone
                     } else if (offset <= eventOffset && end >= eventOffset + eventOldLength) {
                         // event completely internal to the position - adjust length
                         position.setLength(length + deltaLength);
@@ -227,7 +225,6 @@ public class GroovyEditor extends CompilationUnitEditor {
                 // ignore and return
             }
         }
-
     }
 
     /**
@@ -620,19 +617,11 @@ public class GroovyEditor extends CompilationUnitEditor {
                     }
                 });
             }
-
-
         }
 
-        /*
-         * @see org.eclipse.jface.text.link.ILinkedModeListener#suspend(org.eclipse.jface.text.link.LinkedModeModel)
-         */
         public void suspend(LinkedModeModel environment) {
         }
 
-        /*
-         * @see org.eclipse.jface.text.link.ILinkedModeListener#resume(org.eclipse.jface.text.link.LinkedModeModel, int)
-         */
         public void resume(LinkedModeModel environment, int flags) {
         }
     }
@@ -868,8 +857,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseAngularBracketsEnabled", bool, fBracketInserterField, disabled);
     }
 
-    // temporary storage for editor input
-    // so that GroovyConiguration can use it
+    // temporary storage for editor input so that GroovyConiguration can use it
     IEditorInput internalInput;
     /**
      * Override this method so that we can get access to the newly initialized
@@ -892,6 +880,25 @@ public class GroovyEditor extends CompilationUnitEditor {
         } finally {
             internalInput = null;
         }
+    }
+
+    @Override
+    public void doSave(IProgressMonitor progressMonitor) {
+        try {
+            super.doSave(progressMonitor);
+        } catch (RuntimeException e) {
+            GroovyPlugin.getDefault().logError("GroovyEditor: error saving document", e);
+            throw e;
+        } catch (Error e) {
+            GroovyPlugin.getDefault().logError("GroovyEditor: error saving document", e);
+            throw e;
+        }
+    }
+
+    @Override
+    protected void handleExceptionOnSave(CoreException exception, IProgressMonitor progressMonitor) {
+        GroovyPlugin.getDefault().logError("GroovyEditor: error saving document", exception);
+        super.handleExceptionOnSave(exception, progressMonitor);
     }
 
     @Override
@@ -1296,12 +1303,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         // disable Clean Ups...
         AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
         acua.setEnabled(false);
-//        // GRECLIPSE-966 must dispose action to avoid memory leak
-//        if (acua != null) {
-//            acua.dispose();
-//            ReflectionUtils.setPrivateField(CleanUpAction.class, "fEditor", acua, null);
-//        }
-//        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fCleanUp", group, new NoopCleanUpsAction(getEditorSite()));
     }
 
     /** Modifies, replaces, or disables actions managed by the {@link RefactorActionGroup}. */

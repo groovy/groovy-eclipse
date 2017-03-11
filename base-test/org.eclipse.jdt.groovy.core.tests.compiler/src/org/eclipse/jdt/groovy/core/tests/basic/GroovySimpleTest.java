@@ -2407,20 +2407,16 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     public void testTypeClash() {
         runNegativeTest(new String[] {
             "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "}\n",
+            "package p\n" +
+            "public class X {}",
 
             "p/X.java",
-            "package p;\n"+
-            "public class X {}\n"
+            "package p;\n" +
+            "public class X {}"
         },
         "----------\n" +
-        "1. ERROR in p\\X.groovy (at line 2)\n" +
-        "\tpublic class X {\n" +
+        "1. ERROR in p\\X.java (at line 2)\n" +
+        "\tpublic class X {}\n" +
         "\t             ^\n" +
         "The type X is already defined\n" +
         "----------\n");

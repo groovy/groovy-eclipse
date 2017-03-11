@@ -430,47 +430,6 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	 */
 	public void compile(ICompilationUnit[] sourceUnits) {
 		this.stats.startTime = System.currentTimeMillis();
-		// GROOVY start
-		// sort the sourceUnits - java first! might be temporary, hmmm
-		if (this.options.buildGroovyFiles==2) {
-			int groovyFileIndex = -1;
-//			System.out.println("before");
-//			for (int u=0,max=sourceUnits.length;u<max;u++) {
-//				System.out.println(sourceUnits[u].getFileName());
-//			}
-			for (int u=0,max=sourceUnits.length;u<max;u++) {
-				char[] fn = sourceUnits[u].getFileName();
-				boolean isDotJava = fn[fn.length-1]=='a'; // a means .java
-				if (isDotJava) {
-					if (groovyFileIndex!=-1) {
-						// swap them!
-						ICompilationUnit swap = sourceUnits[groovyFileIndex];
-						sourceUnits[groovyFileIndex] = sourceUnits[u];
-						sourceUnits[u] = swap;
-						// find the next .groovy file after the groovyFileIndex (worst case it will be 'u')
-						int newGroovyFileIndex = -1;
-						for (int g=groovyFileIndex;g<=u;g++) {
-							char[] fn2 = sourceUnits[g].getFileName();
-							boolean isDotGroovy = fn2[fn2.length-1]=='y';
-							if (isDotGroovy) {
-								newGroovyFileIndex = g;
-								break;
-							}
-						}
-						groovyFileIndex = newGroovyFileIndex;
-					}
-				} else {
-					if (groovyFileIndex==-1) {
-						groovyFileIndex = u;
-					}
-				}
-			}
-//			System.out.println("after");
-//			for (int u=0,max=sourceUnits.length;u<max;u++) {
-//				System.out.println(sourceUnits[u].getFileName());
-//			}
-		}
-		// GROOVY end
 		CompilationUnitDeclaration unit = null;
 		ProcessTaskManager processingTask = null;
 		try {

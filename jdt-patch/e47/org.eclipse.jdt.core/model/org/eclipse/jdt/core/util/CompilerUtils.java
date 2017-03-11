@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 package org.eclipse.jdt.core.util;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -34,6 +33,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Utility class, contains helpers for configuring the compiler options based on the project.
@@ -80,8 +80,8 @@ public class CompilerUtils {
 	 * If anything goes wrong it will configure the options to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(Map<String, String> optionMap, IJavaProject javaProject) {
-		IProject project = javaProject.getProject();
 		try {
+			IProject project = javaProject.getProject();
 			if (isGroovyNaturedProject(project)) {
 				optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				setGroovyClasspath(optionMap, javaProject);
@@ -96,7 +96,7 @@ public class CompilerUtils {
 				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
 			}
 		} catch (CoreException e) {
-			e.printStackTrace();
+			Util.log(e, "configureOptionsBasedOnNature failed"); //$NON-NLS-1$
 			optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
 			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
 		}
@@ -138,32 +138,21 @@ public class CompilerUtils {
 		if (file.exists()) {
 			try {
 				PropertyResourceBundle prb = new PropertyResourceBundle(file.getContents());
-				Enumeration<String> e = prb.getKeys();
-				while (e.hasMoreElements()) {
-					String k = e.nextElement();
-					String v = (String) prb.getObject(k);
-					v = fixup(v, javaProject);
+				for (String k : prb.keySet()) {
+					String v = fixup(prb.getString(k), javaProject);
 					if (k.equals(CompilerOptions.OPTIONG_GroovyClassLoaderPath)) {
 						optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, v);
 					}
 				}
-			} catch (IOException ioe) {
-				System.err.println("Problem configuring groovy classloader classpath"); //$NON-NLS-1$
-				ioe.printStackTrace();
-			} catch (CoreException ce) {
-				System.err.println("Problem configuring groovy classloader classpath"); //$NON-NLS-1$
-				ce.printStackTrace();
 			} catch (Throwable t) {
-				System.err.println("Problem configuring groovy classloader classpath"); //$NON-NLS-1$
-				t.printStackTrace();
+				Util.log(t, "configuring groovy classloader classpath failed"); //$NON-NLS-1$
 			}
 		} else {
 			try {
 				String classpath = calculateClasspath(javaProject);
 				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, classpath);
 			} catch (Throwable t) {
-				System.err.println("Problem configuring groovy classloader classpath (not using groovy.properties)"); //$NON-NLS-1$
-				t.printStackTrace();
+				Util.log(t, "configuring groovy classloader classpath (not using groovy.properties) failed"); //$NON-NLS-1$
 			}
 		}
 		IProject project = javaProject.getProject();
@@ -172,15 +161,14 @@ public class CompilerUtils {
 			String defaultOutputLocation = pathToString(defaultOutputPath, project);
 			optionMap.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, defaultOutputLocation);
 		} catch (Throwable t) {
-			System.err.println("Problem configuring serviceScanExclude"); //$NON-NLS-1$
-			t.printStackTrace();
+			Util.log(t, "configuring exclude global AST scan failed"); //$NON-NLS-1$
 		}
 		optionMap.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getName());
 	}
 
 	private static String fixup(String someString, IJavaProject javaProject) {
 		if (someString.startsWith("%projhome%")) { //$NON-NLS-1$
-			someString = javaProject.getProject().getLocation().toOSString()+File.separator+someString.substring("%projhome%".length()); //$NON-NLS-1$
+			someString = javaProject.getProject().getLocation().toOSString() + File.separator + someString.substring("%projhome%".length()); //$NON-NLS-1$
 		}
 		if (someString.equals("%projclasspath%")) { //$NON-NLS-1$
 			someString = calculateClasspath(javaProject);
@@ -204,7 +192,7 @@ public class CompilerUtils {
 					// the path is actually to the project root
 					IPath rawPath = project.getRawLocation();
 					if (rawPath == null) {
-						System.err.println("Failed on call to getRawLocation() against the project: " + project); //$NON-NLS-1$
+						Util.log(null, "getRawLocation() against the project: " + project + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
 					} else {
 						realLocation = project.getRawLocation().toOSString();
 					}
@@ -256,7 +244,7 @@ public class CompilerUtils {
 									pathElement = (ipath == null ? null : ipath.toOSString());
 								}
 							} catch (Throwable t) {
-								t.printStackTrace();
+								Util.log(t, "getting library path failed"); //$NON-NLS-1$
 							}
 						}
 						if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
@@ -286,19 +274,13 @@ public class CompilerUtils {
 						}
 					}
 				} catch (CoreException e) {
-					System.err.println("Unexpected error on checking Groovy Nature"); //$NON-NLS-1$
-					e.printStackTrace();
+					Util.log(e, "checking Groovy Nature failed"); //$NON-NLS-1$
 				}
 
-				StringBuilder sb = new StringBuilder();
-				for (String entry : accumulatedPathEntries) {
-					sb.append(entry).append(File.pathSeparator);
-				}
-				return sb.toString();
+				return accumulatedPathEntries.stream().collect(Collectors.joining(File.pathSeparator));
 			}
 		} catch (JavaModelException e) {
-			System.err.println("Problem trying to determine classpath of project " + javaProject.getProject().getName() + ':'); //$NON-NLS-1$
-			e.printStackTrace();
+			Util.log(e, "determining classpath of project " + javaProject.getProject().getName() + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return ""; //$NON-NLS-1$
 	}

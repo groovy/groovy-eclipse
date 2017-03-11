@@ -265,10 +265,10 @@ private void createParentFolder(IContainer parent) throws CoreException {
 	}
 }
 
-//GROOVY add
+// GROOVY add
 public boolean avoidAdditionalGroovyAnswers = false;
 private static final char[] groovySuffixAsChars = ".groovy".toCharArray(); //$NON-NLS-1$
-//GROOVY end
+// GROOVY end
 
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName) {
 	if (this.notifier != null)

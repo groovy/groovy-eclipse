@@ -685,7 +685,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 					multiEdit.addChild(new org.eclipse.text.edits.ReplaceEdit(nameRange.getOffset(), nameRange.getLength(), newTypeName));
 				}
 				IJavaElement[] children = type.getChildren();
-				for (int i = 0; i < children.length; i++) {
+				for (int i = 0, n = children.length; i < n; i += 1) {
 					if (children[i].getElementType() == IJavaElement.METHOD) {
 						IMethod method = (IMethod) children[i];
 						if (method.isConstructor()) {

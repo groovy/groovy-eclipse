@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
-import groovy.lang.Closure;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import groovy.lang.Closure;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -361,7 +361,7 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, boolean isDeprecated, List<String> exceptions, boolean noParens) {
-        if (staticScope && !isStatic && !currentType.getName().equals(VariableScope.CLASS_CLASS_NODE)) {
+        if (staticScope && !isStatic && !VariableScope.CLASS_CLASS_NODE.equals(currentType)) {
             return;
         }
         ClassNode type;
@@ -376,8 +376,7 @@ public class DSLContributionGroup extends ContributionGroup {
         } else {
             // invalid
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL,
-                        "Cannot invoke delegatesTo() on an invalid object: " + expr);
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot invoke delegatesTo() on an invalid object: " + expr);
             }
             return;
         }

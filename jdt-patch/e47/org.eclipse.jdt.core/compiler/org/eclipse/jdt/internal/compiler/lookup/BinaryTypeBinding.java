@@ -930,7 +930,7 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 				this.infraMethods = Binding.NO_METHODS;
 			} else {
 				this.infraMethods = new MethodBinding[skipped];
-				for (int i = 0, index = 0; i < initialTotal; i++) {
+				for (int i = 0, index = 0; i < initialTotal; i += 1) {
 					if (iClinit != i && (toSkip != null && toSkip[i] == -1)) {
 						// this is a skipped method
 						MethodBinding method = createMethod(iMethods[i], binaryType, sourceLevel, missingTypeNames);
@@ -1457,7 +1457,7 @@ public ReferenceBinding[] memberTypes() {
 // GROOVY add
 public MethodBinding[] infraMethods() {
 	if (!this.infraMethodsComplete) {
-		for (int i = this.infraMethods.length; --i >= 0;) {
+		for (int i = this.infraMethods.length - 1; i >= 0; i -= 1) {
 			resolveTypesFor(this.infraMethods[i]);
 		}
 		this.infraMethodsComplete = true;

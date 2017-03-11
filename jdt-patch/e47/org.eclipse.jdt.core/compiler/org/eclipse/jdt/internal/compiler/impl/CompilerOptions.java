@@ -2002,25 +2002,19 @@ public class CompilerOptions {
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyExtraImports)) != null) {
 			this.groovyExtraImports = optionValue;
-		} else {
-			if (sysPropConfiguredExtraImports != null && this.groovyExtraImports == null) {
-				this.groovyExtraImports = sysPropConfiguredExtraImports;
-			}
+		} else if (sysPropConfiguredExtraImports != null && this.groovyExtraImports == null) {
+			this.groovyExtraImports = sysPropConfiguredExtraImports;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyCustomizerClassesList)) != null) {
 			this.groovyCustomizerClassesList = optionValue;
-		} else {
-			if (sysPropConfiguredCustomizerClassesList != null && this.groovyCustomizerClassesList == null) {
-				this.groovyCustomizerClassesList = sysPropConfiguredCustomizerClassesList;
-			}
+		} else if (sysPropConfiguredCustomizerClassesList != null && this.groovyCustomizerClassesList == null) {
+			this.groovyCustomizerClassesList = sysPropConfiguredCustomizerClassesList;
 		}
 		optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile);
 		if (optionValue != null && !optionValue.isEmpty()) {
 			this.groovyTransformsToRunOnReconcile = optionValue;
-		} else {
-			if (sysPropConfiguredGroovyTransforms != null) {
-				this.groovyTransformsToRunOnReconcile = sysPropConfiguredGroovyTransforms;
-			}
+		} else if (sysPropConfiguredGroovyTransforms != null) {
+			this.groovyTransformsToRunOnReconcile = sysPropConfiguredGroovyTransforms;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
 			this.groovyProjectName = optionValue;
@@ -2032,9 +2026,9 @@ public class CompilerOptions {
 	}
 
 	// GROOVY add
-	static String sysPropConfiguredCustomizerClassesList = null;
-	static String sysPropConfiguredExtraImports = null;
-	static String sysPropConfiguredGroovyTransforms = null;
+	static String sysPropConfiguredExtraImports;
+	static String sysPropConfiguredGroovyTransforms;
+	static String sysPropConfiguredCustomizerClassesList;
 	static {
 		try {
 			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports"); //$NON-NLS-1$

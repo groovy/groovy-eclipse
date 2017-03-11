@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -477,24 +477,20 @@ public class GroovyClassScope extends ClassScope {
         return true;
     }
 
-    // FIXASC (M3) currently inactive; this enables getSingleton()
-    // FIXASC (M3) make this switchable as it is too damn powerful
     @Override
     public MethodBinding[] getAnyExtraMethods(char[] selector) {
-        if (true) {
-            return null;
-        }
-        List<MethodNode> mns = ((GroovyTypeDeclaration) referenceContext).getClassNode().getMethods(new String(selector));
-        MethodBinding[] newMethods = new MethodBinding[mns.size()];
-        int idx = 0;
-        for (MethodNode methodNode : mns) {
-            TypeBinding[] parameterTypes = null;
+        List<MethodNode> methods = ((GroovyTypeDeclaration) referenceContext).getClassNode().getMethods(String.valueOf(selector));
+
+        int n = methods.size();
+        MethodBinding[] bindings = new MethodBinding[n];
+        for (int i = 0; i < n; i += 1) {
+            MethodNode method = methods.get(i);
+            TypeBinding[] parameterTypes = null; // TODO: resolve these
             TypeBinding returnType = compilationUnitScope().environment.getResolvedType(
-                    CharOperation.splitAndTrimOn('.', methodNode.getReturnType().getName().toCharArray()), this);
-            newMethods[idx++] = new MethodBinding(methodNode.getModifiers(), selector, returnType, parameterTypes, null, referenceContext.binding);
+                CharOperation.splitAndTrimOn('.', method.getReturnType().getName().toCharArray()), this);
+            bindings[i] = new MethodBinding(method.getModifiers(), selector, returnType, parameterTypes, null, referenceContext.binding);
         }
-        //unitScope.environment.getResolvedType(JAVA_LANG_STRING, this);
-        return newMethods;
+        return bindings;
     }
 
     @Override

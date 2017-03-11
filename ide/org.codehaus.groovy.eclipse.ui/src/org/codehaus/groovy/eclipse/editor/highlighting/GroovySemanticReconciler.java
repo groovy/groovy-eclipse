@@ -271,7 +271,10 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
      */
     private boolean synchronize() {
         try {
-            return lock.tryAcquire(1, TimeUnit.SECONDS);
+            boolean acquired = lock.tryAcquire(2, TimeUnit.SECONDS);
+            if (!acquired)
+                GroovyPlugin.getDefault().logWarning("Failed to acquire semantic highlight semaphore");
+            return acquired;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

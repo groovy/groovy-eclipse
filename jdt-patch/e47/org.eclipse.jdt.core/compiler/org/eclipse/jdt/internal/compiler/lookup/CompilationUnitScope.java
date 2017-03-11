@@ -210,8 +210,8 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
 	if ((typeDecl.modifiers & ClassFileConstants.AccPublic) != 0) {
 		char[] mainTypeName;
-		if ((mainTypeName = this.referenceContext.getMainTypeName()) != null // mainTypeName == null means that implementor of ICompilationUnit decided to return null
-				&& !CharOperation.equals(mainTypeName, typeDecl.name)) {
+		if ((mainTypeName = this.referenceContext.getMainTypeName()) != null && // mainTypeName == null means that implementor of ICompilationUnit decided to return null
+				!CharOperation.equals(mainTypeName, typeDecl.name)) {
 			problemReporter().publicClassMustMatchFileName(this.referenceContext, typeDecl);
 			// tolerate faulty main type name (91091), allow to proceed into type construction
 		}
