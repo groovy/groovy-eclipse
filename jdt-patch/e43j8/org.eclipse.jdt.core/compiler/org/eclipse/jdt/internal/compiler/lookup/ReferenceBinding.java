@@ -2044,7 +2044,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 }
 //GROOVY start
 //more thought required - is this in the right place?
-public MethodBinding[] getAnyExtraMethods(char[] selector) {
+public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
 	return null;
 }
 //GROOVY end

@@ -1301,17 +1301,17 @@ public abstract class Scope {
 		return findMethod(receiverType, selector, argumentTypes, invocationSite, false);
 	}
 
-	// GROOVY start
-	// put thought into this approach
+	// GROOVY add
+	// FIXASC (M3) currently inactive; this enables getSingleton()
+	// FIXASC (M3) make this switchable as it is too damn powerful
 	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
-		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
-		if (extraMethods!=null) {
+		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector, argumentTypes);
+		if (false && extraMethods != null && extraMethods.length > 0) {
 			return extraMethods[0];
-		} else {
-			return null;
 		}
+		return null;
 	}
-	// GROOVY end		
+	// GROOVY end
 
 	// Internal use only - use findMethod()
 	public MethodBinding findMethod(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite, boolean inStaticContext) {

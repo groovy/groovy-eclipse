@@ -1553,20 +1553,20 @@ public abstract class Scope {
 			}
 		}
 		return method;
-	}	
-	
-	// GROOVY start
-	// put thought into this approach
-	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
-		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
-		if (extraMethods!=null) {
-			return extraMethods[0];
-		} else {
-			return null;
-		}
 	}
-	// GROOVY end		
-	
+
+	// GROOVY add
+	// FIXASC (M3) currently inactive; this enables getSingleton()
+	// FIXASC (M3) make this switchable as it is too damn powerful
+	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
+		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector, argumentTypes);
+		if (false && extraMethods != null && extraMethods.length > 0) {
+			return extraMethods[0];
+		}
+		return null;
+	}
+	// GROOVY end
+
 	public MethodBinding findMethod0(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite, boolean inStaticContext) {
 		ReferenceBinding currentType = receiverType;
 		boolean receiverTypeIsInterface = receiverType.isInterface();

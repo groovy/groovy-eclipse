@@ -478,7 +478,7 @@ public class GroovyClassScope extends ClassScope {
     }
 
     @Override
-    public MethodBinding[] getAnyExtraMethods(char[] selector) {
+    public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
         MethodBinding[] bindings = null;
 
         List<MethodNode> methods = ((GroovyTypeDeclaration) referenceContext).getClassNode().getMethods(String.valueOf(selector));
