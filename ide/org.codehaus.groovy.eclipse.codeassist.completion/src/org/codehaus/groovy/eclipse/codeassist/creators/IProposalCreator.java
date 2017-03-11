@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,13 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 
 /**
- * Creates proposals in a given completion context
- *
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
+ * Creates proposals in a given completion context.
  */
 public interface IProposalCreator {
-    List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
-            boolean isPrimary);
+    List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary);
 
     /**
-     * If true, then execute this creator twice when in closures. Once for
-     * Delegate and once for This
-     *
-     * @return
+     * If true, then execute this creator twice when in closures. Once for delegate and once for this.
      */
     boolean redoForLoopClosure();
 }

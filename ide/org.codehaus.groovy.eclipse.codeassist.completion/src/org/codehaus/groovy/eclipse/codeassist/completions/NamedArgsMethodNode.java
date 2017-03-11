@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
  */
 public class NamedArgsMethodNode extends MethodNode {
 
-    private static final Parameter[] NO_PARAMETERS = new Parameter[0];
-
     private final Parameter[] regularParams;
 
     private final Parameter[] namedParams;
@@ -52,9 +50,9 @@ public class NamedArgsMethodNode extends MethodNode {
     }
 
     private static Parameter[] concatParams(Parameter[] regularParams, Parameter[] namedParams, Parameter[] optionalParams) {
-        regularParams = regularParams == null ? NO_PARAMETERS : regularParams;
-        namedParams = namedParams == null ? NO_PARAMETERS : namedParams;
-        optionalParams = optionalParams == null ? NO_PARAMETERS : optionalParams;
+        regularParams = regularParams == null ? Parameter.EMPTY_ARRAY : regularParams;
+        namedParams = namedParams == null ? Parameter.EMPTY_ARRAY : namedParams;
+        optionalParams = optionalParams == null ? Parameter.EMPTY_ARRAY : optionalParams;
 
         Parameter[] allParams = new Parameter[regularParams.length + namedParams.length + optionalParams.length];
         System.arraycopy(regularParams, 0, allParams, 0, regularParams.length);

@@ -99,7 +99,7 @@ public enum AccessorSupport {
                     }
                     // one implicit accessor exists in Object
                     if (!isCategory && kind == GETTER && methodName.equals("getClass")) {
-                        return ClassHelper.OBJECT_TYPE.getMethod("getClass", new Parameter[0]);
+                        return ClassHelper.OBJECT_TYPE.getMethod("getClass", Parameter.EMPTY_ARRAY);
                     }
                 }
             }

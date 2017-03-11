@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +40,8 @@ import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- * Generates all of the method proposals for a given location
- * Also will add the non-getter form of getter methods if appropriate
- *
+ * Generates all of the method proposals for a given location.
+ * Also will add the non-getter form of getter methods if appropriate.
  */
 public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
@@ -51,8 +49,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
     private Set<ClassNode> alreadySeen = Collections.emptySet();
 
-    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
-            boolean isPrimary) {
+    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         boolean firstTime = alreadySeen.isEmpty();
         List<MethodNode> allMethods = getAllMethods(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
@@ -64,8 +61,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
-            if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
-                    checkName(methodName)) {
+            if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) && checkName(methodName)) {
                 boolean isInterestingType = false;
                 if (isStatic && method.isStatic()) {
                     isInterestingType = true;
@@ -111,10 +107,8 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         return groovyProposals;
     }
 
-    protected List<MethodNode> getAllMethods(ClassNode thisType) {
-        Set<ClassNode> types = new HashSet<ClassNode>();
-
-        List<MethodNode> allMethods = thisType.getAllDeclaredMethods();
+    protected List<MethodNode> getAllMethods(ClassNode type) {
+        List<MethodNode> allMethods = type.getAllDeclaredMethods();
         if (!alreadySeen.isEmpty()) {
             // remove all methods from classes that we have already visited
             for (Iterator<MethodNode> methodIter = allMethods.iterator(); methodIter.hasNext();) {
@@ -124,30 +118,26 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
             }
         }
 
-
         // keep track of the already seen types so that next time, we won't include them
-        getAllSupers(thisType, types, alreadySeen);
+        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
+        getAllSupers(type, types, alreadySeen);
         if (alreadySeen.isEmpty()) {
             alreadySeen = types;
         } else {
             alreadySeen.addAll(types);
         }
 
-
         return allMethods;
     }
 
-    private List<IGroovyProposal> getStaticImportProposals(String prefix,
-            ModuleNode module) {
+    private List<IGroovyProposal> getStaticImportProposals(String prefix, ModuleNode module) {
         List<IGroovyProposal> staticProposals = new ArrayList<IGroovyProposal>();
-        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper
-                .getStaticImports(module);
+
+        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper.getStaticImports(module);
         for (Entry<String, ImportNode> entry : staticImports.entrySet()) {
             String fieldName = entry.getValue().getFieldName();
-            if (fieldName != null
-                    && ProposalUtils.looselyMatches(prefix, fieldName)) {
-                List<MethodNode> methods = entry.getValue().getType()
-                        .getDeclaredMethods(fieldName);
+            if (fieldName != null && ProposalUtils.looselyMatches(prefix, fieldName)) {
+                List<MethodNode> methods = entry.getValue().getType().getDeclaredMethods(fieldName);
                 if (methods != null) {
                     for (MethodNode method : methods) {
                         staticProposals.add(new GroovyMethodProposal(method, "Groovy", options));
@@ -155,16 +145,13 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                 }
             }
         }
-        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper
-                .getStaticStarImports(module);
+
+        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper.getStaticStarImports(module);
         for (Entry<String, ImportNode> entry : staticStarImports.entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
-                for (MethodNode method : (Iterable<MethodNode>) type
-                        .getMethods()) {
-                    if (method.isStatic()
-                            && ProposalUtils.looselyMatches(prefix,
-                                    method.getName())) {
+                for (MethodNode method : (Iterable<MethodNode>) type.getMethods()) {
+                    if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
                         staticProposals.add(new GroovyMethodProposal(method, "Groovy", options));
                     }
                 }
@@ -173,5 +160,4 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
         return staticProposals;
     }
-
 }

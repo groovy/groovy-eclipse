@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -45,18 +43,11 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- * GRECLIPSE-512: most fields have properties created for them, so we want to
- * avoid duplicate proposals.
- * Constants are an exception, so return them here.
- * I may have missed something, so be prepared to add more kinds of fields here.
+ * GRECLIPSE-512: most fields have properties created for them, so we want to avoid duplicate proposals.
+ * Constants are an exception, so return them here. I may have missed something, so be prepared to add more kinds of fields here.
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
-    private static final Parameter[] NO_PARAMETERS = new Parameter[0];
-    private static final ClassNode[] NO_CLASSES = new ClassNode[0];
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
     private Set<ClassNode> alreadySeen = Collections.emptySet();
@@ -67,21 +58,19 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         return new GroovyFieldProposal(field);
     }
 
-    public List<IGroovyProposal> findAllProposals(ClassNode type,
- Set<ClassNode> categories, String prefix, boolean isStatic,
-            boolean isPrimary) {
+    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         boolean isFirstTime = alreadySeen.isEmpty();
         Collection<FieldNode> allFields = getAllFields(type);
-        List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
+        List<IGroovyProposal> groovyProposals = new ArrayList<IGroovyProposal>();
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
-            if ((!isStatic || field.isStatic()) &&
-                    ProposalUtils.looselyMatches(prefix, field.getName())) {
-                GroovyFieldProposal fieldProposal = new GroovyFieldProposal(field);
-                float relevanceMultiplier = isInterestingType(field.getType()) ? 101f : 1f;
-                relevanceMultiplier *= field.isStatic() ? 0.1 : 1f;
+            if ((!isStatic || field.isStatic()) && ProposalUtils.looselyMatches(prefix, field.getName())) {
+                float relevanceMultiplier = isInterestingType(field.getType()) ? 101 : 1;
+                if (field.isStatic()) relevanceMultiplier *= 0.1f;
                 // de-emphasize 'this' references inside closure
-                relevanceMultiplier *= !isFirstTime ? 0.1 : 1f;
+                if (!isFirstTime) relevanceMultiplier *= 0.1f;
+
+                GroovyFieldProposal fieldProposal = new GroovyFieldProposal(field);
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);
 
@@ -96,7 +85,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
             groovyProposals.add(CLASS_PROPOSAL);
         }
 
-        // now add all proposals coming from static imports
+        // add all proposals coming from static imports
         if (currentScope != null) {
             ClassNode enclosingTypeDeclaration = currentScope.getEnclosingTypeDeclaration();
             if (enclosingTypeDeclaration != null && isFirstTime && isPrimary && type.getModule() != null) {
@@ -106,53 +95,43 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         return groovyProposals;
     }
 
-    /**
-     * @param field
-     * @return
-     */
+    @Override
+    protected boolean isInterestingType(ClassNode type) {
+        return type.isEnum() || super.isInterestingType(type);
+    }
+
     private MethodNode convertToMethodProposal(FieldNode field) {
         MethodNode method = new MethodNode(field.getName(), field.getModifiers(), field.getType(),
-                extractParameters(field.getInitialExpression()), NO_CLASSES, new BlockStatement());
+                extractParameters(field.getInitialExpression()), ClassNode.EMPTY_ARRAY, new BlockStatement());
         method.setDeclaringClass(field.getDeclaringClass());
         return method;
     }
 
-    /**
-     * @param getI
-     * @return
-     */
     private Parameter[] extractParameters(Expression expr) {
         if (expr instanceof ClosureExpression) {
             return ((ClosureExpression) expr).getParameters();
         }
-        return NO_PARAMETERS;
+        return Parameter.EMPTY_ARRAY;
     }
 
-    private List<IGroovyProposal> getStaticImportProposals(
-            String prefix, ModuleNode module) {
+    private List<IGroovyProposal> getStaticImportProposals(String prefix, ModuleNode module) {
         List<IGroovyProposal> staticProposals = new ArrayList<IGroovyProposal>();
-        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper
-                .getStaticImports(module);
+        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper.getStaticImports(module);
         for (Entry<String, ImportNode> entry : staticImports.entrySet()) {
             String fieldName = entry.getValue().getFieldName();
-            if (fieldName != null
-                    && ProposalUtils.looselyMatches(prefix, fieldName)) {
-                FieldNode field = entry.getValue().getType()
-                        .getField(fieldName);
+            if (fieldName != null && ProposalUtils.looselyMatches(prefix, fieldName)) {
+                FieldNode field = entry.getValue().getType().getField(fieldName);
                 if (field != null) {
                     staticProposals.add(new GroovyFieldProposal(field));
                 }
             }
         }
-        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper
-                .getStaticStarImports(module);
+        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper.getStaticStarImports(module);
         for (Entry<String, ImportNode> entry : staticStarImports.entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (FieldNode field : (Iterable<FieldNode>) type.getFields()) {
-                    if (field.isStatic()
-                            && ProposalUtils.looselyMatches(prefix,
-                                    field.getName())) {
+                    if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
                         staticProposals.add(new GroovyFieldProposal(field));
                     }
                 }

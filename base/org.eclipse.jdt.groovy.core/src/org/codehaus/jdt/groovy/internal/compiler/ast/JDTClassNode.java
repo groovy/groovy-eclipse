@@ -75,8 +75,6 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
 
-    private static final Parameter[] NO_PARAMETERS = new Parameter[0];
-
     // arbitrary choice of first eight; maintaining these as a constant array prevents 10000 strings called 'arg0' consuming memory
     private final static String[] argNames = new String[] { "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7" };
 
@@ -356,7 +354,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         methodBinding.genericSignature();
         Parameter[] gParameters = makeParameters(methodBinding.parameters);
 
-        ClassNode[] thrownExceptions = new ClassNode[0]; // FIXASC use constant of size 0
+        ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
         if (methodBinding.thrownExceptions != null) {
             thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
             for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
@@ -377,7 +375,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     private Parameter[] makeParameters(TypeBinding[] jdtParameters) {
-        Parameter[] params = NO_PARAMETERS;
+        Parameter[] params = Parameter.EMPTY_ARRAY;
         if (jdtParameters != null && jdtParameters.length > 0) {
             params = new Parameter[jdtParameters.length];
             for (int i = 0; i < params.length; i++) {
@@ -437,7 +435,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
         int modifiers = methodBinding.modifiers;
         Parameter[] parameters = makeParameters(methodBinding.parameters);
-        ClassNode[] thrownExceptions = new ClassNode[0];
+        ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
         if (methodBinding.thrownExceptions != null) {
             thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
             for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {

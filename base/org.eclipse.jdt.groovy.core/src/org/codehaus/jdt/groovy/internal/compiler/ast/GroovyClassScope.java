@@ -479,17 +479,21 @@ public class GroovyClassScope extends ClassScope {
 
     @Override
     public MethodBinding[] getAnyExtraMethods(char[] selector) {
-        List<MethodNode> methods = ((GroovyTypeDeclaration) referenceContext).getClassNode().getMethods(String.valueOf(selector));
+        MethodBinding[] bindings = null;
 
-        int n = methods.size();
-        MethodBinding[] bindings = new MethodBinding[n];
-        for (int i = 0; i < n; i += 1) {
-            MethodNode method = methods.get(i);
-            TypeBinding[] parameterTypes = null; // TODO: resolve these
-            TypeBinding returnType = compilationUnitScope().environment.getResolvedType(
-                CharOperation.splitAndTrimOn('.', method.getReturnType().getName().toCharArray()), this);
-            bindings[i] = new MethodBinding(method.getModifiers(), selector, returnType, parameterTypes, null, referenceContext.binding);
+        List<MethodNode> methods = ((GroovyTypeDeclaration) referenceContext).getClassNode().getMethods(String.valueOf(selector));
+        if (methods != null && !methods.isEmpty()) {
+            int n = methods.size();
+            bindings = new MethodBinding[n];
+            for (int i = 0; i < n; i += 1) {
+                MethodNode method = methods.get(i);
+                TypeBinding[] parameterTypes = null; // TODO: resolve these
+                TypeBinding returnType = compilationUnitScope().environment.getResolvedType(
+                    CharOperation.splitAndTrimOn('.', method.getReturnType().getName().toCharArray()), this);
+                bindings[i] = new MethodBinding(method.getModifiers(), selector, returnType, parameterTypes, null, referenceContext.binding);
+            }
         }
+
         return bindings;
     }
 

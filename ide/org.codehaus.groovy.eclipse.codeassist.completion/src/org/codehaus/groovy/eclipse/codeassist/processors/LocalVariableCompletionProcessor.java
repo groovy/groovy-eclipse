@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -130,7 +129,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private GroovyMethodProposal createMethodProposal(String name, ClassNode declaring, ClassNode returnType) {
-        MethodNode method = new MethodNode(name, Opcodes.ACC_PUBLIC, returnType, new Parameter[0], new ClassNode[0], null);
+        MethodNode method = new MethodNode(name, Opcodes.ACC_PUBLIC, returnType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
         method.setDeclaringClass(declaring);
         return new GroovyMethodProposal(method);
     }
@@ -186,7 +185,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         } else if (astNode instanceof ClassNode && ((ClassNode) astNode).isScript()) {
             // use scope of the run method
             ClassNode clazz = (ClassNode) astNode;
-            MethodNode method = clazz.getMethod("run", new Parameter[0]);
+            MethodNode method = clazz.getMethod("run", Parameter.EMPTY_ARRAY);
             if (method != null && method.getCode() instanceof BlockStatement) {
                 return ((BlockStatement) method.getCode()).getVariableScope();
             }

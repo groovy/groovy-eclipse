@@ -113,7 +113,7 @@ public class GroovyPartialModelTests  extends AbstractGroovyTypeRootTests {
         for (ConstructorNode cons : inClass.getDeclaredConstructors()) {
             assertUnique(expr, cons);
         }
-        MethodNode clinit = inClass.getMethod("<clinit>", new Parameter[0]);
+        MethodNode clinit = inClass.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
         if (clinit!=null) {
             assertUnique(expr, clinit);
         }

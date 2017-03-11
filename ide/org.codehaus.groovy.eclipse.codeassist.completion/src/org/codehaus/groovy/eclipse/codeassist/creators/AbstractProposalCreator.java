@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,6 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- */
 public abstract class AbstractProposalCreator implements IProposalCreator {
 
     /**
@@ -53,15 +48,14 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
         getAllSupers(type.getSuperClass(), set, except);
         for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
-            if (! inter.getName().equals(type.getName())) {
+            if (!inter.getName().equals(type.getName())) {
                 getAllSupers(inter, set, except);
             }
         }
     }
 
     protected boolean isInterestingType(ClassNode type) {
-        return lhsType != null
-                && ClassHelper.getUnwrapper(type).equals(lhsType);
+        return lhsType != null && ClassHelper.getUnwrapper(type).equals(lhsType);
     }
 
     protected void getAllSupersAsStrings(ClassNode type, Set<String> set) {

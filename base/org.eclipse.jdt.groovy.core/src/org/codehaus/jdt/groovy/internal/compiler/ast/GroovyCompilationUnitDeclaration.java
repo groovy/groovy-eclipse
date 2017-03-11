@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1207,7 +1207,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         if (enclosingMethodGroovy == null) {
                             // probably an anon type inside a script
                             ClassNode outerClass = inner.getClassNode().getOuterClass();
-                            enclosingMethodGroovy = outerClass.getMethod("run", new Parameter[0]);
+                            enclosingMethodGroovy = outerClass.getMethod("run", Parameter.EMPTY_ARRAY);
                             if (enclosingMethodGroovy == null) {
                                 throw new GroovyEclipseBug("Failed to find the enclosing method for anonymous type " + inner.getClassNode().getName());
                             }

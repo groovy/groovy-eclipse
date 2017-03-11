@@ -944,7 +944,7 @@ public class VariableScope {
 
         // check to see if this type has an iterator method
         // if so, then resolve the type parameters
-        MethodNode iterator = collectionType.getMethod("iterator", new Parameter[0]);
+        MethodNode iterator = collectionType.getMethod("iterator", Parameter.EMPTY_ARRAY);
         ClassNode typeToResolve = null;
         if (iterator == null && collectionType.isInterface()) {
             // could be a type that implements List
@@ -957,7 +957,7 @@ public class VariableScope {
                 typeToResolve = collectionType;
             } else if (collectionType.declaresInterface(MAP_CLASS_NODE) || collectionType.equals(MAP_CLASS_NODE)) {
                 // if the type is a map, then resolve the entrySet
-                MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
+                MethodNode entrySetMethod = collectionType.getMethod("entrySet", Parameter.EMPTY_ARRAY);
                 if (entrySetMethod != null) {
                     typeToResolve = entrySetMethod.getReturnType();
                 }

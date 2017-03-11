@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rewriter;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -30,6 +25,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Stack;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.antlr.LineColumn;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -763,7 +759,7 @@ public class ASTWriter extends CodeVisitorSupport implements
         if (root.getClasses().size() == 1) {
             ClassNode clazz = root.getClasses().get(0);
             if (clazz.isScript()) {
-                MethodNode runMethod = clazz.getMethod("run", new Parameter[0]);
+                MethodNode runMethod = clazz.getMethod("run", Parameter.EMPTY_ARRAY);
                 if (runMethod != null) {
                     Statement s = runMethod.getCode();
                     if (s instanceof BlockStatement) {

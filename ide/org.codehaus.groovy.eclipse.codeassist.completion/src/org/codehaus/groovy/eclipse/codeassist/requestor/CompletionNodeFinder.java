@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
-import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.*;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.ANNOTATION_BODY;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.CLASS_BODY;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.EXCEPTIONS;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.EXPRESSION;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.EXTENDS;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.IMPLEMENTS;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.IMPORT;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.PARAMETER;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.SCRIPT;
+import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.STATEMENT;
 
 import java.util.Iterator;
 import java.util.List;
@@ -198,7 +207,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
 
         // visit <clinit> body because this is where static field initializers are placed
-        MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
+        MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
         if (clinit != null && clinit.getCode() instanceof BlockStatement) {
             blockStack.push(clinit.getCode());
             for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {

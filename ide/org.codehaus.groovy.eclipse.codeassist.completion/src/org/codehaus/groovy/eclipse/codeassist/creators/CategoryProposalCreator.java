@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,15 +34,9 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- */
 public class CategoryProposalCreator extends AbstractProposalCreator {
 
-    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
-            boolean isPrimary) {
+    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         ClassNode candidate = GroovyUtils.getWrapperTypeIfPrimitive(type);
         Set<String> set = new HashSet<String>();
         getAllSupersAsStrings(candidate, set);
@@ -51,8 +45,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         return groovyProposals;
     }
 
-    private List<IGroovyProposal> findAllProposals(Set<String> set, Set<ClassNode> categories, String prefix,
-            ClassNode declaringClass) {
+    private List<IGroovyProposal> findAllProposals(Set<String> set, Set<ClassNode> categories, String prefix, ClassNode declaringClass) {
         DGMProposalFilter filter = new DGMProposalFilter();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> existingFieldProposals = new HashSet<String>();
@@ -104,10 +97,6 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
      * We SHOULD be checking if this new method is more specific than the old
      * method
      * and replacing if it is, but we are not doing that.
-     *
-     * @param method
-     * @param existingMethodProposals
-     * @return
      */
     private boolean dupMethod(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
         List<MethodNode> otherMethods = existingMethodProposals.get(newMethod.getName());
@@ -133,10 +122,6 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         return false;
     }
 
-    /**
-     * @param category
-     * @return
-     */
     private boolean isDGMCategory(ClassNode category) {
         String className = category.getName();
         for (ClassNode dgClass : VariableScope.ALL_DEFAULT_CATEGORIES) {
