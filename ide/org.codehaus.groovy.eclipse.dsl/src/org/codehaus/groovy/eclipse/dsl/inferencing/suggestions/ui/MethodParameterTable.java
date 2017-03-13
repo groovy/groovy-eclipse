@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 /**
- * 
+ *
  * @author Nieraj Singh
  * @created 2011-05-13
  */
@@ -53,9 +53,9 @@ public class MethodParameterTable extends AbstractControlManager {
 
     enum ColumnTypes {
         NAME("Name", 300), TYPE("Type", 300);
-        private String label;
 
-        private int weight;
+        private final String label;
+        private final int weight;
 
         private ColumnTypes(String label, int weight) {
             this.label = label;
@@ -69,7 +69,6 @@ public class MethodParameterTable extends AbstractControlManager {
         public int getWeight() {
             return weight;
         }
-
     }
 
     /**

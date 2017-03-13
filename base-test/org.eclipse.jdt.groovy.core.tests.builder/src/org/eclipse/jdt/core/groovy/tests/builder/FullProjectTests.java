@@ -271,7 +271,6 @@ public class FullProjectTests extends BuilderTests {
         //@formatter:on
 
         incrementalBuild(projectPath);
-        System.err.println("now reconciling");
         ICompilationUnit icu = ReconcilerUtils.getWorkingCopy(ijp, "Foo.groovy");
         PR pr = new PR();
         icu.becomeWorkingCopy(pr, null);

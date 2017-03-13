@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,24 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 29, 2009
- */
 public class TypeLookupResult {
     /**
      * Specifies the kind of match found for this type
      */
-    public static enum TypeConfidence {
+    public enum TypeConfidence {
         /**
          * Match is certain E.g., type is explicitly declared on a variable
          */
-        EXACT(0),
+        EXACT,
         /**
          * Match is potential. E.g., it may be from an interface or from a concrete type, but not possible to tell which one from
          * the context
          */
-        POTENTIAL(1),
+        POTENTIAL,
         /**
          * The type has been inferred from local or global context. E.g., by looking at assignment statements
          */
-        INFERRED(2),
+        INFERRED,
         /**
          * The type has been inferred using less precise means. E.g., from an extending ITypeLookup All
          * AbstractSimplifiedTypeLookups return this type confidence.
@@ -49,24 +45,22 @@ public class TypeLookupResult {
          * Furthermore, a type confidence of this will not cause the Inferencing engine to end its lookup. It will continue and try
          * to find a more confident type using other lookups.
          */
-        LOOSELY_INFERRED(3),
+        LOOSELY_INFERRED,
         /**
          * This is an unknown reference
          */
-        UNKNOWN(4);
-
-        private final int val;
-
-        TypeConfidence(int val) {
-            this.val = val;
-        }
+        UNKNOWN;
 
         public static TypeConfidence findLessPrecise(TypeConfidence left, TypeConfidence right) {
-            return left.val > right.val ? left : right;
+            return left.isLessThan(right) ? left : right;
         }
 
-        public boolean isLessPreciseThan(TypeConfidence other) {
-            return this.val > other.val;
+        public boolean isLessThan(TypeConfidence that) {
+            return this.ordinal() > that.ordinal();
+        }
+
+        public boolean isAtLeast(TypeConfidence that) {
+            return this.ordinal() <= that.ordinal();
         }
     }
 

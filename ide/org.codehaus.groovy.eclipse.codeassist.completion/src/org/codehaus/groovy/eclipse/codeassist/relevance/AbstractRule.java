@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,9 @@ public abstract class AbstractRule implements IRelevanceRule {
 	 */
 	public enum TypeRelevanceCategory {
 
-		LOWEST_TYPE(1), LOW_TYPE(4), MEDIUM_TYPE(8), MEDIUM_HIGH_TYPE(12), HIGH_TYPE(
-				16);
+		LOWEST_TYPE(1), LOW_TYPE(4), MEDIUM_TYPE(8), MEDIUM_HIGH_TYPE(12), HIGH_TYPE(16);
 
-		private double multiplier;
+		private final double multiplier;
 
 		private TypeRelevanceCategory(double multiplier) {
 			this.multiplier = multiplier;
@@ -56,7 +55,6 @@ public abstract class AbstractRule implements IRelevanceRule {
 		public int applyCategory(int value) {
 			return (int) getMultiplier() * value;
 		}
-
 	}
 
 	/**
@@ -99,7 +97,7 @@ public abstract class AbstractRule implements IRelevanceRule {
      * Returns true if an only if the relevance type is contained in the same package as ALL other
      * context types. If the context types includes types from different folders, or the relevance
      * type is in a different package than the context types, false is returned.
-     * 
+     *
      * @param relevanceType type whose relevance needs to be determined
      * @param contextTypes context types where this rule is being invoked, like the compilation unit
      *            where the relevance type is being imported
@@ -132,7 +130,7 @@ public abstract class AbstractRule implements IRelevanceRule {
      * Return true if and only if the relevance type and ALL the context types are in the same
      * compilation unit. If at least one of the context types is in a different compilation unit, or
      * the compilation unit of either cannot be resolved, false is returned.
-     * 
+     *
      * @param relevanceType
      * @param contextTypes
      * @return true if and only if the relevance type and all context types are in the same

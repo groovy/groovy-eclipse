@@ -3673,7 +3673,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 scriptClass.setLastColumnNumber(last.getLastColumnNumber());
 
                 // fix the run method to contain the start and end locations of the statement block
-                MethodNode runMethod = scriptClass.getDeclaredMethod("run", new Parameter[0]);
+                MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
                 runMethod.setStart(first.getStart());
                 runMethod.setLineNumber(first.getLineNumber());
                 runMethod.setColumnNumber(first.getColumnNumber());

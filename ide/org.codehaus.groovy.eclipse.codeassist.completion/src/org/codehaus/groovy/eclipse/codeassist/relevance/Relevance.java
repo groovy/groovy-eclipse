@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,12 +76,16 @@ public enum Relevance {
      */
     VERY_HIGH(1000000);
 
+    //
+    private final int value;
+
     private Relevance(int value) {
         this.value = value;
-
     }
 
-    private int value;
+    public int getRelavance() {
+        return value;
+    }
 
     /**
      * There are 10 gradations in each relevance class
@@ -96,23 +100,14 @@ public enum Relevance {
         return Math.max(1, (int) (value * multiplier));
     }
 
-    public int getRelavance() {
-        return value;
-    }
-
     /**
      * Calculates the relevance of an AST node based on a number of heuristics
-     *
-     * @param groovyProposal
-     * @return
      */
-    public static int calculateRelevance(AbstractGroovyProposal groovyProposal,
-            float multiplier) {
+    public static int calculateRelevance(AbstractGroovyProposal groovyProposal, float multiplier) {
         return findRelevanceClass(groovyProposal).getRelevance(multiplier);
     }
 
-    public static Relevance findRelevanceClass(
-            AbstractGroovyProposal groovyProposal) {
+    public static Relevance findRelevanceClass(AbstractGroovyProposal groovyProposal) {
         // dispatch on the kind of groovyProposal
 
         if (groovyProposal instanceof GroovyFieldProposal || groovyProposal instanceof GroovyPropertyProposal) {
@@ -175,5 +170,4 @@ public enum Relevance {
         IGNORED_METHOD_NAMES.add("setProperty");
         IGNORED_METHOD_NAMES.add("invokeMethod");
     }
-
 }

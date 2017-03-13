@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -287,12 +287,11 @@ public class RelevanceRules implements IRelevanceRule {
 				this.value = value.toCharArray();
 			}
 
-			private char[] value;
+			private final char[] value;
 
 			public char[] getValue() {
 				return value;
 			}
-
 		}
 
 		/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,8 @@ public class GroovySuggestionsTable {
 
         EXPAND_ALL("Expand All");
 
-        private String label;
+        //
+        private final String label;
 
         private ButtonTypes(String label) {
             this.label = label;
@@ -111,9 +112,8 @@ public class GroovySuggestionsTable {
     enum ColumnTypes implements ITreeViewerColumn {
         SUGGESTIONS("Suggestions", 60);
 
-        private String label;
-
-        private int weight;
+        private final String label;
+        private final int weight;
 
         private ColumnTypes(String label, int weight) {
             this.label = label;

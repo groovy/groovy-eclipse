@@ -78,7 +78,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
-        TypeConfidence[] confidence = new TypeConfidence[] {TypeConfidence.EXACT};
+        TypeConfidence[] confidence = {TypeConfidence.EXACT};
         if (ClassHelper.isPrimitiveType(objectExpressionType)) {
             objectExpressionType = ClassHelper.getWrapper(objectExpressionType);
         }
@@ -754,30 +754,41 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             ClassNode parameter = parameters[i].getType(), argument = arguments.get(i);
 
             // test parameter and argument for exact and fuzzy match
+            Boolean partialResult = isTypeCompatible(argument, parameter);
+            if (partialResult == null) {
+                result = null; // fuzzy
+            } else if (!partialResult) {
+                result = Boolean.FALSE;
+                break;
+            }
+        }
+        return result;
+    }
 
-            if (!parameter.equals(argument) &&
-                    !(argument == GroovyUtils.NULL_TYPE && !parameter.isPrimitive()) &&
-                    !(argument.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(parameter))) {
+    protected static Boolean isTypeCompatible(ClassNode source, ClassNode target) {
+        Boolean result = Boolean.TRUE;
+        if (!target.equals(source) &&
+                !(source == GroovyUtils.NULL_TYPE && !target.isPrimitive()) &&
+                !(source.isArray() && !source.getComponentType().isPrimitive() &&
+                    ClassHelper.OBJECT_TYPE.equals(target.getComponentType())) &&
+                !(source.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(target))) {
 
-                result = null; // not an exact match
+            result = null; // not an exact match
 
-                try { // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
-                    if (!MetaClassHelper.isAssignableFrom(parameter.getTypeClass(), argument.getTypeClass())) {
+            if (source.hasClass() && target.hasClass()) {
+                // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
+                if (!MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass())) {
+                    result = Boolean.FALSE;
+                }
+            } else {
+                if (target.isInterface()) {
+                    if (!source.declaresInterface(target)) {
                         result = Boolean.FALSE;
-                        break;
                     }
-                } catch (Throwable boo) {
-                    if (parameter.isInterface()) {
-                        if (!argument.declaresInterface(parameter)) {
-                            result = Boolean.FALSE;
-                            break;
-                        }
-                    } else {
-                        // TODO 'null' literal argument should be correctly resolved
-                        if (!argument.isDerivedFrom(parameter)) {
-                            result = Boolean.FALSE;
-                            break;
-                        }
+                } else {
+                    // TODO 'null' literal argument should be correctly resolved
+                    if (!source.isDerivedFrom(target)) {
+                        result = Boolean.FALSE;
                     }
                 }
             }

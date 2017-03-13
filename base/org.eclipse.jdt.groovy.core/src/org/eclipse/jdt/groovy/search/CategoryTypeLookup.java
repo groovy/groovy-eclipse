@@ -15,9 +15,8 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -29,153 +28,139 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.reflection.ParameterTypes;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
  * Looks up the type of an expression in the currently applicable categories.
- * Note that DefaultGroovyMethods are always considered to be an applicable
- * category.
- *
- * @author Andrew Eisenberg
- * @created Oct 25, 2009
+ * Note: DefaultGroovyMethods are always considered to be an applicable category.
  */
 public class CategoryTypeLookup implements ITypeLookup {
 
-    /**
-     * Looks up method calls to see if they are declared in any current categories
-     */
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
         if (node instanceof VariableExpression || (node instanceof ConstantExpression &&
                 ClassHelper.STRING_TYPE.equals(node.getType()) && node.getLength() <= node.getText().length())) {
-            TypeLookupResult result;
             String simpleName = node.getText();
-            ClassNode expectedType = objectExpressionType != null ? objectExpressionType : scope.getDelegateOrThis();
+            ClassNode expectedType = objectExpressionType;
+            if (expectedType == null) expectedType = scope.getDelegateOrThis();
             ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(expectedType);
-            String getterName = AccessorSupport.GETTER.createAccessorName(simpleName);
-            String setterName = AccessorSupport.SETTER.createAccessorName(simpleName);
 
-            // go through all categories and look for a method with the given name
+            //
+            List<MethodNode> candidates = new ArrayList<MethodNode>();
+
             for (ClassNode category : scope.getCategoryNames()) {
                 for (MethodNode method : category.getMethods(simpleName)) {
-                    if ((result = tryMatch(method, scope, expectedType, normalizedType)) != null) {
-                        return result;
+                    if (isCompatibleCategoryMethod(method, normalizedType)) {
+                        candidates.add(method);
                     }
                 }
-                // also check to see if an accessor variant is available
+                String getterName = AccessorSupport.GETTER.createAccessorName(simpleName);
                 if (getterName != null) {
                     for (MethodNode method : category.getMethods(getterName)) {
-                        if (method.isStatic() && AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER) {
-                            if ((result = tryMatch(method, scope, expectedType, normalizedType)) != null) {
-                                return result;
-                            }
+                        if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER &&
+                                isCompatibleCategoryMethod(method, normalizedType)) {
+                            candidates.add(method);
                         }
                     }
                 }
+                String setterName = AccessorSupport.SETTER.createAccessorName(simpleName);
                 if (setterName != null) {
                     for (MethodNode method : category.getMethods(setterName)) {
-                        if (method.isStatic() && AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER) {
-                            if ((result = tryMatch(method, scope, expectedType, normalizedType)) != null) {
-                                return result;
-                            }
+                        if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER &&
+                                isCompatibleCategoryMethod(method, normalizedType)) {
+                            candidates.add(method);
                         }
                     }
                 }
             }
+
+            if (!candidates.isEmpty()) {
+                TypeConfidence[] confidence = {TypeConfidence.LOOSELY_INFERRED};
+                MethodNode method = selectBestMatch(candidates, confidence, normalizedType, scope);
+                ClassNode returnType = SimpleTypeLookup.getTypeFromDeclaration(method, expectedType);
+
+                TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence[0], scope);
+                result.isGroovy = true; // enable semantic highlighting as Groovy method
+                return result;
+            }
         }
         return null;
     }
 
-    private TypeLookupResult tryMatch(MethodNode method, VariableScope scope, ClassNode expectedType, ClassNode normalizedType) {
-        Parameter[] params = method.getParameters();
-        if (params != null && params.length > 0 && isAssignableFrom(normalizedType, params[0].getType())) {
-            ClassNode declaringClass = method.getDeclaringClass();
-            ClassNode returnType = SimpleTypeLookup.getTypeFromDeclaration(method, expectedType);
-            TypeConfidence confidence = getConfidence(declaringClass);
-            if (confidence == TypeConfidence.LOOSELY_INFERRED) {
-                confidence = checkParameters(params, scope.getMethodCallArgumentTypes());
-            }
-            TypeLookupResult result = new TypeLookupResult(returnType, declaringClass, method, confidence, scope);
-            result.isGroovy = true;
-            return result;
-        }
-        return null;
-    }
-
-    /**
-     * DGM and DGSM classes are loosely inferred so that other lookups can provide better solutions
-     */
-    private TypeConfidence getConfidence(ClassNode declaringClass) {
-        boolean contains = VariableScope.ALL_DEFAULT_CATEGORIES.contains(declaringClass);
-        return contains ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED;
-    }
-
-    /**
-     * Checks for exact match. If so then confidence is EXACT. In that case no need to find better solution.
-     *
-     * @param params declared method parameters
-     * @param arguments actual method arguments
-     * @return updated confidence
-     */
-    private TypeConfidence checkParameters(Parameter[] params, List<ClassNode> arguments) {
-        if (arguments == null || arguments.size() == 0) {
-            return TypeConfidence.LOOSELY_INFERRED;
-        }
-        if (params.length != arguments.size() + 1) {
-            return TypeConfidence.LOOSELY_INFERRED;
-        }
-        for (int i = 0; i < arguments.size(); i++) {
-            if (!arguments.get(i).equals(params[i + 1].getOriginType())) {
-                return TypeConfidence.LOOSELY_INFERRED;
-            }
-        }
-        return TypeConfidence.EXACT;
-    }
-
-    private void findAllSupers(ClassNode clazz, Set<String> allSupers) {
-        String name = clazz.getName();
-        if (!allSupers.contains(name)) {
-            allSupers.add(name);
-            if (clazz.getSuperClass() != null) {
-                findAllSupers(clazz.getSuperClass(), allSupers);
-            }
-            if (clazz.getInterfaces() != null) {
-                for (ClassNode superInterface : clazz.getInterfaces()) {
-                    findAllSupers(superInterface, allSupers);
-                }
-            }
-        }
-    }
-
-    /**
-     * Can {@code source} be assigned to {@code target}?
-     */
-    private boolean isAssignableFrom(ClassNode source, ClassNode target) {
-        if (source == null || target == null) {
-            return false;
-        }
-        String sourceName = source.getName(), targetName = target.getName();
-        Set<String> allSupers = new HashSet<String>();
-        allSupers.add("java.lang.Object");
-        if (sourceName.startsWith("["))
-            allSupers.add("[Ljava.lang.Object;");
-        findAllSupers(source, allSupers);
-        for (String superName : allSupers) {
-            if (targetName.equals(superName)) {
+    protected boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType) {
+        if (method.isStatic()) {
+            Parameter[] paramters = method.getParameters();
+            if (paramters != null && paramters.length > 0 &&
+                    SimpleTypeLookup.isTypeCompatible(firstArgumentType, paramters[0].getType()) != Boolean.FALSE) {
                 return true;
             }
         }
         return false;
     }
 
-    public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
-        return null;
+    protected boolean isDefaultGroovyMethod(MethodNode method) {
+        return VariableScope.ALL_DEFAULT_CATEGORIES.contains(method.getDeclaringClass());
     }
 
-    public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-        return null;
+    /**
+     * Selects the candidate that most closely matches the method call arguments.
+     */
+    protected MethodNode selectBestMatch(List<MethodNode> candidates, TypeConfidence[] confidence, ClassNode firstArgumentType, VariableScope scope) {
+        int args = 1 + scope.getMethodCallNumberOfArguments();
+        List<ClassNode> argumentTypes = new ArrayList<ClassNode>(args);
+        argumentTypes.add(firstArgumentType); // comes from dot expression
+        if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
+
+        MethodNode method = null;
+        for (MethodNode candidate : candidates) {
+            if (argumentTypes.size() == candidate.getParameters().length) {
+                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes, candidate.getParameters());
+                if (compatible == Boolean.TRUE) { // exact match
+                    confidence[0] = isDefaultGroovyMethod(candidate) ? TypeConfidence.INFERRED : TypeConfidence.POTENTIAL;
+                    method = candidate;
+                    break;
+                } else if (compatible != Boolean.FALSE) { // fuzzy match
+                    if (method != null) {
+                        long d1 = calculateParameterDistance(argumentTypes, method.getParameters());
+                        long d2 = calculateParameterDistance(argumentTypes, candidate.getParameters());
+
+                        if (d1 <= d2) continue; // stick with current selection
+                    }
+                    //confidence[0] = isDefaultGroovyMethod(candidate) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED;
+                    method = candidate;
+                } else if (method == null) {
+                    method = candidate; // at least arguments line up with parameters
+                }
+            }
+        }
+        return method != null ? method : candidates.get(0);
     }
+
+    private static long calculateParameterDistance(List<ClassNode> arguments, Parameter[] parameters) {
+        try {
+            int n = arguments.size();
+            Class<?>[] args = new Class[n];
+            for (int i = 0; i < n; i += 1) {
+                args[i] = arguments.get(i).getTypeClass();
+            }
+
+            n = parameters.length;
+            Class<?>[] prms = new Class[n];
+            for (int i = 0; i < n; i += 1) {
+                prms[i] = parameters[i].getType().getTypeClass();
+            }
+
+            // TODO: This can fail in a lot of cases; is there a better way to call it?
+            return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
+        } catch (Throwable t) {
+            return Long.MAX_VALUE;
+        }
+    }
+
+    //--------------------------------------------------------------------------
 
     public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         return null;
@@ -186,6 +171,14 @@ public class CategoryTypeLookup implements ITypeLookup {
     }
 
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
+        return null;
+    }
+
+    public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
+        return null;
+    }
+
+    public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
         return null;
     }
 
