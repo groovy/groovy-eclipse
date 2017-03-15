@@ -230,15 +230,27 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 List<Position> oldPositions = new LinkedList<Position>(getHighlightedPositions());
                 if (update(monitor, 1)) return;
 
-                HighlightedTypedPosition last = null;
+                HighlightedTypedPosition last = null; Position x = null;
                 for (HighlightedTypedPosition ref : semanticReferences) {
                     if (ref.compareTo(last) != 0) {
                         Position pos = newHighlightedPosition(ref);
-                        tryAddPosition(newPositions, oldPositions, pos);
+                        x = tryAddPosition(newPositions, oldPositions, pos);
 
-                    } else if (GET_HIGHLIGHTING != null && (ref.kind == DEPRECATED || ref.kind == UNKNOWN) && !newPositions.isEmpty()) {
+                    } else if (GET_HIGHLIGHTING != null && (ref.kind == DEPRECATED || ref.kind == UNKNOWN)) {
                         // this and last cover same source range and this indicates deprecated or unknown
-                        Position pos = newPositions.get(newPositions.size() - 1);
+                        Position pos = !newPositions.isEmpty() ? newPositions.get(newPositions.size() - 1) : null;
+                        if (ref.compareTo(pos) != 0) {
+                            if (ref.compareTo(x) == 0) {
+                                pos = newHighlightedPosition(last);
+                                newPositions.add(pos);
+                                oldPositions.add(x);
+                            } else {
+                                GroovyPlugin.getDefault().logWarning(
+                                    String.format("Failed to apply %s semantic at %s",
+                                    ref.kind.name().toLowerCase(), ((Position) ref).toString()));
+                                continue; // logic error?
+                            }
+                        }
                         Object style = GET_HIGHLIGHTING.invoke(pos);
                         TextAttribute one = getTextAttribute(style);
                         TextAttribute two = getTextAttribute(ref.kind == DEPRECATED ? deprecatedRefHighlighting : undefinedRefHighlighting);
@@ -347,19 +359,17 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return (Position) ReflectionUtils.invokeConstructor(HIGHLIGHTED_POSITION, pos.offset, pos.length, style, this);
     }
 
-    private void tryAddPosition(List<Position> newPositions, List<Position> oldPositions, Position maybePosition) {
-        boolean found = false; // TODO: Is there a quicker way to search for matches?  These can be sorted easily.
+    private Position tryAddPosition(List<Position> newPositions, List<Position> oldPositions, Position maybePosition) {
+        // TODO: Is there a quicker way to search for matches?  These can be sorted easily.
         for (Iterator<Position> it = oldPositions.iterator(); it.hasNext();) {
             Position oldPosition = it.next();
             if (!oldPosition.isDeleted() && oldPosition.equals(maybePosition) && isSameStyle(oldPosition, maybePosition)) {
-                found = true;
-                it.remove();
-                break;
+                it.remove(); // prevent old position from being removed from presentation
+                return oldPosition;
             }
         }
-        if (!found) {
-            newPositions.add(maybePosition);
-        }
+        newPositions.add(maybePosition);
+        return null;
     }
 
     private boolean isSameStyle(Position a, Position b) {
