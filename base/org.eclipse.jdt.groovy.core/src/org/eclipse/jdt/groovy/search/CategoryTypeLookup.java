@@ -78,11 +78,11 @@ public class CategoryTypeLookup implements ITypeLookup {
             }
 
             if (!candidates.isEmpty()) {
-                TypeConfidence[] confidence = {TypeConfidence.LOOSELY_INFERRED};
-                MethodNode method = selectBestMatch(candidates, confidence, normalizedType, scope);
+                MethodNode method = selectBestMatch(candidates, normalizedType, scope);
                 ClassNode returnType = SimpleTypeLookup.getTypeFromDeclaration(method, expectedType);
 
-                TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence[0], scope);
+                TypeConfidence confidence = isDefaultGroovyMethod(method) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED;
+                TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence, scope);
                 result.isGroovy = true; // enable semantic highlighting as Groovy method
                 return result;
             }
@@ -108,7 +108,7 @@ public class CategoryTypeLookup implements ITypeLookup {
     /**
      * Selects the candidate that most closely matches the method call arguments.
      */
-    protected MethodNode selectBestMatch(List<MethodNode> candidates, TypeConfidence[] confidence, ClassNode firstArgumentType, VariableScope scope) {
+    protected MethodNode selectBestMatch(List<MethodNode> candidates, ClassNode firstArgumentType, VariableScope scope) {
         int args = 1 + scope.getMethodCallNumberOfArguments();
         List<ClassNode> argumentTypes = new ArrayList<ClassNode>(args);
         argumentTypes.add(firstArgumentType); // comes from dot expression
@@ -119,7 +119,6 @@ public class CategoryTypeLookup implements ITypeLookup {
             if (argumentTypes.size() == candidate.getParameters().length) {
                 Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes, candidate.getParameters());
                 if (compatible == Boolean.TRUE) { // exact match
-                    confidence[0] = isDefaultGroovyMethod(candidate) ? TypeConfidence.INFERRED : TypeConfidence.POTENTIAL;
                     method = candidate;
                     break;
                 } else if (compatible != Boolean.FALSE) { // fuzzy match
@@ -129,7 +128,6 @@ public class CategoryTypeLookup implements ITypeLookup {
 
                         if (d1 <= d2) continue; // stick with current selection
                     }
-                    //confidence[0] = isDefaultGroovyMethod(candidate) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED;
                     method = candidate;
                 } else if (method == null) {
                     method = candidate; // at least arguments line up with parameters

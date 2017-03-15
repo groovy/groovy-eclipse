@@ -1019,38 +1019,33 @@ assert primaryExprType != null && dependentExprType != null;
             // find the type of the complete expression
             String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
             if (isArithmeticOperationOnNumberOrStringOrList(node.getOperation().getText(), primaryExprType, dependentExprType)) {
-                // another special case.
-                // In 1.8 and later, Groovy will not go through the
-                // MOP for standard arithmetic operations on numbers
+                // in 1.8 and later, Groovy will not go through the MOP for standard arithmetic operations on numbers
                 completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE : primaryExprType;
             } else if (associatedMethod != null) {
-                // there is an overloadable method associated with this operation
-                // convert to a constant expression and infer type
+                scopes.peek().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
+                // there is an overloadable method associated with this operation; convert to a constant expression and look it up
                 TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false, scopes.peek());
                 completeExprType = result.type;
+                // special case DefaultGroovyMethods.getAt -- the problem is that DGM has too many variants of getAt
                 if (associatedMethod.equals("getAt") && result.declaringType.equals(VariableScope.DGM_CLASS_NODE)) {
-                    // special case getAt coming from DGM.
-                    // problem is that DGM has too many overloaded variants of getAt.
-                    // do better by looking at the rhs.
                     if (primaryExprType.getName().equals("java.util.BitSet")) {
                         completeExprType = VariableScope.BOOLEAN_CLASS_NODE;
                     } else {
                         GenericsType[] lhsGenericsTypes = primaryExprType.getGenericsTypes();
                         ClassNode elementType;
-                        if (VariableScope.MAP_CLASS_NODE.equals(primaryExprType) && lhsGenericsTypes != null
-                                && lhsGenericsTypes.length == 2) {
-                            // for maps, always use the type of value
+                        if (VariableScope.MAP_CLASS_NODE.equals(primaryExprType) && lhsGenericsTypes != null && lhsGenericsTypes.length == 2) {
+                            // for maps use the value type
                             elementType = lhsGenericsTypes[1].getType();
                         } else {
-                            // deref...get component type of lhs
                             elementType = VariableScope.extractElementType(primaryExprType);
                         }
-                        // if rhs is a range or list type, then result is a list parameterized by lhs type
-                        if (dependentExprType.isArray()
-                                || dependentExprType.getName().equals(VariableScope.LIST_CLASS_NODE.getName())
-                                || dependentExprType.implementsInterface(VariableScope.LIST_CLASS_NODE)) {
+                        if (dependentExprType.isArray() ||
+                                dependentExprType.implementsInterface(VariableScope.LIST_CLASS_NODE) ||
+                                dependentExprType.getName().equals(VariableScope.LIST_CLASS_NODE.getName())) {
+                            // if rhs is a range or list type, then result is a list of elements
                             completeExprType = createParameterizedList(elementType);
-                        } else {
+                        } else if (dependentExprType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+                            // if rhs is a number type, then result is a single element
                             completeExprType = elementType;
                         }
                     }
@@ -1242,42 +1237,42 @@ assert primaryExprType != null && dependentExprType != null;
                 if (cat.delegatesToClosures.containsKey(node)) {
                     declaringType = cat.delegatesToClosures.get(node);
                 }
-                scope.addVariable("delegate", declaringType, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("getDelegate", declaringType, VariableScope.CLOSURE_CLASS);
+                scope.addVariable("delegate", declaringType, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getDelegate", declaringType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode thisType = scope.getThis();
                 // GRECLIPSE-1348 someone is silly enough to have a variable named "delegate".
                 // don't override that
                 if (scope.lookupName("delegate") == null) {
-                    scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
+                    scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS_NODE);
                 }
-                scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS);
+                scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS_NODE);
             }
 
             // Owner is 'this' if no enclosing closure, or 'Closure' if there is
             if (parent.getEnclosingClosure() != null) {
-                scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("owner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
+                scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("owner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode thisType = scope.getThis();
                 // GRECLIPSE-1348 someone is silly enough to have a variable named "owner".
                 // don't override that
                 if (scope.lookupName("owner") == null) {
-                    scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
+                    scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS_NODE);
                 }
-                scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
+                scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS_NODE);
 
                 // only do this if we are not already in a closure; no need to add twice
-                scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("resolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("getResolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS);
-                scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+                scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("resolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getResolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             }
             super.visitClosureExpression(node);
         }
@@ -2035,7 +2030,7 @@ assert primaryExprType != null && dependentExprType != null;
                         if (expression instanceof ConstantExpression &&
                             ((ConstantExpression) expression).isNullExpression()) {
 
-                            types.add(GroovyUtils.NULL_TYPE); // non-void sentinel value
+                            types.add(VariableScope.NULL_TYPE); // sentinel value
                         } else {
                             scopes.peek().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
                             TypeLookupResult tlr = lookupExpressionType(expression, null, false, scopes.peek());

@@ -166,7 +166,7 @@ public class ParameterGuesserDelegate {
         ICompletionProposal proposal = null;
         if (expectedType.equals(VariableScope.STRING_CLASS_NODE.getName())) {
             proposal = new PositionBasedCompletionProposal(EMPTY_STRING, position, 1);
-        } else if (expectedType.equals(VariableScope.CLOSURE_CLASS.getName())) {
+        } else if (expectedType.equals(VariableScope.CLOSURE_CLASS_NODE.getName())) {
             proposal = new PositionBasedCompletionProposal(CLOSURE_TEXT, position, 2);
         }
 

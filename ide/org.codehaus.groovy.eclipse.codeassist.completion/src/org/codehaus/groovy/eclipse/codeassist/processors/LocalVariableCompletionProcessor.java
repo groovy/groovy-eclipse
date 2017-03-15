@@ -81,27 +81,27 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             maybeAddClosureProperty(proposals, "getOwner", ownerInfo.declaringType, ownerInfo.type, true);
             maybeAddClosureProperty(proposals, "delegate", delegateInfo.declaringType, delegateInfo.type, false);
             maybeAddClosureProperty(proposals, "getDelegate", delegateInfo.declaringType, delegateInfo.type, true);
-            maybeAddClosureProperty(proposals, "thisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "thisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getThisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "getThisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "resolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "resolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getResolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "getResolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "directive", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "directive", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getDirective", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "getDirective", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
             maybeAddClosureProperty(proposals, "maximumNumberOfParameters",
-                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
             maybeAddClosureProperty(proposals, "getMaximumNumberOfParameters",
-                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "parameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "parameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getParameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+            maybeAddClosureProperty(proposals, "getParameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
                     org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE, true);
             return proposals;
         } else {

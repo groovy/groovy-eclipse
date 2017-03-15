@@ -48,6 +48,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -70,9 +71,6 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Maps variable names to types in a hierarchy.
- *
- * @author Andrew Eisenberg
- * @created Sep 25, 2009
  */
 public class VariableScope {
 
@@ -85,6 +83,8 @@ public class VariableScope {
     public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
     public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
     public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
+    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
+    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
     public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
     public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
     public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
@@ -100,7 +100,6 @@ public class VariableScope {
     public static final ClassNode BUFFERED_READER_CLASS_NODE = ClassHelper.make(BufferedReader.class);
     public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
     public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
-    public static final ClassNode CLOSURE_CLASS = ClassHelper.CLOSURE_TYPE;
     public static final ClassNode GROOVY_OBJECT_SUPPORT = ClassHelper.make(GroovyObjectSupport.class);
 
     // standard category classes

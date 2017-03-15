@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.Comparator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -870,31 +871,6 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // GRECLIPSE-743
-    public void testOverrideCategory1() {
-        String contents = "class A { }\n new A().getAt() ";
-        int start = contents.lastIndexOf("getAt");
-        int end = start + "getAt".length();
-        assertType(contents, start, end, "java.lang.Object");
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-    }
-
-    public void testOverrideCategory2() {
-        String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n new A().getAt()";
-        int start = contents.lastIndexOf("getAt");
-        int end = start + "getAt".length();
-        assertType(contents, start, end, "A");
-        assertDeclaringType(contents, start, end, "A");
-    }
-
-    public void testOverrideCategory3() {
-        String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n class B extends A { }\n new B().getAt()";
-        int start = contents.lastIndexOf("getAt");
-        int end = start + "getAt".length();
-        assertType(contents, start, end, "A");
-        assertDeclaringType(contents, start, end, "A");
-    }
-
     public void testGRECLIPSE731a() {
         String contents = "def foo() { } \nString xxx = foo()\nxxx";
         int start = contents.lastIndexOf("xxx");
@@ -1577,8 +1553,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() {
-        String contents =
-            "other\n";
+        String contents = "other\n";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertDeclaringType(contents, start, end, "Search", false, true);
@@ -1683,16 +1658,55 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
     }
 
+    // GRECLIPSE-743
+    public void testGetAt5() {
+        String contents = "class A { }\n new A().getAt() ";
+        int start = contents.lastIndexOf("getAt");
+        int end = start + "getAt".length();
+        assertType(contents, start, end, "java.lang.Object");
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    public void testGetAt6() {
+        String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n new A().getAt('x')";
+        int start = contents.lastIndexOf("getAt");
+        int end = start + "getAt".length();
+        assertType(contents, start, end, "A");
+        assertDeclaringType(contents, start, end, "A");
+    }
+
+    public void testGetAt7() {
+        String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n class B extends A { }\n new B().getAt('x')";
+        int start = contents.lastIndexOf("getAt");
+        int end = start + "getAt".length();
+        assertType(contents, start, end, "A");
+        assertDeclaringType(contents, start, end, "A");
+    }
+
+    public void testListSort1() {
+        String contents = "def list = []; list.sort()";
+        int start = contents.lastIndexOf("sort");
+        int end = start + "sort".length();
+        assertType(contents, start, end, "java.util.List<java.lang.Object>");
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    public void testListSort2() throws Exception {
+        String contents = "def list = []; list.sort({ o1, o2 -> o1 <=> o2 } as Comparator)";
+        int start = contents.lastIndexOf("sort");
+        int end = start + "sort".length();
+        // Java 8 added sort(Comparator) to the List interface
+        boolean jdkListSort = (List.class.getDeclaredMethod("sort", Comparator.class) != null);
+        assertType(contents, start, end, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
+        assertDeclaringType(contents, start, end, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
     // GRECLIPSE-1013
     public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
-
         int start = contents.indexOf("text");
-        if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            assertDeclaringType(contents, start, start + 4, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
-        } else {
-            assertDeclaringType(contents, start, start + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-        }
+        assertDeclaringType(contents, start, start + 4, GroovyUtils.GROOVY_LEVEL >= 20
+            ? "org.codehaus.groovy.runtime.ResourceGroovyMethods" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     public void testInterfaceMethodsAsProperty() throws Exception {
@@ -1722,7 +1736,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         String target = "class", source = "java.lang.Object";
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
     }
-
+    
     public void testClassReference1() {
         String contents = "String";
         assertDeclaringType(contents, 0, contents.length(), "java.lang.String");

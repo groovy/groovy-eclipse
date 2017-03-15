@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,6 @@ import org.eclipse.jdt.core.JavaCore;
 /**
  * Project creation utilities taken from AJDT:
  *   org.eclipse.ajdt.core.tests.AJDTCoreTestCase
- * @author Andrew Eisenberg
- * @created Oct 6, 2010
  */
 public class ProjectUtils {
     private ProjectUtils() { }
@@ -90,12 +88,11 @@ public class ProjectUtils {
 
         // create project
         final IProject project = getWorkspaceRoot().getProject(projectName);
-        if (! project.exists()) {
+        if (!project.exists()) {
             SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project "+projectName);
             IWorkspaceRunnable populate = new IWorkspaceRunnable() {
                 public void run(IProgressMonitor monitor) throws CoreException {
                     project.create(monitor);
-                    System.err.println("after project create call");
                 }
             };
             getWorkspace().run(populate, spm);

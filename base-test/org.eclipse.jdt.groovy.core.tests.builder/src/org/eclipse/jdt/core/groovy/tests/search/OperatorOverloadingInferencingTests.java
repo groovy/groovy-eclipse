@@ -182,19 +182,19 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
 
     // lots of variants with getAt
 
-    public void testGetAt1() throws Exception {
+    public void testGetAt1() {
         String contents =
                 "class Foo { }\n" +
                 "class Bar {\n" +
                 "  Foo getAt() { }\n" +
                 "}\n" +
-                "def xxx = new Bar()[nuthin]\n" +
+                "def xxx = new Bar()[nuthin]\n" + // should be DGM.getAt(Object, String): Object
                 "xxx";
         String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Object");
     }
 
-    public void testGetAt2() throws Exception {
+    public void testGetAt2() {
         String contents =
                 "class Foo{ }\n" +
                 "Foo[] yyy\n" +
@@ -204,7 +204,7 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
-    public void testGetAt3() throws Exception {
+    public void testGetAt3() {
         String contents =
                 "class Foo{ }\n" +
                 "Foo[] yyy\n" +
@@ -214,7 +214,7 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
 
-    public void testGetAt4() throws Exception {
+    public void testGetAt4() {
         String contents =
                 "class Foo{ }\n" +
                 "Foo[] yyy\n" +
@@ -223,7 +223,8 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
-    public void testGetAt5() throws Exception {
+
+    public void testGetAt5() {
         String contents =
                 "class Foo{ }\n" +
                 "List<Foo> yyy\n" +
@@ -233,7 +234,7 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
-    public void testGetAt6() throws Exception {
+    public void testGetAt6() {
         String contents =
                 "class Foo{ }\n" +
                 "List<Foo> yyy\n" +
@@ -243,7 +244,7 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
 
-    public void testGetAt7() throws Exception {
+    public void testGetAt7() {
         String contents =
                 "class Foo{ }\n" +
                 "List<Foo> yyy\n" +
@@ -252,7 +253,8 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
-    public void testGetAt8() throws Exception {
+
+    public void testGetAt8() {
         String contents =
                 "class Foo{ }\n" +
                 "Map<Integer,Foo> yyy\n" +
@@ -262,7 +264,7 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
-    public void testGetAt9() throws Exception {
+    public void testGetAt9() {
         String contents =
                 "class Foo{ }\n" +
                 "BitSet yyy\n" +

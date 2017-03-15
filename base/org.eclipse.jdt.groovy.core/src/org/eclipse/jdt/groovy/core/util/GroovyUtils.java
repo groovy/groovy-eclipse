@@ -30,7 +30,6 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
@@ -40,8 +39,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * Helper methods - can be made more eclipse friendly or replaced if the groovy infrastructure provides the information.
  */
 public abstract class GroovyUtils {
-
-    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
 
     public static char[] readSourceRange(SourceUnit unit, int offset, int length) {
         Reader reader = null;

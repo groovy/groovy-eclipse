@@ -149,8 +149,8 @@ public class DSLContributionGroup extends ContributionGroup {
         ClassNode delegate = asClassNode(arg);
         if (delegate != null) {
             // also need to set targetType, but only if primary expression
-            scope.addVariable("delegate", delegate, VariableScope.CLOSURE_CLASS);
-            scope.addVariable("getDelegate", delegate, VariableScope.CLOSURE_CLASS);
+            scope.addVariable("delegate", delegate, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getDelegate", delegate, VariableScope.CLOSURE_CLASS_NODE);
             contributions.add(new EmptyContributionElement(currentType));
 
             if (isPrimaryExpression) {

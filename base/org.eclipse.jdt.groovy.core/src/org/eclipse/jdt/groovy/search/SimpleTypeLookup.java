@@ -55,7 +55,6 @@ import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
@@ -371,15 +370,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         } else if (name.equals("call")) {
             // assume that this is a synthetic call method for calling a closure
-            realDeclaringType = VariableScope.CLOSURE_CLASS;
+            realDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
             declaration = realDeclaringType.getMethods("call").get(0);
         } else {
             realDeclaringType = declaringType;
             confidence = TypeConfidence.UNKNOWN;
         }
 
-        // now check to see if the object expression is static, but the declaration is not
         if (declaration != null && !realDeclaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
+            // check to see if the object expression is static but the declaration is not
             if (declaration instanceof FieldNode) {
                 if (isStaticObjectExpression && !((FieldNode) declaration).isStatic()) {
                     confidence = TypeConfidence.UNKNOWN;
@@ -397,6 +396,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (declaration instanceof MethodNode) {
                 if (isStaticObjectExpression && !((MethodNode) declaration).isStatic()) {
                     confidence = TypeConfidence.UNKNOWN;
+                } else
+                // check if the arguments and parameters are mismatched; a category method may make a better match
+                if (((MethodNode) declaration).getParameters().length != scope.getMethodCallNumberOfArguments()) {
+                    confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
             }
         }
@@ -768,10 +771,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static Boolean isTypeCompatible(ClassNode source, ClassNode target) {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
-                !(source == GroovyUtils.NULL_TYPE && !target.isPrimitive()) &&
-                !(source.isArray() && !source.getComponentType().isPrimitive() &&
-                    ClassHelper.OBJECT_TYPE.equals(target.getComponentType())) &&
-                !(source.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(target))) {
+            !(!source.isPrimitive() && target.isGenericsPlaceHolder()) &&
+            !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) &&
+            !(source.isArray() && !source.getComponentType().isPrimitive() &&
+                (ClassHelper.OBJECT_TYPE.equals(target.getComponentType()) ||
+                target.isArray() && target.getComponentType().isGenericsPlaceHolder())) &&
+            !(source.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(target))) {
 
             result = null; // not an exact match
 
