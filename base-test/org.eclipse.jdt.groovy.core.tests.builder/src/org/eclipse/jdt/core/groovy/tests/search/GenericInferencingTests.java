@@ -21,6 +21,7 @@ import java.util.List;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -112,8 +113,22 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // GRECLIPSE-1040
     public void testList8() {
+        String contents ="def x = []\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.List<java.lang.Object>");
+    }
+
+    public void testList9() {
+        String contents = "def x = [] << ''; x";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.List<java.lang.String>");
+    }
+
+    // GRECLIPSE-1040
+    public void testList10() {
         String contents = "def x = new LinkedList()\nx";
         String toFind = "x";
         int start = contents.indexOf(toFind);
@@ -275,16 +290,6 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    // see org.eclipse.jdt.groovy.search.SimpleTypeLookup.getTypeFromDeclaration(ASTNode, ClassNode)
-    // GenericsMapper does not yet traverse methods and so the return type remains parameterized
-    public void _testArray3() {
-        String contents = "def x = [ 1, 2 ] as String[]; x.iterator()";
-        String toFind = "iterator";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
     }
 
     private static final String XX = "class XX {\nXX[] xx\nXX yy\n}";
@@ -481,6 +486,30 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    public void _testClosure1() {
+        String contents = "def fn = { int a, int b -> a + b }";
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+    }
+
+    public void _testClosure2() {
+        String contents = "def fn = 'abc'.&length";
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+    }
+
+    public void _testClosure3() {
+        String contents = "def fn = Collections.&emptyList";
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.util.List>");
+    }
+
+    public void testDGM() {
+        String contents = "String[] strings = ['1', '2'];  strings.iterator()";
+        String toFind = "iterator";
+        int start = contents.lastIndexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
+        MethodNode dgm = assertDeclaration(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "iterator", DeclarationKind.METHOD);
+        assertEquals("First parameter type should be resolved from object expression", "java.lang.String[]", printTypeName(dgm.getParameters()[0].getType()));
+    }
+
     // all testing for GRECLIPSE-833
     public void testDGMClosure1() {
         String contents = "[''].each { it }";
@@ -524,6 +553,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+
     // Integer is explicit, so should use that as a type
     public void testDGMClosure7() {
         String contents = "[''].reverseEach { Integer val -> val }";

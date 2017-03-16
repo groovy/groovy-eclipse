@@ -231,7 +231,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
 
     protected enum DeclarationKind { FIELD, METHOD, PROPERTY, CLASS }
 
-    protected void assertDeclaration(String contents, int exprStart, int exprEnd, String expectedDeclaringType, String declarationName, DeclarationKind kind) {
+    protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprEnd, String expectedDeclaringType, String declarationName, DeclarationKind kind) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false, false);
         GroovyCompilationUnit unit = createUnit("Search", contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
@@ -253,6 +253,11 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
                 assertTrue("Expecting class, but was " + requestor.result.declaration, requestor.result.declaration instanceof ClassNode);
                 assertEquals("Wrong class name", declarationName, ((ClassNode) requestor.result.declaration).getName());
         }
+
+        @SuppressWarnings("unchecked")
+        N decl = (N) requestor.result.declaration;
+
+        return decl;
     }
 
     protected void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean forceWorkingCopy) {
@@ -264,33 +269,33 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
         assertNotNull("Did not find expected ASTNode", requestor.node);
-        if (! expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
+        if (!expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected declaring type not found.\n");
-            sb.append("Expected: " + expectedDeclaringType + "\n");
-            sb.append("Found type: " + printTypeName(requestor.result.type) + "\n");
-            sb.append("Found declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
-            sb.append("ASTNode: " + requestor.node + "\n");
+            sb.append("\tExpected: ").append(expectedDeclaringType).append("\n");
+            sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
+            sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+            sb.append("\tASTNode: ").append(requestor.node);
             fail(sb.toString());
         }
         if (expectingUnknown) {
             if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Confidence: " + requestor.result.confidence + " (but expecting UNKNOWN)\n");
-                sb.append("Expected: " + expectedDeclaringType + "\n");
-                sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
-                sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
-                sb.append("ASTNode: " + requestor.node + "\n");
+                sb.append("Confidence: ").append(requestor.result.confidence).append(" (but expecting UNKNOWN)\n");
+                sb.append("\tExpected: ").append(expectedDeclaringType).append("\n");
+                sb.append("\tFound: ").append(printTypeName(requestor.result.type)).append("\n");
+                sb.append("\tDeclaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+                sb.append("\tASTNode: ").append(requestor.node);
                 fail(sb.toString());
             }
         } else {
             if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Expected Confidence should not have been UNKNOWN, but it was.\n");
-                sb.append("Expected declaring type: " + expectedDeclaringType + "\n");
-                sb.append("Found type: " + printTypeName(requestor.result.type) + "\n");
-                sb.append("Found declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
-                sb.append("ASTNode: " + requestor.node + "\n");
+                sb.append("\tExpected declaring type: ").append(expectedDeclaringType).append("\n");
+                sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
+                sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+                sb.append("\tASTNode: ").append(requestor.node);
                 fail(sb.toString());
             }
         }

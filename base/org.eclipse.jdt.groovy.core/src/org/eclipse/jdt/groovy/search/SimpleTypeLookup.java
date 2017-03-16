@@ -396,10 +396,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (declaration instanceof MethodNode) {
                 if (isStaticObjectExpression && !((MethodNode) declaration).isStatic()) {
                     confidence = TypeConfidence.UNKNOWN;
-                } else
-                // check if the arguments and parameters are mismatched; a category method may make a better match
-                if (((MethodNode) declaration).getParameters().length != scope.getMethodCallNumberOfArguments()) {
-                    confidence = TypeConfidence.LOOSELY_INFERRED;
+                } else {
+                    // check if the arguments and parameters are mismatched; a category method may make a better match
+                    if (((MethodNode) declaration).getParameters().length != scope.getMethodCallNumberOfArguments()) {
+                        confidence = TypeConfidence.LOOSELY_INFERRED;
+                    }
                 }
             }
         }

@@ -227,47 +227,17 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    public void testList1() {
-        String contents ="def x = []\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.util.List<java.lang.Object>");
-    }
-
-    public void testList2() throws Throwable {
-        String contents = "def x = [] << \"\"\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertTypeOneOf(contents, start, end, // TODO: java.util.List<java.lang.String>
-            "java.util.Collection<java.lang.Object>", "java.util.List<java.lang.Object>");
-    }
-
     public void testClosure1() {
         String contents = "def fn = { a, b -> a + b }";
         assertType(contents, 4, 6, "groovy.lang.Closure");
     }
 
     public void testClosure2() {
-        String contents = "def fn = { int a, int b -> a + b }";
-        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
-    }
-
-    public void _testClosure3() {
         String contents = "def fn = x.&y";
         assertType(contents, 4, 6, "groovy.lang.Closure");
     }
 
-    public void _testClosure4() {
-        String contents = "def fn = 'abc'.&length";
-        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
-    }
-
-    public void _testClosure5() {
-        String contents = "def fn = Collections.&emptyList";
-        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.util.List>
-    }
-
-    public void testClosure6() {
+    public void testClosure3() {
         String contents =
                 "class Baz {\n" +
                 "  URL other\n" +
@@ -280,7 +250,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.net.URL");
     }
 
-    public void testClosure7() {
+    public void testClosure4() {
         String contents =
                 "class Baz {\n" +
                 "  URL other\n" +
@@ -307,7 +277,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Baz");
     }
 
-    public void testClosure8() {
+    public void testClosure5() {
         String contents =
                 "def x = {\n" +
                 "maximumNumberOfParameters\n" +
@@ -329,7 +299,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
-    public void testClosure9() {
+    public void testClosure6() {
         String contents =
                 "def x = { def y = {\n" +
                 "maximumNumberOfParameters\n" +

@@ -66,8 +66,10 @@ import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.codehaus.groovy.runtime.ProcessGroovyMethods;
 import org.codehaus.groovy.runtime.SwingGroovyMethods;
 import org.codehaus.groovy.runtime.XmlGroovyMethods;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
  * Maps variable names to types in a hierarchy.
@@ -575,49 +577,102 @@ public class VariableScope {
         }
     }
 
-    public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode typeToParameterize) {
-        if (!mapper.hasGenerics()) {
-            return typeToParameterize;
-        }
-        GenericsType[] typesToParameterize = typeToParameterize.getGenericsTypes();
-        if (typesToParameterize == null) {
-            return typeToParameterize;
-        }
-        // try to match
-        for (int i = 0; i < typesToParameterize.length; i++) {
-            GenericsType genericsToParameterize = typesToParameterize[i];
+    public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {
+        if (mapper.hasGenerics()) {
+            GenericsType[] parameterizedTypes = GenericsMapper.getGenericsTypes(type);
+            if (parameterizedTypes.length > 0) {
+                // try to match
+                for (int i = 0, n = parameterizedTypes.length; i < n; i += 1) {
+                    GenericsType parameterizedType = parameterizedTypes[i];
 
-            // recur down the type parameter
-            resolveTypeParameterization(mapper, genericsToParameterize.getType());
+                    // recur down the type parameter
+                    resolveTypeParameterization(mapper, parameterizedType.getType());
 
-            String toParameterizeName = genericsToParameterize.getName();
-            ClassNode resolved = mapper.findParameter(toParameterizeName, genericsToParameterize.getType());
-            // we have a match, three possibilities, this type is the resolved type parameter of a generic type (eg-
-            // Iterator<E> --> Iterator<String>)
-            // or it is the resolution of a type parameter itself (eg- E --> String)
-            // or it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from
-            // the declaring type)
-            // if this parameter exists in the redirect, then it is the former, if not, then check the redirect for type
-            // parameters
-            if (typeParameterExistsInRedirected(typeToParameterize, toParameterizeName)) {
-                Assert.isLegal(typeToParameterize.redirect() != typeToParameterize,
-                        "Error: trying to resolve type parameters of a type declaration: " + typeToParameterize);
-                // we have: Iterator<E> --> Iterator<String>
-                typeToParameterize.getGenericsTypes()[i].setType(resolved);
-                genericsToParameterize.setName(genericsToParameterize.getType().getName());
-                genericsToParameterize.setUpperBounds(null);
-                genericsToParameterize.setLowerBound(null);
-            } else {
-                // E --> String
-                // no need to recur since this is the resolution of a type parameter
-                typeToParameterize = resolved;
+                    String toParameterizeName = parameterizedType.getName();
+                    ClassNode resolved = mapper.findParameter(toParameterizeName, parameterizedType.getType());
 
-                // I *think* this means we are done.
-                // I *think* this can only be reached when typesToParameterize.length == 1
-                break;
+                    // there are three possibilities for resolved:
+                    // 1. it is the resolution of a type parameter itself (eg- E --> String)
+                    // 2. it is the resolved type parameter of a generic type (eg- Iterator<E> --> Iterator<String>)
+                    // 3. it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from the declaring type)
+
+                    if (typeParameterExistsInRedirected(type, toParameterizeName)) {
+                        Assert.isLegal(type.redirect() != type, "Error: trying to resolve type parameters of a type declaration: " + type);
+                        // Iterator<E> --> Iterator<String>
+                        GenericsMapper.getGenericsTypes(type)[i].setType(resolved);
+                        parameterizedType.setName(parameterizedType.getType().getName());
+                        parameterizedType.setUpperBounds(null);
+                        parameterizedType.setLowerBound(null);
+                    } else {
+                        // E --> String
+                        // E[] --> String[]
+                        while (type.isArray()) {
+                            type = type.getComponentType();
+                            resolved = resolved.makeArray();
+                        }
+                        type = resolved;
+
+                        // I *think* this means we are done.
+                        // I *think* this can only be reached when typesToParameterize.length == 1
+                        break;
+                    }
+                }
             }
         }
-        return typeToParameterize;
+        return type;
+    }
+
+    public static MethodNode resolveTypeParameterization(GenericsMapper mapper, MethodNode method) {
+        if (mapper.hasGenerics() && (GenericsMapper.getGenericsTypes(method).length > 0 ||
+                GenericsMapper.getGenericsTypes(method.getDeclaringClass()).length > 0)) {
+
+            ClassNode returnType = resolveTypeParameterization(mapper, clone(method.getReturnType()));
+
+            Parameter[] parameters = method.getParameters();
+            if (parameters != null && parameters.length > 0) {
+                int n = parameters.length;
+                parameters = new Parameter[n];
+                for (int i = 0; i < n; i += 1) {
+                    Parameter original = method.getParameters()[i];
+                    ClassNode parameterType = resolveTypeParameterization(mapper, clone(original.getType()));
+                    parameters[i] = new Parameter(parameterType, original.getName(), original.getInitialExpression());
+                    parameters[i].addAnnotations(original.getAnnotations());
+                    parameters[i].setClosureSharedVariable(original.isClosureSharedVariable());
+                    parameters[i].setDeclaringClass(original.getDeclaringClass());
+                    parameters[i].setHasNoRealSourcePosition(original.hasNoRealSourcePosition());
+                    parameters[i].setInStaticContext(original.isInStaticContext());
+                    parameters[i].setModifiers(original.getModifiers());
+                    parameters[i].copyNodeMetaData(original);
+                    parameters[i].setOriginType(original.getOriginType());
+                    parameters[i].setSourcePosition(original);
+                    parameters[i].setSynthetic(original.isSynthetic());
+                }
+            }
+
+            MethodNode resolved;
+            if (method instanceof JDTMethodNode) {
+                resolved = new JDTMethodNode(
+                    ((JDTMethodNode) method).getMethodBinding(), ((JDTMethodNode) method).getResolver(),
+                    method.getName(), method.getModifiers(), returnType, parameters, method.getExceptions(), method.getCode());
+            } else {
+                resolved = new MethodNode(
+                    method.getName(), method.getModifiers(), returnType, parameters, method.getExceptions(), method.getCode());
+                resolved.addAnnotations(method.getAnnotations());
+            }
+            resolved.setAnnotationDefault(method.hasAnnotationDefault());
+            resolved.setDeclaringClass(method.getDeclaringClass());
+            resolved.setGenericsTypes(method.getGenericsTypes());
+            resolved.setHasNoRealSourcePosition(method.hasNoRealSourcePosition());
+            resolved.copyNodeMetaData(method);
+            resolved.setOriginal(method.getOriginal());
+            resolved.setSourcePosition(method);
+            resolved.setSynthetic(method.isSynthetic());
+            resolved.setSyntheticPublic(method.isSyntheticPublic());
+            resolved.setVariableScope(method.getVariableScope());
+
+            method = resolved;
+        }
+        return method;
     }
 
     private static boolean typeParameterExistsInRedirected(ClassNode type, String toParameterizeName) {
@@ -632,9 +687,6 @@ public class VariableScope {
 
     /**
      * Create a copy of this class, taking into account generics and redirects
-     *
-     * @param type type to copy
-     * @return a copy of this type
      */
     public static ClassNode clone(ClassNode type) {
         return cloneInternal(type, 0);
@@ -675,42 +727,49 @@ public class VariableScope {
     }
 
     /**
-     * Internal variant of clone that ensures stack recursion never gets too large
+     * Internal variant of clone that ensures recursion never gets too deep.
      *
-     * @param type class to clone
-     * @param depth prevent recursion
+     * @param type class node to clone
+     * @param depth stack overflow prevention
      */
     private static ClassNode cloneInternal(ClassNode type, int depth) {
-        if (type == null) {
+        if (type == null || type.isPrimitive()) {
             return type;
         }
-        ClassNode newType;
-        newType = type.getPlainNodeReference();
-        newType.setRedirect(type.redirect());
-        ClassNode[] origIFaces = type.getInterfaces();
-        if (origIFaces != null) {
-            ClassNode[] newIFaces = new ClassNode[origIFaces.length];
-            for (int i = 0; i < newIFaces.length; i++) {
-                newIFaces[i] = origIFaces[i];
-            }
-            newType.setInterfaces(newIFaces);
-        }
+        ClassNode newType = type.getPlainNodeReference();
+
         newType.setSourcePosition(type);
+        newType.setGenericsPlaceHolder(type.isGenericsPlaceHolder());
+        ReflectionUtils.setPrivateField(ClassNode.class, "componentType", newType,
+            cloneInternal(type.getComponentType(), depth + 1)
+        );
 
-        // See GRECLIPSE-1024 set an arbitrary depth to return from
+        Assert.isNotNull(ReflectionUtils.getPrivateField(ClassNode.class, "redirect", newType));
+//        if (ReflectionUtils.getPrivateField(ClassNode.class, "redirect", newType) == null) {
+//            ClassNode[] faces = type.getInterfaces();
+//            if (faces != null) {
+//                int n = faces.length;
+//                ClassNode[] copy = new ClassNode[n];
+//                System.arraycopy(faces, 0, copy, 0, n);
+//
+//                newType.setInterfaces(copy);
+//            }
+//        }
+
+        // GRECLIPSE-1024: set an arbitrary depth to return from
         // ensures that improperly set up generics do not lead to infinite recursion
-        if (depth > 10) {
-            return newType;
+        if (depth < 11) {
+            GenericsType[] generics = type.getGenericsTypes();
+            if (generics != null) {
+                int n = generics.length;
+                GenericsType[] clones = new GenericsType[n];
+                for (int i = 0; i < n; i += 1) {
+                    clones[i] = clone(generics[i], depth);
+                }
+                newType.setGenericsTypes(clones);
+            }
         }
 
-        GenericsType[] origgts = type.getGenericsTypes();
-        if (origgts != null) {
-            GenericsType[] newgts = new GenericsType[origgts.length];
-            for (int i = 0; i < origgts.length; i++) {
-                newgts[i] = clone(origgts[i], depth);
-            }
-            newType.setGenericsTypes(newgts);
-        }
         return newType;
     }
 

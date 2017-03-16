@@ -145,6 +145,11 @@ public abstract class GroovyUtils {
         return new String[] {name.substring(0, Math.max(0, index)), name.substring(index + 1)};
     }
 
+    public static ClassNode getBaseType(ClassNode node) {
+        while (node.isArray()) node = node.getComponentType();
+        return node;
+    }
+
     public static List<ClassNode> getParameterTypes(Parameter... params) {
         final int n = params.length;
         if (n == 0) return Collections.emptyList();

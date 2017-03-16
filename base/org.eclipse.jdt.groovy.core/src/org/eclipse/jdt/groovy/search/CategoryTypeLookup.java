@@ -78,11 +78,17 @@ public class CategoryTypeLookup implements ITypeLookup {
             }
 
             if (!candidates.isEmpty()) {
-                MethodNode method = selectBestMatch(candidates, normalizedType, scope);
-                ClassNode returnType = SimpleTypeLookup.getTypeFromDeclaration(method, expectedType);
+                int args = 1 + scope.getMethodCallNumberOfArguments();
+                List<ClassNode> argumentTypes = new ArrayList<ClassNode>(args);
+                argumentTypes.add(normalizedType); // lhs of dot or delegate type
+                if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 
-                TypeConfidence confidence = isDefaultGroovyMethod(method) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED;
-                TypeLookupResult result = new TypeLookupResult(returnType, method.getDeclaringClass(), method, confidence, scope);
+                MethodNode method = selectBestMatch(candidates, argumentTypes, scope);
+                GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, normalizedType, method);
+                method = VariableScope.resolveTypeParameterization(mapper, method); // replace any type parameters
+
+                TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
+                        isDefaultGroovyMethod(method) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
                 result.isGroovy = true; // enable semantic highlighting as Groovy method
                 return result;
             }
@@ -108,12 +114,7 @@ public class CategoryTypeLookup implements ITypeLookup {
     /**
      * Selects the candidate that most closely matches the method call arguments.
      */
-    protected MethodNode selectBestMatch(List<MethodNode> candidates, ClassNode firstArgumentType, VariableScope scope) {
-        int args = 1 + scope.getMethodCallNumberOfArguments();
-        List<ClassNode> argumentTypes = new ArrayList<ClassNode>(args);
-        argumentTypes.add(firstArgumentType); // comes from dot expression
-        if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
-
+    protected MethodNode selectBestMatch(List<MethodNode> candidates, List<ClassNode> argumentTypes, VariableScope scope) {
         MethodNode method = null;
         for (MethodNode candidate : candidates) {
             if (argumentTypes.size() == candidate.getParameters().length) {

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getBaseType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -381,11 +383,6 @@ public class OrganizeGroovyImports {
                     "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
                     name, start, until, node.getLineNumber(), length, name.length()), new Exception());
             }
-        }
-
-        private ClassNode getBaseType(ClassNode node) {
-            while (node.isArray()) node = node.getComponentType();
-            return node;
         }
 
         private String getTypeName(ClassNode node) {

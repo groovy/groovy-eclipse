@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,71 +15,67 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+import java.util.TreeMap;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * This class maps type parameter names to resolved types
+ * Maps type parameters to resolved types.
  */
 public class GenericsMapper {
 
     /**
-     * Stack keeps track of all type parameterization up the type hierarchy
-     */
-    private Stack<Map<String, ClassNode>> allGenerics = new Stack<Map<String, ClassNode>>();
-
-    /**
-     * Creates a mapper for a particular resolved type tracing up the type hierarchy until the declaring type is reached. This is
-     * the public entry point for this class.
+     * Creates a mapper for a particular resolved type tracing up the type hierarchy until the declaring type is reached.
+     * This is the public entry point for this class.
      *
      * @param resolvedType unredirected type that has generic types already parameterized
      * @param declaringType a type that is somewhere in resolvedType's hierarchy used to find the target of the mapping
      */
     public static GenericsMapper gatherGenerics(ClassNode resolvedType, ClassNode declaringType) {
-        ClassNode ucandidate = resolvedType.redirect();
-        ClassNode rcandidate = resolvedType;
-        GenericsType[] ugts;
-        GenericsType[] rgts;
         GenericsMapper mapper = new GenericsMapper();
 
-        LinkedHashSet<ClassNode> uHierarchy = new LinkedHashSet<ClassNode>();
-        VariableScope.createTypeHierarchy(ucandidate, uHierarchy, false);
-        Iterator<ClassNode> uIter = uHierarchy.iterator();
+        ClassNode rcandidate = resolvedType;
+        ClassNode ucandidate = resolvedType.redirect();
+
         LinkedHashSet<ClassNode> rHierarchy = new LinkedHashSet<ClassNode>();
         VariableScope.createTypeHierarchy(rcandidate, rHierarchy, true);
         Iterator<ClassNode> rIter = rHierarchy.iterator();
+        LinkedHashSet<ClassNode> uHierarchy = new LinkedHashSet<ClassNode>();
+        VariableScope.createTypeHierarchy(ucandidate, uHierarchy, false);
+        Iterator<ClassNode> uIter = uHierarchy.iterator();
 
         // travel up the hierarchy
-        while (uIter.hasNext() && rIter.hasNext()) {
-            ucandidate = uIter.next();
+        while (rIter.hasNext() && uIter.hasNext()) {
             rcandidate = rIter.next();
+            ucandidate = uIter.next();
 
-            ugts = ucandidate.getGenericsTypes();
-            ugts = ugts == null ? VariableScope.NO_GENERICS : ugts;
-            rgts = rcandidate.getGenericsTypes();
-            rgts = rgts == null ? VariableScope.NO_GENERICS : rgts;
+            GenericsType[] rgts = getGenericsTypes(rcandidate);
+            GenericsType[] ugts = getGenericsTypes(ucandidate);
 
-            HashMap<String, ClassNode> resolved = new HashMap<String, ClassNode>(2, 1.0f);
-            // for each generics type add to list
-            for (int i = 0; i < rgts.length && i < ugts.length; i++) {
+            int n = Math.min(rgts.length, ugts.length);
+            Map<String, ClassNode> resolved = (n <= 0) ? Collections.EMPTY_MAP : new TreeMap<String, ClassNode>();
+            for (int i = 0; i < n; i += 1) {
                 // now try to resolve the parameter in the context of the
                 // most recently visited type. If it doesn't exist, then
                 // default to the resovled type
                 resolved.put(ugts[i].getName(), mapper.resolveParameter(rgts[i], 0));
             }
+            mapper.allGenerics.add(resolved);
 
-            mapper.allGenerics.push(resolved);
+            // don't need to travel up the whole hierarchy; stop at the declaring class
             if (rcandidate.getName().equals(declaringType.getName())) {
-                // don't need to travel up the whole hierarchy. We can stop at the declaring class
                 break;
             }
         }
@@ -87,8 +83,44 @@ public class GenericsMapper {
         return mapper;
     }
 
-    boolean hasGenerics() {
-        return !allGenerics.isEmpty() && allGenerics.peek().size() > 0;
+    public static GenericsMapper gatherGenerics(List<ClassNode> argumentTypes, ClassNode delegateOrThisType, MethodNode methodDeclaration) {
+        // GOAL: resolve return type of something like "static <T> Iterator<T> iterator(T[] array)"
+
+        // inspect owner type for generics
+        GenericsMapper mapper = gatherGenerics(delegateOrThisType, methodDeclaration.getDeclaringClass());
+
+        // inspect parameters for generics
+        GenericsType[] ugts = getGenericsTypes(methodDeclaration);
+        if (ugts.length > 0) {
+            Map<String, ClassNode> resolved;
+            // add method generics to the end of the chain
+            if (mapper.allGenerics.isEmpty() || (resolved = mapper.allGenerics.removeLast()).isEmpty()) {
+                resolved = new TreeMap<String, ClassNode>();
+            }
+            mapper.allGenerics.add(resolved);
+
+            // try to resolve each generics type by matching arguments to parameters
+            unresolved: for (GenericsType ugt : ugts) {
+                for (int i = 0, n = Math.min(argumentTypes.size(), methodDeclaration.getParameters().length); i < n; i += 1) {
+                    ClassNode rbt = GroovyUtils.getBaseType(argumentTypes.get(i));
+                    ClassNode ubt = GroovyUtils.getBaseType(methodDeclaration.getParameters()[i].getType());
+
+                    if (ubt.isGenericsPlaceHolder() && ugt.getName().equals(getGenericsTypes(ubt)[0].getName())) {
+                        resolved.put(ugt.getName(), rbt);
+                        continue unresolved;
+                    }
+
+                    GenericsMapper map = gatherGenerics(rbt, ubt); // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
+                    ClassNode rt = map.findParameter(ugt.getName(), null);
+                    if (rt != null) {
+                        resolved.put(ugt.getName(), rt);
+                        continue unresolved;
+                    }
+                }
+            }
+        }
+
+        return mapper;
     }
 
     /**
@@ -98,16 +130,14 @@ public class GenericsMapper {
      * @param depth ensure that we don't recur forever, bottom out after a certain depth
      */
     public ClassNode resolveParameter(GenericsType topGT, int depth) {
-        if (depth > 10) {
-            // don't recur forever
-            // FIXADE This problem is believed fixed. If this conidtional is never reached, then
-            // we should be able to delete this section.
-            Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core",
-                    "GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT));
+        if (allGenerics.isEmpty()) {
             return topGT.getType();
         }
 
-        if (allGenerics.isEmpty()) {
+        if (depth > 10) {
+            // don't recur forever
+            // FIXADE This problem is believed fixed. If this conidtional is never reached, then we should be able to delete this section.
+            Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core", "GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT));
             return topGT.getType();
         }
 
@@ -133,16 +163,39 @@ public class GenericsMapper {
         return origType;
     }
 
+    //--------------------------------------------------------------------------
+
+    /**
+     * Keeps track of all type parameterization up the type hierarchy.
+     */
+    private final LinkedList<Map<String, ClassNode>> allGenerics = new LinkedList<Map<String, ClassNode>>();
+
+    protected boolean hasGenerics() {
+        return !allGenerics.isEmpty() && !allGenerics.getLast().isEmpty();
+    }
+
+    protected static GenericsType[] getGenericsTypes(ClassNode classNode) {
+        GenericsType[] generics = GroovyUtils.getBaseType(classNode).getGenericsTypes();
+        if (generics == null) return VariableScope.NO_GENERICS;
+        return generics;
+    }
+
+    protected static GenericsType[] getGenericsTypes(MethodNode methodNode) {
+        GenericsType[] generics = methodNode.getGenericsTypes();
+        if (generics == null) return VariableScope.NO_GENERICS;
+        return generics;
+    }
+
     /**
      * finds the type of a parameter name in the highest level of the type hierarchy currently analyzed
      *
      * @param defaultType type to return if parameter name doesn't exist
      */
-    ClassNode findParameter(String parameterName, ClassNode defaultType) {
+    protected ClassNode findParameter(String parameterName, ClassNode defaultType) {
         if (allGenerics.isEmpty()) {
             return defaultType;
         }
-        ClassNode type = allGenerics.peek().get(parameterName);
+        ClassNode type = allGenerics.getLast().get(parameterName);
         if (type == null) {
             return defaultType;
         }
