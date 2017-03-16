@@ -790,7 +790,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
      * imports. Adding it to the array may result in extra type proposals. Not sure...
      */
     private void initializeImportArrays(GroovyCompilationUnitScope scope) {
-        int i, n = scope.imports.length, s, t;
+        int i, n = scope.imports != null ? scope.imports.length : 0, s, t;
         for (i = 0, s = 0, t = 0; i < n; i += 1) {
             if (!scope.imports[i].isStatic()) {
                 if (scope.imports[i].onDemand) {
