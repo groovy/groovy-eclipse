@@ -92,7 +92,7 @@ public class GroovyIndentationService {
      * last request, but a new instance will be created if the project has changed.
      */
     public static synchronized GroovyIndentationService get(IJavaProject project) {
-        if (lastIndenter != null && !project.equals(lastIndenter.project)) {
+        if (lastIndenter != null && project != null && !project.equals(lastIndenter.project)) {
             disposeLastImpl();
         }
         if (lastIndenter == null) {
