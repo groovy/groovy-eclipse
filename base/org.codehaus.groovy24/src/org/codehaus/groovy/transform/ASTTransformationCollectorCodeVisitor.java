@@ -210,26 +210,23 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
         if (transformClassNames.length == 0 && transformClasses.length == 0) {
-            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
-                    annotation.getClassNode().getName() + " does not specify any transform class names/classes", source));
-        }
-
-        if(transformClassNames.length > 0 && transformClasses.length > 0) {
-            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
-                    annotation.getClassNode().getName() +  " should specify transforms only by class names or by classes and not by both", source));
+            source.getErrorCollector().addError(new SimpleMessage(
+                    "@GroovyASTTransformationClass in " + annotation.getClassNode().getName() +
+                    " does not specify any transform class names/classes", source));
+        } else if (transformClassNames.length > 0 && transformClasses.length > 0) {
+            source.getErrorCollector().addError(new SimpleMessage(
+                    "@GroovyASTTransformationClass in " + annotation.getClassNode().getName() +
+                    " should specify transforms by class names or by classes, not by both", source));
         }
 
         for (String transformClass : transformClassNames) {
             try {
                 Class klass = transformLoader.loadClass(transformClass, false, true, false);
                 verifyAndAddTransform(annotation, klass);
-
             } catch (ClassNotFoundException e) {
-                source.getErrorCollector().addErrorAndContinue(
-                        new SimpleMessage(
-                                "Could not find class for Transformation Processor " + transformClass
-                                + " declared by " + annotation.getClassNode().getName(),
-                                source));
+                source.getErrorCollector().addErrorAndContinue(new SimpleMessage(
+                        "Could not find class for Transformation Processor "+ transformClass +
+                        " declared by " + annotation.getClassNode().getName(), source));
             }
         }
         for (Class klass : transformClasses) {

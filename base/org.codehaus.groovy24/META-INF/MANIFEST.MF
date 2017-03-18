@@ -3,12 +3,12 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy
 Bundle-Name: Groovy
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.4.9.qualifier
+Bundle-Version: 2.4.10.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  lib/bsf-2.4.0.jar,
  lib/ivy-2.4.0.jar,
- lib/groovy-all-2.4.9.jar
+ lib/groovy-all-2.4.10.jar
 Export-Package: groovy.beans,
  groovy.grape,
  groovy.inspect,

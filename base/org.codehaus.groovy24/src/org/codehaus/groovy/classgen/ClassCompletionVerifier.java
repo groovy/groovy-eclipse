@@ -55,7 +55,9 @@ import static groovyjarjarasm.asm.Opcodes.*;
  * </ul>
  */
 public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
-
+    private static final String[] INVALID_NAME_CHARS = {".", ":", "/", ";", "[", "<", ">"};
+    // the groovy.compiler.strictNames system property is experimental and may change default value or be removed in a future version of Groovy
+    private final boolean strictNames = Boolean.parseBoolean(System.getProperty("groovy.compiler.strictNames", "false"));
     private ClassNode currentClass;
     private SourceUnit source;
     private boolean inConstructor = false;
@@ -79,6 +81,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             checkAbstractMethodVisibility(node);
             checkClassForOverwritingFinal(node);
             checkMethodsForIncorrectModifiers(node);
+            checkMethodsForIncorrectName(node);
             checkMethodsForWeakerAccess(node);
             checkMethodsForOverridingFinal(node);
             checkNoAbstractMethodsNonabstractClass(node);
@@ -289,6 +292,22 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             if (!cn.isInterface()) {
                 // GRECLIPSE addError->addTypeError
                 addTypeError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
+            }
+        }
+    }
+
+    private void checkMethodsForIncorrectName(ClassNode cn) {
+        if (!strictNames) return;
+        List<MethodNode> methods = cn.getAllDeclaredMethods();
+        for (MethodNode mNode : methods) {
+            String name = mNode.getName();
+            if (name.equals("<init>") || name.equals("<clinit>")) continue;
+            // Groovy allows more characters than Character.isValidJavaIdentifier() would allow
+            // if we find a good way to encode special chars we could remove (some of) these checks
+            for (String ch : INVALID_NAME_CHARS) {
+                if (name.contains(ch)) {
+                    addError("You are not allowed to have '" + ch + "' in a method name", mNode);
+                }
             }
         }
     }
