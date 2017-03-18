@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.alltests;
+package org.codehaus.groovy.alltests
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.Test
+import junit.framework.TestSuite
 
-public class AllGroovyAndJDTTests {
-    public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite("All Groovy-Eclipse tests");
+final class AllGroovyAndJDTTests {
+    static Test suite() {
+        TestSuite suite = new TestSuite('All Groovy-Eclipse tests')
         // AGT must be first because it checks startup log contents
-        suite.addTest(AllGroovyTests.suite());
-        suite.addTest(GroovyJDTTests.suite());
-        suite.addTest(JavaJDTTests.suite());
-        return suite;
+        suite.addTest(AllGroovyTests.suite())
+        suite.addTest(GroovyJDTTests.suite())
+        suite.addTest(JavaJDTTests.suite())
+        return suite
     }
 }

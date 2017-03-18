@@ -124,7 +124,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         String contents = "def x = [] << ''; x";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        assertType(contents, start, end, "java.util.List<java.lang.String>");
+        assertType(contents, start, end, GroovyUtils.GROOVY_LEVEL < 24 ? "java.util.Collection<java.lang.String>" : "java.util.List<java.lang.String>");
     }
 
     // GRECLIPSE-1040
@@ -1098,6 +1098,24 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("col");
         int end = start + "col".length();
         assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void _testStaticMethod7() {
+        // Collections: public static final <T> List<T> singletonList(T)
+        String contents = "List<String> list = Collections.singletonList('')";
+        String toFind = "singletonList";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.String>");
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collections", "singletonList", DeclarationKind.METHOD);
+        assertEquals("First parameter type should be resolved", "java.lang.String", printTypeName(m.getParameters()[0].getType()));
+    }
+
+    public void _testStaticMethod8() { // no help from parameters
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "List<String> list = Collections.emptyList()";
+        String toFind = "emptyList";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.String>");
     }
 
     public void _testJira1718() throws Exception {

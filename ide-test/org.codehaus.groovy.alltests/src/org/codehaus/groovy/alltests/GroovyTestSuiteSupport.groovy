@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.alltests;
+package org.codehaus.groovy.alltests
 
-import org.codehaus.groovy.frameworkadapter.util.CompilerChooser;
-import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
+import org.codehaus.groovy.frameworkadapter.util.CompilerChooser
+import org.codehaus.groovy.frameworkadapter.util.ResolverActivator
 
-public class GroovyTestSuiteSupport {
+final class GroovyTestSuiteSupport {
 
-    private static boolean initialized = false;
+    private GroovyTestSuiteSupport() {}
 
-    public static CompilerChooser initializeCompilerChooser() {
+    private static boolean initialized = false
+
+    static CompilerChooser initializeCompilerChooser() {
         if (!initialized) {
-            ResolverActivator.getDefault().initializeChooser();
-            initialized = true;
+            ResolverActivator.default.initializeChooser()
+            initialized = true
         }
-        return ResolverActivator.getDefault().getChooser();
+        return ResolverActivator.default.chooser
     }
 }
