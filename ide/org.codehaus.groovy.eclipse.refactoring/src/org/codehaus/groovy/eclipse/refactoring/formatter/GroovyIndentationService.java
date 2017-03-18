@@ -15,7 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.*;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.EOF;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LBRACK;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LCURLY;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_else;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_for;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_if;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_while;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.LPAREN;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.NLS;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.RBRACK;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.RCURLY;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.RPAREN;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_END;
+import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_START;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,7 +92,7 @@ public class GroovyIndentationService {
      * last request, but a new instance will be created if the project has changed.
      */
     public static synchronized GroovyIndentationService get(IJavaProject project) {
-        if (lastIndenter != null && !lastIndenter.project.equals(project)) {
+        if (lastIndenter != null && !project.equals(lastIndenter.project)) {
             disposeLastImpl();
         }
         if (lastIndenter == null) {
