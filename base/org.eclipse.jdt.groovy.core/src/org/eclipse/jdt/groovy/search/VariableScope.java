@@ -660,7 +660,7 @@ public class VariableScope {
                 resolved.addAnnotations(method.getAnnotations());
             }
             resolved.setAnnotationDefault(method.hasAnnotationDefault());
-            resolved.setDeclaringClass(method.getDeclaringClass());
+            resolved.setDeclaringClass(resolveTypeParameterization(mapper, clone(method.getDeclaringClass())));
             resolved.setGenericsTypes(method.getGenericsTypes());
             resolved.setHasNoRealSourcePosition(method.hasNoRealSourcePosition());
             resolved.copyNodeMetaData(method);

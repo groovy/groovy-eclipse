@@ -1071,12 +1071,12 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testStaticMethod5() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return;
         String contents =
-                "class A { }\n" +
+                "class A {}\n" +
                 "class B extends A {}\n" +
                 "static <T extends A> T loadSomething(T t) {\n" +
-                "    return t\n" +
+                "  return t\n" +
                 "}\n" +
-                "def val = loadSomething(new B())\n";
+                "def val = loadSomething(new B())";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "B");
@@ -1100,7 +1100,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
-    public void _testStaticMethod7() {
+    public void testStaticMethod7() {
         // Collections: public static final <T> List<T> singletonList(T)
         String contents = "List<String> list = Collections.singletonList('')";
         String toFind = "singletonList";

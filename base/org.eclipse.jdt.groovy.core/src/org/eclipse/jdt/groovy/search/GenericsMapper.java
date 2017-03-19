@@ -91,7 +91,7 @@ public class GenericsMapper {
 
         // inspect parameters for generics
         GenericsType[] ugts = getGenericsTypes(methodDeclaration);
-        if (ugts.length > 0) {
+        if (ugts.length > 0 && argumentTypes != null) {
             Map<String, ClassNode> resolved;
             // add method generics to the end of the chain
             if (mapper.allGenerics.isEmpty() || (resolved = mapper.allGenerics.removeLast()).isEmpty()) {
@@ -100,21 +100,31 @@ public class GenericsMapper {
             mapper.allGenerics.add(resolved);
 
             // try to resolve each generics type by matching arguments to parameters
-            unresolved: for (GenericsType ugt : ugts) {
+            for (GenericsType ugt : ugts) {
                 for (int i = 0, n = Math.min(argumentTypes.size(), methodDeclaration.getParameters().length); i < n; i += 1) {
                     ClassNode rbt = GroovyUtils.getBaseType(argumentTypes.get(i));
                     ClassNode ubt = GroovyUtils.getBaseType(methodDeclaration.getParameters()[i].getType());
 
-                    if (ubt.isGenericsPlaceHolder() && ugt.getName().equals(getGenericsTypes(ubt)[0].getName())) {
-                        resolved.put(ugt.getName(), rbt);
-                        continue unresolved;
-                    }
-
-                    GenericsMapper map = gatherGenerics(rbt, ubt); // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
-                    ClassNode rt = map.findParameter(ugt.getName(), null);
-                    if (rt != null) {
-                        resolved.put(ugt.getName(), rt);
-                        continue unresolved;
+                    // rbt could be "String" and ubt could be "T"
+                    if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(ugt.getName())) {
+                        saveParameterType(resolved, ugt.getName(), rbt);
+                    } else {
+                        // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
+                        GenericsType[] ubt_gts = getGenericsTypes(ubt);
+                        for (int j = 0; j < ubt_gts.length; j += 1) {
+                            if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[0].getName().equals(ugt.getName())) {
+                              //System.err.println(rbt.toString(false) + " --> " + ubt.toString(false));
+                                // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
+                                String key = getGenericsTypes(ubt.redirect())[j].getName();
+                                GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
+                                ClassNode rt = map.findParameter(key, null);
+                                if (rt != null) {
+                                    saveParameterType(resolved, ugt.getName(), rt);
+                                }
+                                break;
+                            }
+                        }
+                        // TODO: What about "Foo<Bar<T>>", "Foo<? extends T>", or "Foo<? super T>"?
                     }
                 }
             }
@@ -124,8 +134,7 @@ public class GenericsMapper {
     }
 
     /**
-     * takes this type or type parameter and determines what its type should be based on the type parameter resolution in the top
-     * level of the mapper
+     * takes this type or type parameter and determines what its type should be based on the type parameter resolution in the top level of the mapper
      *
      * @param depth ensure that we don't recur forever, bottom out after a certain depth
      */
@@ -165,9 +174,7 @@ public class GenericsMapper {
 
     //--------------------------------------------------------------------------
 
-    /**
-     * Keeps track of all type parameterization up the type hierarchy.
-     */
+    /** Keeps track of all type parameterization up the type hierarchy. */
     private final LinkedList<Map<String, ClassNode>> allGenerics = new LinkedList<Map<String, ClassNode>>();
 
     protected boolean hasGenerics() {
@@ -200,5 +207,16 @@ public class GenericsMapper {
             return defaultType;
         }
         return type;
+    }
+
+    protected static void saveParameterType(Map<String, ClassNode> map, String key, ClassNode val) {
+        ClassNode old = map.remove(key);
+        if (old != null && !old.equals(val) && !VariableScope.OBJECT_CLASS_NODE.equals(old) &&
+                !VariableScope.OBJECT_CLASS_NODE.equals(val) && SimpleTypeLookup.isTypeCompatible(old, val) != Boolean.FALSE) {
+            // find the LUB of val and value and save it to val
+            System.err.println("Need to find LUB of " + val.toString(false) + " and " + old.toString(false));
+            return;
+        }
+        map.put(key, val);
     }
 }

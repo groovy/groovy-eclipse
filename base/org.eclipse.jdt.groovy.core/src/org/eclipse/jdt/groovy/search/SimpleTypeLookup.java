@@ -313,6 +313,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     closestMatch = candidates.get(0);
                     confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
+
+                closestMatch = VariableScope.resolveTypeParameterization(
+                    GenericsMapper.gatherGenerics(scope.getMethodCallArgumentTypes(), declaringType, closestMatch), closestMatch);
                 return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
             }
         }
@@ -352,15 +355,24 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (declaration != null) {
             type = getTypeFromDeclaration(declaration, declaringType);
             realDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaringType);
+
+            GenericsMapper mapper;
+            if (!(declaration instanceof MethodNode)) {
+                mapper = GenericsMapper.gatherGenerics(declaringType, realDeclaringType.redirect());
+                type = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(type));
+            } else {
+                MethodNode method = (MethodNode) declaration;
+                mapper = GenericsMapper.gatherGenerics(scope.getMethodCallArgumentTypes(), declaringType, method);
+                declaration = method = VariableScope.resolveTypeParameterization(mapper, method);
+                realDeclaringType = method.getDeclaringClass();
+                type = method.getReturnType();
+            }
         } else if ("this".equals(name)) {
             // Fix for 'this' as property of ClassName
             declaration = declaringType;
             type = declaringType;
             realDeclaringType = declaringType;
-        } else if (isPrimaryExpression &&
-            // make everything from the scopes available
-                (varInfo = scope.lookupName(name)) != null) {
-
+        } else if (isPrimaryExpression && (varInfo = scope.lookupName(name)) != null) { // make everything from the scopes available
             // now try to find the declaration again
             type = varInfo.type;
             realDeclaringType = varInfo.declaringType;
@@ -664,7 +676,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @return class node with generics replaced by actual types
      */
     protected static ClassNode getTypeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
-        ClassNode typeOfDeclaration, declaringType = getDeclaringTypeFromDeclaration(declaration, resolvedType);
+        ClassNode typeOfDeclaration;
         if (declaration instanceof PropertyNode) {
             FieldNode field = ((PropertyNode) declaration).getField();
             if (field != null) {
@@ -687,13 +699,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             typeOfDeclaration = VariableScope.OBJECT_CLASS_NODE;
         }
-
-        // now try to resolve generics
-        // travel up the hierarchy and look for more generics
-        // also look for generics on methods...(not doing this yet...)
-        GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedType, declaringType.redirect());
-        ClassNode resolvedTypeOfDeclaration = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(typeOfDeclaration));
-        return resolvedTypeOfDeclaration;
+        return typeOfDeclaration;
     }
 
     protected static ClassNode getDeclaringTypeFromDeclaration(ASTNode declaration, ClassNode resolvedTypeOfDeclaration) {
