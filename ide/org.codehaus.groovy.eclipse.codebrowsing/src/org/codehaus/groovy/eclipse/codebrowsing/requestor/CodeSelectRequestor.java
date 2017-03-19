@@ -638,24 +638,20 @@ public class CodeSelectRequestor implements ITypeRequestor {
         // check for methods first, then fields, and finally accessor variants of the name
 
         IMethod closestMatch = null;
-        methodsIteration: for (IMethod method : type.getMethods()) {
+        next_method: for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
                 closestMatch = method;
-                if (parameters != null) {
-                    // prefer methods with the same parameter list
-                    String[] params = method.getParameterTypes();
-                    final int n = params.length;
-                    if (n == parameters.length) {
-                        for (int i = 0; i < n; i += 1) {
-                            String maybeMethodParameterSignature = removeGenerics(params[i]);
-                            String originalMethodSignature = Signature.createTypeSignature(
-                                parameters[i].getType().getNameWithoutPackage(), type.isBinary());
-                            if (!originalMethodSignature.equals(maybeMethodParameterSignature)) {
-                                continue methodsIteration;
-                            }
+                // prefer methods with the same parameter list
+                if (parameters.length == method.getParameterTypes().length) {
+                    for (int i = 0; i < parameters.length; i += 1) {
+                        String jdtMethodParam = removeGenerics(method.getParameterTypes()[i]);
+                        String astMethodParam = Signature.createTypeSignature(jdtMethodParam.contains(".")
+                            ? parameters[i].getType().getName() : parameters[i].getType().getNameWithoutPackage(), type.isBinary());
+                        if (!astMethodParam.equals(jdtMethodParam)) {
+                            continue next_method;
                         }
-                        return method;
                     }
+                    return method;
                 }
             }
         }
