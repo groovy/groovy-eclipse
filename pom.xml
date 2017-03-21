@@ -50,7 +50,7 @@
 			When not running on bamboo, singing is disabled by default.
 		-->
 		<signing.skip>true</signing.skip>
-		<signing.alias>vmware</signing.alias>
+		<signing.alias>pivotal</signing.alias>
 		<signing.keystore></signing.keystore>
 		<signing.store.password></signing.store.password>
 		<signing.key.password></signing.key.password>
@@ -376,10 +376,10 @@
 			<id>bamboo-signing</id>
 			<properties>
 				<signing.skip>false</signing.skip>
-				<signing.alias>vmware</signing.alias>
+				<signing.alias>pivotal</signing.alias>
 				<signing.store.password>${env.bamboo_signing_store_password}</signing.store.password>
 				<signing.key.password>${env.bamboo_signing_key_password}</signing.key.password>
-				<signing.keystore>~/.keytool/springsource.jks</signing.keystore>
+				<signing.keystore>~/.keytool/pivotal.jks</signing.keystore>
 			</properties>
 		</profile>
 
