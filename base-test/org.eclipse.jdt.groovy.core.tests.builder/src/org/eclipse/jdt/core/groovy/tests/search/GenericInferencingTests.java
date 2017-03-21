@@ -1094,7 +1094,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "    }\n" +
                 "    def col = loadSomething(new B())\n" +
                 "    def m() { col }" +
-                "}\n";
+                "}";
         int start = contents.lastIndexOf("col");
         int end = start + "col".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -1106,8 +1106,8 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "singletonList";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.String>");
-        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collections", "singletonList", DeclarationKind.METHOD);
-        assertEquals("First parameter type should be resolved", "java.lang.String", printTypeName(m.getParameters()[0].getType()));
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collections", toFind, DeclarationKind.METHOD);
+        assertEquals("Parameter type should be resolved", "java.lang.String", printTypeName(m.getParameters()[0].getType()));
     }
 
     public void _testStaticMethod8() { // no help from parameters
@@ -1116,6 +1116,45 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "emptyList";
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.String>");
+    }
+
+    public void testStaticMethod9() {
+        // Collection: public boolean removeAll(Collection<?>)
+        String contents = "List<String> list = ['1','2']; list.removeAll(['1'])";
+        String toFind = "removeAll";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Boolean");
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
+        assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.Object>", printTypeName(m.getParameters()[0].getType()));
+    }
+
+    public void testStaticMethod10() {
+        // Collection: public boolean addAll(Collection<? extends E>)
+        String contents = "List<String> list = ['1','2']; list.addAll(['3'])";
+        String toFind = "addAll";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Boolean");
+        MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
+        assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.String>", printTypeName(m.getParameters()[0].getType()));
+    }
+
+    public void testStaticMethodOverloads() {
+        String contents =
+                "class Preconditions {\n" +
+                "  static <T> T checkNotNull(T ref) { null }\n" +
+                "  static <T> T checkNotNull(T ref, Object errorMessage) { null }\n" +
+                "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1) { null }\n" +
+                "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1, Object arg2) { null }\n" +
+                "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object... errorMessageArgs) { null }\n" +
+                "}\n" +
+                "String s = Preconditions.checkNotNull('blah', 'Should not be null')";
+
+        String toFind = "checkNotNull";
+        int start = contents.lastIndexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String"); // return type should be resolved
+        MethodNode m = assertDeclaration(contents, start, end, "Preconditions", toFind, DeclarationKind.METHOD);
+        assertEquals("Parameter type should be resolved", "java.lang.String", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("Second overload should be selected", "java.lang.Object", printTypeName(m.getParameters()[1].getType()));
     }
 
     public void _testJira1718() throws Exception {

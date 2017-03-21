@@ -15,9 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
-import static org.eclipse.jdt.core.Signature.createTypeSignature;
-import static org.eclipse.jdt.core.Signature.getSimpleName;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -30,9 +27,11 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -150,6 +149,18 @@ public abstract class GroovyUtils {
         return node;
     }
 
+    public static GenericsType[] getGenericsTypes(ClassNode classNode) {
+        GenericsType[] generics = getBaseType(classNode).getGenericsTypes();
+        if (generics == null) return GenericsType.EMPTY_ARRAY;
+        return generics;
+    }
+
+    public static GenericsType[] getGenericsTypes(MethodNode methodNode) {
+        GenericsType[] generics = methodNode.getGenericsTypes();
+        if (generics == null) return GenericsType.EMPTY_ARRAY;
+        return generics;
+    }
+
     public static List<ClassNode> getParameterTypes(Parameter... params) {
         final int n = params.length;
         if (n == 0) return Collections.emptyList();
@@ -166,35 +177,59 @@ public abstract class GroovyUtils {
      *
      * @see org.eclipse.jdt.core.Signature
      */
-    public static String getTypeSignature(ClassNode node, boolean qualified) {
+    public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
+        StringBuilder builder = new StringBuilder(getTypeSignatureWithoutGenerics(node, qualified, resolved));
+
+        if (getBaseType(node).isUsingGenerics() && !getBaseType(node).isGenericsPlaceHolder()) {
+            GenericsType[] generics = getGenericsTypes(node);
+            if (generics.length > 0) {
+                builder.setCharAt(builder.length() - 1, Signature.C_GENERIC_START);
+                for (GenericsType gen : generics) {
+                    if (gen.isPlaceholder() || !gen.isWildcard()) {
+                        // TODO: Can lower bound or upper bounds exist in this case?
+                        builder.append(getTypeSignature(gen.getType(), qualified, resolved));
+                    } else if (gen.getLowerBound() != null) {
+                        builder.append(Signature.C_SUPER).append(getTypeSignature(gen.getLowerBound(), qualified, resolved));
+                    } else if (gen.getUpperBounds() != null && gen.getUpperBounds().length > 0) { // TODO: handle more than one
+                        builder.append(Signature.C_EXTENDS).append(getTypeSignature(gen.getUpperBounds()[0], qualified, resolved));
+                    } else {
+                        builder.append(Signature.C_STAR);
+                    }
+                }
+                builder.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
+            }
+        }
+
+        return builder.toString();
+    }
+
+    public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
         StringBuilder builder = new StringBuilder();
         while (node.isArray()) {
             builder.append('[');
             node = node.getComponentType();
         }
-        String name = qualified ? node.getName() : getSimpleName(node.getName());
+
+        String name;
+        if (node.isGenericsPlaceHolder()) {
+            // use "T" instead of "Object"
+            name = node.getUnresolvedName();
+        } else if (!qualified) {
+            name = node.getNameWithoutPackage();
+            if (name.indexOf('$') > 0) {
+                name = node.getUnresolvedName();
+            }
+        } else {
+            name = node.getName();
+            if (name.indexOf('$') > 0) {
+                // TODO: Should it be "java.util.Map$Entry" or "java.util.Map.Entry"?
+            }
+        }
         assert !name.startsWith("[") && !name.contains("<") && !name.endsWith(";");
 
-        builder.append(createTypeSignature(name, false));
-
-        if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-            builder.setCharAt(builder.length() - 1, '<');
-            for (GenericsType gen : node.getGenericsTypes()) {
-                if (gen.isPlaceholder()) {
-                    builder.append(createTypeSignature(gen.getName(), false));
-                    // TODO: Can lower bound or upper bounds exist in this case?
-                } else if (!gen.isWildcard()) {
-                    builder.append(getTypeSignature(gen.getType(), qualified));
-                } else if (gen.getLowerBound() != null) {
-                    builder.append('-').append(getTypeSignature(gen.getLowerBound(), qualified));
-                } else if (gen.getUpperBounds() != null && gen.getUpperBounds().length > 0) {
-                    builder.append('+').append(getTypeSignature(gen.getUpperBounds()[0], qualified));
-                } else {
-                    builder.append('*');
-                }
-            }
-            builder.append(">;");
-        }
+        final int pos = builder.length();
+        builder.append(Signature.createTypeSignature(name, resolved));
+        if (resolved && node.isGenericsPlaceHolder()) builder.setCharAt(pos, 'T');
 
         return builder.toString();
     }

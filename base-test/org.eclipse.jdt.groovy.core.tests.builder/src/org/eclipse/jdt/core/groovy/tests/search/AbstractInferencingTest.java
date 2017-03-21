@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -323,7 +324,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
         String arraySuffix = "";
         while (type.getComponentType() != null) {
-            arraySuffix+="[]";
+            arraySuffix += "[]";
             type = type.getComponentType();
         }
         String name = type.getName() + arraySuffix;
@@ -331,15 +332,33 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     }
 
     public static String printGenerics(ClassNode type) {
-        if (type.getGenericsTypes() == null || type.getGenericsTypes().length == 0) {
+        GenericsType[] generics = GroovyUtils.getGenericsTypes(type);
+        int n = generics.length;
+        if (n == 0) {
             return "";
         }
         StringBuilder sb = new StringBuilder();
         sb.append('<');
-        for (int i = 0; i < type.getGenericsTypes().length; i++) {
-            GenericsType gt = type.getGenericsTypes()[i];
-            sb.append(printTypeName(gt.getType()));
-            if (i < type.getGenericsTypes().length-1) {
+        for (int i = 0; i < n; i += 1) {
+            GenericsType gt = generics[i];
+            if (gt.isWildcard()) {
+                sb.append('?');
+            } else if (gt.isPlaceholder()) {
+                sb.append(gt.getName());
+            } else {
+                sb.append(printTypeName(gt.getType()));
+            }
+            if (gt.getLowerBound() != null) {
+                sb.append(" super ");
+                sb.append(printTypeName(gt.getLowerBound()));
+            } else if (gt.getUpperBounds() != null) {
+                sb.append(" extends ");
+                for (ClassNode ub : gt.getUpperBounds()) {
+                    sb.append(printTypeName(ub)).append(" & ");
+                }
+                sb.setLength(sb.length() - 3); // remove trailer
+            }
+            if (i < n - 1) {
                 sb.append(',');
             }
         }

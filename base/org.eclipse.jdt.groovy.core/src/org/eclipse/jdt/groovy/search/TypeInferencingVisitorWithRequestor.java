@@ -103,6 +103,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
@@ -145,7 +146,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public boolean DEBUG = false;
 
     // shared instances for several method checks below
-    private static final String[] NO_PARAMS = new String[0];
+    private static final String[] NO_PARAMS = CharOperation.NO_STRINGS;
     private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
 
     /**
@@ -2208,11 +2209,11 @@ assert primaryExprType != null && dependentExprType != null;
                         continue;
                     }
                     inner: for (int i = 0, n = groovyParams.length; i < n; i += 1) {
-                        String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false);
+                        String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false, false);
                         if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
                             continue inner;
                         }
-                        String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true);
+                        String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true, false);
                         if (!groovyClassType.equals(jdtParamTypes[i])) {
                             continue outer;
                         }
@@ -2240,11 +2241,11 @@ assert primaryExprType != null && dependentExprType != null;
                         continue;
                     }
                     inner: for (int i = 0, n = groovyParams.length; i < n; i += 1) {
-                        String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false);
+                        String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false, false);
                         if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
                             continue inner;
                         }
-                        String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true);
+                        String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true, false);
                         if (!groovyClassType.equals(jdtParamTypes[i])) {
                             continue outer;
                         }

@@ -61,8 +61,8 @@ public class GenericsMapper {
             rcandidate = rIter.next();
             ucandidate = uIter.next();
 
-            GenericsType[] rgts = getGenericsTypes(rcandidate);
-            GenericsType[] ugts = getGenericsTypes(ucandidate);
+            GenericsType[] rgts = GroovyUtils.getGenericsTypes(rcandidate);
+            GenericsType[] ugts = GroovyUtils.getGenericsTypes(ucandidate);
 
             int n = Math.min(rgts.length, ugts.length);
             Map<String, ClassNode> resolved = (n <= 0) ? Collections.EMPTY_MAP : new TreeMap<String, ClassNode>();
@@ -90,7 +90,7 @@ public class GenericsMapper {
         GenericsMapper mapper = gatherGenerics(delegateOrThisType, methodDeclaration.getDeclaringClass());
 
         // inspect parameters for generics
-        GenericsType[] ugts = getGenericsTypes(methodDeclaration);
+        GenericsType[] ugts = GroovyUtils.getGenericsTypes(methodDeclaration);
         if (ugts.length > 0 && argumentTypes != null) {
             Map<String, ClassNode> resolved;
             // add method generics to the end of the chain
@@ -110,12 +110,12 @@ public class GenericsMapper {
                         saveParameterType(resolved, ugt.getName(), rbt);
                     } else {
                         // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
-                        GenericsType[] ubt_gts = getGenericsTypes(ubt);
+                        GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
                         for (int j = 0; j < ubt_gts.length; j += 1) {
                             if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[0].getName().equals(ugt.getName())) {
                               //System.err.println(rbt.toString(false) + " --> " + ubt.toString(false));
                                 // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                                String key = getGenericsTypes(ubt.redirect())[j].getName();
+                                String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
                                 GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
                                 ClassNode rt = map.findParameter(key, null);
                                 if (rt != null) {
@@ -179,18 +179,6 @@ public class GenericsMapper {
 
     protected boolean hasGenerics() {
         return !allGenerics.isEmpty() && !allGenerics.getLast().isEmpty();
-    }
-
-    protected static GenericsType[] getGenericsTypes(ClassNode classNode) {
-        GenericsType[] generics = GroovyUtils.getBaseType(classNode).getGenericsTypes();
-        if (generics == null) return VariableScope.NO_GENERICS;
-        return generics;
-    }
-
-    protected static GenericsType[] getGenericsTypes(MethodNode methodNode) {
-        GenericsType[] generics = methodNode.getGenericsTypes();
-        if (generics == null) return VariableScope.NO_GENERICS;
-        return generics;
     }
 
     /**

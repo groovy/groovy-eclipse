@@ -41,6 +41,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMet
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceType;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -53,6 +54,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
@@ -68,9 +70,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Type requestor for code selection (i.e., hovers and open declaration).
- *
- * @author Andrew Eisenberg
- * @created Nov 4, 2009
  */
 public class CodeSelectRequestor implements ITypeRequestor {
 
@@ -263,8 +262,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             start = ((VariableExpression) var).getStart();
         }
 
-        // be compatible between 3.6 and 3.7+
-        String signature = Signature.createTypeSignature(createGenericsAwareName(type, true), false);
+        String signature = GroovyUtils.getTypeSignature(type, false, false);
         return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), start, signature);
     }
 
@@ -493,55 +491,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     /**
-     * Creates the type signature for local variables
-     */
-    private String createGenericsAwareName(ClassNode node, boolean useSimple) {
-        StringBuilder sb = new StringBuilder();
-        String name = node.getName();
-        StringBuilder sbArr;
-        if (name.charAt(0) == '[') {
-            sbArr = new StringBuilder();
-            int arrayCount = 0;
-            while (name.charAt(arrayCount) == '[') {
-                sbArr.append("[]");
-                node = node.getComponentType();
-                arrayCount++;
-            }
-        } else {
-            sbArr = null;
-        }
-
-        if (useSimple) {
-            sb.append(node.getNameWithoutPackage());
-        } else {
-            sb.append(node.getName());
-        }
-
-        // recur down the generics
-        GenericsType[] genericsTypes = node.getGenericsTypes();
-        if (genericsTypes != null && genericsTypes.length > 0) {
-            sb.append('<');
-            for (GenericsType gt : genericsTypes) {
-                ClassNode genericsType = gt.getType();
-                // determine whether we should use the name of the type parameter
-                // or the name of the resolved type
-                if (genericsType == null || !genericsType.getName().equals(gt.getName())) {
-                    sb.append(useSimple? genericsType.getNameWithoutPackage() : genericsType.getName());
-                } else {
-                    sb.append(createGenericsAwareName(genericsType, useSimple));
-                }
-                sb.append(',');
-            }
-            sb.replace(sb.length() - 1, sb.length(), ">");
-        }
-        if (sbArr != null) {
-            sb.append(sbArr);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Creates the unique key for classes, fields and methods
+     * Creates the unique key for classes, fields and methods.
      */
     private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IJavaElement maybeRequested) {
         if (resolvedDeclaringType == null) {
@@ -550,65 +500,96 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 resolvedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
             }
         }
-        StringBuilder sb = new StringBuilder();
         if (node instanceof PropertyNode) {
             node = ((PropertyNode) node).getField();
         }
+
+        StringBuilder sb = new StringBuilder();
+
         if (node instanceof FieldNode) {
-            return createUniqueKeyForField((FieldNode) node, resolvedType, resolvedDeclaringType).toString();
+            appendUniqueKeyForField(sb, (FieldNode) node, resolvedType, resolvedDeclaringType);
         } else if (node instanceof MethodNode) {
             if (maybeRequested.getElementType() == IJavaElement.FIELD) {
                 // this is likely a generated getter or setter
-                return createUniqueKeyForGeneratedAccessor((MethodNode) node, resolvedType, resolvedDeclaringType, (IField) maybeRequested).toString();
+                appendUniqueKeyForGeneratedAccessor(sb, (MethodNode) node, resolvedType, resolvedDeclaringType, (IField) maybeRequested);
             } else {
-                return createUniqueKeyForMethod((MethodNode) node, resolvedType, resolvedDeclaringType).toString();
+                appendUniqueKeyForMethod(sb, (MethodNode) node, resolvedType, resolvedDeclaringType);
             }
         } else if (node instanceof ClassNode) {
-            return createUniqueKeyForClass(resolvedType, resolvedDeclaringType).toString();
+            appendUniqueKeyForClass(sb, resolvedType, resolvedDeclaringType);
         }
+
         return sb.toString();
     }
 
-    private StringBuilder createUniqueKeyForMethod(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
-        StringBuilder sb = new StringBuilder();
-        ClassNode declaringClass = node.getDeclaringClass();
-        sb.append(createUniqueKeyForClass(declaringClass, resolvedDeclaringType));
-        String name = node.getName();
-        sb.append('.').append(name.equals("<init>") ? declaringClass.getNameWithoutPackage() : name);
-        sb.append('(');
-        if (node.getParameters() != null) {
-            for (Parameter param : node.getParameters()) {
-                ClassNode paramType = param.getType() != null ? param.getType() : VariableScope.OBJECT_CLASS_NODE;
-                sb.append(createUniqueKeyForClass(paramType, resolvedDeclaringType));
+    private void appendUniqueKeyForField(StringBuilder sb, FieldNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
+        appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
+        sb.append('.').append(node.getName()).append(')');
+        appendUniqueKeyForResolvedClass(sb, resolvedType);
+    }
+
+    private void appendUniqueKeyForMethod(StringBuilder sb, MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
+        // TODO: This method does not handle capture types like Java does; example for Plain.class.newInstance():
+        // LPlain;&Ljava/lang/Class<!Ljava/lang/Class;{0}+LPlain;152;>;.newInstance()!+LPlain;|Ljava/lang/InstantiationException;|Ljava/lang/IllegalAccessException;
+
+        // declaring type
+        appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
+
+        // method name
+        String methodName = node.getName();
+        sb.append(Signature.C_DOT).append(methodName.equals("<init>") ? node.getDeclaringClass().getNameWithoutPackage() : methodName);
+
+        // generic types
+        GenericsType[] generics = GroovyUtils.getGenericsTypes(node);
+        if (generics.length > 0) {
+            sb.append(Signature.C_GENERIC_START);
+            for (GenericsType gt : generics) {
+                appendUniqueKeyForGenericsType(sb, gt);
+            }
+            sb.append(Signature.C_GENERIC_END);
+        }
+
+        // parameters
+        sb.append(Signature.C_PARAM_START);
+        Parameter[] parameters = node.getOriginal().getParameters();
+        if (parameters != null) {
+            for (Parameter param : parameters) {
+                ClassNode paramType = param.getType();
+                appendUniqueKeyForClass(sb, paramType, resolvedDeclaringType);
             }
         }
-        sb.append(')');
-        sb.append(createUniqueKeyForResolvedClass(resolvedType));
-        return sb;
+        sb.append(Signature.C_PARAM_END);
+
+        // return type
+        appendUniqueKeyForClass(sb, node.getOriginal().getReturnType(), resolvedDeclaringType);
+
+        // generic type resolution
+        if (generics.length > 0) {
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(GroovyUtils.getParameterTypes(node.getParameters()), resolvedDeclaringType, node.getOriginal());
+
+            sb.append('%');
+            sb.append(Signature.C_GENERIC_START);
+            for (GenericsType gt : generics) {
+                ClassNode rt = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(gt.getType()));
+                appendUniqueKeyForResolvedClass(sb, rt);
+            }
+            sb.append(Signature.C_GENERIC_END);
+        }
+
+        // exceptions
+        if (node.getExceptions() != null) {
+            for (ClassNode exception : node.getExceptions()) {
+                sb.append(Signature.C_INTERSECTION);
+                appendUniqueKeyForClass(sb, exception, resolvedDeclaringType);
+            }
+        }
     }
 
-    private StringBuilder createUniqueKeyForField(FieldNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
-        sb.append('.').append(node.getName()).append(')');
-        sb.append(createUniqueKeyForResolvedClass(resolvedType));
-        return sb;
-    }
-
-    private StringBuilder createUniqueKeyForGeneratedAccessor(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
+    private void appendUniqueKeyForGeneratedAccessor(StringBuilder sb, MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
+        appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
         sb.append('.').append(actualField.getElementName()).append(')');
         ClassNode typeOfField = node.getName().startsWith("set")  && node.getParameters() != null && node.getParameters().length > 0 ? node.getParameters()[0].getType(): resolvedType;
-        sb.append(createUniqueKeyForResolvedClass(typeOfField));
-        return sb;
-    }
-
-    private StringBuilder createUniqueKeyForResolvedClass(ClassNode resolvedType) {
-        if (resolvedType.getName().equals("java.lang.Void")) {
-            resolvedType = VariableScope.VOID_CLASS_NODE;
-        }
-        return new StringBuilder(Signature.createTypeSignature(createGenericsAwareName(resolvedType, false/*fully qualified*/), true/*must resolve*/).replace('.', '/'));
+        appendUniqueKeyForResolvedClass(sb, typeOfField);
     }
 
     /**
@@ -617,14 +598,31 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * @param unresolvedType unresolved type whose type parameters need to be resolved
      * @param resolvedDeclaringType the resolved type that is the context in which to resolve it.
      */
-    private StringBuilder createUniqueKeyForClass(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
+    private void appendUniqueKeyForClass(StringBuilder sb, ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
         GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, resolvedDeclaringType.redirect());
         ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(unresolvedType));
-        return createUniqueKeyForResolvedClass(resolvedType);
+        appendUniqueKeyForResolvedClass(sb, resolvedType);
     }
 
-    private ClassNode removeArray(ClassNode declaration) {
-        return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
+    private void appendUniqueKeyForResolvedClass(StringBuilder sb, ClassNode resolvedType) {
+        String signature = GroovyUtils.getTypeSignature(resolvedType, true, true);
+
+        sb.append(signature.replace('.', '/'));
+    }
+
+    private void appendUniqueKeyForGenericsType(StringBuilder sb, GenericsType gt) {
+        String[] bounds = CharOperation.NO_STRINGS;
+        if (gt.getLowerBound() != null) {
+            ClassNode lb = gt.getLowerBound();
+            bounds = (String[]) ArrayUtils.add(bounds, GroovyUtils.getTypeSignature(lb, true, true));
+        } else if (gt.getUpperBounds() != null) {
+            for (ClassNode ub : gt.getUpperBounds()) {
+                bounds = (String[]) ArrayUtils.add(bounds, GroovyUtils.getTypeSignature(ub, true, true));
+            }
+        }
+        String signature = Signature.createTypeParameterSignature(gt.getName(), bounds);
+
+        sb.append(signature.replace('.', '/'));
     }
 
     private IJavaElement findElement(IType type, String text, Parameter[] parameters) throws JavaModelException {
@@ -643,10 +641,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 closestMatch = method;
                 // prefer methods with the same parameter list
                 if (parameters.length == method.getParameterTypes().length) {
-                    for (int i = 0; i < parameters.length; i += 1) {
+                    for (int i = 0, n = parameters.length; i < n; i += 1) {
+                        // remove generics from the type signatures to make matching simpler
                         String jdtMethodParam = removeGenerics(method.getParameterTypes()[i]);
-                        String astMethodParam = Signature.createTypeSignature(jdtMethodParam.contains(".")
-                            ? parameters[i].getType().getName() : parameters[i].getType().getNameWithoutPackage(), type.isBinary());
+                        String astMethodParam = GroovyUtils.getTypeSignatureWithoutGenerics(
+                            parameters[i].getOriginType(), jdtMethodParam.indexOf('.') > 0, type.isBinary());
                         if (!astMethodParam.equals(jdtMethodParam)) {
                             continue next_method;
                         }
@@ -684,7 +683,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return null;
     }
 
-    private String removeGenerics(String param) {
+    private static ClassNode removeArray(ClassNode declaration) {
+        while (declaration.getComponentType() != null) {
+            declaration = declaration.getComponentType();
+        }
+        return declaration;
+    }
+
+    private static String removeGenerics(String param) {
         // TODO: Check for nested generics
         int genericStart = param.indexOf('<');
         if (genericStart > 0) {
@@ -693,7 +699,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return param;
     }
 
-    private String extractPrefix(String text) {
+    private static String extractPrefix(String text) {
         if (text.startsWith("is")) {
             if (text.length() > 2) {
                 return "is";

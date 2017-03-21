@@ -39,13 +39,13 @@ public class StaticInferencingTests extends AbstractInferencingTest {
     }
     public void testClassReference2() throws Exception {
         String contents = "String.class";
-        assertType(contents, "java.lang.Class<java.lang.Object<T>>");  // should be String, not object
+        assertType(contents, "java.lang.Class<T extends java.lang.Object>");  // should be String, not object
     }
     public void testClassReference3() throws Exception {
         String contents = "String.getClass()";
         int start = contents.indexOf("getClass");
         int end = start + "getClass".length();
-        assertType(contents, start, end, "java.lang.Class<java.lang.Object>");  // should be String, not object
+        assertType(contents, start, end, "java.lang.Class<? extends java.lang.Object>");  // should be String, not object
     }
     public void testClassReference4() throws Exception {
         String contents = "String.class.getCanonicalName()";

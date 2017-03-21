@@ -1021,7 +1021,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         String contents = "first {\n second {\n owner } }";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
-        assertType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>");
+        assertType(contents, start, end, "groovy.lang.Closure<V extends java.lang.Object>");
     }
 
     public void testInClosure3() {
@@ -1187,7 +1187,7 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "}";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
-        assertDeclaringType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>", false);
+        assertDeclaringType(contents, start, end, "groovy.lang.Closure<V extends java.lang.Object>", false);
     }
 
     // Unknown references should have the declaring type of the enclosing method
@@ -1745,7 +1745,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         // in the groovy AST, this is all one ast expression node (a class expression)
         int textStart = contents.indexOf("String.class");
         int textEnd = textStart + "String.class".length();
-        assertDeclaringType(contents, textStart, textEnd, "java.lang.Class<java.lang.Object<T>>", false, false);
+        assertDeclaringType(contents, textStart, textEnd, "java.lang.Class<T extends java.lang.Object>", false, false);
     }
 
     public void testMultiDecl1() {
