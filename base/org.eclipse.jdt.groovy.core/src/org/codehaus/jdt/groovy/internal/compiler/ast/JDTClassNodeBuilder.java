@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,8 +45,6 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
  * code structure from Java5 as closely as we can, we will build ClassNodes that contain the unusual form of generics configuration
  * that the rest of groovy wants to see. (Note: Java5.setAdditionalClassInformation() is used for building ClassNode objects for JVM
  * reflective class objects).
- *
- * @author Andy Clement
  */
 class JDTClassNodeBuilder {
 
@@ -93,12 +91,14 @@ class JDTClassNodeBuilder {
     /**
      * Based on Java5.configureTypeVariable()
      */
-    GenericsType[] configureTypeVariables(TypeVariableBinding[] tvs) {
-        if (tvs.length == 0)
+    GenericsType[] configureTypeVariables(TypeVariableBinding[] bindings) {
+        int n;
+        if (bindings == null || (n = bindings.length) == 0) {
             return null;
-        GenericsType[] gts = new GenericsType[tvs.length];
-        for (int i = 0; i < tvs.length; i++) {
-            gts[i] = configureTypeVariableDefinition(tvs[i]);
+        }
+        GenericsType[] gts = new GenericsType[n];
+        for (int i = 0; i < n; i += 1) {
+            gts[i] = configureTypeVariableDefinition(bindings[i]);
         }
         return gts;
     }
@@ -106,18 +106,15 @@ class JDTClassNodeBuilder {
     /**
      * Based on Java5.configureTypeArguments()
      */
-    GenericsType[] configureTypeArguments(TypeBinding[] ta) {
-        if (ta == null) {
+    GenericsType[] configureTypeArguments(TypeBinding[] bindings) {
+        int n;
+        if (bindings == null || (n = bindings.length) == 0) {
             return null;
         }
-
-        if (ta.length == 0) {
-            return null;
-        }
-        GenericsType[] gts = new GenericsType[ta.length];
-        for (int i = 0; i < ta.length; i++) {
-            ClassNode t = configureType(ta[i]);
-            if (ta[i] instanceof WildcardBinding) {
+        GenericsType[] gts = new GenericsType[n];
+        for (int i = 0; i < n; i += 1) {
+            ClassNode t = configureType(bindings[i]);
+            if (bindings[i] instanceof WildcardBinding) {
                 GenericsType[] gen = t.getGenericsTypes();
                 gts[i] = gen[0];
             } else {
@@ -172,13 +169,14 @@ class JDTClassNodeBuilder {
     /**
      * Based on Java5.configureTypes()
      */
-    private ClassNode[] configureTypes(TypeBinding[] types) {
-        if (types.length == 0) {
+    private ClassNode[] configureTypes(TypeBinding[] bindings) {
+        int n;
+        if (bindings == null || (n = bindings.length) == 0) {
             return null;
         }
-        ClassNode[] nodes = new ClassNode[types.length];
-        for (int i = 0; i < types.length; i++) {
-            nodes[i] = configureType(types[i]);
+        ClassNode[] nodes = new ClassNode[n];
+        for (int i = 0; i < n; i += 1) {
+            nodes[i] = configureType(bindings[i]);
         }
         return nodes;
     }
@@ -188,26 +186,26 @@ class JDTClassNodeBuilder {
      */
     private ClassNode configureBaseTypeBinding(BaseTypeBinding type) {
         switch (type.id) {
-            case TypeIds.T_boolean:
-                return ClassHelper.boolean_TYPE;
-            case TypeIds.T_char:
-                return ClassHelper.char_TYPE;
-            case TypeIds.T_byte:
-                return ClassHelper.byte_TYPE;
-            case TypeIds.T_short:
-                return ClassHelper.short_TYPE;
-            case TypeIds.T_int:
-                return ClassHelper.int_TYPE;
-            case TypeIds.T_long:
-                return ClassHelper.long_TYPE;
-            case TypeIds.T_double:
-                return ClassHelper.double_TYPE;
-            case TypeIds.T_float:
-                return ClassHelper.float_TYPE;
-            case TypeIds.T_void:
-                return ClassHelper.VOID_TYPE;
-            default:
-                throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + type + "(type.id=" + type.id + ")");
+        case TypeIds.T_boolean:
+            return ClassHelper.boolean_TYPE;
+        case TypeIds.T_char:
+            return ClassHelper.char_TYPE;
+        case TypeIds.T_byte:
+            return ClassHelper.byte_TYPE;
+        case TypeIds.T_short:
+            return ClassHelper.short_TYPE;
+        case TypeIds.T_int:
+            return ClassHelper.int_TYPE;
+        case TypeIds.T_long:
+            return ClassHelper.long_TYPE;
+        case TypeIds.T_double:
+            return ClassHelper.double_TYPE;
+        case TypeIds.T_float:
+            return ClassHelper.float_TYPE;
+        case TypeIds.T_void:
+            return ClassHelper.VOID_TYPE;
+        default:
+            throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + type + "(type.id=" + type.id + ")");
         }
     }
 
@@ -219,7 +217,7 @@ class JDTClassNodeBuilder {
         ClassNode node = configureType(component);
         int dims = genericArrayType.dimensions;
         ClassNode result = node;
-        for (int d = 0; d < dims; d++) {
+        for (int d = 0; d < dims; d += 1) {
             result = result.makeArray();
         }
         return result;
@@ -299,20 +297,20 @@ class JDTClassNodeBuilder {
     private ClassNode configureWildcardType(WildcardBinding wildcardType) {
         ClassNode base = ClassHelper.makeWithoutCaching("?");
         base.setRedirect(ClassHelper.OBJECT_TYPE);
-        // TOO: more than one lower bound for wildcards?
-        ClassNode[] lowers = configureTypes(getLowerbounds(wildcardType)); // wildcardType.getLowerBounds()
+
+        ClassNode[] uppers = configureTypes(getUpperbounds(wildcardType));
+
+        ClassNode[] lowers = configureTypes(getLowerbounds(wildcardType));
         ClassNode lower = null;
-        // TOO: is it safe to remove this? What was the original intention?
-        if (lowers != null) {
+        if (lowers != null && lowers.length > 0) {
             lower = lowers[0];
         }
-        ClassNode[] upper = configureTypes(getUpperbounds(wildcardType));// wildcardType.getUpperBounds()
-        GenericsType t = new GenericsType(base, upper, lower);
+
+        GenericsType t = new GenericsType(base, uppers, lower);
         t.setWildcard(true);
 
         ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
         ref.setGenericsTypes(new GenericsType[] { t });
-
         return ref;
     }
 
@@ -325,17 +323,15 @@ class JDTClassNodeBuilder {
 
     private TypeBinding[] getUpperbounds(WildcardBinding wildcardType) {
         if (wildcardType.boundKind == Wildcard.EXTENDS) {
-            List<TypeBinding> bounds = new ArrayList<TypeBinding>();
-            bounds.add(wildcardType.bound);
-            if (wildcardType.otherBounds != null) {
-                for (int b = 0; b < wildcardType.otherBounds.length; b++) {
-                    bounds.add(wildcardType.otherBounds[b]);
-                }
+            int nBounds = (wildcardType.otherBounds == null) ? 1 : 1 + wildcardType.otherBounds.length;
+            TypeBinding[] bounds = new TypeBinding[nBounds];
+            bounds[0] = wildcardType.bound;
+            if (--nBounds > 0) {
+                System.arraycopy(wildcardType.otherBounds, 0, bounds, 1, nBounds);
             }
-            return bounds.toArray(new TypeBinding[bounds.size()]);
+            return bounds;
         }
-        return new TypeBinding[] { wildcardType.erasure() };
-        // return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
+        return Binding.NO_TYPES;
     }
 
     private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {

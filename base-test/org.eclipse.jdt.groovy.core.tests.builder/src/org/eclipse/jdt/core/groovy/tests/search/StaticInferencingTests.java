@@ -18,12 +18,9 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import junit.framework.Test;
 
 /**
- * Tests various kinds of static references
- *
- * @author Andrew Eisenberg
- * @created Jun 9, 2011
+ * Tests various kinds of static references.
  */
-public class StaticInferencingTests extends AbstractInferencingTest {
+public final class StaticInferencingTests extends AbstractInferencingTest {
     public static Test suite() {
         return buildTestSuite(StaticInferencingTests.class);
     }
@@ -45,7 +42,7 @@ public class StaticInferencingTests extends AbstractInferencingTest {
         String contents = "String.getClass()";
         int start = contents.indexOf("getClass");
         int end = start + "getClass".length();
-        assertType(contents, start, end, "java.lang.Class<? extends java.lang.Object>");  // should be String, not object
+        assertType(contents, start, end, "java.lang.Class<?>");  // should be String, not object
     }
     public void testClassReference4() throws Exception {
         String contents = "String.class.getCanonicalName()";

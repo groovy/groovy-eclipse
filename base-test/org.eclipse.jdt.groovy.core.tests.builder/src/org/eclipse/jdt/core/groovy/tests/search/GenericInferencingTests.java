@@ -1125,7 +1125,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         int start = contents.indexOf(toFind), end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Boolean");
         MethodNode m = assertDeclaration(contents, start, end, "java.util.Collection<java.lang.String>", toFind, DeclarationKind.METHOD);
-        assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.Object>", printTypeName(m.getParameters()[0].getType()));
+        assertEquals("Parameter type should be resolved", "java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
     }
 
     public void testStaticMethod10() {

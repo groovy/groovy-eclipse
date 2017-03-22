@@ -76,7 +76,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 public class JDTClassNode extends ClassNode implements JDTNode {
 
     // arbitrary choice of first eight; maintaining these as a constant array prevents 10000 strings called 'arg0' consuming memory
-    private final static String[] argNames = new String[] { "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7" };
+    private final static String[] argNames = { "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7" };
 
     // The binding which this JDTClassNode represents
     ReferenceBinding jdtBinding;
@@ -130,14 +130,14 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     private static String getName(TypeBinding tb) {
         if (tb instanceof ArrayBinding) {
-            return new String(((ArrayBinding) tb).signature());
+            return String.valueOf(((ArrayBinding) tb).signature());
         } else if (tb instanceof MemberTypeBinding) {
             MemberTypeBinding mtb = (MemberTypeBinding) tb;
             return CharOperation.toString(mtb.compoundName);
         } else if (tb instanceof ReferenceBinding) {
             return CharOperation.toString(((ReferenceBinding) tb).compoundName);
         } else {
-            return new String(tb.sourceName());
+            return String.valueOf(tb.sourceName());
         }
     }
 
@@ -336,64 +336,61 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * Convert a JDT MethodBinding to a Groovy MethodNode
      */
     private MethodNode methodBindingToMethodNode(MethodBinding methodBinding) {
-        String name = new String(methodBinding.selector);
-
-        TypeVariableBinding[] typeVariables = methodBinding.typeVariables();
-
-        GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
-        MethodNode mNode = null;
-
         // FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
         // If they need to be correct we need to retrieve the method decl from the binding scope
+
+        String name = String.valueOf(methodBinding.selector);
+
         int modifiers = methodBinding.modifiers;
-        if (jdtBinding.isInterface() && (modifiers & 0x10000 /* Modifier.DEFAULT */) == 0 && (modifiers & Modifier.STATIC) == 0) {
+        if (jdtBinding.isInterface() && (modifiers & (0x10000 /*Modifier.DEFAULT*/ | Modifier.STATIC)) == 0) {
             modifiers |= Modifier.ABSTRACT;
         }
+
         ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
 
-        methodBinding.genericSignature();
-        Parameter[] gParameters = makeParameters(methodBinding.parameters);
+        Parameter[] parameters = makeParameters(methodBinding.parameters);
 
-        ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
-        if (methodBinding.thrownExceptions != null) {
-            thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
-            for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
-                thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
+        int nExceptions; ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
+        if (methodBinding.thrownExceptions != null && (nExceptions = methodBinding.thrownExceptions.length) > 0) {
+            exceptions = new ClassNode[nExceptions];
+            for (int i = 0; i < nExceptions; i += 1) {
+                exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
             }
         }
-        mNode = new JDTMethodNode(methodBinding, resolver, name, modifiers, returnType, gParameters, thrownExceptions, null);
+
+        MethodNode mNode = new JDTMethodNode(methodBinding, resolver, name, modifiers, returnType, parameters, exceptions, null /*body*/);
 
         // FIXASC (M3) likely to need something like this...
-        // if (jdtBinding.isEnum()) {
-        // if (methodBinding.getDefaultValue() != null) {
-        // mNode.setAnnotationDefault(true);
-        // }
-        // }
+        //if (jdtBinding.isEnum() && methodBinding.getDefaultValue() != null) {
+        //    mNode.setAnnotationDefault(true);
+        //}
 
+        GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables());
         mNode.setGenericsTypes(generics);
+
         return mNode;
     }
 
     private Parameter[] makeParameters(TypeBinding[] jdtParameters) {
-        Parameter[] params = Parameter.EMPTY_ARRAY;
-        if (jdtParameters != null && jdtParameters.length > 0) {
-            params = new Parameter[jdtParameters.length];
-            for (int i = 0; i < params.length; i++) {
-                params[i] = makeParameter(jdtParameters[i], i);
+        int nParameters; Parameter[] parameters = Parameter.EMPTY_ARRAY;
+        if (jdtParameters != null && (nParameters = jdtParameters.length) > 0) {
+            parameters = new Parameter[nParameters];
+            for (int i = 0; i < nParameters; i += 1) {
+                parameters[i] = makeParameter(jdtParameters[i], i);
             }
         }
-        return params;
+        return parameters;
     }
 
-    private Parameter makeParameter(TypeBinding parameterType, int paramNumber) {
-        TypeBinding clazz = null;
+    private Parameter makeParameter(TypeBinding parameterType, int parameterPosition) {
+        TypeBinding erasureType;
         if (parameterType instanceof ParameterizedTypeBinding) {
-            clazz = ((ParameterizedTypeBinding) parameterType).genericType();
+            erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
         } else {
-            clazz = new JDTClassNodeBuilder(resolver).toRawType(parameterType);
+            erasureType = new JDTClassNodeBuilder(resolver).toRawType(parameterType);
         }
-        ClassNode paramType = makeClassNode(parameterType, clazz);
-        String paramName = (paramNumber < 8 ? argNames[paramNumber] : "arg" + paramNumber);
+        ClassNode paramType = makeClassNode(parameterType, erasureType);
+        String paramName = (parameterPosition < argNames.length ? argNames[parameterPosition] : "arg" + parameterPosition);
         return new Parameter(paramType, paramName);
     }
 
@@ -448,7 +445,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding, TypeDeclaration groovyTypeDecl) {
-        String name = new String(fieldBinding.name);
+        String name = String.valueOf(fieldBinding.name);
         int modifiers = fieldBinding.modifiers;
         ClassNode fieldType = resolver.convertToClassNode(fieldBinding.type);
         Constant c = fieldBinding.constant();
@@ -595,7 +592,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * Assumes that methodName is more than 4/3 characters long and starts with a proper prefix.
      */
     private String convertToPropertyName(String methodName) {
-        StringBuffer propertyName = new StringBuffer();
+        StringBuilder propertyName = new StringBuilder();
         int prefixLen;
         if (methodName.startsWith("is")) {
             prefixLen = 2;

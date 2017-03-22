@@ -151,7 +151,10 @@ public class Java5 implements VMPlugin {
         // TODO: is it safe to remove this? What was the original intention?
         if (lowers != null) lower = lowers[0];
 
-        ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
+        // GRECLIPSE edit -- want <?> like JDT does, not <? extends Object>
+        //ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
+        ClassNode[] upper = wildcardType.toString().equals("?") ? null : configureTypes(wildcardType.getUpperBounds());
+        // GRECLIPSE end
         GenericsType t = new GenericsType(base, upper, lower);
         t.setWildcard(true);
 
