@@ -1661,12 +1661,19 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
-    public void testListSort2() throws Exception {
+    public void testListSort2() {
+        // Java 8 added sort(Comparator) to the List interface
+        boolean jdkListSort;
+        try {
+            List.class.getDeclaredMethod("sort", Comparator.class);
+            jdkListSort = true;
+        } catch (Exception e) {
+            jdkListSort = false;
+        }
+
         String contents = "def list = []; list.sort({ o1, o2 -> o1 <=> o2 } as Comparator)";
         int start = contents.lastIndexOf("sort");
         int end = start + "sort".length();
-        // Java 8 added sort(Comparator) to the List interface
-        boolean jdkListSort = (List.class.getDeclaredMethod("sort", Comparator.class) != null);
         assertType(contents, start, end, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
         assertDeclaringType(contents, start, end, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
