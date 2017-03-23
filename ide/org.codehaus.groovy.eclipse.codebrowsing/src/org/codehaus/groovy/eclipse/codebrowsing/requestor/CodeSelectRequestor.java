@@ -33,6 +33,8 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryField;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryType;
@@ -246,6 +248,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
                             }
                             requestedNode = nodeToLookFor;
                         }
+                    }
+                } else {
+                    String message = "Could not proceed due to null declaring type for " + requestedNode;
+                    if (GroovyLogManager.manager.hasLoggers()) {
+                        GroovyLogManager.manager.log(TraceCategory.CODE_SELECT, message);
+                    } else {
+                        System.err.println(getClass().getSimpleName() + ": " + message);
                     }
                 }
             }
@@ -634,7 +643,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
 
         // check for methods first, then fields, and finally accessor variants of the name
-
         IMethod closestMatch = null;
         next_method: for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {

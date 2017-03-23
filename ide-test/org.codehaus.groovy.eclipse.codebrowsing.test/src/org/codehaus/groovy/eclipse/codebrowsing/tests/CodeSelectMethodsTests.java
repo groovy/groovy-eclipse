@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMet
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 public final class CodeSelectMethodsTests extends BrowsingTestCase {
 
@@ -177,6 +178,16 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
     public void testCodeSelectStaticMethod4() {
         String contents = "def empty = Collections.&emptyList";
         assertCodeSelect(asList(contents), "emptyList");
+    }
+
+    public void testCodeSelectStaticMethod5() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        String contents = "import static java.util.Collections.singletonList\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class X { static {\n" +
+            "  singletonList('')\n" +
+            "}}";
+        assertCodeSelect(asList(contents), "singletonList");
     }
 
     public void testCodeSelectStaticProperty1() {
