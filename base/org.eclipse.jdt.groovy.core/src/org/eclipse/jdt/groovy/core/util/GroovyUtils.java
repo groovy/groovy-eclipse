@@ -210,7 +210,7 @@ public abstract class GroovyUtils {
             node = node.getComponentType();
         }
 
-        String name;
+        String name = node.getName();
         if (node.isGenericsPlaceHolder()) {
             // use "T" instead of "Object"
             name = node.getUnresolvedName();
@@ -218,11 +218,6 @@ public abstract class GroovyUtils {
             name = node.getNameWithoutPackage();
             if (name.indexOf('$') > 0) {
                 name = node.getUnresolvedName();
-            }
-        } else {
-            name = node.getName();
-            if (name.indexOf('$') > 0) {
-                // TODO: Should it be "java.util.Map$Entry" or "java.util.Map.Entry"?
             }
         }
         assert !name.startsWith("[") && !name.contains("<") && !name.endsWith(";");

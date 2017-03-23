@@ -314,8 +314,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
 
-                closestMatch = VariableScope.resolveTypeParameterization(
-                    GenericsMapper.gatherGenerics(scope.getMethodCallArgumentTypes(), declaringType, closestMatch), closestMatch);
                 return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
             }
         }
@@ -355,18 +353,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (declaration != null) {
             type = getTypeFromDeclaration(declaration, declaringType);
             realDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaringType);
-
-            GenericsMapper mapper;
-            if (!(declaration instanceof MethodNode)) {
-                mapper = GenericsMapper.gatherGenerics(declaringType, realDeclaringType.redirect());
-                type = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(type));
-            } else {
-                MethodNode method = (MethodNode) declaration;
-                mapper = GenericsMapper.gatherGenerics(scope.getMethodCallArgumentTypes(), declaringType, method);
-                declaration = method = VariableScope.resolveTypeParameterization(mapper, method);
-                realDeclaringType = method.getDeclaringClass();
-                type = method.getReturnType();
-            }
         } else if ("this".equals(name)) {
             // Fix for 'this' as property of ClassName
             declaration = declaringType;

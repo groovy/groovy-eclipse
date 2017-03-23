@@ -648,7 +648,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (method.getElementName().equals(text)) {
                 closestMatch = method;
                 // prefer methods with the same parameter list
-                if (parameters.length == method.getParameterTypes().length) {
+                if (parameters != null && parameters.length == method.getParameterTypes().length) {
                     for (int i = 0, n = parameters.length; i < n; i += 1) {
                         // remove generics from the type signatures to make matching simpler
                         String jdtMethodParam = removeGenerics(method.getParameterTypes()[i]);

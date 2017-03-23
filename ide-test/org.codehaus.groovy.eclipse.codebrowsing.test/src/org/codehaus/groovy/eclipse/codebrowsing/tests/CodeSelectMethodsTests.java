@@ -19,6 +19,7 @@ import static java.util.Arrays.asList;
 
 import junit.framework.Test;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -171,7 +172,7 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
     }
 
     public void testCodeSelectStaticMethod3() {
-        String contents = "class C { def m() { java.util.Collections.<Object>emptyList() } }";
+        String contents = "class Foo { def m() { java.util.Collections.<Object>emptyList() } }";
         assertCodeSelect(asList(contents), "Collections");
     }
 
@@ -180,14 +181,16 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), "emptyList");
     }
 
-    public void testCodeSelectStaticMethod5() {
+    public void testCodeSelectStaticMethod5() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents = "import static java.util.Collections.singletonList\n" +
             "@groovy.transform.TypeChecked\n" +
-            "class X { static {\n" +
+            "class Foo { static {\n" +
             "  singletonList('')\n" +
             "}}";
-        assertCodeSelect(asList(contents), "singletonList");
+        IJavaElement elem = assertCodeSelect(asList(contents), "singletonList");
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());
+        assertEquals("java.util.List <java.lang.String>", method.getReturnType().toString(false));
     }
 
     public void testCodeSelectStaticProperty1() {

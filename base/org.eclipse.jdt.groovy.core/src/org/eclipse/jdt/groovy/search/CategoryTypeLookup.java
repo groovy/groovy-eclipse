@@ -84,8 +84,6 @@ public class CategoryTypeLookup implements ITypeLookup {
                 if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 
                 MethodNode method = selectBestMatch(candidates, argumentTypes, scope);
-                GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, normalizedType, method);
-                method = VariableScope.resolveTypeParameterization(mapper, method); // replace any type parameters
 
                 TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
                         isDefaultGroovyMethod(method) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);

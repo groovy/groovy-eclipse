@@ -159,14 +159,6 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     public void testMap3() {
-        String contents = "def x = new HashMap<String,Integer>()\nx.entrySet";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Integer>>");
-    }
-
-    public void testMap3a() {
         String contents = "Map<String,Integer> x\nx.entrySet().iterator().next().value";
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);

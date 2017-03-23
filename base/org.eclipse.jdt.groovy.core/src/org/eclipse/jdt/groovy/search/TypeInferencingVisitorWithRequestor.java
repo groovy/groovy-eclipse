@@ -2070,14 +2070,14 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private TypeLookupResult lookupExpressionType(Expression node, ClassNode objectExprType, boolean isStatic, VariableScope scope) {
+    private TypeLookupResult lookupExpressionType(Expression node, ClassNode objExprType, boolean isStatic, VariableScope scope) {
         TypeLookupResult result = null;
         for (ITypeLookup lookup : lookups) {
             TypeLookupResult candidate;
             if (lookup instanceof ITypeLookupExtension) {
-                candidate = ((ITypeLookupExtension) lookup).lookupType(node, scope, objectExprType, isStatic);
+                candidate = ((ITypeLookupExtension) lookup).lookupType(node, scope, objExprType, isStatic);
             } else {
-                candidate = lookup.lookupType(node, scope, objectExprType);
+                candidate = lookup.lookupType(node, scope, objExprType);
             }
             if (candidate != null) {
                 if (result == null || result.confidence.isLessThan(candidate.confidence)) {
@@ -2088,14 +2088,18 @@ assert primaryExprType != null && dependentExprType != null;
                 }
             }
         }
-        if (result.confidence == TypeConfidence.UNKNOWN && VariableScope.MAP_CLASS_NODE.equals(result.declaringType)) {
+        if (TypeConfidence.UNKNOWN == result.confidence && VariableScope.MAP_CLASS_NODE.equals(result.declaringType)) {
             ClassNode inferredType = VariableScope.OBJECT_CLASS_NODE;
             if (currentMapVariable != null && node instanceof ConstantExpression) {
                 inferredType = localMapProperties.get(currentMapVariable).get(((ConstantExpression) node).getConstantName());
             }
-            result = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope);
+            TypeLookupResult tlr = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope, result.extraDoc);
+            tlr.enclosingAnnotation = result.enclosingAnnotation;
+            tlr.enclosingAssignment = result.enclosingAssignment;
+            tlr.isGroovy = result.isGroovy;
+            result = tlr;
         }
-        return result;
+        return result.resolveTypeParameterization(objExprType, isStatic);
     }
 
     private boolean handleParameterList(Parameter[] params) {
