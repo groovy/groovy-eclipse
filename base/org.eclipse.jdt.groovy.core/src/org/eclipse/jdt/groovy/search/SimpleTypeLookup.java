@@ -46,7 +46,11 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -59,7 +63,6 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
-import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
  * Determines types using AST inspection.
@@ -248,12 +251,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(type, null, null, confidence, scope);
 
         } else if (node instanceof ClassExpression) {
-            // check for special case...a bit crude...determine if the actual reference is to Foo.class or to Foo
-            if (isNodeDotClassReference(node, unit)) {
-                return new TypeLookupResult(VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE, VariableScope.CLASS_CLASS_NODE, TypeConfidence.EXACT, scope);
-            } else {
-                return new TypeLookupResult(nodeType, declaringType, nodeType, confidence, scope);
+            if (isClassLiteralExpression((ClassExpression) node, scope)) {
+                ClassNode classType = ClassHelper.makeWithoutCaching(ClassHelper.CLASS_Type.getName());
+                classType.setGenericsTypes(new GenericsType[] {new GenericsType(node.getType())});
+                classType.setRedirect(ClassHelper.CLASS_Type);
+                classType.setSourcePosition(node);
+
+                return new TypeLookupResult(classType, null, node.getType(), TypeConfidence.EXACT, scope);
             }
+            return new TypeLookupResult(nodeType, declaringType, nodeType, confidence, scope);
 
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
@@ -709,21 +715,27 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * a little crude because will not find if there are spaces between '.' and 'class'
+     * Determines if the specified class expression is a class literal.
      */
-    protected static boolean isNodeDotClassReference(Expression node, CompilationUnit unit) {
-        int end = node.getEnd();
-        int start = node.getStart();
-        if (unit.exists()) { // will return false if unit was moved during inferencing operation
-            char[] contents = unit.getContents();
-            if (contents.length >= end) {
-                char[] realText = new char[end - start];
-                System.arraycopy(contents, start, realText, 0, end - start);
-                String realTextStr = String.valueOf(realText).trim();
-                return realTextStr.endsWith(".class") || realTextStr.endsWith(".class.");
-            }
+    protected boolean isClassLiteralExpression(ClassExpression classExpr, VariableScope scope) {
+        ASTNode scopeNode = scope.getCurrentNode();
+        boolean probablyClassLiteral;
+        if (scopeNode == null) {
+            probablyClassLiteral = true;
+        } else if (scopeNode instanceof ListExpression) {
+            probablyClassLiteral = true;
+        } else if (scopeNode instanceof MapEntryExpression) {
+            probablyClassLiteral = true;
+        } else if (scopeNode instanceof ConstantExpression) {
+            probablyClassLiteral = true;
+        } else if (scopeNode instanceof MethodCallExpression) {
+            probablyClassLiteral = (classExpr != ((MethodCallExpression) scopeNode).getObjectExpression());
+        } else if (scopeNode instanceof PropertyExpression && classExpr.getEnd() > 0) {
+            probablyClassLiteral = String.valueOf(unit.getContents(), classExpr.getStart(), classExpr.getLength()).endsWith(".class");
+        } else {
+            probablyClassLiteral = false;
         }
-        return false;
+        return probablyClassLiteral;
     }
 
     /**

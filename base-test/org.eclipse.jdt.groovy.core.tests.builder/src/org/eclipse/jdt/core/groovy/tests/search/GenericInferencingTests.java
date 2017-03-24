@@ -914,7 +914,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "    @CompileStatic\n" +
                 "    static void main(String[] args) {\n" +
                 "        A a = new A()\n" +
-                "        def val = a.myMethod(String)\n" +
+                "        def val = a.myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -934,7 +934,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "    }\n" +
                 "    static void main(String[] args) {\n" +
                 "        A a = new A()\n" +
-                "        def val = a.myMethod(String)\n" +
+                "        def val = a.myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -955,7 +955,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "    }\n" +
                 "    @CompileStatic\n" +
                 "    def m() {\n" +
-                "        def val = myMethod(String)\n" +
+                "        def val = myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -974,7 +974,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "        return null\n" +
                 "    }\n" +
                 "    def m() {\n" +
-                "        def val = myMethod(String)\n" +
+                "        def val = myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -995,7 +995,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "    }\n" +
                 "    @groovy.transform.CompileStatic\n" +
                 "    static void main(String[] args) {\n" +
-                "        def val = A.myMethod(String)\n" +
+                "        def val = A.myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -1013,7 +1013,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "        return null\n" +
                 "    }\n" +
                 "    static void main(String[] args) {\n" +
-                "        def val = A.myMethod(String)\n" +
+                "        def val = A.myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -1032,7 +1032,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "    }\n" +
                 "    @groovy.transform.CompileStatic\n" +
                 "    def m() {\n" +
-                "        def val = myMethod(String)\n" +
+                "        def val = myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";
@@ -1050,7 +1050,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
                 "        return null\n" +
                 "    }\n" +
                 "    def m() {\n" +
-                "        def val = myMethod(String)\n" +
+                "        def val = myMethod(String.class)\n" +
                 "        val.trim()\n" +
                 "    }\n" +
                 "}";

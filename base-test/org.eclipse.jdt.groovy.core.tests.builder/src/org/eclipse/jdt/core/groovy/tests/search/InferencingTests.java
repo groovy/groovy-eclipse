@@ -27,9 +27,6 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.osgi.framework.Version;
 
-/**
- * Lots of tests to see that expressions have the proper type associated with them.
- */
 public final class InferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
@@ -456,6 +453,36 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.indexOf("booleanValue");
         int end = start + "booleanValue".length();
         assertType(contents, start, end, "java.lang.Boolean");
+    }
+
+    public void testClassLiteral1() {
+        String contents = "def foo = Number.class";
+        int start = contents.indexOf("foo"), end = start + 3;
+        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+    }
+
+    public void testClassLiteral2() {
+        String contents = "def foo = java.lang.Number.class";
+        int start = contents.indexOf("foo"), end = start + 3;
+        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+    }
+
+    public void testClassLiteral3() {
+        String contents = "def foo = Number";
+        int start = contents.indexOf("foo"), end = start + 3;
+        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+    }
+
+    public void testClassLiteral4() {
+        String contents = "def foo = java.lang.Number";
+        int start = contents.indexOf("foo"), end = start + 3;
+        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+    }
+
+    public void testClassLiteral5() {
+        String contents = "def foo = Map.Entry.class";
+        int start = contents.indexOf("foo"), end = start + 3;
+        assertType(contents, start, end, "java.lang.Class<java.util.Map$Entry>");
     }
 
     public void testConstructor1() {
@@ -1713,46 +1740,33 @@ public final class InferencingTests extends AbstractInferencingTest {
         String target = "class", source = "java.lang.Object";
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
     }
-    
-    public void testClassReference1() {
-        String contents = "String";
-        assertDeclaringType(contents, 0, contents.length(), "java.lang.String");
-    }
 
-    public void testClassReference2() {
+    public void testClassReference1() {
         String contents = "String.substring";
         int textStart = contents.indexOf("substring");
         int textEnd = textStart + "substring".length();
         assertDeclaringType(contents, textStart, textEnd, "java.lang.String", false, true);
     }
 
-    public void testClassReference3() {
+    public void testClassReference2() {
         String contents = "String.getPackage()";
         int textStart = contents.indexOf("getPackage");
         int textEnd = textStart + "getPackage".length();
         assertType(contents, textStart, textEnd, "java.lang.Package");
     }
 
-    public void testClassReference4() {
+    public void testClassReference3() {
         String contents = "String.class.getPackage()";
         int textStart = contents.indexOf("getPackage");
         int textEnd = textStart + "getPackage".length();
         assertType(contents, textStart, textEnd, "java.lang.Package");
     }
 
-    public void testClassReference5() {
+    public void testClassReference4() {
         String contents = "String.class.package";
         int textStart = contents.indexOf("package");
         int textEnd = textStart + "package".length();
         assertType(contents, textStart, textEnd, "java.lang.Package");
-    }
-
-    public void testClassReference6() {
-        String contents = "String.class";
-        // in the groovy AST, this is all one ast expression node (a class expression)
-        int textStart = contents.indexOf("String.class");
-        int textEnd = textStart + "String.class".length();
-        assertDeclaringType(contents, textStart, textEnd, "java.lang.Class<T extends java.lang.Object>", false, false);
     }
 
     public void testMultiDecl1() {

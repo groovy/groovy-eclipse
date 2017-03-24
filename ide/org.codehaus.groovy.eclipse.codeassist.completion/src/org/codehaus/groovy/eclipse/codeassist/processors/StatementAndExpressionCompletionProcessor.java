@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,11 +135,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
 
             boolean success = doTest(node);
-            boolean derefList = false; // if true use the parameterized type of
-                                       // the list
+            boolean derefList = false; // if true use the parameterized type of the list
             if (!success) {
-                // maybe this is content assist after array access
-                // ie- foo[0].<_>
+                // maybe this is content assist after array access, ie- foo[0].<_>
                 derefList = success = doTestForAfterArrayAccess(node);
             }
             if (success) {
@@ -149,9 +147,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
                 isStatic = node instanceof StaticMethodCallExpression ||
-                    (node instanceof ClassExpression &&
-                     // if we are completing on '.class' then never static context
-                     resultingType != VariableScope.CLASS_CLASS_NODE);
+                    // if we are completing on '.class' then never static context
+                    (node instanceof ClassExpression && !resultingType.equals(VariableScope.CLASS_CLASS_NODE));
                 currentScope = result.scope;
                 return VisitStatus.STOP_VISIT;
             }
@@ -160,11 +157,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
         private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
             // if completing on a method call with an implicit 'this'.
-            ClassNode candidate = getContext().location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType
-                    : result.type;
+            ClassNode candidate = getContext().location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType : result.type;
             if (derefList) {
-                for (int i = 0; i < derefCount; i++) {
-
+                for (int i = 0; i < derefCount; i += 1) {
                     // GRECLIPSE-742: does the LHS type have a 'getAt' method?
                     boolean getAtFound = false;
                     List<MethodNode> getAts = candidate.getMethods("getAt");
