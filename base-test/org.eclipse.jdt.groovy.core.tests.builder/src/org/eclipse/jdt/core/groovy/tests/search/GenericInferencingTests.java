@@ -809,6 +809,24 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    public void testInferringGetClass1() {
+        String contents = "''.getClass()", toFind = "getClass";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Class<? extends java.lang.String>");
+    }
+
+    public void testInferringGetClass2() {
+        String contents = "[''].getClass()", toFind = "getClass";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Class<? extends java.util.List<java.lang.String>>");
+    }
+
+    public void testInferringGetClass3() {
+        String contents = "[a:''].getClass()", toFind = "getClass";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Class<? extends java.util.Map<java.lang.String,java.lang.String>>");
+    }
+
     public void testInferringList1() {
         String contents = "def x = 9\ndef xxx = [x]\nxxx";
         String toFind = "xxx";

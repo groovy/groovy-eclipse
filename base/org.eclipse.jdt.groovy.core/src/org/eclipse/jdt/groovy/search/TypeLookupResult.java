@@ -159,14 +159,20 @@ public class TypeLookupResult {
                 }
 
                 MethodNode method = (MethodNode) declaration;
-                GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, targetType, method);
-                method = VariableScope.resolveTypeParameterization(mapper, method);
-                if (method != declaration) {
-                    TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);
-                    result.enclosingAnnotation = enclosingAnnotation;
-                    result.enclosingAssignment = enclosingAssignment;
-                    result.isGroovy = isGroovy;
-                    return result;
+                if (!isStatic && method.getName().equals("getClass")) {
+                    ClassNode classType = VariableScope.clone(method.getReturnType());
+                    classType.getGenericsTypes()[0].setUpperBounds(new ClassNode[] {targetType});
+                    return new TypeLookupResult(classType, method.getDeclaringClass(), method, confidence, scope, extraDoc);
+                } else {
+                    GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, targetType, method);
+                    method = VariableScope.resolveTypeParameterization(mapper, method);
+                    if (method != declaration) {
+                        TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);
+                        result.enclosingAnnotation = enclosingAnnotation;
+                        result.enclosingAssignment = enclosingAssignment;
+                        result.isGroovy = isGroovy;
+                        return result;
+                    }
                 }
             }
         }
