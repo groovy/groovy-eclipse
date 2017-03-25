@@ -578,64 +578,68 @@ public class VariableScope {
         if (mapper.hasGenerics()) {
             GenericsType[] parameterizedTypes = GroovyUtils.getGenericsTypes(type);
             if (parameterizedTypes.length > 0) {
-                // try to match
                 for (int i = 0, n = parameterizedTypes.length; i < n; i += 1) {
                     GenericsType parameterizedType = parameterizedTypes[i];
-
-                    if (!parameterizedType.isWildcard()) {
-                        resolveTypeParameterization(mapper, parameterizedType.getType()); // TODO: capture return value?
-
-                        String toParameterizeName = parameterizedType.getName();
-                        ClassNode resolved = mapper.findParameter(toParameterizeName, parameterizedType.getType());
-
-                        // there are three known possibilities for resolved:
-                        // 1. it is the resolution of a type parameter itself (eg- E --> String)
-                        // 2. it is the resolved type parameter of a generic type (eg- Iterator<E> --> Iterator<String>)
-                        // 3. it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from the declaring type)
-
-                        if (typeParameterExistsInRedirected(type, toParameterizeName)) {
-                            Assert.isLegal(type.redirect() != type, "Error: trying to resolve type parameters of a type declaration: " + type);
-                            // Iterator<E> --> Iterator<String>
-                            parameterizedType.setResolved(true);
-                            parameterizedType.setType(resolved);
-                            parameterizedType.setName(parameterizedType.getType().getName());
-                            parameterizedType.setPlaceholder(false);
-                            parameterizedType.setWildcard(false);
-                            parameterizedType.setLowerBound(null);
-                            parameterizedType.setUpperBounds(null);
-                        } else {
-                            // E --> String
-                            // E[] --> String[]
-                            while (type.isArray()) {
-                                type = type.getComponentType();
-                                resolved = resolved.makeArray();
-                            }
-                            type = resolved;
-
-                            // I *think* this means we are done.
-                            assert n == 1;
-                            break;
-                        }
-
-                    } else if (parameterizedType.getLowerBound() != null) {
-                        // List<? super E> --> List<? super String>
-                        ClassNode resolved = resolveTypeParameterization(mapper, parameterizedType.getLowerBound());
-                        parameterizedType.setLowerBound(resolved);
-                        parameterizedType.setResolved(true);
-
-                    } else if (parameterizedType.getUpperBounds() != null) {
-                        // List<? extends E> --> List<? extends String>
-                        ClassNode[] parameterizedTypeUpperBounds = parameterizedType.getUpperBounds();
-                        for (int j = 0, k = parameterizedTypeUpperBounds.length; j < k; j += 1) {
-                            ClassNode resolved = resolveTypeParameterization(mapper, parameterizedTypeUpperBounds[j]);
-                            parameterizedTypeUpperBounds[j] = resolved;
-                        }
-                        parameterizedType.setResolved(true);
+                    ClassNode maybe = resolveTypeParameterization(mapper, parameterizedType, type);
+                    if (maybe != type) {
+                        assert n == 1;
+                        type = maybe;
+                        break;
                     }
                 }
             }
         }
         return type;
+    }
+
+    public static ClassNode resolveTypeParameterization(GenericsMapper mapper, GenericsType generic, ClassNode unresolved) {
+        if (!generic.isWildcard()) {
+            resolveTypeParameterization(mapper, generic.getType()); // TODO: capture return value?
+
+            String toParameterizeName = generic.getName();
+            ClassNode resolved = mapper.findParameter(toParameterizeName, generic.getType());
+
+            // there are three known possibilities for resolved:
+            // 1. it is the resolution of a type parameter itself (eg- E --> String)
+            // 2. it is the resolved type parameter of a generic type (eg- Iterator<E> --> Iterator<String>)
+            // 3. it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from the declaring type)
+
+            if (typeParameterExistsInRedirected(unresolved, toParameterizeName)) {
+                Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to resolve type parameters of a type declaration: " + unresolved);
+                // Iterator<E> --> Iterator<String>
+                generic.setResolved(true);
+                generic.setType(resolved);
+                generic.setName(generic.getType().getName());
+                generic.setPlaceholder(false);
+                generic.setWildcard(false);
+                generic.setLowerBound(null);
+                generic.setUpperBounds(null);
+            } else {
+                // E --> String
+                // E[] --> String[]
+                while (unresolved.isArray()) {
+                    unresolved = unresolved.getComponentType();
+                    resolved = resolved.makeArray();
+                }
+                return resolved;
+            }
+
+        } else if (generic.getLowerBound() != null) {
+            // List<? super E> --> List<? super String>
+            ClassNode resolved = resolveTypeParameterization(mapper, generic.getLowerBound());
+            generic.setLowerBound(resolved);
+            generic.setResolved(true);
+
+        } else if (generic.getUpperBounds() != null) {
+            // List<? extends E> --> List<? extends String>
+            ClassNode[] parameterizedTypeUpperBounds = generic.getUpperBounds();
+            for (int j = 0, k = parameterizedTypeUpperBounds.length; j < k; j += 1) {
+                ClassNode resolved = resolveTypeParameterization(mapper, parameterizedTypeUpperBounds[j]);
+                parameterizedTypeUpperBounds[j] = resolved;
+            }
+            generic.setResolved(true);
+        }
+        return unresolved;
     }
 
     public static MethodNode resolveTypeParameterization(GenericsMapper mapper, MethodNode method) {
@@ -760,18 +764,6 @@ public class VariableScope {
             cloneInternal(type.getComponentType(), depth + 1)
         );
 
-        Assert.isNotNull(ReflectionUtils.getPrivateField(ClassNode.class, "redirect", newType));
-//        if (ReflectionUtils.getPrivateField(ClassNode.class, "redirect", newType) == null) {
-//            ClassNode[] faces = type.getInterfaces();
-//            if (faces != null) {
-//                int n = faces.length;
-//                ClassNode[] copy = new ClassNode[n];
-//                System.arraycopy(faces, 0, copy, 0, n);
-//
-//                newType.setInterfaces(copy);
-//            }
-//        }
-
         // GRECLIPSE-1024: set an arbitrary depth to return from
         // ensures that improperly set up generics do not lead to infinite recursion
         if (depth < 11) {
@@ -795,7 +787,7 @@ public class VariableScope {
      * @param origgt the original {@link GenericsType} to copy
      * @param depth prevent infinite recursion on bad generics
      */
-    private static GenericsType clone(GenericsType origgt, int depth) {
+    public static GenericsType clone(GenericsType origgt, int depth) {
         GenericsType newgt = new GenericsType();
         newgt.setType(cloneInternal(origgt.getType(), depth + 1));
         newgt.setLowerBound(cloneInternal(origgt.getLowerBound(), depth + 1));

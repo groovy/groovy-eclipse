@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMet
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
@@ -56,9 +57,38 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
         assertCodeSelect(asList(one, two, "new Structure().meth(0, 0, 0)"), "meth");
     }
 
+    public void testCodeSelectGenericMethod1() {
+        String contents = "[a: Number].keySet()";
+        IJavaElement elem = assertCodeSelect(asList(contents), "keySet");
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());
+        assertEquals("java.util.Set <java.lang.String>", method.getReturnType().toString(false));
+    }
+
+    public void testCodeSelectGenericMethod2() {
+        String contents = "[a: Number].values()";
+        IJavaElement elem = assertCodeSelect(asList(contents), "values");
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());
+        assertEquals("java.util.Collection <java.lang.Class>", method.getReturnType().toString(false));
+    }
+
+    public void testCodeSelectGenericMethod3() {
+        String contents = "[a: Number].entrySet()";
+        IJavaElement elem = assertCodeSelect(asList(contents), "entrySet");
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());
+        assertEquals("java.util.Set <java.util.Map$Entry>", method.getReturnType().toString(false));
+    }
+
+    public void testCodeSelectGenericCategoryMethod3() {
+        String contents = "[a: Number].getAt('a')";
+        IJavaElement elem = assertCodeSelect(asList(contents), "getAt");
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());
+        assertEquals("java.lang.Class <java.lang.Number>", method.getReturnType().toString(false));
+    }
+
     public void testCodeSelectClosure() {
-        String contents = "def x = {\nt -> print t\n}\nx(\"hello\")";
-        assertCodeSelect(asList(contents), "x");
+        String contents = "def x = { t -> print t }\nx('hello')";
+        IJavaElement elem = assertCodeSelect(asList(contents), "x");
+        assertEquals("QClosure;", ((ILocalVariable) elem).getTypeSignature());
     }
 
     public void testCodeSelectInt() {
@@ -178,7 +208,9 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
 
     public void testCodeSelectStaticMethod4() {
         String contents = "def empty = Collections.&emptyList";
-        assertCodeSelect(asList(contents), "emptyList");
+        IJavaElement elem = assertCodeSelect(asList(contents), "emptyList");
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());
+        assertEquals("java.util.List <T>", method.getReturnType().toString(false)); // want T to be java.lang.String
     }
 
     public void testCodeSelectStaticMethod5() throws Exception {

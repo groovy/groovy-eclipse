@@ -579,7 +579,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
             sb.append('%');
             sb.append(Signature.C_GENERIC_START);
             for (GenericsType gt : generics) {
-                ClassNode rt = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(gt.getType()));
+                gt = VariableScope.clone(gt, 0);
+                ClassNode rt = VariableScope.resolveTypeParameterization(mapper, gt, gt.getType());
                 sb.append(GroovyUtils.getTypeSignatureWithoutGenerics(rt, true, true).replace('.', '/'));
             }
             sb.append(Signature.C_GENERIC_END);

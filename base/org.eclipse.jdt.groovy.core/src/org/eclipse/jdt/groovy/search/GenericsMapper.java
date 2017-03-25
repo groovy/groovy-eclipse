@@ -112,7 +112,7 @@ public class GenericsMapper {
                         // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
                         GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
                         for (int j = 0; j < ubt_gts.length; j += 1) {
-                            if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[0].getName().equals(ugt.getName())) {
+                            if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName())) {
                               //System.err.println(rbt.toString(false) + " --> " + ubt.toString(false));
                                 // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
                                 String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
