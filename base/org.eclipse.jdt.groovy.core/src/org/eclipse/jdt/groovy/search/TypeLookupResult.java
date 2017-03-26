@@ -159,7 +159,7 @@ public class TypeLookupResult {
                 }
 
                 MethodNode method = (MethodNode) declaration;
-                if (!isStatic && method.getName().equals("getClass")) {
+                if (!isStatic && method.getName().equals("getClass") && method.getParameters().length == 0) {
                     ClassNode classType = VariableScope.clone(method.getReturnType());
                     classType.getGenericsTypes()[0].setUpperBounds(new ClassNode[] {targetType});
                     return new TypeLookupResult(classType, method.getDeclaringClass(), method, confidence, scope, extraDoc);

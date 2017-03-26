@@ -237,16 +237,16 @@ public abstract class GroovyUtils {
     }
 
     public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {
-        if (!"groovy.lang.Closure".equals(closure.getName())) {
+        if (!"groovy.lang.Closure".equals(closure.getName()) || closure == closure.redirect()) {
             return;
         }
 
-        ClassNode redir =
-            closure.redirect();
-        closure.setRedirect(null);
-        closure.setInterfaces(redir.getInterfaces());
-        returnType = getWrapperTypeIfPrimitive(returnType);
-        closure.setGenericsTypes(new GenericsType[] {new GenericsType(returnType)});
-        ReflectionUtils.setPrivateField(ClassNode.class, "clazz", closure, redir.getTypeClass());
+        //ClassNode redir =
+        //    closure.redirect();
+        //closure.setRedirect(null);
+        //closure.setInterfaces(redir.getInterfaces());
+        //ReflectionUtils.setPrivateField(ClassNode.class, "clazz", closure, redir.getTypeClass());
+        //ReflectionUtils.setPrivateField(ClassNode.class, "lazyInitDone", closure, Boolean.FALSE);
+        closure.setGenericsTypes(new GenericsType[] {new GenericsType(getWrapperTypeIfPrimitive(returnType))});
     }
 }

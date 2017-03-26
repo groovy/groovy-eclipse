@@ -478,19 +478,24 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    public void _testClosure1() {
+    public void testClosure1() {
         String contents = "def fn = { int a, int b -> a + b }";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
     }
 
-    public void _testClosure2() {
+    public void testClosure2() {
         String contents = "def fn = 'abc'.&length";
         assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
     }
 
-    public void _testClosure3() {
+    public void testClosure3() {
         String contents = "def fn = Collections.&emptyList";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.util.List>");
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.util.List<T>>");
+    }
+
+    public void testClosure4() {
+        String contents = "def fn = (String.&trim) >> (Class.&forName)";
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Class<?>>");
     }
 
     public void testDGM() {
