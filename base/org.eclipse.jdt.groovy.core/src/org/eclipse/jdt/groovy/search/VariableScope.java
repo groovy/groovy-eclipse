@@ -531,13 +531,6 @@ public class VariableScope {
         }
     }
 
-    public static boolean isVoidOrObject(ClassNode maybeVoid) {
-        return maybeVoid != null &&
-            (maybeVoid.getName().equals(VOID_CLASS_NODE.getName()) ||
-                maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) ||
-                maybeVoid.getName().equals(OBJECT_CLASS_NODE.getName()));
-    }
-
     /**
      * Updates the type info of this variable if it already exists in scope, or just adds it if it doesn't
      */
@@ -1064,5 +1057,19 @@ public class VariableScope {
 
     public List<ClassNode> getMethodCallArgumentTypes() {
         return methodCallArgumentTypes;
+    }
+
+    public static boolean isPlainClosure(ClassNode type) {
+        return CLOSURE_CLASS_NODE.equals(type) && !type.isUsingGenerics();
+    }
+
+    public static boolean isParameterizedClosure(ClassNode type) {
+        return CLOSURE_CLASS_NODE.equals(type) &&  type.isUsingGenerics();
+    }
+
+    public static boolean isVoidOrObject(ClassNode type) {
+        return type != null && (type.getName().equals(VOID_CLASS_NODE.getName()) ||
+                type.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) ||
+                type.getName().equals(OBJECT_CLASS_NODE.getName()));
     }
 }

@@ -68,11 +68,12 @@ public class STCTypeLookup implements ITypeLookup {
                     confidence = TypeConfidence.UNKNOWN;
                 } else if (accessedVariable instanceof ASTNode) {
                     declaration = (ASTNode) accessedVariable;
-                    if (inferredType instanceof ClassNode) { // can we do better?
+                    if (inferredType instanceof ClassNode &&
+                            VariableScope.isPlainClosure((ClassNode) inferredType)) {
                         VariableInfo info = scope.lookupName(accessedVariable.getName());
-                        if (info != null && info.type != null && info.type != inferredType &&
-                                !info.type.toString(false).equals(((ClassNode) inferredType).toString(false)))
+                        if (info != null && VariableScope.isParameterizedClosure(info.type)) {
                             inferredType = info.type; // Closure --> Closure<String>
+                        }
                     }
                 }
             } else if (expr instanceof MethodCallExpression ||
