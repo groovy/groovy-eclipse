@@ -40,6 +40,7 @@ import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 public class STCTypeLookup implements ITypeLookup {
 
@@ -62,11 +63,17 @@ public class STCTypeLookup implements ITypeLookup {
                 declaration = ((FieldExpression) expr).getField();
             } else if (expr instanceof VariableExpression) {
                 Variable accessedVariable = ((VariableExpression) expr).getAccessedVariable();
-                if (accessedVariable instanceof ASTNode) {
-                    declaration = (ASTNode) accessedVariable;
-                } else if (accessedVariable instanceof DynamicVariable) {
+                if (accessedVariable instanceof DynamicVariable) {
                     // defer to other type lookup impls
                     confidence = TypeConfidence.UNKNOWN;
+                } else if (accessedVariable instanceof ASTNode) {
+                    declaration = (ASTNode) accessedVariable;
+                    if (inferredType instanceof ClassNode) { // can we do better?
+                        VariableInfo info = scope.lookupName(accessedVariable.getName());
+                        if (info != null && info.type != null && info.type != inferredType &&
+                                !info.type.toString(false).equals(((ClassNode) inferredType).toString(false)))
+                            inferredType = info.type; // Closure --> Closure<String>
+                    }
                 }
             } else if (expr instanceof MethodCallExpression ||
                     expr instanceof StaticMethodCallExpression || expr instanceof ConstructorCallExpression ||
