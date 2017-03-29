@@ -73,11 +73,11 @@ public class GenericsType extends ASTNode {
             s.append(",lowerBound=").append(lowerBound);
         }
         if (upperBounds != null) {
-        s.append(",upperBounds=[");
-        for (int i = 0, n = upperBounds.length; i < n; i++) {
-            if (i > 0) s.append(",");
-            s.append(upperBounds[i]);
-        }
+            s.append(",upperBounds=[");
+            for (int i = 0, n = upperBounds.length; i < n; i += 1) {
+                if (i > 0) s.append(",");
+                s.append(upperBounds[i]);
+            }
         }
         s.append("]]");
         s.append(this.getClass().getName());

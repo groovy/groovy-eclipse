@@ -30,16 +30,11 @@ import org.codehaus.groovy.ast.tools.WideningCategories;
  * @see ClassNode
  */
 public class GenericsType extends ASTNode {
-	/**
-	 * Andys observations:
-	 * - this is used to represent either a type variable with bounds (T extends I) or type parameter value (<String>).  In the former I think
-	 * just the name and bounds are used, whilst in the latter the type is used.  If the name is used then it is a placeholder.
-	 * but why does the first constructor take a set of parameters that wouldn't seem to make sense together?
-	 * 
-	 */
-	// GRECLIPSE: start: five from private to protected and first two non-final 
-    protected ClassNode[] upperBounds;
-    protected ClassNode lowerBound;
+    public static final GenericsType[] EMPTY_ARRAY = new GenericsType[0];
+
+    // GRECLIPSE edit
+    protected /*final*/ ClassNode[] upperBounds;
+    protected /*final*/ ClassNode lowerBound;
     protected ClassNode type;
     protected String name;
     protected boolean placeholder;
@@ -54,30 +49,31 @@ public class GenericsType extends ASTNode {
         placeholder = type.isGenericsPlaceHolder();
         resolved = false;
     }
-    // GRECLIPSE: start
+
+    // GRECLIPSE add
     public GenericsType() {}
-    
+
     public String toDetailsString() {
-    	StringBuilder s = new StringBuilder();
-    	s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
-    	s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
-    	s.append(",type=").append(type);
-    	if (lowerBound!=null) {
-    		s.append(",lowerBound=").append(lowerBound);
-    	}
-    	if (upperBounds!=null) {
-    	s.append(",upperBounds=[");
-    	for (int i=0;i<upperBounds.length;i++) {
-    		if (i>0) { s.append(","); }
-    		s.append(upperBounds[i]);
-    	}
-    	}
-    	s.append("]]");
-    	s.append(this.getClass().getName());
-    	return s.toString();
+        StringBuilder s = new StringBuilder();
+        s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
+        s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
+        s.append(",type=").append(type);
+        if (lowerBound!=null) {
+            s.append(",lowerBound=").append(lowerBound);
+        }
+        if (upperBounds!=null) {
+        s.append(",upperBounds=[");
+        for (int i=0;i<upperBounds.length;i++) {
+            if (i>0) { s.append(","); }
+            s.append(upperBounds[i]);
+        }
+        }
+        s.append("]]");
+        s.append(this.getClass().getName());
+        return s.toString();
     }
-    // end
-        
+    // GRECLIPSE end
+
     public GenericsType(ClassNode basicType) {
         this(basicType,null,null);
     }
@@ -483,14 +479,14 @@ public class GenericsType extends ASTNode {
         }
         return superClass;
     }
-    
-    // GRECLIPSE: start
-	public void setUpperBounds(ClassNode[] bounds) {
-		this.upperBounds = bounds;		
-	}
 
-	public void setLowerBound(ClassNode bound) {
-		this.lowerBound = bound;		
-	}
-	// end
+    // GRECLIPSE add
+    public void setUpperBounds(ClassNode[] bounds) {
+        this.upperBounds = bounds;
+    }
+
+    public void setLowerBound(ClassNode bound) {
+        this.lowerBound = bound;
+    }
+    // GRECLIPSE end
 }

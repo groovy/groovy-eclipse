@@ -1245,25 +1245,50 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().script = script;
     }
 
-    public String toString() {
+    // GRECLIPSE edit
+    /*public String toString() {
         String ret = getName();
-        Set<ClassNode> alreadySeen = new HashSet<ClassNode>(); // GRECLIPSE added
         if (genericsTypes != null) {
             ret += " <";
             for (int i = 0; i < genericsTypes.length; i++) {
                 if (i != 0) ret += ", ";
                 GenericsType genericsType = genericsTypes[i];
-                ret += genericTypeAsString(genericsType, alreadySeen); // GRECLIPSE added alreadySeen
+                ret += genericTypeAsString(genericsType);
             }
             ret += ">";
         }
         if (redirect != null) {
-            ret += " -> " + redirect().toString(alreadySeen); // GRECLIPSE added alreadySeen
+            ret += " -> " + redirect().toString();
+        }
+        return ret;
+    }*/
+
+    public String toString() {
+        return toString(true);
+    }
+
+    public String toString(boolean showRedirect) {
+        if (isArray()) {
+            return componentType.toString(showRedirect)+"[]";
+        }
+        String ret = getName();
+        if (placeholder) ret = getUnresolvedName();
+        Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
+        if (!placeholder && genericsTypes != null) {
+            ret += " <";
+            for (int i = 0; i < genericsTypes.length; i++) {
+                if (i != 0) ret += ", ";
+                GenericsType genericsType = genericsTypes[i];
+                ret += genericTypeAsString(genericsType, alreadySeen);
+            }
+            ret += ">";
+        }
+        if (redirect != null && showRedirect) {
+            ret += " -> " + redirect().toString(alreadySeen);
         }
         return ret;
     }
 
-    // GRECLIPSE start
     private String toString(Set<ClassNode> alreadySeen) {
         String ret = getName();
         if (genericsTypes != null) {

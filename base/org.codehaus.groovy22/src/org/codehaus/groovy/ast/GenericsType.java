@@ -31,22 +31,17 @@ import java.util.Set;
  * @see ClassNode
  */
 public class GenericsType extends ASTNode {
-	/**
-	 * Andys observations:
-	 * - this is used to represent either a type variable with bounds (T extends I) or type parameter value (<String>).  In the former I think
-	 * just the name and bounds are used, whilst in the latter the type is used.  If the name is used then it is a placeholder.
-	 * but why does the first constructor take a set of parameters that wouldn't seem to make sense together?
-	 * 
-	 */
-	// GRECLIPSE: start: five from private to protected and first two non-final 
-    protected ClassNode[] upperBounds;
-    protected ClassNode lowerBound;
+    public static final GenericsType[] EMPTY_ARRAY = new GenericsType[0];
+
+    // GRECLIPSE edit
+    private /*final*/ ClassNode[] upperBounds;
+    private /*final*/ ClassNode lowerBound;
     protected ClassNode type;
     protected String name;
     protected boolean placeholder;
     private boolean resolved;
     private boolean wildcard;
-    
+
     public GenericsType(ClassNode type, ClassNode[] upperBounds, ClassNode lowerBound) {
         this.type = type;
         this.name = type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getName();
@@ -55,30 +50,32 @@ public class GenericsType extends ASTNode {
         placeholder = type.isGenericsPlaceHolder();
         resolved = false;
     }
-    // GRECLIPSE: start
-    public GenericsType() {}
-    
-    public String toDetailsString() {
-    	StringBuilder s = new StringBuilder();
-    	s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
-    	s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
-    	s.append(",type=").append(type);
-    	if (lowerBound!=null) {
-    		s.append(",lowerBound=").append(lowerBound);
-    	}
-    	if (upperBounds!=null) {
-    	s.append(",upperBounds=[");
-    	for (int i=0;i<upperBounds.length;i++) {
-    		if (i>0) { s.append(","); }
-    		s.append(upperBounds[i]);
-    	}
-    	}
-    	s.append("]]");
-    	s.append(this.getClass().getName());
-    	return s.toString();
+
+    // GRECLIPSE add
+    public GenericsType() {
     }
-    // end
-        
+
+    public String toDetailsString() {
+        StringBuilder s = new StringBuilder();
+        s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
+        s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
+        s.append(",type=").append(type);
+        if (lowerBound!=null) {
+            s.append(",lowerBound=").append(lowerBound);
+        }
+        if (upperBounds!=null) {
+            s.append(",upperBounds=[");
+            for (int i=0;i<upperBounds.length;i++) {
+                if (i>0) { s.append(","); }
+                s.append(upperBounds[i]);
+            }
+        }
+        s.append("]]");
+        s.append(this.getClass().getName());
+        return s.toString();
+    }
+    // GRECLIPSE end
+
     public GenericsType(ClassNode basicType) {
         this(basicType,null,null);
     }
@@ -128,7 +125,7 @@ public class GenericsType extends ASTNode {
             if (Modifier.isStatic(innerClassNode.getModifiers()) || innerClassNode.isInterface()) {
                 ret.append(innerClassNode.getOuterClass().getName());
             } else {
-            	ret.append(genericsBounds(innerClassNode.getOuterClass(), new HashSet<String>()));
+                ret.append(genericsBounds(innerClassNode.getOuterClass(), new HashSet<String>()));
             }
             ret.append(".");
             String typeName = theType.getName();
@@ -508,14 +505,14 @@ public class GenericsType extends ASTNode {
         }
         return superClass;
     }
-    
-    // GRECLIPSE: start
-	public void setUpperBounds(ClassNode[] bounds) {
-		this.upperBounds = bounds;		
-	}
 
-	public void setLowerBound(ClassNode bound) {
-		this.lowerBound = bound;		
-	}
-	// end
+    // GRECLIPSE add
+    public void setUpperBounds(ClassNode[] bounds) {
+        this.upperBounds = bounds;
+    }
+
+    public void setLowerBound(ClassNode bound) {
+        this.lowerBound = bound;
+    }
+    // GRECLIPSE end
 }

@@ -17,6 +17,8 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+
 public final class StaticInferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
@@ -42,7 +44,8 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         String contents = "String.getClass()";
         int start = contents.indexOf("getClass");
         int end = start + "getClass".length();
-        assertType(contents, start, end, "java.lang.Class<?>"); // should be <java.lang.String>
+        assertType(contents, start, end, GroovyUtils.GROOVY_LEVEL > 23 ? "java.lang.Class<?>"
+            : "java.lang.Class<? extends java.lang.Object>"); // should be <? extends java.lang.String>
     }
 
     public void testClassReference4() {
