@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
-import static org.eclipse.core.runtime.FileLocator.resolve;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.SortedSet;
@@ -39,27 +37,21 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
-/**
- * @author Andrew Eisenberg
- * @created Sep 22, 2009
- */
 public class CompilerUtils {
-    /**
-     * Note: Used by Grails tooling
-     */
+
     public static String getGroovyVersion() {
         return GroovySystem.getVersion();
     }
 
-    /**
-     * Note: Used by Grails tooling
-     */
     public static boolean isGroovyVersionDisabledOrMissing(SpecifiedVersion version) {
         return getActiveGroovyVersion() == version;
     }
@@ -76,16 +68,11 @@ public class CompilerUtils {
         return CompilerChooser.getInstance().getActiveBundle();
     }
 
-
-
     /**
-     * Swtiches to or from groovy version 1.6.x depending on the boolean passed
-     * in
-     * A restart is required immediately after or else many exceptions will be
-     * thrown.
+     * Swtiches to or from groovy version 1.6.x depending on the boolean passed in.
+     * A restart is required immediately after or else many exceptions will be thrown.
      *
-     * @return {@link Status.OK_STATUS} if successful or error status that
-     *         contains the exception thrown otherwise
+     * @return {@link Status.OK_STATUS} if successful or error status that contains the exception thrown otherwise
      */
     public static IStatus switchVersions(SpecifiedVersion fromVersion, SpecifiedVersion toVersion) {
         try {
@@ -94,9 +81,7 @@ public class CompilerUtils {
             return Status.OK_STATUS;
         } catch (Exception e) {
             GroovyCore.logException(e.getMessage(), e);
-            return new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID,
-                            e.getMessage()
-                            + "\n\nSee the error log for more information.", e);
+            return new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, e.getMessage() + "\n\nSee the error log for more information.", e);
         }
     }
 
@@ -110,6 +95,18 @@ public class CompilerUtils {
         return allVersions;
     }
 
+    /**
+     * @return Best guess at the .groovy location (usually in user.home).
+     *         If user.home can't be found, then null is returned
+     */
+    public static String getDotGroovyLocation() {
+        String home = System.getProperty("user.home");
+        if (home != null) {
+            home += "/.groovy";
+        }
+        return home;
+    }
+
     private static String getDotGroovyLibLocation() {
         String home = getDotGroovyLocation();
         if (home != null) {
@@ -119,7 +116,7 @@ public class CompilerUtils {
     }
 
     public static SpecifiedVersion getCompilerLevel(IProject project) {
-        SpecifiedVersion version = UNSPECIFIED;
+        SpecifiedVersion version = SpecifiedVersion.UNSPECIFIED;
         if (GroovyNature.hasGroovyNature(project)) {
             String groovyCompilerLevelStr = Activator.getDefault().getGroovyCompilerLevel(project);
             if (groovyCompilerLevelStr != null) {
@@ -127,6 +124,16 @@ public class CompilerUtils {
             }
         }
         return version;
+    }
+
+    public static SpecifiedVersion getWorkspaceCompilerLevel() {
+        String groovyVersion = GroovySystem.getVersion();
+        // convert from major.minor.micro to major.minor
+        int dotIndex = groovyVersion.lastIndexOf('.');
+        if (dotIndex > 0) {
+            groovyVersion = groovyVersion.substring(0, dotIndex);
+        }
+        return SpecifiedVersion.findVersionFromString(groovyVersion);
     }
 
     public static void setCompilerLevel(IProject project, SpecifiedVersion projectLevel) {
@@ -145,22 +152,17 @@ public class CompilerUtils {
     }
 
     /**
-     * Check that the compiler level of the project matches that of the
-     * workspace
-     * if a msmatch, then a marker is added to the project
-     *
-     * @param project
-     * @param projectLevel
+     * Checks that the compiler level of the project matches that of the workspace.
+     * If a mismatch, then a marker is added to the project.
      */
     public static void addCompilerMismatchError(IProject project, SpecifiedVersion projectLevel) {
         try {
             SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
             IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
-            marker.setAttribute(IMarker.MESSAGE,
-                    "Groovy: compiler mismatch Project level is: " + projectLevel.toReadableVersionString()
-                            + " Workspace level is " + workspaceLevel.toReadableVersionString()
-                    + "\nGroovy compiler level expected by the project does not match workspace compiler level. "
-                    + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
+            marker.setAttribute(IMarker.MESSAGE, "Groovy: compiler mismatch Project level is: " +
+                projectLevel.toReadableVersionString() + " Workspace level is " + workspaceLevel.toReadableVersionString() +
+                "\nGroovy compiler level expected by the project does not match workspace compiler level. " +
+                "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
             marker.setAttribute(IMarker.LOCATION, project.getName());
         } catch (CoreException e) {
@@ -170,8 +172,7 @@ public class CompilerUtils {
 
     public static void removeCompilermMismatchProblem(IProject project) {
         try {
-            IMarker[] findMarkers = project.findMarkers(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM, true,
-                    IResource.DEPTH_ZERO);
+            IMarker[] findMarkers = project.findMarkers(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM, true, IResource.DEPTH_ZERO);
             for (IMarker marker : findMarkers) {
                 marker.delete();
             }
@@ -182,12 +183,9 @@ public class CompilerUtils {
 
     public static void addMultipleCompilersOnClasspathError(IProject project, SpecifiedVersion compiler1, SpecifiedVersion compiler2) {
         try {
-            //SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
             IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
-            marker.setAttribute(IMarker.MESSAGE,
-                    "Multiple Groovy compilers found on classpath. Continuing with compilation will produce unpredictible results. "
-                            + "Remove a compiler before continuing.\n" + "Found " + compiler1.toReadableVersionString() + " and "
-                            + compiler2.toReadableVersionString());
+            marker.setAttribute(IMarker.MESSAGE, "Multiple Groovy compilers found on classpath. Continuing with compilation will produce unpredictible results. " +
+                "Remove a compiler before continuing.\n" + "Found " + compiler1.toReadableVersionString() + " and " + compiler2.toReadableVersionString());
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
             marker.setAttribute(IMarker.LOCATION, project.getName());
         } catch (CoreException e) {
@@ -196,57 +194,29 @@ public class CompilerUtils {
     }
 
     public static boolean projectVersionMatchesWorkspaceVersion(SpecifiedVersion version) {
-        if (version == UNSPECIFIED || version == SpecifiedVersion.DONT_CARE) {
+        if (version == SpecifiedVersion.UNSPECIFIED || version == SpecifiedVersion.DONT_CARE) {
             return true;
-        } else {
-            SpecifiedVersion workspaceCompilerLevel = getWorkspaceCompilerLevel();
-            return version == workspaceCompilerLevel;
         }
-
+        return version == getWorkspaceCompilerLevel();
     }
 
     /**
-     * Returns the groovy-all-*.jar that is used in the Eclipse project. We know
-     * there should only be one specified in the header for org.codehaus.groovy
-     * right now.
-     *
-     * @return Returns the names of the jars that are exported by the
-     *         org.codehaus.groovy project.
-     * @throws BundleException
+     * Returns the groovy-all-x.y.z.jar that is used in the Eclipse project.
      */
-    public static URL getExportedGroovyAllJar() {
-        try {
-            Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-            if (groovyBundle == null) {
-                throw new RuntimeException("Could not find groovy bundle");
+    public static IPath getExportedGroovyAllJar() {
+        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+        for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "groovy-all-*.jar", false))) {
+            if (!jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
+                return toFilePath(jarUrl);
             }
-            Enumeration<URL> enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
-            if (enu == null) {
-                // in some versions of the plugin, the groovy-all jar is in the base directory of the plugins
-                enu = groovyBundle.findEntries("", "groovy-all-*.jar", false);
-            }
-            while (enu.hasMoreElements()) {
-                URL jar = enu.nextElement();
-                if (jar.getFile().indexOf("-sources") == -1 &&
-                        jar.getFile().indexOf("-javadoc") == -1 &&
-                        jar.getFile().indexOf("-eclipse") == -1) {
-                    // remove the "reference:/" protocol
-                    jar = resolve(jar);
-                    return jar;
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-        throw new RuntimeException("Could not find groovy all jar");
+        throw new RuntimeException("Could not find groovy-all jar");
     }
 
     private static boolean includeServlet = true;
-
     static {
         try {
-            String p = System.getProperty("greclipse.includeServletInClasspathContainer","true");
-            if (p.equalsIgnoreCase("false")) {
+            if (System.getProperty("greclipse.includeServletInClasspathContainer", "true").equalsIgnoreCase("false")) {
                 includeServlet = false;
             }
         } catch (Exception e) {
@@ -255,90 +225,50 @@ public class CompilerUtils {
     }
 
     /**
-     * finds and returns the extra jars that belong inside the Groovy Classpath
-     * Container
-     *
-     * @return jline, servlet-api, ivy, and commons-cli
+     * Returns the extra jars that belong inside the Groovy Classpath Container.
      */
-    public static URL[] getExtraJarsForClasspath() {
-        try {
-            Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-            Enumeration<URL> enu = groovyBundle.findEntries("lib", "*.jar", false);
-            if (enu == null) {
-                // in some versions of the plugin, the groovy-all jar is in the
-                // base directory of the plugins
-                enu = groovyBundle.findEntries("", "*.jar", false);
+    public static List<IPath> getExtraJarsForClasspath() {
+        List<IPath> jarPaths = new ArrayList<IPath>();
+        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+        for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "*.jar", false))) {
+            if (!jarUrl.getFile().startsWith("groovy-all") && (!jarUrl.getFile().startsWith("servlet") || includeServlet) &&
+                    !jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
+                jarPaths.add(toFilePath(jarUrl));
             }
-            List<URL> urls = new ArrayList<URL>(5);
-            while (enu.hasMoreElements()) {
-                URL jar = enu.nextElement();
-                if (!jar.getFile().contains("groovy") && (!jar.getFile().contains("servlet") || includeServlet)
-                        && !jar.getFile().endsWith("-sources.jar") && !jar.getFile().endsWith("-javadoc.jar")) {
-                    // remove the "reference:/" protocol
-                    jar = resolve(jar);
-                    urls.add(jar);
-                }
-            }
-            return urls.toArray(new URL[urls.size()]);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return jarPaths;
     }
 
     /**
-     * Finds a specific jar in the groovy lib folder, or null if not found
+     * Finds a specific jar in the groovy lib folder, or null if not found.
      *
      * @param jarName the name of the jar
      * @return the full, resolved url to the jar
-     * @throws IOException
      */
-    public static URL getJarInGroovyLib(String jarName) throws IOException {
+    public static IPath getJarInGroovyLib(String jarName) {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         Enumeration<URL> enu = groovyBundle.findEntries("lib", jarName, false);
-        if (enu == null) {
-            // in some versions of the plugin, the groovy-all jar is in the
-            // base directory of the plugins
-            enu = groovyBundle.findEntries("", jarName, false);
-        }
         if (enu != null && enu.hasMoreElements()) {
-            URL jar = enu.nextElement();
-            jar = resolve(jar);
-            if (jar.getFile().indexOf("sources") > 0 && enu.hasMoreElements()) {
-                jar = enu.nextElement();
-                jar = resolve(jar);
+            URL jarUrl = enu.nextElement();
+            if (jarUrl.getFile().endsWith("-sources.jar") && enu.hasMoreElements()) {
+                jarUrl = enu.nextElement();
             }
-            return jar;
+            return toFilePath(jarUrl);
         }
         return null;
     }
 
-    public static URL findDSLDFolder() {
-        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        Enumeration<URL> enu = groovyBundle.findEntries(".", "plugin_dsld_support", false);
-        if (enu != null && enu.hasMoreElements()) {
-            URL folder = enu.nextElement();
-            // remove the "reference:/" protocol
-            try {
-                folder = resolve(folder);
-                return folder;
-            } catch (IOException e) {
-                GroovyCore.logException("Exception when looking for DSLD folder", e);
+    public static IPath findDSLDFolder() {
+        try {
+            Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+            Enumeration<URL> enu = groovyBundle.findEntries(".", "plugin_dsld_support", false);
+            if (enu != null && enu.hasMoreElements()) {
+                return toFilePath(enu.nextElement());
             }
+        } catch (Exception e) {
+            GroovyCore.logException("Failed to resolve DSLD folder", e);
         }
         return null;
-
-    }
-
-    /**
-     * @return Best guess at the .groovy location (usually in user.home).
-     *         If user.home can't be found, then null is returned
-     */
-    public static String getDotGroovyLocation() {
-        String home = System.getProperty("user.home");
-        if (home != null) {
-            home += "/.groovy";
-        }
-        return home;
     }
 
     public static File[] findJarsInDotGroovyLocation() {
@@ -348,8 +278,7 @@ public class CompilerUtils {
             if (libDir.isDirectory()) {
                 File[] files = libDir.listFiles(new FilenameFilter() {
                     public boolean accept(File dir, String name) {
-                        return !(new File(dir, name).isDirectory()) &&
-                                name.endsWith(".jar");
+                        return !(new File(dir, name).isDirectory()) && name.endsWith(".jar");
                     }
                 });
                 return files;
@@ -358,13 +287,13 @@ public class CompilerUtils {
         return new File[0];
     }
 
-    public static SpecifiedVersion getWorkspaceCompilerLevel() {
-        String groovyVersion = GroovySystem.getVersion();
-        // convert from major.minor.micro to major.minor
-        int dotIndex = groovyVersion.lastIndexOf('.');
-        if (dotIndex > 0) {
-            groovyVersion = groovyVersion.substring(0, dotIndex);
+    /** Converts "bundleentry:/514.fwk1995952705/lib/groovy-all-x.y.z.jar" to file path. */
+    private static IPath toFilePath(URL url) {
+        try {
+            url = FileLocator.toFileURL(url);
+            return new Path(url.getPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return SpecifiedVersion.findVersionFromString(groovyVersion);
     }
 }

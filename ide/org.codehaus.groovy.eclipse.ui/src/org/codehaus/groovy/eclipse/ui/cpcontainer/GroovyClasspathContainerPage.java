@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.ui.cpcontainer;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
@@ -28,6 +26,7 @@ import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -220,15 +219,11 @@ implements IClasspathContainerPage, IClasspathContainerPageExtension {
     }
 
     private String extraJarsAsString() {
-        URL[] extraJars = CompilerUtils.getExtraJarsForClasspath();
+        List<IPath> extraJars = CompilerUtils.getExtraJarsForClasspath();
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
-        for (URL jar : extraJars) {
-            try {
-                sb.append(new File(jar.toURI()).getName()).append("\n");
-            } catch (URISyntaxException e) {
-                // OK to ignore
-            }
+        for (IPath jar : extraJars) {
+            sb.append(jar.toFile().getName()).append("\n");
         }
         sb.replace(sb.length()-1, sb.length(), "");
         return sb.toString();

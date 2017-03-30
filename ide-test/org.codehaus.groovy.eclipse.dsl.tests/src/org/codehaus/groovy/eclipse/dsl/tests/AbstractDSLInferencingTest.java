@@ -145,9 +145,9 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     }
 
     protected static void addGroovyJarToProject(String jarName, IProject project) throws CoreException, IOException {
-        URL url = CompilerUtils.getJarInGroovyLib(jarName);
-        if (url != null) {
-            env.addExternalJar(project.getFullPath(), url.getFile());
+        IPath path = CompilerUtils.getJarInGroovyLib(jarName);
+        if (path != null) {
+            env.addExternalJar(project.getFullPath(), path.toString());
             project.refreshLocal(IResource.DEPTH_INFINITE, null);
             env.cleanBuild();
         } else {

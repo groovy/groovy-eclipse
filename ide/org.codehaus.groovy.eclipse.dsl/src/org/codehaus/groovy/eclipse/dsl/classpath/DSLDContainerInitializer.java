@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.dsl.classpath;
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,9 +36,6 @@ import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Classpath container initializer that grabs all of the DSLDs that live outside of the workspace.
- *
- * @author andrew
- * @created May 21, 2011
  */
 public class DSLDContainerInitializer extends ClasspathContainerInitializer {
 
@@ -48,7 +44,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     /**
      * The location for global dsld files.  Null if the locaiton does not exist and cannot be created
      */
-    private static final File globalDsldLocation = getglobalDsldLocation();
+    private static final File globalDsldLocation = getGlobalDsldLocation();
 
 
     private final class DSLDClasspathContainer implements IClasspathContainer {
@@ -79,7 +75,6 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
 
         /**
          * Two entries: the /dsld folder in the groovy bundle and the ~/.groovy/greclipse/dsld folder
-         * @return
          */
         protected IClasspathEntry[] calculateEntries() {
             if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
@@ -93,19 +88,22 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
                 newEntries.add(newLibraryEntry(dsldPath, null, null, false));
             }
 
-            URL folder = CompilerUtils.findDSLDFolder();
-            if (folder != null) {
-                String file = folder.getFile();
-                Assert.isTrue(new File(file).exists(), "Plugin DSLD location does not exist: " + file);
+            try {
+                IPath folder = CompilerUtils.findDSLDFolder();
+                if (folder != null) {
+                    Assert.isTrue(folder.toFile().exists(), "Plugin DSLD location does not exist: " + folder);
 
-                IPath path = new Path(folder.getPath());
-                newEntries.add(newLibraryEntry(path, null, null));
+                    newEntries.add(newLibraryEntry(folder, null, null));
+                }
+            } catch (Exception e) {
+                GroovyDSLCoreActivator.logException(e);
             }
+
             return newEntries.toArray(NO_ENTRIES);
         }
-
     }
-    private static File getglobalDsldLocation() {
+
+    private static File getGlobalDsldLocation() {
         File location = null;
         String dotGroovyLocation = CompilerUtils.getDotGroovyLocation();
         if (dotGroovyLocation != null) {

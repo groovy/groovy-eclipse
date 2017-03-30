@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *     Ferenc Hechler, ferenc_hechler@users.sourceforge.net - 83258 [jar exporter] Deploy java application as executable jar
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.eclipse.jdt.testplugin;
 
 import java.io.File;
@@ -34,12 +38,9 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -690,24 +691,16 @@ public class JavaProjectHelper {
 			null
 		};
 	}
-	/**
-	 */
+
 	public static IPath[] findGroovyJar() throws CoreException {
-	    URL installURL= CompilerUtils.getExportedGroovyAllJar();
-	    URL localURL;
-        try {
-            localURL = FileLocator.toFileURL(installURL);
-        } catch (IOException e) {
-            throw new CoreException(new Status(IStatus.ERROR, RefactoringTestPlugin.getPluginId(), "Error getting groovy jar", e));
-        }
-	    File groovyJarFile = new File(localURL.getFile());
-	    Assert.assertNotNull(groovyJarFile);
-	    Assert.assertTrue(groovyJarFile.exists());
-	    return new IPath[] {
-	            Path.fromOSString(groovyJarFile.getPath()),
-	            null,
-	            null
-	    };
+		IPath groovyJarPath = CompilerUtils.getExportedGroovyAllJar();
+		Assert.assertNotNull(groovyJarPath);
+		Assert.assertTrue(groovyJarPath.toFile().exists());
+		return new IPath[] {
+			groovyJarPath,
+			null,
+			null
+		};
 	}
 
 	private static void addNatureToProject(IProject proj, String natureId, IProgressMonitor monitor) throws CoreException {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@ package org.codehaus.groovy.eclipse.core.builder;
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -77,30 +75,30 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         try {
             boolean minimalLibraries = hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(JavaCore.create(project)));
 
-            Set<URL> libraryUrls = new LinkedHashSet<URL>();
-            libraryUrls.add(CompilerUtils.getExportedGroovyAllJar());
+            Set<IPath> libraries = new LinkedHashSet<IPath>();
+            libraries.add(CompilerUtils.getExportedGroovyAllJar());
             if (!minimalLibraries) {
-                libraryUrls.addAll(Arrays.asList(CompilerUtils.getExtraJarsForClasspath()));
+                libraries.addAll(CompilerUtils.getExtraJarsForClasspath());
             }
 
-            final List<IClasspathEntry> cpEntries = new ArrayList<IClasspathEntry>(libraryUrls.size());
+            final List<IClasspathEntry> cpEntries = new ArrayList<IClasspathEntry>(libraries.size());
 
-            for (URL libraryUrl : libraryUrls) {
-                IPath jarPath = new Path(libraryUrl.getPath());
-                IPath srcPath = null;
+            for (IPath jarPath : libraries) {
+                 IPath srcPath = null;
 
                 // check for sources
-                File srcJarFile = new File(libraryUrl.getPath().replace(".jar", "-sources.jar"));
+                File srcJarFile = new File(jarPath.removeFileExtension().toString() + "-sources.jar");
                 if (srcJarFile.exists()) {
                     srcPath = new Path(srcJarFile.getAbsolutePath());
                 }
 
                 // check for javadoc
                 IClasspathAttribute[] cpAttrs;
-                File docJarFile = new File(libraryUrl.getPath().replace(".jar", "-javadoc.jar"));
+                File docJarFile = new File(jarPath.removeFileExtension().toString() + "-javadoc.jar");
                 if (docJarFile.exists()) {
-                    cpAttrs = new IClasspathAttribute[] { new ClasspathAttribute(
-                            IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docJarFile.getAbsolutePath()) };
+                    cpAttrs = new IClasspathAttribute[] {
+                        new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docJarFile.getAbsolutePath())
+                    };
                 } else {
                     cpAttrs = new IClasspathAttribute[0];
                 }
@@ -115,7 +113,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
             entries = cpEntries.toArray(new IClasspathEntry[cpEntries.size()]);
 
         } catch (Exception e) {
-            GroovyCore.logException("Problem finding groovy runtime", e);
+            GroovyCore.logException("Problem finding Groovy runtime", e);
 
             entries = new IClasspathEntry[0];
         }
@@ -150,16 +148,13 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     }
 
     /**
-     * Finds all the jars in the ~/.groovy/lib directory and adds them
-     * to the classpath
+     * Finds all the jars in the ~/.groovy/lib directory and adds them to the classpath.
      */
     private Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
         File[] files = CompilerUtils.findJarsInDotGroovyLocation();
         final List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>(files.length);
         for (File file : files) {
-            IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()),
-                    null, null, null,
-                    new IClasspathAttribute[0], true);
+            IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()), null, null, null, new IClasspathAttribute[0], true);
             newEntries.add(entry);
         }
         return newEntries;
