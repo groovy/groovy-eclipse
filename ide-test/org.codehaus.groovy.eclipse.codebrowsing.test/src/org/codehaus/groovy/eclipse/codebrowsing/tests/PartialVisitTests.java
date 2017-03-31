@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,29 +19,29 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import junit.framework.Test;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectRequestor;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 
 /**
- * Ensures that the code select requestor properly avoids visiting ASTNodes that are not in the same
- * {@link IJavaElement} as the target node.
- *
- * @author Andrew Eisenberg
- * @created Mar 2, 2011
+ * Ensures that the code select requestor properly avoids visiting ASTNodes that
+ * are not in the same {@link IJavaElement} as the target node.
  */
 public final class PartialVisitTests extends BrowsingTestCase {
 
-    public static junit.framework.Test suite() {
+    public static Test suite() {
         return newTestSuite(PartialVisitTests.class);
     }
 
     private static class PartialCodeSelectRequestor extends CodeSelectRequestor {
-        Set<String> skippedElements = new HashSet<String>();
+        private final Set<String> skippedElements = new HashSet<String>();
 
         public PartialCodeSelectRequestor(ASTNode node, GroovyCompilationUnit unit) {
             super(node, unit);
@@ -51,17 +51,17 @@ public final class PartialVisitTests extends BrowsingTestCase {
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             VisitStatus status = super.acceptASTNode(node, result, enclosingElement);
             if (status == VisitStatus.CANCEL_MEMBER) {
-                if (skippedElements.contains(enclosingElement)) {
+                if (skippedElements.contains(getElementName(enclosingElement))) {
                     fail("Element has been skipped twice, but should only have been skipped once: " + enclosingElement);
                 }
-                skippedElements.add(enclosingElement.getElementName());
+                skippedElements.add(getElementName(enclosingElement));
             }
             return status;
         }
     }
 
-    private class PartialCodeSelectHelper extends CodeSelectHelper {
-        Set<String> skippedElements = new HashSet<String>();
+    private static class PartialCodeSelectHelper extends CodeSelectHelper {
+        private Set<String> skippedElements = new HashSet<String>();
 
         @Override
         protected CodeSelectRequestor createRequestor(ASTNode node, Region r1, Region r2, GroovyCompilationUnit unit) {
@@ -72,65 +72,76 @@ public final class PartialVisitTests extends BrowsingTestCase {
 
         @Override
         public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
-            helper.skippedElements.clear();
+            skippedElements.clear();
             return super.select(unit, start, length);
         }
 
         @Override
         public ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
-            helper.skippedElements.clear();
+            skippedElements.clear();
             return super.selectASTNode(unit, start, length);
         }
     }
 
-    PartialCodeSelectHelper helper = new PartialCodeSelectHelper();
+    private final PartialCodeSelectHelper helper = new PartialCodeSelectHelper();
 
-    // should not visit the Foo class, or the main method
+    // should not visit the class or the main method
     public void testSimple() throws Exception {
-        String contents = "new Foo().x\nclass Foo { \ndef x }\n";
-        assertCodeSelectWithSkippedNames(contents, indexOf(contents, "x"), "x", "Hello", "main");
+        String contents = "new Foo().x\nclass Foo {\n def x \n}\n";
+        assertCodeSelectWithSkippedNames(contents, indexOf(contents, "x"), "x", "Hello()", "Hello(context)", "main(args)");
     }
 
     // should not visit the Hello constructor, Foo class, or the main method
     public void testSimple2() throws Exception {
-        String contents = "class Foo { \ndef x }\nnew Foo().x";
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "x"), "x", "Hello", "main", "Foo");
+        String contents = "class Foo {\n def x \n}\nnew Foo().x";
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "x"), "x", "Foo", "Hello()", "Hello(context)", "main(args)");
     }
 
     // should not visit the x field
     public void testSimple3() throws Exception {
-        String contents = "class Foo { \ndef x\n def blah() { \nx } }";
+        String contents = "class Foo {\n def x\n def blah() { \nx } }";
         assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "x"), "x", "x");
     }
 
     public void testFieldInitializer() throws Exception {
         String contents = "class Foo { Foo() { } \n def y \ndef x = y }";
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo", "y");
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "y");
     }
 
     // static initializers are now visited in place
     public void testStaticFieldInitializer() throws Exception {
         String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y }";
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo", "z", "y");
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "z", "y");
     }
 
     public void testInnerClass() throws Exception {
         String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog \n def blag = y } }";
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo", "x", "y", "z", "blog");
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "x", "y", "z", "blog");
     }
 
     public void testInnerClass2() throws Exception {
         String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog }\n def blag = y  }";
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo", "x", "y", "z", "Inner");
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "x", "y", "z", "Inner");
     }
 
     //
 
-    private Region indexOf(String contents, String string) {
+    private static String getElementName(IJavaElement element) {
+        if (element instanceof IMethod) {
+            try {
+                String[] params = ((IMethod) element).getParameterNames();
+                return element.getElementName() + (params.length < 1 ? "()"
+                    : Arrays.toString(params).replace('[', '(').replace(']', ')'));
+            } catch (JavaModelException e) {}
+        }
+        return element.getElementName();
+    }
+
+    private static Region indexOf(String contents, String string) {
         return new Region(contents.indexOf(string), string.length());
     }
 
-    private Region lastIndexOf(String contents, String string) {
+    private static Region lastIndexOf(String contents, String string) {
         return new Region(contents.lastIndexOf(string), string.length());
     }
 
@@ -139,7 +150,7 @@ public final class PartialVisitTests extends BrowsingTestCase {
 
         IJavaElement[] elems = helper.select(unit, region.getOffset(), region.getLength());
         assertEquals("Should have found a single selection: " + Arrays.toString(elems), 1, elems.length);
-        assertEquals("Wrong element selected", expectedElementName, elems[0].getElementName());
+        assertEquals("Wrong element selected", expectedElementName, getElementName(elems[0]));
 
         for (String skipped : skippedElementNames) {
             assertTrue("Element " + skipped + " should have been skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements, helper.skippedElements.contains(skipped));

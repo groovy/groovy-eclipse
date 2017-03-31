@@ -77,7 +77,7 @@ public class RefreshDSLDJob extends Job {
             }
             if (resource.getType() == IResource.FILE) {
                 IFile file = (IFile) resource;
-                if (!alreadyAdded.contains(file) && (isDSLD(file) || isSuggestionFile(file))) {
+                if (!alreadyAdded.contains(file.getName()) && (isDSLD(file) || isSuggestionFile(file))) {
                     alreadyAdded.add(file.getName());
                     dsldFiles.add(file);
                 } else {
