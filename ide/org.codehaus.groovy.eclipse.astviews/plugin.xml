@@ -4,7 +4,7 @@
    <extension point="org.eclipse.ui.views">
       <view
             name="Groovy AST Viewer"
-            icon="icons/tiny.png"
+            icon="icons/groovy16.png"
             category="org.codehaus.groovy.eclipse.Groovy"
             class="org.codehaus.groovy.eclipse.astviews.ASTView"
             id="org.codehaus.groovy.eclipse.astviews.ASTView">
