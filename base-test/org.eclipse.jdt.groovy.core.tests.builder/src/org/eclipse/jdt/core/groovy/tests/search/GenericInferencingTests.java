@@ -480,7 +480,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     public void testClosure1() {
         String contents = "def fn = { int a, int b -> a + b }";
-        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
     }
 
     public void testClosure2() {

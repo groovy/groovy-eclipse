@@ -41,6 +41,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -59,6 +60,7 @@ import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
@@ -249,6 +251,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return new TypeLookupResult(VariableScope.PATTERN_CLASS_NODE, null, null, confidence, scope);
             }
             return new TypeLookupResult(type, null, null, confidence, scope);
+
+        } else if (node instanceof ClosureExpression && VariableScope.isPlainClosure(nodeType)) {
+            ClassNode returnType = (ClassNode) node.getNodeMetaData("returnType");
+            if (returnType != null && !VariableScope.isVoidOrObject(returnType))
+                GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
 
         } else if (node instanceof ClassExpression) {
             if (isClassLiteralExpression((ClassExpression) node, scope)) {

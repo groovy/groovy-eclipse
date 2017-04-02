@@ -85,10 +85,12 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
+import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
@@ -888,7 +890,7 @@ assert primaryExprType != null && dependentExprType != null;
                 scopes.getLast().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
                 // there is an overloadable method associated with this operation; convert to a constant expression and look it up
                 TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false, scopes.getLast());
-                completeExprType = result.type;
+                if (result.confidence != TypeConfidence.UNKNOWN) completeExprType = result.type;
                 // special case DefaultGroovyMethods.getAt -- the problem is that DGM has too many variants of getAt
                 if (associatedMethod.equals("getAt") && result.declaringType.equals(VariableScope.DGM_CLASS_NODE)) {
                     if (primaryExprType.getName().equals("java.util.BitSet")) {
@@ -988,8 +990,6 @@ assert primaryExprType != null && dependentExprType != null;
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
 
-        boolean shouldContinue = handleSimpleExpression(node);
-        if (shouldContinue) {
             ClassNode[] implicitParamType = findImplicitParamType(scope, node);
             Parameter[] parameters = node.getParameters(); final int n;
             if (parameters != null && (n = parameters.length) > 0) {
@@ -1057,8 +1057,10 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             }
+
             super.visitClosureExpression(node);
-        }
+            handleSimpleExpression(node);
+
         scopes.removeLast();
     }
 
@@ -1544,7 +1546,19 @@ assert primaryExprType != null && dependentExprType != null;
     public void visitReturnStatement(ReturnStatement ret) {
         boolean shouldContinue = handleStatement(ret);
         if (shouldContinue) {
-            super.visitReturnStatement(ret);
+            ClosureExpression closure = scopes.getLast().getEnclosingClosure();
+            if (closure == null || closure.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) != null) {
+                super.visitReturnStatement(ret);
+            } else { // capture return type
+                completeExpressionStack.add(ret);
+                super.visitReturnStatement(ret);
+                completeExpressionStack.removeLast();
+                ClassNode returnType = primaryTypeStack.removeLast();
+                ClassNode closureType = (ClassNode) closure.putNodeMetaData("returnType", returnType);
+                if (closureType != null && !closureType.equals(returnType)) {
+                    closure.putNodeMetaData("returnType", WideningCategories.lowestUpperBound(closureType, returnType));
+                }
+            }
         }
     }
 
@@ -2071,9 +2085,6 @@ assert primaryExprType != null && dependentExprType != null;
             } else if (complete instanceof MethodPointerExpression) {
                 MethodPointerExpression ref = (MethodPointerExpression) complete;
                 return ref.getMethodName() == node;
-            } else if (complete instanceof ReturnStatement) {
-                ReturnStatement ret = (ReturnStatement) complete;
-                return ret.getExpression() == node;
             } else if (complete instanceof ImportNode) {
                 ImportNode imp = (ImportNode) complete;
                 return imp.getAliasExpr() == node || imp.getFieldNameExpr() == node;
@@ -2139,6 +2150,9 @@ assert primaryExprType != null && dependentExprType != null;
                 // this check is used to store the type of the collection expression
                 // so that it can be assigned to the for loop variable
                 return ((ForStatement) complete).getCollectionExpression() == node;
+
+            } else if (complete instanceof ReturnStatement) {
+                return ((ReturnStatement) complete).getExpression() == node;
 
             } else if (complete instanceof ListExpression) {
                 return isNotEmpty(((ListExpression) complete).getExpressions()) &&

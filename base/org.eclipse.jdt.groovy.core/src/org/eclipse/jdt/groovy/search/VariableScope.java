@@ -506,6 +506,16 @@ public class VariableScope {
         }
     }
 
+    public ClosureExpression getEnclosingClosure() {
+        if (scopeNode instanceof ClosureExpression) {
+            return (ClosureExpression) scopeNode;
+        }
+        if (parent != null) {
+            return parent.getEnclosingClosure();
+        }
+        return null;
+    }
+
     private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
         ClassNode propertyType = methodNode.getReturnType();
         String methodName = methodNode.getName();
@@ -674,7 +684,7 @@ public class VariableScope {
             }
             resolved.setAnnotationDefault(method.hasAnnotationDefault());
             resolved.setDeclaringClass(resolveTypeParameterization(mapper, clone(method.getDeclaringClass())));
-            resolved.setGenericsTypes(method.getGenericsTypes()); // TODO: resolve
+            resolved.setGenericsTypes(method.getGenericsTypes()); // TODO: resolve?
             resolved.setHasNoRealSourcePosition(method.hasNoRealSourcePosition());
             resolved.copyNodeMetaData(method);
             resolved.setOriginal(method.getOriginal());
@@ -789,12 +799,7 @@ public class VariableScope {
             int n = oldUpperBounds.length;
             ClassNode[] newUpperBounds = new ClassNode[n];
             for (int i = 0; i < n; i += 1) {
-                // avoid infinite recursion of Enum<E extends Enum<?>>
-                //if (oldUpperBounds[i].getName().equals(newgt.getType().getName())) {
-                //    newUpperBounds[i] = VariableScope.OBJECT_CLASS_NODE;
-                //} else {
-                    newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
-                //}
+                newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
             }
             newgt.setUpperBounds(newUpperBounds);
         }
@@ -818,16 +823,6 @@ public class VariableScope {
      */
     public boolean isPrimaryNode() {
         return isPrimaryNode;
-    }
-
-    public ClosureExpression getEnclosingClosure() {
-        if (scopeNode instanceof ClosureExpression) {
-            return (ClosureExpression) scopeNode;
-        }
-        if (parent != null) {
-            return parent.getEnclosingClosure();
-        }
-        return null;
     }
 
     /**
