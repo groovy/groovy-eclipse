@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,19 @@ package org.codehaus.groovy.frameworkadapter.util;
 import org.osgi.framework.Version;
 
 public enum SpecifiedVersion {
-    _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"),
-    _19(1, 9, "19"), _20(2, 0, "20"), _21(2,1,"21"),
-    _22(2,2,"22"),_23(2,3,"23"),_24(2,4,"24"),DONT_CARE(0, 0, "-1"), UNSPECIFIED(0, 0, "0");
+    _16(1, 6, "16"),
+    _17(1, 7, "17"),
+    _18(1, 8, "18"),
+    _19(1, 9, "19"),
+    _20(2, 0, "20"),
+    _21(2, 1, "21"),
+    _22(2, 2, "22"),
+    _23(2, 3, "23"),
+    _24(2, 4, "24"),
+    _25(2, 5, "25"),
+    DONT_CARE(0, 0, "-1"),
+    UNSPECIFIED(0, 0, "0");
+
     public final int majorVersion;
     public final int minorVersion;
     public final String versionName;
@@ -45,13 +55,11 @@ public enum SpecifiedVersion {
         }
     }
 
-
     /**
      * Generates a {@link SpecifiedVersion} from a name of a groovy jar
      *
      * @param jarName the name of a jar
-     * @return the {@link SpecifiedVersion} if known. Will return
-     *         {@link UNSPECIFIED} if not known
+     * @return the {@link SpecifiedVersion} if known. Will return {@link UNSPECIFIED} if not known
      */
     public static SpecifiedVersion parseVersion(String jarName) {
         boolean groovyStart = jarName.startsWith("groovy-");
@@ -91,9 +99,10 @@ public enum SpecifiedVersion {
                                     return _23;
                                 case 4:
                                     return _24;
+                                case 5:
+                                    return _25;
                             }
                             break;
-
                     }
                 } catch (NumberFormatException e) {
                     // can ignore just return unspecified
@@ -135,6 +144,9 @@ public enum SpecifiedVersion {
         if ("24".equals(compilerLevel) || "2.4".equals(compilerLevel)) {
             return _24;
         }
+        if ("25".equals(compilerLevel) || "2.5".equals(compilerLevel)) {
+            return _25;
+        }
         if ("0".equals(compilerLevel)) {
             return UNSPECIFIED;
         }
@@ -143,7 +155,8 @@ public enum SpecifiedVersion {
         }
 
         System.out.println("Invalid Groovy compiler level specified: " + compilerLevel +
-                        "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24 or 2.4");
+            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25 or 2.5");
+
         return UNSPECIFIED;
     }
 
@@ -171,6 +184,8 @@ public enum SpecifiedVersion {
                         return _23;
                     case 4:
                         return _24;
+                    case 5:
+                        return _25;
                 }
         }
         return UNSPECIFIED;

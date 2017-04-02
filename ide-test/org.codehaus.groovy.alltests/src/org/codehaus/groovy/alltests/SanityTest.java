@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.alltests;
 
 import junit.framework.TestCase;
-
 import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.eclipse.core.runtime.Platform;
@@ -24,11 +23,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 /**
- * Ensure the proper compiler level is being run
- * @author Andrew Eisenberg
- * @created Jun 28, 2012
+ * Ensures the proper compiler level is being used.
  */
 public class SanityTest extends TestCase {
+
     @Override
     protected void setUp() throws Exception {
         GroovyActivator.initialize();
@@ -37,9 +35,8 @@ public class SanityTest extends TestCase {
 
     private Version getEclipsePlatformVersion() {
         Bundle eclipseplatform = Platform.getBundle("org.eclipse.platform");
-        System.out.println("org.eclipse.platform?"+eclipseplatform);
-//        assertNotNull("Can't find eclipse platform", eclipseplatform);
-        return eclipseplatform==null?null:eclipseplatform.getVersion();
+        System.out.println("org.eclipse.platform?" + eclipseplatform);
+        return eclipseplatform == null ? null : eclipseplatform.getVersion();
     }
 
     private Version getEclipseVersion() {
@@ -60,7 +57,6 @@ public class SanityTest extends TestCase {
         Version eclipseplatformVersion = getEclipsePlatformVersion();
         Version groovyVersion = getGroovyCompilerVersion();
 
-        //use sys *err* because build run on bamboo eats the sys out
         System.err.println("---------------------------------------");
         System.err.println("SanityTest.testCompilerVersion()");
         System.err.println("Eclipse Platform " + eclipseplatformVersion);
@@ -77,12 +73,10 @@ public class SanityTest extends TestCase {
         // JDT 3.9 test against Groovy 2.2
         // JDT 3.10 test against Groovy 2.3
 
-        //Reality: all tests run against latest Groovy. I.e. 2.3.x
-        assertEquals("2.4", groovyVersion.getMajor() + "." +groovyVersion.getMinor());
-
+        assertEquals("2.5", groovyVersion.getMajor() + "." +groovyVersion.getMinor());
     }
 
-    public void testCompilerJars() throws Exception {
+    public void testCompilerJars() {
         System.out.println("---------------------------------------");
         System.out.println("SanityTest.testCompilerJars()");
         System.out.println("Classloader location " + GroovyActivator.class.getClassLoader().getResource("."));
