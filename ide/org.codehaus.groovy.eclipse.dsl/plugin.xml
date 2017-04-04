@@ -186,7 +186,7 @@
             base-type="org.eclipse.jdt.groovy.core.groovySource"
             file-extensions="dsld"
             id="org.codehaus.groovy.eclipse.dsl.dsld"
-            name="Groovy DSL Descriptor file"
+            name="Groovy DSL Descriptor"
             priority="high">
       </content-type>
    </extension>
