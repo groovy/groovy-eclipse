@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
 
@@ -100,15 +100,13 @@ public class GroovyImportRewriteFactory {
 
             // find a reasonable substring that contains
             // what looks to be the import dependencies
-            CharArraySequence contents = new CharArraySequence(
-                    unit.getContents());
-            CharArraySequence imports = findImportsRegion(contents);
+            CharSequence imports = findImportsRegion(new CharArraySequence(unit.getContents()));
 
             // Now send this to a parser
             // need to be very careful here that if we can't parse, then don't send to rewriter
 
             ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
-            parser.setSource(unit.cloneCachingContents(CharOperation.concat(imports.getChars(), "class X { }".toCharArray())));
+            parser.setSource(unit.cloneCachingContents(new StringBuilder(imports).append("class X { }").toString().toCharArray()));
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
             ASTNode result = null;
             try {
@@ -129,22 +127,13 @@ public class GroovyImportRewriteFactory {
     }
 
     /**
-     * Convenience methpd for
-     * {@link GroovyProposalTypeSearchRequestor#findImportsRegion(CharArraySequence)}
-     */
-    public static CharArraySequence findImportsRegion(String contents) {
-        return findImportsRegion(new CharArraySequence(contents));
-    }
-
-    /**
      * Finds a region of text that kind of looks like where the imports should
      * be placed. Uses regular expressions.
      *
-     * @param contents
-     *            the contents of a compilation unit
+     * @param contents the contents of a compilation unit
      * @return a presumed region
      */
-    public static CharArraySequence findImportsRegion(CharArraySequence contents) {
+    public static CharSequence findImportsRegion(CharSequence contents) {
         // heuristics:
         // look for last index of ^import
         // if that returns -1, then look for ^package

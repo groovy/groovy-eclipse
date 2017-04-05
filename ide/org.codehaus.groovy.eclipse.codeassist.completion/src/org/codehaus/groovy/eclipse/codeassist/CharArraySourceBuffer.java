@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,42 +16,21 @@
 package org.codehaus.groovy.eclipse.codeassist;
 
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
-import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 
-/**
- *
- * @author andrew
- * @created Apr 29, 2011
- */
-public class CharArraySourceBuffer implements ISourceBuffer {
-
-    private final char[] chars;
+public class CharArraySourceBuffer extends CharArraySequence implements ISourceBuffer {
 
     public CharArraySourceBuffer(char[] chars) {
-        this.chars = chars;
+        super(chars);
     }
-
-    public char charAt(int offset) {
-        return chars[offset];
-    }
-
-    public int length() {
-        return chars.length;
-    }
-
-    public CharSequence subSequence(int start, int end) {
-        return String.valueOf(CharOperation.subarray(chars, start, end));
-    }
-
 
     public int[] toLineColumn(int offset) {
-        // not implemented
+        // not yet implemented
         return null;
     }
 
     public int toOffset(int line, int column) {
-        // not implemented
+        // not yet implemented
         return 0;
     }
-
 }

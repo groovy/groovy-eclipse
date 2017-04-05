@@ -451,12 +451,16 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (!(sloc.getOffset() > node.getNameEnd())) {
             return;
         }
+        // anonymous inner classes cannot have extends or implements clauses
+        if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
+            return;
+        }
         // set offset beyond the class name and any generics
         GenericsType type = ArrayUtils.lastElement(node.getGenericsTypes());
         int offset = (type != null ? type.getEnd() : node.getNameEnd()) + 1;
         String source, src = null;
         try {
-        source = (src = readClassDeclaration(node)).substring(offset - node.getStart());
+            source = (src = readClassDeclaration(node)).substring(offset - node.getStart());
         } catch (Exception err) {
             GroovyCore.logException(String.format(
                 "Error checking super-types at offset %d in file / index %d of:%n%s%n%s",

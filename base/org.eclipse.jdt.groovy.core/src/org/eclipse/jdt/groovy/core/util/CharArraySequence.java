@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,51 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codeassist.processors;
+package org.eclipse.jdt.groovy.core.util;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.compiler.CharOperation;
 
-/**
- * A char sequence from an array
- */
 public class CharArraySequence implements CharSequence {
 
     private final char[] chars;
 
     public CharArraySequence(char[] chars) {
+        Assert.isNotNull(chars);
         this.chars = chars;
     }
 
-    public CharArraySequence(String contents) {
-        this.chars = contents.toCharArray();
-    }
-
-    public char[] getChars() {
-        return chars;
+    public char charAt(int offset) {
+        return chars[offset];
     }
 
     public int length() {
         return chars.length;
     }
 
-    /**
-     * may throw {@link IndexOutOfBoundsException}
-     */
-    public char charAt(int index) {
-        return chars[index];
+    public CharSequence subSequence(int start, int until) {
+        return new CharArraySequence(CharOperation.subarray(chars, start, until));
     }
 
-    public CharArraySequence subSequence(int start, int end) {
-        return new CharArraySequence(CharOperation.subarray(chars, start,
-                end));
-    }
-
-    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < chars.length; i++) {
-            sb.append(chars[i]);
-        }
-        return sb.toString();
+        return String.valueOf(chars);
     }
 }
