@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,57 +15,63 @@
  */
 package org.codehaus.jdt.groovy.integration.internal;
 
+import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isGroovyLikeFileName;
+import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isJavaLikeButNotGroovyLikeExtension;
+
+import java.util.regex.Pattern;
+
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * The multiplexing parser can delegate file parsing to multiple parsers. In this scenario it subtypes 'Parser' (which is the Java
  * parser) but is also aware of a groovy parser. Depending on what kind of file is to be parsed, it will invoke the relevant parser.
- *
- * @author Andy Clement
  */
 public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 
-    GroovyParser groovyParser;
-    private boolean allowTransforms = true;
+    // FIXASC How often is the LanguageSupport impl looked up? Should be once then we remember what happened.
 
-    // FIXASC how often is the LanguageSupport impl looked up? should be once then
-    // we remember what happened
-    public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
-            boolean optimizeStringLiterals, boolean allowTransforms) {
-        super(problemReporter, optimizeStringLiterals);
-        // The superclass that is extended is in charge of parsing .java files
-        groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, allowTransforms, true);
-        this.allowTransforms = allowTransforms;
+    private final GroovyParser groovyParser;
+
+    public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
+        this(requestor, compilerOptions, problemReporter, optimizeStringLiterals, true);
     }
 
-    public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
-            boolean optimizeStringLiterals) {
-        this(requestor, compilerOptions, problemReporter, optimizeStringLiterals, true);
+    public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals, boolean allowTransforms) {
+        super(problemReporter, optimizeStringLiterals);
+        groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, allowTransforms, true);
     }
 
     @Override
     public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-            // even though the Java scanner is not used, its contents can be asked for.
+        if (isGroovyLikeFileName(sourceUnit.getFileName()) || isGroovyLikeSourceUnit(sourceUnit)) {
             if (this.scanner != null) {
                 this.scanner.setSource(sourceUnit.getContents());
             }
-            // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-            // FIXASC ought to reuse to ensure types end up in same groovy CU
-            return new GroovyParser(this.groovyParser.requestor, this.groovyParser.getCompilerOptions(),
-                    this.groovyParser.problemReporter, allowTransforms, true).dietParse(sourceUnit, compilationResult);
-            // return groovyParser.dietParse(sourceUnit, compilationResult);
-        } else {
-            return super.dietParse(sourceUnit, compilationResult);
+            return groovyParser.dietParse(sourceUnit, compilationResult);
         }
+        return super.dietParse(sourceUnit, compilationResult);
     }
+
+    private static boolean isGroovyLikeSourceUnit(ICompilationUnit sourceUnit) {
+        if (sourceUnit.getFileName() == null || !isJavaLikeButNotGroovyLikeExtension(String.valueOf(sourceUnit.getFileName()))) {
+            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(sourceUnit.getContents())).find()) {
+                Util.log(1, "Identified a Groovy source unit through inspection of its contents: " +
+                    String.valueOf(sourceUnit.getContents(), 0, Math.min(250, sourceUnit.getContents().length)));
+                return true;
+            }
+        }
+        return false;
+    }
+    private static final Pattern GROOVY_SOURCE_DISCRIMINATOR =
+        Pattern.compile("\\Apackage\\s+\\w+(?:\\s*\\.\\s*\\w+)*\\s++(?!;)");
 
     @Override
     public void reset() {
