@@ -16,7 +16,7 @@
 package org.codehaus.jdt.groovy.integration.internal;
 
 import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isGroovyLikeFileName;
-import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isJavaLikeButNotGroovyLikeExtension;
+import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isJavaLikeButNotGroovyLikeFileName;
 
 import java.util.regex.Pattern;
 
@@ -61,7 +61,7 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
     }
 
     private static boolean isGroovyLikeSourceUnit(ICompilationUnit sourceUnit) {
-        if (sourceUnit.getFileName() == null || !isJavaLikeButNotGroovyLikeExtension(String.valueOf(sourceUnit.getFileName()))) {
+        if (sourceUnit.getFileName() == null || !isJavaLikeButNotGroovyLikeFileName(String.valueOf(sourceUnit.getFileName()))) {
             if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(sourceUnit.getContents())).find()) {
                 Util.log(1, "Identified a Groovy source unit through inspection of its contents: " +
                     String.valueOf(sourceUnit.getContents(), 0, Math.min(250, sourceUnit.getContents().length)));

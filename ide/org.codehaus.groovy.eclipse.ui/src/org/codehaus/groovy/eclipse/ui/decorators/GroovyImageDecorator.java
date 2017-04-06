@@ -20,11 +20,13 @@ import static org.eclipse.jdt.groovy.core.util.ContentTypeUtils.isGroovyLikeFile
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
@@ -95,7 +97,10 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
         if (image != null && image.getBounds().width > 16) {
             size = JavaElementImageProvider.BIG_SIZE;
         }
-        ImageDescriptor desc = GroovyPluginImages.DESC_GROOVY_FILE;
+
+        boolean isGradle = (GroovyPluginImages.DESC_GRADLE_FILE != null && ContentTypeUtils.isGradleLikeFileName(resource.getName()));
+        ImageDescriptor desc = isGradle ? GroovyPluginImages.DESC_GRADLE_FILE : GroovyPluginImages.DESC_GROOVY_FILE;
+        if (!isGradle)
         try {
             if (isGroovyProject(resource.getProject())) {
                 if (isRuntimeCompiled(resource)) {
@@ -107,8 +112,9 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
                 flags |= JavaElementImageDescriptor.BUILDPATH_ERROR;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            GroovyPlugin.getDefault().logError("Failed to apply image overlay(s) to: " + resource.getName(), e);
         }
+
         return getImage(new JavaElementImageDescriptor(desc, flags, size));
     }
 

@@ -20,12 +20,26 @@ import org.osgi.framework.FrameworkUtil;
 
 public final class GroovyPluginImages {
 
+    public static final ImageDescriptor DESC_GRADLE_FILE = createDescriptor2(
+            "platform:/plugin/org.eclipse.buildship.ui/icons/full/obj16/gradle_file.png");
     public static final ImageDescriptor DESC_GROOVY_FILE = createDescriptor("icons/groovy_file.gif");
-
     public static final ImageDescriptor DESC_NEW_GROOVY_PROJECT = createDescriptor("icons/full/newgroovyprj_wiz.gif");
 
     private static ImageDescriptor createDescriptor(String path) {
         // create the image descriptor without causing this bundle to be activated
         return ImageDescriptor.createFromURL(FrameworkUtil.getBundle(GroovyPluginImages.class).getEntry(path));
+    }
+
+    private static ImageDescriptor createDescriptor2(String path) {
+        ImageDescriptor desc;
+        try {
+            desc = ImageDescriptor.createFromURL(new java.net.URL(path));
+            org.eclipse.swt.graphics.Image img = desc.createImage(false);
+            if (img != null) { img.dispose(); } else { desc = null; }
+        } catch (Exception e) {
+            e.printStackTrace();
+            desc = null;
+        }
+        return desc;
     }
 }
