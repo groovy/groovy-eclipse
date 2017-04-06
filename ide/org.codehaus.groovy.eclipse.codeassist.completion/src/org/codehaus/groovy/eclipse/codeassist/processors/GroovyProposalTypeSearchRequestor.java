@@ -290,16 +290,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                     flatEnclosingTypeNames = null;
                     typeName = simpleTypeName;
                 } else {
-                    flatEnclosingTypeNames = CharOperation.concatWith(
-                            acceptedType.enclosingTypeNames, '.');
-                    typeName = CharOperation.concat(flatEnclosingTypeNames,
-                            simpleTypeName, '.');
+                    flatEnclosingTypeNames = CharOperation.concatWith(acceptedType.enclosingTypeNames, '.');
+                    typeName = CharOperation.concat(flatEnclosingTypeNames, simpleTypeName, '.');
                 }
-                char[] fullyQualifiedName = CharOperation.concat(
-                        packageName, typeName, '.');
+                char[] fullyQualifiedName = CharOperation.concat(packageName, typeName, '.');
 
                 // get this imports from the module node
-                if (imports == null) {
+                if (imports == null && resolver.getScope() != null) {
                     initializeImportArrays(resolver.getScope());
                 }
 
@@ -311,11 +308,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                         // if there is already something else with the same
                         // simple
                         // name imported
-                        proposals.add(proposeType(packageName,
-                                simpleTypeName, modifiers, accessibility,
-                                typeName, fullyQualifiedName,
-                                !CharOperation.equals(fullyQualifiedName,
-                                        importName[1])));
+                        proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility,
+                            typeName, fullyQualifiedName, !CharOperation.equals(fullyQualifiedName, importName[1])));
                         continue next;
                     }
                 }
@@ -533,7 +527,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                 final int accessibility = acceptedConstructor.accessibility;
                 char[] fullyQualifiedName = CharOperation.concat(packageName, simpleTypeName, '.');
 
-                if (imports == null) {
+                if (imports == null && resolver.getScope() != null) {
                     initializeImportArrays(resolver.getScope());
                 }
 
@@ -790,7 +784,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
      * imports. Adding it to the array may result in extra type proposals. Not sure...
      */
     private void initializeImportArrays(GroovyCompilationUnitScope scope) {
-        int i, n = scope.imports != null ? scope.imports.length : 0, s, t;
+        int i, n = (scope.imports != null) ? scope.imports.length : 0, s, t;
         for (i = 0, s = 0, t = 0; i < n; i += 1) {
             if (!scope.imports[i].isStatic()) {
                 if (scope.imports[i].onDemand) {
