@@ -2363,8 +2363,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (isEnumField) {
                 // they have no 'leading' type declaration or modifiers
-                fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getNameStart() : doc.sourceStart;
-                fieldDeclaration.declarationSourceEnd = fieldNode.getNameEnd() - 1;
+                fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
+                fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
             } else {
                 fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
                 // the end of the fragment including initializer (and trailing ',')

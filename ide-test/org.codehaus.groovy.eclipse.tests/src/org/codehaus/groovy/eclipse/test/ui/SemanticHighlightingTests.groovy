@@ -701,6 +701,24 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('alt'), 3, FIELD))
     }
 
+    void testEnumAnno() {
+        EclipseTestSetup.addGroovySource '''\
+            import java.lang.annotation.*
+            @Target(ElementType.FIELD)
+            @Retention(RetentionPolicy.RUNTIME)
+            @interface Tag { String value() }
+            '''.stripIndent()
+
+        String contents = '''\
+            enum X {
+              @Tag('why') Y
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE))
+    }
+
     void testAnnoElems() {
         String contents = '''\
             @Grab( module = 'something:anything' )

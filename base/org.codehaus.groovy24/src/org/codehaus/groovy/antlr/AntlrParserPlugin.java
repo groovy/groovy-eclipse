@@ -967,20 +967,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         // GRECLIPSE edit
         //FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
-        //enumField.addAnnotations(annotations);
-        //configureAST(enumField, node);
-        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
-        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = nameStart + identifier.length() - 1;
-        ClassNode fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue = ClassHelper.make(classNode.getName());
-        fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue.setRedirect(classNode);
-        FieldNode fn = EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
-        configureAST(fn, node);
-        fn.setNameStart(nameStart);
-        fn.setNameEnd(nameEnd);
-        fn.setStart(nameStart);
-        fn.setEnd(nameEnd);
+        ClassNode nonDeclaredTypeOfEnumValue =
+            ClassHelper.make(classNode.getName());
+        nonDeclaredTypeOfEnumValue.setRedirect(classNode);
+        FieldNode enumField = EnumHelper.addEnumConstant(nonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
+        enumField.setNameStart(locations.findOffset(savedLine, savedColumn));
+        enumField.setNameEnd(enumField.getNameStart() + identifier.length() - 1);
         // GRECLIPSE end
+        enumField.addAnnotations(annotations);
+        configureAST(enumField, node);
         enumConstantBeingDef = false;
     }
 

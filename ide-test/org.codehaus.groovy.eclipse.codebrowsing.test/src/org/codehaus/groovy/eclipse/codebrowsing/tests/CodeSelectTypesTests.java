@@ -124,22 +124,12 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
         assertCodeSelect(asList(contents), "EqualsAndHashCode");
     }
 
-    public void testSelectAnnotationValue() {
-        String another = "@interface RunWith {\n  Class value()\n}\nclass Runner { }";
-        String contents = "@RunWith(Runner)\nclass ATest { }";
-        assertCodeSelect(asList(another, contents), "Runner");
-    }
-
-    public void testSelectAnnotationValue2() {
-        String another = "enum Foo {\nFOO1, FOO2\n} \n@interface RunWith {\nFoo value();\n}";
-        String contents = "@RunWith(Foo.FOO1)\nclass ATest { }";
-        assertCodeSelect(asList(another, contents), "Foo");
-    }
-
-    public void testSelectAnnotationValue3() {
-        String another = "enum Foo {\nFOO1, FOO2\n} \n@interface RunWith {\nFoo value();\n}";
-        String contents = "@RunWith(Foo.FOO1)\nclass ATest { }";
-        assertCodeSelect(asList(another, contents), "FOO1");
+    public void testSelectAnnotationClass5() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        String another = "import java.lang.annotation.*; @Target(ElementType.FIELD) @interface Tag { String value() }";
+        String contents = "enum Foo { @Tag('Bar') Baz }";
+        assertCodeSelect(asList(another, contents), "Tag");
+        assertCodeSelect(asList(another, contents), "Baz");
     }
 
     // fields

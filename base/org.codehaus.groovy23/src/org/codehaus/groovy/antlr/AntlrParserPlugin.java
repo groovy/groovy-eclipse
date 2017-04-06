@@ -986,54 +986,37 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     ListExpression le = new ListExpression();
                     le.addExpression(init);
                     init = le;
-            	}
+                }
             }
         }
-
-        // GRECLIPSE: start
-        /*old{
-		EnumHelper.addEnumConstant(classNode, identifier, init);
-
-// looks like this is 3 lines in groovy 2.2. now: do we care?
-
-        FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
-        enumField.addAnnotations(annotations);
-        configureAST(enumField, node);
-
-
-        }new */
-        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
-        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = nameStart + identifier.length()-1;
-        
-        ClassNode fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue = ClassHelper.make(classNode.getName());   
-        fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue.setRedirect(classNode);
-
-        FieldNode fn = 
-        // end
-        EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
-        // GRECLIPSE: start
+        // GRECLIPSE edit
+        //FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
+        //enumField.addAnnotations(annotations);
+        //configureAST(enumField, node);
+        ClassNode nonDeclaredTypeOfEnumValue =
+            ClassHelper.make(classNode.getName());
+        nonDeclaredTypeOfEnumValue.setRedirect(classNode);
+        FieldNode fn = EnumHelper.addEnumConstant(nonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
+        fn.setNameStart(locations.findOffset(savedLine, savedColumn));
+        fn.setNameEnd(fn.getNameStart() + identifier.length() - 1);
+        fn.addAnnotations(annotations);
         configureAST(fn, node);
-        fn.setNameStart(nameStart);
-        fn.setNameEnd(nameEnd);
-        fn.setStart(nameStart);
-        fn.setEnd(nameEnd);
-        // end
+        // GRECLIPSE end
         enumConstantBeingDef = false;
     }
-    
+
     protected void throwsList(AST node, List<ClassNode> list) {
-    	String name;
-    	if (isType(DOT, node)) {
-    		name = qualifiedName(node);
-    	} else {
-    		name = identifier(node);
-    	}
-    	ClassNode exception = ClassHelper.make(name);
-    	configureAST(exception, node);
-    	list.add(exception);
-    	AST next = node.getNextSibling();
-    	if (next!=null) throwsList(next, list);
+        String name;
+        if (isType(DOT, node)) {
+            name = qualifiedName(node);
+        } else {
+            name = identifier(node);
+        }
+        ClassNode exception = ClassHelper.make(name);
+        configureAST(exception, node);
+        list.add(exception);
+        AST next = node.getNextSibling();
+        if (next!=null) throwsList(next, list);
     }
 
 	protected void methodDef(AST methodDef) {

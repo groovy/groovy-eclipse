@@ -1230,32 +1230,18 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "  GREEN,\n"+
             "  BLUE\n"+
             "}\n",
-        },"");
+        });
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 
-        FieldDeclaration fDecl = null;
+        FieldDeclaration fDecl = grabField(decl, "RED");
+        assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>32 modifiersSourceStart=30 endPart1Position:30", stringifyFieldDecl(fDecl));
 
-        fDecl = grabField(decl,"RED");
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:30>31 modifiersSourceStart=0 endPart1Position:30",stringifyFieldDecl(fDecl));
-        } else {
-            assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>31 modifiersSourceStart=30 endPart1Position:30",stringifyFieldDecl(fDecl));
+        fDecl = grabField(decl, "GREEN");
+        assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>41 modifiersSourceStart=37 endPart1Position:37", stringifyFieldDecl(fDecl));
 
-        }
-
-        fDecl = grabField(decl,"GREEN");
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=0 endPart1Position:37",stringifyFieldDecl(fDecl));
-        } else {
-            assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
-        }
-        fDecl = grabField(decl,"BLUE");
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=0 endPart1Position:46",stringifyFieldDecl(fDecl));
-        } else {
-            assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
-        }
+        fDecl = grabField(decl, "BLUE");
+        assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>49 modifiersSourceStart=46 endPart1Position:46", stringifyFieldDecl(fDecl));
     }
 
     public void testEnumValues_GRE1071() {
@@ -1785,8 +1771,8 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     //    def x
     //        ^
     public void testInvalidScripts_GRE323_2() {
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            runNegativeTest(new String[] {
+        // command expression syntax now allows this but it looks weird as
+        runConformTest(new String[] {
                 "One.groovy",
                 "def moo(closure) {\n" +
                 "  closure();\n" +
@@ -1799,31 +1785,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "  def secBoardRep = session2.\n" +
                 "  def x\n" +
                 "}\n"
-            },
-            "----------\n" +
-            "1. ERROR in One.groovy (at line 10)\n" +
-            "\tdef x\n" +
-            "\t    ^\n" +
-            "Groovy:expecting \'}\', found \'x\' @ line 10, column 7.\n" +
-            "----------\n");
-        } else {
-            // command expression syntax now allows this but it looks weird as
-            runConformTest(new String[] {
-                    "One.groovy",
-                    "def moo(closure) {\n" +
-                    "  closure();\n" +
-                    "}\n" +
-                    "\n" +
-                    "moo {\n" +
-                    "  final session2 = null\n" +
-                    "  \n" +
-                    "  // Define scenarios\n" +
-                    "  def secBoardRep = session2.\n" +
-                    "  def x\n" +
-                    "}\n"
-                },
-                "");
-        }
+            });
     }
 
     // removed surrounding method
@@ -1997,8 +1959,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testInvalidScripts_GRE323_6() {
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            runNegativeTest(new String[] {
+        runConformTest(new String[] {
                 "Six.groovy",
                 "def moo(closure) {\n" +
                 "  closure();\n" +
@@ -2011,29 +1972,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "  // Define scenarios\n" +
                 "  final y = session2.def x\n" +
                 "}\n"
-            },
-            "----------\n" +
-            "1. ERROR in Six.groovy (at line 10)\n" +
-            "\tfinal y = session2.def x\n" +
-            "\t                       ^\n" +
-            "Groovy:expecting \'}\', found \'x\' @ line 10, column 26.\n" +
-            "----------\n");
-        } else {
-            runConformTest(new String[] {
-                    "Six.groovy",
-                    "def moo(closure) {\n" +
-                    "  closure();\n" +
-                    "}\n" +
-                    "\n" +
-                    "moo {\n" +
-                    "  final session2 = [\"def\": { println \"DEF\" }]\n" +
-                    "  \n" +
-                    "  final x = 1\n"+
-                    "  // Define scenarios\n" +
-                    "  final y = session2.def x\n" +
-                    "}\n"
-                },"DEF");
-        }
+            },"DEF");
     }
 
     public void testBridgeMethods_GRE336() {
