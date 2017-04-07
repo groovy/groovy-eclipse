@@ -57,7 +57,6 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -780,35 +779,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return result;
     }
 
+    // TODO: How much of this could/should be moved to GroovyUtils.isAssignable?
     protected static Boolean isTypeCompatible(ClassNode source, ClassNode target) {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
-            !(!source.isPrimitive() && target.isGenericsPlaceHolder()) &&
             !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) &&
             !(source.isArray() && !source.getComponentType().isPrimitive() &&
-                (ClassHelper.OBJECT_TYPE.equals(target.getComponentType()) ||
-                target.isArray() && target.getComponentType().isGenericsPlaceHolder())) &&
+                ClassHelper.OBJECT_TYPE.equals(target.getComponentType())) &&
             !(source.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(target))) {
 
-            result = null; // not an exact match
-
-            if (source.hasClass() && target.hasClass()) {
-                // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
-                if (!MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass())) {
-                    result = Boolean.FALSE;
-                }
-            } else {
-                if (target.isInterface()) {
-                    if (!source.declaresInterface(target)) {
-                        result = Boolean.FALSE;
-                    }
-                } else {
-                    // TODO 'null' literal argument should be correctly resolved
-                    if (!source.isDerivedFrom(target)) {
-                        result = Boolean.FALSE;
-                    }
-                }
-            }
+            result = !GroovyUtils.isAssignable(source, target) ? Boolean.FALSE : null; // not an exact match
         }
         return result;
     }

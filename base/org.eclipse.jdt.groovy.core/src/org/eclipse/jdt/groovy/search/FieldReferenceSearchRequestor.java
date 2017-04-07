@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.search.FieldReferenceMatch;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
@@ -40,11 +41,8 @@ import org.eclipse.jdt.internal.core.search.matching.VariablePattern;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 31, 2009
- */
 public class FieldReferenceSearchRequestor implements ITypeRequestor {
+
     private final SearchRequestor requestor;
     private final SearchParticipant participant;
 
@@ -132,7 +130,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
             // constructors
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
-                boolean isCompleteMatch = qualifiedNameMatches(removeArray(result.declaringType));
+                boolean isCompleteMatch = qualifiedNameMatches(GroovyUtils.getBaseType(result.declaringType));
                 // GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know
                 // about writes
                 if (isCompleteMatch
@@ -202,9 +200,5 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
      */
     private boolean shouldAlwaysBeAccurate() {
         return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
-    }
-
-    private ClassNode removeArray(ClassNode declaration) {
-        return (declaration != null && declaration.getComponentType() != null) ? removeArray(declaration.getComponentType()) : declaration;
     }
 }

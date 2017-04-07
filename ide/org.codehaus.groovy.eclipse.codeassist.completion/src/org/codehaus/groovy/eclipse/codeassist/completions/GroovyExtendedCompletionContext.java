@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,25 +37,16 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.SourceField;
 
-/**
- *
- * @author andrew
- * @created May 3, 2011
- */
 public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletionContext {
 
-    /**
-     *
-     * @author andrew
-     * @created Nov 23, 2011
-     */
-    class PropertyVariant extends SourceField implements IField {
+    private static class PropertyVariant extends SourceField implements IField {
         private final IMethod baseMethod;
 
         PropertyVariant(IMethod method) {
@@ -132,7 +123,6 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
 
     private IJavaElement[] computeVisibleElements(String typeSignature) {
         ClassNode targetType = toClassNode(typeSignature);
-        boolean isInterface = targetType.isInterface();
         boolean isEnum = targetType.isEnum();
 
         // look at all local variables in scope
@@ -140,28 +130,23 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         if (currentScope != null) {
             Iterator<Entry<String, VariableInfo>> variablesIter = currentScope.variablesIterator();
             while (variablesIter.hasNext()) {
-                // GRECLIPSE-1268 currently, no good way to get to the actual
-                // declaration.
-                // of the variable. This can cause ordering problems for the
-                // guessed
-                // parameters.
+                // GRECLIPSE-1268 currently, no good way to get to the actual eclaration of the variable.
+                // This can cause ordering problems for the guessed parameters.
                 Entry<String, VariableInfo> entry = variablesIter.next();
-                // don't put elements in a second time since we are moving from
-                // inner scope to outer scope
+                // don't put elements in a second time since we are moving from inner scope to outer scope
                 String varName = entry.getKey();
-                // ignore synthetic getters and setters that are put in the
-                // scope.
+                // ignore synthetic getters and setters that are put in the scope
                 // looking at prefix is a good approximation
+                if (!varName.startsWith("get") &&
+                    !varName.startsWith("set") &&
+                    !varName.equals("super") &&
+                    !varName.startsWith("<") &&
+                    !nameElementMap.containsKey(varName)) {
 
-                if (!varName.startsWith("get") && !varName.startsWith("set") && !varName.equals("super")
-                        && !varName.startsWith("<") && !nameElementMap.containsKey(varName)) {
                     ClassNode type = entry.getValue().type;
-                    if (isAssignableTo(type, targetType, isInterface)) {
-                        // note that parent, start location, and typeSignature
-                        // are
-                        // not important here
-                        nameElementMap.put(varName,
-                                ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));
+                    if (GroovyUtils.isAssignable(type, targetType)) {
+                        // note that parent, start location, and typeSignature are not important here
+                        nameElementMap.put(varName, ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));
                     }
                 }
             }
@@ -171,11 +156,11 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         IType enclosingType = (IType) getEnclosingElement().getAncestor(IJavaElement.TYPE);
         if (enclosingType != null) {
             try {
-                addFields(targetType, isInterface, nameElementMap, enclosingType);
+                addFields(targetType, nameElementMap, enclosingType);
                 ITypeHierarchy typeHierarchy = enclosingType.newSupertypeHierarchy(null);
                 IType[] allTypes = typeHierarchy.getAllSupertypes(enclosingType);
                 for (IType superType : allTypes) {
-                    addFields(targetType, isInterface, nameElementMap, superType);
+                    addFields(targetType, nameElementMap, superType);
                 }
             } catch (JavaModelException e) {
                 GroovyCore.logException("", e);
@@ -200,12 +185,12 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         return nameElementMap.values().toArray(NO_ELEMENTS);
     }
 
-    public void addFields(ClassNode targetType, boolean isInterface, Map<String, IJavaElement> nameElementMap, IType type)
+    public void addFields(ClassNode targetType, Map<String, IJavaElement> nameElementMap, IType type)
             throws JavaModelException {
         IField[] fields = type.getFields();
         for (IField field : fields) {
             ClassNode fieldTypeClassNode = toClassNode(field.getTypeSignature());
-            if (isAssignableTo(fieldTypeClassNode, targetType, isInterface)) {
+            if (GroovyUtils.isAssignable(fieldTypeClassNode, targetType)) {
                 nameElementMap.put(field.getElementName(), field);
             }
         }
@@ -213,9 +198,10 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         IMethod[] methods = type.getMethods();
         for (IMethod method : methods) {
             ClassNode methodReturnTypeClassNode = toClassNode(method.getReturnType());
-            if (isAssignableTo(methodReturnTypeClassNode, targetType, isInterface)) {
-                if ((method.getParameterTypes() == null || method.getParameterTypes().length == 0)
-                        && (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
+            if (GroovyUtils.isAssignable(methodReturnTypeClassNode, targetType)) {
+                if ((method.getParameterTypes() == null || method.getParameterTypes().length == 0) &&
+                    (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
+
                     nameElementMap.put(method.getElementName(), method);
                     IField field = new PropertyVariant(method);
                     nameElementMap.put(field.getElementName(), field);
@@ -224,10 +210,6 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         }
     }
 
-    /**
-     * @param typeSignature
-     * @return
-     */
     private ClassNode toClassNode(String typeSignature) {
         int dims = Signature.getArrayCount(typeSignature);
         String noArray = Signature.getElementType(typeSignature);
@@ -244,40 +226,10 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                 resolved = VariableScope.OBJECT_CLASS_NODE;
             }
         }
-        for (int i = 0; i < dims; i++) {
+        for (int i = 0; i < dims; i += 1) {
             resolved = resolved.makeArray();
         }
         return resolved;
-    }
-
-    /**
-     * This handles checking super classes and interfaces, autoboxing, but not
-     * generics or groovy-specific kinds of coercion
-     */
-    private boolean isAssignableTo(ClassNode type, ClassNode superType, boolean isInterface) {
-        // must make sure that the array dimensions are the same
-        while (type.isArray() && superType.isArray()) {
-            type = type.getComponentType();
-            superType = superType.getComponentType();
-        }
-        if (type.isArray() || superType.isArray()) {
-            return false;
-        }
-
-        // now box the type
-        type = ClassHelper.getWrapper(type);
-        // no need to do this...already has been wrapped above
-        // superType = ClassHelper.getWrapper(superType);
-
-        if (type.equals(superType)) {
-            return true;
-        }
-
-        if (isInterface) {
-            return type.implementsInterface(superType);
-        } else {
-            return type.isDerivedFrom(superType);
-        }
     }
 
     private String getQualifiedName(String typeSignature) {

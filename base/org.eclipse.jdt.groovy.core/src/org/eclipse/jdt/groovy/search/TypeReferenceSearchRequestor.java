@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.core.search.TypeReferenceMatch;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -108,7 +109,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
             }
 
             if (type != null) {
-                type = removeArray(type);
+                type = GroovyUtils.getBaseType(type);
                 if (qualifiedNameMatches(type) && hasValidSourceLocation(node)) {
                     int start = -1;
                     int end = -1;
@@ -245,10 +246,6 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
             }
         }
         return orig;
-    }
-
-    private ClassNode removeArray(ClassNode declaration) {
-        return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
     }
 
     private String[] extractNameAndQualification(ClassNode type) {

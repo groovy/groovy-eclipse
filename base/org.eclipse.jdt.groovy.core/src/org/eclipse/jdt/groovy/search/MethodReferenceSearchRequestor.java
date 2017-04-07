@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.search.MethodReferenceMatch;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -48,10 +49,6 @@ import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 31, 2009
- */
 public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
     protected static final int MAX_PARAMS = 10;
@@ -141,7 +138,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
                 int numberOfParameters = findNumberOfParameters(node, result);
-                boolean isCompleteMatch = nameAndArgsMatch(removeArray(result.declaringType), numberOfParameters);
+                boolean isCompleteMatch = nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), numberOfParameters);
                 if (isCompleteMatch) {
                     IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
                             .getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
@@ -333,9 +330,5 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      */
     private boolean shouldAlwaysBeAccurate() {
         return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
-    }
-
-    private ClassNode removeArray(ClassNode declaration) {
-        return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
     }
 }

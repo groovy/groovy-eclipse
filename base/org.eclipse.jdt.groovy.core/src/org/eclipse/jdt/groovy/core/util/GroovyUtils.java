@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -171,6 +172,17 @@ public abstract class GroovyUtils {
         return types;
     }
 
+    public static ClassNode[] getTypeParameterBounds(ClassNode typeParam) {
+        if (typeParam.isGenericsPlaceHolder()) {
+            GenericsType[] generics = typeParam.getGenericsTypes();
+            ClassNode[] bounds = generics[0].getUpperBounds();
+            if (bounds != null) {
+                return bounds;
+            }
+        }
+        return ClassNode.EMPTY_ARRAY;
+    }
+
     /**
      * Creates a type signature string for the specified class node, including
      * its generics if any are present.
@@ -234,6 +246,43 @@ public abstract class GroovyUtils {
             return ClassHelper.getWrapper(type);
         }
         return type;
+    }
+
+    /**
+     * Determines if a value or reference of given source type can be assigned
+     * to a receiver of given target type.  Excludes checks for the null value,
+     * certain Groovy coercions, etc.
+     *
+     * @see org.codehaus.groovy.classgen.Verifier#isAssignable(ClassNode, ClassNode)
+     * @see org.codehaus.groovy.runtime.MetaClassHelper#isAssignableFrom(Class, Class)
+     * @see org.eclipse.jdt.groovy.search.SimpleTypeLookup#isTypeCompatible(ClassNode, ClassNode)
+     */
+    public static boolean isAssignable(ClassNode source, ClassNode target) {
+        if (source.isArray() && target.isArray()) {
+            return isAssignable(source.getComponentType(), target.getComponentType());
+        }
+        if (source.isArray() || target.isArray()) {
+            return false;
+        }
+
+        boolean result;
+        if (source.hasClass() && target.hasClass()) {
+            // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
+            result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
+        } else if (target.isInterface()) {
+            result = source.equals(target) || source.declaresInterface(target);
+        } else {
+            result = getWrapperTypeIfPrimitive(source)
+                .isDerivedFrom(getWrapperTypeIfPrimitive(target));
+        }
+
+        // if target is like <T extends A & B>, check source against B
+        final ClassNode[] bounds = getTypeParameterBounds(target);
+        for (int i = 1; i < bounds.length && result; i += 1) {
+            result = isAssignable(source, bounds[i]);
+        }
+
+        return result;
     }
 
     public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {

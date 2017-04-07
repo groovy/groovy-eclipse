@@ -157,11 +157,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
         requestedNode = result.declaration;
         if (requestedNode instanceof ClassNode) {
             ClassNode classNode = (ClassNode) requestedNode;
-            if (!removeArray(classNode).isGenericsPlaceHolder()) {
+            if (!GroovyUtils.getBaseType(classNode).isGenericsPlaceHolder()) {
                 requestedNode = classNode.redirect();
             } else {
                 requestedElement = findTypeParam(
-                    removeArray(classNode).getUnresolvedName(), enclosingElement);
+                    GroovyUtils.getBaseType(classNode).getUnresolvedName(), enclosingElement);
                 return;
             }
         }
@@ -284,7 +284,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (type == null) type = result.declaringType;
             if (type == null) type = (ClassNode) result.declaration;
             int typeStart = startOffset(type), typeEnd = endOffset(type);
-            type = removeArray(type); // unpack type now that position is known
+            type = GroovyUtils.getBaseType(type); // unpack type now that position is known
 
             if (typeEnd > 0) {
                 String source = gunit.getSource().substring(typeStart, typeEnd);
@@ -331,9 +331,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private ClassNode findDeclaringType(TypeLookupResult result) {
         ClassNode declaringType = null;
         if (result.declaringType != null) {
-            declaringType = removeArray(result.declaringType);
+            declaringType = GroovyUtils.getBaseType(result.declaringType);
         } else if (result.declaration instanceof ClassNode) {
-            declaringType = removeArray((ClassNode) result.declaration);
+            declaringType = GroovyUtils.getBaseType((ClassNode) result.declaration);
         } else if (result.declaration instanceof FieldNode) {
             declaringType = ((FieldNode) result.declaration).getDeclaringClass();
         } else if (result.declaration instanceof MethodNode) {
@@ -341,7 +341,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         } else if (result.declaration instanceof PropertyNode) {
             declaringType = ((PropertyNode) result.declaration).getDeclaringClass();
         } else if (result.declaration instanceof DeclarationExpression) {
-            declaringType = removeArray(((DeclarationExpression) result.declaration).getLeftExpression().getType());
+            declaringType = GroovyUtils.getBaseType(((DeclarationExpression) result.declaration).getLeftExpression().getType());
         }
         return declaringType;
     }
@@ -690,13 +690,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
 
         return null;
-    }
-
-    private static ClassNode removeArray(ClassNode declaration) {
-        while (declaration.getComponentType() != null) {
-            declaration = declaration.getComponentType();
-        }
-        return declaration;
     }
 
     private static String removeGenerics(String param) {

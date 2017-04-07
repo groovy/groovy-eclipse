@@ -44,19 +44,19 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     public void testEnum1() {
         String contents =
-                "Blah<Some> farb\n" +
-                "farb.something().AA.other\n" +
-                "enum Some {\n" +
-                "    AA(List)\n" +
-                "    public final Class<List<String>> other\n" +
-                "    public Some(Class<List<String>> other) {\n" +
-                "        this.other = other\n" +
-                "    }\n" +
-                "}\n" +
-                "class Blah<K> {\n" +
-                "    K something() {\n" +
-                "    }\n" +
-                "}";
+            "Blah<Some> farb\n" +
+            "farb.something().AA.other\n" +
+            "enum Some {\n" +
+            "    AA(List)\n" +
+            "    public final Class<List<String>> other\n" +
+            "    public Some(Class<List<String>> other) {\n" +
+            "        this.other = other\n" +
+            "    }\n" +
+            "}\n" +
+            "class Blah<K> {\n" +
+            "    K something() {\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.indexOf("other");
         int end = start + "other".length();
@@ -450,10 +450,12 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     public void testForLoop10() {
-        String contents = "class X {\n"
-                + "List<String> images\n" + "}\n"
-                + "def sample = new X()\n" + "for (img in sample.images) {\n"
-                + "    img\n" + "}";
+        String contents = "class X {\n" +
+            "  List<String> images\n" +
+            "}\n" +
+            "def sample = new X()\n" + "for (img in sample.images) {\n" +
+            "  img\n" +
+            "}";
         String toFind = "img";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -461,7 +463,6 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     public void testForLoop11() {
-        // @formatter:off
         String contents =
             "class X {\n" +
             " public void m() {\n" +
@@ -471,7 +472,6 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
             "  }\n" +
             " }\n" +
             "}\n";
-        // @formatter:on
         String toFind = "foo";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -691,9 +691,10 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics1() {
-        String contents = "class MyMap extends HashMap<String,Class> { }\n" +
-                "MyMap m\n" +
-                "m.get()";
+        String contents =
+            "class MyMap extends HashMap<String,Class> { }\n" +
+            "MyMap m\n" +
+            "m.get()";
         String toFind = "get";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -702,9 +703,10 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics2() {
-        String contents = "class MyMap extends HashMap<String,Class> { }\n" +
-                "MyMap m\n" +
-                "m.entrySet()";
+        String contents =
+            "class MyMap extends HashMap<String,Class> { }\n" +
+            "MyMap m\n" +
+            "m.entrySet()";
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -713,10 +715,11 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics3() {
-        String contents = "import java.lang.ref.WeakReference\n" +
-                "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
-        "MyMap<String,Class> m\n" +
-        "m.entrySet()";
+        String contents =
+            "import java.lang.ref.WeakReference\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+            "MyMap<String,Class> m\n" +
+            "m.entrySet()";
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -725,11 +728,12 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics4() {
-        String contents = "import java.lang.ref.WeakReference\n" +
-        "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
-        "class MySubMap extends MyMap<String,Class>{ }\n" +
-        "MySubMap m\n" +
-        "m.entrySet()";
+        String contents =
+            "import java.lang.ref.WeakReference\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+            "class MySubMap extends MyMap<String,Class>{ }\n" +
+            "MySubMap m\n" +
+            "m.entrySet()";
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -738,13 +742,14 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics5() {
-        String contents = "import java.lang.ref.WeakReference\n" +
-        "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
-        "class MySubMap<L> extends MyMap<String,Class>{ \n" +
-        "  Map<L,Class> val\n" +
-        "}\n" +
-        "MySubMap<Integer> m\n" +
-        "m.val";
+        String contents =
+            "import java.lang.ref.WeakReference\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+            "class MySubMap<L> extends MyMap<String,Class>{ \n" +
+            "  Map<L,Class> val\n" +
+            "}\n" +
+            "MySubMap<Integer> m\n" +
+            "m.val";
         String toFind = "val";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -753,11 +758,12 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics6() {
-        String contents = "import java.lang.ref.WeakReference\n" +
-        "class MyMap<K,V> extends HashMap<K,WeakReference<List<K>>>{ }\n" +
-        "class MySubMap extends MyMap<String,Class>{ }\n" +
-        "MySubMap m\n" +
-        "m.entrySet()";
+        String contents =
+            "import java.lang.ref.WeakReference\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<List<K>>>{ }\n" +
+            "class MySubMap extends MyMap<String,Class>{ }\n" +
+            "MySubMap m\n" +
+            "m.entrySet()";
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -766,9 +772,10 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics7() {
-        String contents = "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
-        "MyMap<Integer,Class> m\n" +
-        "m.get";
+        String contents =
+            "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
+            "MyMap<Integer,Class> m\n" +
+            "m.get";
         String toFind = "get";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -777,10 +784,11 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-997
     public void testNestedGenerics8() {
-        String contents = "class MyMap<K,V> extends HashMap<K,V>{\n" +
-                "Map<V,Class<K>> val}\n" +
-        "MyMap<Integer,Class> m\n" +
-        "m.val";
+        String contents =
+            "class MyMap<K,V> extends HashMap<K,V>{\n" +
+            "Map<V,Class<K>> val}\n" +
+            "MyMap<Integer,Class> m\n" +
+            "m.val";
         String toFind = "val";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -906,8 +914,8 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     public void testInferringMap5() {
         String contents = "def x = [ ['a':11, 'b':12] : ['a':21, 'b':22] ]\n" +
-                "def xxx = x\n" +
-                "xxx";
+            "def xxx = x\n" +
+            "xxx";
         String toFind = "xxx";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -916,8 +924,8 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
 
     public void testInferringMap6() {
         String contents = "def x = [ ['a':11, 'b':12], ['a':21, 'b':22] ]\n" +
-                "def xxx = x*.a\n" +
-                "xxx";
+            "def xxx = x*.a\n" +
+            "xxx";
         String toFind = "xxx";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -929,19 +937,18 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testMethod1() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "import groovy.transform.CompileStatic\n" +
-                "class A {\n" +
-                "    public <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    @CompileStatic\n" +
-                "    static void main(String[] args) {\n" +
-                "        A a = new A()\n" +
-                "        def val = a.myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
-
+            "import groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "    public <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    @CompileStatic\n" +
+            "    static void main(String[] args) {\n" +
+            "        A a = new A()\n" +
+            "        def val = a.myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -951,17 +958,16 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testMethod2() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "class A {\n" +
-                "    public <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    static void main(String[] args) {\n" +
-                "        A a = new A()\n" +
-                "        def val = a.myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
-
+            "class A {\n" +
+            "    public <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    static void main(String[] args) {\n" +
+            "        A a = new A()\n" +
+            "        def val = a.myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -971,18 +977,17 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testMethod3() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "import groovy.transform.CompileStatic\n" +
-                "class A {\n" +
-                "    public <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    @CompileStatic\n" +
-                "    def m() {\n" +
-                "        def val = myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
-
+            "import groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "    public <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    @CompileStatic\n" +
+            "    def m() {\n" +
+            "        def val = myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -992,16 +997,15 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testMethod4() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "class A {\n" +
-                "    public <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    def m() {\n" +
-                "        def val = myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
-
+            "class A {\n" +
+            "    public <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    def m() {\n" +
+            "        def val = myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1012,16 +1016,16 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testStaticMethod1() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "class A {\n" +
-                "    static <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    @groovy.transform.CompileStatic\n" +
-                "    static void main(String[] args) {\n" +
-                "        def val = A.myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
+            "class A {\n" +
+            "    static <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    @groovy.transform.CompileStatic\n" +
+            "    static void main(String[] args) {\n" +
+            "        def val = A.myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1031,15 +1035,15 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testStaticMethod2() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "class A {\n" +
-                "    static <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    static void main(String[] args) {\n" +
-                "        def val = A.myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
+            "class A {\n" +
+            "    static <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    static void main(String[] args) {\n" +
+            "        def val = A.myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1049,16 +1053,16 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testStaticMethod3() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "class A {\n" +
-                "    static <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    @groovy.transform.CompileStatic\n" +
-                "    def m() {\n" +
-                "        def val = myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
+            "class A {\n" +
+            "    static <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    @groovy.transform.CompileStatic\n" +
+            "    def m() {\n" +
+            "        def val = myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1068,15 +1072,15 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testStaticMethod4() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
-                "class A {\n" +
-                "    static <T> T myMethod(Class<T> claz) {\n" +
-                "        return null\n" +
-                "    }\n" +
-                "    def m() {\n" +
-                "        def val = myMethod(String.class)\n" +
-                "        val.trim()\n" +
-                "    }\n" +
-                "}";
+            "class A {\n" +
+            "    static <T> T myMethod(Class<T> claz) {\n" +
+            "        return null\n" +
+            "    }\n" +
+            "    def m() {\n" +
+            "        def val = myMethod(String.class)\n" +
+            "        val.trim()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1086,12 +1090,12 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     public void testStaticMethod5() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return;
         String contents =
-                "class A {}\n" +
-                "class B extends A {}\n" +
-                "static <T extends A> T loadSomething(T t) {\n" +
-                "  return t\n" +
-                "}\n" +
-                "def val = loadSomething(new B())";
+            "class A {}\n" +
+            "class B extends A {}\n" +
+            "static <T extends A> T loadSomething(T t) {\n" +
+            "  return t\n" +
+            "}\n" +
+            "def val = loadSomething(new B())";
         int start = contents.lastIndexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "B");
@@ -1101,15 +1105,15 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     // Actually type should not be inferred for fields with type def
     public void testStaticMethod6() {
         String contents =
-                "class A {}\n" +
-                "class B extends A {}\n" +
-                "class C {\n" +
-                "    static <T extends A> T loadSomething(T t) {\n" +
-                "        return t\n" +
-                "    }\n" +
-                "    def col = loadSomething(new B())\n" +
-                "    def m() { col }" +
-                "}";
+            "class A {}\n" +
+            "class B extends A {}\n" +
+            "class C {\n" +
+            "    static <T extends A> T loadSomething(T t) {\n" +
+            "        return t\n" +
+            "    }\n" +
+            "    def col = loadSomething(new B())\n" +
+            "    def m() { col }" +
+            "}";
         int start = contents.lastIndexOf("col");
         int end = start + "col".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -1153,16 +1157,136 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertEquals("Parameter type should be resolved", "java.util.Collection<? extends java.lang.String>", printTypeName(m.getParameters()[0].getType()));
     }
 
-    public void testStaticMethodOverloads() {
+    public void testStaticMethodOverloads1() {
         String contents =
-                "class Preconditions {\n" +
-                "  static <T> T checkNotNull(T ref) { null }\n" +
-                "  static <T> T checkNotNull(T ref, Object errorMessage) { null }\n" +
-                "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1) { null }\n" +
-                "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1, Object arg2) { null }\n" +
-                "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object... errorMessageArgs) { null }\n" +
-                "}\n" +
-                "String s = Preconditions.checkNotNull('blah', 'Should not be null')";
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence> T b(T seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b([])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object"); // should not satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads2() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence> T b(T seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b('')";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String"); // should satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads3() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b([])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object"); // should not satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads4() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence & Iterable> T b(T seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b('')";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object"); // should not satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads5() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b('')";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String"); // should satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads6() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence> T b(T[] seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b(new Object[0])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object"); // should not satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads7() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence> T b(T[] seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b(new String[0])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String"); // should satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads8() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T[] seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b(new Object[0])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object"); // should not satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads9() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence & Iterable> T b(T[] seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b(new String[0])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Object"); // should not satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads10() {
+        String contents =
+            "class A {\n" +
+            "  static Object b(Object obj) { obj }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T[] seq) { seq }\n" +
+            "}\n" +
+            "def result = A.b(new String[0])";
+        String toFind = "result";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.String"); // should satisfy bounds of T
+    }
+
+    public void testStaticMethodOverloads11() {
+        String contents =
+            "class Preconditions {\n" +
+            "  static <T> T checkNotNull(T ref) { null }\n" +
+            "  static <T> T checkNotNull(T ref, Object errorMessage) { null }\n" +
+            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1) { null }\n" +
+            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1, Object arg2) { null }\n" +
+            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object... errorMessageArgs) { null }\n" +
+            "}\n" +
+            "String s = Preconditions.checkNotNull('blah', 'Should not be null')";
 
         String toFind = "checkNotNull";
         int start = contents.lastIndexOf(toFind), end = start + toFind.length();
@@ -1173,89 +1297,97 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     public void _testJira1718() throws Exception {
-
         // the type checking script
-        IPath robotPath = env.addPackage(
-                project.getFolder("src").getFullPath(), "p2");
+        IPath robotPath = env.addPackage(project.getFolder("src").getFullPath(), "p2");
 
-        env.addGroovyClass(robotPath, "Renderer", "package p2\n"
-                + "interface Renderer<T> {\n" + "Class<T> getTargetType()\n"
-                + "void render(T object, String context)\n" + "}\n");
+        env.addGroovyClass(robotPath, "Renderer",
+            "package p2\n" +
+            "interface Renderer<T> {\n" +
+            "Class<T> getTargetType()\n" +
+            "void render(T object, String context)\n" +
+            "}\n");
 
-        env.addGroovyClass(
-                robotPath,
-                "AbstractRenderer",
-                "package p2\n"
-                        + "abstract class AbstractRenderer<T> implements Renderer<T> {\n"
-                        + "private Class<T> targetType\n"
-                        + "public Class<T> getTargetType() {\n"
-                        + "return null\n" + "}\n"
-                        + "public void render(T object, String context) {\n"
-                        + "}\n" + "}\n");
+        env.addGroovyClass(robotPath, "AbstractRenderer",
+            "package p2\n" +
+            "abstract class AbstractRenderer<T> implements Renderer<T> {\n" +
+            "private Class<T> targetType\n" +
+            "public Class<T> getTargetType() {\n" +
+            "return null\n" +
+            "}\n" +
+            "public void render(T object, String context) {\n" +
+            "}\n" +
+            "}\n");
 
-        env.addGroovyClass(robotPath, "DefaultRenderer", "package p2\n"
-                + "class DefaultRenderer<T> implements Renderer<T> {\n"
-                + "Class<T> targetType\n"
-                + "DefaultRenderer(Class<T> targetType) {\n"
-                + "this.targetType = targetType\n" + "}\n"
-                + "public Class<T> getTargetType() {\n" + "return null\n"
-                + "}\n" + "public void render(T object, String context) {\n"
-                + "}\n" + "}");
+        env.addGroovyClass(robotPath, "DefaultRenderer",
+            "package p2\n" +
+            "class DefaultRenderer<T> implements Renderer<T> {\n" +
+            "Class<T> targetType\n" +
+            "DefaultRenderer(Class<T> targetType) {\n" +
+            "this.targetType = targetType\n" +
+            "}\n" +
+            "public Class<T> getTargetType() {\n" +
+            "return null\n" +
+            "}\n" +
+            "public void render(T object, String context) {\n" +
+            "}\n" +
+            "}");
 
-        env.addGroovyClass(
-                robotPath,
-                "RendererRegistry",
-                "package p2\n"
-                        + "interface RendererRegistry {\n"
-                        + "public <T> Renderer<T> findRenderer(String contentType, T object)\n"
-                        + "}\n");
+        env.addGroovyClass(robotPath, "RendererRegistry",
+            "package p2\n" +
+            "interface RendererRegistry {\n" +
+            "public <T> Renderer<T> findRenderer(String contentType, T object)\n" +
+            "}\n");
 
-        env.addGroovyClass(
-                robotPath,
-                "DefaultRendererRegistry",
-                "package p2\n"
-                        + "class DefaultRendererRegistry implements RendererRegistry {\n"
-                        + "def <T> Renderer<T> findRenderer(String contentType, T object) {\n"
-                        + "return null\n" + "}\n" + "}\n");
+        env.addGroovyClass(robotPath, "DefaultRendererRegistry",
+            "package p2\n" +
+            "class DefaultRendererRegistry implements RendererRegistry {\n" +
+            "def <T> Renderer<T> findRenderer(String contentType, T object) {\n" +
+            "return null\n" +
+            "}\n" +
+            "}\n");
 
-        env.addGroovyClass(
-                robotPath,
-                "LinkingRenderer",
-                "package p2\n"
-                        + "import groovy.transform.CompileStatic\n"
-                        + "@CompileStatic\n"
-                        + "class LinkingRenderer<T> extends AbstractRenderer<T> {\n"
-                        + "public void render(T object, String context) {\n"
-                        + "DefaultRendererRegistry registry = new DefaultRendererRegistry()\n"
-                        + "Renderer htmlRenderer = registry.findRenderer(\"HTML\", object)\n"
-                        + "if (htmlRenderer == null) {\n"
-                        + "htmlRenderer = new DefaultRenderer(targetType)\n"
-                        + "}\n" + "htmlRenderer.render(object, context)\n"
-                        + "}\n" + "}\n");
+        env.addGroovyClass(robotPath, "LinkingRenderer",
+            "package p2\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
+            "class LinkingRenderer<T> extends AbstractRenderer<T> {\n" +
+            "public void render(T object, String context) {\n" +
+            "DefaultRendererRegistry registry = new DefaultRendererRegistry()\n" +
+            "Renderer htmlRenderer = registry.findRenderer(\"HTML\", object)\n" +
+            "if (htmlRenderer == null) {\n" +
+            "htmlRenderer = new DefaultRenderer(targetType)\n" +
+            "}\n" +
+            "htmlRenderer.render(object, context)\n" +
+            "}\n" +
+            "}\n");
 
         final List<IProblem> problems = new ArrayList<IProblem>();
         final IProblemRequestor problemRequestor = new IProblemRequestor() {
             public void acceptProblem(IProblem problem) {
                 problems.add(problem);
             }
+
             public void beginReporting() {
             }
+
             public void endReporting() {
             }
+
             public boolean isActive() {
                 return true;
             }
         };
 
         ICompilationUnit cu = ReconcilerUtils.findCompilationUnit(JavaCore.create(project), "LinkingRenderer.groovy").getWorkingCopy(new WorkingCopyOwner() {
-                @Override
-                public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
-                    return problemRequestor;
-                }
+            @Override
+            public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
+                return problemRequestor;
+            }
 
-            }, new NullProgressMonitor());
-        assertEquals("Should have found no problems in LinkingRenderer.groovy:\n" +
-            Arrays.toString(problems.toArray(new IProblem[problems.size()])), 0, problems.size());
+        }, new NullProgressMonitor());
+
+        assertEquals("Should have found no problems in LinkingRenderer.groovy:\n" + Arrays.toString(problems.toArray(new IProblem[problems.size()])), 0, problems.size());
+
         // Discard the working copy to free up caches
         cu.discardWorkingCopy();
     }
