@@ -259,9 +259,21 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // GRECLIPSE-941
     public void testMapOfList6() {
-        String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndef x = dataTyped      ['foo'][5][2]\nx";
+        String contents = "Map<String, Map<Integer, List<Date>>> map\n" +
+            "def x = map.get('foo').get(5).get(2)\n" +
+            "x";
+        String toFind = "x";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Date");
+    }
+
+    // GRECLIPSE-941
+    public void _testMapOfList7() {
+        String contents = "Map<String, Map<Integer, List<Date>>> map\n" +
+            "def x = map['foo'][5][2]\n" +
+            "x";
         String toFind = "x";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
