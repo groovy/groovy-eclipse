@@ -78,7 +78,7 @@ public final class CodeSelectMethodsTests extends BrowsingTestCase {
         assertEquals("java.util.Set <java.util.Map$Entry>", method.getReturnType().toString(false));
     }
 
-    public void testCodeSelectGenericCategoryMethod3() {
+    public void _testCodeSelectGenericCategoryMethod3() {
         String contents = "[a: Number].getAt('a')";
         IJavaElement elem = assertCodeSelect(asList(contents), "getAt");
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement());

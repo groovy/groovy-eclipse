@@ -31,7 +31,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -266,10 +265,10 @@ public abstract class GroovyUtils {
         }
 
         boolean result;
-        if (source.hasClass() && target.hasClass()) {
+        /*if (source.hasClass() && target.hasClass()) {
             // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
             result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
-        } else if (target.isInterface()) {
+        } else*/ if (target.isInterface()) {
             result = source.equals(target) || source.declaresInterface(target);
         } else {
             result = getWrapperTypeIfPrimitive(source)

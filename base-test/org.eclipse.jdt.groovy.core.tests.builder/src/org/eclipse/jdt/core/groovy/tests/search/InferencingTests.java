@@ -1293,7 +1293,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
-        assertType(contents, start, end, "java.lang.Long");
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     public void testDoubleClosure4() {
@@ -1306,7 +1306,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
-        assertType(contents, start, end, "java.lang.Long");
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     public void testDoubleClosure5() {
@@ -1319,7 +1319,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
-        assertType(contents, start, end, "java.lang.Long");
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     public void testDoubleClosure6() {
