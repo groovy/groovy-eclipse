@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,9 +8,11 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann <stephan@cs.tu-berlin.de> - inconsistent initialization of classpath container backed by external class folder, see https://bugs.eclipse.org/320618
+ *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for
+ *     						Bug 320618 - inconsistent initialization of classpath container backed by external class folder
+ *     						Bug 346010 - [model] strange initialization dependency in OptionTests
  *******************************************************************************/
-package org.eclipse.jdt.internal.core; // GROOVY PATCHED
+package org.eclipse.jdt.internal.core;
 
 import java.io.*;
 import java.net.URI;
@@ -1656,7 +1659,7 @@ public class JavaProject
 	 */
 	public String getOption(String optionName, boolean inheritJavaCoreOptions) {
 		return JavaModelManager.getJavaModelManager().getOption(optionName, inheritJavaCoreOptions, getEclipsePreferences());
-		}
+	}
 
 	/**
 	 * @see org.eclipse.jdt.core.IJavaProject#getOptions(boolean)
@@ -1702,7 +1705,6 @@ public class JavaProject
 						}
 					}
 				}
-				
 				// cache project options
 				perProjectInfo.options = projectOptions;
 			}
@@ -2949,16 +2951,16 @@ public class JavaProject
 	public void setOption(String optionName, String optionValue) {
 		// Store option value
 		IEclipsePreferences projectPreferences = getEclipsePreferences();
-		boolean modified = JavaModelManager.getJavaModelManager().storePreference(optionName, optionValue, projectPreferences);
+		boolean modified = JavaModelManager.getJavaModelManager().storePreference(optionName, optionValue, projectPreferences, null);
 
 		// Write changes
 		if (modified) {
-		try {
-			projectPreferences.flush();
-		} catch (BackingStoreException e) {
-			// problem with pref store - quietly ignore
+			try {
+				projectPreferences.flush();
+			} catch (BackingStoreException e) {
+				// problem with pref store - quietly ignore
+			}
 		}
-	}
 	}
 
 	/**
@@ -2978,7 +2980,7 @@ public class JavaProject
 					Map.Entry entry = (Map.Entry) entries.next();
 					String key = (String) entry.getKey();
 					String value = (String) entry.getValue();
-					javaModelManager.storePreference(key, value, projectPreferences);
+					javaModelManager.storePreference(key, value, projectPreferences, newOptions);
 				}
 
 				// reset to default all options not in new map

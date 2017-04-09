@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann <stephan@cs.tu-berlin.de> - TypeConverters don't set enclosingType - https://bugs.eclipse.org/bugs/show_bug.cgi?id=320841
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.parser; // GROOVY PATCHED
+package org.eclipse.jdt.internal.compiler.parser;
 
 /**
  * Converter from source element type to parsed compilation unit.
@@ -34,43 +35,16 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
-import org.eclipse.jdt.internal.compiler.ast.Block;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
-import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.compiler.env.ISourceImport;
-import org.eclipse.jdt.internal.compiler.env.ISourceType;
+import org.eclipse.jdt.internal.compiler.env.*;
+
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
-import org.eclipse.jdt.internal.core.ImportDeclaration;
-import org.eclipse.jdt.internal.core.InitializerElementInfo;
-import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.PackageFragment;
-import org.eclipse.jdt.internal.core.SourceAnnotationMethodInfo;
-import org.eclipse.jdt.internal.core.SourceField;
-import org.eclipse.jdt.internal.core.SourceFieldElementInfo;
-import org.eclipse.jdt.internal.core.SourceMethod;
-import org.eclipse.jdt.internal.core.SourceMethodElementInfo;
-import org.eclipse.jdt.internal.core.SourceType;
-import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
+import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class SourceTypeConverter extends TypeConverter {
@@ -350,17 +324,17 @@ public class SourceTypeConverter extends TypeConverter {
 		   incorrect lookup and may mistakenly end up with missing types
 		 */
 		TypeParameter[] typeParams = null;
-			char[][] typeParameterNames = methodInfo.getTypeParameterNames();
-			if (typeParameterNames != null) {
-				int parameterCount = typeParameterNames.length;
-				if (parameterCount > 0) { // method's type parameters must be null if no type parameter
-					char[][][] typeParameterBounds = methodInfo.getTypeParameterBounds();
-					typeParams = new TypeParameter[parameterCount];
-					for (int i = 0; i < parameterCount; i++) {
-						typeParams[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
-					}
+		char[][] typeParameterNames = methodInfo.getTypeParameterNames();
+		if (typeParameterNames != null) {
+			int parameterCount = typeParameterNames.length;
+			if (parameterCount > 0) { // method's type parameters must be null if no type parameter
+				char[][][] typeParameterBounds = methodInfo.getTypeParameterBounds();
+				typeParams = new TypeParameter[parameterCount];
+				for (int i = 0; i < parameterCount; i++) {
+					typeParams[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
 				}
 			}
+		}
 
 		int modifiers = methodInfo.getModifiers();
 		if (methodInfo.isConstructor()) {
@@ -522,15 +496,15 @@ public class SourceTypeConverter extends TypeConverter {
 		   and/or super interfaces in order to be able to detect overriding in the presence
 		   of generics.
 		 */
-			char[][] typeParameterNames = typeInfo.getTypeParameterNames();
-			if (typeParameterNames.length > 0) {
-				int parameterCount = typeParameterNames.length;
-				char[][][] typeParameterBounds = typeInfo.getTypeParameterBounds();
-				type.typeParameters = new TypeParameter[parameterCount];
-				for (int i = 0; i < parameterCount; i++) {
-					type.typeParameters[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
-				}
+		char[][] typeParameterNames = typeInfo.getTypeParameterNames();
+		if (typeParameterNames.length > 0) {
+			int parameterCount = typeParameterNames.length;
+			char[][][] typeParameterBounds = typeInfo.getTypeParameterBounds();
+			type.typeParameters = new TypeParameter[parameterCount];
+			for (int i = 0; i < parameterCount; i++) {
+				type.typeParameters[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
 			}
+		}
 
 		/* set superclass and superinterfaces */
 		if (typeInfo.getSuperclassName() != null) {

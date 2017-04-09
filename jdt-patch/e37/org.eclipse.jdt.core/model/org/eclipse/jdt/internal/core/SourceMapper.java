@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *     Kelly Campbell <kellyc@google.com> - Hangs in SourceMapper during java proposals - https://bugs.eclipse.org/bugs/show_bug.cgi?id=281575
  *******************************************************************************/
-package org.eclipse.jdt.internal.core; // GROOVY PATCHED
+package org.eclipse.jdt.internal.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1107,7 +1108,7 @@ public class SourceMapper
 					return UNKNOWN_RANGE;
 				} else {
 					return ranges[1];
-		}
+				}
 		}
 		SourceRange[] ranges = (SourceRange[]) this.sourceRanges.get(element);
 		if (ranges == null) {

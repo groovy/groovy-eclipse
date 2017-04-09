@@ -156,6 +156,7 @@ public class UserLibraryManager {
 		} catch (ClasspathEntry.AssertionFailedException ase) {
 			Util.log(ase, "Exception while decoding user library '"+ libName +"'."); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		
 	}
 
 	public void removeUserLibrary(String libName)  {

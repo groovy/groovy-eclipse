@@ -1,15 +1,16 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Tom Tromey - patch for readTable(String) as described in http://bugs.eclipse.org/bugs/show_bug.cgi?id=32196
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.parser; // GROOVY PATCHED
+package org.eclipse.jdt.internal.compiler.parser;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -3826,7 +3827,7 @@ protected void consumeFieldAccess(boolean isSuperAccess) {
 	} else {
 		//optimize push/pop
 		fr.receiver = this.expressionStack[this.expressionPtr];
-		//fieldreference begins at the receiver
+		//field reference begins at the receiver
 		fr.sourceStart = fr.receiver.sourceStart;
 		this.expressionStack[this.expressionPtr] = fr;
 	}
@@ -5310,9 +5311,9 @@ protected void consumeRightParen() {
 	// PushRPAREN ::= ')'
 	pushOnIntStack(this.rParenPos);
 }
-// This method is part of an automatic generation : do NOT edit-modify  
+// This method is part of an automatic generation : do NOT edit-modify
 protected void consumeRule(int act) {
-   switch ( act ) {
+  switch ( act ) {
     case 30 : if (DEBUG) { System.out.println("Type ::= PrimitiveType"); }  //$NON-NLS-1$
 		    consumePrimitiveType();  
 			break;
@@ -7436,11 +7437,11 @@ protected void consumeStatementThrow() {
 	pushOnAstStack(new ThrowStatement(this.expressionStack[this.expressionPtr--], this.intStack[this.intPtr--], this.endStatementPosition));
 }
 protected void consumeStatementTry(boolean withFinally, boolean hasResources) {
-	//TryStatement ::= 'try'  Block Catches
-	//TryStatement ::= 'try'  Block Catchesopt Finally
+	// TryStatement ::= 'try'  Block Catches
+	// TryStatement ::= 'try'  Block Catchesopt Finally
 	// TryStatementWithResources ::= 'try' ResourceSpecification TryBlock Catchesopt
 	// TryStatementWithResources ::= 'try' ResourceSpecification TryBlock Catchesopt Finally
-
+	
 	int length;
 	TryStatement tryStmt = new TryStatement();
 	//finally
@@ -8171,7 +8172,7 @@ protected void consumeUnaryExpression(int op) {
 			if (convertToMinValue ==  intLiteral) {
 				// not a min value literal so we convert it to an unary expression
 				r = new UnaryExpression(exp, op);
-		} else {
+			} else {
 				r = convertToMinValue;
 			}
 		} else if (exp instanceof LongLiteral) {

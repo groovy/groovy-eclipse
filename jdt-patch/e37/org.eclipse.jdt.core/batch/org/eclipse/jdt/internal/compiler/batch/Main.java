@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -3390,7 +3391,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 						CompilerOptions.OPTION_IncludeNullInfoFromAsserts,
 						isEnabling ? CompilerOptions.ENABLED : CompilerOptions.DISABLED);
 				return;
-			}
+			} 
 			break;
 		case 'j' :
 			if (token.equals("javadoc")) {//$NON-NLS-1$

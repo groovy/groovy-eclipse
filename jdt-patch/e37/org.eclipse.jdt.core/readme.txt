@@ -5,3 +5,4 @@
 15-Jun-2011: ported to org.eclipse.jdt.core v_B61 (37rc4)
 22-Sep-2011: ported to org.eclipse.jdt.core v_B76_R37x (371rc3)
 21-Feb-2011: ported to org.eclipse.jdt.core v_B83_R37x (372rc3) - tag 20120119-1537
+09-Apr-2017: ported to org.eclipse.jdt.core v_B86_R37x (8fc9b42)

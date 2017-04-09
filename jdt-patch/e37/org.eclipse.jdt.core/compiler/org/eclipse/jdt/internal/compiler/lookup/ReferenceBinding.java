@@ -1,14 +1,15 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.lookup; // GROOVY PATCHED
+package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -433,9 +434,9 @@ public void computeId() {
 								this.id = TypeIds.T_JavaLangAutoCloseable;
 							return;
 						case 14:
-					if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_ASSERTIONERROR[2]))
-						this.id = TypeIds.T_JavaLangAssertionError;
-					return;
+							if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_ASSERTIONERROR[2]))
+								this.id = TypeIds.T_JavaLangAssertionError;
+							return;
 					}
 					return;
 				case 'B' :
@@ -688,8 +689,8 @@ public void computeId() {
 						return;
 				}
 				return;
+			}
 	}
-}
 }
 
 /**

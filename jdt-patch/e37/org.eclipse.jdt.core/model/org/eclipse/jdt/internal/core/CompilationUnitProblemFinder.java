@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +9,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core; // GROOVY PATCHED
+package org.eclipse.jdt.internal.core;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,22 +17,11 @@ import java.util.Map;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaModelMarker;
-import org.eclipse.jdt.core.IJavaModelStatusConstants;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.util.CompilerUtils;
-import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.Compiler;
-import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
-import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
-import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
-import org.eclipse.jdt.internal.compiler.IProblemFactory;
-import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
@@ -109,7 +99,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 
 		CompilationResult result =
 			new CompilationResult(sourceTypes[0].getFileName(), 1, 1, this.options.maxProblemsPerUnit);
-
+		
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=305259, build the compilation unit in its own sand box.
 		final long savedComplianceLevel = this.options.complianceLevel;
 		final long savedSourceLevel = this.options.sourceLevel;
@@ -119,24 +109,24 @@ public class CompilationUnitProblemFinder extends Compiler {
 			this.options.complianceLevel = CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true));
 			this.options.sourceLevel = CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_SOURCE, true));
 
-		// need to hold onto this
-		CompilationUnitDeclaration unit =
-			SourceTypeConverter.buildCompilationUnit(
-				sourceTypes,//sourceTypes[0] is always toplevel here
-				SourceTypeConverter.FIELD_AND_METHOD // need field and methods
-				| SourceTypeConverter.MEMBER_TYPE // need member types
-				| SourceTypeConverter.FIELD_INITIALIZATION, // need field initialization
-				this.lookupEnvironment.problemReporter,
-				result);
+			// need to hold onto this
+			CompilationUnitDeclaration unit =
+				SourceTypeConverter.buildCompilationUnit(
+						sourceTypes,//sourceTypes[0] is always toplevel here
+						SourceTypeConverter.FIELD_AND_METHOD // need field and methods
+						| SourceTypeConverter.MEMBER_TYPE // need member types
+						| SourceTypeConverter.FIELD_INITIALIZATION, // need field initialization
+						this.lookupEnvironment.problemReporter,
+						result);
 
-		if (unit != null) {
-			this.lookupEnvironment.buildTypeBindings(unit, accessRestriction);
-			this.lookupEnvironment.completeTypeBindings(unit);
-		}
+			if (unit != null) {
+				this.lookupEnvironment.buildTypeBindings(unit, accessRestriction);
+				this.lookupEnvironment.completeTypeBindings(unit);
+			}
 		} finally {
 			this.options.complianceLevel = savedComplianceLevel;
 			this.options.sourceLevel = savedSourceLevel;
-	}
+		}
 	}
 
 	protected static CompilerOptions getCompilerOptions(Map settings, boolean creatingAST, boolean statementsRecovery) {

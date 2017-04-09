@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.WorkingCopyOwner;
@@ -54,6 +55,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
+import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
@@ -69,6 +71,7 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.search.matching.JavaSearchNameEnvironment;
 import org.eclipse.jdt.internal.core.util.Messages;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * This class is the entry point for source completions.
@@ -498,8 +501,6 @@ public final class CompletionEngine
 	private final static int SUPERTYPE = 1;
 	private final static int SUBTYPE = 2;
 	
-	private final static char[] DOT_ENUM = ".enum".toCharArray(); //$NON-NLS-1$
-	
 	int expectedTypesPtr = -1;
 	TypeBinding[] expectedTypes = new TypeBinding[1];
 	int expectedTypesFilter;
@@ -551,6 +552,10 @@ public final class CompletionEngine
 	int startPosition, actualCompletionPosition, endPosition, offset;
 	int tokenStart, tokenEnd;
 	int javadocTagPosition; // Position of previous tag while completing in javadoc
+	String sourceLevel;
+	String complianceLevel;
+	SimpleSetOfCharArray validPackageNames = new SimpleSetOfCharArray(10);
+	SimpleSetOfCharArray invalidPackageNames = new SimpleSetOfCharArray(1);
 	HashtableOfObject knownPkgs = new HashtableOfObject(10);
 	HashtableOfObject knownTypes = new HashtableOfObject(10);
 	
@@ -657,6 +662,8 @@ public final class CompletionEngine
 		this.nameEnvironment = nameEnvironment;
 		this.typeCache = new HashtableOfObject(5);
 		this.openedBinaryTypes = 0;
+		this.sourceLevel = javaProject.getOption(JavaCore.COMPILER_SOURCE, true);
+		this.complianceLevel = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 
 		this.problemFactory = new CompletionProblemFactory(Locale.getDefault());
 		this.problemReporter = new ProblemReporter(
@@ -1085,6 +1092,8 @@ public final class CompletionEngine
 
 		if (this.knownPkgs.containsKey(packageName)) return;
 
+		if (!isValidPackageName(packageName)) return;
+
 		this.knownPkgs.put(packageName, this);
 
 		char[] completion;
@@ -1172,7 +1181,7 @@ public final class CompletionEngine
 			}
 		}
 		
-		if (isForbiddenType(packageName, simpleTypeName, enclosingTypeNames)) {
+		if (isForbidden(packageName, simpleTypeName, enclosingTypeNames)) {
 			return;
 		}
 
@@ -11959,16 +11968,19 @@ public final class CompletionEngine
 	private boolean isAllowingLongComputationProposals() {
 		return this.monitor != null;
 	}
-	private boolean isForbidden(Binding binding) {
+	private boolean isForbidden(ReferenceBinding binding) {
 		for (int i = 0; i <= this.forbbidenBindingsPtr; i++) {
 			if(this.forbbidenBindings[i] == binding) {
 				return true;
 			}
 		}
+		if (!isValidPackageName(binding.qualifiedPackageName())) {
+			return true;
+		}
 		return false;
 	}
 
-	private boolean isForbiddenType(char[] givenPkgName, char[] givenTypeName, char[][] enclosingTypeNames) {
+	private boolean isForbidden(char[] givenPkgName, char[] givenTypeName, char[][] enclosingTypeNames) {
 		// CharOperation.concatWith() handles the cases where input args are null/empty
 		char[] fullTypeName = CharOperation.concatWith(enclosingTypeNames, givenTypeName, '.');
 		for (int i = 0; i <= this.forbbidenBindingsPtr; i++) {
@@ -11984,11 +11996,8 @@ public final class CompletionEngine
 			}
 		}
 		
-		// filter packages ending with enum for projects above 1.5 
-		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
-		if (this.compilerOptions.sourceLevel >= ClassFileConstants.JDK1_5 &&
-				CharOperation.endsWith(givenPkgName, DOT_ENUM)) { //note: it should be .enum and not just enum
-				return true;
+		if (!isValidPackageName(givenPkgName)) {
+			return true;
 		}
 		
 		return false;
@@ -12006,6 +12015,28 @@ public final class CompletionEngine
 		return this.requestor.isIgnored(kind) ||
 			!this.requestor.isAllowingRequiredProposals(kind, requiredProposalKind);
 	}
+
+	private boolean isValidPackageName(char[] packageName) {
+		if (this.validPackageNames.includes(packageName)) {
+			return true;
+		}
+
+		if (this.invalidPackageNames.includes(packageName)) {
+			return false;
+		}
+
+		char[][] names = CharOperation.splitOn('.', packageName);
+		for (int i = 0, length = names.length; i < length; i++) {
+			if (!Util.isValidFolderNameForPackage(new String(names[i]), this.sourceLevel, this.complianceLevel)) {
+				this.invalidPackageNames.add(packageName);
+				return false;
+			}
+		}
+
+		this.validPackageNames.add(packageName);
+		return true;
+	}
+
 	private boolean isValidParent(ASTNode parent, ASTNode node, Scope scope){
 
 		if(parent instanceof ParameterizedSingleTypeReference) {
@@ -12672,6 +12703,8 @@ public final class CompletionEngine
 	protected void reset() {
 
 		super.reset(false);
+		this.validPackageNames = new SimpleSetOfCharArray(10);
+		this.invalidPackageNames = new SimpleSetOfCharArray(1);
 		this.knownPkgs = new HashtableOfObject(10);
 		this.knownTypes = new HashtableOfObject(10);
 		if (this.noCacheNameEnvironment != null) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -710,8 +710,7 @@ public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStr
 			}
 		}
 	}
-	// reposition the endPC
-	codeStream.updateLastRecordedEndPC(currentScope, position);
+	codeStream.recordPositionsFrom(position, this.sourceEnd);
 }
 
 /* Optimized (java) code generation for string concatenations that involve StringBuffer
@@ -1053,8 +1052,9 @@ public boolean forcedToBeRaw(ReferenceContext referenceContext) {
  * or <code>null</null> if not reusable
  */
 public Object reusableJSRTarget() {
-	if (this.constant != Constant.NotAConstant)
+	if (this.constant != Constant.NotAConstant && (this.implicitConversion & TypeIds.BOXING) == 0) {
 		return this.constant;
+	}
 	return null;
 }
 

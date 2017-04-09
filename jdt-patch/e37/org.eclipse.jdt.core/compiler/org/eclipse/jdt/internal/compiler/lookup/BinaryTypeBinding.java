@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.ArrayList;
 
@@ -302,7 +302,7 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 		   of generics.
 		 */
 		char[] typeSignature = binaryType.getGenericSignature(); // use generic signature even in 1.4
-			this.tagBits |= binaryType.getTagBits();
+		this.tagBits |= binaryType.getTagBits();
 		
 		char[][][] missingTypeNames = binaryType.getMissingTypeNames();
 		SignatureWrapper wrapper = null;
@@ -327,7 +327,7 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 				this.typeVariables = addMethodTypeVariables(typeVars);			
 			}
 		}
-		if (typeSignature == null) {
+		if (typeSignature == null)  {
 			char[] superclassName = binaryType.getSuperclassName();
 			if (superclassName != null) {
 				// attempt to find the superclass if it exists in the cache (otherwise - resolve it when requested)

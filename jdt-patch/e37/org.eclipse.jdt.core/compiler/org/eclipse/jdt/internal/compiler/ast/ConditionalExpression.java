@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,7 +32,7 @@ public class ConditionalExpression extends OperatorExpression {
 	int trueInitStateIndex = -1;
 	int falseInitStateIndex = -1;
 	int mergedInitStateIndex = -1;
-
+	
 	// we compute and store the null status during analyseCode (https://bugs.eclipse.org/324178):
 	private int nullStatus = FlowInfo.UNKNOWN;
 
@@ -218,7 +218,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 				// Jump over the else part
 				int position = codeStream.position;
 				codeStream.goto_(endifLabel);
-				codeStream.updateLastRecordedEndPC(currentScope, position);
+				codeStream.recordPositionsFrom(position, this.valueIfTrue.sourceEnd);
 				// Tune codestream stack size
 				if (valueRequired) {
 					switch(this.resolvedType.id) {
@@ -273,6 +273,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		BranchLabel trueLabel,
 		BranchLabel falseLabel,
 		boolean valueRequired) {
+
+		int pc = codeStream.position;
 
 		if ((this.constant != Constant.NotAConstant) && (this.constant.typeID() == T_boolean) // constant
 			|| ((this.valueIfTrue.implicitConversion & IMPLICIT_CONVERSION_MASK) >> 4) != T_boolean) { // non boolean values
@@ -331,7 +333,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 					}
 					int position = codeStream.position;
 					codeStream.goto_(endifLabel);
-					codeStream.updateLastRecordedEndPC(currentScope, position);
+					codeStream.recordPositionsFrom(position, this.valueIfTrue.sourceEnd);
 				}
 				// No need to decrement codestream stack size
 				// since valueIfTrue was already consumed by branch bytecode
@@ -353,12 +355,12 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 			codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
 		}
 		// no implicit conversion for boolean values
-		codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+		codeStream.recordPositionsFrom(pc, this.sourceEnd);
 	}
 
-public int nullStatus(FlowInfo flowInfo) {
+	public int nullStatus(FlowInfo flowInfo) {
 		return this.nullStatus;
-}
+	}
 
 	public Constant optimizedBooleanConstant() {
 

@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.lookup; // GROOVY PATCHED
+package org.eclipse.jdt.internal.compiler.lookup;
 
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -47,48 +47,48 @@ boolean areParametersEqual(MethodBinding one, MethodBinding two) {
 	if (length != twoArgs.length) return false;
 
 	
-		// methods with raw parameters are considered equal to inherited methods
-		// with parameterized parameters for backwards compatibility, need a more complex check
-		int i;
-		foundRAW: for (i = 0; i < length; i++) {
-			if (!areTypesEqual(oneArgs[i], twoArgs[i])) {
-				if (oneArgs[i].leafComponentType().isRawType()) {
-					if (oneArgs[i].dimensions() == twoArgs[i].dimensions() && oneArgs[i].leafComponentType().isEquivalentTo(twoArgs[i].leafComponentType())) {
-						// raw mode does not apply if the method defines its own type variables
-						if (one.typeVariables != Binding.NO_TYPE_VARIABLES)
+	// methods with raw parameters are considered equal to inherited methods
+	// with parameterized parameters for backwards compatibility, need a more complex check
+	int i;
+	foundRAW: for (i = 0; i < length; i++) {
+		if (!areTypesEqual(oneArgs[i], twoArgs[i])) {
+			if (oneArgs[i].leafComponentType().isRawType()) {
+				if (oneArgs[i].dimensions() == twoArgs[i].dimensions() && oneArgs[i].leafComponentType().isEquivalentTo(twoArgs[i].leafComponentType())) {
+					// raw mode does not apply if the method defines its own type variables
+					if (one.typeVariables != Binding.NO_TYPE_VARIABLES)
+						return false;
+					// one parameter type is raw, hence all parameters types must be raw or non generic
+					// otherwise we have a mismatch check backwards
+					for (int j = 0; j < i; j++)
+						if (oneArgs[j].leafComponentType().isParameterizedTypeWithActualArguments())
 							return false;
-						// one parameter type is raw, hence all parameters types must be raw or non generic
-						// otherwise we have a mismatch check backwards
-						for (int j = 0; j < i; j++)
-							if (oneArgs[j].leafComponentType().isParameterizedTypeWithActualArguments())
-								return false;
-						// switch to all raw mode
-						break foundRAW;
-					}
+					// switch to all raw mode
+					break foundRAW;
 				}
-				return false;
 			}
+			return false;
 		}
-		// all raw mode for remaining parameters (if any)
-		for (i++; i < length; i++) {
-			if (!areTypesEqual(oneArgs[i], twoArgs[i])) {
-				if (oneArgs[i].leafComponentType().isRawType())
-					if (oneArgs[i].dimensions() == twoArgs[i].dimensions() && oneArgs[i].leafComponentType().isEquivalentTo(twoArgs[i].leafComponentType()))
-						continue;
-				return false;
-			} else if (oneArgs[i].leafComponentType().isParameterizedTypeWithActualArguments()) {
-				return false; // no remaining parameter can be a Parameterized type (if one has been converted then all RAW types must be converted)
-			}
+	}
+	// all raw mode for remaining parameters (if any)
+	for (i++; i < length; i++) {
+		if (!areTypesEqual(oneArgs[i], twoArgs[i])) {
+			if (oneArgs[i].leafComponentType().isRawType())
+				if (oneArgs[i].dimensions() == twoArgs[i].dimensions() && oneArgs[i].leafComponentType().isEquivalentTo(twoArgs[i].leafComponentType()))
+					continue;
+			return false;
+		} else if (oneArgs[i].leafComponentType().isParameterizedTypeWithActualArguments()) {
+			return false; // no remaining parameter can be a Parameterized type (if one has been converted then all RAW types must be converted)
 		}
+	}
 	return true;
 }
 boolean areReturnTypesCompatible(MethodBinding one, MethodBinding two) {
 	if (one.returnType == two.returnType) return true;
 	if (this.type.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
-	return areReturnTypesCompatible0(one, two);
+		return areReturnTypesCompatible0(one, two);
 	} else {
 		return areTypesEqual(one.returnType.erasure(), two.returnType.erasure());
-}
+	}
 }
 boolean areTypesEqual(TypeBinding one, TypeBinding two) {
 	if (one == two) return true;
@@ -303,29 +303,6 @@ void checkForNameClash(MethodBinding currentMethod, MethodBinding inheritedMetho
 	}
 }
 void checkInheritedMethods(MethodBinding inheritedMethod, MethodBinding otherInheritedMethod) {
-/* still need this post 3.7.1?
-	// sent from checkMethods() to compare 2 inherited methods that are not 'equal'
-	if (inheritedMethod.declaringClass.erasure() == otherInheritedMethod.declaringClass.erasure()) {
-		boolean areDuplicates = inheritedMethod.hasSubstitutedParameters() && otherInheritedMethod.hasSubstitutedParameters()
-			? inheritedMethod.areParametersEqual(otherInheritedMethod)
-			: inheritedMethod.areParameterErasuresEqual(otherInheritedMethod);
-		if (areDuplicates) {
-			// GROOVY start - necessary because BinaryTypeBindings have been changed to allow bridge methods through (@see BTB.createMethods())
-			boolean reportProblem = true;
-			if (this.environment!=null && this.environment.globalOptions.buildGroovyFiles==2) {
-				// Dont report if one of them is a bridge
-				reportProblem = !(inheritedMethod.isBridge() || otherInheritedMethod.isBridge());
-			}
-			if (reportProblem) {
-			// end
-				problemReporter().duplicateInheritedMethods(this.type, inheritedMethod, otherInheritedMethod);
-				return;
-			// GROOVY start
-			}
-			// end
-		}
-	}
-*/
 
 	// the 2 inherited methods clash because of a parameterized type overrides a raw type
 	//		interface I { void foo(A a); }
@@ -355,8 +332,8 @@ void checkInheritedMethods(MethodBinding[] methods, int length) {
 		}
 	}
 	if (continueInvestigation) {
-	super.checkInheritedMethods(methods, length);
-}
+		super.checkInheritedMethods(methods, length);
+	}
 }
 boolean checkInheritedReturnTypes(MethodBinding method, MethodBinding otherMethod) {
 	if (areReturnTypesCompatible(method, otherMethod)) return true;
@@ -976,7 +953,7 @@ void verify() {
 		this.type.detectAnnotationCycle();
 
 	super.verify();
-
+	
 	reportRawReferences();
 
 	for (int i = this.type.typeVariables.length; --i >= 0;) {

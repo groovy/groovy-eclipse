@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -8,7 +9,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.search.indexing; // GROOVY PATCHED
+package org.eclipse.jdt.internal.core.search.indexing;
 
 import java.io.*;
 import java.util.*;
@@ -189,13 +190,13 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 
     // GROOVY start
     /* old {
-		SourceElementParser parser = new IndexingParser(
-				requestor,
-				new DefaultProblemFactory(Locale.getDefault()),
-				new CompilerOptions(options),
-				true, // index local declarations
-				true, // optimize string literals
-				false); // do not use source javadoc parser to speed up parsing
+	SourceElementParser parser = new IndexingParser(
+		requestor,
+		new DefaultProblemFactory(Locale.getDefault()),
+		new CompilerOptions(options),
+		true, // index local declarations
+		true, // optimize string literals
+		false); // do not use source javadoc parser to speed up parsing
     } new */
 	SourceElementParser parser = LanguageSupportFactory.getIndexingParser(
 			requestor,

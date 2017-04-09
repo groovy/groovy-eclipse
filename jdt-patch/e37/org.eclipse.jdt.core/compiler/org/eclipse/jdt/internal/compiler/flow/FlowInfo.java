@@ -39,7 +39,7 @@ public abstract class FlowInfo {
 	 */
 	public final static int UNREACHABLE = UNREACHABLE_OR_DEAD | UNREACHABLE_BY_NULLANALYSIS;
 	public final static int NULL_FLAG_MASK = 4;
-
+	
 	public final static int UNKNOWN = 1;
 	public final static int NULL = 2;
 	public final static int NON_NULL = 4;
@@ -445,7 +445,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 			unconditionalInits();
 		// if a variable is only initialized in one branch and not initialized in the other,
 		// then we need to cast a doubt on its initialization in the merged info
-		mergedInfo.definiteInits &= initsWhenFalse.unconditionalCopy().definiteInits;
+		mergedInfo.mergeDefiniteInitsWith(initsWhenFalse.unconditionalCopy());
 		
 	}
 	else if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0 &&
@@ -461,7 +461,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 			unconditionalInits();
 		// if a variable is only initialized in one branch and not initialized in the other,
 		// then we need to cast a doubt on its initialization in the merged info
-		mergedInfo.definiteInits &= initsWhenTrue.unconditionalCopy().definiteInits;
+		mergedInfo.mergeDefiniteInitsWith(initsWhenTrue.unconditionalCopy());
 	}
 	else {
 		mergedInfo = initsWhenTrue.
@@ -512,6 +512,8 @@ abstract public FlowInfo setReachMode(int reachMode);
  */
 abstract public UnconditionalFlowInfo mergedWith(
 		UnconditionalFlowInfo otherInits);
+
+abstract public UnconditionalFlowInfo mergeDefiniteInitsWith(UnconditionalFlowInfo otherInits);
 
 /**
  * Return a copy of this unconditional flow info, deprived from its null

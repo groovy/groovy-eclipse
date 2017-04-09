@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,6 +34,16 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		Statement stat = this.statements[i];
 		if ((complaintLevel = stat.complainIfUnreachable(flowInfo, this.scope, complaintLevel)) < Statement.COMPLAINED_UNREACHABLE) {
 			flowInfo = stat.analyseCode(this.scope, flowContext, flowInfo);
+		}
+	}
+	if (this.explicitDeclarations > 0) {
+		// cleanup assignment info for locals that are scoped to this block:
+		LocalVariableBinding[] locals = this.scope.locals;
+		if (locals != null) {
+			int numLocals = this.scope.localIndex;
+			for (int i = 0; i < numLocals; i++) {
+				flowInfo.resetAssignmentInfo(locals[i]);
+			}
 		}
 	}
 	return flowInfo;

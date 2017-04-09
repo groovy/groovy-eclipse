@@ -3620,17 +3620,16 @@ public final class JavaCore extends Plugin {
 								externalFoldersManager.addFolder(entryPath, true);
 							}
 						}
-							}
-						}
 					}
+				}
+			}
 			try {
 				externalFoldersManager.createPendingFolders(monitor);
-				}
+			}
 			catch(JavaModelException jme) {
 				// Creation of external folder project failed. Log it and continue;
 				Util.log(jme, "Error while processing external folders"); //$NON-NLS-1$
 			}
-
 			// initialize delta state
 			if (monitor != null)
 				monitor.subTask(Messages.javamodel_initializing_delta_state);

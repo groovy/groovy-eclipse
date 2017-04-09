@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,6 @@ import org.eclipse.jdt.internal.compiler.flow.ExceptionHandlingFlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.flow.InitializationFlowContext;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
@@ -104,20 +103,20 @@ public class Clinit extends AbstractMethodDeclaration {
 		}
 		boolean restart = false;
 		do {
-		try {
-			clinitOffset = classFile.contentsOffset;
-			this.generateCode(classScope, classFile, clinitOffset);
+			try {
+				clinitOffset = classFile.contentsOffset;
+				this.generateCode(classScope, classFile, clinitOffset);
 				restart = false;
-		} catch (AbortMethod e) {
-			// should never occur
-			// the clinit referenceContext is the type declaration
-			// All clinit problems will be reported against the type: AbortType instead of AbortMethod
-			// reset the contentsOffset to the value before generating the clinit code
-			// decrement the number of method info as well.
-			// This is done in the addProblemMethod and addProblemConstructor for other
-			// cases.
-			if (e.compilationResult == CodeStream.RESTART_IN_WIDE_MODE) {
-				// a branch target required a goto_w, restart code gen in wide mode.
+			} catch (AbortMethod e) {
+				// should never occur
+				// the clinit referenceContext is the type declaration
+				// All clinit problems will be reported against the type: AbortType instead of AbortMethod
+				// reset the contentsOffset to the value before generating the clinit code
+				// decrement the number of method info as well.
+				// This is done in the addProblemMethod and addProblemConstructor for other
+				// cases.
+				if (e.compilationResult == CodeStream.RESTART_IN_WIDE_MODE) {
+					// a branch target required a goto_w, restart code gen in wide mode.
 					classFile.contentsOffset = clinitOffset;
 					classFile.methodCount--;
 					classFile.codeStream.resetInWideMode(); // request wide mode
@@ -129,13 +128,13 @@ public class Clinit extends AbstractMethodDeclaration {
 					classFile.codeStream.resetForCodeGenUnusedLocals();
 					// restart method generation
 					restart = true;
-			} else {
-				// produce a problem method accounting for this fatal error
-				classFile.contentsOffset = clinitOffset;
-				classFile.methodCount--;
+				} else {
+					// produce a problem method accounting for this fatal error
+					classFile.contentsOffset = clinitOffset;
+					classFile.methodCount--;
 					restart = false;
+				}
 			}
-		}
 		} while (restart);
 	}
 
@@ -187,7 +186,7 @@ public class Clinit extends AbstractMethodDeclaration {
 		}
 		// generate static fields/initializers/enum constants
 		final FieldDeclaration[] fieldDeclarations = declaringType.fields;
-		BlockScope lastInitializerScope = null;
+		int sourcePosition = -1;
 		int remainingFieldCount = 0;
 		if (TypeDeclaration.kind(declaringType.modifiers) == TypeDeclaration.ENUM_DECL) {
 			int enumCount = declaringType.enumConstantsCounter;
@@ -195,7 +194,7 @@ public class Clinit extends AbstractMethodDeclaration {
 				// generate synthetic methods to initialize all the enum constants
 				int begin = -1;
 				int count = 0;
-			if (fieldDeclarations != null) {
+				if (fieldDeclarations != null) {
 					int max = fieldDeclarations.length;
 					for (int i = 0; i < max; i++) {
 						FieldDeclaration fieldDecl = fieldDeclarations[i];
@@ -263,7 +262,7 @@ public class Clinit extends AbstractMethodDeclaration {
 								break;
 							}
 							remainingFieldCount--;
-							lastInitializerScope = ((Initializer) fieldDecl).block.scope;
+							sourcePosition = ((Initializer) fieldDecl).block.sourceEnd;
 							fieldDecl.generateCode(staticInitializerScope, codeStream);
 							break;
 						case AbstractVariableDeclaration.FIELD :
@@ -271,7 +270,7 @@ public class Clinit extends AbstractMethodDeclaration {
 								break;
 							}
 							remainingFieldCount--;
-							lastInitializerScope = null;
+							sourcePosition = fieldDecl.declarationEnd;
 							fieldDecl.generateCode(staticInitializerScope, codeStream);
 							break;
 					}
@@ -285,13 +284,13 @@ public class Clinit extends AbstractMethodDeclaration {
 						case AbstractVariableDeclaration.INITIALIZER :
 							if (!fieldDecl.isStatic())
 								break;
-							lastInitializerScope = ((Initializer) fieldDecl).block.scope;
+							sourcePosition = ((Initializer) fieldDecl).block.sourceEnd;
 							fieldDecl.generateCode(staticInitializerScope, codeStream);
 							break;
 						case AbstractVariableDeclaration.FIELD :
 							if (!fieldDecl.binding.isStatic())
 								break;
-							lastInitializerScope = null;
+							sourcePosition = fieldDecl.declarationEnd;
 							fieldDecl.generateCode(staticInitializerScope, codeStream);
 							break;
 					}
@@ -311,9 +310,9 @@ public class Clinit extends AbstractMethodDeclaration {
 			if ((this.bits & ASTNode.NeedFreeReturn) != 0) {
 				int before = codeStream.position;
 				codeStream.return_();
-				if (lastInitializerScope != null) {
+				if (sourcePosition != -1) {
 					// expand the last initializer variables to include the trailing return
-					codeStream.updateLastRecordedEndPC(lastInitializerScope, before);
+					codeStream.recordPositionsFrom(before, sourcePosition);
 				}
 			}
 			// Record the end of the clinit: point to the declaration of the class

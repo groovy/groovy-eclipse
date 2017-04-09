@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contribution for bug 328281 - visibility leaks not detected when analyzing unused field in private class
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.lookup; // GROOVY PATCHED
+package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -642,7 +643,7 @@ public char[] computeUniqueKey(boolean isLeaf) {
 		if (start == 0)
 			start = 1; // start after L
 		if (this.isMemberType()) {
-		end = CharOperation.indexOf('$', uniqueKey, start);
+			end = CharOperation.indexOf('$', uniqueKey, start);
 		} else {
 			// '$' is part of the type name
 			end = -1;
@@ -1634,7 +1635,6 @@ public ReferenceBinding superclass() {
 public ReferenceBinding[] superInterfaces() {
 	return this.superInterfaces;
 }
-
 public SyntheticMethodBinding[] syntheticMethods() {
 	if (this.synthetics == null 
 			|| this.synthetics[SourceTypeBinding.METHOD_EMUL] == null 

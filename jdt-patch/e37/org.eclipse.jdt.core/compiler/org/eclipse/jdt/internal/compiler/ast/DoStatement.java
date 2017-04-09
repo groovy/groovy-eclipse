@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,7 +130,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 								// recover upstream null info
 						isConditionOptimizedTrue,
 						(condInfo.tagBits & FlowInfo.UNREACHABLE) == 0
-								? flowInfo.addInitializationsFrom(condInfo.initsWhenFalse()) 
+								? flowInfo.copy().addInitializationsFrom(condInfo.initsWhenFalse()) // https://bugs.eclipse.org/bugs/show_bug.cgi?id=380927
 								: condInfo,
 							// recover null inits from before condition analysis
 						false, // never consider opt false case for DO loop, since break can always occur (47776)

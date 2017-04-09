@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2010 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for bug 215139 and bug 295894
  *******************************************************************************/
-package org.eclipse.jdt.core.search; // GROOVY PATCHED
+package org.eclipse.jdt.core.search;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;

@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,9 +11,10 @@
  *     Benjamin Muskalla - Contribution for bug 239066
  *     Stephan Herrmann  - Contribution for bug 236385
  *     Stephan Herrmann  - Contribution for bug 295551
+ *     Jesper Steen Moller - Contributions for
+ *								bug 404146 - [1.7][compiler] nested try-catch-finally-blocks leads to unrunnable Java byte code
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.impl;
-// GROOVY PATCHED
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -104,6 +106,7 @@ public class CompilerOptions {
 	public static final String OPTION_TaskPriorities = "org.eclipse.jdt.core.compiler.taskPriorities"; //$NON-NLS-1$
 	public static final String OPTION_TaskCaseSensitive = "org.eclipse.jdt.core.compiler.taskCaseSensitive"; //$NON-NLS-1$
 	public static final String OPTION_InlineJsr = "org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode"; //$NON-NLS-1$
+	public static final String OPTION_ShareCommonFinallyBlocks = "org.eclipse.jdt.core.compiler.codegen.shareCommonFinallyBlocks"; //$NON-NLS-1$
 	public static final String OPTION_ReportNullReference = "org.eclipse.jdt.core.compiler.problem.nullReference"; //$NON-NLS-1$
 	public static final String OPTION_ReportPotentialNullReference = "org.eclipse.jdt.core.compiler.problem.potentialNullReference"; //$NON-NLS-1$
 	public static final String OPTION_ReportRedundantNullCheck = "org.eclipse.jdt.core.compiler.problem.redundantNullCheck"; //$NON-NLS-1$
@@ -352,6 +355,8 @@ public class CompilerOptions {
 	public boolean reportMissingJavadocCommentsOverriding;
 	/** Indicate whether the JSR bytecode should be inlined to avoid its presence in classfile */
 	public boolean inlineJsrBytecode;
+	/** Indicate whether common escaping finally blocks should be shared */
+	public boolean shareCommonFinallyBlocks;
 	/** Indicate if @SuppressWarning annotations are activated */
 	public boolean suppressWarnings;
 	/** Indicate if @SuppressWarning annotations should also suppress optional errors */
@@ -984,6 +989,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportSpecialParameterHidingField, this.reportSpecialParameterHidingField ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_MaxProblemPerUnit, String.valueOf(this.maxProblemsPerUnit));
 		optionsMap.put(OPTION_InlineJsr, this.inlineJsrBytecode ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_ShareCommonFinallyBlocks, this.shareCommonFinallyBlocks ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportNullReference, getSeverityString(NullReference));
 		optionsMap.put(OPTION_ReportPotentialNullReference, getSeverityString(PotentialNullReference));
 		optionsMap.put(OPTION_ReportRedundantNullCheck, getSeverityString(RedundantNullCheck));
@@ -1121,8 +1127,9 @@ public class CompilerOptions {
 		this.reportMissingJavadocCommentsVisibility = ClassFileConstants.AccPublic;
 		this.reportMissingJavadocCommentsOverriding = false;
 		
-		// JSR bytecode inlining
+		// JSR bytecode inlining and sharing
 		this.inlineJsrBytecode = false;
+		this.shareCommonFinallyBlocks = false;
 
 		// javadoc comment support
 		this.docCommentSupport = false;
@@ -1345,6 +1352,13 @@ public class CompilerOptions {
 				} else if (DISABLED.equals(optionValue)) {
 					this.inlineJsrBytecode = false;
 				}
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_ShareCommonFinallyBlocks)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.shareCommonFinallyBlocks = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.shareCommonFinallyBlocks = false;
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTION_SuppressWarnings)) != null) {
@@ -1689,6 +1703,7 @@ public class CompilerOptions {
 		buf.append("\n\t- report unused parameter include doc comment reference : ").append(this.reportUnusedParameterIncludeDocCommentReference ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report constructor/setter parameter hiding existing field : ").append(this.reportSpecialParameterHidingField ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- inline JSR bytecode : ").append(this.inlineJsrBytecode ? ENABLED : DISABLED); //$NON-NLS-1$
+		buf.append("\n\t- share common finally blocks : ").append(this.shareCommonFinallyBlocks ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- report unavoidable generic type problems : ").append(this.reportUnavoidableGenericTypeProblems ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unsafe type operation: ").append(getSeverityString(UncheckedTypeOperation)); //$NON-NLS-1$
 		buf.append("\n\t- unsafe raw type: ").append(getSeverityString(RawTypeReference)); //$NON-NLS-1$

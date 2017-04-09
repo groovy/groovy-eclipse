@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -367,6 +367,7 @@ public class EqualExpression extends BinaryExpression {
 		// default case
 		this.left.generateCode(currentScope, codeStream, valueRequired);
 		this.right.generateCode(currentScope, codeStream, valueRequired);
+		int pc = codeStream.position;
 		if (valueRequired) {
 			if (falseLabel == null) {
 				if (trueLabel != null) {
@@ -382,8 +383,7 @@ public class EqualExpression extends BinaryExpression {
 				}
 			}
 		}
-		// reposition the endPC
-		codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+		codeStream.recordPositionsFrom(pc, this.sourceEnd);
 	}
 	/**
 	 * Boolean generation for == with non-boolean operands

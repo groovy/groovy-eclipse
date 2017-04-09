@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@
  *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -216,7 +216,6 @@ public void completeTypeBindings() {
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;
 
-	// FIXASC doesn't this sometimes bring MetaClass/MOP in that need hierarchy connecting? (see 30-Jun comments)
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 		CompilationUnitScope unitScope = (this.unitBeingCompleted = this.units[i]).scope;
 		unitScope.checkParameterizedTypes();

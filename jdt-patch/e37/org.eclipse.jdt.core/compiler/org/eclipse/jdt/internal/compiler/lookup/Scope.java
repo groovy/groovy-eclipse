@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -8,7 +9,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.lookup; // GROOVY PATCHED
+package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.*;
 
@@ -985,7 +986,6 @@ public abstract class Scope {
 		}
 		return null;
 	}
-
 	// Internal use only
 	/*	Answer the field binding that corresponds to fieldName.
 		Start the lookup at the receiverType.
@@ -993,9 +993,8 @@ public abstract class Scope {
 			isSuperAccess(); this is used to determine if the discovered field is visible.
 		Only fields defined by the receiverType or its supertypes are answered;
 		a field of an enclosing type will not be found using this API.
-
-		If no visible field is discovered, null is answered.
-	*/
+    	If no visible field is discovered, null is answered.
+	 */
 	public FieldBinding findField(TypeBinding receiverType, char[] fieldName, InvocationSite invocationSite, boolean needResolve) {
 		return findField(receiverType, fieldName, invocationSite, needResolve, false);
 	}

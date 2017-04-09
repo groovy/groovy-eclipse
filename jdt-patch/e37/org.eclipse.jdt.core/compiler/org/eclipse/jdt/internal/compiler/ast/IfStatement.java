@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -187,8 +187,8 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				this.thenStatement.branchChainTo(endifLabel);
 				int position = codeStream.position;
 				codeStream.goto_(endifLabel);
-				//goto is tagged as part of the thenAction block
-				codeStream.updateLastRecordedEndPC((this.thenStatement instanceof Block) ? ((Block) this.thenStatement).scope : currentScope, position);
+				//goto is pointing to the last line of the thenStatement
+				codeStream.recordPositionsFrom(position, this.thenStatement.sourceEnd);
 				// generate else statement
 			}
 			// May loose some local variable initializations : affecting the local variable attributes

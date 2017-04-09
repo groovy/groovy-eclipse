@@ -273,7 +273,7 @@ public CategorizedProblem[] getTasks() {
 
 public boolean hasErrors() {
 	return this.numberOfErrors != 0;
-		}
+}
 
 public boolean hasProblems() {
 	return this.problemCount != 0;
@@ -348,8 +348,8 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 	if (newProblem.isError()) {
 		this.numberOfErrors++;
 		if ((newProblem.getID() & IProblem.Syntax) != 0) {
-		this.hasSyntaxError = true;
-}
+			this.hasSyntaxError = true;
+		}
 	}
 }
 

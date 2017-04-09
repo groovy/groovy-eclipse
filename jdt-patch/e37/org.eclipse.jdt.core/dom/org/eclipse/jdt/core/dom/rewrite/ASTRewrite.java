@@ -91,7 +91,6 @@ import org.eclipse.text.edits.TextEditGroup;
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class ASTRewrite {
-
 	/** root node for the rewrite: Only nodes under this root are accepted */
 	private final AST ast;
 
@@ -104,7 +103,7 @@ public class ASTRewrite {
 	 * @since 3.1
 	 */
 	private TargetSourceRangeComputer targetSourceRangeComputer = null;
-
+	
 	/**
 	 * Primary field used in representing rewrite properties efficiently.
 	 * If <code>null</code>, this rewrite has no properties.

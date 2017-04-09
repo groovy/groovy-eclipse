@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,7 +45,7 @@ public class CodeStream {
 	static LocalVariableBinding[] noVisibleLocals = new LocalVariableBinding[LOCALS_INCREMENT];
 	public static final CompilationResult RESTART_IN_WIDE_MODE = new CompilationResult((char[])null, 0, 0, 0);
 	public static final CompilationResult RESTART_CODE_GEN_FOR_UNUSED_LOCALS_MODE = new CompilationResult((char[])null, 0, 0, 0);
-	
+
 	public int allLocalsCounter;
 	public byte[] bCodeStream;
 	public ClassFile classFile; // The current classfile it is associated to.
@@ -4542,7 +4542,6 @@ public void invokeStringIntern() {
 			ConstantPool.Intern,
 			ConstantPool.InternSignature);
 }
-
 public void invokeStringValueOf(int typeID) {
 	// invokestatic: java.lang.String.valueOf(argumentType)
 	char[] signature;
@@ -6653,46 +6652,6 @@ public String toString() {
 	buffer.append(")"); //$NON-NLS-1$
 	return buffer.toString();
 }
-
-/**
- * Note: it will walk the locals table and extend the end range for all matching ones, no matter if
- * visible or not.
- * {  int i = 0;
- *    {  int j = 1; }
- * }   <== would process both 'i' and 'j'
- * Processing non-visible ones is mandated in some cases (include goto instruction after if-then block)
- */
-public void updateLastRecordedEndPC(Scope scope, int pos) {
-
-	/* Tune positions in the table, this is due to some
-	 * extra bytecodes being
-	 * added to some user code (jumps). */
-	/** OLD CODE
-		if (!generateLineNumberAttributes)
-			return;
-		pcToSourceMap[pcToSourceMapSize - 1][1] = position;
-		// need to update the initialization endPC in case of generation of local variable attributes.
-		updateLocalVariablesAttribute(pos);
-	*/
-
-	if ((this.generateAttributes & ClassFileConstants.ATTR_LINES) != 0) {
-		this.lastEntryPC = pos;
-	}
-	// need to update the initialization endPC in case of generation of local variable attributes.
-	if ((this.generateAttributes & (ClassFileConstants.ATTR_VARS
-			| ClassFileConstants.ATTR_STACK_MAP_TABLE
-			| ClassFileConstants.ATTR_STACK_MAP)) != 0) {
-		for (int i = 0, max = this.locals.length; i < max; i++) {
-			LocalVariableBinding local = this.locals[i];
-			if (local != null && local.declaringScope == scope && local.initializationCount > 0) {
-				if (local.initializationPCs[((local.initializationCount - 1) << 1) + 1] == pos) {
-					local.initializationPCs[((local.initializationCount - 1) << 1) + 1] = this.position;
-				}
-			}
-		}
-	}
-}
-
 protected void writePosition(BranchLabel label) {
 	int offset = label.position - this.position + 1;
 	if (Math.abs(offset) > 0x7FFF && !this.wideMode) {

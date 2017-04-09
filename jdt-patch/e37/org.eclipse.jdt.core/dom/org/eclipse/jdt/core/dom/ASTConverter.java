@@ -1258,7 +1258,7 @@ class ASTConverter {
 			}
 			// GROOVY end
 			compilationUnit.setStatementsRecoveryData(unit.compilationResult.recoveryScannerData);
-
+	
 			// Parse comments
 			int[][] comments = unit.comments;
 			if (comments != null) {
@@ -2504,21 +2504,21 @@ class ASTConverter {
 				return createFakeEmptyStatement(statement);
 			}
 			// annotation and enum type declarations are not returned by the parser inside method bodies
-					TypeDeclaration typeDeclaration = (TypeDeclaration) result;
-					TypeDeclarationStatement typeDeclarationStatement = new TypeDeclarationStatement(this.ast);
-					typeDeclarationStatement.setDeclaration(typeDeclaration);
-					switch(this.ast.apiLevel) {
-						case AST.JLS2_INTERNAL :
-							TypeDeclaration typeDecl = typeDeclarationStatement.internalGetTypeDeclaration();
-							typeDeclarationStatement.setSourceRange(typeDecl.getStartPosition(), typeDecl.getLength());
-							break;
+			TypeDeclaration typeDeclaration = (TypeDeclaration) result;
+			TypeDeclarationStatement typeDeclarationStatement = new TypeDeclarationStatement(this.ast);
+			typeDeclarationStatement.setDeclaration(typeDeclaration);
+			switch(this.ast.apiLevel) {
+				case AST.JLS2_INTERNAL :
+					TypeDeclaration typeDecl = typeDeclarationStatement.internalGetTypeDeclaration();
+					typeDeclarationStatement.setSourceRange(typeDecl.getStartPosition(), typeDecl.getLength());
+					break;
 				default :
-							AbstractTypeDeclaration typeDeclAST3 = typeDeclarationStatement.getDeclaration();
-							typeDeclarationStatement.setSourceRange(typeDeclAST3.getStartPosition(), typeDeclAST3.getLength());
-							break;
-					}
-					return typeDeclarationStatement;
+					AbstractTypeDeclaration typeDeclAST3 = typeDeclarationStatement.getDeclaration();
+					typeDeclarationStatement.setSourceRange(typeDeclAST3.getStartPosition(), typeDeclAST3.getLength());
+					break;
 			}
+			return typeDeclarationStatement;
+		}
 		if (statement instanceof org.eclipse.jdt.internal.compiler.ast.WhileStatement) {
 			return convert((org.eclipse.jdt.internal.compiler.ast.WhileStatement) statement);
 		}
@@ -3246,28 +3246,28 @@ class ASTConverter {
 				sourceStart = (int)(positions[0]>>>32);
 				switch(this.ast.apiLevel) {
 					case AST.JLS2_INTERNAL : {
-							char[][] name = ((org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference) typeReference).getTypeName();
-							int nameLength = name.length;
-							sourceStart = (int)(positions[0]>>>32);
-							length = (int)(positions[nameLength - 1] & 0xFFFFFFFF) - sourceStart + 1;
-							Name qualifiedName = this.setQualifiedNameNameAndSourceRanges(name, positions, typeReference);
-							final SimpleType simpleType = new SimpleType(this.ast);
-							simpleType.setName(qualifiedName);
-							simpleType.setSourceRange(sourceStart, length);
-							type = simpleType;
-						}
-						break;
+						char[][] name = ((org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference) typeReference).getTypeName();
+						int nameLength = name.length;
+						sourceStart = (int)(positions[0]>>>32);
+						length = (int)(positions[nameLength - 1] & 0xFFFFFFFF) - sourceStart + 1;
+						Name qualifiedName = this.setQualifiedNameNameAndSourceRanges(name, positions, typeReference);
+						final SimpleType simpleType = new SimpleType(this.ast);
+						simpleType.setName(qualifiedName);
+						simpleType.setSourceRange(sourceStart, length);
+						type = simpleType;
+					}
+					break;
 					default :
 						if (typeArguments != null) {
 							int numberOfEnclosingType = 0;
-                            int startingIndex = 0;
-                            int endingIndex = 0;
+							int startingIndex = 0;
+							int endingIndex = 0;
 							for (int i = 0, max = typeArguments.length; i < max; i++) {
 								if (typeArguments[i] != null) {
 									numberOfEnclosingType++;
 								} else if (numberOfEnclosingType == 0) {
-                                    endingIndex++;
-                                }
+									endingIndex++;
+								}
 							}
 							Name name = null;
 							if (endingIndex - startingIndex == 0) {
@@ -3280,7 +3280,7 @@ class ASTConverter {
 								simpleName.index = 1;
 								name = simpleName;
 								if (this.resolveBindings) {
-		 							recordNodes(simpleName, typeReference);
+									recordNodes(simpleName, typeReference);
 								}
 							} else {
 								name = this.setQualifiedNameNameAndSourceRanges(tokens, positions, endingIndex, typeReference);
@@ -3292,10 +3292,10 @@ class ASTConverter {
 							simpleType.setSourceRange(start, end - start + 1);
 							ParameterizedType parameterizedType = new ParameterizedType(this.ast);
 							parameterizedType.setType(simpleType);
-                            if (this.resolveBindings) {
-                                recordNodes(simpleType, typeReference);
-                                recordNodes(parameterizedType, typeReference);
-                            }
+							if (this.resolveBindings) {
+								recordNodes(simpleType, typeReference);
+								recordNodes(parameterizedType, typeReference);
+							}
 							start = simpleType.getStartPosition();
 							end = start + simpleType.getLength() - 1;
 							for (int i = 0, max = typeArguments[endingIndex].length; i < max; i++) {
@@ -3321,22 +3321,22 @@ class ASTConverter {
 								QualifiedType qualifiedType = new QualifiedType(this.ast);
 								qualifiedType.setQualifier(currentType);
 								qualifiedType.setName(simpleName);
-                                if (this.resolveBindings) {
-                                    recordNodes(simpleName, typeReference);
-                                    recordNodes(qualifiedType, typeReference);
-                                }
+								if (this.resolveBindings) {
+									recordNodes(simpleName, typeReference);
+									recordNodes(qualifiedType, typeReference);
+								}
 								start = currentType.getStartPosition();
 								end = simpleName.getStartPosition() + simpleName.getLength() - 1;
 								qualifiedType.setSourceRange(start, end - start + 1);
 								indexOfEnclosingType++;
 								if (typeArguments[startingIndex] != null) {
-	                               	qualifiedType.index = indexOfEnclosingType;
+									qualifiedType.index = indexOfEnclosingType;
 									ParameterizedType parameterizedType2 = new ParameterizedType(this.ast);
 									parameterizedType2.setType(qualifiedType);
- 									parameterizedType2.index = indexOfEnclosingType;
-                                   if (this.resolveBindings) {
-                                        recordNodes(parameterizedType2, typeReference);
-                                    }
+									parameterizedType2.index = indexOfEnclosingType;
+									if (this.resolveBindings) {
+										recordNodes(parameterizedType2, typeReference);
+									}
 									for (int i = 0, max = typeArguments[startingIndex].length; i < max; i++) {
 										final Type type2 = convertType(typeArguments[startingIndex][i]);
 										parameterizedType2.typeArguments().add(type2);
@@ -3348,7 +3348,7 @@ class ASTConverter {
 									currentType = parameterizedType2;
 								} else {
 									currentType = qualifiedType;
-                               		qualifiedType.index = indexOfEnclosingType;
+									qualifiedType.index = indexOfEnclosingType;
 								}
 								startingIndex++;
 							}

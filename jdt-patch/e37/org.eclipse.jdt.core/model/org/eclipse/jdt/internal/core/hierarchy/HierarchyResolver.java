@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - contribution for Bug 300576 - NPE Computing type hierarchy when compliance doesn't match libraries
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.hierarchy; // GROOVY PATCHED
+package org.eclipse.jdt.internal.core.hierarchy;
 
 /**
  * This is the public entry point to resolve type hierarchies.
@@ -42,11 +43,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -55,31 +52,14 @@ import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
-import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
-import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TagBits;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.Messages;
-import org.eclipse.jdt.internal.core.ClassFile;
-import org.eclipse.jdt.internal.core.CompilationUnit;
-import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.core.Member;
-import org.eclipse.jdt.internal.core.Openable;
-import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
+import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.ASTNodeFinder;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 
@@ -805,21 +785,21 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=145333)
 		try {
 			this.lookupEnvironment.completeTypeBindings(parsedUnits, hasLocalType, unitsIndex);
-		// remember type bindings
-		for (int i = 0; i < unitsIndex; i++) {
-			CompilationUnitDeclaration parsedUnit = parsedUnits[i];
+			// remember type bindings
+			for (int i = 0; i < unitsIndex; i++) {
+				CompilationUnitDeclaration parsedUnit = parsedUnits[i];
 				if (parsedUnit != null && !parsedUnit.hasErrors()) {
-				boolean containsLocalType = hasLocalType[i];
-				if (containsLocalType) {
-					if (monitor != null && monitor.isCanceled())
-						throw new OperationCanceledException();
-					parsedUnit.scope.faultInTypes();
-					parsedUnit.resolve();
+					boolean containsLocalType = hasLocalType[i];
+					if (containsLocalType) {
+						if (monitor != null && monitor.isCanceled())
+							throw new OperationCanceledException();
+						parsedUnit.scope.faultInTypes();
+						parsedUnit.resolve();
+					}
+					
+					rememberAllTypes(parsedUnit, cus[i], containsLocalType);
 				}
-
-				rememberAllTypes(parsedUnit, cus[i], containsLocalType);
 			}
-		}
 		} catch (AbortCompilation e) {
 			// skip it silently
 		}

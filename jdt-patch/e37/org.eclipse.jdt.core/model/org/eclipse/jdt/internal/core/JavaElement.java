@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -252,7 +253,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		Object info = manager.getInfo(this);
 		if (info != null) return info;
-		return openWhenClosed(createElementInfo(), monitor);
+		return openWhenClosed(createElementInfo(), false, monitor);
 	}
 	/**
 	 * @see IAdaptable
@@ -506,19 +507,11 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
-	
-	// GROOVY start
-	// placeholder as this method exists in e42
-	protected Object openWhenClosed(Object info, boolean b, IProgressMonitor monitor) throws JavaModelException {
-		return openWhenClosed(info,monitor);
-	}
-	// GROOVY end
-	
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.
 	 */
-	protected Object openWhenClosed(Object info, IProgressMonitor monitor) throws JavaModelException {
+	protected Object openWhenClosed(Object info, boolean forceAdd, IProgressMonitor monitor) throws JavaModelException {
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		boolean hadTemporaryCache = manager.hasTemporaryCache();
 		try {
@@ -537,7 +530,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 				throw newNotPresentException();
 			}
 			if (!hadTemporaryCache) {
-				manager.putInfos(this, newElements);
+				info = manager.putInfos(this, info, forceAdd, newElements);
 			}
 		} finally {
 			if (!hadTemporaryCache) {

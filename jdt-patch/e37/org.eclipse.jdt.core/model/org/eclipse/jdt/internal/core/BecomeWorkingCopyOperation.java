@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,7 +35,7 @@ public class BecomeWorkingCopyOperation extends JavaModelOperation {
 		// open the working copy now to ensure contents are that of the current state of this element
 		CompilationUnit workingCopy = getWorkingCopy();
 		JavaModelManager.getJavaModelManager().getPerWorkingCopyInfo(workingCopy, true/*create if needed*/, true/*record usage*/, this.problemRequestor);
-		workingCopy.openWhenClosed(workingCopy.createElementInfo(), this.progressMonitor);
+		workingCopy.openWhenClosed(workingCopy.createElementInfo(), true, this.progressMonitor);
 
 		if (!workingCopy.isPrimary()) {
 			// report added java delta for a non-primary working copy

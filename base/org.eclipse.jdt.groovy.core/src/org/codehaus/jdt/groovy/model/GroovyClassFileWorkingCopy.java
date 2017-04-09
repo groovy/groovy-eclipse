@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,11 +184,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         if (elementInfo == null) {
             try {
                 elementInfo = (CompilationUnitElementInfo) createElementInfo();
-                // FIXADE in E4.2, this method takes 3 args
-                // when no longer supporting E3.7, then remove this
-                // and uncomment the line below
-                openWhenClosed(elementInfo, new NullProgressMonitor());
-                // openWhenClosed(elementInfo, true, new NullProgressMonitor());
+                openWhenClosed(elementInfo, true, new NullProgressMonitor());
             } catch (JavaModelException e) {
                 elementInfo = null;
                 Activator.getDefault().getLog().log(e.getJavaModelStatus());

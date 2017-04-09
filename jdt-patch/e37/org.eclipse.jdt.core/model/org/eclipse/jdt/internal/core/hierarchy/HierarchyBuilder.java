@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -8,7 +9,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.hierarchy; // GROOVY PATCHED
+package org.eclipse.jdt.internal.core.hierarchy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -179,7 +180,7 @@ public abstract class HierarchyBuilder {
 			case TypeDeclaration.ANNOTATION_TYPE_DECL :
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=329663
 				if (this.hierarchy.typeToSuperInterfaces.get(typeHandle) == null)
-				this.hierarchy.addInterface(typeHandle);
+					this.hierarchy.addInterface(typeHandle);
 				break;
 		}
 		if (superinterfaceHandles == null) {

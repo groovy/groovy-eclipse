@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -105,7 +105,7 @@ public class ForeachStatement extends Statement {
 
 			// code generation can be optimized when no need to continue in the loop
 			exitBranch = flowInfo.unconditionalCopy().
-					addNullInfoFrom(condInfo.initsWhenFalse());
+					addInitializationsFrom(condInfo.initsWhenFalse());
 			// TODO (maxime) no need to test when false: can optimize (same for action being unreachable above)
 			if ((actionInfo.tagBits & loopingContext.initsOnContinue.tagBits &
 					FlowInfo.UNREACHABLE_OR_DEAD) != 0) {
@@ -153,6 +153,7 @@ public class ForeachStatement extends Statement {
 									exitBranch,
 									false,
 									true /*for(;;){}while(true); unreachable(); */);
+		mergedInfo.resetAssignmentInfo(this.elementVariable.binding);
 		this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
 		return mergedInfo;
 	}
