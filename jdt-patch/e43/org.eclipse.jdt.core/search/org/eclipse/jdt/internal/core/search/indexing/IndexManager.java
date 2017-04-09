@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
-// GROOVY PATCHED
 
 import java.io.*;
 import java.net.URL;
@@ -76,7 +76,8 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	// Debug
 	public static boolean DEBUG = false;
 
-	public synchronized void aboutToUpdateIndex(IPath containerPath, Integer newIndexState) {
+
+public synchronized void aboutToUpdateIndex(IPath containerPath, Integer newIndexState) {
 	// newIndexState is either UPDATING_STATE or REBUILDING_STATE
 	// must tag the index as inconsistent, in case we exit before the update job is started
 	IndexLocation indexLocation = computeIndexLocation(containerPath);
@@ -326,7 +327,7 @@ public synchronized Index getIndex(IPath containerPath, IndexLocation indexLocat
 				indexLocation = computeIndexLocation(containerPath);
 				rebuildIndex(indexLocation, containerPath);
 				return null;
-		}
+			}
 		}
 		// index wasn't found on disk, consider creating an empty new one
 		if (createIfMissing) {
@@ -390,18 +391,18 @@ public Index[] getIndexes(IndexLocation[] locations, IProgressMonitor progressMo
 				}
 			} else {
 				if (indexLocation.isParticipantIndex() && indexLocation.exists()) { // the index belongs to non-jdt search participant
-						try {
-							IPath container = getParticipantsContainer(indexLocation);
-							if (container != null) {
+					try {
+						IPath container = getParticipantsContainer(indexLocation);
+						if (container != null) {
 							index = new Index(indexLocation, container.toOSString(), true /*reuse index file*/);
-								this.indexes.put(indexLocation, index);
-							}
-						} catch (IOException e) {
-							// ignore
+							this.indexes.put(indexLocation, index);
 						}
-					} 
+					} catch (IOException e) {
+						// ignore
+					}
 				}
 			}
+		}
 		if (index != null)
 			locatedIndexes[count++] = index; // only consider indexes which are ready
 	}
@@ -1087,7 +1088,7 @@ private synchronized void updateIndexState(IndexLocation indexLocation, Integer 
 public void updateParticipant(IPath indexPath, IPath containerPath) {
 	if (this.participantsContainers == null) {
 		readParticipantsIndexNamesFile();
-	} 
+	}
 	IndexLocation indexLocation = new FileIndexLocation(indexPath.toFile(), true);
 	if (this.participantsContainers.get(indexLocation) == null) {
 		this.participantsContainers.put(indexLocation, containerPath);

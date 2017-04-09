@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -23,7 +24,6 @@
  *								bug 404146 - [1.7][compiler] nested try-catch-finally-blocks leads to unrunnable Java byte code
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.impl;
-// GROOVY PATCHED
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -454,7 +454,7 @@ public class CompilerOptions {
 	public boolean analyseResourceLeaks;
 	/** Should missing enum cases be reported even if a default case exists in the same switch? */
 	public boolean reportMissingEnumCaseDespiteDefault;
-
+	
 	/** Should the compiler tolerate illegal ambiguous varargs invocation in compliance < 1.7 
 	 * to be bug compatible with javac? (bug 383780) */
 	public static boolean tolerateIllegalAmbiguousVarargsInvocation;
@@ -485,7 +485,7 @@ public class CompilerOptions {
 		"null", //$NON-NLS-1$
 		"rawtypes", //$NON-NLS-1$
 		"resource", //$NON-NLS-1$
-		"restriction", //$NON-NLS-1$
+		"restriction", //$NON-NLS-1$		
 		"serial", //$NON-NLS-1$
 		"static-access", //$NON-NLS-1$
 		"static-method", //$NON-NLS-1$
@@ -948,7 +948,7 @@ public class CompilerOptions {
 			case InvalidJavadoc :
 			case MissingJavadocComments :
 			case MissingJavadocTags:
-				return "javadoc"; //$NON-NLS-1$				
+				return "javadoc"; //$NON-NLS-1$
 			case MissingSynchronizedModifierInInheritedMethod:
 				return "sync-override";	 //$NON-NLS-1$
 		}

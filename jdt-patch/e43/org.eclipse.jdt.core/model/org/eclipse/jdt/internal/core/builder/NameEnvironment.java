@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -14,7 +15,7 @@
  *								Bug 392727 - Cannot compile project when a java file contains $ in its file name
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-// GROOVY PATCHED
+
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 

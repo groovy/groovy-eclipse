@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-// GROOVY PATCHED
 
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.resources.*;
@@ -711,7 +711,7 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 		// we may use a different resource for certain problems such as IProblem.MissingNonNullByDefaultAnnotationOnPackage
 		// but at the start of the next problem we should reset it to the source file's resource
 		IResource resource = sourceFile.resource;
-
+		
 		// handle missing classfile situation
 		if (id == IProblem.IsClassPathCorrect) {
 			String missingClassfileName = problem.getArguments()[0];

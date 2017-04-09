@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -165,7 +166,7 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	IBuffer buffer = getBuffer();
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
-		BinaryType type = (BinaryType) getType();
+	    BinaryType type = (BinaryType) getType();
 		// GROOVY start
 		/*old{
 		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()));

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -18,7 +19,6 @@
  *								Bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.*;
 
@@ -324,9 +324,9 @@ public abstract class Scope {
 						{
 							// parameterized types are incompatible due to incompatible type arguments => unsatisfiable
 							return null;
+						}
+					}
 				}
-			}
-		}
 			}
 		}
 		if (removed == 0) return result;
@@ -1050,7 +1050,6 @@ public abstract class Scope {
 		}
 		return null;
 	}
-
 	// Internal use only
 	/*	Answer the field binding that corresponds to fieldName.
 		Start the lookup at the receiverType.
@@ -1058,9 +1057,8 @@ public abstract class Scope {
 			isSuperAccess(); this is used to determine if the discovered field is visible.
 		Only fields defined by the receiverType or its supertypes are answered;
 		a field of an enclosing type will not be found using this API.
-
-		If no visible field is discovered, null is answered.
-	*/
+    	If no visible field is discovered, null is answered.
+	 */
 	public FieldBinding findField(TypeBinding receiverType, char[] fieldName, InvocationSite invocationSite, boolean needResolve) {
 		return findField(receiverType, fieldName, invocationSite, needResolve, false);
 	}
@@ -2870,19 +2868,19 @@ public abstract class Scope {
 								}
 								if (conflict) {
 								// GROOVY - end
-									ImportReference importReference = someImport.reference;
-									if (importReference != null) {
-										importReference.bits |= ASTNode.Used;
-									}
-									if (foundInImport) {
-										// Answer error binding -- import on demand conflict; name found in two import on demand packages.
-										temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
-										if (typeOrPackageCache != null)
-											typeOrPackageCache.put(name, temp);
-										return temp;
-									}
-									type = temp;
-									foundInImport = true;
+								ImportReference importReference = someImport.reference;
+								if (importReference != null) {
+									importReference.bits |= ASTNode.Used;
+								}
+								if (foundInImport) {
+									// Answer error binding -- import on demand conflict; name found in two import on demand packages.
+									temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
+									if (typeOrPackageCache != null)
+										typeOrPackageCache.put(name, temp);
+									return temp;
+								}
+								type = temp;
+								foundInImport = true;
 								// GROOVY - start
 								}
 								// GROOVY - end
@@ -3102,9 +3100,9 @@ public abstract class Scope {
 							if (oneParam == eType || oneParam.isCompatibleWith(eType))
 								return true; // special case to choose between 2 varargs methods when the last arg is Object[]
 						} else {
-						if (oType == eType || oType.isCompatibleWith(eType))
-							return true; // special case to choose between 2 varargs methods when the last arg is Object[]
-					}
+							if (oType == eType || oType.isCompatibleWith(eType))
+								return true; // special case to choose between 2 varargs methods when the last arg is Object[]
+						}
 					}
 					return false;
 				}

@@ -13,19 +13,11 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.compiler.util.CompoundNameVector;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfType;
-import org.eclipse.jdt.internal.compiler.util.ObjectVector;
-import org.eclipse.jdt.internal.compiler.util.SimpleNameVector;
+import org.eclipse.jdt.internal.compiler.util.*;
 
 public class CompilationUnitScope extends Scope {
 
@@ -402,7 +394,7 @@ void faultInImports() {
 	this.tempImports = new ImportBinding[numberOfImports + this.importPtr-1];
 	System.arraycopy(defaultImports, 0, this.tempImports, 0, this.importPtr);
 	// GROOVY end
-
+	
 	// keep static imports with normal imports until there is a reason to split them up
 	// on demand imports continue to be packages & types. need to check on demand type imports for fields/methods
 	// single imports change from being just types to types or fields
@@ -465,7 +457,7 @@ void faultInImports() {
 			// all the code here which checks for valid bindings have been moved to the method 
 			// checkAndRecordImportBinding() since bug 361327
 			if(checkAndRecordImportBinding(importBinding, typesBySimpleNames, importReference, compoundName) == -1)
-						continue nextImport;
+				continue nextImport;
 			if (importReference.isStatic()) {
 				// look for more static bindings being imported by single static import(bug 361327).
 				// findSingleImport() finds fields first, followed by method and then type
@@ -475,10 +467,10 @@ void faultInImports() {
 					checkMoreStaticBindings(compoundName, typesBySimpleNames, Binding.TYPE | Binding.METHOD, importReference);		
 				} else if (importBinding.kind() == Binding.METHOD) {
 					checkMoreStaticBindings(compoundName, typesBySimpleNames, Binding.TYPE, importReference);
-					}
-					}
 				}
 			}
+		}
+	}
 
 	// shrink resolvedImports... only happens if an error was reported
 	if (this.tempImports.length > this.importPtr)
@@ -961,7 +953,7 @@ private int checkAndRecordImportBinding(
 			problemReporter().deprecatedType(typeToCheck, importReference);
 
 		// GROOVY edit
-		//ReferenceBinding existingType = typesBySimpleNames.get(name);
+		//ReferenceBinding existingType = typesBySimpleNames.get(compoundName[compoundName.length - 1]);
 		ReferenceBinding existingType = typesBySimpleNames.get(importReference.getSimpleName());
 		// GROOVY end			
 		if (existingType != null) {

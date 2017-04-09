@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -12,7 +13,6 @@
  *     							bug 186342 - [compiler][null] Using annotations for null checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
-// GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.compiler.*;

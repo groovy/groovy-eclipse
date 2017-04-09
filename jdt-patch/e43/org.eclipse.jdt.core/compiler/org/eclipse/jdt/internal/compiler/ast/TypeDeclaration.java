@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -13,7 +14,6 @@
  *     Keigo Imai - Contribution for  bug 388903 - Cannot extend inner class as an anonymous class when it extends the outer class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
 
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.*;
@@ -1358,7 +1358,7 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 }
 
 /**
- *	Iteration for a local innertype
+ *	Iteration for a local inner type
  */
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	try {

@@ -11,6 +11,7 @@
  *								bug 185682 - Increment/decrement operators mark local variables as read
  *								bug 331649 - [compiler][null] consider null annotations for fields
  *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								Bug 412203 - [compiler] Internal compiler error: java.lang.IllegalArgumentException: info cannot be null
  *     Jesper S Moller - Contributions for
  *								Bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
@@ -119,6 +120,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 		if (   !isCompound
 			&& this.receiver.isThis()
 			&& !(this.receiver instanceof QualifiedThisReference)
+			&& this.receiver.resolvedType == this.binding.declaringClass // inherited fields are not tracked here
 			&& ((this.receiver.bits & ASTNode.ParenthesizedMASK) == 0)) { // (this).x is forbidden
 			flowInfo.markAsDefinitelyAssigned(this.binding);
 		}		

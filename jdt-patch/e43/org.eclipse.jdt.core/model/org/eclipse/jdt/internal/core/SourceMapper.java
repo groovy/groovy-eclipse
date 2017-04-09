@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -11,7 +12,6 @@
  *     Stephan Herrmann - Contribution for Bug 380048 - error popup when navigating to source files
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1151,7 +1151,7 @@ public class SourceMapper
 					return UNKNOWN_RANGE;
 				} else {
 					return ranges[1];
-		}
+				}
 		}
 		SourceRange[] ranges = (SourceRange[]) this.sourceRanges.get(element);
 		if (ranges == null) {

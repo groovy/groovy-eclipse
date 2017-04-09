@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
-// GROOVY PATCHED
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -913,7 +913,7 @@ public MethodBinding getMethodBinding(MethodPattern methodPattern) {
     // special handling for methods of anonymous/local types. Since these cannot be looked up in the environment the usual way ...
     if (methodPattern.focus instanceof SourceMethod) {
     	char[] typeName = PatternLocator.qualifiedPattern(methodPattern.declaringSimpleName, methodPattern.declaringQualification);
-    	if (CharOperation.indexOf(IIndexConstants.ONE_STAR, typeName, true) >= 0) { // See org.eclipse.jdt.core.search.SearchPattern.enclosingTypeNames(IType)
+    	if (typeName != null && CharOperation.indexOf(IIndexConstants.ONE_STAR, typeName, true) >= 0) { // See org.eclipse.jdt.core.search.SearchPattern.enclosingTypeNames(IType)
     		IType type = methodPattern.declaringType;
     		IType enclosingType = type.getDeclaringType();
     		while (enclosingType != null) {
@@ -1812,10 +1812,10 @@ protected void purgeMethodStatements(TypeDeclaration type, boolean checkEachMeth
 				AbstractMethodDeclaration method = methods[j];
 				if (!this.currentPossibleMatch.nodeSet.hasPossibleNodes(method.declarationSourceStart, method.declarationSourceEnd)) {
 					if (this.sourceStartOfMethodToRetain != method.declarationSourceStart || this.sourceEndOfMethodToRetain != method.declarationSourceEnd) { // approximate, but no big deal
-					method.statements = null;
-					method.javadoc = null;
+						method.statements = null;
+						method.javadoc = null;
+					}
 				}
-			}
 			}
 		} else {
 			for (int j = 0, length = methods.length; j < length; j++) {

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
+
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,7 +48,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 
 	private static final byte[] CLOSING_DOUBLE_QUOTE = new byte[] { 34 };
 	/* To handle the pre - HTML 5 format: <META http-equiv="Content-Type" content="text/html; charset=UTF-8">  */
-	private static final byte[] CHARSET = new byte[] {99, 104, 97, 114, 115, 101, 116, 61 };
+	private static final byte[] CHARSET = new byte[] { 99, 104, 97, 114, 115, 101, 116, 61 };
 	/* To handle the HTML 5 format: <meta http-equiv="Content-Type" content="text/html" charset="UTF-8"> */
 	private static final byte[] CHARSET_HTML5 = new byte[] { 99, 104, 97, 114, 115, 101, 116, 61, 34 };
 	private static final byte[] META_START = new byte[] { 60, 109, 101, 116, 97 };
@@ -537,7 +538,6 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			    if (newElements.containsKey(openable)) {
 			        openable.closeBuffer();
 			    }
-			    
 				throw newNotPresentException();
 			}
 			if (!hadTemporaryCache) {
@@ -786,7 +786,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			byte[] contents = org.eclipse.jdt.internal.compiler.util.Util.getInputStreamAsByteArray(stream, connection.getContentLength());
 			if (encoding == null) {
 				int index = getIndexOf(contents, META_START, 0, -1);
-					if (index != -1) {
+				if (index != -1) {
 					int end = getIndexOf(contents, META_END, index, -1);
 					if (end != -1) {
 						if ((end + 1) <= contents.length) end++;
@@ -797,7 +797,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 								charsetIndex = charsetIndex + CHARSET.length;
 						} else {
 							charsetIndex = charsetIndex + CHARSET_HTML5.length;
-							}
+						}
 						if (charsetIndex != -1) {
 							end = getIndexOf(contents, CLOSING_DOUBLE_QUOTE, charsetIndex, end);
 							encoding = new String(contents, charsetIndex, end - charsetIndex, org.eclipse.jdt.internal.compiler.util.Util.UTF_8);
@@ -827,19 +827,19 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		} catch (FileNotFoundException e) {
 			// Ignore, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=120559 &
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=403036
-		} catch(SocketException e) {
+		} catch (SocketException e) {
 			// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=247845 &
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=400060
 			throw new JavaModelException(e, IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC);
-		} catch(UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=247845 &
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=400060
 			throw new JavaModelException(e, IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC);
-		} catch(ProtocolException e) {
+		} catch (ProtocolException e) {
 			// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=247845 &
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=400060
 			throw new JavaModelException(e, IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC);
-		} catch(IOException e) {
+		} catch (IOException e) {
 			throw new JavaModelException(e, IJavaModelStatusConstants.IO_EXCEPTION);
 		} finally {
 			if (stream != null) {

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@
  *     Stephan Herrmann  - Contribution for bug 295551
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -79,7 +79,7 @@ public class CompilationUnitDeclaration extends ASTNode implements ProblemSeveri
 	long[] suppressWarningScopePositions; // (start << 32) + end
 	int suppressWarningsCount;
 
-public CompilationUnitDeclaration(ProblemReporter problemReporter, CompilationResult compilationResult, 	int sourceLength) {
+public CompilationUnitDeclaration(ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
 	this.problemReporter = problemReporter;
 	this.compilationResult = compilationResult;
 	//by definition of a compilation unit....
@@ -721,16 +721,15 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 	}
 }
 
-	// GROOVY start
-	// new method so that other compilation unit declarations can built alternative scopes
-	public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
-		return new CompilationUnitScope(this,lookupEnvironment);
-	}
-	
-	// If a special dom CompilationUnit is needed return it, otherwise return null (and a default one will be created)
-	public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
-		return null;
-	}
-	// GROOVY end
+// GROOVY start
+// new method so that other compilation unit declarations can built alternative scopes
+public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
+	return new CompilationUnitScope(this,lookupEnvironment);
+}
 
+// If a special dom CompilationUnit is needed return it, otherwise return null (and a default one will be created)
+public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
+	return null;
+}
+// GROOVY end
 }

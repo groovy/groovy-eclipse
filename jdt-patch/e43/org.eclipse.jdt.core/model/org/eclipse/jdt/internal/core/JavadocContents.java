@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2012 IBM Corporation and others.
+ * Copyright (c) 2009, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -479,13 +479,22 @@ public class JavadocContents {
 			return;
 		}
 		/*
-		 * Check out to cut off the hierarchy see 119844
-		 * We remove what the contents between the start of class data and the first <P>
+		 * Cut off the type hierarchy, see bug 119844.
+		 * We remove the contents between the start of class data and where
+		 * we guess the actual class comment starts.
 		 */
 		int start = indexOfStartOfClassData + JavadocConstants.START_OF_CLASS_DATA_LENGTH;
-		int indexOfFirstParagraph = CharOperation.indexOf("<P>".toCharArray(), this.content, false, start); //$NON-NLS-1$
-		if (indexOfFirstParagraph != -1 && indexOfFirstParagraph < indexOfNextSummary) {
-			start = indexOfFirstParagraph;
+		int indexOfFirstParagraph = CharOperation.indexOf(JavadocConstants.P.toCharArray(), this.content, false, start, indexOfNextSummary);
+		int indexOfFirstDiv = CharOperation.indexOf(JavadocConstants.DIV_CLASS_BLOCK.toCharArray(), this.content, false, start, indexOfNextSummary);
+		int afterHierarchy = indexOfNextSummary;
+		if (indexOfFirstParagraph != -1 && indexOfFirstParagraph < afterHierarchy) {
+			afterHierarchy = indexOfFirstParagraph;
+		}
+		if (indexOfFirstDiv != -1 && indexOfFirstDiv < afterHierarchy) {
+			afterHierarchy = indexOfFirstDiv;
+		}
+		if (afterHierarchy != indexOfNextSummary) {
+			start = afterHierarchy;
 		}
 		
 		this.typeDocRange = new int[]{start, indexOfNextSummary};

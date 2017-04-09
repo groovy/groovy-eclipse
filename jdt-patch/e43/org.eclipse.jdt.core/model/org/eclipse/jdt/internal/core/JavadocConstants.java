@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2012 IBM Corporation and others.
+ * Copyright (c) 2005, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,4 +39,6 @@ public interface JavadocConstants {
 	char[] SEPARATOR_START = "<!-- =".toCharArray(); //$NON-NLS-1$
 	char[] START_OF_CLASS_DATA = "<!-- ======== START OF CLASS DATA ======== -->".toCharArray(); //$NON-NLS-1$
 	int START_OF_CLASS_DATA_LENGTH = JavadocConstants.START_OF_CLASS_DATA.length;
+	String P = "<P>"; //$NON-NLS-1$
+	String DIV_CLASS_BLOCK = "<DIV CLASS=\"BLOCK\">"; //$NON-NLS-1$
 }

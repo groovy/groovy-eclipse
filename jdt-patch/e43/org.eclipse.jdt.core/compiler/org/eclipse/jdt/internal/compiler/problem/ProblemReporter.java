@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -8,9 +9,9 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
- *     Stephan Herrmann  - Contributions for 
+ *     Stephan Herrmann  - Contributions for
  *	     						bug 236385 - [compiler] Warn for potential programming problem if an object is created but not used
- *     						bug 338303 - Warning about Redundant assignment conflicts with definite assignment
+ *  	   						bug 338303 - Warning about Redundant assignment conflicts with definite assignment
  *								bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
@@ -29,7 +30,6 @@
  *								bug 395681 - [compiler] Improve simulation of javac6 behavior from bug 317719 after fixing bug 388795
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
-// GROOVY PATCHED
 
 import java.io.CharConversionException;
 import java.io.PrintWriter;
@@ -92,7 +92,7 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
-import org.eclipse.jdt.internal.compiler.ast.Statement; 
+import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.SwitchStatement;
 import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -498,7 +498,7 @@ public static int getIrritant(int problemID) {
 			
 		case IProblem.MethodCanBePotentiallyStatic:
 			return CompilerOptions.MethodCanBePotentiallyStatic;
-				
+
 		case IProblem.UnclosedCloseable:
 		case IProblem.UnclosedCloseableAtExit:
 			return CompilerOptions.UnclosedCloseable;
@@ -593,7 +593,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.UnhandledWarningToken :
 			case CompilerOptions.UnusedWarningToken :
 			case CompilerOptions.UnusedLabel :
-			case CompilerOptions.RedundantSuperinterface :	
+			case CompilerOptions.RedundantSuperinterface :
 			case CompilerOptions.RedundantSpecificationOfTypeArguments :
 			case CompilerOptions.UnusedTypeParameter:
 				return CategorizedProblem.CAT_UNNECESSARY_CODE;
@@ -620,7 +620,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.ForbiddenReference :
 			case CompilerOptions.DiscouragedReference :
 				return CategorizedProblem.CAT_RESTRICTION;
-			
+
 			case CompilerOptions.NullSpecViolation :
 			case CompilerOptions.NullAnnotationInferenceConflict :
 			case CompilerOptions.NullUncheckedConversion :
@@ -1212,9 +1212,9 @@ public void cannotReadSource(CompilationUnitDeclaration unit, AbortCompilationUn
 		stringWriter = new StringWriter();
 		writer = new PrintWriter(stringWriter);
 	}
-		writer.print(abortException.exception.getClass().getName());
-		writer.print(':');
-		writer.print(abortException.exception.getMessage());
+	writer.print(abortException.exception.getClass().getName());
+	writer.print(':');
+	writer.print(abortException.exception.getMessage());
 	String exceptionTrace = stringWriter.toString();
 	String[] arguments = new String[]{ fileName, exceptionTrace };
 	this.handle(
@@ -2979,7 +2979,7 @@ public void incorrectSwitchType(Expression expression, TypeBinding testType) {
 					expression.sourceEnd);
 		} else {
 			if (this.options.sourceLevel < ClassFileConstants.JDK1_5 && testType.isEnum()) {
-	this.handle(
+				this.handle(
 						IProblem.SwitchOnEnumNotBelow15,
 						new String[] {new String(testType.readableName())},
 						new String[] {new String(testType.shortReadableName())},
@@ -2987,12 +2987,12 @@ public void incorrectSwitchType(Expression expression, TypeBinding testType) {
 						expression.sourceEnd);
 			} else {
 				this.handle(
-		IProblem.IncorrectSwitchType,
-		new String[] {new String(testType.readableName())},
-		new String[] {new String(testType.shortReadableName())},
-		expression.sourceStart,
-		expression.sourceEnd);
-}
+						IProblem.IncorrectSwitchType,
+						new String[] {new String(testType.readableName())},
+						new String[] {new String(testType.shortReadableName())},
+						expression.sourceStart,
+						expression.sourceEnd);
+			}
 		}
 	} else {
 		this.handle(
@@ -5218,7 +5218,7 @@ public boolean expressionNonNullComparison(Expression expr, boolean checkForNull
 			expr = ((CastExpression) expr).expression;
 		else
 			break;
-}
+	}
 	// check all those kinds of expressions that can possible answer NON_NULL from nullStatus():
 	if (expr instanceof MessageSend) {
 		problemId = checkForNull 
@@ -5581,12 +5581,12 @@ public void missingEnumConstantCase(SwitchStatement switchStatement, FieldBindin
 }
 public void missingDefaultCase(SwitchStatement switchStatement, boolean isEnumSwitch, TypeBinding expressionType) {
 	if (isEnumSwitch) {
-	this.handle(
+		this.handle(
 				IProblem.MissingEnumDefaultCase,
-		new String[] {new String(expressionType.readableName())},
-		new String[] {new String(expressionType.shortReadableName())},
-		switchStatement.expression.sourceStart,
-		switchStatement.expression.sourceEnd);
+				new String[] {new String(expressionType.readableName())},
+				new String[] {new String(expressionType.shortReadableName())},
+				switchStatement.expression.sourceStart,
+				switchStatement.expression.sourceEnd);
 	} else {
 		this.handle(
 				IProblem.MissingDefaultCase,
@@ -5594,7 +5594,7 @@ public void missingDefaultCase(SwitchStatement switchStatement, boolean isEnumSw
 				NoArgument,
 				switchStatement.expression.sourceStart,
 				switchStatement.expression.sourceEnd);
-}
+	}
 }
 public void missingOverrideAnnotation(AbstractMethodDeclaration method) {
 	int severity = computeSeverity(IProblem.MissingOverrideAnnotation);
@@ -7169,6 +7169,10 @@ public void typeMismatchError(TypeBinding actualType, TypeBinding expectedType, 
 			expectedType = expectedType.erasure();
 	}
 	if (actualType != null && (actualType.tagBits & TagBits.HasMissingType) != 0) { // improve secondary error
+		if (location instanceof Annotation) {
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376977
+			return; // Already reported, don't report a secondary error
+		}
 		this.handle(
 				IProblem.UndefinedType,
 				new String[] {new String(actualType.leafComponentType().readableName())},
@@ -7224,17 +7228,17 @@ private String typesAsString(MethodBinding methodBinding, TypeBinding[] paramete
 	if (methodBinding.isPolymorphic()) {
 		// get the original polymorphicMethod method
 		TypeBinding[] types = methodBinding.original().parameters;
-	StringBuffer buffer = new StringBuffer(10);
-	for (int i = 0, length = types.length; i < length; i++) {
-		if (i != 0) {
-			buffer.append(", "); //$NON-NLS-1$
-		}
-		TypeBinding type = types[i];
+		StringBuffer buffer = new StringBuffer(10);
+		for (int i = 0, length = types.length; i < length; i++) {
+			if (i != 0) {
+				buffer.append(", "); //$NON-NLS-1$
+			}
+			TypeBinding type = types[i];
 			boolean isVarargType = i == length-1;
 			if (isVarargType) {
 				type = ((ArrayBinding)type).elementsType();
 			}
-		buffer.append(new String(makeShort ? type.shortReadableName() : type.readableName()));
+			buffer.append(new String(makeShort ? type.shortReadableName() : type.readableName()));
 			if (isVarargType) {
 				buffer.append("..."); //$NON-NLS-1$
 			}
@@ -7257,7 +7261,7 @@ private String typesAsString(MethodBinding methodBinding, TypeBinding[] paramete
 		}
 	}
 	return buffer.toString();
-	}
+}
 private String typesAsString(TypeBinding[] types, boolean makeShort) {
 	StringBuffer buffer = new StringBuffer(10);
 	for (int i = 0, length = types.length; i < length; i++) {
@@ -7269,6 +7273,7 @@ private String typesAsString(TypeBinding[] types, boolean makeShort) {
 	}
 	return buffer.toString();
 }
+
 public void undefinedAnnotationValue(TypeBinding annotationType, MemberValuePair memberValuePair) {
 	if (isRecoveredName(memberValuePair.name)) return;
 	String name = 	new String(memberValuePair.name);
@@ -7361,8 +7366,8 @@ public void unhandledExceptionFromAutoClose (TypeBinding exceptionType, ASTNode 
 					new String(exceptionType.shortReadableName()),
 					new String(localBinding.shortReadableName())},
 			location.sourceStart,
-		location.sourceEnd);
-}
+			location.sourceEnd);
+	}
 }
 public void unhandledWarningToken(Expression token) {
 	String[] arguments = new String[] { token.constant.stringValue() };
@@ -7883,7 +7888,7 @@ public void unusedPrivateConstructor(ConstructorDeclaration constructorDecl) {
 
 	int severity = computeSeverity(IProblem.UnusedPrivateConstructor);
 	if (severity == ProblemSeverities.Ignore) return;
-
+	
 	if (excludeDueToAnnotation(constructorDecl.annotations, IProblem.UnusedPrivateConstructor)) return;
 	
 	MethodBinding constructor = constructorDecl.binding;
@@ -7928,7 +7933,7 @@ public void unusedPrivateField(FieldDeclaration fieldDecl) {
 		if (referenceBinding != null) {
 			if (referenceBinding.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoSerializable, false /*Serializable is not a class*/) != null) {
 				return; // do not report unused serialVersionUID field for class that implements Serializable
-	}
+			}
 		}
 	}
 	if (excludeDueToAnnotation(fieldDecl.annotations, IProblem.UnusedPrivateField)) return;
@@ -8326,6 +8331,7 @@ public void wrongSequenceOfExceptionTypes(TypeReference typeRef, TypeBinding exc
 		typeRef.sourceStart,
 		typeRef.sourceEnd);
 }
+
 public void autoManagedResourcesNotBelow17(LocalDeclaration[] resources) {
 	this.handle(
 			IProblem.AutoManagedResourceNotBelow17,
@@ -8435,9 +8441,9 @@ public void nullityMismatch(Expression expression, TypeBinding providedType, Typ
 			var = ((Reference)expression).lastFieldBinding();
 		}
 		if (var != null && var.isNullable()) {
-					nullityMismatchSpecdNullable(expression, requiredType, annotationName);
-					return;
-				}
+			nullityMismatchSpecdNullable(expression, requiredType, annotationName);
+			return;
+		}
 		nullityMismatchPotentiallyNull(expression, requiredType, annotationName);
 		return;
 	}

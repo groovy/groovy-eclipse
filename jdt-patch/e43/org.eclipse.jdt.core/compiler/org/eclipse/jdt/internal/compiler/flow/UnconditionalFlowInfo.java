@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2072,7 +2072,57 @@ public UnconditionalFlowInfo unconditionalInits() {
 public UnconditionalFlowInfo unconditionalInitsWithoutSideEffect() {
 	return this;
 }
+public UnconditionalFlowInfo mergeDefiniteInitsWith(UnconditionalFlowInfo otherInits) {
+	if ((otherInits.tagBits & UNREACHABLE_OR_DEAD) != 0 && this != DEAD_END) {
+		return this;
+	}
+	if ((this.tagBits & UNREACHABLE_OR_DEAD) != 0) {
+		return (UnconditionalFlowInfo) otherInits.copy(); // make sure otherInits won't be affected
+	}
 
+	// intersection of definitely assigned variables,
+	this.definiteInits &= otherInits.definiteInits;
+	if (this.extra != null) {
+		if (otherInits.extra != null) {
+			// both sides have extra storage
+			int i = 0, length, otherLength;
+			if ((length = this.extra[0].length) < (otherLength = otherInits.extra[0].length)) {
+				// current storage is shorter -> grow current
+				for (int j = 0; j < extraLength; j++) {
+					System.arraycopy(this.extra[j], 0,
+						(this.extra[j] = new long[otherLength]), 0, length);
+				}
+				for (; i < length; i++) {
+					this.extra[0][i] &= otherInits.extra[0][i];
+				}
+				for (; i < otherLength; i++) {
+					this.extra[0][i] = otherInits.extra[0][i];
+				}
+			}
+			else {
+				// current storage is longer
+				for (; i < otherLength; i++) {
+					this.extra[0][i] &= otherInits.extra[0][i];
+				}
+			}
+		} else {
+			for (int i = 0; i < this.extra[0].length; i++) {
+				this.extra[0][i] = 0;
+			}
+		}
+	}
+	else if (otherInits.extra != null) {
+		// no storage here, but other has extra storage.
+		int otherLength = otherInits.extra[0].length;
+		this.extra = new long[extraLength][];
+		for (int j = 0; j < extraLength; j++) {
+			this.extra[j] = new long[otherLength];
+		}
+		System.arraycopy(otherInits.extra[0], 0, this.extra[0], 0,
+				otherLength);
+	}
+	return this;
+}
 public void resetAssignmentInfo(LocalVariableBinding local) {
 	resetAssignmentInfo(local.id + this.maxFieldCount);
 }

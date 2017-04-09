@@ -18,7 +18,7 @@
 		<property name="bundleVersion" value="3.9.0.qualifier"/>
 		<fail unless="bundleVersion" message="Property 'bundleVersion' must be provided by caller"/>
 		<condition property="bundleVersionOK">
-		<matches pattern="\d\.\d\.\d.*" string="${bundleVersion}"/>
+			<matches pattern="\d\.\d\.\d.*" string="${bundleVersion}"/>
 		</condition>
 		<fail message="bundleVersion variable had unexpected format. Should be digit.digit.digit,ANY but was ${bundleVersion}" unless="bundleVersionOK"/>
 		<script language="javascript">
@@ -109,7 +109,6 @@
 			</fileset>
 		</zip>
 
-
 		<echo message="UPDATE ecjsrc-${buildLabel}.jar" />
 		<delete file="${dest}/ecjsrc-${buildLabel}.jar" failonerror="false"/>
 		<copy todir="${ecj-temp-src-folder}">
@@ -126,7 +125,7 @@
 				<exclude name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
 			</zipfileset>
 			<fileset dir="${ecj-temp-folder}">
-							<include name="**/messages.properties"/>
+				<include name="**/messages.properties"/>
 			</fileset>
 			<zipfileset dir="compiler" />
 			<zipfileset dir="antadapter">

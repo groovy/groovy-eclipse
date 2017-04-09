@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -12,7 +13,6 @@
  *     								Bug 353474 - type converters should include more annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
-// GROOVY PATCHED
 
 /**
  * Converter from source element type to parsed compilation unit.
@@ -116,8 +116,6 @@ public class SourceTypeConverter extends TypeConverter {
         } new */
 		this.unit = LanguageSupportFactory.newCompilationUnitDeclaration((ICompilationUnit) ((SourceTypeElementInfo) sourceTypes[0]).getHandle().getCompilationUnit(), this.problemReporter, compilationResult, 0);
         // GROOVY end
-
-		
 		// not filled at this point
 
 		if (sourceTypes.length == 0) return this.unit;
@@ -327,17 +325,17 @@ public class SourceTypeConverter extends TypeConverter {
 		   incorrect lookup and may mistakenly end up with missing types
 		 */
 		TypeParameter[] typeParams = null;
-			char[][] typeParameterNames = methodInfo.getTypeParameterNames();
-			if (typeParameterNames != null) {
-				int parameterCount = typeParameterNames.length;
-				if (parameterCount > 0) { // method's type parameters must be null if no type parameter
-					char[][][] typeParameterBounds = methodInfo.getTypeParameterBounds();
-					typeParams = new TypeParameter[parameterCount];
-					for (int i = 0; i < parameterCount; i++) {
-						typeParams[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
-					}
+		char[][] typeParameterNames = methodInfo.getTypeParameterNames();
+		if (typeParameterNames != null) {
+			int parameterCount = typeParameterNames.length;
+			if (parameterCount > 0) { // method's type parameters must be null if no type parameter
+				char[][][] typeParameterBounds = methodInfo.getTypeParameterBounds();
+				typeParams = new TypeParameter[parameterCount];
+				for (int i = 0; i < parameterCount; i++) {
+					typeParams[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
 				}
 			}
+		}
 
 		int modifiers = methodInfo.getModifiers();
 		if (methodInfo.isConstructor()) {
@@ -505,15 +503,15 @@ public class SourceTypeConverter extends TypeConverter {
 		   and/or super interfaces in order to be able to detect overriding in the presence
 		   of generics.
 		 */
-			char[][] typeParameterNames = typeInfo.getTypeParameterNames();
-			if (typeParameterNames.length > 0) {
-				int parameterCount = typeParameterNames.length;
-				char[][][] typeParameterBounds = typeInfo.getTypeParameterBounds();
-				type.typeParameters = new TypeParameter[parameterCount];
-				for (int i = 0; i < parameterCount; i++) {
-					type.typeParameters[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
-				}
+		char[][] typeParameterNames = typeInfo.getTypeParameterNames();
+		if (typeParameterNames.length > 0) {
+			int parameterCount = typeParameterNames.length;
+			char[][][] typeParameterBounds = typeInfo.getTypeParameterBounds();
+			type.typeParameters = new TypeParameter[parameterCount];
+			for (int i = 0; i < parameterCount; i++) {
+				type.typeParameters[i] = createTypeParameter(typeParameterNames[i], typeParameterBounds[i], start, end);
 			}
+		}
 
 		/* set superclass and superinterfaces */
 		if (typeInfo.getSuperclassName() != null) {

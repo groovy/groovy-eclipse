@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-// GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
@@ -562,7 +562,7 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 							if (this.sourceLocations[i].sourceFolder.getFolder(removedPackagePath).exists()) {
 								// only a package fragment was removed, same as removing multiple source files
 								if (md.hasIndependentOutputFolder)
-								createFolder(removedPackagePath, md.binaryFolder); // ensure package exists in the output folder
+									createFolder(removedPackagePath, md.binaryFolder); // ensure package exists in the output folder
 								IResourceDelta[] removedChildren = sourceDelta.getAffectedChildren();
 								for (int j = 0, m = removedChildren.length; j < m; j++)
 									if (!findSourceFiles(removedChildren[j], md, segmentCount))

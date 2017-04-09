@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -220,14 +220,18 @@ protected void computeFolderChildren(IContainer folder, boolean isIncluded, Stri
 		vChildren.add(pkg);
 	}
 	try {
-		JavaProject javaProject = (JavaProject)getJavaProject();
-		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		IResource[] members = folder.members();
 		boolean hasIncluded = isIncluded;
 		int length = members.length;
-		if (length >0) {
-			String sourceLevel = javaProject.getOption(JavaCore.COMPILER_SOURCE, true);
-			String complianceLevel = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
+		if (length > 0) {
+			// if package fragment root refers to folder in another IProject, then
+			// folder.getProject() is different than getJavaProject().getProject()
+			// use the other java project's options to verify the name
+			IJavaProject otherJavaProject = JavaCore.create(folder.getProject());
+			String sourceLevel = otherJavaProject.getOption(JavaCore.COMPILER_SOURCE, true);
+			String complianceLevel = otherJavaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
+			JavaProject javaProject = (JavaProject) getJavaProject();
+			JavaModelManager manager = JavaModelManager.getJavaModelManager();
 			for (int i = 0; i < length; i++) {
 				IResource member = members[i];
 				String memberName = member.getName();

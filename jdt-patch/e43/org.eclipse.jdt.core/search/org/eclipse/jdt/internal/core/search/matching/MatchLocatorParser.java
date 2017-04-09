@@ -1,15 +1,15 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
-// GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -231,29 +231,29 @@ protected void consumeCastExpressionLL1() {
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
 		CastExpression castExpression = (CastExpression) this.expressionStack[this.expressionPtr];
 		this.patternLocator.match(castExpression.type, this.nodeSet);
-        }
 	}
+}
 protected void consumeCastExpressionWithGenericsArray() {
 	super.consumeCastExpressionWithGenericsArray();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
 		CastExpression castExpression = (CastExpression) this.expressionStack[this.expressionPtr];
 		this.patternLocator.match(castExpression.type, this.nodeSet);
-        }
 	}
+}
 protected void consumeCastExpressionWithNameArray() {
 	super.consumeCastExpressionWithNameArray();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
 		CastExpression castExpression = (CastExpression) this.expressionStack[this.expressionPtr];
 		this.patternLocator.match(castExpression.type, this.nodeSet);
-        }
 	}
+}
 protected void consumeCastExpressionWithPrimitiveType() {
 	super.consumeCastExpressionWithPrimitiveType();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
 		CastExpression castExpression = (CastExpression) this.expressionStack[this.expressionPtr];
 		this.patternLocator.match(castExpression.type, this.nodeSet);
-        }
 	}
+}
 protected void consumeCastExpressionWithQualifiedGenericsArray() {
 	super.consumeCastExpressionWithQualifiedGenericsArray();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -541,9 +541,9 @@ protected void consumeStatementCatch() {
 				this.patternLocator.match(refs[i], this.nodeSet);
 			}
 		} else {
-		this.patternLocator.match(localDeclaration.type, this.nodeSet);
+			this.patternLocator.match(localDeclaration.type, this.nodeSet);
+		}
 	}
-}
 }
 
 protected void consumeTypeArgumentList1() {

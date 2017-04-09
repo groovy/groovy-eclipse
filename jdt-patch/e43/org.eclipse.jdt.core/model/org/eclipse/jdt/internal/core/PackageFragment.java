@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -58,9 +58,12 @@ public class PackageFragment extends Openable implements IPackageFragment, Suffi
 
 	public String[] names;
 
+	private boolean isValidPackageName;
+
 protected PackageFragment(PackageFragmentRoot root, String[] names) {
 	super(root);
 	this.names = names;
+	this.isValidPackageName = internalIsValidPackageName();
 }
 /**
  * @see Openable
@@ -407,14 +410,11 @@ public boolean hasSubpackages() throws JavaModelException {
 	}
 	return false;
 }
-/**
- * @see IPackageFragment#isDefaultPackage()
- */
-public boolean isDefaultPackage() {
-	return this.names.length == 0;
-}
-private boolean isValidPackageName() {
-	JavaProject javaProject = (JavaProject) getJavaProject();
+protected boolean internalIsValidPackageName() {
+	// if package fragment refers to folder in another IProject, then
+	// resource().getProject() is different than getJavaProject().getProject()
+	// use the other java project's options to verify the name
+	IJavaProject javaProject = JavaCore.create(resource().getProject());
 	String sourceLevel = javaProject.getOption(JavaCore.COMPILER_SOURCE, true);
 	String complianceLevel = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
 	for (int i = 0, length = this.names.length; i < length; i++) {
@@ -422,6 +422,15 @@ private boolean isValidPackageName() {
 			return false;
 	}
 	return true;
+}
+/**
+ * @see IPackageFragment#isDefaultPackage()
+ */
+public boolean isDefaultPackage() {
+	return this.names.length == 0;
+}
+protected final boolean isValidPackageName() {
+	return this.isValidPackageName;
 }
 /**
  * @see ISourceManipulation#move(IJavaElement, IJavaElement, String, boolean, IProgressMonitor)

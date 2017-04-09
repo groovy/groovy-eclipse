@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@
  *     Stephan Herrmann - Contribution for bug 363858 - [dom] early throwing of AbortCompilation causes NPE in CompilationUnitResolver
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
-// GROOVY PATCHED
 
 import java.io.File;
 import java.io.IOException;
@@ -721,12 +721,12 @@ class CompilationUnitResolver extends Compiler {
 				// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=86541
 				CompilationUnitDeclaration unitDeclaration = parse(sourceUnit, nodeSearcher, options, flags);
 				if (unit != null) {
-				final int problemCount = unit.compilationResult.problemCount;
-				if (problemCount != 0) {
-					unitDeclaration.compilationResult.problems = new CategorizedProblem[problemCount];
-					System.arraycopy(unit.compilationResult.problems, 0, unitDeclaration.compilationResult.problems, 0, problemCount);
-					unitDeclaration.compilationResult.problemCount = problemCount;
-				}
+					final int problemCount = unit.compilationResult.problemCount;
+					if (problemCount != 0) {
+						unitDeclaration.compilationResult.problems = new CategorizedProblem[problemCount];
+						System.arraycopy(unit.compilationResult.problems, 0, unitDeclaration.compilationResult.problems, 0, problemCount);
+						unitDeclaration.compilationResult.problemCount = problemCount;
+					}
 				} else if (resolver.abortProblem != null) {
 					unitDeclaration.compilationResult.problemCount = 1;
 					unitDeclaration.compilationResult.problems = new CategorizedProblem[] { resolver.abortProblem };
