@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@
  *     Stephan Herrmann - Contribution for bug 186342 [compiler][null] Using annotations for null checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.*;
 
@@ -1013,7 +1013,6 @@ public abstract class Scope {
 		}
 		return null;
 	}
-
 	// Internal use only
 	/*	Answer the field binding that corresponds to fieldName.
 		Start the lookup at the receiverType.
@@ -1021,9 +1020,8 @@ public abstract class Scope {
 			isSuperAccess(); this is used to determine if the discovered field is visible.
 		Only fields defined by the receiverType or its supertypes are answered;
 		a field of an enclosing type will not be found using this API.
-
-		If no visible field is discovered, null is answered.
-	*/
+    	If no visible field is discovered, null is answered.
+	 */
 	public FieldBinding findField(TypeBinding receiverType, char[] fieldName, InvocationSite invocationSite, boolean needResolve) {
 		return findField(receiverType, fieldName, invocationSite, needResolve, false);
 	}
@@ -3056,9 +3054,9 @@ public abstract class Scope {
 							if (oneParam == eType || oneParam.isCompatibleWith(eType))
 								return true; // special case to choose between 2 varargs methods when the last arg is Object[]
 						} else {
-						if (oType == eType || oType.isCompatibleWith(eType))
-							return true; // special case to choose between 2 varargs methods when the last arg is Object[]
-					}
+							if (oType == eType || oType.isCompatibleWith(eType))
+								return true; // special case to choose between 2 varargs methods when the last arg is Object[]
+						}
 					}
 					return false;
 				}

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -258,7 +259,6 @@ private void createParentFolder(IContainer parent) throws CoreException {
 		((IFolder) parent).create(true, true, null);
 	}
 }
-
 
 // GRECLIPSE 1594
 public boolean avoidAdditionalGroovyAnswers = false;

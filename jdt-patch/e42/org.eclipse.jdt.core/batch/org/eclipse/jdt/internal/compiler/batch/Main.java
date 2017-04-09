@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -2285,12 +2286,12 @@ public void configure(String[] argv) {
 						tokenCounter++;
 						switch(token.charAt(0)) {
 							case '+' :
-									isEnabling = true;
-									token = token.substring(1);
+								isEnabling = true;
+								token = token.substring(1);
 								break;
 							case '-' :
-									isEnabling = false;
-									token = token.substring(1);
+								isEnabling = false;
+								token = token.substring(1);
 						}
 						handleWarningToken(token, isEnabling);
 					}
@@ -2334,12 +2335,12 @@ public void configure(String[] argv) {
 						tokenCounter++;
 						switch(token.charAt(0)) {
 							case '+' :
-									isEnabling = true;
-									token = token.substring(1);
+								isEnabling = true;
+								token = token.substring(1);
 								break;
 							case '-' :
-									isEnabling = false;
-									token = token.substring(1);
+								isEnabling = false;
+								token = token.substring(1);
 								break;
 						}
 						handleErrorToken(token, isEnabling);
@@ -3477,7 +3478,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 						CompilerOptions.OPTION_IncludeNullInfoFromAsserts,
 						isEnabling ? CompilerOptions.ENABLED : CompilerOptions.DISABLED);
 				return;
-			}
+			} 
 			break;
 		case 'j' :
 			if (token.equals("javadoc")) {//$NON-NLS-1$
@@ -3541,7 +3542,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 					this.options.put(CompilerOptions.OPTION_NullableAnnotationName, nullableAnnotName);
 					this.options.put(CompilerOptions.OPTION_NonNullAnnotationName, nonNullAnnotName);
 					this.options.put(CompilerOptions.OPTION_NonNullByDefaultAnnotationName, nonNullByDefaultAnnotName);
-			}
+				}
 				this.options.put(
 						CompilerOptions.OPTION_AnnotationBasedNullAnalysis,
 						isEnabling ? CompilerOptions.ENABLED : CompilerOptions.DISABLED);

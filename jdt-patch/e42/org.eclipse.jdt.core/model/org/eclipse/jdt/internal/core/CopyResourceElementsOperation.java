@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
 
 import java.util.*;
 
@@ -279,20 +279,21 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	 */
 	protected void prepareDeltas(IJavaElement sourceElement, IJavaElement destinationElement, boolean isMove, boolean overWriteCU) {
 		if (Util.isExcluded(sourceElement) || Util.isExcluded(destinationElement)) return;
+		
 		IJavaProject destProject = destinationElement.getJavaProject();
 		if (isMove) {
 			IJavaProject sourceProject = sourceElement.getJavaProject();
 			getDeltaFor(sourceProject).movedFrom(sourceElement, destinationElement);
 			if (!overWriteCU) {
-			getDeltaFor(destProject).movedTo(destinationElement, sourceElement);
+				getDeltaFor(destProject).movedTo(destinationElement, sourceElement);
 				return;
 			}
 		} else {
 			if (!overWriteCU) {
-			getDeltaFor(destProject).added(destinationElement);
+				getDeltaFor(destProject).added(destinationElement);
 				return;
+			}
 		}
-	}
 		getDeltaFor(destinationElement.getJavaProject()).changed(destinationElement, IJavaElementDelta.F_CONTENT);
 	}
 	/**

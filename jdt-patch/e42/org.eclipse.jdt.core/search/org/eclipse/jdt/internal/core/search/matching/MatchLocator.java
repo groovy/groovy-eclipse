@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
-// GROOVY PATCHED
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1821,10 +1821,10 @@ protected void purgeMethodStatements(TypeDeclaration type, boolean checkEachMeth
 				AbstractMethodDeclaration method = methods[j];
 				if (!this.currentPossibleMatch.nodeSet.hasPossibleNodes(method.declarationSourceStart, method.declarationSourceEnd)) {
 					if (this.sourceStartOfMethodToRetain != method.declarationSourceStart || this.sourceEndOfMethodToRetain != method.declarationSourceEnd) { // approximate, but no big deal
-					method.statements = null;
-					method.javadoc = null;
+						method.statements = null;
+						method.javadoc = null;
+					}
 				}
-			}
 			}
 		} else {
 			for (int j = 0, length = methods.length; j < length; j++) {

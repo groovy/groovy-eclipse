@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,8 @@
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *     							bug 359334 - Analysis for resource leak warnings does not consider exceptions as method exit points
  *								bug 358903 - Filter practically unimportant resource leak warnings
+ *     Jesper Steen Moller - Contributions for
+ *								bug 404146 - [1.7][compiler] nested try-catch-finally-blocks leads to unrunnable Java byte code
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -21,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.*;
 import org.eclipse.jdt.internal.compiler.flow.*;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
@@ -916,7 +919,8 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 			return false;
 	}
 	// optimize subroutine invocation sequences, using the targetLocation (if any)
-	if (targetLocation != null) {
+	CompilerOptions options = this.scope.compilerOptions();
+	if (options.shareCommonFinallyBlocks && targetLocation != null) {
 		boolean reuseTargetLocation = true;
 		if (this.reusableJSRTargetsCount > 0) {
 			nextReusableTarget: for (int i = 0, count = this.reusableJSRTargetsCount; i < count; i++) {

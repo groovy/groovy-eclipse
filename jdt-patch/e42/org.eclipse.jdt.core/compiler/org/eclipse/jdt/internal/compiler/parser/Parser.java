@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -13,7 +14,6 @@
  *								bug 374605 - Unreasonable warning for enum-based switch statements
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
-// GROOVY PATCHED
 
 import java.io.*;
 import java.util.ArrayList;

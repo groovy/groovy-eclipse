@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -15,7 +16,6 @@
  *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -385,7 +385,7 @@ public void computeId() {
 		case 3 :
 			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
 				return;
-
+			
 			char[] packageName = this.compoundName[1];
 			if (packageName.length == 0) return; // just to be safe
 			char[] typeName = this.compoundName[2];
@@ -452,9 +452,9 @@ public void computeId() {
 							}
 							return;
 						case 14:
-					if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_ASSERTIONERROR[2]))
-						this.id = TypeIds.T_JavaLangAssertionError;
-					return;
+							if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_ASSERTIONERROR[2]))
+								this.id = TypeIds.T_JavaLangAssertionError;
+							return;
 					}
 					return;
 				case 'B' :
@@ -684,33 +684,33 @@ public void computeId() {
 			packageName = this.compoundName[0];
 			switch (packageName[0]) {
 				case 'j' :
-			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
-				return;
-			packageName = this.compoundName[1];
-			if (packageName.length == 0) return; // just to be safe
-
-			if (CharOperation.equals(TypeConstants.LANG, packageName)) {
-				packageName = this.compoundName[2];
-				if (packageName.length == 0) return; // just to be safe
-				switch (packageName[0]) {
-					case 'i' :
-						if (CharOperation.equals(packageName, TypeConstants.INVOKE)) { 
-							typeName = this.compoundName[3];
-							if (typeName.length == 0) return; // just to be safe
-							switch (typeName[0]) {
-								case 'M' :
-									char[] memberTypeName = this.compoundName[4];
-									if (memberTypeName.length == 0) return; // just to be safe
-									if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE[3])
-											&& CharOperation.equals(memberTypeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE[4]))
-										this.id = TypeIds.T_JavaLangInvokeMethodHandlePolymorphicSignature;
-									return;
-							}
+					if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
+						return;
+					packageName = this.compoundName[1];
+					if (packageName.length == 0) return; // just to be safe
+					
+					if (CharOperation.equals(TypeConstants.LANG, packageName)) {
+						packageName = this.compoundName[2];
+						if (packageName.length == 0) return; // just to be safe
+						switch (packageName[0]) {
+							case 'i' :
+								if (CharOperation.equals(packageName, TypeConstants.INVOKE)) { 
+									typeName = this.compoundName[3];
+									if (typeName.length == 0) return; // just to be safe
+									switch (typeName[0]) {
+										case 'M' :
+											char[] memberTypeName = this.compoundName[4];
+											if (memberTypeName.length == 0) return; // just to be safe
+											if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE[3])
+													&& CharOperation.equals(memberTypeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE[4]))
+												this.id = TypeIds.T_JavaLangInvokeMethodHandlePolymorphicSignature;
+											return;
+									}
+								}
+								return;
 						}
 						return;
-				}
-				return;
-	}
+					}
 					return;
 				case 'o':
 					if (!CharOperation.equals(TypeConstants.ORG, this.compoundName[0]))
@@ -743,7 +743,7 @@ public void computeId() {
 					return;
 			}
 			break;
-}
+	}
 }
 
 /**
@@ -1493,6 +1493,7 @@ MethodBinding[] unResolvedMethods() { // for the MethodVerifier so it doesn't re
 public FieldBinding[] unResolvedFields() {
 	return Binding.NO_FIELDS;
 }
+
 /*
  * If a type - known to be a Closeable - is mentioned in one of our white lists
  * answer the typeBit for the white list (BitWrapperCloseable or BitResourceFreeCloseable).

@@ -254,12 +254,12 @@ public class GroovyProjectGroovyQuickFixTest extends GroovyProjectQuickFixHarnes
     }
 
     public void testAddGroovyRuntime() throws Exception {
-        assumeTrue("Project lacks Groovy nature", hasGroovyNature());
+        assumeTrue(/*"Project lacks Groovy nature",*/ hasGroovyNature());
         removeGroovyClasspathContainer(testProject.getJavaProject());
         buildAll();
 
         IMarker[] markers = getProjectJDTFailureMarkers();
-        assumeTrue("Should have found problems in this project", markers != null && markers.length > 0);
+        assumeTrue(/*"Should have found problems in this project",*/ markers != null && markers.length > 0);
 
         List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit);
         assertEquals("Should have found exactly one resolver", 1, resolvers.size());

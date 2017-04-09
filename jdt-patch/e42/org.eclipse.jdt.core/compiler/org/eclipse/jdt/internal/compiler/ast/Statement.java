@@ -62,6 +62,7 @@ public abstract FlowInfo analyseCode(BlockScope currentScope, FlowContext flowCo
 	public static final int COMPLAINED_FAKE_REACHABLE = 1;
 	public static final int COMPLAINED_UNREACHABLE = 2;
 	
+
 /** Analysing arguments of MessageSend, ExplicitConstructorCall, AllocationExpression. */
 protected void analyseArguments(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, MethodBinding methodBinding, Expression[] arguments)
 {
@@ -104,7 +105,7 @@ protected int checkAssignmentAgainstNullAnnotation(BlockScope currentScope, Flow
 {
 	if (local != null) {
 		if ((local.tagBits & TagBits.AnnotationNonNull) != 0
-			&& nullStatus != FlowInfo.NON_NULL) {
+				&& nullStatus != FlowInfo.NON_NULL) {
 			flowContext.recordNullityMismatch(currentScope, expression, providedType, local.type, nullStatus);
 			return FlowInfo.NON_NULL;
 		} else if ((local.tagBits & TagBits.AnnotationNullable) != 0

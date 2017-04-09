@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -13,7 +14,6 @@
  *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,6 +91,7 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 
 	static final ProblemPackageBinding TheNotFoundPackage = new ProblemPackageBinding(CharOperation.NO_CHAR, NotFound);
 	static final ProblemReferenceBinding TheNotFoundType = new ProblemReferenceBinding(CharOperation.NO_CHAR_CHAR, null, NotFound);
+
 
 public LookupEnvironment(ITypeRequestor typeRequestor, CompilerOptions globalOptions, ProblemReporter problemReporter, INameEnvironment nameEnvironment) {
 	this.typeRequestor = typeRequestor;
@@ -224,7 +225,6 @@ public void completeTypeBindings() {
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;
 
-	// FIXASC doesn't this sometimes bring MetaClass/MOP in that need hierarchy connecting? (see 30-Jun comments)
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 		CompilationUnitScope unitScope = (this.unitBeingCompleted = this.units[i]).scope;
 		unitScope.checkParameterizedTypes();
@@ -1233,7 +1233,7 @@ private ReferenceBinding getTypeFromCompoundName(char[][] compoundName, boolean 
 			 * misconfiguration now that did not also exist in some equivalent form while producing the class files which encode 
 			 * these missing types. So no need to bark again. Note that wasMissingType == true signals a type referenced in a .class 
 			 * file which could not be found when the binary was produced. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=364450 */
-		this.problemReporter.isClassPathCorrect(compoundName, this.unitBeingCompleted, this.missingClassFileLocation);
+			this.problemReporter.isClassPathCorrect(compoundName, this.unitBeingCompleted, this.missingClassFileLocation);
 		}
 		// create a proxy for the missing BinaryType
 		binding = createMissingType(null, compoundName);
@@ -1493,6 +1493,7 @@ public void reset() {
 	this.unitBeingCompleted = null; // in case AbortException occurred
 
 	this.classFilePool.reset();
+
 	// name environment has a longer life cycle, and must be reset in
 	// the code which created it.
 }

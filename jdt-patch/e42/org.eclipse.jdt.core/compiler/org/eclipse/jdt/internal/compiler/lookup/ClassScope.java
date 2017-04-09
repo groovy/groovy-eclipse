@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -15,7 +16,6 @@
  *     						Bug 358903 - Filter practically unimportant resource leak warnings
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1242,12 +1242,12 @@ public class ClassScope extends Scope {
 				for (Iterator iter = environment().typesBeingConnected.iterator(); iter.hasNext();) {
 					SourceTypeBinding type = (SourceTypeBinding) iter.next();
 					if (CharOperation.equals(referredName, type.sourceName())) {
-				problemReporter().hierarchyCircularity(sourceType, superType, reference);
-				sourceType.tagBits |= TagBits.HierarchyHasProblems;
-				superType.tagBits |= TagBits.HierarchyHasProblems;
-				return true;
-			}
-		}
+						problemReporter().hierarchyCircularity(sourceType, superType, reference);
+						sourceType.tagBits |= TagBits.HierarchyHasProblems;
+						superType.tagBits |= TagBits.HierarchyHasProblems;
+						return true;
+					}
+				}
 			}
 		}
 		if ((superType.tagBits & TagBits.BeginHierarchyCheck) == 0)

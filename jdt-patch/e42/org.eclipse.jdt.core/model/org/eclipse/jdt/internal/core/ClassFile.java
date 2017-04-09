@@ -1,5 +1,6 @@
+// GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -165,7 +166,7 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	IBuffer buffer = getBuffer();
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
-		BinaryType type = (BinaryType) getType();
+	    BinaryType type = (BinaryType) getType();
 		// GROOVY start
 		/*old{
 		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()));
@@ -370,11 +371,6 @@ public IBuffer getBuffer() throws JavaModelException {
 	if (status.isOK()) {
 		return super.getBuffer();
 	} else {
-		// .class file not on classpath, create a new buffer to be nice (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=41444)
-		Object info = ((ClassFile) getClassFile()).getBinaryTypeInfo((IFile) resource());
-		IBuffer buffer = openBuffer(null, info);
-		if (buffer != null && !(buffer instanceof NullBuffer))
-			return buffer;
 		switch (status.getCode()) {
 		case IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH: // don't throw a JavaModelException to be able to open .class file outside the classpath (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=138507 )
 		case IJavaModelStatusConstants.INVALID_ELEMENT_TYPES: // don't throw a JavaModelException to be able to open .class file in proj==src case without source (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=221904 )

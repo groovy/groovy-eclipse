@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -14,7 +15,6 @@
  *     Terry Parker <tparker@google.com> - DeltaProcessor misses state changes in archive files, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=357425
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-// GROOVY PATCHED
 
 import java.io.*;
 import java.net.URI;
@@ -1415,7 +1415,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public static boolean CP_RESOLVE_VERBOSE_ADVANCED = false;
 	public static boolean CP_RESOLVE_VERBOSE_FAILURE = false;
 	public static boolean ZIP_ACCESS_VERBOSE = false;
-
+	
 	/**
 	 * A cache of opened zip files per thread.
 	 * (for a given thread, the object value is a HashMap from IPath to java.io.ZipFile)
@@ -1428,7 +1428,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * List of IPath of jars that are known to not contain a chaining (through MANIFEST.MF) to another library
 	 */
 	private Set nonChainingJars;
-
+	
 	/*
 	 * List of IPath of jars that are known to be invalid - such as not being a valid/known format
 	 */
@@ -1584,7 +1584,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if (this.nonChainingJars != null)
 			this.nonChainingJars.add(path);
 	}
-
+	
 	public void addInvalidArchive(IPath path) {
 		// unlikely to be null
 		if (this.invalidArchives == null) {
@@ -2068,7 +2068,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		int optionLevel = getOptionLevel(optionName);
 		if (optionLevel != UNKNOWN_OPTION){
 			IPreferencesService service = Platform.getPreferencesService();
-			String value =  service.get(optionName, null, this.preferencesLookup);
+			String value = service.get(optionName, null, this.preferencesLookup);
 			if (value == null && optionLevel == DEPRECATED_OPTION) {
 				// May be a deprecated option, retrieve the new value in compatible options
 				String[] compatibleOptions = (String[]) this.deprecatedOptions.get(optionName);
@@ -2110,7 +2110,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				return newValue == null ? null : newValue.trim();
 		}
 		return null;
-		}
+	}
 
 	/**
 	 * Returns whether an option name is known or not.
@@ -2228,7 +2228,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		defaultOptionsMap.put(JavaCore.CORE_JAVA_BUILD_ORDER, JavaCore.IGNORE);
 		defaultOptionsMap.put(JavaCore.CORE_INCOMPLETE_CLASSPATH, JavaCore.ERROR);
 		defaultOptionsMap.put(JavaCore.CORE_CIRCULAR_CLASSPATH, JavaCore.ERROR);
-		defaultOptionsMap.put(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL, JavaCore.IGNORE);
+		defaultOptionsMap.put(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL, JavaCore.IGNORE); 
 		defaultOptionsMap.put(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, JavaCore.ERROR);
 		defaultOptionsMap.put(JavaCore.CORE_ENABLE_CLASSPATH_EXCLUSION_PATTERNS, JavaCore.ENABLED);
 		defaultOptionsMap.put(JavaCore.CORE_ENABLE_CLASSPATH_MULTIPLE_OUTPUT_LOCATIONS, JavaCore.ENABLED);
@@ -3068,7 +3068,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	public boolean isNonChainingJar(IPath path) {
 		return this.nonChainingJars != null && this.nonChainingJars.contains(path);
 	}
-
+	
 	public boolean isInvalidArchive(IPath path) {
 		return this.invalidArchives != null && this.invalidArchives.contains(path);
 	}
@@ -3112,7 +3112,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 		return Collections.synchronizedSet(pathCache);
 	}
-
+	
 	private File getClasspathListFile(String fileName) {
 		return JavaCore.getPlugin().getStateLocation().append(fileName).toFile(); 
 	}
@@ -3141,7 +3141,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		this.nonChainingJars = Collections.synchronizedSet(result);
 		return this.nonChainingJars;
 	}
-
+	
 	private Set getClasspathListCache(String cacheName) throws CoreException {
 		if (cacheName == NON_CHAINING_JARS_CACHE) 
 			return getNonChainingJarsCache();
@@ -4025,24 +4025,24 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 
 		void save(ISaveContext context) throws IOException, JavaModelException {
-				saveProjects(getJavaModel().getJavaProjects());
-					// remove variables that should not be saved
-					HashMap varsToSave = null;
-					Iterator iterator = JavaModelManager.this.variables.entrySet().iterator();
-					IEclipsePreferences defaultPreferences = getDefaultPreferences();
-					while (iterator.hasNext()) {
-						Map.Entry entry = (Map.Entry) iterator.next();
-						String varName = (String) entry.getKey();
-						if (defaultPreferences.get(CP_VARIABLE_PREFERENCES_PREFIX + varName, null) != null // don't save classpath variables from the default preferences as there is no delta if they are removed
-								|| CP_ENTRY_IGNORE_PATH.equals(entry.getValue())) {
+			saveProjects(getJavaModel().getJavaProjects());
+			// remove variables that should not be saved
+			HashMap varsToSave = null;
+			Iterator iterator = JavaModelManager.this.variables.entrySet().iterator();
+			IEclipsePreferences defaultPreferences = getDefaultPreferences();
+			while (iterator.hasNext()) {
+				Map.Entry entry = (Map.Entry) iterator.next();
+				String varName = (String) entry.getKey();
+				if (defaultPreferences.get(CP_VARIABLE_PREFERENCES_PREFIX + varName, null) != null // don't save classpath variables from the default preferences as there is no delta if they are removed
+						|| CP_ENTRY_IGNORE_PATH.equals(entry.getValue())) {
 
-							if (varsToSave == null)
-								varsToSave = new HashMap(JavaModelManager.this.variables);
-							varsToSave.remove(varName);
-						}
-					}
-					saveVariables(varsToSave != null ? varsToSave : JavaModelManager.this.variables);
+					if (varsToSave == null)
+						varsToSave = new HashMap(JavaModelManager.this.variables);
+					varsToSave.remove(varName);
+				}
 			}
+			saveVariables(varsToSave != null ? varsToSave : JavaModelManager.this.variables);
+		}
 
 		private void saveAccessRule(ClasspathAccessRule rule) throws IOException {
 			saveInt(rule.problemId);
@@ -4833,47 +4833,47 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	}
 
 	public void setOptions(Hashtable newOptions) {
-			Hashtable cachedValue = newOptions == null ? null : new Hashtable(newOptions);
-			IEclipsePreferences defaultPreferences = getDefaultPreferences();
-			IEclipsePreferences instancePreferences = getInstancePreferences();
+		Hashtable cachedValue = newOptions == null ? null : new Hashtable(newOptions);
+		IEclipsePreferences defaultPreferences = getDefaultPreferences();
+		IEclipsePreferences instancePreferences = getInstancePreferences();
 
-			if (newOptions == null){
-				try {
+		if (newOptions == null){
+			try {
 				instancePreferences.clear();
-				} catch(BackingStoreException e) {
-					// ignore
-				}
-			} else {
-				Enumeration keys = newOptions.keys();
-				while (keys.hasMoreElements()){
-					String key = (String)keys.nextElement();
-					int optionLevel = getOptionLevel(key);
-					if (optionLevel == UNKNOWN_OPTION) continue; // unrecognized option
-					if (key.equals(JavaCore.CORE_ENCODING)) {
-						if (cachedValue != null) {
-							cachedValue.put(key, JavaCore.getEncoding());
-						}
-						continue; // skipped, contributed by resource prefs
-					}
-					String value = (String)newOptions.get(key);
-					String defaultValue = defaultPreferences.get(key, null);
-					// Store value in preferences
-					if (defaultValue != null && defaultValue.equals(value)) {
-						value = null;
-					}
-				storePreference(key, value, instancePreferences, newOptions);
-				}
-				try {
-			// persist options
-			instancePreferences.flush();
-				} catch(BackingStoreException e) {
-					// ignore
-				}
+			} catch(BackingStoreException e) {
+				// ignore
 			}
-			// update cache
-			Util.fixTaskTags(cachedValue);
-			this.optionsCache = cachedValue;
+		} else {
+			Enumeration keys = newOptions.keys();
+			while (keys.hasMoreElements()){
+				String key = (String)keys.nextElement();
+				int optionLevel = getOptionLevel(key);
+				if (optionLevel == UNKNOWN_OPTION) continue; // unrecognized option
+				if (key.equals(JavaCore.CORE_ENCODING)) {
+					if (cachedValue != null) {
+						cachedValue.put(key, JavaCore.getEncoding());
+					}
+					continue; // skipped, contributed by resource prefs
+				}
+				String value = (String) newOptions.get(key);
+				String defaultValue = defaultPreferences.get(key, null);
+				// Store value in preferences
+				if (defaultValue != null && defaultValue.equals(value)) {
+					value = null;
+				}
+				storePreference(key, value, instancePreferences, newOptions);
+			}
+			try {
+				// persist options
+				instancePreferences.flush();
+			} catch(BackingStoreException e) {
+				// ignore
+			}
 		}
+		// update cache
+		Util.fixTaskTags(cachedValue);
+		this.optionsCache = cachedValue;
+	}
 
 	public void startup() throws CoreException {
 		try {

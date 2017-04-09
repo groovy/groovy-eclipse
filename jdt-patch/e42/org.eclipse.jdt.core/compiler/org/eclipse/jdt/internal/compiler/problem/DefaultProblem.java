@@ -72,17 +72,19 @@ public boolean equals(Object obj) {
 		;
 }
 public int hashCode() {
-	return java.util.Arrays.hashCode(new Object[] {
-		this.id,
-		this.severity,
-		this.line,
-		this.column,
-		this.startPosition,
-		this.endPosition,
-		this.message,
-		java.util.Arrays.hashCode(this.arguments),
-		java.util.Arrays.hashCode(this.fileName)
-	});
+	int result = 17;
+	result = 31 * result + this.id;
+	result = 31 * result + this.severity;
+	result = 31 * result + this.line;
+	result = 31 * result + this.column;
+	result = 31 * result + this.startPosition;
+	result = 31 * result + this.endPosition;
+	result = 31 * result + this.message.hashCode();
+	result = 31 * result + new String(this.fileName).hashCode();
+	for (int i = 0, n = this.arguments.length; i < n; i += 1) {
+		result = 31 * result + this.arguments[i].hashCode();
+	}
+	return result;
 }
 // GROOVY end
 

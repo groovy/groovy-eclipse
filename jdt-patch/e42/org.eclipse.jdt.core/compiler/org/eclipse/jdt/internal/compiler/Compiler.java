@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -12,7 +13,6 @@
  *     							bug 186342 - [compiler][null] Using annotations for null checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
-// GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.compiler.*;
@@ -271,7 +271,6 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 		if (this.options.buildGroovyFiles==0) {
 			// demoted to error message, groovy disabled
 			// disable this println for now - seems to have served its purpose:
-//			System.err.println("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'");//$NON-NLS-1$
 			this.options.buildGroovyFiles=1;
 			this.options.groovyFlags = 0;
 		}

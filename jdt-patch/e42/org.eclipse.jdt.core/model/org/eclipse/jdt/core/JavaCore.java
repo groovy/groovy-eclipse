@@ -3947,6 +3947,21 @@ public final class JavaCore extends Plugin {
 				// Creation of external folder project failed. Log it and continue;
 				Util.log(jme, "Error while processing external folders"); //$NON-NLS-1$
 			}
+
+			// ensure external jars are refreshed (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=93668)
+			// before search is initialized (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=405051)
+			final JavaModel model = manager.getJavaModel();
+			try {
+				if (monitor != null)
+					monitor.subTask(Messages.javamodel_refreshing_external_jars);
+				model.refreshExternalArchives(
+					null/*refresh all projects*/,
+					monitor == null ? null : new SubProgressMonitor(monitor, 1) // 1% of the time is spent in jar refresh
+				);
+			} catch (JavaModelException e) {
+				// refreshing failed: ignore
+			}
+
 			// initialize delta state
 			if (monitor != null)
 				monitor.subTask(Messages.javamodel_initializing_delta_state);
@@ -4001,7 +4016,6 @@ public final class JavaCore extends Plugin {
 			} catch (CoreException e) {
 				// could not read version number: consider it is new
 			}
-			final JavaModel model = manager.getJavaModel();
 			String newVersionNumber = Byte.toString(State.VERSION);
 			if (!newVersionNumber.equals(versionNumber)) {
 				// build state version number has changed: touch every projects to force a rebuild
@@ -4035,19 +4049,6 @@ public final class JavaCore extends Plugin {
 					Util.log(e, "Could not persist build state version number"); //$NON-NLS-1$
 				}
 			}
-
-			// ensure external jars are refreshed (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=93668)
-			try {
-				if (monitor != null)
-					monitor.subTask(Messages.javamodel_refreshing_external_jars);
-				model.refreshExternalArchives(
-					null/*refresh all projects*/,
-					monitor == null ? null : new SubProgressMonitor(monitor, 1) // 1% of the time is spent in jar refresh
-				);
-			} catch (JavaModelException e) {
-				// refreshing failed: ignore
-			}
-
 		} finally {
 			if (monitor != null) monitor.done();
 		}

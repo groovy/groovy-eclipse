@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@
  *     Stephan Herrmann - Contribution for Bug 360328 - [compiler][null] detect null problems in nested code (local class inside a loop)
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
 
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.*;

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -20,7 +21,6 @@
  *								bug 386356 - Type mismatch error with annotations and generics
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-// GROOVY PATCHED
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -657,7 +657,7 @@ public char[] computeUniqueKey(boolean isLeaf) {
 		if (start == 0)
 			start = 1; // start after L
 		if (this.isMemberType()) {
-		end = CharOperation.indexOf('$', uniqueKey, start);
+			end = CharOperation.indexOf('$', uniqueKey, start);
 		} else {
 			// '$' is part of the type name
 			end = -1;
@@ -1277,7 +1277,7 @@ public MethodBinding[] methods() {
 													break;
 												}
 											} else  {
-											break;
+												break;
 											}
 										}
 										if (params1[index] == params2[index]) {
@@ -1298,7 +1298,7 @@ public MethodBinding[] methods() {
 														break;
 													}
 												} else  {
-												break;
+													break;
 												}
 											}
 										
@@ -1781,7 +1781,7 @@ private int findNonNullDefault(Scope currentScope, LookupEnvironment environment
 		int foundDefaultNullness = currentType.getPackage().defaultNullness;
 		if (foundDefaultNullness != NO_NULL_DEFAULT) {
 			return foundDefaultNullness;
-	}
+		}
 	}
 
 	return NO_NULL_DEFAULT;
@@ -1819,7 +1819,6 @@ public ReferenceBinding superclass() {
 public ReferenceBinding[] superInterfaces() {
 	return this.superInterfaces;
 }
-
 public SyntheticMethodBinding[] syntheticMethods() {
 	if (this.synthetics == null 
 			|| this.synthetics[SourceTypeBinding.METHOD_EMUL] == null 
