@@ -1171,15 +1171,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     inners.add(typeDeclaration);
 
                     if (isAnon(classNode)) {
-                        // anon inner class, actually
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
-                        // fill in the AST just enough to get JDT working
                         typeDeclaration.allocation = new QualifiedAllocationExpression(typeDeclaration);
-                        typeDeclaration.allocation.type = typeDeclaration.superclass;
-                        typeDeclaration.allocation.enclosingInstance =
-                                new NullLiteral(typeDeclaration.sourceStart, typeDeclaration.sourceEnd);
+                        typeDeclaration.allocation.enclosingInstance = new NullLiteral(typeDeclaration.sourceStart, typeDeclaration.sourceEnd);
                         typeDeclaration.allocation.sourceStart = typeDeclaration.sourceStart;
                         typeDeclaration.allocation.sourceEnd = typeDeclaration.bodyEnd;
+                        typeDeclaration.allocation.statementEnd = typeDeclaration.bodyEnd;
+                        typeDeclaration.allocation.type = typeDeclaration.superclass;
                         typeDeclaration.name = CharOperation.NO_CHAR;
                     }
                 } else {

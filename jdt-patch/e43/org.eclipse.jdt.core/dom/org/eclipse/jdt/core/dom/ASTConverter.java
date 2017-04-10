@@ -2546,6 +2546,10 @@ class ASTConverter {
 			stmt.setExpression(expr);
 			int sourceStart = expr.getStartPosition();
 			int sourceEnd = statement2.statementEnd;
+			// GROOVY add
+			if (sourceStart >= 0 && sourceEnd < 0)
+				sourceEnd = statement2.sourceEnd;
+			// GROOVY end
 			stmt.setSourceRange(sourceStart, sourceEnd - sourceStart + 1);
 			return stmt;
 		}

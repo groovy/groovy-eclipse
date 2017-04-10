@@ -87,7 +87,7 @@ class ASTConverter {
 	// GROOVY add
 	private boolean scannerUsable = true;
 	// GROOVY end
-	
+
 	public ASTConverter(Map options, boolean resolveBindings, IProgressMonitor monitor) {
 		this.resolveBindings = resolveBindings;
 		this.referenceContext = null;
@@ -201,7 +201,7 @@ class ASTConverter {
 						boolean originalValue = this.scannerUsable;
 						try {
 							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
-							// GROOVY end
+						// GROOVY end
 							typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
 						// GROOVY add
 						} finally {
@@ -508,9 +508,9 @@ class ASTConverter {
 		if (!this.scannerUsable) {
 			return false;
 		}
-		if (scope!=null) {
+		if (scope != null) {
 			org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope cuScope = scope.compilationUnitScope();
-			if (cuScope!=null) {
+			if (cuScope != null) {
 				return cuScope.scannerAvailable();	
 			}
 		}
@@ -534,10 +534,10 @@ class ASTConverter {
 		int start = methodDeclaration.sourceStart;
 		// GROOVY edit
 		//int end = retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd);
- 		int end = (scannerAvailable(methodDeclaration.scope)?retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd):methodDeclaration.sourceEnd);
+		int end = (scannerAvailable(methodDeclaration.scope) ? retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd) : methodDeclaration.sourceEnd);
+		// GROOVY end
 		if (end < start)
 			end = start + methodDeclaration.selector.length;// naive recovery with method name
-		// GROOVY end
 		methodName.setSourceRange(start, end - start + 1);
 		methodDecl.setName(methodName);
 		org.eclipse.jdt.internal.compiler.ast.TypeReference[] thrownExceptions = methodDeclaration.thrownExceptions;
@@ -592,7 +592,7 @@ class ASTConverter {
 				// GROOVY add
 				// unset the scope
 				if (parameters[i-1].binding != null) {
-				    parameters[i-1].binding.declaringScope = origScope;
+					parameters[i-1].binding.declaringScope = origScope;
 				}
 				// GROOVY end
 				methodDecl.parameters().add(parameter);
@@ -1390,7 +1390,7 @@ class ASTConverter {
 			// GROOVY edit
 			//CompilationUnit compilationUnit = new CompilationUnit(this.ast);
 			CompilationUnit compilationUnit = unit.getSpecialDomCompilationUnit(this.ast);
-			if (compilationUnit==null) compilationUnit = new CompilationUnit(this.ast);
+			if (compilationUnit == null) compilationUnit = new CompilationUnit(this.ast);
 			// GROOVY end
 			compilationUnit.setStatementsRecoveryData(unit.compilationResult.recoveryScannerData);
 	
@@ -2807,6 +2807,10 @@ class ASTConverter {
 			stmt.setExpression(expr);
 			int sourceStart = expr.getStartPosition();
 			int sourceEnd = statement2.statementEnd;
+			// GROOVY add
+			if (sourceStart >= 0 && sourceEnd < 0)
+				sourceEnd = statement2.sourceEnd;
+			// GROOVY end
 			stmt.setSourceRange(sourceStart, sourceEnd - sourceStart + 1);
 			return stmt;
 		}
@@ -4968,8 +4972,8 @@ class ASTConverter {
 					case ')': lParentCount -= 1; break;
 					case '[': balance += 1; break;
 					case ']': balance -= 1;
-						if (lParentCount>0) break; 
-						if (balance>0) break; 
+						if (lParentCount > 0) break;
+						if (balance > 0) break;
 						count += 1;
 						if (count == bracketNumber) {
 							return pos;
@@ -5600,7 +5604,7 @@ class ASTConverter {
 	}
 
 	protected QualifiedName setQualifiedNameNameAndSourceRanges(char[][] typeName, long[] positions, org.eclipse.jdt.internal.compiler.ast.ASTNode node) {
-	    int length = typeName.length;
+		int length = typeName.length;
 		final SimpleName firstToken = new SimpleName(this.ast);
 		firstToken.internalSetIdentifier(new String(typeName[0]));
 		firstToken.index = 1;
@@ -5705,10 +5709,10 @@ class ASTConverter {
 				recordPendingNameScopeResolution(newPart);
 			}
 		}
-        if (newPart == null && this.resolveBindings) {
-            recordNodes(qualifiedName, node);
-            recordPendingNameScopeResolution(qualifiedName);
-        }
+		if (newPart == null && this.resolveBindings) {
+			recordNodes(qualifiedName, node);
+			recordPendingNameScopeResolution(qualifiedName);
+		}
 		return qualifiedName;
 	}
 

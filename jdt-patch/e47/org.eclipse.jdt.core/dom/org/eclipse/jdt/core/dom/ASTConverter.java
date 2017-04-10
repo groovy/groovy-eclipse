@@ -202,7 +202,7 @@ class ASTConverter {
 						try {
 							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
 						// GROOVY end
-						typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
+							typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
 						// GROOVY add
 						} finally {
 							this.scannerUsable = originalValue;
@@ -483,6 +483,7 @@ class ASTConverter {
 		int len = end - start + 1;
 		return len > 0 ? len : 0;
 	}
+
 	protected void completeRecord(ArrayType arrayType, org.eclipse.jdt.internal.compiler.ast.ASTNode astNode) {
 		ArrayType array = arrayType;
 		this.recordNodes(arrayType, astNode);
@@ -1611,7 +1612,7 @@ class ASTConverter {
 				if (anonymousType != null) {
 					AnonymousClassDeclaration anonymousClassDeclaration = new AnonymousClassDeclaration(this.ast);
 					int start = retrieveStartBlockPosition(anonymousType.sourceEnd, anonymousType.bodyEnd);
-					int end = retrieveRightBrace(anonymousType.bodyEnd +1, declarationSourceEnd);
+					int end = retrieveRightBrace(anonymousType.bodyEnd + 1, declarationSourceEnd);
 					if (end == -1) end = anonymousType.bodyEnd;
 					anonymousClassDeclaration.setSourceRange(start, end - start + 1);
 					enumConstantDeclaration.setAnonymousClassDeclaration(anonymousClassDeclaration);
@@ -2814,6 +2815,10 @@ class ASTConverter {
 			stmt.setExpression(expr);
 			int sourceStart = expr.getStartPosition();
 			int sourceEnd = statement2.statementEnd;
+			// GROOVY add
+			if (sourceStart >= 0 && sourceEnd < 0)
+				sourceEnd = statement2.sourceEnd;
+			// GROOVY end
 			stmt.setSourceRange(sourceStart, sourceEnd - sourceStart + 1);
 			return stmt;
 		}
@@ -4956,9 +4961,8 @@ class ASTConverter {
 			} else {
 				// crude groovy variant of the below scanner usage to find right bracket
 				int count = 0, lParentCount = 0, balance = 0, pos = start, lines = 0;
-				int end2 = this.scanner.source.length;
 				char[] sourceCode = this.scanner.source;
-				while (pos < end2) {
+				while (pos < sourceCode.length) {
 					char ch = sourceCode[pos];
 					switch (ch) {
 					case '(':
@@ -5607,7 +5611,7 @@ class ASTConverter {
 	}
 
 	protected QualifiedName setQualifiedNameNameAndSourceRanges(char[][] typeName, long[] positions, org.eclipse.jdt.internal.compiler.ast.ASTNode node) {
-	    int length = typeName.length;
+		int length = typeName.length;
 		final SimpleName firstToken = new SimpleName(this.ast);
 		firstToken.internalSetIdentifier(new String(typeName[0]));
 		firstToken.index = 1;
@@ -5712,10 +5716,10 @@ class ASTConverter {
 				recordPendingNameScopeResolution(newPart);
 			}
 		}
-        if (newPart == null && this.resolveBindings) {
-            recordNodes(qualifiedName, node);
-            recordPendingNameScopeResolution(qualifiedName);
-        }
+		if (newPart == null && this.resolveBindings) {
+			recordNodes(qualifiedName, node);
+			recordPendingNameScopeResolution(qualifiedName);
+		}
 		return qualifiedName;
 	}
 

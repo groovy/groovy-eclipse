@@ -2807,6 +2807,10 @@ class ASTConverter {
 			stmt.setExpression(expr);
 			int sourceStart = expr.getStartPosition();
 			int sourceEnd = statement2.statementEnd;
+			// GROOVY add
+			if (sourceStart >= 0 && sourceEnd < 0)
+				sourceEnd = statement2.sourceEnd;
+			// GROOVY end
 			stmt.setSourceRange(sourceStart, sourceEnd - sourceStart + 1);
 			return stmt;
 		}
@@ -5600,7 +5604,7 @@ class ASTConverter {
 	}
 
 	protected QualifiedName setQualifiedNameNameAndSourceRanges(char[][] typeName, long[] positions, org.eclipse.jdt.internal.compiler.ast.ASTNode node) {
-	    int length = typeName.length;
+		int length = typeName.length;
 		final SimpleName firstToken = new SimpleName(this.ast);
 		firstToken.internalSetIdentifier(new String(typeName[0]));
 		firstToken.index = 1;
@@ -5705,10 +5709,10 @@ class ASTConverter {
 				recordPendingNameScopeResolution(newPart);
 			}
 		}
-        if (newPart == null && this.resolveBindings) {
-            recordNodes(qualifiedName, node);
-            recordPendingNameScopeResolution(qualifiedName);
-        }
+		if (newPart == null && this.resolveBindings) {
+			recordNodes(qualifiedName, node);
+			recordPendingNameScopeResolution(qualifiedName);
+		}
 		return qualifiedName;
 	}
 
