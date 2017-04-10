@@ -1276,10 +1276,10 @@ public abstract class Scope {
 	// FIXASC (M3) currently inactive; this enables getSingleton()
 	// FIXASC (M3) make this switchable as it is too damn powerful
 	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
-		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector, argumentTypes);
-		if (false && extraMethods != null && extraMethods.length > 0) {
+		/*MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector, argumentTypes);
+		if (extraMethods != null && extraMethods.length > 0) {
 			return extraMethods[0];
-		}
+		}*/
 		return null;
 	}
 	// GROOVY end

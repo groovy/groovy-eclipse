@@ -491,7 +491,7 @@ public class JavaProject
 			}
 		}
 		// GROOVY start
-		LanguageSupportFactory.getEventHandler().handle(this,"close");
+		LanguageSupportFactory.getEventHandler().handle(this, "close"); //$NON-NLS-1$
 		// GROOVY end
 		super.close();
 	}

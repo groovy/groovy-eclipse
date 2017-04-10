@@ -3598,7 +3598,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         env.addGroovyClass(root, "q", "DefaultNamed",
                 "package q;\n" +
                 "public class DefaultNamed {\n" +
-                "    protected String name() { 'name' }\n" +
+                "    public String name() { 'name' }\n" +
                 "}\n");
 
         env.addGroovyClass(root, "r", "NamedClass",

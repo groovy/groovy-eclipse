@@ -71,7 +71,7 @@ public class MemberValuePair extends ASTNode {
 		while (scope.parent != null) {
 			scope = scope.parent;
 		}
-		return scope.getClass().getSimpleName().startsWith("Groovy"); //$NON-NLS-1$
+		return scope.getClass().getName().substring(scope.getClass().getName().lastIndexOf('.') + 1).startsWith("Groovy"); //$NON-NLS-1$
 	}
 
 	private static Expression repairClassLiteralReference(Expression exp, BlockScope scope) {

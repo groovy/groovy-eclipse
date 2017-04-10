@@ -289,8 +289,8 @@ public class ClassScope extends Scope {
 	}
 
 	// GROOVY start: overridable method so the scope can build the right kind of new scope
-	protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
-		return new ClassScope(parent, typeDecl);
+	protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl) {
+		return new ClassScope(parentScope, typeDecl);
 	}
 	// GROOVY end
 

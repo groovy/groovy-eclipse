@@ -974,7 +974,7 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 // GROOVY start
 // FIXASC (M3) is this the right approach to adding extra methods? Probably not - they should be forced on when created
 public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
-	return (this.scope==null?null:this.scope.getAnyExtraMethods(selector, argumentTypes));
+	return (this.scope == null ? null : this.scope.getAnyExtraMethods(selector, argumentTypes));
 }
 // GROOVY end
 
@@ -1168,6 +1168,10 @@ public MethodBinding[] methods() {
 	if ((this.tagBits & TagBits.AreMethodsComplete) != 0)
 		return this.methods;
 
+	if (!areMethodsInitialized()) { // https://bugs.eclipse.org/384663
+		this.scope.buildMethods();
+	}
+
 	// lazily sort methods
 	if ((this.tagBits & TagBits.AreMethodsSorted) == 0) {
 		int length = this.methods.length;
@@ -1180,6 +1184,11 @@ public MethodBinding[] methods() {
 	MethodBinding[] resolvedMethods = this.methods;
 	try {
 		for (int i = 0, length = this.methods.length; i < length; i++) {
+			if ((this.tagBits & TagBits.AreMethodsComplete) != 0) {
+				// recursive call to methods() from resolveTypesFor(..) resolved the methods
+				return this.methods;
+			}
+
 			if (resolveTypesFor(this.methods[i]) == null) {
 				// do not alter original method array until resolution is over, due to reentrance (143259)
 				if (resolvedMethods == this.methods) {
@@ -1332,6 +1341,10 @@ public MethodBinding[] methods() {
 			}
 		}
 	} finally {
+		if ((this.tagBits & TagBits.AreMethodsComplete) != 0) {
+			// recursive call to methods() from resolveTypesFor(..) resolved the methods
+			return this.methods;
+		}
 		if (failed > 0) {
 			int newSize = resolvedMethods.length - failed;
 			if (newSize == 0) {
@@ -1424,13 +1437,13 @@ public MethodBinding resolveTypesFor(MethodBinding method) {
 		method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 
 	AbstractMethodDeclaration methodDecl = method.sourceMethod();
-	// GROOVY
+	// GROOVY edit
 	/* old {
 	if (methodDecl == null) return null; // method could not be resolved in previous iteration
-    } new*/
+	} new*/
 	if (methodDecl == null) {
 		if (method instanceof LazilyResolvedMethodBinding) {
-			LazilyResolvedMethodBinding lrMethod = (LazilyResolvedMethodBinding)method;
+			LazilyResolvedMethodBinding lrMethod = (LazilyResolvedMethodBinding) method;
 			// the rest is a copy of the code below but doesn't depend on the method declaration
 			// nothing to do for method type parameters (there are none)
 			// nothing to do for method exceptions (there are none)
@@ -1447,7 +1460,7 @@ public MethodBinding resolveTypesFor(MethodBinding method) {
 		// returning null is what this clause would have done anyway
 		return null;
 	}
-	// FIXASC - end
+	// GROOVY end
 
 	TypeParameter[] typeParameters = methodDecl.typeParameters();
 	if (typeParameters != null) {
