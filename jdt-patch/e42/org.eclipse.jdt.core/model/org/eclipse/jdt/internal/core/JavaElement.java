@@ -1,4 +1,3 @@
-// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -507,14 +506,6 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
-	
-	// GROOVY start: add stub method for backwards compatibility on 3.7
-	// can remove when no longer supporting Grails-ide on E3.7
-	protected Object openWhenClosed(Object info, IProgressMonitor monitor) throws JavaModelException {
-		return openWhenClosed(info, true, monitor);
-	}
-	// GROOVY end
-
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.

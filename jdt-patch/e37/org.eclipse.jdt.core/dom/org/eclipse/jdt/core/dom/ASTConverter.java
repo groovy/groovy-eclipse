@@ -75,7 +75,7 @@ class ASTConverter {
 	protected boolean resolveBindings;
 	Scanner scanner;
 	private DefaultCommentMapper commentMapper;
-	
+
 	// GROOVY start
 	private boolean scannerUsable = true;
 	// GROOVY end
@@ -484,9 +484,7 @@ class ASTConverter {
 			        parameters[i].binding.declaringScope = methodDeclaration.scope;
 			    }
 		        // GROOVY end
-			    
 				parameter = convert(parameters[i++]);
-                
 				// GROOVY start
                 // unset the scope
                 // new code
@@ -655,7 +653,6 @@ class ASTConverter {
 	}
 	// GROOVY end
 
-	
 	public ClassInstanceCreation convert(org.eclipse.jdt.internal.compiler.ast.AllocationExpression expression) {
 		ClassInstanceCreation classInstanceCreation = new ClassInstanceCreation(this.ast);
 		if (this.resolveBindings) {
@@ -841,10 +838,10 @@ class ASTConverter {
 		// Do not try to change source ends for var args.  Groovy assumes that
 		// all methods that have an array as the last param are varargs
         /* old {
-        if (isVarArgs && extraDimensions == 0) {
+		if (isVarArgs && extraDimensions == 0) {
         } new */
 		if (argument.binding != null && scannerAvailable(argument.binding.declaringScope) && isVarArgs && extraDimensions == 0) {
-		    // GROOVY end
+		// GROOVY end
 			// remove the ellipsis from the type source end
 			argument.type.sourceEnd = retrieveEllipsisStartPosition(argument.type.sourceStart, typeSourceEnd);
 		}
@@ -3301,7 +3298,14 @@ class ASTConverter {
 							for (int i = 0, max = typeArguments[endingIndex].length; i < max; i++) {
 								final Type type2 = convertType(typeArguments[endingIndex][i]);
 								parameterizedType.typeArguments().add(type2);
+								// GROOVY add
+								if (type2.getStartPosition() > 0)
+								// GROOVY end
 								end = type2.getStartPosition() + type2.getLength() - 1;
+								// GROOVY add
+								else // generic type lacks positional info (probably backed by an ImmutableClassNode in the Groovy AST)
+									end += type2.toString().length();
+								// GROOVY end
 							}
 							int indexOfEnclosingType = 1;
 							parameterizedType.index = indexOfEnclosingType;

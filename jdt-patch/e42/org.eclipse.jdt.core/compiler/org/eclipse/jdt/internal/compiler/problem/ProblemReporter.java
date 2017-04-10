@@ -2808,10 +2808,10 @@ public void incompatibleExceptionInThrowsClause(SourceTypeBinding type, MethodBi
 			type.sourceEnd());
 }
 public void incompatibleReturnType(MethodBinding currentMethod, MethodBinding inheritedMethod) {
-    // GROOVY start: fired off by method verifier
+	// GROOVY start: fired off by method verifier
 	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
-		SourceTypeBinding stb = (SourceTypeBinding)currentMethod.declaringClass;
-		if (stb.scope!=null && !stb.scope.shouldReport(IProblem.IncompatibleReturnType)) {
+		SourceTypeBinding stb = (SourceTypeBinding) currentMethod.declaringClass;
+		if (stb.scope != null && !stb.scope.shouldReport(IProblem.IncompatibleReturnType)) {
 			return;
 		}
 	}

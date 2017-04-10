@@ -1167,7 +1167,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportNonnullParameterAnnotationDropped, getSeverityString(NonnullParameterAnnotationDropped));
 		// GROOVY start
 		// if not supplied here it isn't seen as something that can be set from elsewhere
-		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile,"");
+		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile, ""); //$NON-NLS-1$
 		// GROOVY end
 		return optionsMap;
 	}
@@ -1843,17 +1843,17 @@ public class CompilerOptions {
 	static String sysPropConfiguredGroovyTransforms = null;
 	static {
 		try {
-			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports");
+			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports"); //$NON-NLS-1$
 		} catch (Exception e) {
 			sysPropConfiguredExtraImports= null;
 		}
 		try {
-			sysPropConfiguredGroovyTransforms = System.getProperty("greclipse.transformsDuringReconcile");
+			sysPropConfiguredGroovyTransforms = System.getProperty("greclipse.transformsDuringReconcile"); //$NON-NLS-1$
 		} catch (Exception e) {
 			sysPropConfiguredGroovyTransforms= null;
 		}
 		try {
-			sysPropConfiguredCustomizerClassesList = System.getProperty("greclipse.customizerClassesList");
+			sysPropConfiguredCustomizerClassesList = System.getProperty("greclipse.customizerClassesList"); //$NON-NLS-1$
 		} catch (Exception e) {
 			sysPropConfiguredCustomizerClassesList= null;
 		}

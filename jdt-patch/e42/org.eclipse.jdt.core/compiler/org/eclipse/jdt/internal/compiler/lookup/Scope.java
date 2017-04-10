@@ -2753,7 +2753,7 @@ public abstract class Scope {
 						// GROOVY start
 						/* old {
 						if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
-						} new */						
+						} new */
 						if (CharOperation.equals(getSimpleName(importBinding), name)) {
 						// GROOVY end
 							Binding resolvedImport = unitScope.resolveSingleImport(importBinding, Binding.TYPE);
@@ -2768,11 +2768,53 @@ public abstract class Scope {
 					}
 				}
 			}
-			// GRECLIPSE removed code block here according to the fix for 401271
-			// In this location we had a fix for
+			// walk single static imports. A type found here will shadow types with same name in other CU's, or types coming
+			// from on-demand imports. JLS 7.5.3
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318401
-			// However, as of today (4.3M6 candidate) this fix seems unnecessary, while causing StackOverflowError in
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=401271
+			if (imports != null) {
+				ReferenceBinding type = null;
+				nextImport : for (int i = 0, length = imports.length; i < length; i++) {
+					ImportBinding importBinding = imports[i];
+					if (importBinding.isStatic()) {
+						ReferenceBinding temp = null;
+						if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
+							Binding resolvedImport = importBinding.resolvedImport;
+							if (resolvedImport == null) continue nextImport;
+							if (resolvedImport instanceof MethodBinding || resolvedImport instanceof FieldBinding) {
+								// check to see if there are also member types with the same name
+								// must find the importRef's type again since the method/field can be from an inherited type
+								// see StaticImportTest#test084 for more clarity
+								char[][] importName = importBinding.reference.tokens;
+								TypeBinding referencedType = getType(importName, importName.length - 1);
+								if (referencedType != null && referencedType instanceof ReferenceBinding) {
+									temp = findMemberType(name, (ReferenceBinding) referencedType);
+								}
+							}
+							if (temp != null && temp.isStatic() && temp != type) {
+								if (temp.isValidBinding()) {
+									if (!temp.canBeSeenBy(unitScope.fPackage)) {
+										// Answer error binding - type is not visible
+										foundType = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.NotVisible);
+									} else {
+										ImportReference importReference = importBinding.reference;
+										if (importReference != null) {
+											importReference.bits |= ASTNode.Used;
+										}
+										type = temp;
+									}
+								} else if (foundType == null) {
+									foundType = temp;
+								}
+							}
+						}
+					}
+				}
+				if (type != null) {
+					if (typeOrPackageCache != null)
+						typeOrPackageCache.put(name, type);
+					return type;
+				}
+			}
 			// check if the name is in the current package, skip it if its a sub-package
 			PackageBinding currentPackage = unitScope.fPackage;
 			unitScope.recordReference(currentPackage.compoundName, name);
@@ -2822,19 +2864,19 @@ public abstract class Scope {
 								}
 								if (conflict) {
 								// GROOVY - end
-									ImportReference importReference = someImport.reference;
-									if (importReference != null) {
-										importReference.bits |= ASTNode.Used;
-									}
-									if (foundInImport) {
-										// Answer error binding -- import on demand conflict; name found in two import on demand packages.
-										temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
-										if (typeOrPackageCache != null)
-											typeOrPackageCache.put(name, temp);
-										return temp;
-									}
-									type = temp;
-									foundInImport = true;
+								ImportReference importReference = someImport.reference;
+								if (importReference != null) {
+									importReference.bits |= ASTNode.Used;
+								}
+								if (foundInImport) {
+									// Answer error binding -- import on demand conflict; name found in two import on demand packages.
+									temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
+									if (typeOrPackageCache != null)
+										typeOrPackageCache.put(name, temp);
+									return temp;
+								}
+								type = temp;
+								foundInImport = true;
 								// GROOVY - start
 								}
 								// GROOVY - end
@@ -2977,7 +3019,7 @@ public abstract class Scope {
 		}
 		return false;
 	}
-	
+
 	// GROOVY start
 	protected char[] getSimpleName(ImportBinding importBinding) {
 		if (importBinding.reference==null) {

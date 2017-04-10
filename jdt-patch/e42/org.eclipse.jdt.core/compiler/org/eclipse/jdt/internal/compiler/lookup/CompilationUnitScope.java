@@ -955,7 +955,7 @@ private int checkAndRecordImportBinding(
 		// GROOVY edit
 		//ReferenceBinding existingType = typesBySimpleNames.get(name);
 		ReferenceBinding existingType = typesBySimpleNames.get(importReference.getSimpleName());
-		// GROOVY end			
+		// GROOVY end
 		if (existingType != null) {
 			// duplicate test above should have caught this case, but make sure
 			if (existingType == referenceBinding) {

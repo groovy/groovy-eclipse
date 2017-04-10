@@ -732,5 +732,4 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 		return null;
 	}
 	// GROOVY end
-
 }

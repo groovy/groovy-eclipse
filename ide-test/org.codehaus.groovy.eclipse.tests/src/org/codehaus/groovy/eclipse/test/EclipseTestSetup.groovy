@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ class EclipseTestSetup extends TestSetup {
     }
 
     static void buildProject() {
-        testProject.fullBuild();
+        testProject.fullBuild()
     }
 
     static JavaEditor openInEditor(ICompilationUnit unit) {
@@ -141,7 +141,7 @@ class EclipseTestSetup extends TestSetup {
         IFolder sourceFolder = testProject.sourceFolder.resource
         sourceFolder.members().each { IResource item -> Util.delete(item) }
 
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean");
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean")
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
         spm.waitForCompletion()
     }

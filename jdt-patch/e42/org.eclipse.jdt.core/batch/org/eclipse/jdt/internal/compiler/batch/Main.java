@@ -1916,7 +1916,7 @@ public void configure(String[] argv) {
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
 				}new code: */
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java) 
-					|| currentArg.endsWith(".groovy")) {				 //$NON-NLS-1$
+					|| currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 				
 					if (currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 						encounteredGroovySourceFile = true;
@@ -2747,7 +2747,6 @@ public void configure(String[] argv) {
 				CompilerOptions.DISABLED);		
 	}
 	// GROOVY end
-
 
 	if (printUsageRequired || (filesCount == 0 && classCount == 0)) {
 		if (usageSection ==  null) {
