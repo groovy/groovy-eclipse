@@ -138,17 +138,22 @@ public class CategoryTypeLookup implements ITypeLookup {
 
     private static long calculateParameterDistance(List<ClassNode> arguments, Parameter[] parameters) {
         try {
-            int n = arguments.size();
-            Class<?>[] args = new Class[n];
-            for (int i = 0; i < n; i += 1) {
-                args[i] = arguments.get(i).getTypeClass();
-            }
+            // weight self type higher to prevent considering getAt(Map, Object)
+            // and getAt(Object, String) equally for the arguments (Map, String)
 
-            n = parameters.length;
-            Class<?>[] prms = new Class[n];
-            for (int i = 0; i < n; i += 1) {
-                prms[i] = parameters[i].getType().getTypeClass();
+            int n = 1 + arguments.size();
+            Class<?>[] args = new Class[n];
+            for (int i = 1; i < n; i += 1) {
+                args[i] = arguments.get(i - 1).getTypeClass();
             }
+            args[0] = args[1]; // repeat the self type for effect
+
+            n = 1 + parameters.length;
+            Class<?>[] prms = new Class[n];
+            for (int i = 1; i < n; i += 1) {
+                prms[i] = parameters[i - 1].getType().getTypeClass();
+            }
+            prms[0] = prms[1]; // repeat the self type for effect
 
             // TODO: This can fail in a lot of cases; is there a better way to call it?
             return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));

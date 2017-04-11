@@ -120,7 +120,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.List<java.lang.Object>");
     }
 
-    public void testList9() {
+    public void _testList9() {
         String contents = "def x = [] << ''; x";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
@@ -270,7 +270,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-941
-    public void _testMapOfList7() {
+    public void testMapOfList7() {
         String contents = "Map<String, Map<Integer, List<Date>>> map\n" +
             "def x = map['foo'][5][2]\n" +
             "x";

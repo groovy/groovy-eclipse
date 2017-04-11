@@ -269,7 +269,7 @@ public abstract class GroovyUtils {
             // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
             result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
         } else*/ if (target.isInterface()) {
-            result = source.equals(target) || source.declaresInterface(target);
+            result = source.equals(target) || source.implementsInterface(target);
         } else {
             result = getWrapperTypeIfPrimitive(source)
                 .isDerivedFrom(getWrapperTypeIfPrimitive(target));

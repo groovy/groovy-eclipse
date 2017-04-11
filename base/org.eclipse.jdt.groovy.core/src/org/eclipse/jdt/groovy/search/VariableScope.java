@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
 
-import groovy.lang.GroovyObjectSupport;
 import groovy.lang.Tuple;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -77,18 +76,19 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 public class VariableScope {
 
     public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
+    public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
+    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
+    public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
+    public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
     public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
+    public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
     public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
     public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
     public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
-    public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
     public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
     public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
     public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
-    public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
-    public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
-    public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
     public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
     public static final ClassNode ITERATOR_CLASS = ClassHelper.make(Iterator.class);
     public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
@@ -102,7 +102,6 @@ public class VariableScope {
     public static final ClassNode BUFFERED_READER_CLASS_NODE = ClassHelper.make(BufferedReader.class);
     public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
     public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
-    public static final ClassNode GROOVY_OBJECT_SUPPORT = ClassHelper.make(GroovyObjectSupport.class);
 
     // standard category classes
     public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);

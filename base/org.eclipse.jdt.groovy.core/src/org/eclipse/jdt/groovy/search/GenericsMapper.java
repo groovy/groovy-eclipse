@@ -46,23 +46,18 @@ public class GenericsMapper {
     public static GenericsMapper gatherGenerics(ClassNode resolvedType, ClassNode declaringType) {
         GenericsMapper mapper = new GenericsMapper();
 
-        ClassNode rcandidate = resolvedType;
-        ClassNode ucandidate = resolvedType.redirect();
-
-        LinkedHashSet<ClassNode> rHierarchy = new LinkedHashSet<ClassNode>();
-        VariableScope.createTypeHierarchy(rcandidate, rHierarchy, true);
-        Iterator<ClassNode> rIter = rHierarchy.iterator();
-        LinkedHashSet<ClassNode> uHierarchy = new LinkedHashSet<ClassNode>();
-        VariableScope.createTypeHierarchy(ucandidate, uHierarchy, false);
-        Iterator<ClassNode> uIter = uHierarchy.iterator();
+        ClassNode rCandidate = resolvedType;
+        ClassNode uCandidate = resolvedType.redirect();
+        Iterator<ClassNode> rIterator = getTypeHierarchy(rCandidate, true);
+        Iterator<ClassNode> uIterator = getTypeHierarchy(uCandidate, false);
 
         // travel up the hierarchy
-        while (rIter.hasNext() && uIter.hasNext()) {
-            rcandidate = rIter.next();
-            ucandidate = uIter.next();
+        while (rIterator.hasNext() && uIterator.hasNext()) {
+            rCandidate = rIterator.next();
+            uCandidate = uIterator.next();
 
-            GenericsType[] rgts = GroovyUtils.getGenericsTypes(rcandidate);
-            GenericsType[] ugts = GroovyUtils.getGenericsTypes(ucandidate);
+            GenericsType[] rgts = GroovyUtils.getGenericsTypes(rCandidate);
+            GenericsType[] ugts = GroovyUtils.getGenericsTypes(uCandidate);
 
             int n = Math.min(rgts.length, ugts.length);
             Map<String, ClassNode> resolved = (n <= 0) ? Collections.EMPTY_MAP : new TreeMap<String, ClassNode>();
@@ -75,7 +70,7 @@ public class GenericsMapper {
             mapper.allGenerics.add(resolved);
 
             // don't need to travel up the whole hierarchy; stop at the declaring class
-            if (rcandidate.getName().equals(declaringType.getName())) {
+            if (rCandidate.getName().equals(declaringType.getName())) {
                 break;
             }
         }
@@ -107,6 +102,7 @@ public class GenericsMapper {
 
                     // rbt could be "String" and ubt could be "T"
                     if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(ugt.getName())) {
+                        // TODO: Check type compatibility with ugt's bounds!
                         saveParameterType(resolved, ugt.getName(), rbt);
                     } else {
                         // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
@@ -115,10 +111,11 @@ public class GenericsMapper {
                             if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName())) {
                               //System.err.println(rbt.toString(false) + " --> " + ubt.toString(false));
                                 // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                                String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
+                                String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName(); // <-- AIOOB exception
                                 GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
                                 ClassNode rt = map.findParameter(key, null);
                                 if (rt != null) {
+                                    // TODO: Check type compatibility with ugt's bounds!
                                     saveParameterType(resolved, ugt.getName(), rt);
                                 }
                                 break;
@@ -197,14 +194,23 @@ public class GenericsMapper {
         return type;
     }
 
+    protected static Iterator<ClassNode> getTypeHierarchy(ClassNode type, boolean useResolved) {
+        LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<ClassNode>();
+        VariableScope.createTypeHierarchy(type, hierarchy, useResolved);
+        hierarchy.remove(VariableScope.GROOVY_OBJECT_CLASS_NODE);
+        hierarchy.remove(VariableScope.OBJECT_CLASS_NODE);
+        return hierarchy.iterator();
+    }
+
     protected static void saveParameterType(Map<String, ClassNode> map, String key, ClassNode val) {
-        ClassNode old = map.remove(key);
+        if (!map.containsKey(key)) map.put(key, val);
+
+        /*ClassNode old = map.remove(key);
         if (old != null && !old.equals(val) && !VariableScope.OBJECT_CLASS_NODE.equals(old) &&
                 !VariableScope.OBJECT_CLASS_NODE.equals(val) && SimpleTypeLookup.isTypeCompatible(old, val) != Boolean.FALSE) {
             // find the LUB of val and value and save it to val
             System.err.println("Need to find LUB of " + val.toString(false) + " and " + old.toString(false));
             return;
-        }
-        map.put(key, val);
+        }*/
     }
 }

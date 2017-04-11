@@ -959,16 +959,16 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         env.addGroovyClass(root, "", "Demo",
                 "@groovy.transform.CompileStatic\n"+
                 "class Demo {\n"+
-                "	void doit() {\n" +
-                "		def c = {\n" +
-                "			Map<String, String> data = [:]\n" +
-                "			Map<String, Set<String>> otherData = [:];\n" +
-                "			data.each { String k, String v ->\n" +
-                "		    	def foo = otherData.get(k)\n" +
-                "			}\n" +
-                "		}\n" +
-                "	}\n" +
-                "}\n");
+                "  void doit() {\n" +
+                "    def c = {\n" +
+                "      Map<String, String> data = [:]\n" +
+                "      Map<String, Set<String>> otherData = [:]\n" +
+                "      data.each { String k, String v ->\n" +
+                "        def foo = otherData.get(k)\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
 
         incrementalBuild(projectPath);
         expectingNoProblems();
@@ -1025,35 +1025,31 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
-    // Activate when identified script recognition does not damage performance
-    // public void testScriptSupport() throws Exception {
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    // env.addGroovyJars(projectPath);
-    // fullBuild(projectPath);
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    // // The fact that this is 'scripts' should cause us to suppress the .class
-    // file
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "scripts");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    // env.addGroovyClass(root, "p1", "Hello",
-    // "package p1;\n"+
-    // "public class Hello {\n"+
-    // "   public static void main(String[] args) {\n"+
-    // "      System.out.println(\"Hello world\");\n"+
-    // "   }\n"+
-    // "}\n"
-    // );
-    //
-    // incrementalBuild(projectPath);
-    // // No compiled output as it was a script
-    // expectingCompiledClasses("");
-    // expectingNoProblems();
-    // }
+    public void _testScriptSupport() throws Exception {
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        // The fact that this is 'scripts' should cause us to suppress the .class file
+        IPath root = env.addPackageFragmentRoot(projectPath, "scripts");
+        env.setOutputFolder(projectPath, "bin");
+
+        env.addGroovyClass(root, "p1", "Hello",
+            "package p1;\n" +
+            "public class Hello {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.println('Hello world')\n" +
+            "  }\n" +
+            "}");
+
+        incrementalBuild(projectPath);
+        expectingCompiledClasses("");
+        expectingNoProblems();
+    }
 
     public void testTypeDuplication_GRE796_1() throws Exception {
         IPath projectPath = env.addProject("Project");
