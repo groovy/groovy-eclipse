@@ -172,11 +172,13 @@ public abstract class GroovyUtils {
     }
 
     public static ClassNode[] getTypeParameterBounds(ClassNode typeParam) {
-        if (typeParam.isGenericsPlaceHolder()) {
+        if (typeParam.isGenericsPlaceHolder()) { assert typeParam.isUsingGenerics();
             GenericsType[] generics = typeParam.getGenericsTypes();
-            ClassNode[] bounds = generics[0].getUpperBounds();
-            if (bounds != null) {
-                return bounds;
+            if (generics != null && generics.length > 0) {
+                ClassNode[] bounds = generics[0].getUpperBounds();
+                if (bounds != null) {
+                    return bounds;
+                }
             }
         }
         return ClassNode.EMPTY_ARRAY;

@@ -100,23 +100,23 @@ public class GenericsMapper {
                     ClassNode rbt = GroovyUtils.getBaseType(argumentTypes.get(i));
                     ClassNode ubt = GroovyUtils.getBaseType(methodDeclaration.getParameters()[i].getType());
 
-                    // rbt could be "String" and ubt could be "T"
+                    // rbt could be "String" and ubt could be "T" or "T extends CharSequence"
                     if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(ugt.getName())) {
-                        // TODO: Check type compatibility with ugt's bounds!
-                        saveParameterType(resolved, ugt.getName(), rbt);
+                        if (GroovyUtils.isAssignable(rbt, ubt))
+                            saveParameterType(resolved, ugt.getName(), rbt, true);
                     } else {
                         // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
                         GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
                         for (int j = 0; j < ubt_gts.length; j += 1) {
                             if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName())) {
-                              //System.err.println(rbt.toString(false) + " --> " + ubt.toString(false));
                                 // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                                String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName(); // <-- AIOOB exception
+                                String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName(); // lurking AIOOB exception
                                 GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
                                 ClassNode rt = map.findParameter(key, null);
-                                if (rt != null) {
-                                    // TODO: Check type compatibility with ugt's bounds!
-                                    saveParameterType(resolved, ugt.getName(), rt);
+
+                                // rt could be "String" and ubt_gts[j] could be "T" or "T extends CharSequence"
+                                if (rt != null && GroovyUtils.isAssignable(rt, ubt_gts[j].getType())) {
+                                    saveParameterType(resolved, ugt.getName(), rt, false);
                                 }
                                 break;
                             }
@@ -202,14 +202,20 @@ public class GenericsMapper {
         return hierarchy.iterator();
     }
 
-    protected static void saveParameterType(Map<String, ClassNode> map, String key, ClassNode val) {
-        if (!map.containsKey(key)) map.put(key, val);
+    protected static void saveParameterType(Map<String, ClassNode> map, String key, ClassNode val, boolean weak) {
+        // special case 1: Arrays.asList(T...): List<T> -- each param has a chance to influence the LUB
+        // special case 2: Collections.replaceAll(List<T>, T, T) -- list should dictate type unless it's dynamic
+        // special case 3: Collections.checkedSet(Set<E>, Class<E>): Set<E> -- set type and class type should agree
 
-        /*ClassNode old = map.remove(key);
-        if (old != null && !old.equals(val) && !VariableScope.OBJECT_CLASS_NODE.equals(old) &&
+        ClassNode old = map.remove(key); // if mapped type is Object, consider it malleable
+        if (old != null && !old.equals(val) && old != VariableScope.OBJECT_CLASS_NODE) {
+            val = old;
+        }
+        map.put(key, val);
+
+        /*if (old != null && !old.equals(val) && !VariableScope.OBJECT_CLASS_NODE.equals(old) &&
                 !VariableScope.OBJECT_CLASS_NODE.equals(val) && SimpleTypeLookup.isTypeCompatible(old, val) != Boolean.FALSE) {
             // find the LUB of val and value and save it to val
-            System.err.println("Need to find LUB of " + val.toString(false) + " and " + old.toString(false));
             return;
         }*/
     }

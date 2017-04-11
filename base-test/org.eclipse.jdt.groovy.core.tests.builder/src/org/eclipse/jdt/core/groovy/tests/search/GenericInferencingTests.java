@@ -120,7 +120,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.List<java.lang.Object>");
     }
 
-    public void _testList9() {
+    public void testList9() {
         String contents = "def x = [] << ''; x";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
