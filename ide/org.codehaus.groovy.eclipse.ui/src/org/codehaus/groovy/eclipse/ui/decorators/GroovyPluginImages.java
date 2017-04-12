@@ -31,15 +31,12 @@ public final class GroovyPluginImages {
     }
 
     private static ImageDescriptor createDescriptor2(String path) {
-        ImageDescriptor desc;
         try {
-            desc = ImageDescriptor.createFromURL(new java.net.URL(path));
-            org.eclipse.swt.graphics.Image img = desc.createImage(false);
-            if (img != null) { img.dispose(); } else { desc = null; }
+            java.net.URL url = new java.net.URL(path);
+            url.openConnection(); // does image exist?
+            return ImageDescriptor.createFromURL(url);
         } catch (Exception e) {
-            e.printStackTrace();
-            desc = null;
+            return null;
         }
-        return desc;
     }
 }
