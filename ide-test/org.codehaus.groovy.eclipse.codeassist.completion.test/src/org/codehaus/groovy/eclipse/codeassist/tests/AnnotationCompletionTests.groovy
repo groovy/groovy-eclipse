@@ -140,17 +140,15 @@ final class AnnotationCompletionTests extends CompletionTestCase {
     }
 
     void testAnnoAttr2() {
-        EclipseTestSetup.addJUnit4()
         String contents = '''\
-            import org.junit.Test
-            class SomeTest {
-              @Test()
-              void testSomething() { }
+            import javax.xml.bind.annotation.*
+            @XmlAnyElement()
+            class Something {
             }
             '''.stripIndent()
-        def proposals = getProposals(contents, '@Test(')
+        def proposals = getProposals(contents, '@XmlAnyElement(')
 
-        assertThat(proposals).includes('expected', 'timeout')
+        assertThat(proposals).includes('lax', 'value')
     }
 
     //--------------------------------------------------------------------------

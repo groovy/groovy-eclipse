@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,17 +38,14 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeName2() {
-        EclipseTestSetup.addJUnit4()
-
         String source = '''\
+            import javax.xml.bind.annotation.*
+            @XmlAnyElement(lax=true)
             class C {
-              @org.junit.Test(timeout=1234L)
-              void testSomething() {
-              }
             }
             '''.stripIndent()
 
-        def elem = assertCodeSelect([source], 'timeout')
+        def elem = assertCodeSelect([source], 'lax')
         assert elem.inferredElement instanceof MethodNode
     }
 
