@@ -303,6 +303,7 @@ public class VariableScope {
     private ClassNode categoryBeingDeclared;
 
     private List<ClassNode> methodCallArgumentTypes;
+    private GenericsType[]  methodCallGenericsTypes;
 
     private final Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
 
@@ -867,16 +868,28 @@ public class VariableScope {
         return nameVariableMap.containsKey(name);
     }
 
+    void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
+        this.methodCallArgumentTypes = methodCallArgumentTypes;
+    }
+
+    public List<ClassNode> getMethodCallArgumentTypes() {
+        return methodCallArgumentTypes;
+    }
+
+    void setMethodCallGenericsTypes(GenericsType[] methodCallGenericsTypes) {
+        this.methodCallGenericsTypes = methodCallGenericsTypes;
+    }
+
+    public GenericsType[] getMethodCallGenericsTypes() {
+        return methodCallGenericsTypes;
+    }
+
     /**
      * If visiting the identifier of a method call expression, this field will
      * be equal to the number of arguments to the method call.
      */
     int getMethodCallNumberOfArguments() {
-        return methodCallArgumentTypes != null ? methodCallArgumentTypes.size() : 0;
-    }
-
-    void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
-        this.methodCallArgumentTypes = methodCallArgumentTypes;
+        return isMethodCall() ? methodCallArgumentTypes.size() : 0;
     }
 
     public boolean isMethodCall() {
@@ -1047,10 +1060,6 @@ public class VariableScope {
      */
     public boolean inScriptRunMethod() {
         return shared.isRunMethod;
-    }
-
-    public List<ClassNode> getMethodCallArgumentTypes() {
-        return methodCallArgumentTypes;
     }
 
     public static boolean isPlainClosure(ClassNode type) {

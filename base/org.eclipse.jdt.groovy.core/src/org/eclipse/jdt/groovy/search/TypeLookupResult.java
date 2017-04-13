@@ -164,7 +164,7 @@ public class TypeLookupResult {
                     classType.getGenericsTypes()[0].setUpperBounds(new ClassNode[] {targetType});
                     return new TypeLookupResult(classType, method.getDeclaringClass(), method, confidence, scope, extraDoc);
                 } else {
-                    GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, targetType, method);
+                    GenericsMapper mapper = GenericsMapper.gatherGenerics(argumentTypes, targetType, method, scope.getMethodCallGenericsTypes());
                     method = VariableScope.resolveTypeParameterization(mapper, method);
                     if (method != declaration) {
                         TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope, extraDoc);

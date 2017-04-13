@@ -316,14 +316,13 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "XX");
     }
 
-    // I don't agree that the element type of getAt should be XX in this case
-    public void _testArray6() {
+    public void testArray6() {
         createUnit("XX", XX);
         String contents = "new XX().xx[new XX()].yy";
         String toFind = "yy";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "XX");
+        assertUnknownConfidence(contents, start, end, "XX", false);
     }
 
     public void testArray7() {
@@ -1150,6 +1149,14 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     public void testStaticMethod9() {
+        // Collections: public static final <T> List<T> emptyList()
+        String contents = "def list = Collections.<String>emptyList()";
+        String toFind = "list";
+        int start = contents.indexOf(toFind), end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.String>");
+    }
+
+    public void testStaticMethod10() {
         // Collection: public boolean removeAll(Collection<?>)
         String contents = "List<String> list = ['1','2']; list.removeAll(['1'])";
         String toFind = "removeAll";
@@ -1159,7 +1166,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertEquals("Parameter type should be resolved", "java.util.Collection<?>", printTypeName(m.getParameters()[0].getType()));
     }
 
-    public void testStaticMethod10() {
+    public void testStaticMethod11() {
         // Collection: public boolean addAll(Collection<? extends E>)
         String contents = "List<String> list = ['1','2']; list.addAll(['3'])";
         String toFind = "addAll";

@@ -1400,9 +1400,10 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         node.getMethod().visit(this);
+
         // this is the inferred return type of this method
         // must pop now before visiting any other nodes
-        ClassNode exprType = dependentTypeStack.removeLast();
+        ClassNode returnType = dependentTypeStack.removeLast();
 
         // this is the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
@@ -1419,16 +1420,15 @@ assert primaryExprType != null && dependentExprType != null;
         // remember that we are inside a method call while analyzing the arguments
         scope.addEnclosingMethodCall(call);
         node.getArguments().visit(this);
-
         scope.forgetEnclosingMethodCall();
 
         // if this method call is the primary of a larger expression,
         // then pass the inferred type onwards
         if (node.isSpreadSafe()) {
-            exprType = createParameterizedList(exprType);
+            returnType = createParameterizedList(returnType);
         }
 
-        handleCompleteExpression(node, exprType, t.declaringType);
+        handleCompleteExpression(node, returnType, t.declaringType);
         scopes.getLast().forgetCurrentNode();
     }
 
@@ -1789,6 +1789,7 @@ assert primaryExprType != null && dependentExprType != null;
             primaryType = null;
             isStatic = false;
             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
+            scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
         } else {
             primaryType = primaryTypeStack.removeLast();
             // implicit this expressions do not have a primary type
@@ -1798,6 +1799,7 @@ assert primaryExprType != null && dependentExprType != null;
             }
             isStatic = hasStaticObjectExpression(node);
             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(completeExpressionStack.getLast()));
+            scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(completeExpressionStack.getLast()));
         }
         scope.setPrimaryNode(primaryType == null);
 
@@ -1815,8 +1817,8 @@ assert primaryExprType != null && dependentExprType != null;
         result.enclosingAssignment = enclosingAssignment;
         VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
         VariableScope scope = scopes.getLast();
-        // forget the argument types
         scope.setMethodCallArgumentTypes(null);
+        scope.setMethodCallGenericsTypes(null);
 
         // when there is a category method, we don't want to store it
         // as the declaring type since this will mess things up inside closures
@@ -2004,6 +2006,18 @@ assert primaryExprType != null && dependentExprType != null;
             return Collections.emptyList();
         }
         return null;
+    }
+
+    private GenericsType[] getMethodCallGenericsTypes(ASTNode node) {
+        GenericsType[] generics = null;
+        if (node instanceof MethodCallExpression) {
+            generics = ((MethodCallExpression) node).getGenericsTypes();
+        }/* else if (node instanceof ConstructorCallExpression) {
+            generics = ((ConstructorCallExpression) node).getGenericsTypes();
+        } else if (node instanceof StaticMethodCallExpression) {
+            generics = ((StaticMethodCallExpression) node).getGenericsTypes();
+        }*/
+        return generics;
     }
 
     private void inferItType(ClosureExpression node, VariableScope scope) {

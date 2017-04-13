@@ -1682,11 +1682,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             for (int i = 0; i < ps.length; i++) {
                 Parameter parameter = ps[i];
                 TypeReference parameterTypeReference = createTypeReferenceForClassNode(parameter.getType());
-                // not doing this for now:
-                // if (isMain) {
-                // parameterTypeReference = new ArrayTypeReference("String".toCharArray(), 1,
-                // (parameterTypeReference.sourceStart << 32) | parameterTypeReference.sourceEnd);
-                // }
                 long pos;
                 int pstart = parameter.getStart();
                 if (parameter.getStart() == 0 && parameter.getEnd() == 0) {
@@ -1698,7 +1693,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, ClassFileConstants.AccPublic);
                 arguments[i].declarationSourceStart = pstart;
             }
-            if (isVargs(ps) /* && !isMain */) {
+            if (isVargs(ps)) {
                 arguments[ps.length - 1].type.bits |= ASTNode.IsVarArgs;
             }
             return arguments;
@@ -2173,8 +2168,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (parameters.length == 0) {
                 return false;
             }
-            ClassNode clazz = parameters[parameters.length - 1].getType();
-            return (clazz.isArray());
+            Parameter last = parameters[parameters.length - 1];
+            ClassNode type = last.getType();
+            return type.isArray();
         }
 
         private char[] toMainName(char[] fileName) {
