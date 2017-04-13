@@ -118,7 +118,7 @@ public class GenericsMapper {
                             for (int j = 0; j < ubt_gts.length; j += 1) {
                                 if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName())) {
                                     // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                                    String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName(); // lurking AIOOB exception
+                                    String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
                                     GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
                                     ClassNode rt = map.findParameter(key, null);
 
@@ -232,15 +232,9 @@ public class GenericsMapper {
         // special case 3: Collections.checkedSet(Set<E>, Class<E>): Set<E> -- set type and class type should agree
 
         ClassNode old = map.remove(key); // if mapped type is Object, consider it malleable
-        if (old != null && !old.equals(val) && old != VariableScope.OBJECT_CLASS_NODE) {
-            val = old;
+        if (old != null && !old.equals(val) && !old.equals(VariableScope.OBJECT_CLASS_NODE) && weak) {
+            val = /*WideningCategories.lowestUpperBound(*/old/*, val)*/;
         }
         map.put(key, val);
-
-        /*if (old != null && !old.equals(val) && !VariableScope.OBJECT_CLASS_NODE.equals(old) &&
-                !VariableScope.OBJECT_CLASS_NODE.equals(val) && SimpleTypeLookup.isTypeCompatible(old, val) != Boolean.FALSE) {
-            // find the LUB of val and value and save it to val
-            return;
-        }*/
     }
 }

@@ -610,13 +610,13 @@ public class VariableScope {
             if (typeParameterExistsInRedirected(unresolved, toParameterizeName)) {
                 Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to resolve type parameters of a type declaration: " + unresolved);
                 // Iterator<E> --> Iterator<String>
+                generic.setLowerBound(null);
+                generic.setUpperBounds(null);
+                generic.setPlaceholder(false); // before setType to prevent mutation of resolved
+                generic.setWildcard(false);
                 generic.setResolved(true);
                 generic.setType(resolved);
                 generic.setName(generic.getType().getName());
-                generic.setPlaceholder(false);
-                generic.setWildcard(false);
-                generic.setLowerBound(null);
-                generic.setUpperBounds(null);
             } else {
                 // E --> String
                 // E[] --> String[]
