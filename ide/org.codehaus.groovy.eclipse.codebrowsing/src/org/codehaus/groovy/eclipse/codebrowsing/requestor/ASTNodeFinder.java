@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -144,18 +145,24 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
         node.visitContents(this);
 
+        // visit trait fields
+        @SuppressWarnings("unchecked")
+        List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
+        if (traitFields != null) {
+            for (FieldNode field : traitFields) {
+                visitField(field);
+            }
+        }
+
         // visit inner classes
-        Iterator<InnerClassNode> innerClasses = node.getInnerClasses();
-        if (innerClasses != null) {
-            while (innerClasses.hasNext()) {
-                ClassNode inner = innerClasses.next();
-                // do not look into closure classes.  A closure class
-                // looks like ParentClass$_name_closure#, where
-                // ParentClass is the name of the containing class.
-                // name is a name for the closure, and # is a number
-                if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
-                    visitClass(inner);
-                }
+        for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
+            ClassNode inner = it.next();
+            // do not look into closure classes.  A closure class
+            // looks like ParentClass$_name_closure#, where
+            // ParentClass is the name of the containing class.
+            // name is a name for the closure, and # is a number
+            if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
+                visitClass(inner);
             }
         }
 

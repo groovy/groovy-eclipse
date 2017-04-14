@@ -458,8 +458,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
         }
 
         public CompilationUnitClone() {
-            super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name,
-                    GroovyCompilationUnit.this.owner);
+            super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name, GroovyCompilationUnit.this.owner);
         }
 
         @Override
@@ -493,20 +492,21 @@ public class GroovyCompilationUnit extends CompilationUnit {
     }
 
     @Override
-    public IJavaElement[] codeSelect(int offset, int length) throws JavaModelException {
+    public IJavaElement[] codeSelect(int offset, int length)
+            throws JavaModelException {
         return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
     }
 
     @Override
-    public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner workingCopyOwner) throws JavaModelException {
+    public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner workingCopyOwner)
+            throws JavaModelException {
         return codeSelect(this, offset, length, workingCopyOwner);
     }
 
     @Override
-    protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length,
-            WorkingCopyOwner o) throws JavaModelException {
-
-        if (CodeSelectHelperFactory.selectHelper != null /* && isOnBuildPath() */) {
+    protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length, WorkingCopyOwner o)
+            throws JavaModelException {
+        if (CodeSelectHelperFactory.selectHelper != null) {
             return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
         }
         return new IJavaElement[0];

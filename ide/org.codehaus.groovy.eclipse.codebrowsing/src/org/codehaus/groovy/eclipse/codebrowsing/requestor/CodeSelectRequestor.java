@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,6 +98,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
         gunit = unit;
         project = new GroovyProjectFacade(unit);
+    }
+
+    public ASTNode getRequestedNode() {
+        return requestedNode;
+    }
+
+    public IJavaElement getRequestedElement() {
+        return requestedElement;
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
@@ -230,7 +239,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         if (qualifier == null) {
                             // find the requested java element
                             IJavaElement maybeRequested = findRequestedElement(result, type);
-                            // try to resolve the type of the requested element.  this will add the proper type parameters, etc to the hover
+                            // try to resolve the type of the requested element; this will add the proper metadata to the hover
                             requestedElement = resolveRequestedElement(result, maybeRequested);
                         } else {
                             // try to resolve as a type (outer class) then as a package
@@ -388,7 +397,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 // GRECLIPSE-1233 can't use getEltAt because of default parameters.
                 // instead, just iterate through children.  Method variants
                 // are always after the original method
-                IJavaElement[] children = type.getChildren();
                 int start = declaration.getStart();
                 int end = declaration.getEnd();
                 String name;
@@ -400,12 +408,21 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 } else if (declaration instanceof FieldNode) {
                     name = ((FieldNode) declaration).getName();
                     // check for an @Lazy field
-                    Iterable<AnnotationNode> annos =
-                        ((FieldNode) declaration).getAnnotations();
+                    Iterable<AnnotationNode> annos = ((FieldNode) declaration).getAnnotations();
                     if (annos != null) {
                         for (AnnotationNode anno : annos) {
                             if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
                                 name = name.substring(1); // strip the leading $
+                            }
+                        }
+                    }
+                    // check for an @Trait field
+                    @SuppressWarnings("unchecked")
+                    List<FieldNode> traitFields = (List<FieldNode>) result.declaringType.getNodeMetaData("trait.fields");
+                    if (traitFields != null) {
+                        for (FieldNode field : traitFields) {
+                            if (field == declaration) {
+                                return type.getField(name);
                             }
                         }
                     }
@@ -414,7 +431,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 } else {
                     name = declaration.getText();
                 }
-                for (IJavaElement child : children) {
+
+                for (IJavaElement child : type.getChildren()) {
                     ISourceRange range = ((ISourceReference) child).getSourceRange();
                     if (range.getOffset() <= start && range.getOffset() + range.getLength() >= end && child.getElementName().equals(name)) {
                         maybeRequested = child;
@@ -425,8 +443,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     }
                 }
             }
-            if (maybeRequested == null) {
-                // try something else because source location not set right
+            if (maybeRequested == null) { // try something else because source location not set right
                 String name = null;
                 Parameter[] parameters = null;
                 if (declaration instanceof MethodNode) {
@@ -644,17 +661,21 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
 
         // check for methods first, then fields, and finally accessor variants of the name
+
+StringBuilder checked = new StringBuilder();
         IMethod closestMatch = null;
         next_method: for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
                 closestMatch = method;
                 // prefer methods with the same parameter list
                 if (parameters != null && parameters.length == method.getParameterTypes().length) {
+checked.append("\n\t").append(text).append('(');
                     for (int i = 0, n = parameters.length; i < n; i += 1) {
                         // remove generics from the type signatures to make matching simpler
                         String jdtMethodParam = removeGenerics(method.getParameterTypes()[i]);
                         String astMethodParam = GroovyUtils.getTypeSignatureWithoutGenerics(
                             parameters[i].getOriginType(), jdtMethodParam.indexOf('.') > 0, type.isBinary());
+checked.append(jdtMethodParam).append(' ');
                         if (!astMethodParam.equals(jdtMethodParam)) {
                             continue next_method;
                         }
@@ -664,13 +685,20 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         }
         if (closestMatch != null) {
+String message = String.format("%s.findElement: no exact match found for %s(%s); options considered:%s",
+    getClass().getSimpleName(), text, parameters == null ? "" : GroovyUtils.getParameterTypes(parameters), checked);
+if (GroovyLogManager.manager.hasLoggers()) {
+    GroovyLogManager.manager.log(TraceCategory.CODE_SELECT, message);
+} else {
+    System.err.println(getClass().getSimpleName() + ": " + message);
+}
             return closestMatch;
         }
 
         IField field = type.getField(text);
         String prefix;
         if (!field.exists() && (prefix = extractPrefix(text)) != null) {
-            // this is a property
+            // try as a property
             String newName = Character.toLowerCase(text.charAt(prefix.length())) + text.substring(prefix.length() + 1);
             field = type.getField(newName);
         }
@@ -752,13 +780,5 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return ((ClassNode) node).getNameWithoutPackage();
         }
         return node.getClass();
-    }
-
-    public ASTNode getRequestedNode() {
-        return requestedNode;
-    }
-
-    public IJavaElement getRequestedElement() {
-        return requestedElement;
     }
 }

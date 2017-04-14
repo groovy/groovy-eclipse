@@ -40,7 +40,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
 
         // GRECLIPSE-1330: check for possible reference in GString
         char[] contents = unit.getContents();
-        if (length > 1 && start + length < contents.length && contents[start] == '$' && contents[start+1] != '{') {
+        if (length > 1 && start + length < contents.length && contents[start] == '$' && contents[start + 1] != '{') {
             start += 1;
             length -= 1;
         }

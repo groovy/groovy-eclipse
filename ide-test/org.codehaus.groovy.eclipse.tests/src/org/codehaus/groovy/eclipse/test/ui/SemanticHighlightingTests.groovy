@@ -1423,7 +1423,7 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }')
     }
 
-    void _testTraits() {
+    void testTraits() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return
 
         String contents = '''\
@@ -1439,11 +1439,11 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD)/*,
             new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('getProperty'), 11, METHOD_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
+            new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE)*/)
     }
 
     //

@@ -324,7 +324,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
 
         this.requestor = requestor;
-        enclosingElement = unit;
+        this.enclosingElement = unit;
         VariableScope topLevelScope = new VariableScope(null, enclosingDeclarationNode, false);
         scopes.add(topLevelScope);
 
@@ -339,8 +339,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
             visitImports((ModuleNode) enclosingDeclarationNode);
             try {
-                IType[] types = unit.getTypes();
-                for (IType type : types) {
+                for (IType type : unit.getTypes()) {
                     visitJDT(type, requestor);
                 }
             } catch (JavaModelException e) {
@@ -388,28 +387,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         case IJavaElement.METHOD:
                             visitJDT((IMethod) child, requestor);
                             break;
-
                         case IJavaElement.FIELD:
                             visitJDT((IField) child, requestor);
                             break;
-
                         case IJavaElement.TYPE:
                             visitJDT((IType) child, requestor);
-                            break;
-
-                        default:
                             break;
                     }
                 }
 
                 if (!type.isEnum()) {
-                    // visit fields that were created by @Field
                     if (node.isScript()) {
+                        // visit fields that were created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
                                 if (field.getNameEnd() <= 0) {
                                     setNameLocation(field);
                                 }
+                                visitField(field);
+                            }
+                        }
+                    } else {
+                        // visit fields that were relocated by @Trait
+                        @SuppressWarnings("unchecked")
+                        List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
+                        if (traitFields != null) {
+                            for (FieldNode field : traitFields) {
                                 visitField(field);
                             }
                         }
@@ -422,6 +425,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         if (defConstructor != null) {
                             visitConstructorOrMethod(defConstructor, true);
                         }
+                    }
+                }
+
+                // visit relocated @Memoized method bodies
+                for (MethodNode method : node.getMethods()) {
+                    if (method.getName().startsWith("memoizedMethodPriv$")) {
+                        visitClassCodeContainer(method.getCode());
                     }
                 }
 
@@ -608,9 +618,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    /**
-     * Visits the class itself.
-     */
     private void visitClassInternal(ClassNode node) {
         if (resolver != null) {
             resolver.currentClass = node;
@@ -637,8 +644,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitClassReference(node.getUnresolvedSuperClass());
         }
 
-        for (ClassNode intr : node.getInterfaces()) {
-            visitClassReference(intr);
+        for (ClassNode face : node.getInterfaces()) {
+            visitClassReference(face);
         }
 
         // TODO: Should all methods w/o peer in JDT model have their bodies visited?  Below are two cases in particular.
@@ -648,13 +655,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             MethodNode value = node.getMethod("value", NO_PARAMETERS);
             if (value != null && value.getEnd() < 1) {
                 visitClassCodeContainer(value.getCode());
-            }
-        }
-
-        // visit relocated @Memoized method bodies
-        for (MethodNode method : node.getMethods()) {
-            if (method.getName().startsWith("memoizedMethodPriv$")) {
-                visitClassCodeContainer(method.getCode());
             }
         }
 
@@ -686,8 +686,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         }
 
-        // I'm not actually sure that there will be anything here. I think these
-        // will all be moved to a constructor
+        // I'm not actually sure that there will be anything here. I think these will all be moved to a constructor
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
         }
