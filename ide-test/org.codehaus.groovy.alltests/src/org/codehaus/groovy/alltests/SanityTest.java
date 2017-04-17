@@ -15,57 +15,63 @@
  */
 package org.codehaus.groovy.alltests;
 
-import junit.framework.TestCase;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
 import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.eclipse.core.runtime.Platform;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 /**
  * Ensures the proper compiler level is being used.
  */
-public class SanityTest extends TestCase {
+public class SanityTest {
 
-    @Override
-    protected void setUp() throws Exception {
+    private static final java.io.PrintStream out = System.out;
+
+    @Rule
+    public TestName test = new TestName();
+
+    @Before
+    public void setUp() throws Exception {
+        out.println("----------------------------------------");
+        out.println("Starting: " + test.getMethodName());
+
         GroovyActivator.initialize();
-        super.setUp();
+        out.println("ClassLoader location " + GroovyActivator.class.getClassLoader().getResource("."));
     }
 
     private Version getEclipsePlatformVersion() {
-        Bundle eclipseplatform = Platform.getBundle("org.eclipse.platform");
-        System.out.println("org.eclipse.platform?" + eclipseplatform);
-        return eclipseplatform == null ? null : eclipseplatform.getVersion();
+        Bundle eclipsePlatform = Platform.getBundle("org.eclipse.platform");
+        return eclipsePlatform == null ? null : eclipsePlatform.getVersion();
     }
 
     private Version getEclipseVersion() {
-        Bundle jdtcore = Platform.getBundle("org.eclipse.jdt.core");
-        assertNotNull("Can't find jdt core", jdtcore);
-        return jdtcore.getVersion();
+        Bundle jdtCore = Platform.getBundle("org.eclipse.jdt.core");
+        assertThat("Can't find JDT Core", jdtCore, notNullValue());
+        return jdtCore.getVersion();
     }
 
     private Version getGroovyCompilerVersion() {
         Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
-        assertEquals(CompilerUtils.getWorkspaceCompilerLevel().majorVersion, version.getMajor());
-        assertEquals(CompilerUtils.getWorkspaceCompilerLevel().minorVersion, version.getMinor());
+        assertThat(version.getMajor(), equalTo(CompilerUtils.getWorkspaceCompilerLevel().majorVersion));
+        assertThat(version.getMinor(), equalTo(CompilerUtils.getWorkspaceCompilerLevel().minorVersion));
         return version;
     }
 
-    public void testCompilerVersion() throws Exception {
-        Version jdtVersion = getEclipseVersion();
-        Version eclipseplatformVersion = getEclipsePlatformVersion();
+    @Test
+    public void testCompilerVersion() {
+        out.println("Eclipse Platform version " + getEclipsePlatformVersion());
+        out.println("JDT version " + getEclipseVersion());
         Version groovyVersion = getGroovyCompilerVersion();
-
-        System.err.println("---------------------------------------");
-        System.err.println("SanityTest.testCompilerVersion()");
-        System.err.println("Eclipse Platform " + eclipseplatformVersion);
-        System.err.println("Using JDT version " + jdtVersion);
-        System.err.println("Using Groovy version " + groovyVersion);
-        System.err.println("Classloader location" + GroovyActivator.class.getClassLoader().getResource("."));
-        System.err.println("Groovy bundle status "+ (Platform.getBundle("org.codehaus.groovy").getState() == Bundle.ACTIVE ? "ACTIVE" : "NOT ACTIVE"));
-        System.err.println("Groovy bundle version "+ Platform.getBundle("org.codehaus.groovy").getVersion());
-        System.err.println("---------------------------------------");
+        out.println("Groovy version " + groovyVersion);
 
         //Ideally:
         // JDT 3.7 test against Groovy 2.1
@@ -73,13 +79,11 @@ public class SanityTest extends TestCase {
         // JDT 3.9 test against Groovy 2.2
         // JDT 3.10 test against Groovy 2.3
 
-        assertEquals("2.5", groovyVersion.getMajor() + "." +groovyVersion.getMinor());
+        assertThat(groovyVersion.getMajor() + "." + groovyVersion.getMinor(), equalTo("2.5"));
     }
 
+    @Test
     public void testCompilerJars() {
-        System.out.println("---------------------------------------");
-        System.out.println("SanityTest.testCompilerJars()");
-        System.out.println("Classloader location " + GroovyActivator.class.getClassLoader().getResource("."));
-        assertNotNull("Couldn't find groovy-all jar", GroovyActivator.GROOVY_ALL_JAR_URL);
+        assertThat("Couldn't find groovy-all jar", GroovyActivator.GROOVY_ALL_JAR_URL, notNullValue());
     }
 }

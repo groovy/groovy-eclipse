@@ -55,7 +55,7 @@ final class GroovyJDTTests {
 
         TestSuite suite = new TestSuite(GroovyJDTTests.class.name)
 
-        suite.addTestSuite(SanityTest)
+        suite.addTest(new junit.framework.JUnit4TestAdapter(SanityTest))
 
         // Builder tests
         suite.addTest(BasicGroovyBuildTests.suite())

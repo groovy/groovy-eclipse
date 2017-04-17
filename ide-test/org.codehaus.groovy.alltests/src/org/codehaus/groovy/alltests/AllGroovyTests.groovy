@@ -39,7 +39,7 @@ final class AllGroovyTests {
         System.err.println '----------------------------------------'
 
         TestSuite suite = new TestSuite(AllGroovyTests.class.name)
-        suite.addTestSuite(SanityTest)
+        suite.addTest(new junit.framework.JUnit4TestAdapter(SanityTest))
         suite.addTest(AllUITests.suite()) // first for 'ErrorLogTest'
         suite.addTest(AllCompletionTests.suite())
         suite.addTest(AllBrowsingTests.suite())
