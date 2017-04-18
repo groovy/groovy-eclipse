@@ -19,13 +19,11 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.junit.Test
 
 final class CodeSelectAttributesTests extends BrowsingTestCase {
 
-    static junit.framework.Test suite() {
-        newTestSuite(CodeSelectAttributesTests)
-    }
-
+    @Test
     void testCodeSelectOnAttributeName1() {
         String source = '''\
             @SuppressWarnings(value=['rawtypes','unchecked'])
@@ -37,6 +35,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof MethodNode
     }
 
+    @Test
     void testCodeSelectOnAttributeName2() {
         String source = '''\
             import javax.xml.bind.annotation.*
@@ -49,6 +48,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof MethodNode
     }
 
+    @Test
     void testCodeSelectOnAttributeValue1() {
         String source = '''\
             @SuppressWarnings(value=['rawtypes','unchecked'])
@@ -59,6 +59,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assertCodeSelect([source], 'rawtypes', '')
     }
 
+    @Test
     void testCodeSelectOnAttributeValue2() {
         EclipseTestSetup.addJUnit4()
 
@@ -75,6 +76,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof ClassNode
     }
 
+    @Test
     void testCodeSelectOnAttributeValue2a() {
         EclipseTestSetup.addJUnit4()
 
@@ -91,6 +93,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof ClassNode
     }
 
+    @Test
     void testCodeSelectOnAttributeValue2b() {
         EclipseTestSetup.addJUnit4()
 
@@ -107,6 +110,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof ClassNode
     }
 
+    @Test
     void testCodeSelectOnAttributeValue3() {
         String source = '''\
             class C {
@@ -121,6 +125,7 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof FieldNode
     }
 
+    @Test
     void testCodeSelectOnAttributeValue3a() {
         String source = '''\
             class C {

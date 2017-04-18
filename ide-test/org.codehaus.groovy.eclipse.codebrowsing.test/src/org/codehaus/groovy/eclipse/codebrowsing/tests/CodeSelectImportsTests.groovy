@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.codehaus.groovy.ast.ClassNode
+import org.junit.Test
 
 final class CodeSelectImportsTests extends BrowsingTestCase {
 
-    static junit.framework.Test suite() {
-        newTestSuite(CodeSelectImportsTests)
-    }
-
+    @Test
     void testCodeSelectOnImportType() {
         String source = '''\
             import java.util.regex.Pattern
@@ -33,6 +31,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof ClassNode
     }
 
+    @Test
     void testCodeSelectOnImportType1a() {
         String source = '''\
             import java.util.regex.Matcher
@@ -44,6 +43,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof ClassNode
     }
 
+    @Test
     void testCodeSelectOnImportType2() {
         String source = '''\
             import java.lang.Thread.State
@@ -55,6 +55,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assert elem.inferredElement instanceof ClassNode
     }
 
+    @Test
     void testCodeSelectOnImportType2a() {
         String source = '''\
             import java.lang.Thread.State
@@ -64,6 +65,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assertCodeSelect([source], 'Thread')
     }
 
+    @Test
     void testCodeSelectOnImportPackage1() {
         String source = '''\
             import java.util.regex.Pattern
@@ -73,6 +75,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assertCodeSelect([source], 'regex', 'java.util.regex')
     }
 
+    @Test
     void testCodeSelectOnImportPackage1a() {
         String source = '''\
             import java.lang.Thread.State
@@ -82,6 +85,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assertCodeSelect([source], 'lang', 'java.lang')
     }
 
+    @Test
     void testCodeSelectOnImportPackage2() {
         String source = '''\
             import java.util.regex.*
@@ -91,6 +95,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assertCodeSelect([source], 'regex', 'java.util.regex')
     }
 
+    @Test
     void testCodeSelectOnImportPackage2a() {
         String source = '''\
             import java.lang.Thread.*
@@ -100,6 +105,7 @@ final class CodeSelectImportsTests extends BrowsingTestCase {
         assertCodeSelect([source], 'lang', 'java.lang')
     }
 
+    @Test
     void testCodeSelectOnImportWildcard() {
         String source = '''\
             import java.util.regex.*

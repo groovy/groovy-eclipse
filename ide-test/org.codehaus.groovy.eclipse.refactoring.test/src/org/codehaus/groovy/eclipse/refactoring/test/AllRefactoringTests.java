@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
+import junit.framework.JUnit4TestAdapter;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -23,10 +24,6 @@ import org.codehaus.groovy.eclipse.refactoring.test.extractMethod.*;
 import org.codehaus.groovy.eclipse.refactoring.test.formatter.*;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.*;
 
-/**
- * @author Andrew Eisenberg
- * @created Mar 27, 2010
- */
 public class AllRefactoringTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite(AllRefactoringTests.class.getName());
@@ -35,8 +32,8 @@ public class AllRefactoringTests {
         suite.addTest(ConvertLocalToFieldTests.suite());
         suite.addTest(ExtractConstantTests.suite());
         suite.addTest(ExtractLocalTests.suite());
-        suite.addTestSuite(StaticExpressionCheckerTests.class);
-        suite.addTestSuite(StaticFragmentCheckerTests.class);
+        suite.addTest(new JUnit4TestAdapter(StaticExpressionCheckerTests.class));
+        suite.addTest(new JUnit4TestAdapter(StaticFragmentCheckerTests.class));
 
         // extractMethod
         suite.addTest(ExtractMethodTestSuite.suite());

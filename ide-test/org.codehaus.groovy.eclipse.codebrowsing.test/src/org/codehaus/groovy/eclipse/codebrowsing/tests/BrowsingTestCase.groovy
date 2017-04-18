@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,37 +15,44 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import junit.framework.Test
-import junit.framework.TestCase
-import junit.framework.TestSuite
+import static org.junit.Assert.*
 
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.SourceRange
+import org.junit.After
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Rule
+import org.junit.rules.TestName
 
-abstract class BrowsingTestCase extends TestCase {
+abstract class BrowsingTestCase {
 
-    /**
-     * Parent class should define:<pre>
-     * public static Test suite() {
-     *   return newTestSuite(Whatever.class);
-     * }</pre>
-     */
-    protected static Test newTestSuite(Class test) {
-        new EclipseTestSetup(new TestSuite(test))
+    @BeforeClass
+    static final void setUpTestSuite() {
+        new EclipseTestSetup(null).setUp()
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        EclipseTestSetup.removeSources()
+    @AfterClass
+    static final void tearDownTestSuite() {
+        new EclipseTestSetup(null).tearDown()
     }
 
-    @Override
-    protected void setUp() throws Exception {
+    @Rule
+    public TestName test = new TestName()
+
+    @Before
+    final void setUpTestCase() {
         println '----------------------------------------'
-        println 'Starting: ' + getName()
+        println 'Starting: ' + test.getMethodName()
+    }
+
+    @After
+    final void tearDownTestCase() {
+        EclipseTestSetup.removeSources()
     }
 
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = nextFileName(), String pack = '') {

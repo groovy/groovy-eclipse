@@ -15,12 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import org.junit.Test
+
 final class CodeSelectCategoriesTests extends BrowsingTestCase {
 
-    static junit.framework.Test suite() {
-        newTestSuite(CodeSelectCategoriesTests)
-    }
-
+    @Test
     void testDGM1() {
         def sources = [
             'this.each { }'
@@ -28,16 +27,18 @@ final class CodeSelectCategoriesTests extends BrowsingTestCase {
         assertCodeSelect(sources, 'each')
     }
 
+    @Test
     void testDGM2() {
         def sources = [
             '[str: String.class].getAt(String.class)'
         ]
         def elem = assertCodeSelect(sources, 'getAt')
-        assertEquals(2, elem.parameterTypes.length)
-        assertEquals('Ljava.util.Map<TK;TV;>;', elem.parameterTypes[0])
-        assertEquals('TK;', elem.parameterTypes[1]) // the class literal argument
+        assert elem.parameterTypes.length == 2
+        assert elem.parameterTypes[0] == 'Ljava.util.Map<TK;TV;>;'
+        assert elem.parameterTypes[1] == 'TK;' // the class literal argument
     }
 
+    @Test
     void testGroovyCategory() {
         def sources = [
             'class MyCategory { static doNothing(Object o) { } }',

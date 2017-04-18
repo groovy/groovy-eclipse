@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,23 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.eclipse.jdt.core.IPackageFragment
+import org.junit.Test
 
 final class CodeSelectPackageTests extends BrowsingTestCase {
 
-    static junit.framework.Test suite() {
-        newTestSuite(CodeSelectPackageTests)
-    }
-
+    @Test
     void testCodeSelectOnPackageDeclaration() {
         def unit = addGroovySource('def pi = Math.PI', 'script', 'w.x.y.z')
         unit.becomeWorkingCopy(null)
 
         def elems = unit.codeSelect(unit.source.indexOf('z'), 1)
-        assertEquals(1, elems.size())
-        assertEquals('w.x.y.z', elems[0].elementName)
-        assertTrue(elems[0] instanceof IPackageFragment)
+        assert elems.size() == 1
+        assert elems[0].elementName == 'w.x.y.z'
+        assert elems[0] instanceof IPackageFragment
 
         elems = unit.codeSelect(unit.source.indexOf('y'), 1)
-        assertEquals(1, elems.size())
-        assertEquals('w.x.y', elems[0].elementName)
-        assertTrue(elems[0] instanceof IPackageFragment)
+        assert elems.size() == 1
+        assert elems[0].elementName == 'w.x.y'
+        assert elems[0] instanceof IPackageFragment
     }
 }
