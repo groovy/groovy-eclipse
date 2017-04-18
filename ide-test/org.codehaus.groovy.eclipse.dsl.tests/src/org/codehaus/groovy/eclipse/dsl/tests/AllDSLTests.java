@@ -15,21 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import junit.framework.JUnit4TestAdapter;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-/**
- * @author Andrew Eisenberg
- * @created Mar 27, 2010
- */
-public class AllDSLTests {
+public final class AllDSLTests {
     public static Test suite() {
         TestSuite suite = new TestSuite(AllDSLTests.class.getName());
         if (!Boolean.getBoolean("greclipse.dsld.disabled")) {
             suite.addTest(BuiltInDSLInferencingTests.suite());
-            suite.addTest(DSLContentAssistTests.suite());
+            suite.addTest(new JUnit4TestAdapter(DSLContentAssistTests.class));
             suite.addTest(DSLInferencingTests.suite());
-            suite.addTest(DSLNamedArgContentAssistTests.suite());
+            suite.addTest(new JUnit4TestAdapter(DSLNamedArgContentAssistTests.class));
             suite.addTest(DSLStoreTests.suite());
             suite.addTest(MetaDSLInferencingTests.suite());
             suite.addTest(PointcutCreationTests.suite());

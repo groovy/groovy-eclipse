@@ -15,9 +15,8 @@
  */
 package org.codehaus.groovy.alltests
 
-import junit.framework.Test
-import junit.framework.TestSuite
-import org.codehaus.groovy.eclipse.codeassist.tests.AllCompletionTests
+import junit.framework.*
+import org.codehaus.groovy.eclipse.codeassist.tests.*
 import org.codehaus.groovy.eclipse.codebrowsing.tests.AllBrowsingTests
 import org.codehaus.groovy.eclipse.core.AllCoreTests
 import org.codehaus.groovy.eclipse.dsl.tests.AllDSLTests
@@ -28,6 +27,7 @@ import org.codehaus.groovy.eclipse.test.AllUITests
 import org.codehaus.groovy.frameworkadapter.util.CompilerChooser
 
 final class AllGroovyTests {
+
     static Test suite() {
         // ensure that the compiler chooser starts up
         CompilerChooser compiler = GroovyTestSuiteSupport.initializeCompilerChooser()
@@ -39,15 +39,47 @@ final class AllGroovyTests {
         System.err.println '----------------------------------------'
 
         TestSuite suite = new TestSuite(AllGroovyTests.class.name)
-        suite.addTest(new junit.framework.JUnit4TestAdapter(SanityTests))
+        suite.addTest(new JUnit4TestAdapter(SanityTests))
         suite.addTest(AllUITests.suite()) // first for 'ErrorLogTest'
-        suite.addTest(AllCompletionTests.suite())
+        suite.addTest(adapt('org.codehaus.groovy.eclipse.codeassist.tests',
+            AnnotationCompletionTests,
+            CommandChainCompletionTests,
+            ConstructorCompletionTests,
+            ContentAssistLocationTests,
+            ContextInformationTests,
+            DefaultGroovyMethodCompletionTests,
+            DefaultMethodContentAssistTests,
+            ExtendedCompletionContextTests,
+            FieldCompletionTests,
+            FindImportsRegionTests,
+            GenericCompletionTests,
+            GroovyLikeCompletionTests,
+            GuessingCompletionTests,
+            InferencingCompletionTests,
+            InnerTypeCompletionTests,
+            LocalVariableCompletionTests,
+            MethodCompletionTests,
+            NewFieldCompletionTests,
+            OtherCompletionTests,
+            ProposalProviderAndFilterTests,
+            RelevanceTests,
+            StaticImportsCompletionTests,
+            TypeCompletionTests,
+            TypeCompletionTests2))
         suite.addTest(AllBrowsingTests.suite())
         suite.addTest(AllCoreTests.suite())
         suite.addTest(AllDSLTests.suite())
         suite.addTest(AllJUnitTests.suite())
         suite.addTest(AllQuickFixTests.suite())
         suite.addTest(AllRefactoringTests.suite())
+        return suite
+    }
+
+    private static Test adapt(String name, Class... tests) {
+        TestSuite suite = new TestSuite(name)
+        for (test in tests) {
+            suite.addTest(new JUnit4TestAdapter(test))
+        }
         return suite
     }
 }

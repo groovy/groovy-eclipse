@@ -17,25 +17,23 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 
-import junit.framework.Test
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
 
 final class AnnotationCompletionTests extends CompletionTestCase {
 
-    static Test suite() {
-        newTestSuite(AnnotationCompletionTests)
-    }
-
-    @Override
-    protected void setUp() {
-        super.setUp()
+    @Before
+    void setUp() {
         // filter some legacy packages
         EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, 'com.sun.*;org.omg.*')
     }
 
+    @Test
     void testAnno0() {
         String contents = '@ class Foo { }'
         def proposals = getProposals(contents, '@')
@@ -43,6 +41,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Deprecated')
     }
 
+    @Test
     void testAnno0a() {
         String contents = '@Generated @ class Foo { }'
         def proposals = getProposals(contents, '@')
@@ -50,6 +49,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Deprecated')
     }
 
+    @Test
     void testAnno0b() {
         String contents = '@ @Generated class Foo { }'
         def proposals = getProposals(contents, '@')
@@ -57,6 +57,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Deprecated')
     }
 
+    @Test
     void testAnno1() {
         String contents = '@Dep class Foo { }'
         def proposals = getProposals(contents, '@Dep')
@@ -64,6 +65,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Deprecated').hasSize(1, 'Only @Deprecated should have been proposed\n')
     }
 
+    @Test
     void testAnno2() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return
         String contents = '@Compile class Foo { }'
@@ -79,6 +81,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).hasSize(total, 'Only @CompileStatic and @CompileDynamic should have been proposed\n')
     }
 
+    @Test
     void testAnno2a() { // checks camel case matching
         if (GroovyUtils.GROOVY_LEVEL < 21) return
         String contents = '@ComDyn class Foo { }'
@@ -86,6 +89,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('CompileDynamic').hasSize(1, 'Only @CompileDynamic should have been proposed\n')
     }
 
+    @Test
     void testAnno3() {
         String contents = '@Single class Foo { }'
         def proposals = getProposals(contents, '@Single')
@@ -93,6 +97,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Singleton').hasSize(1, 'Only @Singleton should have been proposed\n')
     }
 
+    @Test
     void testAnno4() {
         // not exactly right since @Singleton is only allowed on classes, but good enough for testing
         String contents = 'class Foo { @Single def foo }'
@@ -101,6 +106,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Singleton').hasSize(1, 'Only @Singleton should have been proposed\n')
     }
 
+    @Test
     void testAnno5() {
         // not exactly right since @Singleton is only allowed on classes, but good enough for testing
         String contents = 'class Foo { @Single def foo() {} }'
@@ -109,6 +115,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Singleton').hasSize(1, 'Only @Singleton should have been proposed\n')
     }
 
+    @Test
     void testAnno6() {
         // not exactly right since @Singleton is only allowed on classes, but good enough for testing
         String contents = '@Single import java.util.List\nclass Foo { }'
@@ -117,6 +124,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('Singleton').hasSize(1, 'Only @Singleton should have been proposed\n')
     }
 
+    @Test
     void testAnnoAttr0() {
         String contents = '''\
             @SuppressWarnings()
@@ -128,6 +136,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('value').excludes('equals', 'public') // no Object methods or Java keywords
     }
 
+    @Test
     void testAnnoAttr1() {
         String contents = '''\
             @SuppressWarnings(v)
@@ -139,6 +148,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         assertThat(proposals).includes('value').excludes('equals', 'public') // no Object methods or Java keywords
     }
 
+    @Test
     void testAnnoAttr2() {
         String contents = '''\
             import javax.xml.bind.annotation.*
@@ -166,7 +176,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
         exp.includes = check.curry(1)
 
         exp.hasSize = { Integer expected, CharSequence message = null ->
-            assertEquals(message, expected, proposals.length)
+            Assert.assertEquals(message, expected, proposals.length)
             return exp
         }
 

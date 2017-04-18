@@ -22,11 +22,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.junit.Assert;
+import org.junit.Before;
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 27, 2011
- */
 public final class DSLContentAssistTests extends CompletionTestCase {
 
     private static final String COMMAND_CHAIN_NO_ARGS =
@@ -49,13 +47,8 @@ public final class DSLContentAssistTests extends CompletionTestCase {
             "  setDelegateType(String)\n" +
             "}";
 
-    public static junit.framework.Test suite() {
-        return newTestSuite(DSLContentAssistTests.class);
-    }
-
-    @Override @SuppressWarnings({"serial", "unused"})
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before @SuppressWarnings({"serial", "unused"})
+    public void setUp() throws Exception {
         AbstractDSLInferencingTest.refreshExternalFoldersProject();
         EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
         EclipseTestSetup.withProject(new groovy.lang.Closure<IProject>(null) {
@@ -74,7 +67,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
             System.out.println("Creating:\n" + dsl + "\n");
             IFile file = EclipseTestSetup.addPlainText(dsl, "dsl" + (i++) + ".dsld");
             if (!file.exists()) {
-                fail("File " + file + " just created, but doesn't exist");
+                Assert.fail("File " + file + " just created, but doesn't exist");
             }
         }
         return dsls;

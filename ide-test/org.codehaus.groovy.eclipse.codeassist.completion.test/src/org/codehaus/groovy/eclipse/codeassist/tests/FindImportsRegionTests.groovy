@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import junit.framework.TestCase
-
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyImportRewriteFactory
+import org.junit.Test
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 29, 2010
- */
-final class FindImportsRegionTests extends TestCase {
+final class FindImportsRegionTests {
 
+    private void checkRegion(String initial, String expected) {
+        assert GroovyImportRewriteFactory.findImportsRegion(initial).toString() == expected
+    }
+
+    @Test
     void testFindImportsRegion0() {
         checkRegion('', '')
     }
 
+    @Test
     void testFindImportsRegion1() {
         checkRegion('''
             package p
@@ -42,6 +43,7 @@ final class FindImportsRegionTests extends TestCase {
             '''.stripIndent())
     }
 
+    @Test
     void testFindImportsRegion2() {
         checkRegion('''
             import a
@@ -56,6 +58,7 @@ final class FindImportsRegionTests extends TestCase {
     // we made the decision only to look at import statements that start at the
     // beginning of the line.  An argument can be made otherwise and this can
     // be changed in the future
+    @Test
     void testFindImportsRegion3() {
         checkRegion('''
             import a
@@ -66,6 +69,7 @@ final class FindImportsRegionTests extends TestCase {
             '''.stripIndent())
     }
 
+    @Test
     void testFindImportsRegion4() {
         checkRegion('''
              import a
@@ -77,6 +81,7 @@ final class FindImportsRegionTests extends TestCase {
             '''.stripIndent())
     }
 
+    @Test
     void testFindImportsRegion5() {
         checkRegion('''
             package p
@@ -86,6 +91,7 @@ final class FindImportsRegionTests extends TestCase {
             '''.stripIndent())
     }
 
+    @Test
     void testFindImportsRegion6() {
         checkRegion('''\
             package p
@@ -95,6 +101,7 @@ final class FindImportsRegionTests extends TestCase {
             '''.stripIndent())
     }
 
+    @Test
     void testFindImportsRegion7() {
         checkRegion('''\
             /**
@@ -112,6 +119,7 @@ final class FindImportsRegionTests extends TestCase {
             '''.stripIndent())
     }
 
+    @Test
     void testFindImportsRegion8() {
         checkRegion('''\
             /**
@@ -129,9 +137,5 @@ final class FindImportsRegionTests extends TestCase {
             package p
             import a.b.c // fdsaffdsa
             '''.stripIndent())
-    }
-
-    void checkRegion(String initial, String expected) {
-        assertEquals(expected, GroovyImportRewriteFactory.findImportsRegion(initial).toString())
     }
 }

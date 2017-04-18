@@ -17,27 +17,17 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 
 import groovy.lang.Closure;
 
-import junit.framework.Test;
-
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.junit.Before;
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 27, 2011
- */
-public class DSLNamedArgContentAssistTests extends CompletionTestCase {
+public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
 
-    public static Test suite() {
-        return newTestSuite(DSLNamedArgContentAssistTests.class);
-    }
-
-    @Override @SuppressWarnings({"serial", "unused"})
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before @SuppressWarnings({"serial", "unused"})
+    public void setUp() throws Exception {
         EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
         EclipseTestSetup.withProject(new Closure<IProject>(null) {
             public Void doCall(IProject project) {
