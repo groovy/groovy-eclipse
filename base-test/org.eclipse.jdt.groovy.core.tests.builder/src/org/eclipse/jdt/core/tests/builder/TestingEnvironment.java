@@ -52,6 +52,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -1212,34 +1213,6 @@ public class TestingEnvironment {
 		}
 	}
 
-	/** Sets the classpath to the given package fragment
-	 * roots.  The builder searches the classpath to
-	 * find the java files it needs during a build.
-	 */
-	/*public void setClasspath(IPath projectPath, IPath[] packageFragmentRootsPath) {
-		try {
-			checkAssertion("a workspace must be open", fIsOpen);
-			IJavaProject javaProject = JavaCore.create(getProject(projectPath));
-			IClasspathEntry[] entries =
-				new IClasspathEntry[packageFragmentRootsPath.length];
-			for (int i = 0; i < packageFragmentRootsPath.length; ++i) {
-				IPath path = packageFragmentRootsPath[i];
-				if ("jar".equals(path.getFileExtension())
-					|| "zip".equals(path.getFileExtension())) {
-					entries[i] = JavaCore.newLibraryEntry(path, null, null, isExported);
-				} else if (projectPath.isPrefixOf(packageFragmentRootsPath[i])) {
-					entries[i] = JavaCore.newSourceEntry(path, IPath[] exclusionPatterns, IPath specificOutputLocation)
-				} else {
-					entries[i] = JavaCore.newProjectEntry(path, isExported);
-				}
-			}
-			javaProject.setRawClasspath(entries, null);
-		} catch (JavaModelException e) {
-			e.printStackTrace();
-			checkAssertion("JavaModelException", false);
-		}
-	}*/
-
 	public void setAutoBuilding(boolean value) {
 		try {
 			IWorkspace w = getWorkspace();
@@ -1346,5 +1319,12 @@ public class TestingEnvironment {
 
 	public void addJUnitJar(IPath projectPath) throws Exception {
 		addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib/junit4_4.5.0.jar")).getFile());
+	}
+
+	@SuppressWarnings("unchecked")
+	public <U extends ICompilationUnit> U getUnit(IPath path) {
+		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
+		ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+		return (U) unit;
 	}
 }

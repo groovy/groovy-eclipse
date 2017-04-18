@@ -5419,7 +5419,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         return returnType.getName();
     }
 
-        private String stringifyFieldDecl(FieldDeclaration fDecl) {
+    private String stringifyFieldDecl(FieldDeclaration fDecl) {
         StringBuffer sb = new StringBuffer();
         sb.append(fDecl.name);
         sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);

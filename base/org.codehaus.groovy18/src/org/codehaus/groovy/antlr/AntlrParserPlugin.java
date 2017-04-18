@@ -1333,7 +1333,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode type = ClassHelper.DYNAMIC_TYPE;
         if (isType(TYPE, node)) {
             type = makeTypeWithArguments(node);
-            if (variableParameterDef) type = type.makeArray();
+            // GROOVY edit
+            //if (variableParameterDef) type = type.makeArray();
+            if (variableParameterDef) {
+                type = type.makeArray();
+                configureAST(type, node);
+            }
+            // GROOVY end
             node = node.getNextSibling();
         }
 

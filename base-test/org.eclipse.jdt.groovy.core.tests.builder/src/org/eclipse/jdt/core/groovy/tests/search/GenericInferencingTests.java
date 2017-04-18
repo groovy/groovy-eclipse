@@ -15,26 +15,20 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import junit.framework.Test;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.MethodNode;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IProblemRequestor;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 public final class GenericInferencingTests extends AbstractInferencingTest {
 
-    public static Test suite() {
+    public static junit.framework.Test suite() {
         return buildTestSuite(GenericInferencingTests.class);
     }
 
@@ -1365,7 +1359,7 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
             "}\n" +
             "}\n");
 
-        env.addGroovyClass(robotPath, "LinkingRenderer",
+        IPath path = env.addGroovyClass(robotPath, "LinkingRenderer",
             "package p2\n" +
             "import groovy.transform.CompileStatic\n" +
             "@CompileStatic\n" +
@@ -1380,34 +1374,9 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
             "}\n" +
             "}\n");
 
-        final List<IProblem> problems = new ArrayList<IProblem>();
-        final IProblemRequestor problemRequestor = new IProblemRequestor() {
-            public void acceptProblem(IProblem problem) {
-                problems.add(problem);
-            }
+        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
+        Set<IProblem> problems = ReconcilerUtils.reconcile(JavaCore.createCompilationUnitFrom(file));
 
-            public void beginReporting() {
-            }
-
-            public void endReporting() {
-            }
-
-            public boolean isActive() {
-                return true;
-            }
-        };
-
-        ICompilationUnit cu = ReconcilerUtils.findCompilationUnit(JavaCore.create(project), "LinkingRenderer.groovy").getWorkingCopy(new WorkingCopyOwner() {
-            @Override
-            public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
-                return problemRequestor;
-            }
-
-        }, new NullProgressMonitor());
-
-        assertEquals("Should have found no problems in LinkingRenderer.groovy:\n" + Arrays.toString(problems.toArray(new IProblem[problems.size()])), 0, problems.size());
-
-        // Discard the working copy to free up caches
-        cu.discardWorkingCopy();
+        assertTrue(problems.isEmpty());
     }
 }
