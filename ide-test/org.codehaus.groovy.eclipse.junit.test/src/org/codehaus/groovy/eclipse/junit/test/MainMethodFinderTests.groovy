@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
-import groovy.transform.InheritConstructors
-
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.core.search.JavaWorkspaceScope
 import org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine
 import org.eclipse.jdt.ui.IJavaElementSearchConstants
+import org.junit.Test
 
 /**
- * Tests for {@link org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine}
+ * Tests for {@link org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine}.
  */
-@InheritConstructors
 final class MainMethodFinderTests extends JUnitTestCase {
-
-    private void createGroovyType(CharSequence contents, String file = 'Hello', String pack = 'p2') {
-        IPath proj = createGenericProject()
-        IPath root = proj.append('src')
-
-        env.addGroovyClass(root, pack, file, contents.toString())
-        incrementalBuild(proj)
-        expectingNoProblems()
-    }
 
     /**
      * @param expected fully-qualified type names
@@ -46,14 +34,15 @@ final class MainMethodFinderTests extends JUnitTestCase {
         MainMethodSearchEngine engine = new MainMethodSearchEngine()
         IType[] types = engine.searchMainMethods(null as IProgressMonitor,
             new JavaWorkspaceScope(), IJavaElementSearchConstants.CONSIDER_ALL_TYPES)
-        assertEquals("Wrong number of main methods found in: ${ -> types.collect { it.fullyQualifiedName }}", expected.length, types.length)
-        for (i in 0..<types.length) {
-            assertEquals(expected[i], types[i].fullyQualifiedName)
+        assert types.length == expected.length : "Wrong number of main methods found in: ${ -> types.collect { it.fullyQualifiedName }}"
+        types.eachWithIndex { type, i ->
+            assert type.fullyQualifiedName == expected[i]
         }
     }
 
+    @Test
     void testMainMethodFinder1() {
-        createGroovyType '''
+        addGroovySource '''
             class Foo {
               static def main(args) { }
             }
@@ -62,8 +51,9 @@ final class MainMethodFinderTests extends JUnitTestCase {
         expectTypesWithMain 'p2.Foo'
     }
 
+    @Test
     void testMainMethodFinder2() {
-        createGroovyType '''
+        addGroovySource '''
             class Foo {
               static def main(String... args) { }
             }
@@ -72,8 +62,9 @@ final class MainMethodFinderTests extends JUnitTestCase {
         expectTypesWithMain ()
     }
 
+    @Test
     void testMainMethodFinder3() {
-        createGroovyType '''
+        addGroovySource '''
             class Foo {
               static def main(String[] args) { }
             }
@@ -82,8 +73,9 @@ final class MainMethodFinderTests extends JUnitTestCase {
         expectTypesWithMain ()
     }
 
+    @Test
     void testMainMethodFinder4() {
-        createGroovyType '''
+        addGroovySource '''
             class Foo {
               private static def main(String[] args) { }
             }
@@ -92,8 +84,9 @@ final class MainMethodFinderTests extends JUnitTestCase {
         expectTypesWithMain ()
     }
 
+    @Test
     void testMainMethodFinder5() {
-        createGroovyType '''
+        addGroovySource '''
             class Foo {
               def main(String[] args) { }
             }
@@ -102,16 +95,18 @@ final class MainMethodFinderTests extends JUnitTestCase {
         expectTypesWithMain ()
     }
 
+    @Test
     void testMainMethodFinder6() {
-        createGroovyType '''
+        addGroovySource '''
             print 'Nothing'
             '''
 
         expectTypesWithMain 'p2.Hello'
     }
 
+    @Test
     void testMainMethodFinder7() {
-        createGroovyType '''
+        addGroovySource '''
             print 'Hello'
 
             class Foo {
@@ -122,8 +117,9 @@ final class MainMethodFinderTests extends JUnitTestCase {
         expectTypesWithMain 'p2.Hello', 'p2.Foo'
     }
 
+    @Test
     void testMainMethodFinder8() {
-        createGroovyType '''
+        addGroovySource '''
             print 'Hello'
 
             class Foo {

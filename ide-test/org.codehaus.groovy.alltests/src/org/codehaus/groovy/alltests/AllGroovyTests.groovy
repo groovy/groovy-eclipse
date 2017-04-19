@@ -20,7 +20,7 @@ import org.codehaus.groovy.eclipse.codeassist.tests.*
 import org.codehaus.groovy.eclipse.codebrowsing.tests.*
 import org.codehaus.groovy.eclipse.core.AllCoreTests
 import org.codehaus.groovy.eclipse.dsl.tests.AllDSLTests
-import org.codehaus.groovy.eclipse.junit.test.AllJUnitTests
+import org.codehaus.groovy.eclipse.junit.test.*
 import org.codehaus.groovy.eclipse.quickfix.test.AllQuickFixTests
 import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests
 import org.codehaus.groovy.eclipse.test.AllUITests
@@ -86,7 +86,10 @@ final class AllGroovyTests {
             PartialVisitTests))
         suite.addTest(AllCoreTests.suite())
         suite.addTest(AllDSLTests.suite())
-        suite.addTest(AllJUnitTests.suite())
+        suite.addTest(adapt('org.codehaus.groovy.eclipse.junit.tests',
+            JUnit3TestFinderTests,
+            JUnit4TestFinderTests,
+            MainMethodFinderTests))
         suite.addTest(AllQuickFixTests.suite())
         suite.addTest(AllRefactoringTests.suite())
         return suite
