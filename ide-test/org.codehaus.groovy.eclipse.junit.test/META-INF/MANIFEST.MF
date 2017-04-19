@@ -7,6 +7,5 @@ Bundle-Version: 2.9.2.qualifier
 Export-Package: org.codehaus.groovy.eclipse.junit.test
 Import-Package: org.eclipse.core.expressions,
  org.eclipse.jdt.internal.junit.launcher,
- org.eclipse.jdt.internal.junit,
- org.eclipse.jface.operation
+ org.eclipse.jdt.internal.junit
 Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,39 +15,26 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.templates
 
-import junit.framework.Test
-import junit.framework.TestCase
-import junit.framework.TestSuite
-
 import org.codehaus.groovy.eclipse.quickfix.templates.TemplateProposalComputer
+import org.codehaus.groovy.eclipse.quickfix.test.QuickFixTestCase
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.Before
+import org.junit.Test
 
 /**
  * Tests the Groovy templates contributed by the quickfix plug-in.
  */
-final class GroovyTemplatesCompletionTests extends TestCase {
+final class GroovyTemplatesCompletionTests extends QuickFixTestCase {
 
-    static Test suite() {
-        new EclipseTestSetup(new TestSuite(GroovyTemplatesCompletionTests))
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        EclipseTestSetup.removeSources()
-    }
-
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    void setUp() {
         EclipseTestSetup.setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
         EclipseTestSetup.setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
-
-        println '----------------------------------------'
-        println 'Starting: ' + getName()
     }
 
     /**
@@ -57,16 +44,15 @@ final class GroovyTemplatesCompletionTests extends TestCase {
      * @param which name of completion proposal to select and apply
      */
     protected void runTest(CharSequence contents, CharSequence expected, String target, String which = target) {
-        def unit = EclipseTestSetup.addGroovySource(contents.stripIndent().toString(), nextFileName())
-        def editor = EclipseTestSetup.openInEditor(unit)
+        def editor = openInEditor(addGroovySource(contents.stripIndent(), nextFileName()))
         int offset = contents.stripIndent().toString().indexOf(target) + target.length()
         def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
 
         // find proposal
         List<ICompletionProposal> proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
-        assertTrue('Expected some proposals, but got none', proposals != null && !proposals.empty)
+        assert proposals != null && !proposals.empty : 'Expected some proposals, but got none'
         def matches = proposals.findAll { it.displayString.startsWith(which + ' - ') }
-        assertEquals('Expected a match, but got ' + matches.size(), 1, matches.size())
+        assert matches.size() == 1 : 'Expected a match, but got ' + matches.size()
 
         // apply template
         matches[0].apply(editor.viewer, 'x' as char, 0, offset)
@@ -74,7 +60,7 @@ final class GroovyTemplatesCompletionTests extends TestCase {
 
         String expect = expected.stripIndent().toString().replace('|', '').replace('\r\n', '\n')
         String actual = editor.viewer.document.get().replace('\r\n', '\n')
-        assertEquals(expect, actual)
+        assert actual == expect
     }
 
     protected static String nextFileName() {
@@ -85,6 +71,7 @@ final class GroovyTemplatesCompletionTests extends TestCase {
 
     //--------------------------------------------------------------------------
 
+    @Test
     void testBasicTemplate() {
         String input = '''\
             try
@@ -99,6 +86,7 @@ final class GroovyTemplatesCompletionTests extends TestCase {
         runTest(input, output, 'try')
     }
 
+    @Test
     void testJUnitBefore() {
         String input = '''\
             class SomeTest {
@@ -118,6 +106,7 @@ final class GroovyTemplatesCompletionTests extends TestCase {
         runTest(input, output, 'Bef', 'Before')
     }
 
+    @Test
     void testJUnitAfter() {
         String input = '''\
             class SomeTest {
@@ -137,6 +126,7 @@ final class GroovyTemplatesCompletionTests extends TestCase {
         runTest(input, output, 'Aft', 'After')
     }
 
+    @Test
     void testGContractsEnsures() {
         String input = '''\
             class SomeTest {
@@ -157,6 +147,7 @@ final class GroovyTemplatesCompletionTests extends TestCase {
         runTest(input, output, 'Ens', 'Ensures')
     }
 
+    @Test
     void testGContractsRequires() {
         String input = '''\
             class SomeTest {

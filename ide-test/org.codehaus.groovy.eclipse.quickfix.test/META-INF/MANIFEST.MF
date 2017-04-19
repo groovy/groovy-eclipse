@@ -5,11 +5,13 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.quickfix.test;singleton:=true
 Bundle-Name: Groovy Quick Fix Tests
 Bundle-Version: 2.9.2.qualifier
 Export-Package: org.codehaus.groovy.eclipse.quickfix.test,
- org.codehaus.groovy.eclipse.quickfix.test.resolvers
+ org.codehaus.groovy.eclipse.quickfix.test.resolvers,
+ org.codehaus.groovy.eclipse.quickfix.test.templates
 Import-Package: org.eclipse.core.filesystem
 Require-Bundle: org.codehaus.groovy.eclipse.quickfix;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.refactoring.test;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2",
  org.eclipse.ui.editors,
+ org.eclipse.ui.forms,
  org.eclipse.ui.ide,
  org.eclipse.ui

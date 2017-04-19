@@ -21,7 +21,9 @@ import org.codehaus.groovy.eclipse.codebrowsing.tests.*
 import org.codehaus.groovy.eclipse.core.AllCoreTests
 import org.codehaus.groovy.eclipse.dsl.tests.AllDSLTests
 import org.codehaus.groovy.eclipse.junit.test.*
-import org.codehaus.groovy.eclipse.quickfix.test.AllQuickFixTests
+import org.codehaus.groovy.eclipse.quickfix.test.*
+import org.codehaus.groovy.eclipse.quickfix.test.resolvers.*
+import org.codehaus.groovy.eclipse.quickfix.test.templates.*
 import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests
 import org.codehaus.groovy.eclipse.test.AllUITests
 import org.codehaus.groovy.frameworkadapter.util.CompilerChooser
@@ -90,7 +92,12 @@ final class AllGroovyTests {
             JUnit3TestFinderTests,
             JUnit4TestFinderTests,
             MainMethodFinderTests))
-        suite.addTest(AllQuickFixTests.suite())
+        suite.addTest(adapt('org.codehaus.groovy.eclipse.quickfix.tests',
+            GroovyProjectGroovyQuickFixTests,
+            GroovyProjectJavaQuickFixTests,
+            GroovyTemplatesCompletionTests,
+            NonGroovyProjectQuickFixTests,
+            QuickAssistTests))
         suite.addTest(AllRefactoringTests.suite())
         return suite
     }
