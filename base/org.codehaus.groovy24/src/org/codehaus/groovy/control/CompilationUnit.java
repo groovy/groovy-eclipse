@@ -20,8 +20,8 @@ package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyRuntimeException;
-
 import groovy.transform.CompilationUnitAware;
+
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.*;
@@ -121,7 +121,7 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-        // GRECLIPSE added 3 trailing params
+        // GRECLIPSE added final three params
         this(configuration, security, loader, null, true, null, null);
     }
 
@@ -138,16 +138,12 @@ public class CompilationUnit extends ProcessingUnit {
      * @param security        - security setting for the compilation
      * @param configuration   - compilation configuration
      */
-    // GRECLIPSE added 3 trailing params
+    // GRECLIPSE added final three params
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
                            GroovyClassLoader loader, GroovyClassLoader transformLoader,
                            boolean allowTransforms, String localTransformsToRunOnReconcile, String excludeGlobalASTScan) {
         super(configuration, loader, null);
 
-        // GRECLIPSE add
-        this.allowTransforms = allowTransforms;
-        this.excludeGlobalASTScan = excludeGlobalASTScan;
-        // GRECLIPSE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
@@ -164,20 +160,14 @@ public class CompilationUnit extends ProcessingUnit {
         this.staticImportVisitor = new StaticImportVisitor();
         this.optimizer = new OptimizerVisitor(this);
         // GRECLIPSE add
+        this.allowTransforms = allowTransforms;
+        this.excludeGlobalASTScan = excludeGlobalASTScan;
+        this.localTransformsToRunOnReconcile = new ArrayList<String>();
         if (localTransformsToRunOnReconcile == null) {
-            this.localTransformsToRunOnReconcile = new ArrayList<String>();
             this.localTransformsToRunOnReconcile.add("*");
         } else {
-            this.localTransformsToRunOnReconcile = new ArrayList<String>();
-            try {
-                StringTokenizer st = new StringTokenizer(localTransformsToRunOnReconcile, ",");
-                while (st.hasMoreElements()) {
-                    String classname = st.nextToken();
-                    this.localTransformsToRunOnReconcile.add(classname);
-                }
-            } catch (Exception e) {
-                // presumed security exception
-            }
+            String[] tokens = localTransformsToRunOnReconcile.split(",");
+            Collections.addAll(this.localTransformsToRunOnReconcile, tokens);
         }
         // GRECLIPSE end
 
@@ -218,7 +208,7 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.CANONICALIZATION);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-        // GRECLIPSE skip output phase
+        // GRECLIPSE edit -- skip output phase
         //addPhaseOperation(output);
 
         addPhaseOperation(new PrimaryClassNodeOperation() {
@@ -278,17 +268,6 @@ public class CompilationUnit extends ProcessingUnit {
         this.classgenCallback = null;
         this.classNodeResolver = new ClassNodeResolver();
     }
-
-    // GRECLIPSE add
-    public void ensureASTTransformVisitorAdded() {
-        ASTTransformationVisitor.addPhaseOperations(this);
-    }
-
-    // can be called to prevent classfile output (so only use if something else is taking charge of output)
-    public boolean removeOutputPhaseOperation() {
-        return phaseOperations[Phases.OUTPUT].remove(output);
-    }
-    // GRECLIPSE end
 
     /**
      * Returns the class loader for loading AST transformations.
@@ -475,13 +454,6 @@ public class CompilationUnit extends ProcessingUnit {
         for (SourceUnit su : queuedSources) {
             if (name.equals(su.getName())) return su;
         }
-        // GRECLIPSE add
-        if (iterating) {
-            GroovyBugError gbe = new GroovyBugError("Queuing new source whilst already iterating.  Queued source is '" + source.getName() + "'");
-            gbe.printStackTrace();
-            throw gbe;
-        }
-        // GRECLIPSE end
         queuedSources.add(source);
         return source;
     }
@@ -570,23 +542,6 @@ public class CompilationUnit extends ProcessingUnit {
     public ProgressCallback getProgressCallback() {
         return progressCallback;
     }
-
-    // GRECLIPSE add
-    public interface ProgressListener {
-        void parseComplete(int phase, String sourceUnitName);
-        void generateComplete(int phase, ClassNode classNode);
-    }
-
-    private ProgressListener listener;
-
-    public ProgressListener getProgressListener() {
-        return this.listener;
-    }
-
-    public void setProgressListener(ProgressListener listener) {
-        this.listener = listener;
-    }
-    // GRECLIPSE end
 
     //---------------------------------------------------------------------------
     // ACTIONS
@@ -702,13 +657,6 @@ public class CompilationUnit extends ProcessingUnit {
         while (!queuedSources.isEmpty()) {
             SourceUnit su = queuedSources.removeFirst();
             String name = su.getName();
-            // GRECLIPSE add
-            if (iterating) {
-                GroovyBugError gbe = new GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '" + su.getName() + "'");
-                gbe.printStackTrace();
-                throw gbe;
-            }
-            // GRECLIPSE end
             names.add(name);
             sources.put(name, su);
         }
@@ -845,7 +793,7 @@ public class CompilationUnit extends ProcessingUnit {
 
             optimizer.visitClass(classNode, source); // GROOVY-4272: repositioned it here from staticImport
 
-            if(!classNode.isSynthetic()) {
+            if (!classNode.isSynthetic()) {
                 GenericsVisitor genericsVisitor = new GenericsVisitor(source);
                 genericsVisitor.visitClass(classNode);
             }
@@ -880,7 +828,7 @@ public class CompilationUnit extends ProcessingUnit {
             // Prep the generator machinery
             //
             ClassVisitor visitor = createClassVisitor();
-            
+
             String sourceName = (source == null ? classNode.getModule().getDescription() : source.getName());
             // only show the file name and its extension like javac does in its stacktraces rather than the full path
             // also takes care of both \ and / depending on the host compiling environment
@@ -888,12 +836,11 @@ public class CompilationUnit extends ProcessingUnit {
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
             AsmClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
 
-            // GRECLIPSE add
-            // if there are errors, don't generate code.
-            // code gen can fail unexpectedly if there was an earlier error.
-            // source can be null for class nodes created by StaticTypeCheckingSupport
-            if (source == null || !source.getErrorCollector().hasErrors()) {
+            // GRECLIPSE add -- if there are errors, don't generate code
+            // code gen can fail unexpectedly if there was an earlier error
+            if (source != null && source.getErrorCollector().hasErrors()) return;
             // GRECLIPSE end
+
             //
             // Run the generation and create the class (if required)
             //
@@ -917,9 +864,6 @@ public class CompilationUnit extends ProcessingUnit {
             while (!innerClasses.isEmpty()) {
                 classgen.call(source, context, (ClassNode) innerClasses.removeFirst());
             }
-            // GRECLIPSE add
-            }
-            // GRECLIPSE end
         }
     };
 
@@ -969,7 +913,7 @@ public class CompilationUnit extends ProcessingUnit {
 
         };
     }
-    
+
     //---------------------------------------------------------------------------
     // PHASE HANDLING
 
@@ -1008,21 +952,17 @@ public class CompilationUnit extends ProcessingUnit {
         public abstract void call(SourceUnit source) throws CompilationFailedException;
     }
 
-    // GRECLIPSE add
-    private boolean iterating;
-    // GRECLIPSE end
-
     /**
      * A loop driver for applying operations to all SourceUnits.
      * Automatically skips units that have already been processed
      * through the current phase.
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
-        // GRECLIPSE add
-        try {
-        iterating = true;
+        // GRECLIPSE edit -- prevent concurrent modification exceptions
+        //for (String name : names) {
+        for (int i = 0; i < names.size(); i += 1) {
+            String name = names.get(i);
         // GRECLIPSE end
-        for (String name : names) {
             SourceUnit source = sources.get(name);
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {
@@ -1044,11 +984,6 @@ public class CompilationUnit extends ProcessingUnit {
                 }
             }
         }
-        // GRECLIPSE add
-        } finally {
-            iterating = false;
-        }
-        // GRECLIPSE end
 
         getErrorCollector().failIfErrors();
     }
@@ -1093,10 +1028,8 @@ public class CompilationUnit extends ProcessingUnit {
     private List getPrimaryClassNodes(boolean sort) {
         // GRECLIPSE add
         if (sort) {
-            List<ModuleNode> sortedModules = this.ast.getSortedModules();
-            if (sortedModules != null) {
-                return sortedModules;
-            } 
+            List<ClassNode> sorted = this.ast.getSortedClasses();
+            if (sorted != null) return sorted;
         }
         // GRECLIPSE end
         List<ClassNode> unsorted = new ArrayList<ClassNode>();
@@ -1131,33 +1064,30 @@ public class CompilationUnit extends ProcessingUnit {
         // Sort them by how many types are in their hierarchy, but all interfaces first.
         // Algorithm:
         // Create a list of integers.  Each integer captures the index into the unsorted
-        // list (bottom 16bits) and the count of how many types are in that types
-        // hierarchy (top 16bits).  For classes the count is augmented by 2000 so that
-        // when sorting the classes will come out after the interfaces.
-        // This list of integers is sorted.  We then just go through it and for the
-        // lower 16bits of each entry (0xffff) that is the index of the next value to
-        // pull from the unsorted list and put into the sorted list.
-        // Will break down if more than 2000 interfaces in the type hierarchy for an
-        // individual type, or a project contains > 65535 files... but if you've got
-        // that kind of setup, you have other problems...
-        List<Integer> countIndexPairs = new ArrayList<Integer>();
-        {
-            int i = 0;
-            for (Iterator iter = unsorted.iterator(); iter.hasNext(); i++) {
-                ClassNode node = (ClassNode) iter.next();
-                if (node.isInterface()) {
-                    countIndexPairs.add((getSuperInterfaceCount(node) << 16) + i);
-                } else {
-                    countIndexPairs.add(((getSuperClassCount(node) + 2000) << 16) + i);
-                }
+        // list (bottom 16 bits) and the count of how many types are in that types
+        // hierarchy (top 16 bits).  For classes the count is augmented so that when
+        // sorting the classes will come out after the interfaces. This list of integers
+        // is sorted.  We then just go through it and for the lower 16 bits of each entry
+        // that is the index of the next value to pull from the unsorted list and put into
+        // the sorted list.
+        int[] countIndexPairs = new int[unsorted.size()];
+        int count, index = 0;
+        for (ClassNode node : unsorted) {
+            if (node.isInterface()) {
+                count = getSuperInterfaceCount(node);
+            } else {
+                count = getSuperClassCount(node) + 5000;
             }
+            countIndexPairs[index] = ((count << 16) + index);
+            index += 1;
         }
-        Collections.sort(countIndexPairs);
-        List sorted = new ArrayList();
-        for (int i: countIndexPairs) {
-            sorted.add(unsorted.get(i & 0xffff));
+        Arrays.sort(countIndexPairs);
+
+        List<ClassNode> sorted = new ArrayList<ClassNode>(index);
+        for (int i : countIndexPairs) {
+            sorted.add(unsorted.get(i & 0xFFFF));
         }
-        this.ast.setSortedModules(sorted);
+        this.ast.setSortedClasses(sorted);
         // GRECLIPSE end
         return sorted;
     }
@@ -1278,31 +1208,45 @@ public class CompilationUnit extends ProcessingUnit {
         this.classNodeResolver = classNodeResolver;
     }
 
-    // GRECLIPSE add
-    public void setResolveVisitor(ResolveVisitor resolveVisitor) {
-        this.resolveVisitor = resolveVisitor;
+  // GRECLIPSE add
+    public interface ProgressListener {
+        void parseComplete(int phase, String sourceUnitName);
+        void generateComplete(int phase, ClassNode classNode);
+    }
+
+    public ProgressListener getProgressListener() {
+        return this.listener;
+    }
+
+    public void setProgressListener(ProgressListener listener) {
+        this.listener = listener;
     }
 
     public ResolveVisitor getResolveVisitor() {
         return this.resolveVisitor;
     }
 
+    public void setResolveVisitor(ResolveVisitor resolveVisitor) {
+        this.resolveVisitor = resolveVisitor;
+    }
+
+    public void ensureASTTransformVisitorAdded() {
+        ASTTransformationVisitor.addPhaseOperations(this);
+    }
+
+    // can be called to prevent classfile output (so only use if something else is taking charge of output)
+    public boolean removeOutputPhaseOperation() {
+        return phaseOperations[Phases.OUTPUT].remove(output);
+    }
+
     public String toString() {
-        if (sources == null || sources.isEmpty()) return super.toString();
+        if (sources == null || sources.isEmpty())
+            return super.toString();
         for (String s : sources.keySet()) {
             return "CompilationUnit: source is " + s;
         }
         return "CompilationUnit: null";
     }
-
-    /**
-     * Path to a directory that should be ignored when searching for manifest files
-     * that define global AST transforms. See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
-     */
-    public String excludeGlobalASTScan;
-    public boolean allowTransforms = true;
-    public boolean isReconcile;
-    public List<String> localTransformsToRunOnReconcile;
 
     /**
      * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
@@ -1315,11 +1259,23 @@ public class CompilationUnit extends ProcessingUnit {
         // be correctly visited by the verifier and have certain optimizations performed (creating returns)
         if (isReconcile) {
             verifier.inlineStaticFieldInitializersIntoClinit = false;
+            //verifier.inlineFieldInitializersIntoInit = false;
             staticImportVisitor.isReconcile = true;
         } else {
             verifier.inlineStaticFieldInitializersIntoClinit = true;
+            //verifier.inlineFieldInitializersIntoInit = true;
         }
         this.isReconcile = isReconcile;
     }
-    // GRECLIPSE end
+
+    /**
+     * Path to a directory that should be ignored when searching for manifest files that define global AST transforms.
+     * See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
+     */
+    public String excludeGlobalASTScan;
+    public boolean allowTransforms = true;
+    public boolean isReconcile = false;
+    private ProgressListener listener;
+    public List<String> localTransformsToRunOnReconcile;
+  // GRECLIPSE end
 }

@@ -67,6 +67,8 @@ import org.codehaus.groovy.control.messages.LocatedMessage;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.RuntimeParserException;
@@ -207,7 +209,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
         }
         // GRECLIPSE-1776 end
-        boolean alreadyHasProblems = compilationResult.hasProblems();
+        boolean alreadyHasErrors = compilationResult.hasErrors();
         // Our replacement error collector doesn't cause an exception, instead they are checked for post 'compile'
         try {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -223,90 +225,89 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else {
                 return true;
             }
-        } catch (MultipleCompilationErrorsException problems) {
-            fixGroovyRuntimeException(problems);
-            AbortCompilation abort = getAbortCompilation(problems);
-            if (abort != null) {
-                throw abort;
-            } else {
-                // alternative to catching this is fleshing out the ErrorCollector
-                // sub type we have and asking it if there
-                // are errors at the end of a run...
-                problems.printStackTrace();
-                recordProblems(problems.getErrorCollector().getErrors());
+
+        } catch (MultipleCompilationErrorsException mce) {
+            fixGroovyRuntimeException(mce);
+
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, mce.getMessage());
             }
+
+            ErrorCollector collector = mce.getErrorCollector();
+            if (collector.getErrorCount() == 1 && mce.getErrorCollector().getError(0) instanceof ExceptionMessage) {
+                Exception cause = ((ExceptionMessage) mce.getErrorCollector().getError(0)).getCause();
+                if (cause instanceof AbortCompilation) {
+                    throw (AbortCompilation) cause;
+                }
+            }
+
+            recordProblems(mce.getErrorCollector().getErrors());
+
         } catch (GroovyBugError gbe) {
-            if (alreadyHasProblems) {
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, gbe.getBugText());
+            }
+
+            if (gbe.getCause() instanceof AbortCompilation) {
+                AbortCompilation abort = (AbortCompilation) gbe.getCause();
+                if (!abort.isSilent) {
+                    if (abort.problem != null) {
+                        problemReporter.record(abort.problem, compilationResult, this, true);
+                    } else {
+                        throw abort;
+                    }
+                }
+            } else if (alreadyHasErrors) {
                 Util.log(new Status(IStatus.INFO, Activator.PLUGIN_ID,
                     "Ignoring GroovyBugError since it is likely caused by earlier issues", gbe));
             } else {
-                boolean reportIt = true;
-                if (gbe.getCause() instanceof AbortCompilation) {
-                    // might be nothing to log -- AbortCompilations can occur 'normally'
-                    // when jobs are stopped due to any results they produce being stale
-                    if (((AbortCompilation) gbe.getCause()).isSilent) reportIt = false;
-                }
-                if (reportIt) {
-                    // The groovy compiler threw an exception
-                    // FIXASC (M3) Should record these errors as a problem on the project
-                    // should *not* throw these because of bad syntax in the file
-                    Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", gbe));
+                Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", gbe));
 
-                    // Also need to record these problems as compiler errors since some users will not think to check the log
-                    // This is mostly a fix for problems like those in GRECLIPSE-1420, where a GBError is thrown when it is really
-                    // just a syntax problem.
-                    SyntaxErrorMessage syntaxError = new SyntaxErrorMessage(new SyntaxException("Groovy compiler error: " + gbe.getBugText(), gbe, 1, 0), groovySourceUnit);
-                    ErrorCollector errorCollector = groovySourceUnit.getErrorCollector();
-                    errorCollector.addError(syntaxError);
+                // Need to record these problems as compiler errors since some users will not think to check the log.
+                // This is mostly a fix for problems like those in GRECLIPSE-1420, where a GBE is thrown when it is really just a syntax problem.
+                SyntaxErrorMessage syntaxError = new SyntaxErrorMessage(new SyntaxException("Groovy compiler error: " + gbe.getBugText(), gbe, 1, 0), groovySourceUnit);
+                ErrorCollector collector = groovySourceUnit.getErrorCollector();
+                collector.addError(syntaxError);
 
-                    recordProblems(errorCollector.getErrors());
-                }
+                recordProblems(collector.getErrors());
             }
         }
+
         return false;
     }
 
-    private void fixGroovyRuntimeException(MultipleCompilationErrorsException problems) {
-        List<?> errors = problems.getErrorCollector().getErrors();
-        List<ExceptionMessage> toBeFixed = new ArrayList<ExceptionMessage>();
-        for (Object o : errors) {
-            if (o instanceof ExceptionMessage) {
-                ExceptionMessage em = (ExceptionMessage) o;
-                if (em.getCause() instanceof GroovyRuntimeException) {
-                    GroovyRuntimeException gre = (GroovyRuntimeException) em.getCause();
-                    if (gre.getCause() instanceof SyntaxException) {
-                        toBeFixed.add(em);
-                    }
+    /** Unwraps any SyntaxExceptions embedded within a GroovyRuntimeException. */
+    private void fixGroovyRuntimeException(MultipleCompilationErrorsException mce) {
+        List<SyntaxException> syntaxErrors = new ArrayList<SyntaxException>();
+
+        for (Iterator<? extends Message> it = mce.getErrorCollector().getErrors().iterator(); it.hasNext();) {
+            Message m = it.next();
+            if (m instanceof ExceptionMessage) {
+                ExceptionMessage em = (ExceptionMessage) m;
+                if (em.getCause() instanceof GroovyRuntimeException &&
+                        ((GroovyRuntimeException) em.getCause()).getCause() instanceof SyntaxException) {
+                    syntaxErrors.add((SyntaxException) em.getCause().getCause());
+                    it.remove();
                 }
             }
         }
-        for (ExceptionMessage e : toBeFixed) {
-            errors.remove(e);
-            SyntaxException se = (SyntaxException) e.getCause().getCause();
-            problems.getErrorCollector().addError(se, groovySourceUnit);
-        }
-    }
 
-    private AbortCompilation getAbortCompilation(MultipleCompilationErrorsException problems) {
-        ErrorCollector collector = problems.getErrorCollector();
-        if (collector.getErrorCount() == 1 && problems.getErrorCollector().getError(0) instanceof ExceptionMessage) {
-            Exception abort = ((ExceptionMessage) problems.getErrorCollector().getError(0)).getCause();
-            return abort instanceof AbortCompilation ? (AbortCompilation) abort : null;
+        for (SyntaxException se : syntaxErrors) {
+            mce.getErrorCollector().addError(se, groovySourceUnit);
         }
-        return null;
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * @return the *groovy* compilation unit shared by all files in the same project
+     * Returns the Groovy compilation unit shared by all files in the same project.
      */
     public CompilationUnit getCompilationUnit() {
         return groovyCompilationUnit;
     }
 
     /**
-     * Populate the compilation unit based on the successful parse.
+     * Populates the compilation unit based on the successful parse.
      */
     public void populateCompilationUnitDeclaration() {
         UnitPopulator populator = new UnitPopulator();

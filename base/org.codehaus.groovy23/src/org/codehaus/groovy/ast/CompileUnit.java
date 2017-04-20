@@ -37,27 +37,29 @@ import org.codehaus.groovy.syntax.SyntaxException;
  * <p>
  * It's attached to MethodNodes and ClassNodes and is used to find fully qualified names of classes,
  * resolve imports, and that sort of thing.
- * 
+ *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan </a>
  */
 public class CompileUnit {
 
     private final List<ModuleNode> modules = new ArrayList<ModuleNode>();
-    // GRECLIPSE: start cached list of sort operation
-    private List<ModuleNode> sortedModules;
-    // end
-    private Map<String,ClassNode> classes = new HashMap<String, ClassNode>();
+    private final Map<String, ClassNode> classes = new HashMap<String, ClassNode>();
+    // GRECLIPSE add
+    private List<ClassNode> sortedClasses;
+    public void setSortedClasses(List<ClassNode> sortedClasses) { this.sortedClasses = sortedClasses; }
+    public List<ClassNode> getSortedClasses() { return sortedClasses == null ? null : Collections.unmodifiableList(sortedClasses); }
+    // GRECLIPSE end
     private CompilerConfiguration config;
     private GroovyClassLoader classLoader;
     private CodeSource codeSource;
-    private Map<String,ClassNode> classesToCompile = new HashMap<String, ClassNode>();
-    private Map<String,SourceUnit> classNameToSource = new HashMap<String, SourceUnit>();
-    private Map<String, InnerClassNode> generatedInnerClasses = new HashMap();
-    
+    private Map<String, ClassNode> classesToCompile = new HashMap<String, ClassNode>();
+    private Map<String, SourceUnit> classNameToSource = new HashMap<String, SourceUnit>();
+    private Map<String, InnerClassNode> generatedInnerClasses = new HashMap<String, InnerClassNode>();
+
     public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
-    	this(classLoader, null, config);
+        this(classLoader, null, config);
     }
-    
+
     public CompileUnit(GroovyClassLoader classLoader, CodeSource codeSource, CompilerConfiguration config) {
         this.classLoader = classLoader;
         this.config = config;
@@ -71,10 +73,8 @@ public class CompileUnit {
     public void addModule(ModuleNode node) {
         // node==null means a compilation error prevented
         // groovy from building an ast
-        if (node==null) return;
+        if (node == null) return;
         modules.add(node);
-        // GRECLIPSE: start: invalidate sort
-        this.sortedModules= null; 
         node.setUnit(this);
         addClasses(node.getClasses());
     }
@@ -86,7 +86,7 @@ public class CompileUnit {
      */
     public ClassNode getClass(String name) {
         ClassNode cn = classes.get(name);
-        if (cn!=null) return cn;
+        if (cn != null) return cn;
         return classesToCompile.get(name);
     }
 
@@ -108,9 +108,9 @@ public class CompileUnit {
     public GroovyClassLoader getClassLoader() {
         return classLoader;
     }
-    
+
     public CodeSource getCodeSource() {
-    	return codeSource;
+        return codeSource;
     }
 
     /**
@@ -122,12 +122,12 @@ public class CompileUnit {
             addClass(node);
         }
     }
-    
+
     /**
-     *  Adds a class to the unit.
+     * Adds a class to the unit.
      */
     public void addClass(ClassNode node) {
-    	node = node.redirect();
+        node = node.redirect();
         String name = node.getName();
         ClassNode stored = classes.get(name);
         if (stored != null && stored != node) {
@@ -136,13 +136,13 @@ public class CompileUnit {
             // class in the same file and named the class like the file
             SourceUnit nodeSource = node.getModule().getContext();
             SourceUnit storedSource = stored.getModule().getContext();
-            String txt = "Invalid duplicate class definition of class "+node.getName()+" : ";
-            if (nodeSource==storedSource) {
+            String txt = "Invalid duplicate class definition of class " + node.getName() + " : ";
+            if (nodeSource == storedSource) {
                 // same class in same source
-                txt += "The source "+nodeSource.getName()+" contains at least two definitions of the class "+node.getName()+".\n";
+                txt += "The source " + nodeSource.getName() + " contains at least two definitions of the class " + node.getName() + ".\n";
                 if (node.isScriptBody() || stored.isScriptBody()) {
                     txt += "One of the classes is an explicit generated class using the class statement, the other is a class generated from" +
-                           " the script body based on the file name. Solutions are to change the file name or to change the class name.\n";
+                            " the script body based on the file name. Solutions are to change the file name or to change the class name.\n";
                 }
             } else {
                 txt += "The sources " + nodeSource.getName() + " and " + storedSource.getName() + " each contain a class with the name " + node.getName() + ".\n";
@@ -152,33 +152,36 @@ public class CompileUnit {
             );
         }
         classes.put(name, node);
-        
+        // GRECLIPSE add
+        sortedClasses = null;
+        // GRECLIPSE end
+
         if (classesToCompile.containsKey(name)) {
             ClassNode cn = classesToCompile.get(name);
             cn.setRedirect(node);
             classesToCompile.remove(name);
-        }        
+        }
     }
-     
+
     /**
      * this method actually does not compile a class. It's only
      * a marker that this type has to be compiled by the CompilationUnit
      * at the end of a parse step no node should be be left.
      */
     public void addClassNodeToCompile(ClassNode node, SourceUnit location) {
-        classesToCompile.put(node.getName(),node);
-        classNameToSource.put(node.getName(),location);
+        classesToCompile.put(node.getName(), node);
+        classNameToSource.put(node.getName(), location);
     }
-    
+
     public SourceUnit getScriptSourceLocation(String className) {
         return classNameToSource.get(className);
     }
 
-    public boolean hasClassNodeToCompile(){
+    public boolean hasClassNodeToCompile() {
         return !classesToCompile.isEmpty();
     }
-    
-    public Iterator<String> iterateClassNodeToCompile(){
+
+    public Iterator<String> iterateClassNodeToCompile() {
         return classesToCompile.keySet().iterator();
     }
 
@@ -193,14 +196,4 @@ public class CompileUnit {
     public Map<String, InnerClassNode> getGeneratedInnerClasses() {
         return Collections.unmodifiableMap(generatedInnerClasses);
     }
-    // GRECLIPSE: start: access sorted list
-	public List<ModuleNode> getSortedModules() {
-		return this.sortedModules;
-	}
-
-	public void setSortedModules(List<ModuleNode> sortedModules) {
-		this.sortedModules = sortedModules;
-	}
-	// end
-
 }

@@ -121,7 +121,7 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-        // GRECLIPSE added 3 trailing params
+        // GRECLIPSE added final three params
         this(configuration, security, loader, null, true, null, null);
     }
 
@@ -138,16 +138,12 @@ public class CompilationUnit extends ProcessingUnit {
      * @param security        - security setting for the compilation
      * @param configuration   - compilation configuration
      */
-    // GRECLIPSE added 3 trailing params
+    // GRECLIPSE added final three params
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
                            GroovyClassLoader loader, GroovyClassLoader transformLoader,
                            boolean allowTransforms, String localTransformsToRunOnReconcile, String excludeGlobalASTScan) {
         super(configuration, loader, null);
 
-        // GRECLIPSE add
-        this.allowTransforms = allowTransforms;
-        this.excludeGlobalASTScan = excludeGlobalASTScan;
-        // GRECLIPSE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
@@ -164,12 +160,14 @@ public class CompilationUnit extends ProcessingUnit {
         this.staticImportVisitor = new StaticImportVisitor();
         this.optimizer = new OptimizerVisitor(this);
         // GRECLIPSE add
+        this.allowTransforms = allowTransforms;
+        this.excludeGlobalASTScan = excludeGlobalASTScan;
+        this.localTransformsToRunOnReconcile = new ArrayList<>();
         if (localTransformsToRunOnReconcile == null) {
-            this.localTransformsToRunOnReconcile = new ArrayList<>();
             this.localTransformsToRunOnReconcile.add("*");
         } else {
-            this.localTransformsToRunOnReconcile = new ArrayList<>();
-            this.localTransformsToRunOnReconcile.addAll(Arrays.asList(localTransformsToRunOnReconcile.split(",")));
+            String[] tokens = localTransformsToRunOnReconcile.split(",");
+            Collections.addAll(this.localTransformsToRunOnReconcile, tokens);
         }
         // GRECLIPSE end
 
@@ -220,7 +218,7 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.CANONICALIZATION);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-        // GRECLIPSE skip output phase
+        // GRECLIPSE edit -- skip output phase
         //addPhaseOperation(output);
 
         addPhaseOperation(new PrimaryClassNodeOperation() {
@@ -280,17 +278,6 @@ public class CompilationUnit extends ProcessingUnit {
         this.classgenCallback = null;
         this.classNodeResolver = new ClassNodeResolver();
     }
-
-    // GRECLIPSE add
-    public void ensureASTTransformVisitorAdded() {
-        ASTTransformationVisitor.addPhaseOperations(this);
-    }
-
-    // can be called to prevent classfile output (so only use if something else is taking charge of output)
-    public boolean removeOutputPhaseOperation() {
-        return phaseOperations[Phases.OUTPUT].remove(output);
-    }
-    // GRECLIPSE end
 
     /**
      * Returns the class loader for loading AST transformations.
@@ -477,11 +464,6 @@ public class CompilationUnit extends ProcessingUnit {
         for (SourceUnit su : queuedSources) {
             if (name.equals(su.getName())) return su;
         }
-        // GRECLIPSE add
-        if (iterating) {
-            throw new GroovyBugError("Queuing new source whilst already iterating.  Queued source is '" + source.getName() + "'");
-        }
-        // GRECLIPSE end
         queuedSources.add(source);
         return source;
     }
@@ -492,6 +474,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public Iterator<SourceUnit> iterator() {
         return new Iterator<SourceUnit>() {
+            // GRECLIPSE: Should this use an index instead of names.iterator() to prevent/reduce ConMod exceptions?
             Iterator<String> nameIterator = names.iterator();
 
             public boolean hasNext() {
@@ -570,23 +553,6 @@ public class CompilationUnit extends ProcessingUnit {
     public ProgressCallback getProgressCallback() {
         return progressCallback;
     }
-
-    // GRECLIPSE add
-    public interface ProgressListener {
-        void parseComplete(int phase, String sourceUnitName);
-        void generateComplete(int phase, ClassNode classNode);
-    }
-
-    private ProgressListener listener;
-
-    public ProgressListener getProgressListener() {
-        return this.listener;
-    }
-
-    public void setProgressListener(ProgressListener listener) {
-        this.listener = listener;
-    }
-    // GRECLIPSE end
 
     //---------------------------------------------------------------------------
     // ACTIONS
@@ -702,11 +668,6 @@ public class CompilationUnit extends ProcessingUnit {
         while (!queuedSources.isEmpty()) {
             SourceUnit su = queuedSources.removeFirst();
             String name = su.getName();
-            // GRECLIPSE add
-            if (iterating) {
-                throw new GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '" + su.getName() + "'");
-            }
-            // GRECLIPSE end
             names.add(name);
             sources.put(name, su);
         }
@@ -881,12 +842,11 @@ public class CompilationUnit extends ProcessingUnit {
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
             AsmClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
 
-            // GRECLIPSE add
-            // if there are errors, don't generate code.
-            // code gen can fail unexpectedly if there was an earlier error.
-            // source can be null for class nodes created by StaticTypeCheckingSupport
-            if (source == null || !source.getErrorCollector().hasErrors()) {
+            // GRECLIPSE add -- if there are errors, don't generate code
+            // code gen can fail unexpectedly if there was an earlier error
+            if (source != null && source.getErrorCollector().hasErrors()) return;
             // GRECLIPSE end
+
             //
             // Run the generation and create the class (if required)
             //
@@ -910,9 +870,6 @@ public class CompilationUnit extends ProcessingUnit {
             while (!innerClasses.isEmpty()) {
                 classgen.call(source, context, (ClassNode) innerClasses.removeFirst());
             }
-            // GRECLIPSE add
-            }
-            // GRECLIPSE end
         }
     };
 
@@ -1001,21 +958,17 @@ public class CompilationUnit extends ProcessingUnit {
         public abstract void call(SourceUnit source) throws CompilationFailedException;
     }
 
-    // GRECLIPSE add
-    private boolean iterating;
-    // GRECLIPSE end
-
     /**
      * A loop driver for applying operations to all SourceUnits.
      * Automatically skips units that have already been processed
      * through the current phase.
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
-        // GRECLIPSE add
-        try {
-        iterating = true;
+        // GRECLIPSE edit -- prevent concurrent modification exceptions
+        //for (String name : names) {
+        for (int i = 0; i < names.size(); i += 1) {
+            String name = names.get(i);
         // GRECLIPSE end
-        for (String name : names) {
             SourceUnit source = sources.get(name);
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {
@@ -1037,11 +990,6 @@ public class CompilationUnit extends ProcessingUnit {
                 }
             }
         }
-        // GRECLIPSE add
-        } finally {
-            iterating = false;
-        }
-        // GRECLIPSE end
 
         getErrorCollector().failIfErrors();
     }
@@ -1266,31 +1214,46 @@ public class CompilationUnit extends ProcessingUnit {
         this.classNodeResolver = classNodeResolver;
     }
 
-    // GRECLIPSE add
-    public void setResolveVisitor(ResolveVisitor resolveVisitor) {
-        this.resolveVisitor = resolveVisitor;
+  // GRECLIPSE add
+    public interface ProgressListener {
+        void parseComplete(int phase, String sourceUnitName);
+        void generateComplete(int phase, ClassNode classNode);
+    }
+
+    public ProgressListener getProgressListener() {
+        return this.listener;
+    }
+
+    public void setProgressListener(ProgressListener listener) {
+        this.listener = listener;
     }
 
     public ResolveVisitor getResolveVisitor() {
         return this.resolveVisitor;
     }
 
+    public void setResolveVisitor(ResolveVisitor resolveVisitor) {
+        this.resolveVisitor = resolveVisitor;
+    }
+
+    public void ensureASTTransformVisitorAdded() {
+        ASTTransformationVisitor.addPhaseOperations(this);
+    }
+
+    // can be called to prevent classfile output (so only use if something else is taking charge of output)
+    public boolean removeOutputPhaseOperation() {
+        return phaseOperations[Phases.OUTPUT].remove(output);
+    }
+
     public String toString() {
-        if (sources == null || sources.isEmpty()) return super.toString();
+        if (sources == null || sources.isEmpty())
+            return super.toString();
+        // TODO: Why is this loop here?
         for (String s : sources.keySet()) {
             return "CompilationUnit: source is " + s;
         }
         return "CompilationUnit: null";
     }
-
-    /**
-     * Path to a directory that should be ignored when searching for manifest files
-     * that define global AST transforms. See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
-     */
-    public String excludeGlobalASTScan;
-    public boolean allowTransforms = true;
-    public boolean isReconcile;
-    public List<String> localTransformsToRunOnReconcile;
 
     /**
      * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
@@ -1303,11 +1266,23 @@ public class CompilationUnit extends ProcessingUnit {
         // be correctly visited by the verifier and have certain optimizations performed (creating returns)
         if (isReconcile) {
             verifier.inlineStaticFieldInitializersIntoClinit = false;
+            //verifier.inlineFieldInitializersIntoInit = false;
             staticImportVisitor.isReconcile = true;
         } else {
             verifier.inlineStaticFieldInitializersIntoClinit = true;
+            //verifier.inlineFieldInitializersIntoInit = true;
         }
         this.isReconcile = isReconcile;
     }
-    // GRECLIPSE end
+
+    /**
+     * Path to a directory that should be ignored when searching for manifest files that define global AST transforms.
+     * See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
+     */
+    public String excludeGlobalASTScan;
+    public boolean allowTransforms = true;
+    public boolean isReconcile = false;
+    private ProgressListener listener;
+    public List<String> localTransformsToRunOnReconcile;
+  // GRECLIPSE end
 }
