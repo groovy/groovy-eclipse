@@ -76,8 +76,10 @@ import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -151,7 +153,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     public static boolean earlyTransforms = true;
     static {
         try {
-            String value = System.getProperty("	earlyTransforms");
+            String value = System.getProperty("earlyTransforms");
             if (value != null) {
                 if (value.equalsIgnoreCase("true")) {
                     log("groovyeclipse.earlyTransforms = true");
@@ -204,7 +206,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
             }
         }
-        // GRECLIPSE end
+        // GRECLIPSE-1776 end
         boolean alreadyHasProblems = compilationResult.hasProblems();
         // Our replacement error collector doesn't cause an exception, instead they are checked for post 'compile'
         try {
@@ -233,38 +235,31 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 problems.printStackTrace();
                 recordProblems(problems.getErrorCollector().getErrors());
             }
-        } catch (GroovyBugError gbr) {
-            // FIXASC (M3) really, the GBE should not be thrown in the first place
-            // we shouldn't need to silently fail here.
+        } catch (GroovyBugError gbe) {
             if (alreadyHasProblems) {
-                // do not log the error because it is likely to have
-                // occurred because of the existing problem
-                System.err.println("Ignoring GroovyBugError since it is likely caused by earlier issues.  Ignored problem is '" + gbr.getMessage() + "'");
+                Util.log(new Status(IStatus.INFO, Activator.PLUGIN_ID,
+                    "Ignoring GroovyBugError since it is likely caused by earlier issues", gbe));
             } else {
-                boolean reportit = true;
-                if (gbr.getCause() instanceof AbortCompilation) {
-                    // might be nothing to log - AbortCompilations can occur 'normally' during processing
-                    // when jobs are stopped due to any results they produce being stale.
-                    AbortCompilation abort = (AbortCompilation) gbr.getCause();
-                    if (abort.isSilent) {
-                        reportit = false;
-                    }
+                boolean reportIt = true;
+                if (gbe.getCause() instanceof AbortCompilation) {
+                    // might be nothing to log -- AbortCompilations can occur 'normally'
+                    // when jobs are stopped due to any results they produce being stale
+                    if (((AbortCompilation) gbe.getCause()).isSilent) reportIt = false;
                 }
-                if (reportit) {
-                    System.err.println("Internal Groovy Error --- " + gbr.getBugText());
-                    gbr.printStackTrace();
+                if (reportIt) {
                     // The groovy compiler threw an exception
                     // FIXASC (M3) Should record these errors as a problem on the project
                     // should *not* throw these because of bad syntax in the file
-                    Util.log(gbr, "Internal groovy compiler error.");
+                    Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", gbe));
 
                     // Also need to record these problems as compiler errors since some users will not think to check the log
                     // This is mostly a fix for problems like those in GRECLIPSE-1420, where a GBError is thrown when it is really
                     // just a syntax problem.
-                    groovySourceUnit.getErrorCollector().addError(new SyntaxErrorMessage(
-                            new SyntaxException("Internal groovy compiler error.\n" + gbr.getBugText(), gbr, 1, 0),
-                            groovySourceUnit));
-                    recordProblems(groovySourceUnit.getErrorCollector().getErrors());
+                    SyntaxErrorMessage syntaxError = new SyntaxErrorMessage(new SyntaxException("Groovy compiler error: " + gbe.getBugText(), gbe, 1, 0), groovySourceUnit);
+                    ErrorCollector errorCollector = groovySourceUnit.getErrorCollector();
+                    errorCollector.addError(syntaxError);
+
+                    recordProblems(errorCollector.getErrors());
                 }
             }
         }
@@ -682,8 +677,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             if (DEBUG_TASK_TAGS) {
                                 log("Adding task " + taskEntry.toString());
                             }
-                            problemReporter.task(taskEntry.taskTag, taskEntry.getText(), taskEntry.taskPriority, taskEntry.start,
-                                    taskEntry.getEnd());
+                            problemReporter.task(taskEntry.taskTag, taskEntry.getText(), taskEntry.taskPriority, taskEntry.start, taskEntry.getEnd());
                         }
                     }
                 }

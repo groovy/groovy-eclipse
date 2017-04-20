@@ -95,12 +95,15 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
@@ -126,7 +129,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    static class Tuple {
+    private static class Tuple {
         ClassNode declaringType;
         ASTNode declaration;
 
@@ -134,6 +137,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             this.declaringType = declaringType;
             this.declaration = declaration;
         }
+    }
+
+    private static void log(Throwable t, String form, Object... args) {
+        String m = "Groovy-Eclipse Type Inferencing: " + String.format(form, args);
+        Status s = new Status(IStatus.ERROR, Activator.PLUGIN_ID, m, t);
+        Util.log(s);
     }
 
     /**
@@ -338,20 +347,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
             visitImports((ModuleNode) enclosingDeclarationNode);
-            try {
-                for (IType type : unit.getTypes()) {
-                    visitJDT(type, requestor);
-                }
-            } catch (JavaModelException e) {
-                Util.log(e, "Error getting types for " + unit.getElementName());
+            for (IType type : unit.getTypes()) {
+                visitJDT(type, requestor);
             }
-
             scopes.removeLast();
 
         } catch (VisitCompleted vc) {
             // can ignore
         } catch (Exception e) {
-            Util.log(e, "Error in inferencing engine for " + unit.getElementName());
+            log(e, "Error visiting types for %s", unit.getElementName());
             if (DEBUG) {
                 System.err.println("Excpetion thrown from inferencing engine");
                 e.printStackTrace();
@@ -436,9 +440,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
 
             } catch (JavaModelException e) {
-                Util.log(e, "Error visiting children of " + type.getFullyQualifiedName());
+                log(e, "Error visiting children of %s", type.getFullyQualifiedName());
             }
-
         } catch (VisitCompleted vc) {
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
@@ -522,10 +525,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
             }
-        } catch (JavaModelException e) {
-            Util.log(e, "Exception visiting method " + method.getElementName() + " in class " + method.getParent().getElementName());
         } catch (Exception e) {
-            Util.log(e);
+            log(e, "Error visiting method %s in class %s", method.getElementName(), method.getParent().getElementName());
         } finally {
             enclosingElement = oldEnclosing;
             enclosingDeclarationNode = oldEnclosingNode;
@@ -1945,7 +1946,7 @@ assert primaryExprType != null && dependentExprType != null;
                 return methods.get(0);
             }
         } catch (JavaModelException e) {
-            Util.log(e, "Exception finding method " + method.getElementName() + " in class " + clazz.getName());
+            log(e, "Error finding method %s in class %s", method.getElementName(), clazz.getName());
         }
         // probably happened due to a syntax error in the code or an AST transformation
         return null;

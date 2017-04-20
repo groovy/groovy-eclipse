@@ -260,8 +260,6 @@ abstract class QuickFixHarness extends QuickFixTestCase {
             return null
         }
 
-        EclipseTestSetup.waitForIndex()
-
         for (resolver in resolvers) {
             if (resolver instanceof AddMissingGroovyImportsResolver) {
                 AddMissingGroovyImportsResolver importResolver = (AddMissingGroovyImportsResolver) resolver
@@ -311,6 +309,7 @@ abstract class QuickFixHarness extends QuickFixTestCase {
 
     protected IMarker[] getCompilationUnitJDTFailureMarkers(ICompilationUnit unit) throws Exception {
         EclipseTestSetup.buildProject()
+        EclipseTestSetup.waitForIndex()
         return unit.getResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
     }
 }
