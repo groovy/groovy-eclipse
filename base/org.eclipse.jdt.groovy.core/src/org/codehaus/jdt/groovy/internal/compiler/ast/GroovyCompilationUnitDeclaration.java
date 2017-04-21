@@ -17,6 +17,7 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1645,21 +1646,28 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     return new FalseLiteral(start, until);
                 }
             } else if (type.equals("int") || type.equals("java.lang.Integer")) {
-                char[] chars = value.toString().toCharArray();
+                // TODO: Should return a unary minus expression for negative values...
+                char[] chars = String.valueOf(Math.abs((Integer) value)).toCharArray();
                 return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            } else if (type.equals("long") || type.equals("java.lang.Long") || type.equals("java.math.BigInteger")) {
-                char[] chars = (value.toString() + 'L').toCharArray();
+            } else if (type.equals("long") || type.equals("java.lang.Long")) {
+                char[] chars = (String.valueOf(Math.abs((Long) value)) + 'L').toCharArray();
                 return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
-            } else if (type.equals("double") || type.equals("java.lang.Double") || type.equals("java.math.BigDecimal")) {
+            } else if (type.equals("double") || type.equals("java.lang.Double")) {
                 return new DoubleLiteral(value.toString().toCharArray(), start, until);
             } else if (type.equals("float") || type.equals("java.lang.Float")) {
                 return new FloatLiteral(value.toString().toCharArray(), start, until);
-            } else if (type.equals("byte") || type.equals("java.lang.Byte") ||
+            }/* else if (type.equals("byte") || type.equals("java.lang.Byte") ||
                         type.equals("short") || type.equals("java.lang.Short")) {
                 char[] chars = value.toString().toCharArray();
                 return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            } else if (type.equals("char") || type.equals("java.lang.Character")) {
+            }*/ else if (type.equals("char") || type.equals("java.lang.Character")) {
                 return new CharLiteral(value.toString().toCharArray(), start, until);
+            } else if (type.equals("java.math.BigDecimal")) {
+                return new DoubleLiteral(value.toString().toCharArray(), start, until);
+            } else if (type.equals("java.math.BigInteger")) {
+                long thing = ((BigInteger) value).abs().longValue();
+                char[] chars = (String.valueOf(thing) + 'L').toCharArray();
+                return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
             } else {
                 Util.log(IStatus.WARNING, "Unhandled annotation constant type: " + expr.getType().getName());
                 return null;
