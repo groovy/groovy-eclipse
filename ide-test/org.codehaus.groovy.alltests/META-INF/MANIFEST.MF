@@ -14,7 +14,4 @@ Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.quickfix.test.templates,
  org.codehaus.groovy.eclipse.refactoring.test
 Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2",
- org.eclipse.ui.editors,
- org.eclipse.ui.forms,
- org.eclipse.ui
+ org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"

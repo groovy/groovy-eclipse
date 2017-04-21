@@ -29,6 +29,7 @@ abstract class JUnitTestCase {
     @BeforeClass
     static final void setUpTestSuite() {
         new EclipseTestSetup(null).setUp()
+        EclipseTestSetup.addJUnit4()
     }
 
     @AfterClass
@@ -43,8 +44,6 @@ abstract class JUnitTestCase {
     final void setUpTestCase() {
         println '----------------------------------------'
         println 'Starting: ' + test.getMethodName()
-
-        EclipseTestSetup.addJUnit4()
     }
 
     @After

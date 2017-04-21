@@ -5,9 +5,5 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.codeassist.completion.test;sing
 Bundle-Name: Groovy Content Assist Tests
 Bundle-Version: 2.9.2.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codeassist.tests
-Import-Package: org.eclipse.ui,
- org.eclipse.ui.ide,
- org.eclipse.ui.internal,
- org.eclipse.ui.texteditor
 Require-Bundle: org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"

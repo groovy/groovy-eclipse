@@ -6,8 +6,6 @@ Bundle-Name: Groovy Refactoring Tests
 Bundle-Version: 2.9.2.qualifier
 Export-Package: org.codehaus.groovy.eclipse.refactoring.test,
  org.codehaus.groovy.eclipse.refactoring.test.extract
-Import-Package: org.eclipse.ui.plugin,
- org.eclipse.ui.preferences
 Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.refactoring;bundle-version="2.9.2",
