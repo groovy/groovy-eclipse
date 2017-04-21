@@ -28,7 +28,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyPropertyProposal;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
-
 /**
  * This class defines relative relevance classes of proposals.
  *
@@ -40,9 +39,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * changes to the relevancy deep inside the Completion computer. By making the
  * differences between the gradations so large, we ensure that these small
  * changes have no effect on the final outcome.
- *
- * @author andrew
- * @created Aug 10, 2010
  */
 public enum Relevance {
     /**
@@ -108,49 +104,27 @@ public enum Relevance {
     }
 
     public static Relevance findRelevanceClass(AbstractGroovyProposal groovyProposal) {
-        // dispatch on the kind of groovyProposal
-
         if (groovyProposal instanceof GroovyFieldProposal || groovyProposal instanceof GroovyPropertyProposal) {
             AnnotatedNode node = groovyProposal.getAssociatedNode();
-            if (node instanceof FieldNode
-                    && IGNORED_FIELD_NAMES.contains(((FieldNode) node)
-                            .getName())) {
+            if (node instanceof FieldNode && IGNORED_FIELD_NAMES.contains(((FieldNode) node).getName())) {
                 return VERY_LOW;
-            } else {
-                return MEDIUM_HIGH;
             }
+            return MEDIUM_HIGH;
         } else if (groovyProposal instanceof GroovyCategoryMethodProposal) {
             AnnotatedNode node = groovyProposal.getAssociatedNode();
-            if (!(node instanceof MethodNode)) {
-                return MEDIUM_HIGH;
-            }
-
-            MethodNode method = (MethodNode) node;
-            if (VariableScope.ALL_DEFAULT_CATEGORIES.contains(method.getDeclaringClass())) {
+            if (node instanceof MethodNode && VariableScope.ALL_DEFAULT_CATEGORIES.contains(((MethodNode) node).getDeclaringClass())) {
                 return VERY_LOW;
-            } else {
-                // should be higher relevance than regular methods
+            } else { // should be higher relevance than regular methods
                 return MEDIUM_HIGH;
             }
         } else if (groovyProposal instanceof GroovyMethodProposal) {
             AnnotatedNode node = groovyProposal.getAssociatedNode();
-            if (!(node instanceof MethodNode)) {
-                return MEDIUM;
-            }
-
-            MethodNode method = (MethodNode) node;
-            if (node instanceof MethodNode
-                    && IGNORED_METHOD_NAMES.contains(method.getName())
-                    || VariableScope.OBJECT_CLASS_NODE.equals(method
-                            .getDeclaringClass())) {
+            if (node instanceof MethodNode && IGNORED_METHOD_NAMES.contains(((MethodNode) node).getName()) ||
+                    VariableScope.OBJECT_CLASS_NODE.equals(((MethodNode) node).getDeclaringClass())) {
                 return VERY_LOW;
-            } else {
-                return MEDIUM;
             }
-        } else {
-            // don't really know
-            return MEDIUM;
         }
+        return MEDIUM;
     }
 
     // these are fields that we don't really want to see

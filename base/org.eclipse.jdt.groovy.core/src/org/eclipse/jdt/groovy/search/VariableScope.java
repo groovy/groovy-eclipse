@@ -228,9 +228,9 @@ public class VariableScope {
                             List<AnnotationNode> annotations = p.getAnnotations();
                             if (annotations != null) {
                                 for (AnnotationNode annotation : annotations) {
-                                    if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) && args.size() > i
-                                            && args.get(i) instanceof ClosureExpression
-                                            && annotation.getMember("value") instanceof ClassExpression) {
+                                    if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) &&
+                                            args.size() > i && args.get(i) instanceof ClosureExpression &&
+                                            annotation.getMember("value") instanceof ClassExpression) {
                                         delegatesToClosures = new HashMap<ClosureExpression, ClassNode>(3);
                                         delegatesToClosures.put((ClosureExpression) args.get(i), annotation.getMember("value").getType());
                                     }

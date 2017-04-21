@@ -40,10 +40,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
- * Uses the current set of DSLs for this project to look up types
- *
- * @author andrew
- * @created Nov 17, 2010
+ * Uses the current set of DSLDs for this project to look up types.
  */
 public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITypeLookup, ITypeResolver {
 
@@ -67,7 +64,6 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
             // run referesh dependencies synchronously if DSLD store doesn't exist yet
             contextStoreManager.ensureInitialized(unit.getJavaProject().getProject(), true);
         }
-
         disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
             pattern = new GroovyDSLDContext(unit, module, resolver);
@@ -111,15 +107,13 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         // no need to return anything.  setDelegateType is called and evaluated implicitly
     }
 
-
     @Override
     protected TypeConfidence confidence() {
         return TypeConfidence.INFERRED;
     }
 
-
     /*
-     * Checks explicitly if the confidence decision should be made later
+     * Checks explicitly if the confidence decision should be made later.
      */
     @Override
     protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration, String extraDoc) {

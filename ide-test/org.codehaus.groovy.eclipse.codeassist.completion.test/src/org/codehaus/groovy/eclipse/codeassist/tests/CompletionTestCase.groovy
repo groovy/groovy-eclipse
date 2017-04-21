@@ -373,7 +373,7 @@ abstract class CompletionTestCase {
             if (i == 0) {
                 message = String.format("Proposal '%s' should have been found in: ", order[i])
             } else {
-                message = String.format("Proposal '%s' should have followed proposal '%s' in: ", order[i - 1], order[i])
+                message = String.format("Proposal '%s' should have preceded proposal '%s' in: ", order[i - 1], order[i])
             }
             assertTrue(message + printProposals(proposals), next > prev)
 

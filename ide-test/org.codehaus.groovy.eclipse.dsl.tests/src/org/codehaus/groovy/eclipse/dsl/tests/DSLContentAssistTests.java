@@ -24,6 +24,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 public final class DSLContentAssistTests extends CompletionTestCase {
 
@@ -75,18 +76,21 @@ public final class DSLContentAssistTests extends CompletionTestCase {
 
     //
 
+    @Test
     public void testDSLProposalFirstStaticField() throws Exception {
         String contents = "@Singleton class Foo { static aaa }\n Foo.";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ".")));
-        assertProposalOrdering(proposals, "getInstance", "aaa");
+        assertProposalOrdering(proposals, "instance", "aaa");
     }
 
+    @Test
     public void testDSLProposalFirstStaticMethod() throws Exception {
         String contents = "@Singleton class Foo { static aaa() { } }\n Foo.";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ".")));
         assertProposalOrdering(proposals, "getInstance", "aaa");
     }
 
+    @Test
     public void testDSLProposalFirstMethod1() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "  new SwingBuilder().edt {\n" +
@@ -96,6 +100,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         assertProposalOrdering(proposals, "frame", "registerBinding");
     }
 
+    @Test
     public void testDSLProposalFirstMethod2() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "  new SwingBuilder().edt {\n" +
@@ -105,7 +110,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         assertProposalOrdering(proposals, "frame", "registerBinding");
     }
 
-    // proposals should not exist since not applied to 'this'
+    @Test // proposals should not exist since not applied to 'this'
     public void testDSLProposalFirstMethod3() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "  new SwingBuilder().edt {\n" +
@@ -116,7 +121,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "registerBinding", 0);
     }
 
-    // GRECLIPSE-1324
+    @Test // GRECLIPSE-1324
     public void testEmptyClosure1() throws Exception {
         createDsls(SET_DELEGATE_ON_INT);
         String contents = "1.foo {\n" +
@@ -134,7 +139,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "digits", 0);
     }
 
-    // GRECLIPSE-1324
+    @Test // GRECLIPSE-1324
     public void testEmptyClosure2() throws Exception {
         createDsls(SET_DELEGATE_ON_INT);
         String contents = "1.foo {\n" +
@@ -147,6 +152,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "toHexString()", 0);
     }
 
+    @Test
     public void testCommandChain1() throws Exception {
         createDsls(COMMAND_CHAIN_NO_ARGS);
         String contents =
@@ -161,6 +167,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         applyProposalAndCheck(doc, proposal, contents.replace("val.fla", "val.flart"));
     }
 
+    @Test
     public void testCommandChain2() throws Exception {
         createDsls(COMMAND_CHAIN_NO_ARGS);
         String contents =
@@ -175,6 +182,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart"));
     }
 
+    @Test
     public void testCommandChain3() throws Exception {
         createDsls(COMMAND_CHAIN_NO_ARGS);
         String contents =
@@ -189,6 +197,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart"));
     }
 
+    @Test
     public void testCommandChain4() throws Exception {
         createDsls(COMMAND_CHAIN_ONE_ARG);
         String contents =
@@ -203,6 +212,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0 "));
     }
 
+    @Test
     public void testCommandChain5() throws Exception {
         createDsls(COMMAND_CHAIN_TWO_ARGS);
         String contents =
@@ -217,6 +227,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0, \"\" "));
     }
 
+    @Test
     public void testDelegatesToNoParens1() throws Exception {
         createDsls(NO_PARENS_FOR_DELEGATE);
         String contents =
@@ -234,6 +245,7 @@ public final class DSLContentAssistTests extends CompletionTestCase {
         applyProposalAndCheck(doc, proposal, contents.replace("val.bl", "val.blart val, val, val "));
     }
 
+    @Test
     public void testDelegatesToNoParens2() throws Exception {
         createDsls(NO_PARENS_FOR_DELEGATE);
         String contents =

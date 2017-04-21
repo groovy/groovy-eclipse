@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.test.EclipseTestSetup;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.junit.Before;
+import org.junit.Test;
 
 public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
 
@@ -44,6 +45,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
 
     //
 
+    @Test
     public void testNamedArgs1() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -56,6 +58,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNoNamedArgs1() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false\n" +
@@ -68,6 +71,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNamedArgs2() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -80,6 +84,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNamedArgs3() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -92,6 +97,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNamedArgs4() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -104,6 +110,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNamedArgs5() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -116,6 +123,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNoNamedArgs6() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false\n" +
@@ -128,7 +136,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
-
+    @Test
     public void testOptionalArgs1() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", optionalParams:[aaa:Integer, bbb:Boolean, ccc:String]\n" +
@@ -141,6 +149,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testOptionalArgs2() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", namedParams:[aaa:Integer, bbb:Boolean, ccc:String]\n" +
@@ -153,6 +162,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testOptionalArgs3() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", namedParams:[aaa:Integer], optionalParams: [bbb:Boolean, ccc:String]\n" +
@@ -165,6 +175,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNamedArgs7() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -178,6 +189,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
+    @Test
     public void testNamedArgs8() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -191,7 +203,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
 
-
+    @Test
     public void testParamGuessing1() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -205,6 +217,7 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         checkProposalChoices(contents, "flar(", "aaa", "aaa: __, ", expectedChoices);
     }
 
+    @Test
     public void testParamGuessing3() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -219,7 +232,6 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "iii", "yyy", "0" };
         checkProposalChoices(contents, "flar(", "aaa", "aaa: __, ", expectedChoices);
     }
-
 
     // tests application of closures with and without named parameters
     private static final String closuredsld =
@@ -236,42 +248,52 @@ public final class DSLNamedArgContentAssistTests extends CompletionTestCase {
             "    method name: 'test0', namedParams : [first: String], params: [other:String, op:Closure, other2:String, op2:Closure]\n" +
             "}";
     private static final String closureContents = "class Clos { }\nnew Clos().test";
+    @Test
     public void testClostureOp1() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents +"1 {", closureContents.length(), "test1");
     }
+    @Test
     public void testClostureOp2() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "2(\"\") {", closureContents.length(), "test2");
     }
+    @Test
     public void testClostureOp3() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "3(op:{  })", closureContents.length(), "test3");
     }
+    @Test
     public void testClostureOp4() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "4(first:\"\", op:{  })", closureContents.length(), "test4");
     }
+    @Test
     public void testClostureOp5() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "5(\"\", op:{  })", closureContents.length(), "test5");
     }
+    @Test
     public void testClostureOp6() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "6(first:\"\") {", closureContents.length(), "test6");
     }
+    @Test
     public void testClostureOp7() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "7(first:\"\", other:\"\") {", closureContents.length(), "test7");
     }
+    @Test
     public void testClostureOp8() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "8(\"\", first:\"\") {", closureContents.length(), "test8");
     }
+    @Test
     public void testClostureOp9() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "9(\"\", {  }, \"\", first:\"\")", closureContents.length(), "test9");
     }
+    @Test
     public void testClostureOp0() throws Exception {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "0(\"\", {  }, \"\", first:\"\") {", closureContents.length(), "test0");
