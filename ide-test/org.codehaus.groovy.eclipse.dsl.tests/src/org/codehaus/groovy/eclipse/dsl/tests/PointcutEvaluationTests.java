@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -33,6 +30,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.eclipse.dsl.tests.internal.PointcutScriptExecutor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.CoreException;
@@ -42,15 +40,10 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 
+public final class PointcutEvaluationTests extends AbstractGroovySearchTest {
 
-/**
- * @author Andrew Eisenberg
- * @created Feb 11, 2011
- */
-public class PointcutEvaluationTests extends AbstractGroovySearchTest {
-
-    public static Test suite() {
-        return new TestSuite(PointcutEvaluationTests.class);
+    public static junit.framework.Test suite() {
+        return new junit.framework.TestSuite(PointcutEvaluationTests.class);
     }
 
     class PointcutEvaluationRequestor implements ITypeRequestor {

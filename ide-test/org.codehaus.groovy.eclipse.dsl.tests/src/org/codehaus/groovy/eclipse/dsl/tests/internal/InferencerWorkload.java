@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.dsl.tests;
+package org.codehaus.groovy.eclipse.dsl.tests.internal;
 
 import static org.junit.Assert.assertTrue;
 
@@ -34,9 +34,6 @@ import org.junit.Assert;
 /**
  * Represents a test workload for the inferencer consisting of a number of inferencing tasks to be executed
  * all against the same compilation unit contents.
- *
- * @author Kris De Volder
- * @author Andrew Eisenberg
  */
 public class InferencerWorkload implements Iterable<InferencerWorkload.InferencerTask> {
 
@@ -60,15 +57,12 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
        DEFAULT_ALIASES.put("LIST", "java.util.List");
        DEFAULT_ALIASES.put("MAP", "java.util.Map");
        DEFAULT_ALIASES.put("O", "java.lang.Object");
-
     }
 
     /**
      * Represents a single inferencing 'task' in a workload. Contains information
      * about the location we want to inference the type for and the expected result
      * for that location.
-     *
-     * @author Kris De Volder
      */
     public class InferencerTask {
         public final int start;
@@ -104,11 +98,6 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
         this(extractContents(workloadDefinitionFile), extraAliases);
     }
 
-    /**
-     * @param workloadDefinitionFile
-     * @return
-     * @throws Exception
-     */
     private static String extractContents(File workloadDefinitionFile) throws Exception {
         Reader r = new FileReader(workloadDefinitionFile);
         BufferedReader br = new BufferedReader(r);
@@ -237,7 +226,6 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
      * Performs inferencing on the given compilation unit.
      * It is assumed that the contents of the compilation unit
      * matches the contents of this inferencer task
-     * @param unit
      */
     public void perform(GroovyCompilationUnit unit, boolean assumeNoUnknowns) throws Exception {
         boolean doneSomething = false;

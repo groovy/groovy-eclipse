@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.FinalPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PrivatePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.PublicPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.StaticPointcut;
+import org.codehaus.groovy.eclipse.dsl.tests.internal.PointcutScriptExecutor;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
@@ -40,16 +38,10 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractGroovySearchTest;
 
+public final class PointcutCreationTests extends AbstractGroovySearchTest {
 
-/**
- *
- * @author Andrew Eisenberg
- * @created Feb 11, 2011
- */
-public class PointcutCreationTests extends AbstractGroovySearchTest {
-
-    public static Test suite() {
-        return new TestSuite(PointcutCreationTests.class);
+    public static junit.framework.Test suite() {
+        return new junit.framework.TestSuite(PointcutCreationTests.class);
     }
 
     public PointcutCreationTests(String name) {

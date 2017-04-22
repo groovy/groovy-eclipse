@@ -31,7 +31,7 @@ public final class AllDSLTests {
             suite.addTest(MetaDSLInferencingTests.suite());
             suite.addTest(PointcutCreationTests.suite());
             suite.addTest(PointcutEvaluationTests.suite());
-            suite.addTestSuite(StringObjectVectorTests.class);
+            suite.addTest(new JUnit4TestAdapter(StringObjectVectorTests.class));
         }
         return suite;
     }

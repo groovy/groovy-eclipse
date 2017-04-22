@@ -5,9 +5,8 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.dsl.tests;singleton:=true
 Bundle-Name: Groovy DSL Tests
 Bundle-Version: 2.9.2.qualifier
 Export-Package: org.codehaus.groovy.eclipse.dsl.tests
-Require-Bundle: org.codehaus.groovy.eclipse.codeassist.completion.test;bundle-version="2.9.2",
+Require-Bundle: org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.9.2",
+ org.codehaus.groovy.eclipse.codeassist.completion.test;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.dsl;bundle-version="2.9.2"
-Bundle-Activator: org.codehaus.groovy.eclipse.dsl.tests.GroovyDSLDTestsActivator
-Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir

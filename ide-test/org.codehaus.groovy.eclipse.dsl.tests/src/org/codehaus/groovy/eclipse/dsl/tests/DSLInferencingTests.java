@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,56 +15,47 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import java.io.IOException;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.IPath;
 
 /**
- * Tests type inferencing that involve dsls
- *
- * @author Andrew Eisenberg
- * @created Feb 18, 2011
+ * Tests type inferencing that involve DSLs.
  */
-public class DSLInferencingTests extends AbstractDSLInferencingTest {
+public final class DSLInferencingTests extends DSLInferencingTestCase {
+
     private static final String SET_DELEGATE_TYPE_SCRIPT =
-            "public interface Obj {\n" +
-    "    String getFoo();\n" +
-    "    int FOO1 = 9;\n" +
-    "    int FOO2 = 9;\n" +
-    "    int OTHER = 9;\n" +
-    "    int BAR = 9;\n" +
-    "    int BAZ1 = 9;\n" +
-    "    int BAZ2 = 9;\n" +
-    "    int BAZ3 = 9;\n" +
-    " }\n" +
-    "\"\".l { delegate }\n" +
-    "\"\".l { this }\n" +
-    "\"\".l { getFoo() }\n" +
-    "\"\".l { FOO1 }\n" +
-    "\"\".l { delegate.FOO2 }\n" +
-    "\"\".l { ''.OTHER }\n" +
-    "\"\".l { delegate.l { BAR } }\n" +
-    "\"\".l { 1.BAZ1 }\n" +
-    "\"\".l { 1.l { BAZ2 } }\n" +
-    "\"\".l { this.BAZ3 }\n" +
-    "";
-    /**
-     *
-     */
-    private static final String SET_DELEGATE_TYPE_DSLD = "contribute(inClosure() & currentType(String)) {\n" +
-    "  setDelegateType 'Obj'\n" +
-    "}";
+        "public interface Obj {\n" +
+        "    String getFoo();\n" +
+        "    int FOO1 = 9;\n" +
+        "    int FOO2 = 9;\n" +
+        "    int OTHER = 9;\n" +
+        "    int BAR = 9;\n" +
+        "    int BAZ1 = 9;\n" +
+        "    int BAZ2 = 9;\n" +
+        "    int BAZ3 = 9;\n" +
+        " }\n" +
+        "\"\".l { delegate }\n" +
+        "\"\".l { this }\n" +
+        "\"\".l { getFoo() }\n" +
+        "\"\".l { FOO1 }\n" +
+        "\"\".l { delegate.FOO2 }\n" +
+        "\"\".l { ''.OTHER }\n" +
+        "\"\".l { delegate.l { BAR } }\n" +
+        "\"\".l { 1.BAZ1 }\n" +
+        "\"\".l { 1.l { BAZ2 } }\n" +
+        "\"\".l { this.BAZ3 }\n" +
+        "";
+    private static final String SET_DELEGATE_TYPE_DSLD =
+        "contribute(inClosure() & currentType(String)) {\n" +
+        "  setDelegateType 'Obj'\n" +
+        "}";
+
+    public static junit.framework.Test suite() {
+        return new junit.framework.TestSuite(DSLInferencingTests.class);
+    }
 
     public DSLInferencingTests(String name) {
         super(name);
-    }
-
-    public static Test suite() {
-        return new TestSuite(DSLInferencingTests.class);
     }
 
     @Override
@@ -72,6 +63,16 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         super.setUp();
         createDSL();
     }
+
+    private void createDSL() throws Exception {
+        defaultFileExtension = "dsld";
+        createUnit("SomeInterestingExamples", getTestResourceContents("SomeInterestingExamples.dsld"));
+        defaultFileExtension = "groovy";
+        env.fullBuild();
+        expectingNoProblems();
+    }
+
+    //
 
     public void testRegisteredPointcut1() throws Exception {
         String contents = "2.phat";
@@ -87,13 +88,12 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "java.lang.Integer");
     }
 
-
     public void testContiribution1() throws Exception {
         createDsls("contribute(currentType('Foo')) { delegatesTo 'Other' }");
         String contents =
-                "class Foo { }\n" +
-                        "class Other { Class<String> blar() { } }\n" +
-                        "new Foo().blar()";
+            "class Foo { }\n" +
+            "class Other { Class<String> blar() { } }\n" +
+            "new Foo().blar()";
         int start = contents.lastIndexOf("blar");
         int end = start + "blar".length();
         assertType(contents, start, end, "java.lang.Class<java.lang.String>", true);
@@ -240,38 +240,35 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testDeprecated2() throws Exception {
         createDsls("currentType('Foo').accept { method name: 'fooProp', type: 'Map< Integer, Long>', isDeprecated:true }");
         String contents =
-                "class Foo {\n" +
-                        "}\n" +
-                        "new Foo().fooProp";
+            "class Foo {\n" +
+            "}\n" +
+            "new Foo().fooProp";
         int start = contents.lastIndexOf("fooProp");
         int end = start + "fooProp".length();
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Long>", true);
         assertDeprecated(contents, start, end);
     }
 
-
     public void testAssertVersion1() throws Exception {
         createDsls("assertVersion(groovyEclipse:\"9.5.9\")\n" +
-                "contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+            "contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents =
-                "class Foo {\n" +
-                        "}\n" +
-                        "new Foo().fooProp";
+            "class Foo {\n" +
+            "}\n" +
+            "new Foo().fooProp";
         int start = contents.lastIndexOf("fooProp");
         int end = start + "fooProp".length();
         // script should not be executed
         assertUnknownConfidence(contents, start, end, "Foo", false);
-        //        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Long>", true);
-
     }
 
     public void testAssertVersion2() throws Exception {
         createDsls("assertVersion(groovyEclipse:\"1.5.9\")\n" +
-                "contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+            "contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents =
-                "class Foo {\n" +
-                        "}\n" +
-                        "new Foo().fooProp";
+            "class Foo {\n" +
+            "}\n" +
+            "new Foo().fooProp";
         int start = contents.lastIndexOf("fooProp");
         int end = start + "fooProp".length();
         // script should be executed
@@ -280,16 +277,15 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testSupportsVersion3() throws Exception {
         createDsls("if (supportsVersion(groovyEclipse:\"9.5.9\"))\n" +
-                "  contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+            "  contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents =
-                "class Foo {\n" +
-                        "}\n" +
-                        "new Foo().fooProp";
+            "class Foo {\n" +
+            "}\n" +
+            "new Foo().fooProp";
         int start = contents.lastIndexOf("fooProp");
         int end = start + "fooProp".length();
         // script should not be executed
         assertUnknownConfidence(contents, start, end, "Foo", false);
-
     }
 
     public void testSupportsVersion2() throws Exception {
@@ -305,20 +301,19 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Long>", true);
     }
 
-
     public void testIsThisType1() throws Exception {
         createDsls("contribute(isThisType()) { property name: 'thisType', type:Integer }");
         String contents =
-                "class Foo { \n" +
-                "def k() { \n" +
-                "  thisType\n" +
-                "  new Foo().thisType\n" +
-                "  [].thisType }\n" +
-                "def l = { \n" +
-                "  thisType\n" +
-                "  new Foo().thisType\n" +
-                "  [].thisType }\n" +
-                "}";
+            "class Foo { \n" +
+            "def k() { \n" +
+            "  thisType\n" +
+            "  new Foo().thisType\n" +
+            "  [].thisType }\n" +
+            "def l = { \n" +
+            "  thisType\n" +
+            "  new Foo().thisType\n" +
+            "  [].thisType }\n" +
+            "}";
 
         int loc = 0;
         int len = "thisType".length();
@@ -340,7 +335,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall1() throws Exception {
         createDsls("contribute(enclosingCall(name('foo')) & isThisType()) {  " +
-                "property name: 'yes', type: Double } ");
+            "property name: 'yes', type: Double } ");
 
         String contents = "foo( yes )";
         int start = contents.lastIndexOf("yes");
@@ -350,7 +345,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall2() throws Exception {
         createDsls("contribute(enclosingCall('foo') & isThisType()) {  " +
-                "property name: 'yes', type: Double } ");
+            "property name: 'yes', type: Double } ");
 
         String contents = "foo( yes )";
         int start = contents.lastIndexOf("yes");
@@ -360,7 +355,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall3() throws Exception {
         createDsls("contribute(enclosingCall(name('foo') & hasArgument(name('arg') & bind(value : value()))) & isThisType()) {  " +
-                "value.each { property name: \"${it}Prop\", type: Double } }");
+            "value.each { property name: \"${it}Prop\", type: Double } }");
 
         String contents = "foo(arg:'yes', arg2:yesProp)";
         int start = contents.lastIndexOf("yesProp");
@@ -370,7 +365,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall4() throws Exception {
         createDsls("contribute(enclosingCall(name('foo') & hasArgument(value : name('arg'))) & isThisType()) {  " +
-                "value.each { property name: \"${it}Prop\", type: Double } }");
+            "value.each { property name: \"${it}Prop\", type: Double } }");
 
         String contents = "foo(arg:argProp)";
         int start = contents.lastIndexOf("argProp");
@@ -380,7 +375,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall5() throws Exception {
         createDsls("contribute(enclosingCall(name('foo') & hasArgument(bind(value : name('arg')) | bind(value : name('arg2')))) & isThisType()) {  " +
-                "value.each { property name: \"${it}Prop\", type: Double } }");
+            "value.each { property name: \"${it}Prop\", type: Double } }");
 
         String contents = "foo(arg:argProp)";
         int start = contents.lastIndexOf("argProp");
@@ -390,7 +385,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall6() throws Exception {
         createDsls("contribute(enclosingCall(name('foo') & hasArgument(bind(value : name('arg'))) & hasArgument(name('arg2'))) & isThisType()) {  " +
-                "value.each { property name: \"${it}Prop\", type: Double } }");
+            "value.each { property name: \"${it}Prop\", type: Double } }");
 
         String contents = "foo(arg:argProp, arg2: nuthin)";
         int start = contents.lastIndexOf("argProp");
@@ -400,7 +395,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testEnclosingCall7() throws Exception {
         createDsls("contribute(enclosingCall(name('foo') & hasArgument(bind(value : value()) & name('arg'))) & isThisType()) {  " +
-                "value.each { property name: \"${it}Prop\", type: Double } }");
+            "value.each { property name: \"${it}Prop\", type: Double } }");
 
         String contents = "foo(arg:'arg', arg2:argProp)";
         int start = contents.lastIndexOf("argProp");
@@ -409,59 +404,63 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
 
     public void testAnnotatedBy1() throws Exception {
-        createDsls("contribute(enclosingMethod(annotatedBy(\n" +
-                "    name(\"MyAnno\") &   \n" +
-                "    hasAttribute(\n" +
-                "        name(\"name\") & \n" +
-                "        bind(vals : value()))))) {\n" +
-                "    vals.each { property name:it, type: Double }\n" +
-                "}");
-        String contents = "@interface MyAnno {\n" +
-                "    String name() \n" +
-                "}  \n" +
-                "@MyAnno(name = \"name\")\n" +
-                "def method() {\n" +
-                "    name\n" +
-                "}";
+        createDsls(
+            "contribute(enclosingMethod(annotatedBy(\n" +
+            "    name(\"MyAnno\") &   \n" +
+            "    hasAttribute(\n" +
+            "        name(\"name\") & \n" +
+            "        bind(vals : value()))))) {\n" +
+            "    vals.each { property name:it, type: Double }\n" +
+            "}");
+        String contents =
+            "@interface MyAnno {\n" +
+            "    String name() \n" +
+            "}  \n" +
+            "@MyAnno(name = \"name\")\n" +
+            "def method() {\n" +
+            "    name\n" +
+            "}";
         int start = contents.lastIndexOf("name");
         int end = start + "name".length();
         assertType(contents, start, end, "java.lang.Double", true);
     }
 
     public void testAnnotatedBy2() throws Exception {
-        createDsls("contribute(enclosingMethod(annotatedBy(\n" +
-                "    name(\"MyAnno\") &   \n" +
-                "    hasAttribute(\n" +
-                "        name(\"name\") & \n" +
-                "        bind(names : value())) &\n" +
-                "    hasAttribute(\n" +
-                "        name(\"type\") & \n" +
-                "        bind(types : value()))))) {\n" +
-                "    property name : names.iterator().next(), type: types.iterator().next()\n" +
-                "}");
-        String contents = "@interface MyAnno {\n" +
-                "    String name() \n" +
-                "    Class type() \n" +
-                "}\n" +
-                "@MyAnno(name = \"name\", type = Double)\n" +
-                "def method() {\n" +
-                "    name  \n" +
-                "}";
+        createDsls(
+            "contribute(enclosingMethod(annotatedBy(\n" +
+            "    name(\"MyAnno\") &   \n" +
+            "    hasAttribute(\n" +
+            "        name(\"name\") & \n" +
+            "        bind(names : value())) &\n" +
+            "    hasAttribute(\n" +
+            "        name(\"type\") & \n" +
+            "        bind(types : value()))))) {\n" +
+            "    property name : names.iterator().next(), type: types.iterator().next()\n" +
+            "}");
+        String contents =
+            "@interface MyAnno {\n" +
+            "    String name() \n" +
+            "    Class type() \n" +
+            "}\n" +
+            "@MyAnno(name = \"name\", type = Double)\n" +
+            "def method() {\n" +
+            "    name  \n" +
+            "}";
         int start = contents.lastIndexOf("name");
         int end = start + "name".length();
         assertType(contents, start, end, "java.lang.Double", true);
     }
 
-
     // GRECLIPSE-1190
     public void testHasArgument1() throws Exception {
         createDsls(
-                "enclosingMethod(name(\"foo\") & declaringType(\"Flart\") & hasArgument(\"arg\")).accept {\n" +
-                "  property name:\"arg\", type:\"Flart\"\n" +
-                "}");
+            "enclosingMethod(name(\"foo\") & declaringType(\"Flart\") & hasArgument(\"arg\")).accept {\n" +
+            "  property name:\"arg\", type:\"Flart\"\n" +
+            "}");
 
-        String contents = "class Flart {\n" +
-                "  def foo(arg) { arg } }";
+        String contents =
+            "class Flart {\n" +
+            "  def foo(arg) { arg } }";
 
         int start = contents.lastIndexOf("arg");
         int end = start + "arg".length();
@@ -471,13 +470,14 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1190
     public void testHasArgument2() throws Exception {
         createDsls(
-                "enclosingMethod(name(\"foo\") & type(\"Flart\") & hasArgument(\"arg\")).accept {\n" +
-                        "  property name:\"arg\", type:\"Flart\"\n" +
-                "}");
+            "enclosingMethod(name(\"foo\") & type(\"Flart\") & hasArgument(\"arg\")).accept {\n" +
+                    "  property name:\"arg\", type:\"Flart\"\n" +
+            "}");
 
-        String contents = "class Flart { }\n" +
-                "class Other {\n" +
-                "  Flart foo(arg) { arg } }";
+        String contents =
+            "class Flart { }\n" +
+            "class Other {\n" +
+            "  Flart foo(arg) { arg } }";
 
         int start = contents.lastIndexOf("arg");
         int end = start + "arg".length();
@@ -487,10 +487,11 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1261
     public void testStaticContext1() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
-        String contents = "class Flart { }\n" +
-                "static ahem() {\n" +
-                "  new Flart().testme" +
-                "}";
+        String contents =
+            "class Flart { }\n" +
+            "static ahem() {\n" +
+            "  new Flart().testme" +
+            "}";
         int start = contents.lastIndexOf("testme");
         int end = start + "testme".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -499,10 +500,11 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1261
     public void testStaticContext2() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
-        String contents = "class Flart { }\n" +
-                "static ahem() {\n" +
-                "  Flart.testme" +
-                "}";
+        String contents =
+            "class Flart { }\n" +
+            "static ahem() {\n" +
+            "  Flart.testme" +
+            "}";
         int start = contents.lastIndexOf("testme");
         int end = start + "testme".length();
         assertUnknownConfidence(contents, start, end, "Flart", true);
@@ -510,10 +512,11 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1261
     public void testStaticContext3() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean, isStatic:true }");
-        String contents = "class Flart {\n" +
-                "static ahem() {\n" +
-                "  testme" +
-                "} }";
+        String contents =
+            "class Flart {\n" +
+            "static ahem() {\n" +
+            "  testme" +
+            "} }";
         int start = contents.lastIndexOf("testme");
         int end = start + "testme".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -521,10 +524,11 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1261
     public void testStaticContext4() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
-        String contents = "class Flart { \n" +
-                "static ahem() {\n" +
-                "  Flart.testme" +
-                "} }";
+        String contents =
+            "class Flart { \n" +
+            "static ahem() {\n" +
+            "  Flart.testme" +
+            "} }";
         int start = contents.lastIndexOf("testme");
         int end = start + "testme".length();
         assertUnknownConfidence(contents, start, end, "Flart", true);
@@ -533,10 +537,11 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1261
     public void testStaticContext5() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean, isStatic:true }");
-        String contents = "class Flart { \n" +
-                "static ahem() {\n" +
-                "  new Flart().testme" +
-                "} }";
+        String contents =
+            "class Flart { \n" +
+            "static ahem() {\n" +
+            "  new Flart().testme" +
+            "} }";
         int start = contents.lastIndexOf("testme");
         int end = start + "testme".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -546,9 +551,9 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testOperatorOverloading1() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"plus\", params: [a:Object], type: boolean }");
         String contents =
-                "class Flart { }\n" +
-                "def xxx = new Flart() + nuthin\n" +
-                "xxx";
+            "class Flart { }\n" +
+            "def xxx = new Flart() + nuthin\n" +
+            "xxx";
         int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -557,9 +562,9 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testOperatorOverloading2() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"getAt\", params: [a:Object], type: boolean }");
         String contents =
-                "class Flart { }\n" +
-                "def xxx = new Flart()[nuthin]\n" +
-                "xxx";
+            "class Flart { }\n" +
+            "def xxx = new Flart()[nuthin]\n" +
+            "xxx";
         int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -569,9 +574,9 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testOperatorOverloading3() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"getAt\", params: [a:Object], type: boolean }");
         String contents =
-                "class Flart { }\n" +
-                "def xxx = new Flart()[nuthin]\n" +
-                "xxx";
+            "class Flart { }\n" +
+            "def xxx = new Flart()[nuthin]\n" +
+            "xxx";
         int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -581,20 +586,21 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testOperatorOverloading4() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"positive\", type: boolean }");
         String contents =
-                "class Flart { }\n" +
-                "def xxx = +(new Flart())\n" +
-                "xxx";
+            "class Flart { }\n" +
+            "def xxx = +(new Flart())\n" +
+            "xxx";
         int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
     }
+
     // GRECLIPSE-1291
     public void testOperatorOverloading5() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"negative\", type: boolean }");
         String contents =
-                "class Flart { }\n" +
-                        "def xxx = -(new Flart())\n" +
-                        "xxx";
+            "class Flart { }\n" +
+            "def xxx = -(new Flart())\n" +
+            "xxx";
         int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -603,9 +609,9 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testOperatorOverloading6() throws Exception {
         createDsls("contribute(currentType('Flart')) { method name: \"bitwiseNegate\", type: boolean }");
         String contents =
-                "class Flart { }\n" +
-                        "def xxx = ~(new Flart())\n" +
-                        "xxx";
+            "class Flart { }\n" +
+            "def xxx = ~(new Flart())\n" +
+            "xxx";
         int start = contents.lastIndexOf("xxx");
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -615,10 +621,10 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testIsThisType2() throws Exception {
         createDsls("contribute(isThisType()) { property name:'hi', type:int }");
         String contents =
-                "class Foo {\n" +
-                "  def meth(Closure c) { }\n" +
-                "}\n" +
-                "new Foo().meth { hi }";
+            "class Foo {\n" +
+            "  def meth(Closure c) { }\n" +
+            "}\n" +
+            "new Foo().meth { hi }";
         int start = contents.lastIndexOf("hi");
         int end = start + "hi".length();
         assertType(contents, start, end, "java.lang.Integer", true);
@@ -628,10 +634,10 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     public void testIsThisType3() throws Exception {
         createDsls("contribute(currentTypeIsEnclosingType()) { property name:'hi', type:int }");
         String contents =
-                "class Foo {\n" +
-                "  def meth(Closure c) { }\n" +
-                "}\n" +
-                "new Foo().meth { hi }";
+            "class Foo {\n" +
+            "  def meth(Closure c) { }\n" +
+            "}\n" +
+            "new Foo().meth { hi }";
         int start = contents.lastIndexOf("hi");
         int end = start + "hi".length();
         assertUnknownConfidence(contents, start, end, "Foo", true);
@@ -640,33 +646,33 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1301
     public void testEnclosingCallName1() throws Exception {
         createDsls(
-                "contribute(~ enclosingCallName(\"foo\")) {\n" +
-                "    property name:\"hi\"\n" +
-                "}");
-
+            "contribute(~ enclosingCallName(\"foo\")) {\n" +
+            "    property name:\"hi\"\n" +
+            "}");
         String contents =
-                "foo {\n" +
-                "    bar {\n" +
-                "        hi\n" +
-                "    }\n" +
-                "}";
+            "foo {\n" +
+            "    bar {\n" +
+            "        hi\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("hi");
         int end = start + "hi".length();
         assertUnknownConfidence(contents, start, end, "Search", true);
     }
+
     // GRECLIPSE-1301
     public void testEnclosingCallName2() throws Exception {
         createDsls(
-                "contribute(enclosingCall(~name('foo'))) {\n" +
-                "    property name:'hi', type:int\n" +
-                "}");
+            "contribute(enclosingCall(~name('foo'))) {\n" +
+            "    property name:'hi', type:int\n" +
+            "}");
 
         String contents =
-                "foo {\n" +
-                "    bar {\n" +
-                "        hi\n" +
-                "    }\n" +
-                "}";
+            "foo {\n" +
+            "    bar {\n" +
+            "        hi\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("hi");
         int end = start + "hi".length();
         assertType(contents, start, end, "java.lang.Integer", true);
@@ -675,16 +681,16 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1321
     public void testDelegatesTo7() throws Exception {
         createDsls(
-                "contribute(currentType(String)) {\n" +
-                "  delegatesTo 'Obj'\n" +
-                "}");
+            "contribute(currentType(String)) {\n" +
+            "  delegatesTo 'Obj'\n" +
+            "}");
         String contents =
-                "public interface Obj {\n" +
-                "    String getFoo();\n" +
-                "    int foo(arg);\n" +
-                " }\n" +
-                "\"\".getFoo()" +
-                "\"\".foo()";
+            "public interface Obj {\n" +
+            "    String getFoo();\n" +
+            "    int foo(arg);\n" +
+            " }\n" +
+            "\"\".getFoo()" +
+            "\"\".foo()";
         int start = contents.lastIndexOf("foo");
         int end = start + "foo".length();
         assertType(contents, start, end, "java.lang.Integer", true);
@@ -696,16 +702,16 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1442
     public void testDelegatesTo8() throws Exception {
         createDsls(
-                "contribute(currentType(\"Delegatee\")) {\n" +
-                "    delegatesTo type: \"MyCategory\", asCategory: true\n" +
-                "}");
+            "contribute(currentType(\"Delegatee\")) {\n" +
+            "    delegatesTo type: \"MyCategory\", asCategory: true\n" +
+            "}");
         String contents =
-                "class MyCategory {\n" +
-                "    static int getSomething(Delegatee d) { }\n" +
-                "}\n" +
-                "class Delegatee { }\n" +
-                "new Delegatee().something \n" +
-                "new Delegatee().getSomething()";
+            "class MyCategory {\n" +
+            "    static int getSomething(Delegatee d) { }\n" +
+            "}\n" +
+            "class Delegatee { }\n" +
+            "new Delegatee().something \n" +
+            "new Delegatee().getSomething()";
         int start = contents.lastIndexOf("getSomething");
         int end = start + "getSomething".length();
         assertType(contents, start, end, "java.lang.Integer", true);
@@ -717,16 +723,16 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     // GRECLIPSE-1442
     public void testDelegatesTo9() throws Exception {
         createDsls(
-                "contribute(currentType(\"Delegatee\")) {\n" +
-                        "    delegatesTo type: \"MyCategory\", asCategory: true\n" +
-                "}");
+            "contribute(currentType(\"Delegatee\")) {\n" +
+            "    delegatesTo type: \"MyCategory\", asCategory: true\n" +
+            "}");
         String contents =
-                "class MyCategory {\n" +
-                "    static boolean isSomething(Delegatee d) { }\n" +
-                "}\n" +
-                "class Delegatee { }\n" +
-                "new Delegatee().something \n" +
-                "new Delegatee().isSomething()";
+            "class MyCategory {\n" +
+            "    static boolean isSomething(Delegatee d) { }\n" +
+            "}\n" +
+            "class Delegatee { }\n" +
+            "new Delegatee().something \n" +
+            "new Delegatee().isSomething()";
         int start = contents.lastIndexOf("isSomething");
         int end = start + "isSomething".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
@@ -735,94 +741,81 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean", true);
     }
 
-
-    // setDelegateType
     public void testSetDelegateType1() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
         assertType(contents, start, end, "Obj", true);
     }
+
     public void testSetDelegateType1a() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
         assertType(contents, start, end, "Search", true);
     }
+
     public void testSetDelegateType2() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("getFoo");
         int end = start + "getFoo".length();
         assertType(contents, start, end, "java.lang.String", true);
     }
+
     public void testSetDelegateType3() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("FOO1");
         int end = start + "FOO1".length();
         assertType(contents, start, end, "java.lang.Integer", true);
     }
+
     public void testSetDelegateType4() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("FOO2");
         int end = start + "FOO2".length();
         assertType(contents, start, end, "java.lang.Integer", true);
     }
+
     public void testSetDelegateType5() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("OTHER");
         int end = start + "OTHER".length();
         assertUnknownConfidence(contents, start, end, "java.lang.String", true);
     }
+
     public void testSetDelegateType6() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("BAR");
         int end = start + "BAR".length();
         assertType(contents, start, end, "java.lang.Integer", true);
     }
+
     public void testSetDelegateType7() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("BAZ1");
         int end = start + "BAZ1".length();
         assertUnknownConfidence(contents, start, end, "java.lang.Integer", true);
     }
+
     public void testSetDelegateType8() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("BAZ2");
         int end = start + "BAZ2".length();
         assertUnknownConfidence(contents, start, end, "java.lang.Integer", true);
     }
+
     public void testSetDelegateType9() throws Exception {
-        createDsls(
-                SET_DELEGATE_TYPE_DSLD);
-        String contents =
-                SET_DELEGATE_TYPE_SCRIPT;
+        createDsls(SET_DELEGATE_TYPE_DSLD);
+        String contents = SET_DELEGATE_TYPE_SCRIPT;
         int start = contents.lastIndexOf("BAZ3");
         int end = start + "BAZ3".length();
         assertUnknownConfidence(contents, start, end, "Search", true);
@@ -861,14 +854,15 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    private final static String ARRAY_TYPE_DSLD = "contribute(currentType()) {\n" +
-            "    property name:'foot1', type:'java.lang.String[]'\n" +
-            "    property name:'foot2', type:'java.lang.String[][]'\n" +
-            "    property name:'foot3', type:'java.util.List<java.lang.String[][]>'\n" +
-            "    property name:'foot4', type:'java.util.List<java.lang.String>[]'\n" +
-            "    property name:'foot5', type:'java.util.List<java.lang.String[]>[]'\n" +
-            "    property name:'foot6', type:'java.util.Map<java.lang.String[],java.lang.Integer[]>'\n" +
-            "}";
+    private final static String ARRAY_TYPE_DSLD =
+        "contribute(currentType()) {\n" +
+        "    property name:'foot1', type:'java.lang.String[]'\n" +
+        "    property name:'foot2', type:'java.lang.String[][]'\n" +
+        "    property name:'foot3', type:'java.util.List<java.lang.String[][]>'\n" +
+        "    property name:'foot4', type:'java.util.List<java.lang.String>[]'\n" +
+        "    property name:'foot5', type:'java.util.List<java.lang.String[]>[]'\n" +
+        "    property name:'foot6', type:'java.util.Map<java.lang.String[],java.lang.Integer[]>'\n" +
+        "}";
 
     // GRECLIPSE-1555
     public void testArrayType1() throws Exception {
@@ -876,28 +870,33 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         String contents = "foot1";
         assertType(contents, "java.lang.String[]", true);
     }
+
     public void testArrayType2() throws Exception {
         createDsls(ARRAY_TYPE_DSLD);
         String contents = "foot2";
         assertType(contents, "java.lang.String[][]", true);
     }
+
     public void testArrayType3() throws Exception {
         createDsls(ARRAY_TYPE_DSLD);
         String contents = "foot3";
         assertType(contents, "java.util.List<java.lang.String[][]>", true);
     }
+
     // TODO expected to fail
     public void _testArrayType4() throws Exception {
         createDsls(ARRAY_TYPE_DSLD);
         String contents = "foot4";
         assertType(contents, "java.util.List<java.lang.String>[]", true);
     }
+
     // TODO expected to fail
     public void _testArrayType5() throws Exception {
         createDsls(ARRAY_TYPE_DSLD);
         String contents = "foot5";
         assertType(contents, "java.util.List<java.lang.String[]>[]", true);
     }
+
     public void testArrayType6() throws Exception {
         createDsls(ARRAY_TYPE_DSLD);
         String contents = "foot6";
@@ -905,18 +904,20 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
 
     public void testNestedCalls() throws Exception {
-        createDsls("contribute(bind( x: enclosingCall())) {\n" +
-                "	x.each { \n" +
-                "		property name: it.methodAsString + \"XXX\", type: Long\n" +
-                "	}\n" +
-                "}");
+        createDsls(
+            "contribute(bind( x: enclosingCall())) {\n" +
+            "	x.each { \n" +
+            "		property name: it.methodAsString + \"XXX\", type: Long\n" +
+            "	}\n" +
+            "}");
 
-        String contents = "bar {\n" +
-                "	foo {\n" +
-                "		 fooXXX\n" +
-                "		 barXXX      \n" +
-                "	}\n" +
-                "}";
+        String contents =
+            "bar {\n" +
+            "	foo {\n" +
+            "		 fooXXX\n" +
+            "		 barXXX      \n" +
+            "	}\n" +
+            "}";
 
         int start = contents.indexOf("fooXXX");
         int end = start + "fooXXX".length();
@@ -925,14 +926,5 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         start = contents.indexOf("barXXX");
         end = start + "barXXX".length();
         assertType(contents, start, end, "java.lang.Long");
-
-    }
-
-    private void createDSL() throws IOException {
-        defaultFileExtension = "dsld";
-        createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));
-        defaultFileExtension = "groovy";
-        env.fullBuild();
-        expectingNoProblems();
     }
 }

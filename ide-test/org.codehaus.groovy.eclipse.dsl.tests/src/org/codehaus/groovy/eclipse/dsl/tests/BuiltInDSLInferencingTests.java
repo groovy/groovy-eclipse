@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.resources.IResource;
@@ -35,18 +32,16 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
 
 /**
- * Tests type inferencing for DSL scripts included with Groovy plugin
- *
- * @author Andrew Eisenberg
- * @created Jun 16, 2011
+ * Tests type inferencing for DSL scripts included with Groovy plugin.
  */
-public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
-    public BuiltInDSLInferencingTests(String name) {
-        super(name);
+public final class BuiltInDSLInferencingTests extends DSLInferencingTestCase {
+
+    public static junit.framework.Test suite() {
+        return new junit.framework.TestSuite(BuiltInDSLInferencingTests.class);
     }
 
-    public static Test suite() {
-        return new TestSuite(BuiltInDSLInferencingTests.class);
+    public BuiltInDSLInferencingTests(String name) {
+        super(name);
     }
 
     @Override

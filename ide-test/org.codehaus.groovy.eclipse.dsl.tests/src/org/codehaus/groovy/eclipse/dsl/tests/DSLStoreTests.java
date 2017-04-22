@@ -17,9 +17,6 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.util.Collections;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
@@ -27,14 +24,10 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.JavaCore;
 
-/**
- * @author Andrew Eisenberg
- * @created Feb 18, 2011
- */
-public final class DSLStoreTests extends AbstractDSLInferencingTest {
+public final class DSLStoreTests extends DSLInferencingTestCase {
 
-    public static Test suite() {
-        return new TestSuite(DSLStoreTests.class);
+    public static junit.framework.Test suite() {
+        return new junit.framework.TestSuite(DSLStoreTests.class);
     }
 
     public DSLStoreTests(String name) {

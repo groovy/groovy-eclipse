@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -44,7 +45,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -52,14 +52,11 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.osgi.framework.FrameworkUtil;
 
-/**
- * @author Andrew Eisenberg
- * @created Feb 19, 2011
- */
-public class AbstractDSLInferencingTest extends AbstractInferencingTest {
+public abstract class DSLInferencingTestCase extends AbstractInferencingTest {
 
-    public AbstractDSLInferencingTest(String name) {
+    public DSLInferencingTestCase(String name) {
         super(name);
     }
 
@@ -79,7 +76,6 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         super.setUp();
         GroovyLogManager.manager.addLogger(logger);
         assertFalse(GroovyDSLCoreActivator.getDefault().isDSLDDisabled());
-        //GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
         if (doRemoveClasspathContainer) {
             GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
             GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(project).purgeAll();
@@ -94,20 +90,19 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
 
     @Override
     protected void tearDown() throws Exception {
-        //GroovyDSLCoreActivator.getDefault().getContainerListener().unignoreProjects();
         GroovyLogManager.manager.removeLogger(logger);
         super.tearDown();
     }
 
-    protected String[] createDsls(String ... dsls) {
+    protected String[] createDsls(String... dsls) {
         return createDsls(0, dsls);
     }
 
-    protected String[] createDsls(int startWith, String ... dsls) {
+    protected String[] createDsls(int startWith, String... dsls) {
         return createDsls(startWith, project, dsls);
     }
 
-    protected String[] createDsls(int startWith, IProject theProject, String ... dsls) {
+    protected String[] createDsls(int startWith, IProject theProject, String... dsls) {
         int i = startWith;
         System.out.println("Now creating " + dsls.length + " DSLD files.");
         for (String dsl : dsls) {
@@ -125,26 +120,26 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         env.removeFile(project.getFile("dsl" + fileNum + ".dsld").getFullPath());
     }
 
-    protected String[] createDSLsFromFiles(String ... fileNames) throws IOException {
+    protected String[] createDSLsFromFiles(String ... fileNames) throws Exception {
         String[] dslContents = new String[fileNames.length];
         for (int i = 0; i < fileNames.length; i++) {
-            dslContents[i] = GroovyDSLDTestsActivator.getDefault().getTestResourceContents(fileNames[i]);
+            dslContents[i] = getTestResourceContents(fileNames[i]);
         }
         return createDsls(dslContents);
     }
 
-    protected void addJarToProject(String jarName) throws CoreException, IOException {
+    protected void addJarToProject(String jarName) throws Exception {
         String externalFilePath = findExternalFilePath(jarName);
         env.addExternalJar(project.getFullPath(), externalFilePath);
         project.refreshLocal(IResource.DEPTH_INFINITE, null);
         env.cleanBuild();
     }
 
-    protected void addGroovyJarToProject(String jarName) throws CoreException, IOException {
+    protected void addGroovyJarToProject(String jarName) throws Exception {
         addGroovyJarToProject(jarName, project);
     }
 
-    protected static void addGroovyJarToProject(String jarName, IProject project) throws CoreException, IOException {
+    protected static void addGroovyJarToProject(String jarName, IProject project) throws Exception {
         IPath path = CompilerUtils.getJarInGroovyLib(jarName);
         if (path != null) {
             env.addExternalJar(project.getFullPath(), path.toString());
@@ -155,15 +150,15 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         }
     }
 
-    protected String findExternalFilePath(String jarName) throws MalformedURLException, IOException {
-        URL url = GroovyDSLDTestsActivator.getDefault().getTestResourceURL(jarName);
+    protected String findExternalFilePath(String jarName) throws Exception {
+        URL url = getTestResourceURL(jarName);
         URL resolved = FileLocator.resolve(url);
         String externalFilePath = resolved.getFile();
         return externalFilePath;
     }
 
-    protected void removeJarFromProject(String jarName) throws CoreException, IOException {
-        URL url = GroovyDSLDTestsActivator.getDefault().getTestResourceURL(jarName);
+    protected void removeJarFromProject(String jarName) throws Exception {
+        URL url = getTestResourceURL(jarName);
         URL resolved = FileLocator.resolve(url);
         env.removeExternalJar(project.getFullPath(), new Path(resolved.getFile()));
         project.refreshLocal(IResource.DEPTH_INFINITE, null);
@@ -179,8 +174,6 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         // ensure DSLDs are refreshed
         // don't schedule. instead run in the same thread.
         System.out.println("About to run RefreshDSLDJob");
-//        // ensure this classpath container is gone
-//        GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
         env.cleanBuild();
         JavaModelManager.getIndexManager().removeIndex(project.getLocation());
         JavaModelManager.getIndexManager().cleanUpIndexes();
@@ -282,13 +275,37 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         assertUnknownConfidence(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
     }
 
+    protected String getTestResourceContents(String fileName) throws Exception {
+        InputStream stream = getTestResourceStream(fileName);
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            StringBuilder buffer = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line).append('\n');
+            }
+            return buffer.toString();
+        } finally {
+            stream.close();
+        }
+    }
+
+    protected InputStream getTestResourceStream(String fileName) throws Exception {
+        return getTestResourceURL(fileName).openStream();
+    }
+
+    protected URL getTestResourceURL(String fileName) throws Exception {
+        IPath path = new Path("testResources").append(fileName);
+        return new URL(FrameworkUtil.getBundle(getClass()).getEntry("/"), path.toString());
+    }
+
     /**
      * Refreshes the external folders project.  It seems that the contents of
      * linked folders are not being refreshed fast enough and we are getting
      * {@link IllegalArgumentException}s because there is a resource that is
      * aliased, but no longer exists.
      */
-    protected static void refreshExternalFoldersProject() throws CoreException {
+    protected static void refreshExternalFoldersProject() throws Exception {
         Workspace workspace = (Workspace) ResourcesPlugin.getWorkspace();
         IProject externalProject = workspace.getRoot().getProject(".org.eclipse.jdt.core.external.folders");
         if (externalProject.exists()) {
