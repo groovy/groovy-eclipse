@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
+import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
@@ -23,6 +24,13 @@ import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder
 import org.junit.Test
 
 final class JUnit4TestFinderTests extends JUnitTestCase {
+
+    private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
+        EclipseTestSetup.waitForIndex()
+        def type = unit.getType(typeName)
+        assert type.exists() : "Groovy type $typeName should exist"
+        assert new JUnit4TestFinder().isTest(type) == expected : "Groovy type $typeName should${expected ? '' : 'n\'t'} be a JUnit 4 test $reasonText"
+    }
 
     @Test
     void testFinderWithSuite() {
@@ -185,13 +193,5 @@ final class JUnit4TestFinderTests extends JUnitTestCase {
         assert testTypes.any { it.elementName == 'Tester' } : 'Tester should be a test type'
         assert testTypes.any { it.elementName == 'T2' } : 'T2 should be a test type'
         assert testTypes.any { it.elementName == 'T3' } : 'T3 should be a test type'
-    }
-
-    //
-
-    private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
-        def type = unit.getType(typeName)
-        assert type.exists() : "Groovy type $typeName should exist"
-        assert new JUnit4TestFinder().isTest(type) == expected : "Groovy type $typeName should${expected ? '' : 'n\'t'} be a JUnit 3 test $reasonText"
     }
 }
