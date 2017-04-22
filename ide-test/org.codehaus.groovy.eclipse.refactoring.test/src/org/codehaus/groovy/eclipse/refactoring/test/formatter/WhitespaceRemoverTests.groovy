@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,54 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.formatter
 
-import junit.framework.TestCase
-
 import org.codehaus.groovy.eclipse.refactoring.formatter.WhitespaceRemover
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.ITextSelection
+import org.junit.Assert
+import org.junit.Test
 
-class WhitespaceRemoverTests extends TestCase {
-
-    void testNullContent() {
-        assertContentChangedFromTo(null, '')
-    }
-
-    void testEmptyDocument() {
-        assertContentUnchanged('')
-    }
-
-    void testNothingToRemove() {
-        assertContentUnchanged(' def a')
-        assertContentUnchanged(' def a\n def b')
-        assertContentUnchanged(' // def a')
-        assertContentUnchanged(' /* def a */')
-    }
-
-    void testRemoveTrailingSpacesInComments() {
-        assertContentChangedFromTo('// def a  ',     '// def a')
-        assertContentChangedFromTo('/* def a */  ',  '/* def a */')
-        assertContentChangedFromTo('/* def a  \n*/', '/* def a\n*/')
-    }
-
-    void testRemoveTrailingTabsInComments() {
-        assertContentChangedFromTo('// def a\t\t',     '// def a')
-        assertContentChangedFromTo('/* def a */\t\t',  '/* def a */')
-        assertContentChangedFromTo('/* def a\t\t\n*/', '/* def a\n*/')
-    }
-
-    void testRemoveTrailingSpacesInCode() {
-        assertContentChangedFromTo('def a  ', 'def a')
-    }
-
-    void testRemoveTrailingTabsInCode() {
-        assertContentChangedFromTo('def a\t\t', 'def a')
-    }
-
-    void testRemoveTrailingSpacesInMultipleLines() {
-        assertContentChangedFromTo('def a = 1  \ndef b = 2  ',   'def a = 1\ndef b = 2')
-        assertContentChangedFromTo('def a = 1  \rdef b = 2  ',   'def a = 1\rdef b = 2')
-        assertContentChangedFromTo('def a = 1  \r\ndef b = 2  ', 'def a = 1\r\ndef b = 2')
-    }
+final class WhitespaceRemoverTests {
 
     private void assertContentUnchanged(String input) {
         assertContentChangedFromTo(input, input)
@@ -80,6 +39,55 @@ class WhitespaceRemoverTests extends TestCase {
         whitespaceRemoval.apply(document)
         String actualOutput = document.get()
 
-        assertEquals(expectedOutput, actualOutput)
+        Assert.assertEquals(expectedOutput, actualOutput)
+    }
+
+    @Test
+    void testNullContent() {
+        assertContentChangedFromTo(null, '')
+    }
+
+    @Test
+    void testEmptyDocument() {
+        assertContentUnchanged('')
+    }
+
+    @Test
+    void testNothingToRemove() {
+        assertContentUnchanged(' def a')
+        assertContentUnchanged(' def a\n def b')
+        assertContentUnchanged(' // def a')
+        assertContentUnchanged(' /* def a */')
+    }
+
+    @Test
+    void testRemoveTrailingSpacesInComments() {
+        assertContentChangedFromTo('// def a  ',     '// def a')
+        assertContentChangedFromTo('/* def a */  ',  '/* def a */')
+        assertContentChangedFromTo('/* def a  \n*/', '/* def a\n*/')
+    }
+
+    @Test
+    void testRemoveTrailingTabsInComments() {
+        assertContentChangedFromTo('// def a\t\t',     '// def a')
+        assertContentChangedFromTo('/* def a */\t\t',  '/* def a */')
+        assertContentChangedFromTo('/* def a\t\t\n*/', '/* def a\n*/')
+    }
+
+    @Test
+    void testRemoveTrailingSpacesInCode() {
+        assertContentChangedFromTo('def a  ', 'def a')
+    }
+
+    @Test
+    void testRemoveTrailingTabsInCode() {
+        assertContentChangedFromTo('def a\t\t', 'def a')
+    }
+
+    @Test
+    void testRemoveTrailingSpacesInMultipleLines() {
+        assertContentChangedFromTo('def a = 1  \ndef b = 2  ',   'def a = 1\ndef b = 2')
+        assertContentChangedFromTo('def a = 1  \rdef b = 2  ',   'def a = 1\rdef b = 2')
+        assertContentChangedFromTo('def a = 1  \r\ndef b = 2  ', 'def a = 1\r\ndef b = 2')
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,15 @@ import java.io.File;
 import java.util.List;
 
 import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.refactoring.test.BaseTestSuite;
 
-public class FormatterTestSuite extends BaseTestSuite {
+public final class FormatterTestSuite extends BaseTestSuite {
     public static TestSuite suite() throws Exception {
         TestSuite ts = new FormatterTestSuite();
         List<File> files = getFileList("/Formatter", "Formatter_Test_");
         for (File file : files) {
             ts.addTest(new FormatterTestCase(file.getName(), file));
         }
-        ts.addTestSuite(FindIndentsTests.class);
-        ts.addTestSuite(TestFormatterPreferences.class);
-        ts.addTestSuite(GroovyDocumentScannerTests.class);
         return ts;
     }
 }

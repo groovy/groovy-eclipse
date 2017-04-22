@@ -66,13 +66,13 @@ final class StaticExpressionCheckerTests extends CheckerTestCase {
     private void checkIsStatic(String text) {
         ModuleNode module = createModuleFromText(text)
         StaticFragmentChecker checker = new StaticFragmentChecker()
-        assert checker.mayNotBeStatic(getLastFragment(module)) : "Last expression in:\n" + text + "\nshould have been static, but was not."
+        assert checker.mayNotBeStatic(getLastFragment(module)) : "Last expression in:\n$text\nshould have been static, but was not."
     }
 
     // the expression to check is always the last expression in the module
     private void checkIsNotStatic(String text) {
         ModuleNode module = createModuleFromText(text)
         StaticFragmentChecker checker = new StaticFragmentChecker()
-        assert !checker.mayNotBeStatic(getLastFragment(module)) : "Last expression in:\n" + text + "\nshould not have been static, but was."
+        assert !checker.mayNotBeStatic(getLastFragment(module)) : "Last expression in:\n$text\nshould not have been static, but was."
     }
 }

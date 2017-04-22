@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,27 +16,21 @@
 package org.codehaus.groovy.eclipse.refactoring.test.formatter;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore;
 import org.codehaus.groovy.eclipse.refactoring.test.BaseTestCase;
-import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
+import org.codehaus.groovy.eclipse.refactoring.test.internal.TestPrefInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.MalformedTreeException;
 
-
 /**
- * Test Case to test the Groovy Formatter
- *
- * @author Michael Klenk mklenk@hsr.ch
- *
+ * Test Case to test the Groovy Formatter.
  */
-public class FormatterTestCase extends BaseTestCase {
+public final class FormatterTestCase extends BaseTestCase {
 
-    public FormatterTestCase(String arg0, File arg1) throws FileNotFoundException, IOException {
+    public FormatterTestCase(String arg0, File arg1) throws Exception {
         super(arg0, arg1);
         // Set Method to call for JUnit
         setName("testFormatter");

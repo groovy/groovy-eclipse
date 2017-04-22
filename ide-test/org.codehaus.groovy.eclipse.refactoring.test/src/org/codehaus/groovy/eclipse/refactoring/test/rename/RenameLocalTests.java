@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -29,24 +26,22 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 
-public class RenameLocalTests extends RefactoringTest {
+public final class RenameLocalTests extends RefactoringTestCase {
 
-    private static final String REFACTORING_PATH = "RenameLocal/";
+    public static junit.framework.Test suite() {
+        return new RefactoringTestSetup(new junit.framework.TestSuite(RenameLocalTests.class));
+    }
+
+    public static junit.framework.Test setUpTest(junit.framework.Test test) {
+        return new RefactoringTestSetup(test);
+    }
 
     public RenameLocalTests(String name) {
         super(name);
     }
 
-    public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(RenameLocalTests.class));
-    }
-
-    public static Test setUpTest(Test test) {
-        return new RefactoringTestSetup(test);
-    }
-
     protected String getRefactoringPath() {
-        return REFACTORING_PATH;
+        return "RenameLocal/";
     }
 
     protected void setUp() throws Exception {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.codehaus.groovy.eclipse.refactoring.test.ParticipantTesting;
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
+import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -39,24 +36,22 @@ import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 
-public class RenameTypeTests extends RefactoringTest {
+public final class RenameTypeTests extends RefactoringTestCase {
 
-    private static final String REFACTORING_PATH= "RenameType/";
+    public static junit.framework.Test suite() {
+        return new RefactoringTestSetup(new junit.framework.TestSuite(RenameTypeTests.class));
+    }
+
+    public static junit.framework.Test setUpTest(junit.framework.Test someTest) {
+        return new RefactoringTestSetup(someTest);
+    }
 
     public RenameTypeTests(String name) {
         super(name);
     }
 
-    public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(RenameTypeTests.class));
-    }
-
-    public static Test setUpTest(Test someTest) {
-        return new RefactoringTestSetup(someTest);
-    }
-
     protected String getRefactoringPath() {
-        return REFACTORING_PATH;
+        return "RenameType/";
     }
 
     private RenameJavaElementDescriptor createRefactoringDescriptor(IType type, String newName) {

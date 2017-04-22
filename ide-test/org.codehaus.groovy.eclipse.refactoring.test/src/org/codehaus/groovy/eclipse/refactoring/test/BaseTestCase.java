@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
-
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
 import org.eclipse.jface.text.BadLocationException;
@@ -34,9 +32,6 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextSelection;
 
-/**
- * @autor Michael Klenk mklenk@hsr.ch
- */
 public abstract class BaseTestCase extends TestCase {
 
     protected File file;
@@ -55,7 +50,7 @@ public abstract class BaseTestCase extends TestCase {
 
     protected TextSelection selection;
 
-    protected BaseTestCase(String name, File fileToTest) throws FileNotFoundException, IOException {
+    protected BaseTestCase(String name, File fileToTest) throws Exception {
         setFile(fileToTest);
         this.name = name;
         newLine = FilePartReader.getLineDelimiter(new FileReader(file));
@@ -128,11 +123,6 @@ public abstract class BaseTestCase extends TestCase {
         return selection;
     }
 
-    /**
-     * @param properties2
-     * @param documentProvider
-     * @return
-     */
     private TextSelection getSelection() {
         try {
             int startLine = getInt("startLine");
@@ -149,10 +139,6 @@ public abstract class BaseTestCase extends TestCase {
         }
     }
 
-    /**
-     * @param startLine
-     * @return
-     */
     private int getInt(String startLine) {
         try {
             return Integer.valueOf(properties.get(startLine));
@@ -162,11 +148,9 @@ public abstract class BaseTestCase extends TestCase {
     }
 
     /*
-     * reads properties from the testfiles and puts them into
-     * the map "properties"
+     * reads properties from the testfiles and puts them into the map "properties"
      */
-    public HashMap<String, String> getFileProperties() throws FileNotFoundException, IOException {
-
+    public HashMap<String, String> getFileProperties() throws Exception {
         HashMap<String, String> properties = new HashMap<String, String>();
         Matcher propertiesSection = propertiesRegExp.matcher(getContents(file));
         if (propertiesSection.find()) {
@@ -217,5 +201,4 @@ public abstract class BaseTestCase extends TestCase {
 
         return contents.toString();
     }
-
 }

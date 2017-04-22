@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -27,13 +26,13 @@ import java.util.List;
 import java.util.Set;
 
 import junit.framework.TestCase;
-
 import org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticipant;
+import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantShared;
+import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantSingle;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -67,8 +66,9 @@ import org.eclipse.ltk.core.refactoring.RefactoringContribution;
 import org.eclipse.ltk.core.refactoring.RefactoringCore;
 import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.osgi.framework.FrameworkUtil;
 
-public abstract class RefactoringTest extends TestCase {
+public abstract class RefactoringTestCase extends TestCase {
 
     /**
      * If <code>true</code> a descriptor is created from the change.
@@ -91,7 +91,7 @@ public abstract class RefactoringTest extends TestCase {
 
     protected static final List<String> PROJECT_RESOURCE_CHILDREN= Arrays.asList(".project", ".classpath", ".settings");
 
-    public RefactoringTest(String name) {
+    public RefactoringTestCase(String name) {
         super(name);
     }
 
@@ -196,14 +196,14 @@ public abstract class RefactoringTest extends TestCase {
         }
     }
 
-    private void refreshFromLocal() throws CoreException {
+    private void refreshFromLocal() throws Exception {
         if (getRoot().exists())
             getRoot().getResource().refreshLocal(IResource.DEPTH_INFINITE, null);
         else if (getPackageP().exists())//don't refresh package if root already refreshed
             getPackageP().getResource().refreshLocal(IResource.DEPTH_INFINITE, null);
     }
 
-    private static void tryDeletingAllNonJavaChildResources(IPackageFragment pack) throws CoreException {
+    private static void tryDeletingAllNonJavaChildResources(IPackageFragment pack) throws Exception {
         Object[] nonJavaKids= pack.getNonJavaResources();
         for (int i= 0; i < nonJavaKids.length; i++) {
             if (nonJavaKids[i] instanceof IResource) {
@@ -213,7 +213,7 @@ public abstract class RefactoringTest extends TestCase {
         }
     }
 
-    private static void tryDeletingAllJavaChildren(IPackageFragment pack) throws CoreException {
+    private static void tryDeletingAllJavaChildren(IPackageFragment pack) throws Exception {
         IJavaElement[] kids= pack.getChildren();
         for (int i= 0; i < kids.length; i++){
             if (kids[i] instanceof ISourceManipulation){
@@ -244,7 +244,7 @@ public abstract class RefactoringTest extends TestCase {
         return performRefactoring(refactoring, providesUndo);
     }
 
-    protected final Refactoring createRefactoring(RefactoringDescriptor descriptor) throws CoreException {
+    protected final Refactoring createRefactoring(RefactoringDescriptor descriptor) throws Exception {
         RefactoringStatus status= new RefactoringStatus();
         Refactoring refactoring= descriptor.createRefactoring(status);
         assertNotNull("refactoring should not be null", refactoring);
@@ -310,11 +310,11 @@ public abstract class RefactoringTest extends TestCase {
         return null;
     }
 
-    protected void executePerformOperation(final PerformChangeOperation perform, IWorkspace workspace) throws CoreException {
+    protected void executePerformOperation(final PerformChangeOperation perform, IWorkspace workspace) throws Exception {
         workspace.run(perform, new NullProgressMonitor());
     }
 
-    public RefactoringStatus performRefactoringWithStatus(Refactoring ref, boolean performOnFail) throws Exception, CoreException {
+    public RefactoringStatus performRefactoringWithStatus(Refactoring ref, boolean performOnFail) throws Exception {
         RefactoringStatus status= performRefactoring(ref, performOnFail);
         if (status == null)
             return new RefactoringStatus();
@@ -346,7 +346,7 @@ public abstract class RefactoringTest extends TestCase {
     }
 
     /* ===================  helpers  ================= */
-    protected IType getType(ICompilationUnit cu, String name) throws JavaModelException {
+    protected IType getType(ICompilationUnit cu, String name) throws Exception {
         IType[] types= cu.getAllTypes();
         for (int i= 0; i < types.length; i++)
             if (types[i].getTypeQualifiedName('.').equals(name) ||
@@ -427,7 +427,7 @@ public abstract class RefactoringTest extends TestCase {
         return new ByteArrayInputStream(content.getBytes());
     }
 
-    public static IPackageFragmentRoot getSourceFolder(IJavaProject javaProject, String name) throws JavaModelException{
+    public static IPackageFragmentRoot getSourceFolder(IJavaProject javaProject, String name) throws Exception{
         IPackageFragmentRoot[] roots= javaProject.getPackageFragmentRoots();
         for (int i= 0; i < roots.length; i++) {
             if (! roots[i].isArchive() && roots[i].getElementName().equals(name))
@@ -436,11 +436,11 @@ public abstract class RefactoringTest extends TestCase {
         return null;
     }
 
-    public String getFileContents(String fileName) throws IOException {
+    public String getFileContents(String fileName) throws Exception {
         return getContents(getFileInputStream(fileName));
     }
 
-    public static String getContents(IFile file) throws IOException, CoreException {
+    public static String getContents(IFile file) throws Exception {
         return getContents(file.getContents());
     }
 
@@ -451,7 +451,7 @@ public abstract class RefactoringTest extends TestCase {
         return cu;
     }
 
-    public static String getContents(InputStream in) throws IOException {
+    public static String getContents(InputStream in) throws Exception {
         BufferedReader br= new BufferedReader(new InputStreamReader(in));
 
         StringBuffer sb= new StringBuffer(300);
@@ -465,8 +465,8 @@ public abstract class RefactoringTest extends TestCase {
         return sb.toString();
     }
 
-    public static InputStream getFileInputStream(String fileName) throws IOException {
-        return RefactoringTestPlugin.getDefault().getTestResourceStream(fileName);
+    public InputStream getFileInputStream(String fileName) throws Exception {
+        return FrameworkUtil.getBundle(getClass()).getEntry("/resources/" + fileName).openStream();
     }
 
     public static String removeExtension(String fileName) {

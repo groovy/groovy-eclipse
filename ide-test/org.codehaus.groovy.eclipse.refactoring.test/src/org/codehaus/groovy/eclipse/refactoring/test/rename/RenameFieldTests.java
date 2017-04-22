@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,9 @@ package org.codehaus.groovy.eclipse.refactoring.test.rename;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.codehaus.groovy.eclipse.refactoring.test.ParticipantTesting;
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
+import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -40,25 +37,22 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.RenameArguments;
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 
-public class RenameFieldTests extends RefactoringTest {
-    private static final Class<RenameFieldTests> clazz = RenameFieldTests.class;
+public final class RenameFieldTests extends RefactoringTestCase {
 
-    private static final String REFACTORING_PATH = "RenameField/";
+    public static junit.framework.Test suite() {
+        return new RefactoringTestSetup(new junit.framework.TestSuite(RenameFieldTests.class));
+    }
+
+    public static junit.framework.Test setUpTest(junit.framework.Test test) {
+        return new RefactoringTestSetup(test);
+    }
 
     public RenameFieldTests(String name) {
         super(name);
     }
 
-    public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(clazz));
-    }
-
-    public static Test setUpTest(Test test) {
-        return new RefactoringTestSetup(test);
-    }
-
     protected String getRefactoringPath() {
-        return REFACTORING_PATH;
+        return "RenameField/";
     }
 
     protected void setUp() throws Exception {

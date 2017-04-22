@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,108 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.formatter
 
-import junit.framework.TestCase
-
 import org.codehaus.groovy.eclipse.refactoring.formatter.SemicolonRemover
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.TextSelection
+import org.junit.Assert
+import org.junit.Test
 
-class SemicolonRemoverTests extends TestCase {
-
-    void testNullContent() {
-        assertContentChangedFromTo(null, '')
-    }
-
-    void testEmptyDocument() {
-        assertContentUnchanged('')
-    }
-
-    void testNothingToRemove() {
-        assertContentUnchanged('def a = 10')
-        assertContentUnchanged('def a = {}')
-        assertContentUnchanged('def a = []')
-        assertContentUnchanged('for (int i = 0; i < 5; i++) {}')
-    }
-
-    void testFullLineComment() {
-        assertContentUnchanged('// def a')
-        assertContentUnchanged('/* def a; */')
-        assertContentUnchanged('/* def a;\n*/')
-    }
-
-    void testSimpleComment() {
-        assertContentChangedFromTo('def a; // comment;',     'def a // comment;')
-        assertContentChangedFromTo('def a; /* comment; */',  'def a /* comment; */')
-        assertContentChangedFromTo('def a; /* comment;\n*/', 'def a /* comment;\n*/')
-    }
-
-    void testCommentInComment() {
-        assertContentChangedFromTo('def a; /* comment 1; // comment 2; */', 'def a /* comment 1; // comment 2; */')
-        assertContentChangedFromTo('def a; /* comment 1; /* comment 2; */', 'def a /* comment 1; /* comment 2; */')
-        assertContentChangedFromTo('def a; // comment 1; /* comment 2; */', 'def a // comment 1; /* comment 2; */')
-        assertContentChangedFromTo('def a; // comment 1; /* comment 2;',    'def a // comment 1; /* comment 2;')
-    }
-
-    void testMultipleTrailingComments() {
-        assertContentChangedFromTo('def a; /* comment 1; */ // comment 2;',     'def a /* comment 1; */ // comment 2;')
-        assertContentChangedFromTo('def a; /* comment 1; */ /* comment 2; */',  'def a /* comment 1; */ /* comment 2; */')
-        assertContentChangedFromTo('def a; /* comment 1; */ /* comment 2;\n*/', 'def a /* comment 1; */ /* comment 2;\n*/')
-    }
-
-    void testMultipleInlinedComments() {
-        assertContentChangedFromTo('a = 1; /* comment 1; */ b = 2; // comment 2;',     'a = 1; /* comment 1; */ b = 2 // comment 2;')
-        assertContentChangedFromTo('a = 1; /* comment 1; */ b = 2; /* comment 2; */',  'a = 1; /* comment 1; */ b = 2 /* comment 2; */')
-        assertContentChangedFromTo('a = 1; /* comment 1; */ b = 2; /* comment 2;\n*/', 'a = 1; /* comment 1; */ b = 2 /* comment 2;\n*/')
-    }
-
-    void testCommentInString() {
-        assertContentChangedFromTo("def a = 'foo; // bar'; // baz;", "def a = 'foo; // bar' // baz;")
-        assertContentChangedFromTo('def a = "foo; // bar"; // baz;', 'def a = "foo; // bar" // baz;')
-    }
-
-    void testSimpleRemoval() {
-        assertContentChangedFromTo('def a = 10;', 'def a = 10')
-        assertContentChangedFromTo('def a = {};', 'def a = {}')
-        assertContentChangedFromTo('def a = [];', 'def a = []')
-    }
-
-    void testTrailingSpacesAndTabs() {
-        assertContentChangedFromTo('def a = 1 ; ',   'def a = 1  ')
-        assertContentChangedFromTo('def a = 1\t;\t', 'def a = 1\t\t')
-    }
-
-    void testCurlyBraces() {
-        assertContentChangedFromTo('def a = { 1; }',           'def a = { 1 }')
-        assertContentChangedFromTo('def a = [{ 1; }, { 2; }]', 'def a = [{ 1 }, { 2 }]')
-        assertContentChangedFromTo('class A { def a = 1; }',   'class A { def a = 1 }')
-    }
-
-    void testMultipleLines() {
-        assertContentChangedFromTo('def a = 1;\ndef b = 2;', 'def a = 1\ndef b = 2')
-    }
-
-    void 'testSelection_ifNothingIsSelected_theWholeDocumentShouldBeFormatted'() {
-        assertSelectedContentChangedFromTo(null, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
-
-        def selection = new TextSelection(5, 0) // selecting: nothing
-        assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
-    }
-
-    void 'testSelection_ifEverythingIsSelected_theWholeDocumentShouldBeFormatted'() {
-        def selection = new TextSelection(0, 21) // selecting: everything
-        assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
-    }
-
-    void 'testSelection_ifARegionWithAnUnnecessarySemicolonIsSelected_theSemicolonShouldBeRemoved'() {
-        def selection = new TextSelection(13, 6) // selecting: { 2; }
-        assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1; }, { 2 }];')
-    }
-
-    void 'testSelection_ifARegionWithANecessarySemicolonIsSelected_theSemicolonShouldNotBeRemoved'() {
-        def selection = new TextSelection(0, 6) // selecting: a = 1;
-        assertSelectedContentChangedFromTo(selection, 'a = 1; b = 2;', 'a = 1; b = 2;')
-    }
+final class SemicolonRemoverTests {
 
     private void assertContentUnchanged(String input) {
         assertContentChangedFromTo(input, input)
@@ -134,6 +40,117 @@ class SemicolonRemoverTests extends TestCase {
         semicolonRemoval.apply(document)
         String actualOutput = document.get()
 
-        assertEquals(expectedOutput, actualOutput)
+        Assert.assertEquals(expectedOutput, actualOutput)
+    }
+
+    @Test
+    void testNullContent() {
+        assertContentChangedFromTo(null, '')
+    }
+
+    @Test
+    void testEmptyDocument() {
+        assertContentUnchanged('')
+    }
+
+    @Test
+    void testNothingToRemove() {
+        assertContentUnchanged('def a = 10')
+        assertContentUnchanged('def a = {}')
+        assertContentUnchanged('def a = []')
+        assertContentUnchanged('for (int i = 0; i < 5; i++) {}')
+    }
+
+    @Test
+    void testFullLineComment() {
+        assertContentUnchanged('// def a')
+        assertContentUnchanged('/* def a; */')
+        assertContentUnchanged('/* def a;\n*/')
+    }
+
+    @Test
+    void testSimpleComment() {
+        assertContentChangedFromTo('def a; // comment;',     'def a // comment;')
+        assertContentChangedFromTo('def a; /* comment; */',  'def a /* comment; */')
+        assertContentChangedFromTo('def a; /* comment;\n*/', 'def a /* comment;\n*/')
+    }
+
+    @Test
+    void testCommentInComment() {
+        assertContentChangedFromTo('def a; /* comment 1; // comment 2; */', 'def a /* comment 1; // comment 2; */')
+        assertContentChangedFromTo('def a; /* comment 1; /* comment 2; */', 'def a /* comment 1; /* comment 2; */')
+        assertContentChangedFromTo('def a; // comment 1; /* comment 2; */', 'def a // comment 1; /* comment 2; */')
+        assertContentChangedFromTo('def a; // comment 1; /* comment 2;',    'def a // comment 1; /* comment 2;')
+    }
+
+    @Test
+    void testMultipleTrailingComments() {
+        assertContentChangedFromTo('def a; /* comment 1; */ // comment 2;',     'def a /* comment 1; */ // comment 2;')
+        assertContentChangedFromTo('def a; /* comment 1; */ /* comment 2; */',  'def a /* comment 1; */ /* comment 2; */')
+        assertContentChangedFromTo('def a; /* comment 1; */ /* comment 2;\n*/', 'def a /* comment 1; */ /* comment 2;\n*/')
+    }
+
+    @Test
+    void testMultipleInlinedComments() {
+        assertContentChangedFromTo('a = 1; /* comment 1; */ b = 2; // comment 2;',     'a = 1; /* comment 1; */ b = 2 // comment 2;')
+        assertContentChangedFromTo('a = 1; /* comment 1; */ b = 2; /* comment 2; */',  'a = 1; /* comment 1; */ b = 2 /* comment 2; */')
+        assertContentChangedFromTo('a = 1; /* comment 1; */ b = 2; /* comment 2;\n*/', 'a = 1; /* comment 1; */ b = 2 /* comment 2;\n*/')
+    }
+
+    @Test
+    void testCommentInString() {
+        assertContentChangedFromTo("def a = 'foo; // bar'; // baz;", "def a = 'foo; // bar' // baz;")
+        assertContentChangedFromTo('def a = "foo; // bar"; // baz;', 'def a = "foo; // bar" // baz;')
+    }
+
+    @Test
+    void testSimpleRemoval() {
+        assertContentChangedFromTo('def a = 10;', 'def a = 10')
+        assertContentChangedFromTo('def a = {};', 'def a = {}')
+        assertContentChangedFromTo('def a = [];', 'def a = []')
+    }
+
+    @Test
+    void testTrailingSpacesAndTabs() {
+        assertContentChangedFromTo('def a = 1 ; ',   'def a = 1  ')
+        assertContentChangedFromTo('def a = 1\t;\t', 'def a = 1\t\t')
+    }
+
+    @Test
+    void testCurlyBraces() {
+        assertContentChangedFromTo('def a = { 1; }',           'def a = { 1 }')
+        assertContentChangedFromTo('def a = [{ 1; }, { 2; }]', 'def a = [{ 1 }, { 2 }]')
+        assertContentChangedFromTo('class A { def a = 1; }',   'class A { def a = 1 }')
+    }
+
+    @Test
+    void testMultipleLines() {
+        assertContentChangedFromTo('def a = 1;\ndef b = 2;', 'def a = 1\ndef b = 2')
+    }
+
+    @Test
+    void testSelection_ifNothingIsSelected_theWholeDocumentShouldBeFormatted() {
+        assertSelectedContentChangedFromTo(null, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
+
+        def selection = new TextSelection(5, 0) // selecting: nothing
+        assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
+    }
+
+    @Test
+    void testSelection_ifEverythingIsSelected_theWholeDocumentShouldBeFormatted() {
+        def selection = new TextSelection(0, 21) // selecting: everything
+        assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1 }, { 2 }]')
+    }
+
+    @Test
+    void testSelection_ifARegionWithAnUnnecessarySemicolonIsSelected_theSemicolonShouldBeRemoved() {
+        def selection = new TextSelection(13, 6) // selecting: { 2; }
+        assertSelectedContentChangedFromTo(selection, 'a = [{ 1; }, { 2; }];', 'a = [{ 1; }, { 2 }];')
+    }
+
+    @Test
+    void testSelection_ifARegionWithANecessarySemicolonIsSelected_theSemicolonShouldNotBeRemoved() {
+        def selection = new TextSelection(0, 6) // selecting: a = 1;
+        assertSelectedContentChangedFromTo(selection, 'a = 1; b = 2;', 'a = 1; b = 2;')
     }
 }

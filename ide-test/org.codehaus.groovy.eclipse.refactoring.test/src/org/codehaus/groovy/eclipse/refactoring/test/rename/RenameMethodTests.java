@@ -15,10 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -31,13 +28,13 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
 import org.eclipse.ltk.core.refactoring.RefactoringCore;
 
-public final class RenameMethodTests extends RefactoringTest {
+public final class RenameMethodTests extends RefactoringTestCase {
 
-    public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(RenameMethodTests.class));
+    public static junit.framework.Test suite() {
+        return new RefactoringTestSetup(new junit.framework.TestSuite(RenameMethodTests.class));
     }
 
-    public static Test setUpTest(Test test) {
+    public static junit.framework.Test setUpTest(junit.framework.Test test) {
         return new RefactoringTestSetup(test);
     }
 

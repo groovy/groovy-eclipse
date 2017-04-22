@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyLocalRefactoring;
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -28,14 +25,11 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 /**
  * Note that all test files use tabs instead of spaces
- *
- * @author andrew
- * @created May 13, 2010
  */
-public class ExtractLocalTests extends RefactoringTest {
+public final class ExtractLocalTests extends RefactoringTestCase {
 
-    public static Test suite() {
-        return new RefactoringTestSetup(new TestSuite(ExtractLocalTests.class));
+    public static junit.framework.Test suite() {
+        return new RefactoringTestSetup(new junit.framework.TestSuite(ExtractLocalTests.class));
     }
 
     public ExtractLocalTests(String name) {

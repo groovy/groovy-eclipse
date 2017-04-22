@@ -16,38 +16,92 @@
 package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 import groovyjarjarasm.asm.Opcodes;
+import junit.framework.AssertionFailedError;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
-import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
+import org.codehaus.groovy.eclipse.refactoring.test.BaseTestCase;
+import org.codehaus.groovy.eclipse.refactoring.test.internal.TestPrefInitializer;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 
-/**
- * @author Michael Klenk mklenk@hsr.ch
- */
-public class ExtractMethodTestCase extends RefactoringTestCase {
+public final class ExtractMethodTestCase extends BaseTestCase {
 
     private ExtractGroovyMethodRefactoring refactoring;
     private GroovyCompilationUnit unit;
     private TestProject testProject;
 
-    public ExtractMethodTestCase(String name, File file) throws FileNotFoundException, IOException {
+    public ExtractMethodTestCase(String name, File file) throws Exception {
         super(name, file);
+        setName("testRefactoring");
     }
 
     @Override
-    public void preAction() throws FileNotFoundException, IOException {
+    protected void tearDown() throws Exception {
+        try {
+            testProject.dispose();
+            testProject = null;
+        } finally {
+            super.tearDown();
+        }
+    }
+
+    /**
+     * Simulates the framework flow of a Refactoring.
+     */
+    public void testRefactoring() throws Exception {
+        try {
+            preAction();
+            RefactoringStatus rs = checkInitialCondition();
+            simulateUserInput();
+            rs.merge(checkFinalCondition());
+            if (analyseRefactoringStatus(rs)) {
+                Change change = createChange();
+                change.perform(new NullProgressMonitor());
+            }
+            finalAssert();
+        } catch (Exception e) {
+            // Hack because groovy wraps exception from java sometimes
+            if (e.getCause() instanceof AssertionFailedError) {
+                throw (AssertionFailedError) e.getCause();
+            }
+            // Unexpected Refactoring Error
+            throw e;
+        }
+    }
+
+    private boolean analyseRefactoringStatus(RefactoringStatus state) {
+        RefactoringStatusEntry[] entries = state.getEntries();
+        if (shouldFail && (entries.length == 0)) {
+            fail("Should fail: " + properties.get("failMessage"));
+        }
+        for(int i = 0; i < entries.length; i++) {
+            RefactoringStatusEntry entry = entries[i];
+            if((entry.isError() || entry.isFatalError()) && shouldFail == false) {
+                //error was not expected
+                fail("condition check failed: " + entry.getMessage());
+            } else {
+                //Test the errorMessage
+                if(shouldFail && properties.get("failMessage")!= null) {
+                    assertEquals(properties.get("failMessage"),entry.getMessage());
+                }
+            }
+            if (entry.isFatalError()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void preAction() throws Exception {
         try {
             testProject = new TestProject();
             TestProject.setAutoBuilding(false);
@@ -72,13 +126,11 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
         }
     }
 
-    @Override
-    public RefactoringStatus checkInitialCondition() throws CoreException, OperationCanceledException {
+    private RefactoringStatus checkInitialCondition() throws Exception {
         return refactoring.checkInitialConditions(new NullProgressMonitor());
     }
 
-    @Override
-    public void simulateUserInput() {
+    private void simulateUserInput() {
         try {
             int modifier = 0;
             String mod = properties.get("modifier");
@@ -121,13 +173,11 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
         }
     }
 
-    @Override
-    public RefactoringStatus checkFinalCondition() throws CoreException, OperationCanceledException {
+    private RefactoringStatus checkFinalCondition() throws Exception {
         return refactoring.checkFinalConditions(new NullProgressMonitor());
     }
 
-    @Override
-    public Change createChange() throws CoreException, OperationCanceledException {
+    private Change createChange() throws Exception {
         return refactoring.createChange(new NullProgressMonitor());
     }
 
@@ -135,15 +185,5 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     public void finalAssert() {
         getDocument().set(String.valueOf(unit.getContents()));
         super.finalAssert();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            testProject.dispose();
-            testProject = null;
-        } finally {
-            super.tearDown();
-        }
     }
 }
