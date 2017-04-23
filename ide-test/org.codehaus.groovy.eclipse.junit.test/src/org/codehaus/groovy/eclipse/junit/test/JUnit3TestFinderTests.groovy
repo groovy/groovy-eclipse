@@ -25,6 +25,7 @@ import org.junit.Test
 final class JUnit3TestFinderTests extends JUnitTestCase {
 
     private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
+        EclipseTestSetup.buildProject()
         EclipseTestSetup.waitForIndex()
         def type = unit.getType(typeName)
         assert type.exists() : "Groovy type $typeName should exist"
