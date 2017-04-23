@@ -80,7 +80,7 @@ public int hashCode() {
 	result = 31 * result + this.startPosition;
 	result = 31 * result + this.endPosition;
 	result = 31 * result + this.message.hashCode();
-	result = 31 * result + new String(this.fileName).hashCode();
+	result = 31 * result + (this.fileName == null ? 0 : new String(this.fileName).hashCode());
 	for (int i = 0, n = this.arguments.length; i < n; i += 1) {
 		result = 31 * result + this.arguments[i].hashCode();
 	}
