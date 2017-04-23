@@ -42,6 +42,7 @@ import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -92,6 +93,12 @@ public class OrganizeGroovyImports {
                 handleType(annotation.getClassNode(), true);
             }
             super.visitAnnotation(annotation);
+        }
+
+        @Override
+        public void visitArrayExpression(ArrayExpression expression) {
+            handleType(expression.getType(), false);
+            super.visitArrayExpression(expression);
         }
 
         @Override

@@ -101,12 +101,19 @@ final class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testAddImport10() {
         String contents = '''
-            def f = (FirstClass) null;
+            def fs = new FirstClass[0]
             '''
         doAddImportTest(contents, ['import other.FirstClass'])
     }
 
     void testAddImport11() {
+        String contents = '''
+            def f = (FirstClass) null;
+            '''
+        doAddImportTest(contents, ['import other.FirstClass'])
+    }
+
+    void testAddImport12() {
         String contents = '''
             def f = [:] as FirstClass
             '''
