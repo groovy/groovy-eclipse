@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
-import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.core.search.JavaWorkspaceScope
 import org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine
@@ -32,7 +32,7 @@ final class MainMethodFinderTests extends JUnitTestCase {
      */
     private expectTypesWithMain(String... expected) {
         MainMethodSearchEngine engine = new MainMethodSearchEngine()
-        IType[] types = engine.searchMainMethods(null as IProgressMonitor,
+        IType[] types = engine.searchMainMethods(new NullProgressMonitor(),
             new JavaWorkspaceScope(), IJavaElementSearchConstants.CONSIDER_ALL_TYPES)
         assert types.length == expected.length : "Wrong number of main methods found in: ${ -> types.collect { it.fullyQualifiedName }}"
         types.eachWithIndex { type, i ->

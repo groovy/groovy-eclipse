@@ -52,6 +52,9 @@ abstract class JUnitTestCase {
     }
 
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Hello', String pack = 'p2') {
-        EclipseTestSetup.addGroovySource(contents, name, pack)
+        GroovyCompilationUnit unit = EclipseTestSetup.addGroovySource(contents, name, pack)
+        EclipseTestSetup.buildProject()
+        EclipseTestSetup.waitForIndex()
+        return unit
     }
 }

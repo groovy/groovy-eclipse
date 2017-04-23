@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.junit.JUnitPropertyTester
@@ -26,9 +24,7 @@ import org.junit.Test
 final class JUnit4TestFinderTests extends JUnitTestCase {
 
     private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
-        EclipseTestSetup.buildProject()
-        EclipseTestSetup.waitForIndex()
-        def type = unit.getType(typeName)
+        IType type = unit.getType(typeName)
         assert type.exists() : "Groovy type $typeName should exist"
         assert new JUnit4TestFinder().isTest(type) == expected : "Groovy type $typeName should${expected ? '' : 'n\'t'} be a JUnit 4 test $reasonText"
     }
@@ -185,10 +181,10 @@ final class JUnit4TestFinderTests extends JUnitTestCase {
         )
 
         Set<IType> testTypes = [] as Set
-        new JUnit4TestFinder().findTestsInContainer(unit.getJavaProject(), testTypes, new NullProgressMonitor())
+        new JUnit4TestFinder().findTestsInContainer(unit.getJavaProject(), testTypes, null)
 
         assert testTypes.size() == 6 : 'Should have found 6 test classes'
-        assert testTypes.any { it.elementName == 'Hello' } : 'Hello should be a test type'
+        assert testTypes.any { it.elementName == 'Hello'  } : 'Hello should be a test type'
         assert testTypes.any { it.elementName == 'Hello2' } : 'Hello2 should be a test type'
         assert testTypes.any { it.elementName == 'Hello3' } : 'Hello3 should be a test type'
         assert testTypes.any { it.elementName == 'Tester' } : 'Tester should be a test type'

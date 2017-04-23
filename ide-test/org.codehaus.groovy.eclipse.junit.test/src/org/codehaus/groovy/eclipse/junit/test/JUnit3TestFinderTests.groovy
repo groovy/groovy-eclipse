@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.junit.launcher.JUnit3TestFinder
@@ -25,9 +23,7 @@ import org.junit.Test
 final class JUnit3TestFinderTests extends JUnitTestCase {
 
     private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
-        EclipseTestSetup.buildProject()
-        EclipseTestSetup.waitForIndex()
-        def type = unit.getType(typeName)
+        IType type = unit.getType(typeName)
         assert type.exists() : "Groovy type $typeName should exist"
         assert new JUnit3TestFinder().isTest(type) == expected : "Groovy type $typeName should${expected ? '' : 'n\'t'} be a JUnit 3 test $reasonText"
     }
@@ -109,7 +105,7 @@ final class JUnit3TestFinderTests extends JUnitTestCase {
         )
 
         Set<IType> testTypes = [] as Set
-        new JUnit3TestFinder().findTestsInContainer(unit.getJavaProject(), testTypes, new NullProgressMonitor())
+        new JUnit3TestFinder().findTestsInContainer(unit.getJavaProject(), testTypes, null)
 
         assert testTypes.size() == 3 : 'Should have found 3 test classes'
         assert testTypes.any { it.elementName == 'Hello' } : 'Hello should be a test type'
