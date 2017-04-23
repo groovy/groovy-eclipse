@@ -542,16 +542,11 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
     }
 
     void testEnterPressedAtBeginningOfFile() {
-        makeEditor("""${CARET}
-            def foo() {
-            }""".stripIndent(12))
+        makeEditor "$CARET\ndef foo() {\n}"
 
-        send('\n')
+        send '\n'
 
-        assertEditorContents("""
-            ${CARET}
-            def foo() {
-            }""".stripIndent(12))
+        assertEditorContents "\n$CARET\ndef foo() {\n}"
     }
 
     void testEnterPressedAfterLongCommentAtBeginningOfFile() {
@@ -774,6 +769,28 @@ ${CARET}""")
                 def foo() {
                 ${CARET}}
             """.stripIndent())
+    }
+
+    void testSmartTabIncompleteMultiLineString() {
+        makeEditor """\
+            class Foo {
+              def bar() {
+                String baz = '''\\
+            $CARET
+              }
+            }
+            """.stripIndent()
+
+        send '\t'
+
+        assertEditorContents """\
+            class Foo {
+              def bar() {
+                String baz = '''\\
+                $CARET
+              }
+            }
+            """.stripIndent()
     }
 
     void testAutoCloseBracesInGString1() {

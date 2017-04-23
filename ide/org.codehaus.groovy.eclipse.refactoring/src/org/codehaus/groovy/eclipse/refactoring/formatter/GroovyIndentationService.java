@@ -258,9 +258,8 @@ public class GroovyIndentationService {
         if (line != 0) {
             try {
                 Token nextToken = getTokenFrom(d, d.getLineOffset(line));
-                if (isCloserOfPair(nextToken)) {
-                    // Don't use the newline mechanism! Line up the with
-                    // matching opening brace instead.
+                if (nextToken != null && isCloserOfPair(nextToken)) {
+                    // Don't use the newline mechanism! Line up the with matching opening brace instead.
                     return getIndentLevelForCloserPair(d, nextToken);
                 } else {
                     IRegion prevLine = d.getLineInformation(line - 1);
