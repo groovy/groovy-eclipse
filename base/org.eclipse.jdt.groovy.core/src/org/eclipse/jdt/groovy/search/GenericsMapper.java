@@ -105,8 +105,12 @@ public class GenericsMapper {
                     Parameter[] methodParameters = methodDeclaration.getParameters();
                     for (int i = 0, n = isVargs(methodParameters) ? argumentTypes.size() :
                             Math.min(argumentTypes.size(), methodParameters.length); i < n; i += 1) {
-                        ClassNode rbt = GroovyUtils.getBaseType(argumentTypes.get(i));
-                        ClassNode ubt = GroovyUtils.getBaseType(methodParameters[Math.min(i, methodParameters.length - 1)].getType());
+                        ClassNode rbt = argumentTypes.get(i);
+                        ClassNode ubt = methodParameters[Math.min(i, methodParameters.length - 1)].getType();
+                        while (rbt.isArray() && ubt.isArray()) {
+                            rbt = rbt.getComponentType();
+                            ubt = ubt.getComponentType();
+                        }
 
                         // rbt could be "String" and ubt could be "T" or "T extends CharSequence"
                         if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(ugt.getName())) {

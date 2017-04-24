@@ -215,14 +215,13 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         String noArray = Signature.getElementType(typeSignature);
         String qualifiedName = getQualifiedName(noArray);
         ClassNode resolved;
-        if (typeSignature.length() == 1 + dims) {
-            // a primitive type
-            resolved = ClassHelper.getWrapper(ClassHelper.make(qualifiedName));
+        if (typeSignature.length() == 1 + dims) { // is primitive type
+            resolved = /*ClassHelper.getWrapper(*/ClassHelper.make(qualifiedName)/*)*/;
         } else {
             try {
                 resolved = context.unit.getModuleInfo(false).resolver.resolve(qualifiedName);
             } catch (NullPointerException e) {
-                // ignore.  Likely DSL support not available
+                // ignore; likely DSL support not available
                 resolved = VariableScope.OBJECT_CLASS_NODE;
             }
         }

@@ -784,8 +784,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
             !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) &&
-            !(source.isArray() && !source.getComponentType().isPrimitive() &&
-                ClassHelper.OBJECT_TYPE.equals(target.getComponentType())) &&
             !(source.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(target))) {
 
             result = !GroovyUtils.isAssignable(source, target) ? Boolean.FALSE : null; // not an exact match

@@ -259,10 +259,14 @@ public abstract class GroovyUtils {
      * @see org.eclipse.jdt.groovy.search.SimpleTypeLookup#isTypeCompatible(ClassNode, ClassNode)
      */
     public static boolean isAssignable(ClassNode source, ClassNode target) {
+        return isAssignable(false, source, target);
+    }
+
+    private static boolean isAssignable(boolean array, ClassNode source, ClassNode target) {
         if (source.isArray() && target.isArray()) {
-            return isAssignable(source.getComponentType(), target.getComponentType());
+            return isAssignable(true, source.getComponentType(), target.getComponentType());
         }
-        if (source.isArray() || target.isArray()) {
+        if ((source.isArray() && (!target.equals(ClassHelper.OBJECT_TYPE) && !target.isGenericsPlaceHolder())) || target.isArray()) {
             return false;
         }
 
@@ -272,15 +276,17 @@ public abstract class GroovyUtils {
             result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
         } else*/ if (target.isInterface()) {
             result = source.equals(target) || source.implementsInterface(target);
+        } else if (array) {
+            // Object or Object[] is universal receiver for an array
+            result = ClassHelper.OBJECT_TYPE.equals(target) || source.isDerivedFrom(target);
         } else {
-            result = getWrapperTypeIfPrimitive(source)
-                .isDerivedFrom(getWrapperTypeIfPrimitive(target));
+            result = getWrapperTypeIfPrimitive(source).isDerivedFrom(getWrapperTypeIfPrimitive(target));
         }
 
         // if target is like <T extends A & B>, check source against B
         final ClassNode[] bounds = getTypeParameterBounds(target);
         for (int i = 1; i < bounds.length && result; i += 1) {
-            result = isAssignable(source, bounds[i]);
+            result = isAssignable(array, source, bounds[i]);
         }
 
         return result;

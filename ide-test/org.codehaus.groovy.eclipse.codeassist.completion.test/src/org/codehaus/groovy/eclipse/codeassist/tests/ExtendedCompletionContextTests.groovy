@@ -15,157 +15,203 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.junit.Assert.*
-
-import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext
-import org.eclipse.jdt.core.IJavaElement
 import org.junit.Test
 
 final class ExtendedCompletionContextTests extends CompletionTestCase {
 
-    private static final String STRING_SIG = "Ljava.lang.String;"
-    private static final String STRING_ARR_SIG = "[Ljava.lang.String;"
-    private static final String INTEGER_SIG = "Ljava.lang.Integer;"
-    private static final String INTEGER_ARR_SIG = "[Ljava.lang.Integer;"
-    private static final String LIST_SIG = "Ljava.util.List;"
-    private static final String LIST_ARR_SIG = "[Ljava.util.List;"
-
     @Test
     void testExtendedContextInScript1() {
-        String contents = "def x = 9\ndef y = ''\ndef z = []\nint a\nString b\nList c\nz"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, INTEGER_SIG, "x", "a")
-        assertExtendedContextElements(context, STRING_SIG, "y", "b")
-        assertExtendedContextElements(context, LIST_SIG, "z", "c")
+        String contents = '''\
+            def x = 9
+            def y = ""
+            def z = []
+            int a
+            String b
+            List c
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'a')
+        assertExtendedContextElements(context, 'Ljava.lang.String;', 'y', 'b')
+        assertExtendedContextElements(context, 'Ljava.util.List;', 'z', 'c')
     }
 
     @Test
     void testExtendedContextInScript2() {
-        String contents = "int[] x\nString[] y\nList[] z\nint a\nString b\nList c\nz"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, INTEGER_ARR_SIG, "x")
-        assertExtendedContextElements(context, STRING_ARR_SIG, "y")
-        assertExtendedContextElements(context, LIST_ARR_SIG, "z")
+        String contents = '''\
+            int[] x
+            String[] y
+            List[] z
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, '[I', 'x')
+        assertExtendedContextElements(context, '[Ljava.lang.String;', 'y')
+        assertExtendedContextElements(context, '[Ljava.util.List;', 'z')
     }
 
     @Test
     void testExtendedContextInScript3() {
-        String contents = "class Sub extends Super{ }\nclass Super { }\ndef x = new Super()\ndef y = new Sub()\ndef z\nz"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, "LSuper;", "x", "y")
-        assertExtendedContextElements(context, "LSub;", "y")
+        String contents = '''\
+            class Sub extends Super{ }
+            class Super { }
+            def x = new Super()
+            def y = new Sub()
+            def z
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
+        assertExtendedContextElements(context, 'LSub;', 'y')
     }
 
     @Test
     void testExtendedContextInScript4() {
-        String contents = "class Sub extends Super{ }\nclass Super { }\ndef x = new Super[0]\ndef y = new Sub[0]\ndef z\nz"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, "[LSuper;", "x", "y")
-        assertExtendedContextElements(context, "[LSub;", "y")
-        assertExtendedContextElements(context, "LSuper;")
-        assertExtendedContextElements(context, "LSub;")
+        String contents = '''\
+            class Sub extends Super{ }
+            class Super { }
+            def x = new Super[0]
+            def y = new Sub[0]
+            def z
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, '[LSuper;', 'x', 'y')
+        assertExtendedContextElements(context, '[LSub;', 'y')
+        assertExtendedContextElements(context, 'LSuper;')
+        assertExtendedContextElements(context, 'LSub;')
     }
 
     @Test
     void testExtendedContextInClass1() {
-        String contents = "class Sub extends Super{ }\nclass Super {\n def foo() { \ndef x = new Super[0]\ndef y = new Sub[0]\ndef z\nz } }"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("foo", enclosing.getElementName())
-        assertExtendedContextElements(context, "[LSuper;", "x", "y")
-        assertExtendedContextElements(context, "[LSub;", "y")
-        assertExtendedContextElements(context, "LSuper;")
-        assertExtendedContextElements(context, "LSub;")
+        String contents = '''\
+            class Sub extends Super{ }
+            class Super {
+              def foo() {
+                def x = new Super[0]
+                def y = new Sub[0]
+                def z
+                z
+              }
+            }
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'foo'
+        assertExtendedContextElements(context, '[LSuper;', 'x', 'y')
+        assertExtendedContextElements(context, '[LSub;', 'y')
+        assertExtendedContextElements(context, 'LSuper;')
+        assertExtendedContextElements(context, 'LSub;')
     }
 
     @Test
     void testExtendedContextInClass2() {
-        String contents = "class Sub extends Super{ }\nclass Super { \nSuper x\nSub y\ndef z\n def foo() { \nz } }"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("foo", enclosing.getElementName())
-        assertExtendedContextElements(context, "LSuper;", "x", "y")
-        assertExtendedContextElements(context, "LSub;", "y")
+        String contents = '''\
+            class Sub extends Super { }
+            class Super {
+              Super x
+              Sub y
+              def z
+              def foo() { z }
+            }
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'foo'
+        assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
+        assertExtendedContextElements(context, 'LSub;', 'y')
     }
 
     @Test
     void testExtendedContextInClass3() {
-        String contents = "class Super{ \nSuper a\nSub b\ndef c }\nclass Sub extends Super { \nSuper x\nSub y\ndef z\n def foo() { \nSuper z } }"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("foo", enclosing.getElementName())
-        assertExtendedContextElements(context, "LSub;", "y", "b")
-        assertExtendedContextElements(context, "LSuper;", "x", "y", "a", "b", "z")
+        String contents = '''\
+            class Super {
+              Super a
+              Sub b
+              def c
+            }
+            class Sub extends Super {
+              Super x
+              Sub y
+              def z
+              def foo() { Super z }
+            }
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'foo'
+        assertExtendedContextElements(context, 'LSub;', 'b', 'y')
+        assertExtendedContextElements(context, 'LSuper;', 'a', 'b', 'x', 'y', 'z')
     }
 
-    @Test // We should be using erasure types, so generics need not match
+    @Test // should be using erasure types, so generics need not match
     void testExtendedContextWithGenerics() {
-        String contents =
-            "Map<Integer, Class> x\n" +
-            "HashMap<Class, Integer> y\n" +
-            "z"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, "Ljava.util.Map;", "y", "x")
-        assertExtendedContextElements(context, "Ljava.util.HashMap;", "y")
+        String contents = '''\
+            Map<Integer, Class> x
+            HashMap<Class, Integer> y
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, 'Ljava.util.Map;', 'x', 'y')
+        assertExtendedContextElements(context, 'Ljava.util.HashMap;', 'y')
     }
 
     @Test // now look at boxing and unboxing
     void testExtendedContextWithBoxing() {
-        String contents =
-            "int x\n" +
-            "Integer y\n" +
-            "boolean a\n" +
-            "Boolean b\n" +
-            "z"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, "Ljava.lang.Integer;", "y", "x")
-        assertExtendedContextElements(context, "I", "y", "x")
-        assertExtendedContextElements(context, "Ljava.lang.Boolean;", "a", "b")
-        assertExtendedContextElements(context, "Z", "a", "b")
+        String contents = '''\
+            int x
+            Integer y
+            boolean a
+            Boolean b
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, 'I', 'x', 'y')
+        assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
+        assertExtendedContextElements(context, 'Z', 'a', 'b')
+        assertExtendedContextElements(context, 'Ljava.lang.Boolean;', 'a', 'b')
     }
 
-    @Test // now look at arrayed boxing and unboxing
-    void testExtendedContextWithBoxingAndArrays() {
-        String contents =
-            "int x\n" +
-            "Integer y\n" +
-            "boolean a\n" +
-            "Boolean b\n" +
-            "int[] x1\n" +
-            "Integer[] y1\n" +
-            "boolean[] a1\n" +
-            "Boolean[] b1\n" +
-            "int[][] x2\n" +
-            "Integer[][] y2\n" +
-            "boolean[][] a2\n" +
-            "Boolean[][] b2\n" +
-            "z"
-        GroovyExtendedCompletionContext context = getExtendedCoreContext(addGroovySource(contents, "File", ""), contents.lastIndexOf('z')+1)
-        IJavaElement enclosing = context.getEnclosingElement()
-        assertEquals("run", enclosing.getElementName())
-        assertExtendedContextElements(context, "Ljava.lang.Integer;", "y", "x")
-        assertExtendedContextElements(context, "I", "y", "x")
-        assertExtendedContextElements(context, "Ljava.lang.Boolean;", "a", "b")
-        assertExtendedContextElements(context, "Z", "a", "b")
-        assertExtendedContextElements(context, "[Ljava.lang.Integer;", "y1", "x1")
-        assertExtendedContextElements(context, "[I", "y1", "x1")
-        assertExtendedContextElements(context, "[Ljava.lang.Boolean;", "a1", "b1")
-        assertExtendedContextElements(context, "[Z", "a1", "b1")
-        assertExtendedContextElements(context, "[[Ljava.lang.Integer;", "y2", "x2")
-        assertExtendedContextElements(context, "[[I", "y2", "x2")
-        assertExtendedContextElements(context, "[[Ljava.lang.Boolean;", "a2", "b2")
-        assertExtendedContextElements(context, "[[Z", "a2", "b2")
+    @Test
+    void testExtendedContextWithArrays() {
+        String contents = '''\
+            int x
+            Integer y
+            boolean a
+            Boolean b
+            int[] x1
+            Integer[] y1
+            boolean[] a1
+            Boolean[] b1
+            int[][] x2
+            Integer[][] y2
+            boolean[][] a2
+            Boolean[][] b2
+            z
+            '''.stripIndent()
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        assert context.getEnclosingElement().getElementName() == 'run'
+        assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
+        assertExtendedContextElements(context, 'I', 'x', 'y')
+        assertExtendedContextElements(context, 'Ljava.lang.Boolean;', 'a', 'b')
+        assertExtendedContextElements(context, 'Z', 'a', 'b')
+
+        // arrays do not follow the same autoboxing rules
+        assertExtendedContextElements(context, '[I', 'x1')
+        assertExtendedContextElements(context, '[Ljava.lang.Integer;', 'y1')
+        assertExtendedContextElements(context, '[Z', 'a1')
+        assertExtendedContextElements(context, '[Ljava.lang.Boolean;', 'b1')
+        assertExtendedContextElements(context, '[[I', 'x2')
+        assertExtendedContextElements(context, '[[Ljava.lang.Integer;', 'y2')
+        assertExtendedContextElements(context, '[[Z', 'a2')
+        assertExtendedContextElements(context, '[[Ljava.lang.Boolean;', 'b2')
+
+        // this also matched binding and metaClass and a bunch of stuff, so skip this check
+        //assertExtendedContextElements(context, 'Ljava.lang.Object;', 'a1', 'b1', 'a2', 'b2', 'x1', 'y1', 'x2', 'y2')
+        assertExtendedContextElements(context, '[Ljava.lang.Object;', 'a1', 'b1', 'a2', 'b2', 'x1', 'y1', 'x2', 'y2')
+        assertExtendedContextElements(context, '[[Ljava.lang.Object;', 'a2', 'b2', 'x2', 'y2')
     }
 }
