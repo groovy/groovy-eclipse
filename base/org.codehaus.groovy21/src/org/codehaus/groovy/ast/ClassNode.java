@@ -138,21 +138,22 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private ClassNode superClass;
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
-    
+
+    // GRECLIPSE add
     private int bitflags = 0x0000;
     private static final int BIT_INCONSISTENT_HIERARCHY = 0x0001;
-    
+
     public boolean hasInconsistentHierarchy() {
-    	return ((redirect().bitflags) & BIT_INCONSISTENT_HIERARCHY)!=0;
+        return ((redirect().bitflags) & BIT_INCONSISTENT_HIERARCHY) != 0;
     }
     public void setHasInconsistentHierarchy(boolean b) {
-    	ClassNode redirect = redirect();
-    	if (b) {
-    		redirect.bitflags|=BIT_INCONSISTENT_HIERARCHY;
-    	} else {
-    		redirect.bitflags&=~BIT_INCONSISTENT_HIERARCHY;
-    	}
+        if (b) {
+            redirect().bitflags |= BIT_INCONSISTENT_HIERARCHY;
+        } else {
+            redirect().bitflags &= ~BIT_INCONSISTENT_HIERARCHY;
+        }
     }
+    // GRECLIPSE end
 
     /**
      * The ASTTransformations to be applied to the Class
@@ -229,17 +230,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     /**
      * @return true if this instance is a primary ClassNode
      */
-    public boolean isPrimaryClassNode(){
-    	return redirect().isPrimaryNode || (componentType!= null && componentType.isPrimaryClassNode());
+    public boolean isPrimaryClassNode() {
+        return redirect().isPrimaryNode || (componentType != null && componentType.isPrimaryClassNode());
     }
 
-    // GRECLIPSE: from private to public
     /*
      * Constructor used by makeArray() if no real class is available
      */
+    // GRECLIPSE private->public
     public ClassNode(ClassNode componentType) {
-    	// GRECLIPSE: start
-    	/*{
+        // GRECLIPSE: start
+        /*{
         this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         }*/ 
         // newcode:
@@ -249,7 +250,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         isPrimaryNode=false;
     }
 
-    // GRECLIPSE: start
+    // GRECLIPSE add
     /**
      * For a given component type compute the right 'name'.  Rules are as follows:
      * <ul>
@@ -259,46 +260,46 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * </ul>
      */
     public static String computeArrayName(ClassNode componentType) {
-    	String n = componentType.getName();
-    	if (componentType.isPrimitive()) {
-    		int len=n.length();
-    		if (len==7) {
-    			// boolean
-    			return "[Z";
-    		} else if (len==6) {
-    			// double
-    			return "[D";
-    		} else if (len==5) {
-    			if (n.charAt(0)=='f') {
-    				return "[F";//float
-    			} else {
-    				return "[S";//short
-    			}
-    		} else if (len==4) {
-    			 switch (n.charAt(0)) {
-    			 case 'b': return "[B";//byte
-    			 case 'c': return "[C";//char
-    			 default:
-    				 //case 'l': 
-    				 return "[J";//long
-    			 }
-    		} else {
-    			return "[I";//int
-    		}    		
-    	} else if (componentType.isArray()) {
-    		// follow the pattern:
-    		if (n.charAt(0)=='[') {
-    			return new StringBuilder("[").append(n).toString();
-    		} else {
-    			return new StringBuilder(n).append("[]").toString();    			
-    		}  		
-    	} else {
-    		// reference type:
-    		return new StringBuilder("[L").append(componentType.getName()).append(";").toString();
-    	}
+        String n = componentType.getName();
+        if (componentType.isPrimitive()) {
+            int len=n.length();
+            if (len==7) {
+                // boolean
+                return "[Z";
+            } else if (len==6) {
+                // double
+                return "[D";
+            } else if (len==5) {
+                if (n.charAt(0)=='f') {
+                    return "[F";//float
+                } else {
+                    return "[S";//short
+                }
+            } else if (len==4) {
+                switch (n.charAt(0)) {
+                case 'b': return "[B";//byte
+                case 'c': return "[C";//char
+                default:
+                //case 'l':
+                    return "[J";//long
+                }
+            } else {
+                return "[I";//int
+            }
+        } else if (componentType.isArray()) {
+            // follow the pattern:
+            if (n.charAt(0)=='[') {
+                return new StringBuilder("[").append(n).toString();
+            } else {
+                return new StringBuilder(n).append("[]").toString();
+            }
+        } else {
+            // reference type:
+            return new StringBuilder("[L").append(componentType.getName()).append(";").toString();
+        }
     }
-    // end
-    
+    // GRECLIPSE end
+
     /*
      * Constructor used by makeArray() if a real class is available
      */
@@ -429,9 +430,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public ClassNode[] getInterfaces() {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
+        // GRECLIPSE add
         if (hasInconsistentHierarchy()) {
-        	return EMPTY_ARRAY;
+            return EMPTY_ARRAY;
         }
+        // GRECLIPSE end
         if (redirect!=null) return redirect().getInterfaces();
         return interfaces;
     }
@@ -548,19 +551,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().modifiers = modifiers;
     }
 
-    // GRECLIPSE: start: overridable method for JDTClassNode
-    protected void ensurePropertiesInitialized() {	
+    // GRECLIPSE add -- overridable method for JDTClassNode
+    protected void ensurePropertiesInitialized() {
     }
-    // end
+    // GRECLIPSE end
 
     public List<PropertyNode> getProperties() {
-        // GRECLIPSE: start
-    	  redirect().ensurePropertiesInitialized();
-        // end
-	  final ClassNode r = redirect();
+        // GRECLIPSE add
+        redirect().ensurePropertiesInitialized();
+        // GRECLIPSE end
+        final ClassNode r = redirect();
         if (r.properties == null)
             r.properties = new ArrayList<PropertyNode> ();
-        return r.properties;    
+        return r.properties;
     }
 
     public List<ConstructorNode> getDeclaredConstructors() {
@@ -610,15 +613,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         r.fieldIndex.put(node.getName(), node);
     }
 
+    // GRECLIPSE add
     public void addPropertyWithoutField(PropertyNode node) {
         node.setDeclaringClass(redirect());
-//        FieldNode field = node.getField();
-//        addField(field);
         final ClassNode r = redirect();
         if (r.properties == null)
             r.properties = new ArrayList<PropertyNode> ();
         r.properties.add(node);
     }
+    // GRECLIPSE end
 
     public void addProperty(PropertyNode node) {
         node.setDeclaringClass(redirect());
@@ -661,22 +664,25 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public PropertyNode getProperty(String name) {
-    	try {
-	        for (PropertyNode pn : getProperties()) {
-	        	String pname = pn.getName();
-	            if (pname.equals(name)) return pn;
-	        }
-    	} catch (NullPointerException npe) {
-    		throw new RuntimeException("greclipse-972 debug: null pointer in getProperty(), type is "+this.getName()+" props are "+getProperties(),npe);
-    	}
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
+        for (PropertyNode pn : getProperties()) {
+            if (pn.getName().equals(name)) return pn;
+        }
+        // GRECLIPSE add
+        } catch (NullPointerException npe) {
+            throw new RuntimeException("greclipse-972 debug: null pointer in getProperty(), type is " + getName() + " props are " + getProperties(), npe);
+        }
+        // GRECLIPSE end
         return null;
     }
 
     public void addConstructor(ConstructorNode node) {
         node.setDeclaringClass(this);
-        final ClassNode r = redirect();
+        ClassNode r = redirect();
         if (r.constructors == null)
-            r.constructors = new ArrayList<ConstructorNode> ();
+            r.constructors = new ArrayList<ConstructorNode>();
         r.constructors.add(node);
     }
 
@@ -688,9 +694,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addMethod(MethodNode node) {
         node.setDeclaringClass(this);
-        ClassNode redirect = redirect();  // GRECLIPSE
-        redirect.methodsList.add(node);
-        redirect.methods.put(node.getName(), node);
+        ClassNode r = redirect();
+        r.methodsList.add(node);
+        r.methods.put(node.getName(), node);
     }
 
     /**
@@ -777,11 +783,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean equals(Object o) {
-    	// GRECLIPSE: start
-    	if (o==null) {
-    		return false;
-    	}
-    	// GRECLIPSE: end
+        // GRECLIPSE: start
+        if (o==null) {
+            return false;
+        }
+        // GRECLIPSE: end
         if (redirect!=null) return redirect().equals(o);
         if (!(o instanceof ClassNode)) return false;
         ClassNode cn = (ClassNode) o;
@@ -883,7 +889,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             method = (MethodNode) declaredMethods.get(0);
         }
         return method;
-        }
+    }
     
     public void addStaticInitializerStatements(List<Statement> staticStatements, boolean fieldInit) {
         MethodNode method = getOrAddStaticConstructorNode();
@@ -918,26 +924,26 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         MethodNode method = getOrAddStaticConstructorNode();
         Statement statement = method.getCode();
         if (statement instanceof BlockStatement) {
-        	BlockStatement block = (BlockStatement) statement;
-        	// add given statements for explicitly declared static fields just after enum-special fields
-        	// are found - the $VALUES binary expression marks the end of such fields.
-        	List<Statement> blockStatements = block.getStatements();
-        	ListIterator<Statement> litr = blockStatements.listIterator();
-        	while(litr.hasNext()) {
-        		Statement stmt = litr.next();
-        		if(stmt instanceof ExpressionStatement && 
-        				((ExpressionStatement)stmt).getExpression() instanceof BinaryExpression) {
-        			BinaryExpression bExp = (BinaryExpression) ((ExpressionStatement)stmt).getExpression();
-        			if (bExp.getLeftExpression() instanceof FieldExpression) {
-        				FieldExpression fExp = (FieldExpression) bExp.getLeftExpression();
-        				if(fExp.getFieldName().equals("$VALUES")) {
-        					for(Statement tmpStmt : staticFieldStatements) {
-        						litr.add(tmpStmt);
-        					}
-        				}
-        			}
-        		}
-        	}
+            BlockStatement block = (BlockStatement) statement;
+            // add given statements for explicitly declared static fields just after enum-special fields
+            // are found - the $VALUES binary expression marks the end of such fields.
+            List<Statement> blockStatements = block.getStatements();
+            ListIterator<Statement> litr = blockStatements.listIterator();
+            while (litr.hasNext()) {
+                Statement stmt = litr.next();
+                if (stmt instanceof ExpressionStatement && 
+                        ((ExpressionStatement)stmt).getExpression() instanceof BinaryExpression) {
+                    BinaryExpression bExp = (BinaryExpression) ((ExpressionStatement)stmt).getExpression();
+                    if (bExp.getLeftExpression() instanceof FieldExpression) {
+                        FieldExpression fExp = (FieldExpression) bExp.getLeftExpression();
+                        if (fExp.getFieldName().equals("$VALUES")) {
+                            for (Statement tmpStmt : staticFieldStatements) {
+                                litr.add(tmpStmt);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1069,9 +1075,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (!lazyInitDone && !isResolved()) {
             throw new GroovyBugError("ClassNode#getSuperClass for "+getName()+" called before class resolving");
         }
+        // GRECLIPSE add
         if (hasInconsistentHierarchy()) {
-        	return ClassHelper.OBJECT_TYPE;
+            return ClassHelper.OBJECT_TYPE;
         }
+        // GRECLIPSE end
         ClassNode sn = redirect().getUnresolvedSuperClass();
         if (sn!=null) sn=sn.redirect();
         return sn;
@@ -1081,10 +1089,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return getUnresolvedSuperClass(true);
     }
 
-    public ClassNode getUnresolvedSuperClass(boolean useRedirect) { 
-    	if (hasInconsistentHierarchy()) {
-	    	return ClassHelper.OBJECT_TYPE;
-	    }
+    public ClassNode getUnresolvedSuperClass(boolean useRedirect) {
+        // GRECLIPSE add
+        if (hasInconsistentHierarchy()) {
+            return ClassHelper.OBJECT_TYPE;
+        }
+        // GRECLIPSE end
         if (!useRedirect) return superClass;
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         return redirect().superClass;
@@ -1099,9 +1109,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public ClassNode [] getUnresolvedInterfaces(boolean useRedirect) {
+        // GRECLIPSE add
         if (hasInconsistentHierarchy()) {
-        	return EMPTY_ARRAY;
+            return EMPTY_ARRAY;
         }
+        // GRECLIPSE end
         if (!useRedirect) return interfaces;
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         return redirect().interfaces;
@@ -1265,7 +1277,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * in GenericsType calls ClassNode.toString(), which calls GenericsType.toString(), etc. 
      * @param genericsType
      * @param showRedirect
-     * @return
+     * @return the string representing the generic type
      */
     private String genericTypeAsString(GenericsType genericsType, boolean showRedirect) {
         String ret = genericsType.getName();
@@ -1402,43 +1414,42 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 int nonDefaultParameters = 0;
                 for (Parameter parameter : parameters) {
                     if (!parameter.hasInitialExpression()) {
-                		nonDefaultParameters++;
-                	}
+                        nonDefaultParameters++;
+                    }
                 }
                 
-            	if(count < parameters.length && nonDefaultParameters <= count) {
-            		return true;
-            	}
+                if (count < parameters.length && nonDefaultParameters <= count) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    public boolean isInterface(){
-        return (getModifiers() & Opcodes.ACC_INTERFACE) > 0;
+    // GRECLIPSE add
+    public boolean isAbstract() {
+        return (getModifiers() & ACC_ABSTRACT) != 0;
+    }
+    // GRECLIPSE end
+
+    public boolean isInterface() {
+        return (getModifiers() & ACC_INTERFACE) != 0;
     }
 
-    // GRECLIPSE: start: TODO clean all this up 
-    /*{
-    public boolean isResolved(){
-        return redirect().clazz!=null || (componentType != null && componentType.isResolved());
+    public boolean isResolved() {
+        return redirect().isReallyResolved() || // GRECLIPSE add
+            redirect().clazz != null || (componentType != null && componentType.isResolved());
     }
-    }*/// newcode:
-    public boolean isResolved(){
-        return redirect().isReallyResolved() || 
-        redirect().clazz!=null || (componentType != null && componentType.isResolved());
-    }
-    
+
     // GRECLIPSE: hacky, rework (remove?) this if it behaves as an approach
     // enables the redirect to be a JDTClassNode and satisfy 'isResolved()'
     public boolean isReallyResolved() {
-    	return false;
+        return false;
     }
-    // end
-    
+    // GRECLIPSE end
 
-    public boolean isArray(){
-        return componentType!=null;
+    public boolean isArray() {
+        return componentType != null;
     }
 
     public ClassNode getComponentType() {
@@ -1447,7 +1458,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     // GRECLIPSE: start
     public boolean hasClass() {
-    	return redirect().clazz!=null;
+        return redirect().clazz!=null;
     }
     // end
 
@@ -1458,7 +1469,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * a new class node using {@link #getPlainNodeReference()}.
      * @return the class this classnode relates to. May return null.
      */
-    public Class getTypeClass(){ 
+    public Class getTypeClass() {
         Class c = redirect().clazz;
         if (c!=null) return c;
         ClassNode component = redirect().componentType;
@@ -1467,11 +1478,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             setRedirect(cn);
             return redirect().clazz;
         }
-        // GRECLIPSE - very bad way to do this
+        // GRECLIPSE add
         if (redirect().getClass().getName().endsWith("JDTClassNode")) {
-        	// special!
-        	return redirect().getTypeClass();
+            // special!
+            return redirect().getTypeClass();
         }
+        // GRECLIPSE end
         throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
     }
 
@@ -1516,50 +1528,39 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public void setUsingGenerics(boolean b) {
         usesGenerics = b;
     }
-    
-	// original:
+
     public ClassNode getPlainNodeReference() {
         if (ClassHelper.isPrimitiveType(this)) return this;
-        ClassNode n = new ClassNode(name,modifiers,superClass,null,null);
+        ClassNode n = new ClassNode(name, modifiers, superClass, null, null);
         n.isPrimaryNode = false;
         n.setRedirect(redirect());
         n.componentType = redirect().getComponentType();
         return n;
     }
 
-//    public ClassNode getPlainNodeReference() {
-//        if (ClassHelper.isPrimitiveType(this)) return this;
-//		ClassNode n = new ClassNode(name, modifiers, superClass,
-//				getPlainNodeReferencesFor(getInterfaces()), null);
-//        n.isPrimaryNode = false;
-//		n.setRedirect(redirect());
-//        n.componentType = redirect().getComponentType();
-//        return n;
-//    }
-
-	public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {
-		if (classNodes == null) {
-			return null;
-		}
-		if (classNodes.length == 0) {
-			return ClassNode.EMPTY_ARRAY;
-		}
-		ClassNode[] result = new ClassNode[classNodes.length];
-		for (int count = 0; count < classNodes.length; count++) {
-			ClassNode cn = classNodes[count];
-			if (cn.usesGenerics) {
-				result[count] = cn.getPlainNodeReference();
-			} else {
-				result[count] = cn;
-			}
-		}
-		return result;
-	}
+    public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {
+        if (classNodes == null) {
+            return null;
+        }
+        if (classNodes.length == 0) {
+            return ClassNode.EMPTY_ARRAY;
+        }
+        ClassNode[] result = new ClassNode[classNodes.length];
+        for (int count = 0; count < classNodes.length; count++) {
+            ClassNode cn = classNodes[count];
+            if (cn.usesGenerics) {
+                result[count] = cn.getPlainNodeReference();
+            } else {
+                result[count] = cn;
+            }
+        }
+        return result;
+    }
 
     public boolean isAnnotationDefinition() {
         return redirect().isPrimaryNode &&
                isInterface() &&
-               (getModifiers() & Opcodes.ACC_ANNOTATION)!=0;
+               (getModifiers() & ACC_ANNOTATION) != 0;
     }
 
     public List<AnnotationNode> getAnnotations() {
@@ -1608,9 +1609,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isEnum() {
-        return (getModifiers()&Opcodes.ACC_ENUM) != 0;
+        return (getModifiers() & ACC_ENUM) != 0;
      }
-    
+
     /**
      * @return iterator of inner classes defined inside this one
      */
@@ -1620,9 +1621,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     
     // GRECLIPSE-1167 - new method
     public void forgetInnerClass(InnerClassNode icn) {
-    	if (innerClasses!=null) {
-    		innerClasses.remove(icn);
-    	}
+        if (innerClasses!=null) {
+            innerClasses.remove(icn);
+        }
     }
     
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {
@@ -1643,31 +1644,29 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public String getText() {
         return getName();
     }
-    
-     // GRECLIPSE start
-	public String getClassInternalName() {
-		if (redirect!=null) return redirect().getClassInternalName();
-		return null;
-	}
-	
-	public boolean isPrimitive() {
-		if (clazz!=null) {
-			return clazz.isPrimitive();
-		}
-		return false;
-	}
 
-	/**
-	 * @return true if this classnode might have inners, conservatively it says yes if it is unsure.
-	 */
-	public boolean mightHaveInners() {
-		ClassNode redirect=redirect();
-		if (redirect.hasClass()) {
-			return true;
-		}
-		boolean b = redirect.innerClasses!=null && redirect.innerClasses.size()>0;
-		return b;
-	}
-	
-	// GRECLIPSE end
+    // GRECLIPSE add
+    public String getClassInternalName() {
+        if (redirect != null)
+            return redirect().getClassInternalName();
+        return null;
+    }
+
+    public boolean isPrimitive() {
+        if (clazz != null)
+            return clazz.isPrimitive();
+        return false;
+    }
+
+    /**
+     * @return true if this classnode might have inners, conservatively it says yes if it is unsure.
+     */
+    public boolean mightHaveInners() {
+        ClassNode redirect = redirect();
+        if (redirect.hasClass()) {
+            return true;
+        }
+        return redirect.innerClasses != null && !redirect.innerClasses.isEmpty();
+    }
+    // GRECLIPSE end
 }

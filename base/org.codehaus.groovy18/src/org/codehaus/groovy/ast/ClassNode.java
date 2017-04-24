@@ -684,9 +684,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addConstructor(ConstructorNode node) {
         node.setDeclaringClass(this);
-        final ClassNode r = redirect();
+        ClassNode r = redirect();
         if (r.constructors == null)
-            r.constructors = new ArrayList<ConstructorNode> ();
+            r.constructors = new ArrayList<ConstructorNode>();
         r.constructors.add(node);
     }
 
@@ -698,8 +698,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addMethod(MethodNode node) {
         node.setDeclaringClass(this);
-        redirect().methodsList.add(node);
-        redirect().methods.put(node.getName(), node);
+        ClassNode r = redirect();
+        r.methodsList.add(node);
+        r.methods.put(node.getName(), node);
     }
 
     /**
@@ -1468,31 +1469,30 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return false;
     }
 
-    public boolean isInterface(){
-        return (getModifiers() & Opcodes.ACC_INTERFACE) > 0;
+    // GRECLIPSE add
+    public boolean isAbstract() {
+        return (getModifiers() & ACC_ABSTRACT) != 0;
+    }
+    // GRECLIPSE end
+
+    public boolean isInterface() {
+        return (getModifiers() & ACC_INTERFACE) != 0;
     }
 
-    // GRECLIPSE: start: dirty hack
-    /*{
-    public boolean isResolved(){
-        return redirect().clazz!=null || (componentType != null && componentType.isResolved());
+    public boolean isResolved() {
+        return redirect().isReallyResolved() || // GRECLIPSE add
+            redirect().clazz != null || (componentType != null && componentType.isResolved());
     }
-    }*/// newcode:
-    public boolean isResolved(){
-        return redirect().isReallyResolved() || 
-        redirect().clazz!=null || (componentType != null && componentType.isResolved());
-    }
-    
+
     // GRECLIPSE: hacky, rework (remove?) this if it behaves as an approach
     // enables the redirect to be a JDTClassNode and satisfy 'isResolved()'
     public boolean isReallyResolved() {
     	return false;
     }
-    // end
-    
+    // GRECLIPSE end
 
-    public boolean isArray(){
-        return componentType!=null;
+    public boolean isArray() {
+        return componentType != null;
     }
 
     public ClassNode getComponentType() {
@@ -1512,7 +1512,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * a new class node using {@link #getPlainNodeReference()}.
      * @return the class this classnode relates to. May return null.
      */
-    public Class getTypeClass(){
+    public Class getTypeClass() {
         Class c = redirect().clazz;
         if (c!=null) return c;
         ClassNode component = redirect().componentType;
@@ -1523,8 +1523,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         // GRECLIPSE
         if (redirect().getClass().getName().endsWith("JDTClassNode")) {
-        	// special!
-        	return redirect().getTypeClass();
+            // special!
+            return redirect().getTypeClass();
         }
         throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
     }
@@ -1613,7 +1613,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public boolean isAnnotationDefinition() {
         return redirect().isPrimaryNode &&
                isInterface() &&
-               (getModifiers() & Opcodes.ACC_ANNOTATION)!=0;
+               (getModifiers() & ACC_ANNOTATION) != 0;
     }
 
     public List<AnnotationNode> getAnnotations() {
@@ -1660,7 +1660,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isEnum() {
-        return (getModifiers()&Opcodes.ACC_ENUM) != 0;
+        return (getModifiers() & ACC_ENUM) != 0;
      }
 
     /**
@@ -1715,6 +1715,5 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 		boolean b = redirect.innerClasses!=null && redirect.innerClasses.size()>0;
 		return b;
 	}
-	
 	// GRECLIPSE end
 }

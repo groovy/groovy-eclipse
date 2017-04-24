@@ -554,53 +554,50 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * then will return an arbitrary one.
      */
     protected MethodNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
-        // if this is an interface, then we also need to check super interfaces;
-        // super interface methods on an interface are not returned by getMethods(),
-        // so must explicitly look for them -- do this first since findAllInterfaces
-        // will return the current interface as well and this will avoid running this
-        // method on the same interface twice
-        if (declaringType.isInterface()) {
-            LinkedHashSet<ClassNode> superTypes = new LinkedHashSet<ClassNode>();
-            VariableScope.findAllInterfaces(declaringType, superTypes, true);
-            superTypes.add(ClassHelper.OBJECT_TYPE); // implicit super type
+        // concrete types return all declared methods from getMethods()
+        if (!declaringType.isInterface() && !declaringType.isAbstract()) {
+            List<MethodNode> candidates = declaringType.getMethods(name);
+            if (!candidates.isEmpty()) {
+                return findMethodDeclaration0(candidates, methodCallArgumentTypes);
+            }
+            return null;
+        }
 
-            MethodNode outerCandidate = null;
-            for (ClassNode superType : superTypes) {
-                MethodNode innerCandidate = null;
-                List<MethodNode> candidates = superType.getMethods(name);
-                if (!candidates.isEmpty()) {
-                    innerCandidate = findMethodDeclaration0(candidates, methodCallArgumentTypes);
-                    if (outerCandidate == null) {
-                        outerCandidate = innerCandidate;
-                    }
+        // abstract types may not return all methods from getMethods()
+        LinkedHashSet<ClassNode> types = new LinkedHashSet<ClassNode>();
+        VariableScope.createTypeHierarchy(declaringType, types, true);
+        types.remove(ClassHelper.OBJECT_TYPE); // move to the end
+        types.add(ClassHelper.OBJECT_TYPE);
+
+        MethodNode outerCandidate = null;
+        for (ClassNode superType : types) {
+            MethodNode innerCandidate = null;
+            List<MethodNode> candidates = superType.getMethods(name);
+            if (!candidates.isEmpty()) {
+                innerCandidate = findMethodDeclaration0(candidates, methodCallArgumentTypes);
+                if (outerCandidate == null) {
+                    outerCandidate = innerCandidate;
                 }
-                if (innerCandidate != null && methodCallArgumentTypes != null) {
-                    Parameter[] methodParameters = innerCandidate.getParameters();
-                    if (methodCallArgumentTypes.isEmpty() && methodParameters.length == 0) {
-                        return innerCandidate;
-                    }
-                    if (methodCallArgumentTypes.size() == methodParameters.length) {
-                        outerCandidate = innerCandidate;
+            }
+            if (innerCandidate != null && methodCallArgumentTypes != null) {
+                Parameter[] methodParameters = innerCandidate.getParameters();
+                if (methodCallArgumentTypes.isEmpty() && methodParameters.length == 0) {
+                    return innerCandidate;
+                }
+                if (methodCallArgumentTypes.size() == methodParameters.length) {
+                    outerCandidate = innerCandidate;
 
-                        Boolean suitable = isTypeCompatible(methodCallArgumentTypes, methodParameters);
-                        if (Boolean.FALSE.equals(suitable)) {
-                            continue;
-                        }
-                        if (Boolean.TRUE.equals(suitable)) {
-                            return innerCandidate;
-                        }
+                    Boolean suitable = isTypeCompatible(methodCallArgumentTypes, methodParameters);
+                    if (Boolean.FALSE.equals(suitable)) {
+                        continue;
+                    }
+                    if (Boolean.TRUE.equals(suitable)) {
+                        return innerCandidate;
                     }
                 }
             }
-            return outerCandidate;
         }
-
-        List<MethodNode> candidates = declaringType.getMethods(name);
-        if (!candidates.isEmpty()) {
-            return findMethodDeclaration0(candidates, methodCallArgumentTypes);
-        }
-
-        return null;
+        return outerCandidate;
     }
 
     protected MethodNode findMethodDeclaration0(List<MethodNode> candidates, List<ClassNode> arguments) {

@@ -1725,6 +1725,19 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "foo.Baz");
     }
 
+    public void testIndirectInterfaceMethod() throws Exception {
+        createUnit("I", "interface I { def one() }");
+        createUnit("A", "abstract class A implements I { abstract def two() }"); // does not restate 'one'
+        createUnit("C", "class C extends A { def one() { null }  def two() { null }  }");
+
+        String contents = "A a = new C(); a.one(); a.two();";
+
+        int start = contents.indexOf("two");
+        assertDeclaringType(contents, start, start + 3, "A");
+        start = contents.indexOf("one");
+        assertDeclaringType(contents, start, start + 3, "I");
+    }
+
     public void testObjectMethodOnInterface() {
         // Object is not in explicit type hierarchy of List
         String contents = "def meth(List list) { list.getClass() }";
