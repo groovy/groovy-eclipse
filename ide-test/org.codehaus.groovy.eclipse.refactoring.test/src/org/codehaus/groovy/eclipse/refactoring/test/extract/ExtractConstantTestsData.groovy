@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
-class ExtractConstantTestData {
+class ExtractConstantTestsData {
 
 	static int findLocation(toFind, test) {
-		String contents = ExtractConstantTestData."${test}In" as String
+		String contents = ExtractConstantTestsData."${test}In" as String
 		contents.indexOf(toFind)
 	}
 	

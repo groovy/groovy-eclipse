@@ -24,7 +24,9 @@ import org.codehaus.groovy.eclipse.junit.test.*
 import org.codehaus.groovy.eclipse.quickfix.test.*
 import org.codehaus.groovy.eclipse.quickfix.test.resolvers.*
 import org.codehaus.groovy.eclipse.quickfix.test.templates.*
-import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests
+import org.codehaus.groovy.eclipse.refactoring.test.extract.*
+import org.codehaus.groovy.eclipse.refactoring.test.formatter.*
+import org.codehaus.groovy.eclipse.refactoring.test.rename.*
 import org.codehaus.groovy.eclipse.test.AllUITests
 import org.codehaus.groovy.frameworkadapter.util.CompilerChooser
 
@@ -98,7 +100,28 @@ final class AllGroovyTests {
             GroovyTemplatesCompletionTests,
             NonGroovyProjectQuickFixTests,
             QuickAssistTests))
-        suite.addTest(AllRefactoringTests.suite())
+        suite.addTest(adapt('org.codehaus.groovy.eclipse.refactoring.tests',
+            // extract
+            ConvertLocalToFieldTests,
+            ExtractConstantTests,
+            ExtractLocalTests,
+            ExtractMethodTests,
+            StaticExpressionCheckerTests,
+            StaticFragmentCheckerTests,
+            // formatter
+            FindIndentsTests,
+            FormatterPreferencesTests,
+            GroovyFormatterTests,
+            GroovyDocumentScannerTests,
+            SemicolonRemoverTests,
+            WhitespaceRemoverTests,
+            // rename
+            RenameFieldTests,
+            RenameLocalTests,
+            RenameMethodTests,
+            RenameTypeTests,
+            MoveCURefactoringTests,
+            SyntheticAccessorRenamingTests))
         return suite
     }
 

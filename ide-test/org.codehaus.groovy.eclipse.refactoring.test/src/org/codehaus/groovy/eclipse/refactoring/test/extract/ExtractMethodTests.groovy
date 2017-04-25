@@ -1,0 +1,177 @@
+/*
+ * Copyright 2009-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.codehaus.groovy.eclipse.refactoring.test.extract
+
+import groovyjarjarasm.asm.Opcodes
+import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSpec
+import org.codehaus.groovy.eclipse.refactoring.test.internal.TestPrefInitializer
+import org.codehaus.groovy.eclipse.test.TestProject
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
+import org.eclipse.core.runtime.FileLocator
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.Platform
+import org.eclipse.ltk.core.refactoring.Change
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
+
+@RunWith(Parameterized)
+final class ExtractMethodTests {
+
+    @Parameters(name='{1}')
+    static Iterable<Object[]> params() {
+        URL url = Platform.getBundle('org.codehaus.groovy.eclipse.refactoring.test').getEntry('/resources/ExtractMethod')
+        new File(FileLocator.toFileURL(url).getFile()).listFiles({ File dir, String item ->
+            item ==~ /ExtractMethod_Test_.*/
+        } as FilenameFilter).collect {
+            [it, it.name - ~/.txt/] as Object[]
+        }
+    }
+
+    ExtractMethodTests(File file, String name) {
+        spec = new RefactoringTestSpec(file)
+
+        println '----------------------------------------'
+        println "Starting: $name"
+    }
+
+    private TestProject testProject
+    private RefactoringTestSpec spec
+    private GroovyCompilationUnit unit
+    private ExtractGroovyMethodRefactoring refactoring
+
+    @Before
+    void setUp() {
+        testProject = new TestProject()
+        TestProject.autoBuilding = false
+    }
+
+    @After
+    void tearDown() {
+        testProject.dispose()
+    }
+
+    @Test
+    void test() {
+        preAction()
+        def rs = checkInitialCondition()
+        simulateUserInput()
+        rs.merge(checkFinalCondition())
+        if (analyseRefactoringStatus(rs)) {
+            Change change = createChange()
+            change.perform(new NullProgressMonitor())
+        }
+
+        String actual = String.valueOf(unit.contents)
+        String expect = spec.expected.get()
+        assert actual == expect
+    }
+
+    private void preAction() {
+        String fileName = 'File' + new Random(System.currentTimeMillis()).nextInt(99999) + '.groovy'
+        unit = testProject.createGroovyTypeAndPackage('', fileName, spec.document.get())
+
+        int offset = spec.userSelection.offset
+        int length = spec.userSelection.length
+        RefactoringStatus status = new RefactoringStatus()
+        printf 'Attempting to extract new method from [%d,%d):%n %s%n', offset, offset + length, String.valueOf(unit.getContents()).substring(offset, offset + length)
+
+        refactoring = new ExtractGroovyMethodRefactoring(unit, offset, length, status)
+        refactoring.setPreferences(TestPrefInitializer.initializePreferences(spec.properties as HashMap, testProject.javaProject))
+
+        assert status.getSeverity() == RefactoringStatus.OK : "Bad refactoring status on init: $status"
+    }
+
+    private RefactoringStatus checkInitialCondition() {
+        refactoring.checkInitialConditions(new NullProgressMonitor())
+    }
+
+    private void simulateUserInput() {
+        int modifier = 0
+        String mod = spec.properties['modifier']
+        if (mod.equals('def') || mod.equals('public'))
+            modifier = Opcodes.ACC_PUBLIC
+        if (mod.equals('private'))
+            modifier = Opcodes.ACC_PRIVATE
+        if (mod.equals('protected'))
+            modifier = Opcodes.ACC_PROTECTED
+
+        refactoring.setModifier(modifier)
+        refactoring.setNewMethodname(spec.properties['newMethodName'])
+
+        String moveSettings = spec.properties['moveVariable']
+        if (moveSettings != null && moveSettings.trim().length() > 0) {
+            boolean upEvent = false
+            int sortOfMoveCharPosition = moveSettings.indexOf('+')
+            if (sortOfMoveCharPosition == -1) {
+                upEvent = true
+                sortOfMoveCharPosition = moveSettings.indexOf('-')
+            }
+            String varName = moveSettings.substring(0, sortOfMoveCharPosition)
+            int numberOfMoves = Integer.valueOf(moveSettings.substring(sortOfMoveCharPosition + 1, moveSettings.length()))
+            refactoring.setMoveParameter(varName, upEvent, numberOfMoves)
+        }
+
+        String variableToRename = spec.properties['variableToRename']
+        if (variableToRename != null && variableToRename.trim().length() > 0) {
+            Map<String, String> variablesToRename = [:]
+            for (String renameMapping : variableToRename.split(';')) {
+                String[] singleRenames = renameMapping.split(':')
+                if (singleRenames.length == 2) {
+                    variablesToRename.put(singleRenames[0], singleRenames[1])
+                }
+            }
+            refactoring.setParameterRename(variablesToRename)
+        }
+    }
+
+    private RefactoringStatus checkFinalCondition() {
+        refactoring.checkFinalConditions(new NullProgressMonitor())
+    }
+
+    private boolean analyseRefactoringStatus(RefactoringStatus state) {
+        RefactoringStatusEntry[] entries = state.getEntries()
+        if (spec.shouldFail) {
+            assert entries.length > 0 : "Should fail: ${spec.properties['failMessage']}"
+        }
+        for (int i = 0; i < entries.length; i++) {
+            RefactoringStatusEntry entry = entries[i]
+            if ((entry.isError() || entry.isFatalError()) && !spec.shouldFail) {
+                // error was not expected
+                assert false : 'condition check failed: ' + entry.message
+            } else {
+                // check the error message
+                if (spec.shouldFail && spec.properties['failMessage'] != null ) {
+                    assert entry.message == spec.properties['failMessage']
+                }
+            }
+            if (entry.isFatalError()) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private Change createChange() {
+        refactoring.createChange(new NullProgressMonitor())
+    }
+}

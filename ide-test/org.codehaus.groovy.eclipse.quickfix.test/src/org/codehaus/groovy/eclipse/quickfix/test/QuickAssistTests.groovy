@@ -28,7 +28,7 @@ import org.codehaus.groovy.eclipse.quickassist.RemoveUnnecessarySemicolonsComple
 import org.codehaus.groovy.eclipse.quickassist.SplitAssigmentCompletionProposal
 import org.codehaus.groovy.eclipse.quickassist.SwapOperandsCompletionProposal
 import org.codehaus.groovy.eclipse.refactoring.test.extract.ConvertLocalToFieldTestsData
-import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTestData
+import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTestsData
 import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractLocalTestsData
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.text.correction.AssistContext
@@ -605,72 +605,72 @@ final class QuickAssistTests extends QuickFixTestCase {
 
     @Test
     void testExtractToConstant_1() {
-        assertConversionAllOccurrences(ExtractConstantTestData.getTest1In(),
-                ExtractConstantTestData.getTest1Out(),
-                ExtractConstantTestData.findLocation("Foo + Bar", "test1"),
+        assertConversionAllOccurrences(ExtractConstantTestsData.getTest1In(),
+                ExtractConstantTestsData.getTest1Out(),
+                ExtractConstantTestsData.findLocation("Foo + Bar", "test1"),
                 "Foo + Bar".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_2() {
-        assertConversionAllOccurrences(ExtractConstantTestData.getTest2In(),
-                ExtractConstantTestData.getTest2Out(),
-                ExtractConstantTestData.findLocation("Foo + Bar", "test2"),
+        assertConversionAllOccurrences(ExtractConstantTestsData.getTest2In(),
+                ExtractConstantTestsData.getTest2Out(),
+                ExtractConstantTestsData.findLocation("Foo + Bar", "test2"),
                 "Foo + Bar".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_3() {
-        assertConversionAllOccurrences(ExtractConstantTestData.getTest3In(),
-                ExtractConstantTestData.getTest3Out(),
-                ExtractConstantTestData.findLocation("Foo+Bar+A.frax()", "test3"),
+        assertConversionAllOccurrences(ExtractConstantTestsData.getTest3In(),
+                ExtractConstantTestsData.getTest3Out(),
+                ExtractConstantTestsData.findLocation("Foo+Bar+A.frax()", "test3"),
                 "Foo+Bar+A.frax()".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_4() {
-        assertConversionAllOccurrences(ExtractConstantTestData.getTest4In(),
-                ExtractConstantTestData.getTest4Out(),
-                ExtractConstantTestData.findLocation("Foo+Bar+A.frax()", "test4"),
+        assertConversionAllOccurrences(ExtractConstantTestsData.getTest4In(),
+                ExtractConstantTestsData.getTest4Out(),
+                ExtractConstantTestsData.findLocation("Foo+Bar+A.frax()", "test4"),
                 "Foo+Bar+A.frax()".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_5a() {
-        assertConversionAllOccurrences(ExtractConstantTestData.getTest5aIn(),
-                ExtractConstantTestData.getTest5aOut(),
-                ExtractConstantTestData.findLocation("Foo+Bar+A.frax()", "test5a"),
+        assertConversionAllOccurrences(ExtractConstantTestsData.getTest5aIn(),
+                ExtractConstantTestsData.getTest5aOut(),
+                ExtractConstantTestsData.findLocation("Foo+Bar+A.frax()", "test5a"),
                 "Foo+Bar+A.frax()".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_6a() {
-        assertConversionAllOccurrences(ExtractConstantTestData.getTest6aIn(),
-                ExtractConstantTestData.getTest6aOut(),
-                ExtractConstantTestData.findLocation("Foo+Bar+A.frax()", "test6a"),
+        assertConversionAllOccurrences(ExtractConstantTestsData.getTest6aIn(),
+                ExtractConstantTestsData.getTest6aOut(),
+                ExtractConstantTestsData.findLocation("Foo+Bar+A.frax()", "test6a"),
                 "Foo+Bar+A.frax()".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_7() {
-        assertProposalNotOffered(ExtractConstantTestData.getTest7In(),
-                ExtractConstantTestData.findLocation("Foo + Bar", "test7"),
+        assertProposalNotOffered(ExtractConstantTestsData.getTest7In(),
+                ExtractConstantTestsData.findLocation("Foo + Bar", "test7"),
                 "Foo + Bar".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_8() {
-        assertConversion(ExtractConstantTestData.getTest8In(),
-                ExtractConstantTestData.getTest8Out(),
-                ExtractConstantTestData.findLocation("Foo + Bar", "test8"),
+        assertConversion(ExtractConstantTestsData.getTest8In(),
+                ExtractConstantTestsData.getTest8Out(),
+                ExtractConstantTestsData.findLocation("Foo + Bar", "test8"),
                 "Foo + Bar".length(), ExtractToConstantProposal)
     }
 
     @Test
     void testExtractToConstant_NoReplaceOccurrences1() {
-        assertConversion(ExtractConstantTestData.getTestNoReplaceOccurrences1In(),
-                ExtractConstantTestData.getTestNoReplaceOccurrences1Out(),
-                ExtractConstantTestData.findLocation("Foo+Bar+A.frax()", "testNoReplaceOccurrences1"),
+        assertConversion(ExtractConstantTestsData.getTestNoReplaceOccurrences1In(),
+                ExtractConstantTestsData.getTestNoReplaceOccurrences1Out(),
+                ExtractConstantTestsData.findLocation("Foo+Bar+A.frax()", "testNoReplaceOccurrences1"),
                 "Foo+Bar+A.frax()".length(), ExtractToConstantProposal)
     }
 

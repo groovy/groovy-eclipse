@@ -12,6 +12,8 @@ Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.quickfix.test,
  org.codehaus.groovy.eclipse.quickfix.test.resolvers,
  org.codehaus.groovy.eclipse.quickfix.test.templates,
- org.codehaus.groovy.eclipse.refactoring.test
+ org.codehaus.groovy.eclipse.refactoring.test.extract,
+ org.codehaus.groovy.eclipse.refactoring.test.formatter,
+ org.codehaus.groovy.eclipse.refactoring.test.rename
 Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"

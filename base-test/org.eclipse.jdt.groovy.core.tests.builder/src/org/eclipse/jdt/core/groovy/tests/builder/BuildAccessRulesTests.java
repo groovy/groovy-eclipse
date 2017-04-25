@@ -212,6 +212,7 @@ public final class BuildAccessRulesTests extends BuilderTests {
             "class Foo {\n" +
             "  def meth() {\n" +
             "    BeanInfo info = null\n" +
+            "    return info.getBeanDescriptor()\n" +
             "  }\n" +
             "}";
 
