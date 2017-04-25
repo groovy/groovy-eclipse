@@ -23,9 +23,6 @@ import org.codehaus.groovy.GroovyBugError;
 /**
  * A {@link ClassNode} where the {@link GenericsType} information is immutable.
  * Provides extra safety in the IDE.
- *
- * @author Andrew Eisenberg
- * @created Jul 20, 2011
  */
 public class ImmutableClassNode extends ClassNode {
 
@@ -89,14 +86,19 @@ public class ImmutableClassNode extends ClassNode {
     @Override
     public List<MethodNode> getDeclaredMethods(String name) {
         if (lazyInitDone && !writeProtected) {
-            synchronized (methods.map) {
+            synchronized (methods) {
                 if (!writeProtected) {
-                    for (Object key : methods.map.keySet()) {
-                        List<MethodNode> list = methods.get(key);
-                        methods.map.put(key, Collections.unmodifiableList(list));
-                    }
-                    methods.map = Collections.unmodifiableMap(methods.map);
                     writeProtected = true;
+                    if (methods.map == null ||
+                            methods.map.isEmpty()) {
+                        methods.map = Collections.emptyMap();
+                    } else {
+                        for (Object key : methods.map.keySet()) {
+                            List<MethodNode> list = methods.get(key);
+                            methods.map.put(key, Collections.unmodifiableList(list));
+                        }
+                        methods.map = Collections.unmodifiableMap(methods.map);
+                    }
                 }
             }
         }
@@ -160,7 +162,7 @@ public class ImmutableClassNode extends ClassNode {
         }
         if (genericsTypes != null) {
             GenericsType[] immutable = new GenericsType[genericsTypes.length];
-            for (int i = 0; i < genericsTypes.length; i++) {
+            for (int i = 0, n = genericsTypes.length; i < n; i += 1) {
                 immutable[i] = new ImmutableGenericsType(genericsTypes[i], getName());
             }
             genericsTypes = immutable;

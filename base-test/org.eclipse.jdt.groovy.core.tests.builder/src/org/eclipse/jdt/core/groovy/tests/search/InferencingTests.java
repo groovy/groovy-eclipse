@@ -1725,17 +1725,52 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "foo.Baz");
     }
 
+    public void testInterfaceMethodAsProperty2() throws Exception {
+        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
+
+        String contents = "def meth(foo.Baz b) { b.one + b.two }";
+
+        int start = contents.indexOf("one");
+        assertDeclaringType(contents, start, start + 3, "foo.Bar");
+        start = contents.indexOf("two");
+        assertDeclaringType(contents, start, start + 3, "foo.Baz");
+    }
+
+    public void testInterfaceMethodAsProperty3() throws Exception {
+        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
+
+        String contents = "abstract class C extends foo.Baz { }\n def meth(C c) { c.one + c.two }";
+
+        int start = contents.indexOf("one");
+        assertDeclaringType(contents, start, start + 3, "foo.Bar");
+        start = contents.indexOf("two");
+        assertDeclaringType(contents, start, start + 3, "foo.Baz");
+    }
+
     public void testIndirectInterfaceMethod() throws Exception {
-        createUnit("I", "interface I { def one() }");
-        createUnit("A", "abstract class A implements I { abstract def two() }"); // does not restate 'one'
-        createUnit("C", "class C extends A { def one() { null }  def two() { null }  }");
+        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
 
-        String contents = "A a = new C(); a.one(); a.two();";
+        String contents = "abstract class C extends foo.Baz { }\n def meth(C c) { c.getOne() + c.getTwo() }";
 
-        int start = contents.indexOf("two");
-        assertDeclaringType(contents, start, start + 3, "A");
-        start = contents.indexOf("one");
+        int start = contents.indexOf("getOne");
+        assertDeclaringType(contents, start, start + 6, "foo.Bar");
+        start = contents.indexOf("getTwo");
+        assertDeclaringType(contents, start, start + 6, "foo.Baz");
+    }
+
+    public void testIndirectInterfaceConstant() throws Exception {
+        createUnit("I", "interface I { Number ONE = 1 }");
+        createUnit("A", "abstract class A implements I { Number TWO = 2 }");
+
+        String contents = "abstract class B extends A { }\n B b; b.ONE; b.TWO";
+
+        int start = contents.indexOf("ONE");
         assertDeclaringType(contents, start, start + 3, "I");
+        start = contents.indexOf("TWO");
+        assertDeclaringType(contents, start, start + 3, "A");
     }
 
     public void testObjectMethodOnInterface() {

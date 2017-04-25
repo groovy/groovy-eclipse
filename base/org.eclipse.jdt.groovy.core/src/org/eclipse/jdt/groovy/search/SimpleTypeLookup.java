@@ -554,7 +554,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * then will return an arbitrary one.
      */
     protected MethodNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
-        // concrete types return all declared methods from getMethods()
+        // concrete types return all declared methods from getMethods(String)
         if (!declaringType.isInterface() && !declaringType.isAbstract()) {
             List<MethodNode> candidates = declaringType.getMethods(name);
             if (!candidates.isEmpty()) {
@@ -563,16 +563,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return null;
         }
 
-        // abstract types may not return all methods from getMethods()
+        // abstract types may not return all methods from getMethods(String)
         LinkedHashSet<ClassNode> types = new LinkedHashSet<ClassNode>();
-        VariableScope.createTypeHierarchy(declaringType, types, true);
-        types.remove(ClassHelper.OBJECT_TYPE); // move to the end
-        types.add(ClassHelper.OBJECT_TYPE);
+        if (!declaringType.isInterface()) types.add(declaringType);
+        VariableScope.findAllInterfaces(declaringType, types, true);
+        types.add(ClassHelper.OBJECT_TYPE); // implicit super type
 
         MethodNode outerCandidate = null;
-        for (ClassNode superType : types) {
+        for (ClassNode type : types) {
             MethodNode innerCandidate = null;
-            List<MethodNode> candidates = superType.getMethods(name);
+            List<MethodNode> candidates = type.getMethods(name);
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, methodCallArgumentTypes);
                 if (outerCandidate == null) {

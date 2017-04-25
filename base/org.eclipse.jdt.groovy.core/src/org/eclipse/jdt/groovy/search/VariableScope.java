@@ -926,38 +926,35 @@ public class VariableScope {
     }
 
     /**
-     * Finds all interfaces transitively implemented by the type passed in (including <code>type</code> if it is an interface). The
-     * ordering is that the interfaces closest to type are first (in declared order) and then interfaces declared on super
-     * interfaces occur (if they are not duplicates).
+     * Finds all interfaces implemented by {@code type} (including itself, if it
+     * is an interface).  The ordering is that the interfaces closest to type are
+     * first (in declared order) and then interfaces declared on super interfaces
+     * occur (if they are not duplicates).
      *
-     * @param type the interface to look for
      * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
-     * @param useResolved whether or not to use the resolved interfaces.
+     * @param useResolved whether or not to use the resolved interfaces
      */
     public static void findAllInterfaces(ClassNode type, LinkedHashSet<ClassNode> allInterfaces, boolean useResolved) {
-        if (!useResolved) {
-            type = type.redirect();
-        }
-        // do the !isInterface check because if this call is coming from createHierarchy, then
-        // the class would have already been added.
-        if (!type.isInterface() || !allInterfaces.contains(type)) {
-            if (type.isInterface()) {
+        if (!useResolved) type = type.redirect();
+        boolean isInterface = type.isInterface();
+        if (!isInterface || !allInterfaces.contains(type)) {
+            if (isInterface) {
                 allInterfaces.add(type);
             }
-            ClassNode[] interfaces;
             // Urrrgh...I don't like this.
             // Groovy compiler has a different notion of 'resolved' than we do here.
             // Groovy compiler considers a resolved ClassNode one that has no redirect.
-            // however, we consider a ClassNode to be resolved if its type parameters are resolved.
-            // that is why we call getUnresolvedInterfaces if useResolved is true (and vice versa).
-            if (useResolved) {
-                interfaces = type.getUnresolvedInterfaces();
-            } else {
-                interfaces = type.getInterfaces();
+            // However, we consider a ClassNode to be resolved if its type parameters are resolved.
+            ClassNode[] faces = !useResolved ? type.getInterfaces() : type.getUnresolvedInterfaces();
+            if (faces != null) {
+                for (ClassNode face : faces) {
+                    findAllInterfaces(face, allInterfaces, useResolved);
+                }
             }
-            if (interfaces != null) {
-                for (ClassNode superInterface : interfaces) {
-                    findAllInterfaces(superInterface, allInterfaces, useResolved);
+            if (!isInterface) {
+                ClassNode superType = type.getSuperClass();
+                if (superType != null && !OBJECT_CLASS_NODE.equals(superType)) {
+                    findAllInterfaces(superType, allInterfaces, useResolved);
                 }
             }
         }
