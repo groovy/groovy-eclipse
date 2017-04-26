@@ -2115,7 +2115,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testGRECLIPSE1348a() {
-        String contents = 
+        String contents =
             "class A {\n" +
             "    def myMethod(String notOwner) {\n" +
             "        return { return owner }\n" +
@@ -2168,87 +2168,285 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testInstanceOf1() {
         String contents =
             "def m(Object obj) {\n" +
-            "    def val = obj\n" +
-            "    if (val instanceof String) {\n" +
-            "        println val.trim()\n" +
-            "    }\n" +
+            "  def val = obj\n" +
+            "  if (val instanceof String) {\n" +
+            "    println val.trim()\n" +
+            "  }\n" +
+            "  val\n" +
             "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
 
-        start = contents.lastIndexOf("val");
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void testInstanceOf1a() {
+        String contents =
+            "def m(Object obj) {\n" +
+            "  def val = obj\n" +
+            "  if (!(val instanceof String)) {\n" +
+            "    println val\n" +
+            "  }\n" +
+            "  val\n" +
+            "}\n";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
     }
 
     public void testInstanceOf2() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
             "@groovy.transform.TypeChecked\n" +
             "def m(Object obj) {\n" +
-            "    def val = obj\n" +
-            "    if (val instanceof String) {\n" +
-            "        println val.trim()\n" +
-            "    }\n" +
+            "  def val = obj\n" +
+            "  if (val instanceof String) {\n" +
+            "    println val.trim()\n" +
+            "  }\n" +
+            "  val\n" +
             "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
 
-        start = contents.lastIndexOf("val");
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
     }
 
     public void testInstanceOf3() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "def m(Object obj) {\n" +
-            "    def val = obj\n" +
-            "    if (val instanceof String) {\n" +
-            "        println val.trim()\n" +
-            "    }\n" +
+            "  def val = obj\n" +
+            "  if (val instanceof String) {\n" +
+            "    println val.trim()\n" +
+            "  }\n" +
+            "  val\n" +
             "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
 
-        start = contents.lastIndexOf("val");
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
     }
 
     public void testInstanceOf4() {
         String contents =
             "def m(Object obj) {\n" +
-            "    def val = obj\n" +
-            "    if (val instanceof String) {\n" +
-            "        println val.trim()\n" +
-            "    }\n" +
-            "    def var = obj\n" +
-            "    if (var instanceof Integer) {\n" +
-            "        println var.intValue()\n" +
-            "    }\n" +
+            "  def val = obj\n" +
+            "  if (val instanceof String) {\n" +
+            "    println val.trim()\n" +
+            "  }\n" +
+            "  val\n" +
+            "  def var = obj\n" +
+            "  if (var instanceof Integer) {\n" +
+            "    println var.intValue()\n" +
+            "  }\n" +
+            "  var\n" +
             "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
 
-        start = contents.lastIndexOf("val");
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
 
         start = contents.indexOf("var");
         end = start + "var".length();
         assertType(contents, start, end, "java.lang.Object");
 
-        start = contents.lastIndexOf("var");
+        start = contents.indexOf("var", end + 1);
+        end = start + "var".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("var", end + 1);
         end = start + "var".length();
         assertType(contents, start, end, "java.lang.Integer");
+
+        start = contents.indexOf("var", end + 1);
+        end = start + "var".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void testInstanceOf5() {
+        String contents =
+            "def val = new Object()\n" +
+            "if (val instanceof Number) {\n" +
+            "  val\n" +
+            "} else if (val instanceof CharSequence) {\n" +
+            "  val\n" +
+            "}\n" +
+            "val";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Number");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.CharSequence");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void testInstanceOf6() {
+        String contents =
+            "def val = new Object()\n" +
+            "if (val instanceof Number || val instanceof CharSequence) {\n" +
+            "  println val\n" +
+            "}\n" +
+            "val";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void testInstanceOf7() {
+        String contents =
+            "def val = new Object()\n" +
+            "if (val instanceof Number) {\n" +
+            "  if (val instanceof Double) {\n" +
+            "    val\n" +
+            "}}\n" +
+            "val";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Number");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Double");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    public void testInstanceOf8() {
+        String contents =
+            "def val = new Object()\n" +
+            "if (val instanceof String) {\n" +
+            "  if (val instanceof CharSequence) {\n" +
+            "    val\n" +
+            "}}\n" +
+            "val";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.lang.Object");
     }
 
     // GRECLIPSE-554

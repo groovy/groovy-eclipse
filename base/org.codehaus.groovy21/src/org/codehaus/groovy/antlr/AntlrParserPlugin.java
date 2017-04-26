@@ -1728,12 +1728,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             collectionExpression = expression(collectionNode);
             forParameter = new Parameter(type, variable);
             configureAST(forParameter, variableNode);
-            // GRECLIPSE: start
-            // not exactly right since we should be setting the start of the parameter to 
-            // being the start of the type declaration
+            // GRECLIPSE add
             forParameter.setNameStart(forParameter.getStart());
             forParameter.setNameEnd(forParameter.getEnd());
-            // end
+            if (type.getStart() > 0) {
+                // set start of parameter node to start of parameter type
+                forParameter.setStart(type.getStart());
+                forParameter.setLineNumber(type.getLineNumber());
+                forParameter.setColumnNumber(type.getColumnNumber());
+            }
+            // GRECLIPSE end
         }
 
         final AST node = inNode.getNextSibling();

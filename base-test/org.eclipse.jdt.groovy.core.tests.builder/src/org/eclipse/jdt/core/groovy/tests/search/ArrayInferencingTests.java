@@ -144,4 +144,12 @@ public final class ArrayInferencingTests extends AbstractInferencingTest {
             "}";
         assertExprType(contents, "x", "java.lang.Integer");
     }
+
+    public void testForLoop3a() {
+        String contents =
+            "Integer[] a = [1, 2, 3]\n" +
+            "for (x in a) {\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Integer");
+    }
 }

@@ -46,6 +46,7 @@ import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -276,10 +277,12 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitForLoop(ForStatement node) {
-            // check the type node of "for (Item i in x)" but skip "for (i in x)"
-            Parameter parm = node.getVariable(); ClassNode type = parm.getType();
-            if (type.getStart() > 0 && type.getEnd() < parm.getStart()) {
-                handleType(type, false);
+            if (!(node.getCollectionExpression() instanceof ClosureListExpression)) {
+                // check the type node of "for (Item i in x)" but skip "for (i in x)"
+                Parameter parm = node.getVariable(); ClassNode type = parm.getType();
+                if (type.getStart() > 0) {
+                    handleType(type, false);
+                }
             }
             super.visitForLoop(node);
         }

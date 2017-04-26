@@ -290,6 +290,14 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    public void testForLoop2a() {
+        String contents = "for (a in 1..4) { }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
     public void testForLoop3() {
         String contents = "for (a in [1, 2].iterator()) { \na }";
         String toFind = "a";

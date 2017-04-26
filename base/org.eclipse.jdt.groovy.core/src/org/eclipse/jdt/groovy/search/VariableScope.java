@@ -33,8 +33,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -73,7 +71,7 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 /**
  * Maps variable names to types in a hierarchy.
  */
-public class VariableScope {
+public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
     public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
@@ -187,16 +185,18 @@ public class VariableScope {
 
     public static class VariableInfo {
         public ASTNode scopeNode;
+        public final String name;
         public final ClassNode type;
         public final ClassNode declaringType;
 
-        public VariableInfo(ClassNode type, ClassNode declaringType) {
+        public VariableInfo(String name, ClassNode type, ClassNode declaringType) {
+            this.name = name;
             this.type = type;
             this.declaringType = declaringType;
         }
 
         private VariableInfo(VariableInfo info, ASTNode node) {
-            this(info.type, info.declaringType);
+            this(info.name, info.type, info.declaringType);
             this.scopeNode = node;
         }
 
@@ -402,7 +402,7 @@ public class VariableScope {
             if (type != null) {
                 ClassNode superType = type.getSuperClass();
                 superType = superType == null ? VariableScope.OBJECT_CLASS_NODE : superType;
-                return new VariableInfo(superType, superType);
+                return new VariableInfo(name, superType, superType);
             }
         }
 
@@ -459,7 +459,7 @@ public class VariableScope {
     }
 
     public void addVariable(String name, ClassNode type, ClassNode declaringType) {
-        nameVariableMap.put(name, new VariableInfo(type, declaringType != null ? declaringType : OBJECT_CLASS_NODE));
+        nameVariableMap.put(name, new VariableInfo(name, type, declaringType != null ? declaringType : OBJECT_CLASS_NODE));
     }
 
     public void addVariable(Variable var) {
@@ -568,7 +568,7 @@ public class VariableScope {
     private boolean internalUpdateVariable(String name, ClassNode type, ClassNode declaringType) {
         VariableInfo info = lookupNameInCurrentScope(name);
         if (info != null) {
-            nameVariableMap.put(name, new VariableInfo(type, declaringType == null ? info.declaringType : declaringType));
+            nameVariableMap.put(name, new VariableInfo(name, type, declaringType == null ? info.declaringType : declaringType));
             return true;
         } else if (parent != null) {
             return parent.internalUpdateVariable(name, type, declaringType);
@@ -896,10 +896,10 @@ public class VariableScope {
         return methodCallArgumentTypes != null;
     }
 
-    public Iterator<Map.Entry<String, VariableInfo>> variablesIterator() {
-        return new Iterator<Map.Entry<String, VariableInfo>>() {
+    public Iterator<VariableInfo> iterator() {
+        return new Iterator<VariableInfo>() {
             VariableScope currentScope = VariableScope.this;
-            Iterator<Map.Entry<String, VariableInfo>> currentIter = currentScope.nameVariableMap.entrySet().iterator();
+            Iterator<VariableInfo> currentIter = currentScope.nameVariableMap.values().iterator();
 
             public boolean hasNext() {
                 if (currentIter == null) {
@@ -907,16 +907,13 @@ public class VariableScope {
                 }
                 if (!currentIter.hasNext()) {
                     currentScope = currentScope.parent;
-                    currentIter = currentScope == null ? null : currentScope.nameVariableMap.entrySet().iterator();
+                    currentIter = currentScope == null ? null : currentScope.nameVariableMap.values().iterator();
                 }
                 return currentIter != null && currentIter.hasNext();
             }
 
-            public Entry<String, VariableInfo> next() {
-                if (!currentIter.hasNext()) {
-                    throw new NoSuchElementException();
-                }
-                return currentIter.next();
+            public VariableInfo next() {
+                return new VariableInfo(currentIter.next(), currentScope.scopeNode);
             }
 
             public void remove() {

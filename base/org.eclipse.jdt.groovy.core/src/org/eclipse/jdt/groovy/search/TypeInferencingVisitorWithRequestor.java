@@ -83,6 +83,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.IfStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.WideningCategories;
@@ -109,7 +110,6 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
-import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -826,10 +826,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitBinaryExpression(BinaryExpression node) {
-        if (node.getOperation().getType() == Types.KEYWORD_INSTANCEOF && node.getLeftExpression() instanceof VariableExpression) {
-            VariableExpression variable = (VariableExpression) node.getLeftExpression();
-            scopes.getLast().addVariable(variable.getName(), node.getRightExpression().getType(), variable.getDeclaringClass());
-        }
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -969,7 +965,7 @@ assert primaryExprType != null && dependentExprType != null;
         scopes.add(new VariableScope(scopes.getLast(), node, false));
         Parameter param = node.getVariable();
         if (param != null) {
-            handleParameterList(new Parameter[] { param });
+            handleParameterList(new Parameter[] {param});
         }
         super.visitCatchStatement(node);
         scopes.removeLast();
@@ -1227,18 +1223,17 @@ assert primaryExprType != null && dependentExprType != null;
         // the type of the collection
         ClassNode collectionType = primaryTypeStack.removeLast();
 
+        // the loop has its own scope
         scopes.add(new VariableScope(scopes.getLast(), node, false));
-        Parameter param = node.getVariable();
-        if (param != null) {
-            // visit the original parameter, so that requestors relying on
-            // object equality will work
-            handleParameterList(new Parameter[] { param });
 
-            // now update the type of the parameter with the collection type
-            if (param.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
-                ClassNode extractedElementType = VariableScope.extractElementType(collectionType);
-                scopes.getLast().addVariable(param.getName(), extractedElementType, null);
+        // a three-part for loop, i.e. "for (_; _; _)", uses a dummy variable; skip it
+        if (!(node.getCollectionExpression() instanceof ClosureListExpression)) {
+            Parameter param = node.getVariable();
+            if (param.isDynamicTyped()) {
+                // update the type of the parameter from the collection type
+                scopes.getLast().addVariable(param.getName(), VariableScope.extractElementType(collectionType), null);
             }
+            handleParameterList(new Parameter[] {param});
         }
 
         node.getLoopBlock().visit(this);
@@ -1274,6 +1269,33 @@ assert primaryExprType != null && dependentExprType != null;
             super.visitGStringExpression(node);
         }
         scopes.getLast().forgetCurrentNode();
+    }
+
+    @Override
+    public void visitIfElse(IfStatement node) {
+        BooleanExpression expr = node.getBooleanExpression();
+        expr.visit(this);
+
+        VariableScope s = null; // check for "if (x instanceof y) { ... }" flow typing
+        if (!(expr instanceof NotExpression) && expr.getExpression() instanceof BinaryExpression) {
+            BinaryExpression b = (BinaryExpression) expr.getExpression();
+            if (b.getOperation().getType() == Types.KEYWORD_INSTANCEOF &&
+                    b.getLeftExpression() instanceof VariableExpression) {
+                VariableExpression v = (VariableExpression) b.getLeftExpression();
+                VariableScope.VariableInfo i = scopes.getLast().lookupName(v.getName());
+                if (GroovyUtils.isAssignable(b.getRightExpression().getType(), i.type)) {
+                    s = new VariableScope(scopes.getLast(), node.getIfBlock(), false);
+                    s.addVariable(v.getName(), b.getRightExpression().getType(), v.getDeclaringClass());
+                    scopes.add(s);
+                }
+            }
+        }
+
+        node.getIfBlock().visit(this);
+
+        if (s != null) scopes.removeLast();
+
+        node.getElseBlock().visit(this);
     }
 
     @Override
@@ -1543,15 +1565,15 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitReturnStatement(ReturnStatement ret) {
-        boolean shouldContinue = handleStatement(ret);
+    public void visitReturnStatement(ReturnStatement node) {
+        boolean shouldContinue = handleStatement(node);
         if (shouldContinue) {
             ClosureExpression closure = scopes.getLast().getEnclosingClosure();
             if (closure == null || closure.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE) != null) {
-                super.visitReturnStatement(ret);
+                super.visitReturnStatement(node);
             } else { // capture return type
-                completeExpressionStack.add(ret);
-                super.visitReturnStatement(ret);
+                completeExpressionStack.add(node);
+                super.visitReturnStatement(node);
                 completeExpressionStack.removeLast();
                 ClassNode returnType = primaryTypeStack.removeLast();
                 ClassNode closureType = (ClassNode) closure.putNodeMetaData("returnType", returnType);
@@ -1737,15 +1759,14 @@ assert primaryExprType != null && dependentExprType != null;
         if (params != null) {
             VariableScope scope = scopes.getLast();
             scope.setPrimaryNode(false);
-            for (Parameter node : params) {
-                assignmentStorer.storeParameterType(node, scope);
+            for (Parameter param : params) {
+                if (!scope.containsInThisScope(param.getName())) {
+                    scope.addVariable(param);
+                }
+
                 TypeLookupResult result = null;
                 for (ITypeLookup lookup : lookups) {
-                    // the first lookup is used to store the type of the
-                    // parameter in the sope
-                    lookup.lookupType(node, scope);
-                    result = lookup.lookupType(node.getType(), scope);
-                    TypeLookupResult candidate = lookup.lookupType(node.getType(), scope);
+                    TypeLookupResult candidate = lookup.lookupType(param, scope);
                     if (candidate != null) {
                         if (result == null || result.confidence.isLessThan(candidate.confidence)) {
                             result = candidate;
@@ -1755,9 +1776,9 @@ assert primaryExprType != null && dependentExprType != null;
                         }
                     }
                 }
-                // visit the parameter itself
-                TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node, TypeConfidence.EXACT, scope);
-                VisitStatus status = notifyRequestor(node, requestor, parameterResult);
+
+                TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, param, TypeConfidence.EXACT, scope);
+                VisitStatus status = notifyRequestor(param, requestor, parameterResult);
                 switch (status) {
                     case CONTINUE:
                         break;
@@ -1769,10 +1790,11 @@ assert primaryExprType != null && dependentExprType != null;
                 }
 
                 // visit the parameter type
-                visitClassReference(node.getType());
+                visitClassReference(param.getType());
 
-                visitAnnotations(node);
-                Expression init = node.getInitialExpression();
+                visitAnnotations(param);
+
+                Expression init = param.getInitialExpression();
                 if (init != null) {
                     init.visit(this);
                 }
@@ -2057,7 +2079,7 @@ assert primaryExprType != null && dependentExprType != null;
                     if (expr instanceof ClassExpression) {
                         return expr.getType();
                     } else if (expr instanceof VariableExpression && expr.getText() != null) {
-                        VariableInfo info = scopes.getLast().lookupName(expr.getText());
+                        VariableScope.VariableInfo info = scopes.getLast().lookupName(expr.getText());
                         if (info != null) {
                             // info.type should be Class<Category>
                             return info.type.getGenericsTypes()[0].getType();

@@ -16,11 +16,9 @@
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -128,13 +126,11 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         // look at all local variables in scope
         Map<String, IJavaElement> nameElementMap = new LinkedHashMap<String, IJavaElement>();
         if (currentScope != null) {
-            Iterator<Entry<String, VariableInfo>> variablesIter = currentScope.variablesIterator();
-            while (variablesIter.hasNext()) {
-                // GRECLIPSE-1268 currently, no good way to get to the actual eclaration of the variable.
+            for (VariableInfo varInfo : currentScope) {
+                // GRECLIPSE-1268 currently, no good way to get to the actual declaration of the variable.
                 // This can cause ordering problems for the guessed parameters.
-                Entry<String, VariableInfo> entry = variablesIter.next();
                 // don't put elements in a second time since we are moving from inner scope to outer scope
-                String varName = entry.getKey();
+                String varName = varInfo.name;
                 // ignore synthetic getters and setters that are put in the scope
                 // looking at prefix is a good approximation
                 if (!varName.startsWith("get") &&
@@ -143,7 +139,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                     !varName.startsWith("<") &&
                     !nameElementMap.containsKey(varName)) {
 
-                    ClassNode type = entry.getValue().type;
+                    ClassNode type = varInfo.type;
                     if (GroovyUtils.isAssignable(type, targetType)) {
                         // note that parent, start location, and typeSignature are not important here
                         nameElementMap.put(varName, ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));

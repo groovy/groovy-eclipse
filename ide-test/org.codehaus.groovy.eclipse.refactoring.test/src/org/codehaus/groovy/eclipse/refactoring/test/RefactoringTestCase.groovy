@@ -30,7 +30,6 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.ISourceManipulation
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
@@ -176,7 +175,7 @@ abstract class RefactoringTestCase {
 
     private static void tryDeletingAllJavaChildren(IPackageFragment pack) {
         for (kid in pack.children) {
-            if (kid instanceof ISourceManipulation && kid.exists() && !kid.isReadOnly()) {
+            if (kid.exists() && !kid.isReadOnly()) {
                 JavaProjectHelper.delete(kid)
             }
         }
@@ -198,16 +197,8 @@ abstract class RefactoringTestCase {
                 IClasspathEntry[] cpes = fgJavaTestProject.rawClasspath
                 List<IClasspathEntry> newCPEs = []
                 boolean cpChanged = false
-                for (int i = 0; i < cpes.length; i += 1) {
-                    IClasspathEntry cpe = cpes[i]
-                    boolean isJREEntry = false
-                    for (int j = 0; j < jreEntries.length; j += 1) {
-                        if (cpe.equals(jreEntries[j])) {
-                            isJREEntry = true
-                            break
-                        }
-                    }
-                    if (cpe.equals(srcEntry) || isJREEntry) {
+                for (cpe in cpes) {
+                    if (cpe == srcEntry || cpe in jreEntries) {
                         newCPEs.add(cpe)
                     } else {
                         cpChanged = true
