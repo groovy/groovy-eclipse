@@ -249,17 +249,17 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testClosure4() {
         String contents =
-                "class Baz {\n" +
-                "  URL other\n" +
-                "  def method() {\n" +
-                "    sumthin {\n" +
-                "      delegate\n" +
-                "      owner\n" +
-                "      getDelegate()\n" +
-                "      getOwner()\n" +
-                "    }\n" +
-                "  }\n" +
-                "}";
+            "class Baz {\n" +
+            "  URL other\n" +
+            "  def method() {\n" +
+            "    sumthin {\n" +
+            "      delegate\n" +
+            "      owner\n" +
+            "      getDelegate()\n" +
+            "      getOwner()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
         assertType(contents, start, end, "Baz");
@@ -276,12 +276,12 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testClosure5() {
         String contents =
-                "def x = {\n" +
-                "maximumNumberOfParameters\n" +
-                "getMaximumNumberOfParameters()\n" +
-                "thisObject\n" +
-                "getThisObject()\n" +
-                "}";
+            "def x = {\n" +
+            "maximumNumberOfParameters\n" +
+            "getMaximumNumberOfParameters()\n" +
+            "thisObject\n" +
+            "getThisObject()\n" +
+            "}";
         int start = contents.lastIndexOf("maximumNumberOfParameters");
         int end = start + "maximumNumberOfParameters".length();
         assertType(contents, start, end, "java.lang.Integer");
@@ -298,12 +298,12 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testClosure6() {
         String contents =
-                "def x = { def y = {\n" +
-                "maximumNumberOfParameters\n" +
-                "getMaximumNumberOfParameters()\n" +
-                "thisObject\n" +
-                "getThisObject()\n" +
-                "}}";
+            "def x = { def y = {\n" +
+            "maximumNumberOfParameters\n" +
+            "getMaximumNumberOfParameters()\n" +
+            "thisObject\n" +
+            "getThisObject()\n" +
+            "}}";
         int start = contents.lastIndexOf("maximumNumberOfParameters");
         int end = start + "maximumNumberOfParameters".length();
         assertType(contents, start, end, "java.lang.Integer");
@@ -488,11 +488,11 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testConstructor1() {
         // GRECLIPSE-1229 constructors with map parameters
         String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O(aa: 1, bb:8)";
+            "class O {\n" +
+            "  boolean aa\n" +
+            "  int bb\n" +
+            "}\n" +
+            "new O(aa: 1, bb:8)";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -507,11 +507,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testConstructor2() {
         String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O([aa: 1, bb:8])";
+            "class O {\n" +
+            "  boolean aa\n" +
+            "  int bb\n" +
+            "}\n" +
+            "new O([aa: 1, bb:8])";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -526,11 +526,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testConstructor3() {
         String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O([8: 1, bb:8])";
+            "class O {\n" +
+            "  boolean aa\n" +
+            "  int bb\n" +
+            "}\n" +
+            "new O([8: 1, bb:8])";
 
         int start = contents.lastIndexOf("bb");
         int end = start + "bb".length();
@@ -540,11 +540,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testConstructor4() {
         String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O([aa: 1, bb:8], 9)";
+            "class O {\n" +
+            "  boolean aa\n" +
+            "  int bb\n" +
+            "}\n" +
+            "new O([aa: 1, bb:8], 9)";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -559,11 +559,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testConstructor5() {
         String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "new O(9, [aa: 1, bb:8])";
+            "class O {\n" +
+            "  boolean aa\n" +
+            "  int bb\n" +
+            "}\n" +
+            "new O(9, [aa: 1, bb:8])";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -578,11 +578,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testConstructor6() {
         String contents =
-                "class O {\n" +
-                "  boolean aa\n" +
-                "  int bb\n" +
-                "}\n" +
-                "def g = [aa: 1, bb:8]";
+            "class O {\n" +
+            "  boolean aa\n" +
+            "  int bb\n" +
+            "}\n" +
+            "def g = [aa: 1, bb:8]";
 
         int start = contents.lastIndexOf("aa");
         int end = start + "aa".length();
@@ -597,11 +597,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testSpecialConstructor1() {
         String contents =
-                "class C {\n" +
-                "  C() {\n" +
-                "    this()\n" +
-                "  }\n" +
-                "}";
+            "class C {\n" +
+            "  C() {\n" +
+            "    this()\n" +
+            "  }\n" +
+            "}";
 
         int start = contents.indexOf("this()");
         int end = start + "this(".length();
@@ -611,11 +611,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testSpecialConstructor2() {
         String contents =
-                "class C extends HashMap {\n" +
-                "  C() {\n" +
-                "    super()\n" +
-                "  }\n" +
-                "}";
+            "class C extends HashMap {\n" +
+            "  C() {\n" +
+            "    super()\n" +
+            "  }\n" +
+            "}";
 
         int start = contents.indexOf("super()");
         int end = start + "super(".length();
@@ -650,14 +650,14 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLISPE-1244
     public void testStaticMethodCall5() {
         String contents =
-                "class Parent {\n" +
-                "    static p() {}\n" +
-                "}\n" +
-                "class Child extends Parent {\n" +
-                "    def c() {\n" +
-                "        p()\n" +
-                "    }\n" +
-                "}";
+            "class Parent {\n" +
+            "    static p() {}\n" +
+            "}\n" +
+            "class Child extends Parent {\n" +
+            "    def c() {\n" +
+            "        p()\n" +
+            "    }\n" +
+            "}";
         String expr = "p()";
         assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
     }
@@ -665,27 +665,27 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLISPE-1244
     public void testStaticMethodCall6() {
         createUnit("Parent",
-                "class Parent {\n" +
-                "    static p() {}\n" +
-                "}");
+            "class Parent {\n" +
+            "    static p() {}\n" +
+            "}");
         String contents =
-                "class Child extends Parent {\n" +
-                "    def c() {\n" +
-                "        p()\n" +
-                "    }\n" +
-                "}";
+            "class Child extends Parent {\n" +
+            "    def c() {\n" +
+            "        p()\n" +
+            "    }\n" +
+            "}";
         String expr = "p()";
         assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
     }
 
     public void testStaticMethodCall7() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
-                "import java.util.regex.*\n" +
-                "class Bar {\n" +
-                "  static Object meth(Object o) { return o }\n" +
-                "  static Pattern meth(Pattern p) { return p }\n" +
-                "  static Collection meth(Collection c) { return c }\n" +
-                "}");
+            "import java.util.regex.*\n" +
+            "class Bar {\n" +
+            "  static Object meth(Object o) { return o }\n" +
+            "  static Pattern meth(Pattern p) { return p }\n" +
+            "  static Collection meth(Collection c) { return c }\n" +
+            "}");
 
         String staticCall = "meth([])";
         String contents = "import static foo.Bar.*; " + staticCall;
@@ -694,12 +694,12 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testStaticMethodCall8() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
-                "import java.util.regex.*\n" +
-                "class Bar {\n" +
-                "  static Object meth(Object o) { return o }\n" +
-                "  static Pattern meth(Pattern p) { return p }\n" +
-                "  static Collection meth(Collection c) { return c }\n" +
-                "}");
+            "import java.util.regex.*\n" +
+            "class Bar {\n" +
+            "  static Object meth(Object o) { return o }\n" +
+            "  static Pattern meth(Pattern p) { return p }\n" +
+            "  static Collection meth(Collection c) { return c }\n" +
+            "}");
 
         String staticCall = "meth(~/abc/)";
         String contents = "import static foo.Bar.*; " + staticCall;
@@ -708,12 +708,12 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testStaticMethodCall9() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
-                "import java.util.regex.*\n" +
-                "class Bar {\n" +
-                "  static Object meth(Object o) { return o }\n" +
-                "  static Pattern meth(Pattern p) { return p }\n" +
-                "  static Collection meth(Collection c) { return c }\n" +
-                "}");
+            "import java.util.regex.*\n" +
+            "class Bar {\n" +
+            "  static Object meth(Object o) { return o }\n" +
+            "  static Pattern meth(Pattern p) { return p }\n" +
+            "  static Collection meth(Collection c) { return c }\n" +
+            "}");
 
         String staticCall = "meth(compile('abc'))";
         String contents = "import static foo.Bar.*; import static java.util.regex.Pattern.*; " + staticCall;
@@ -841,14 +841,14 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testConstantFromSuper() {
         String contents =
-                "public interface Constants {\n" +
-                "  int FIRST = 9;\n" +
-                "}\n" +
-                "class UsesConstants implements Constants {\n" +
-                "  def x() {\n" +
-                "    FIRST\n" +
-                "  }\n" +
-                "}";
+            "public interface Constants {\n" +
+            "  int FIRST = 9;\n" +
+            "}\n" +
+            "class UsesConstants implements Constants {\n" +
+            "  def x() {\n" +
+            "    FIRST\n" +
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("FIRST");
         int end = start + "FIRST".length();
         assertType(contents, start, end, "java.lang.Integer");
@@ -915,15 +915,15 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testGRECLIPSE1720() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return;
         String contents =
-                "import groovy.transform.CompileStatic\n" +
-                "@CompileStatic\n" +
-                "public class Bug {\n" +
-                "  enum Letter { A,B,C }\n" +
-                "  boolean bug(Letter l) {\n" +
-                "    boolean isEarly = l in [Letter.A,Letter.B]\n" +
-                "    isEarly\n" +
-                "  }\n" +
-                "}";
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
+            "public class Bug {\n" +
+            "  enum Letter { A,B,C }\n" +
+            "  boolean bug(Letter l) {\n" +
+            "    boolean isEarly = l in [Letter.A,Letter.B]\n" +
+            "    isEarly\n" +
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("isEarly");
         int end = start + "isEarly".length();
         assertType(contents, start, end, "java.lang.Boolean");
@@ -1001,10 +1001,10 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure1() {
         String contents =
-                "class Bar {\n" +
-                "  def meth() { }\n" +
-                "}\n" +
-                "new Bar().meth {\n delegate }";
+            "class Bar {\n" +
+            "  def meth() { }\n" +
+            "}\n" +
+            "new Bar().meth {\n delegate }";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
         assertType(contents, start, end, "Bar");
@@ -1012,10 +1012,10 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure2() {
         String contents =
-                "class Bar {\n" +
-                "  def meth(x) { }\n" +
-                "}\n" +
-                "new Bar().meth(6) {\n this }";
+            "class Bar {\n" +
+            "  def meth(x) { }\n" +
+            "}\n" +
+            "new Bar().meth(6) {\n this }";
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
         assertType(contents, start, end, "Search");
@@ -1023,10 +1023,10 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure2a() {
         String contents =
-                "class Bar {\n" +
-                "  def meth(x) { }\n" +
-                "}\n" +
-                "new Bar().meth(6) {\n delegate }";
+            "class Bar {\n" +
+            "  def meth(x) { }\n" +
+            "}\n" +
+            "new Bar().meth(6) {\n delegate }";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
         assertType(contents, start, end, "Bar");
@@ -1034,10 +1034,10 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure2b() {
         String contents =
-                "class Bar {\n" +
-                "  def meth(x) { }\n" +
-                "}\n" +
-                "new Bar().meth(6) {\n owner }";
+            "class Bar {\n" +
+            "  def meth(x) { }\n" +
+            "}\n" +
+            "new Bar().meth(6) {\n owner }";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
         assertType(contents, start, end, "Search");
@@ -1053,12 +1053,12 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure3() {
         String contents = "class Baz { }\n" +
-                "class Bar {\n" +
-                "  def meth(x) { }\n" +
-                "}\n" +
-                "new Bar().meth(6) {\n" +
-                "  new Baz()" +
-                "}";
+            "class Bar {\n" +
+            "  def meth(x) { }\n" +
+            "}\n" +
+            "new Bar().meth(6) {\n" +
+            "  new Baz()" +
+            "}";
         int start = contents.lastIndexOf("Baz");
         int end = start + "Baz".length();
         assertType(contents, start, end, "Baz");
@@ -1066,9 +1066,9 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure4() {
         String contents =
-                "''.foo {\n" +
-                "  substring" +
-                "}";
+            "''.foo {\n" +
+            "  substring" +
+            "}";
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1076,9 +1076,9 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure5() {
         String contents =
-                "''.foo {\n" +
-                "  delegate.substring()" +
-                "}";
+            "''.foo {\n" +
+            "  delegate.substring()" +
+            "}";
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
@@ -1086,9 +1086,9 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure6() {
         String contents =
-                "''.foo {\n" +
-                "  this.substring" +
-                "}";
+            "''.foo {\n" +
+            "  this.substring" +
+            "}";
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertUnknownConfidence(contents, start, end, "Search", false);
@@ -1096,9 +1096,9 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure7() {
         String contents =
-                "''.foo {\n" +
-                "  this\n" +
-                "}";
+            "''.foo {\n" +
+            "  this\n" +
+            "}";
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
         assertType(contents, start, end, "Search", false);
@@ -1106,9 +1106,9 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure8() {
         String contents =
-                "new Date().with {\n" +
-                "  def t = time\n" +
-                "}";
+            "new Date().with {\n" +
+            "  def t = time\n" +
+            "}";
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
         assertType(contents, start, end, "java.lang.Long", false);
@@ -1116,9 +1116,9 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure9() {
         String contents =
-                "new Date().with {\n" +
-                "  time = 0L\n" +
-                "}";
+            "new Date().with {\n" +
+            "  time = 0L\n" +
+            "}";
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
         assertType(contents, start, end, "java.lang.Void", false);
@@ -1126,10 +1126,10 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure10() {
         String contents =
-                "new Date().with {\n" +
-                "  time = 0L\n" +
-                "  def t = time\n" + // this 'time' property should not be seen as setTime()
-                "}";
+            "new Date().with {\n" +
+            "  time = 0L\n" +
+            "  def t = time\n" + // this 'time' property should not be seen as setTime()
+            "}";
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
         assertType(contents, start, end, "java.lang.Long", false);
@@ -1139,16 +1139,16 @@ public final class InferencingTests extends AbstractInferencingTest {
     // type of the method that calls the closure
     public void testInClosureDeclaringType1() {
         String contents =
-                "class Baz {\n" +
-                "  def method() { }\n" +
-                "  Integer other() { }\n" +
-                "}\n" +
-                "class Bar extends Baz {\n" +
-                "  def other(x) { }\n" +
-                "}\n" +
-                "new Bar().method {\n " +
-                "  other\n" +
-                "}";
+            "class Baz {\n" +
+            "  def method() { }\n" +
+            "  Integer other() { }\n" +
+            "}\n" +
+            "class Bar extends Baz {\n" +
+            "  def other(x) { }\n" +
+            "}\n" +
+            "new Bar().method {\n " +
+            "  other\n" +
+            "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertType(contents, start, end, "java.lang.Integer");
@@ -1158,14 +1158,14 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Unknown references should have the declaring type of the closure
     public void testInClosureDeclaringType2() {
         String contents =
-                "class Baz {\n" +
-                "  def method() { }\n" +
-                "}\n" +
-                "class Bar extends Baz {\n" +
-                "}\n" +
-                "new Bar().method {\n " +
-                "  other\n" +
-                "}";
+            "class Baz {\n" +
+            "  def method() { }\n" +
+            "}\n" +
+            "class Bar extends Baz {\n" +
+            "}\n" +
+            "new Bar().method {\n " +
+            "  other\n" +
+            "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertDeclaringType(contents, start, end, "Search", false, true);
@@ -1174,16 +1174,16 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Unknown references should have the delegate type of the closure
     public void testInClosureDeclaringType3() {
         String contents =
-                "class Baz {\n" +
-                "  def method() { }\n" +
-                "}\n" +
-                "class Bar extends Baz {\n" +
-                "  def sumthin() {\n" +
-                "    new Bar().method {\n " +
-                "      other\n" +
-                "    }\n" +
-                "  }\n" +
-                "}";
+            "class Baz {\n" +
+            "  def method() { }\n" +
+            "}\n" +
+            "class Bar extends Baz {\n" +
+            "  def sumthin() {\n" +
+            "    new Bar().method {\n " +
+            "      other\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertDeclaringType(contents, start, end, "Bar", false, true);
@@ -1192,12 +1192,12 @@ public final class InferencingTests extends AbstractInferencingTest {
     // 'this' is always the enclosing type
     public void testInClosureDeclaringType4() {
         String contents =
-                "class Bar {\n" +
-                "  def method() { }\n" +
-                "}\n" +
-                "new Bar().method {\n " +
-                "  this\n" +
-                "}";
+            "class Bar {\n" +
+            "  def method() { }\n" +
+            "}\n" +
+            "new Bar().method {\n " +
+            "  this\n" +
+            "}";
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
         assertDeclaringType(contents, start, end, "Search", false);
@@ -1206,12 +1206,12 @@ public final class InferencingTests extends AbstractInferencingTest {
     // 'delegate' always has declaring type of closure
     public void testInClosureDeclaringType5() {
         String contents =
-                "class Bar {\n" +
-                "  def method() { }\n" +
-                "}\n" +
-                "new Bar().method {\n " +
-                "  delegate\n" +
-                "}";
+            "class Bar {\n" +
+            "  def method() { }\n" +
+            "}\n" +
+            "new Bar().method {\n " +
+            "  delegate\n" +
+            "}";
         int start = contents.lastIndexOf("delegate");
         int end = start + "delegate".length();
         assertDeclaringType(contents, start, end, "groovy.lang.Closure<V extends java.lang.Object>", false);
@@ -1220,11 +1220,11 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Unknown references should have the declaring type of the enclosing method
     public void testInClassDeclaringType1() {
         String contents =
-                "class Baz {\n" +
-                "  def method() {\n" +
-                "    other\n" +
-                "  }\n" +
-                "}";
+            "class Baz {\n" +
+            "  def method() {\n" +
+            "    other\n" +
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertDeclaringType(contents, start, end, "Baz", false, true);
@@ -1245,11 +1245,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure1() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    intValue\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    intValue\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("intValue");
         int end = start + "intValue".length();
@@ -1258,11 +1258,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure2() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    intValue()\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    intValue()\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("intValue");
         int end = start + "intValue".length();
@@ -1271,11 +1271,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure2a() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    delegate.intValue()\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    delegate.intValue()\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("intValue");
         int end = start + "intValue".length();
@@ -1285,11 +1285,11 @@ public final class InferencingTests extends AbstractInferencingTest {
     // test DGM
     public void testDoubleClosure3() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    abs\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    abs\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
@@ -1298,11 +1298,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure4() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    abs()\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    abs()\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
@@ -1311,11 +1311,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure5() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    delegate.abs()\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    delegate.abs()\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
@@ -1324,11 +1324,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure6() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    this.abs()\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    this.abs()\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("abs");
         int end = start + "abs".length();
@@ -1337,11 +1337,11 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testDoubleClosure7() {
         String contents =
-                "''.foo {\n" +
-                "  1.foo {\n" +
-                "    this\n" +
-                "  }" +
-                "}";
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    this\n" +
+            "  }" +
+            "}";
 
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
@@ -1353,21 +1353,21 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testClosureTypeInference1() {
         if (GroovyUtils.GROOVY_LEVEL < 22) return;
         String contents =
-                "import groovy.beans.Bindable\n" +
-                "import groovy.transform.CompileStatic\n" +
-                "class A {\n" +
-                "    @Bindable\n" +
-                "    String foo\n" +
-                "    @CompileStatic" +
-                "    static void main(String[] args) {\n" +
-                "        A a = new A()\n" +
-                "        a.foo = 'old'\n" +
-                "        a.addPropertyChangeListener('foo') {\n" +
-                "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
-                "        }\n" +
-                "        a.foo = 'new'\n" +
-                "    }\n" +
-                "}";
+            "import groovy.beans.Bindable\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "    @Bindable\n" +
+            "    String foo\n" +
+            "    @CompileStatic" +
+            "    static void main(String[] args) {\n" +
+            "        A a = new A()\n" +
+            "        a.foo = 'old'\n" +
+            "        a.addPropertyChangeListener('foo') {\n" +
+            "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
+            "        }\n" +
+            "        a.foo = 'new'\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.lastIndexOf("it");
         int end = start + "it".length();
@@ -1378,19 +1378,19 @@ public final class InferencingTests extends AbstractInferencingTest {
     public void testClosureTypeInference2() {
         if (GroovyUtils.GROOVY_LEVEL < 22) return;
         String contents =
-                "import groovy.beans.Bindable\n" +
-                "class A {\n" +
-                "    @Bindable\n" +
-                "    String foo\n" +
-                "    static void main(String[] args) {\n" +
-                "        A a = new A()\n" +
-                "        a.foo = 'old'\n" +
-                "        a.addPropertyChangeListener('foo') {\n" +
-                "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
-                "        }\n" +
-                "        a.foo = 'new'\n" +
-                "    }\n" +
-                "}";
+            "import groovy.beans.Bindable\n" +
+            "class A {\n" +
+            "    @Bindable\n" +
+            "    String foo\n" +
+            "    static void main(String[] args) {\n" +
+            "        A a = new A()\n" +
+            "        a.foo = 'old'\n" +
+            "        a.addPropertyChangeListener('foo') {\n" +
+            "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
+            "        }\n" +
+            "        a.foo = 'new'\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.lastIndexOf("it");
         int end = start + "it".length();
@@ -1401,23 +1401,23 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Test 'with' operator. No annotations.
     public void testWithAndClosure1() throws Exception {
         createUnit("p", "D",
-                "package p\n" +
-                "class D {\n" +
-                "    String foo\n" +
-                "    D bar\n" +
-                "}");
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar\n" +
+            "}");
         String contents =
-                "package p\n" +
-                "class E {\n" +
-                "    D d = new D()\n" +
-                "    void doSomething() {\n" +
-                "        d.with {\n" +
-                "            foo = 'foo'\n" +
-                "            bar = new D()\n" +
-                "            bar.foo = 'bar'\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+            "package p\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar = new D()\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1439,24 +1439,24 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Test 'with' operator. @TypeChecked annotation.
     public void testWithAndClosure2() throws Exception {
         createUnit("p", "D",
-                "package p\n" +
-                "class D {\n" +
-                "    String foo\n" +
-                "    D bar\n" +
-                "}");
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar\n" +
+            "}");
         String contents =
-                "package p\n" +
-                "@groovy.transform.TypeChecked\n" +
-                "class E {\n" +
-                "    D d = new D()\n" +
-                "    void doSomething() {\n" +
-                "        d.with {\n" +
-                "            foo = 'foo'\n" +
-                "            bar = new D()\n" +
-                "            bar.foo = 'bar'\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+            "package p\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar = new D()\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1478,24 +1478,24 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Test 'with' operator. @CompileStatic annotation.
     public void testWithAndClosure3() throws Exception {
         createUnit("p", "D",
-                "package p\n" +
-                "class D {\n" +
-                "    String foo\n" +
-                "    D bar\n" +
-                "}");
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar\n" +
+            "}");
         String contents =
-                "package p\n" +
-                "@groovy.transform.CompileStatic\n" +
-                "class E {\n" +
-                "    D d = new D()\n" +
-                "    void doSomething() {\n" +
-                "        d.with {\n" +
-                "            foo = 'foo'\n" +
-                "            bar = new D()\n" +
-                "            bar.foo = 'bar'\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar = new D()\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1517,23 +1517,23 @@ public final class InferencingTests extends AbstractInferencingTest {
     // Another test 'with' operator. @CompileStatic annotation.
     public void testWithAndClosure4() throws Exception {
         createUnit("p", "D",
-                "package p\n" +
-                "class D {\n" +
-                "    String foo\n" +
-                "    D bar = new D()\n" +
-                "}");
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar = new D()\n" +
+            "}");
         String contents =
-                "package p\n" +
-                "@groovy.transform.CompileStatic\n" +
-                "class E {\n" +
-                "    D d = new D()\n" +
-                "    void doSomething() {\n" +
-                "        d.with {\n" +
-                "            foo = 'foo'\n" +
-                "            bar.foo = 'bar'\n" +
-                "        }\n" +
-                "    }\n" +
-                "}";
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1930,10 +1930,10 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1264
     public void testImplicitVar1() {
         String contents = "class SettingUndeclaredProperty {\n" +
-                "    public void mymethod() {\n" +
-                "        doesNotExist = \"abc\"\n" +
-                "    }\n" +
-                "}";
+            "    public void mymethod() {\n" +
+            "        doesNotExist = \"abc\"\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
@@ -1941,10 +1941,10 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1264
     public void testImplicitVar2() {
         String contents = "class SettingUndeclaredProperty {\n" +
-                "     def r = {\n" +
-                "        doesNotExist = 0\n" +
-                "    }\n" +
-                "}";
+            "     def r = {\n" +
+            "        doesNotExist = 0\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
@@ -1952,7 +1952,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1264
     public void testImplicitVar3() {
         String contents =
-                "doesNotExist";
+            "doesNotExist";
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
@@ -1967,8 +1967,8 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1264
     public void testImplicitVar5() {
         String contents =
-                "doesNotExist = 9\n" +
-                "def x = {doesNotExist }";
+            "doesNotExist = 9\n" +
+            "def x = {doesNotExist }";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
@@ -1976,10 +1976,9 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1264
     public void testImplicitVar6() {
         String contents =
-                "" +
-                "def x = {\n" +
-                "doesNotExist = 9\n" +
-                "doesNotExist }";
+            "def x = {\n" +
+            "doesNotExist = 9\n" +
+            "doesNotExist }";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
@@ -1987,9 +1986,9 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1264
     public void testImplicitVar7() {
         String contents =
-                "def z() {\n" +
-                "    doesNotExist = 9\n" +
-                "}\n";
+            "def z() {\n" +
+            "    doesNotExist = 9\n" +
+            "}\n";
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
@@ -1997,21 +1996,21 @@ public final class InferencingTests extends AbstractInferencingTest {
     // nested expressions of various forms
     public void testNested1() {
         String contents =
-                "(true ? 2 : 7) + 9";
+            "(true ? 2 : 7) + 9";
         assertType(contents, "java.lang.Integer");
     }
 
     // nested expressions of various forms
     public void testNested2() {
         String contents =
-                "(true ? 2 : 7) + (true ? 2 : 7)";
+            "(true ? 2 : 7) + (true ? 2 : 7)";
         assertType(contents, "java.lang.Integer");
     }
 
     // nested expressions of various forms
     public void testNested3() {
         String contents =
-                "(8 ?: 7) + (8 ?: 7)";
+            "(8 ?: 7) + (8 ?: 7)";
         assertType(contents, "java.lang.Integer");
     }
 
@@ -2024,45 +2023,47 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testPostfix() {
         String contents =
-                "int i = 0\n" +
-                "def list = [0]\n" +
-                "list[i]++";
+            "int i = 0\n" +
+            "def list = [0]\n" +
+            "list[i]++";
         int start = contents.lastIndexOf('i');
         assertType(contents, start, start +1, "java.lang.Integer");
     }
 
     // GRECLIPSE-1302
     public void testNothingIsUnknown() {
-        assertNoUnknowns("1 > 4\n" +
-                "1 < 1\n" +
-                "1 >= 1\n" +
-                "1 <= 1\n" +
-                "1 <=> 1\n" +
-                "1 == 1\n" +
-                "[1,9][0]");
+        assertNoUnknowns(
+            "1 > 4\n" +
+            "1 < 1\n" +
+            "1 >= 1\n" +
+            "1 <= 1\n" +
+            "1 <=> 1\n" +
+            "1 == 1\n" +
+            "[1,9][0]");
     }
 
     public void testNothingIsUnknownWithCategories() {
-        assertNoUnknowns("class Me {\n" +
-                "    def meth() {\n" +
-                "        use (MeCat) {\n" +
-                "            println getVal()\n" +
-                "            println val\n" +
-                "        }\n" +
-                "    }\n" +
-                "} \n" +
-                "\n" +
-                "class MeCat { \n" +
-                "    static String getVal(Me self) {\n" +
-                "        \"val\"\n" +
-                "    }\n" +
-                "}\n" +
-                "\n" +
-                "use (MeCat) {\n" +
-                "    println new Me().getVal()\n" +
-                "    println new Me().val\n" +
-                "}\n" +
-                "new Me().meth()");
+        assertNoUnknowns(
+            "class Me {\n" +
+            "    def meth() {\n" +
+            "        use (MeCat) {\n" +
+            "            println getVal()\n" +
+            "            println val\n" +
+            "        }\n" +
+            "    }\n" +
+            "} \n" +
+            "\n" +
+            "class MeCat { \n" +
+            "    static String getVal(Me self) {\n" +
+            "        \"val\"\n" +
+            "    }\n" +
+            "}\n" +
+            "\n" +
+            "use (MeCat) {\n" +
+            "    println new Me().getVal()\n" +
+            "    println new Me().val\n" +
+            "}\n" +
+            "new Me().meth()");
     }
 
     // GRECLIPSE-1304
@@ -2071,51 +2072,55 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testClosureReferencesSuperClass() {
-        assertNoUnknowns("class MySuper {\n" +
-                "    public void insuper() {  }\n" +
-                "}\n" +
-                "\n" +
-                "class MySub extends MySuper {\n" +
-                "    public void foo() {\n" +
-                "        [1].each {\n" +
-                // this line is problematic --- references super class
-                "            insuper(\"3\")\n" +
-                "        }\n" +
-                "    }\n" +
-                "}");
+        assertNoUnknowns(
+            "class MySuper {\n" +
+            "    public void insuper() {  }\n" +
+            "}\n" +
+            "\n" +
+            "class MySub extends MySuper {\n" +
+            "    public void foo() {\n" +
+            "        [1].each {\n" +
+            // this line is problematic --- references super class
+            "            insuper(\"3\")\n" +
+            "        }\n" +
+            "    }\n" +
+            "}");
     }
 
     // GRECLIPSE-1341
     public void testDeclarationAtBeginningOfMethod() {
-        String contents = "class Problem2 {\n" +
-                "    String action() { }\n" +
-                "    def meth() {\n" +
-                "        def x = action()\n" +
-                "        x.substring()\n" +
-                "    }\n" +
-                "}";
+        String contents =
+            "class Problem2 {\n" +
+            "    String action() { }\n" +
+            "    def meth() {\n" +
+            "        def x = action()\n" +
+            "        x.substring()\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
     }
 
     public void testGRECLIPSE1348() {
-        String contents = "class A {\n" +
-                "    def myMethod(String owner) {\n" +
-                "        return { return owner }\n" +
-                "    }\n" +
-                "}";
+        String contents =
+            "class A {\n" +
+            "    def myMethod(String owner) {\n" +
+            "        return { return owner }\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
         assertType(contents, start, end, "java.lang.String");
     }
 
     public void testGRECLIPSE1348a() {
-        String contents = "class A {\n" +
-                "    def myMethod(String notOwner) {\n" +
-                "        return { return owner }\n" +
-                "    }\n" +
-                "}";
+        String contents = 
+            "class A {\n" +
+            "    def myMethod(String notOwner) {\n" +
+            "        return { return owner }\n" +
+            "    }\n" +
+            "}";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
         assertType(contents, start, end, "A");
@@ -2144,7 +2149,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testAnonInner4() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-                "foo.compareTo";
+            "foo.compareTo";
         int start = contents.lastIndexOf("compareTo");
         int end = start + "compareTo".length();
         assertDeclaringType(contents, start, end, "Search$1");
@@ -2152,8 +2157,8 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testAnonInner5() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-                "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-                "foo.compareTo";
+            "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+            "foo.compareTo";
         int start = contents.lastIndexOf("compareTo");
         int end = start + "compareTo".length();
         assertDeclaringType(contents, start, end, "Search$2");
@@ -2162,12 +2167,12 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1638
     public void testInstanceOf1() {
         String contents =
-                "def m(Object obj) {\n" +
-                "    def val = obj\n" +
-                "    if (val instanceof String) {\n" +
-                "        println val.trim()\n" +
-                "    }\n" +
-                "}\n";
+            "def m(Object obj) {\n" +
+            "    def val = obj\n" +
+            "    if (val instanceof String) {\n" +
+            "        println val.trim()\n" +
+            "    }\n" +
+            "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
@@ -2180,13 +2185,13 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInstanceOf2() {
         String contents =
-                "@groovy.transform.TypeChecked\n" +
-                "def m(Object obj) {\n" +
-                "    def val = obj\n" +
-                "    if (val instanceof String) {\n" +
-                "        println val.trim()\n" +
-                "    }\n" +
-                "}\n";
+            "@groovy.transform.TypeChecked\n" +
+            "def m(Object obj) {\n" +
+            "    def val = obj\n" +
+            "    if (val instanceof String) {\n" +
+            "        println val.trim()\n" +
+            "    }\n" +
+            "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
@@ -2199,13 +2204,13 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInstanceOf3() {
         String contents =
-                "@groovy.transform.CompileStatic\n" +
-                "def m(Object obj) {\n" +
-                "    def val = obj\n" +
-                "    if (val instanceof String) {\n" +
-                "        println val.trim()\n" +
-                "    }\n" +
-                "}\n";
+            "@groovy.transform.CompileStatic\n" +
+            "def m(Object obj) {\n" +
+            "    def val = obj\n" +
+            "    if (val instanceof String) {\n" +
+            "        println val.trim()\n" +
+            "    }\n" +
+            "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
@@ -2218,16 +2223,16 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInstanceOf4() {
         String contents =
-                "def m(Object obj) {\n" +
-                "    def val = obj\n" +
-                "    if (val instanceof String) {\n" +
-                "        println val.trim()\n" +
-                "    }\n" +
-                "    def var = obj\n" +
-                "    if (var instanceof Integer) {\n" +
-                "        println var.intValue()\n" +
-                "    }\n" +
-                "}\n";
+            "def m(Object obj) {\n" +
+            "    def val = obj\n" +
+            "    if (val instanceof String) {\n" +
+            "        println val.trim()\n" +
+            "    }\n" +
+            "    def var = obj\n" +
+            "    if (var instanceof Integer) {\n" +
+            "        println var.intValue()\n" +
+            "    }\n" +
+            "}\n";
 
         int start = contents.indexOf("val");
         int end = start + "val".length();
@@ -2249,11 +2254,11 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-554
     public void testMapEntries1() {
         String contents =
-                "def map = [:]\n" +
-                "map.foo = 1\n" +
-                "print map.foo\n" +
-                "map.foo = 'text'\n" +
-                "print map.foo\n";
+            "def map = [:]\n" +
+            "map.foo = 1\n" +
+            "print map.foo\n" +
+            "map.foo = 'text'\n" +
+            "print map.foo\n";
 
         int start = contents.lastIndexOf("map");
         int end = start + "map".length();
@@ -2272,12 +2277,12 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testThisInInnerClass1() {
         String contents =
-                "class A {\n" +
-                "    String source = null\n" +
-                "    def user = new Object() {\n" +
-                "        def field = A.this.source\n" +
-                "    }\n" +
-                "}\n";
+            "class A {\n" +
+            "    String source = null\n" +
+            "    def user = new Object() {\n" +
+            "        def field = A.this.source\n" +
+            "    }\n" +
+            "}\n";
         int start = contents.lastIndexOf("source");
         int end = start + "source".length();
         assertType(contents, start, end, "java.lang.String");
@@ -2290,23 +2295,23 @@ public final class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1798
     public void testFieldAndPropertyWithSameName() {
         createJavaUnit("Wrapper",
-                "public class Wrapper<T> {\n" +
-                "  private final T wrapped;\n" +
-                "  public Wrapper(T wrapped) { this.wrapped = wrapped; }\n" +
-                "  public T getWrapped() { return wrapped; }\n" +
-                "}");
+            "public class Wrapper<T> {\n" +
+            "  private final T wrapped;\n" +
+            "  public Wrapper(T wrapped) { this.wrapped = wrapped; }\n" +
+            "  public T getWrapped() { return wrapped; }\n" +
+            "}");
         createJavaUnit("MyBean",
-                "public class MyBean {\n" +
-                "  private Wrapper<String> foo = new Wrapper<>(\"foo\");\n" +
-                "  public String getFoo() { return foo.getWrapped(); }\n" +
-                "}");
+            "public class MyBean {\n" +
+            "  private Wrapper<String> foo = new Wrapper<>(\"foo\");\n" +
+            "  public String getFoo() { return foo.getWrapped(); }\n" +
+            "}");
         String contents =
-                "class GroovyTest {\n" +
-                "  static void main(String[] args) {\n" +
-                "    def b = new MyBean()\n" +
-                "    println b.foo.toUpperCase()\n" +
-                "  }\n" +
-                "}";
+            "class GroovyTest {\n" +
+            "  static void main(String[] args) {\n" +
+            "    def b = new MyBean()\n" +
+            "    println b.foo.toUpperCase()\n" +
+            "  }\n" +
+            "}";
 
         int start = contents.lastIndexOf("foo");
         int end = start + "foo".length();

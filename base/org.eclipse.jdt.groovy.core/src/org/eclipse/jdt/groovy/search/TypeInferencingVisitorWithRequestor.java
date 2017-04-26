@@ -909,7 +909,7 @@ assert primaryExprType != null && dependentExprType != null;
                                 dependentExprType.getName().equals(VariableScope.LIST_CLASS_NODE.getName())) {
                             // if rhs is a range or list type, then result is a list of elements
                             completeExprType = createParameterizedList(elementType);
-                        } else if (dependentExprType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+                        } else if (ClassHelper.isNumberType(dependentExprType)) {
                             // if rhs is a number type, then result is a single element
                             completeExprType = elementType;
                         }

@@ -274,114 +274,6 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Date");
     }
 
-    public void testArray1() {
-        String contents = "def x = [ 1, 2 ] as String[]\nx";
-        String toFind = "x";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.String[]");
-    }
-
-    public void testArray2() {
-        String contents = "def x = [ 1, 2 ] as String[]\nx[0].length";
-        String toFind = "length";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    private static final String XX = "class XX {\nXX[] xx\nXX yy\n}";
-
-    public void testArray4() {
-        createUnit("XX", XX);
-        String contents = "new XX().xx";
-        String toFind = "xx";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX[]");
-    }
-
-    public void testArray5() {
-        createUnit("XX", XX);
-        String contents = "new XX().xx[0].yy";
-        String toFind = "yy";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX");
-    }
-
-    public void testArray6() {
-        createUnit("XX", XX);
-        String contents = "new XX().xx[new XX()].yy";
-        String toFind = "yy";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertUnknownConfidence(contents, start, end, "XX", false);
-    }
-
-    public void testArray7() {
-        createUnit("XX", XX);
-        String contents = "new XX().xx[0].yy";
-        String toFind = "yy";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX");
-    }
-
-    public void testArray8() {
-        createUnit("XX", XX);
-        String contents = "new XX().xx[0].xx[9].yy";
-        String toFind = "yy";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX");
-    }
-
-    public void testArray9() {
-        createUnit("XX", XX);
-        String contents = "new XX().getXx()[0].xx[9].yy";
-        String toFind = "yy";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX");
-    }
-
-    public void testArray10() {
-        createUnit("XX", XX);
-        String contents = "new XX().getXx()[0].getYy()";
-        String toFind = "getYy";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX");
-    }
-
-    public void testArray11() {
-        createUnit("XX", XX);
-        String contents = "new XX().getXx()";
-        String toFind = "getXx";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX[]");
-    }
-
-    public void testArray12() {
-        createUnit("XX", XX);
-        String contents = "new XX().getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
-        String toFind = "xx";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX[]");
-    }
-
-    public void testArray13() {
-        createUnit("XX", XX);
-        String contents = "new XX().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
-        String toFind = "xx";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "XX[]");
-    }
-
     public void testForLoop1() {
         String contents = "def x = 1..4\nfor (a in x) { \na }";
         String toFind = "a";
@@ -447,14 +339,6 @@ public final class GenericInferencingTests extends AbstractInferencingTest {
     }
 
     public void testForLoop9() {
-        String contents = "Integer[] x\nfor (a in x) { \na }";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    public void testForLoop10() {
         String contents = "class X {\n" +
             "  List<String> images\n" +
             "}\n" +

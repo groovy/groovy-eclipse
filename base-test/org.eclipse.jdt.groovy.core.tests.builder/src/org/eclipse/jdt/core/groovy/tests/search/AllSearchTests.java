@@ -21,6 +21,7 @@ import junit.framework.TestSuite;
 public final class AllSearchTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite(AllSearchTests.class.getName());
+        suite.addTestSuite(ArrayInferencingTests.class);
         suite.addTestSuite(BinarySearchTests.class);
         suite.addTestSuite(CategorySearchTests.class);
         suite.addTestSuite(DeclarationInferencingTests.class);
