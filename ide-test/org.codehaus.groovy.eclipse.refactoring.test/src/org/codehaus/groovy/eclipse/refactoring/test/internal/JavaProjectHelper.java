@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.testplugin;
+package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
@@ -65,47 +66,14 @@ import org.osgi.framework.FrameworkUtil;
  */
 public class JavaProjectHelper {
 
+    private static final int MAX_RETRY= 5;
     /**
      * @deprecated
      * @see #RT_STUBS_15
      */
     public static final IPath RT_STUBS_13= new Path("resources/rtstubs.jar");
-    /**
-     * @deprecated
-     * @see #JUNIT_SRC_381
-     */
-    public static final IPath JUNIT_SRC= new Path("resources/junit37-noUI-src.zip");
-
     public static final IPath RT_STUBS_15= new Path("resources/rtstubs15.jar");
     public static final IPath RT_STUBS_16= new Path("resources/rtstubs16.jar");
-    public static final IPath JUNIT_SRC_381= new Path("resources/junit381-noUI-src.zip");
-    public static final String JUNIT_SRC_ENCODING= "ISO-8859-1";
-
-    public static final IPath MYLIB= new Path("resources/mylib.jar");
-    public static final IPath MYLIB_STDOUT= new Path("resources/mylib_stdout.jar");
-    public static final IPath MYLIB_SIG= new Path("resources/mylib_sig.jar");
-    public static final IPath NLS_LIB= new Path("resources/nls.jar");
-
-    private static final int MAX_RETRY= 5;
-
-    public static final int COUNT_CLASSES_RT_STUBS_15= 661;
-    public static final int COUNT_INTERFACES_RT_STUBS_15= 135;
-
-    public static final int COUNT_CLASSES_JUNIT_SRC_381= 76;
-    public static final int COUNT_INTERFACES_JUNIT_SRC_381= 8;
-    public static final int COUNT_CLASSES_MYLIB= 3;
-
-    /**
-     * If set to <code>true</code> all resources that are
-     * deleted using {@link #delete(IJavaElement)} and that contain mixed
-     * line delimiters will result in a test failure.
-     * <p>
-     * Should be <code>false</code> during normal and Releng test runs
-     * due to performance impact and because the search plug-in gets
-     * loaded which results in a test failure.
-     * </p>
-     */
-    private static final boolean ASSERT_NO_MIXED_LINE_DELIMIERS= false;
 
     /**
      * Creates a IJavaProject.
@@ -149,6 +117,7 @@ public class JavaProjectHelper {
 
         return jproject;
     }
+
     /**
      * Creates a IJavaProject with a groovy nature
      * @param projectName The name of the project
@@ -200,7 +169,7 @@ public class JavaProjectHelper {
      * @param project the java project
      */
     public static void set15CompilerOptions(IJavaProject project) {
-        Map options= project.getOptions(false);
+        Map<String, String> options= project.getOptions(false);
         JavaProjectHelper.set15CompilerOptions(options);
         project.setOptions(options);
     }
@@ -210,7 +179,7 @@ public class JavaProjectHelper {
      * @param project the java project
      */
     public static void set14CompilerOptions(IJavaProject project) {
-        Map options= project.getOptions(false);
+        Map<String, String> options= project.getOptions(false);
         JavaProjectHelper.set14CompilerOptions(options);
         project.setOptions(options);
     }
@@ -219,7 +188,7 @@ public class JavaProjectHelper {
      * Sets the compiler options to 1.6
      * @param options The compiler options to configure
      */
-    public static void set16CompilerOptions(Map options) {
+    public static void set16CompilerOptions(Map<String, String> options) {
         options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_6);
         options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
         options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
@@ -231,7 +200,7 @@ public class JavaProjectHelper {
      * Sets the compiler options to 1.5
      * @param options The compiler options to configure
      */
-    public static void set15CompilerOptions(Map options) {
+    public static void set15CompilerOptions(Map<String, String> options) {
         options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
         options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
         options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
@@ -243,7 +212,7 @@ public class JavaProjectHelper {
      * Sets the compiler options to 1.4
      * @param options The compiler options to configure
      */
-    public static void set14CompilerOptions(Map options) {
+    public static void set14CompilerOptions(Map<String, String> options) {
         options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
         options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
         options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.WARNING);
@@ -255,7 +224,7 @@ public class JavaProjectHelper {
      * Sets the compiler options to 1.3
      * @param options The compiler options to configure
      */
-    public static void set13CompilerOptions(Map options) {
+    public static void set13CompilerOptions(Map<String, String> options) {
         options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_3);
         options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.WARNING);
         options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.WARNING);
@@ -271,9 +240,6 @@ public class JavaProjectHelper {
      * @see #ASSERT_NO_MIXED_LINE_DELIMIERS
      */
     public static void delete(final IJavaElement elem) throws Exception {
-        if (ASSERT_NO_MIXED_LINE_DELIMIERS)
-            MixedLineDelimiterDetector.assertNoMixedLineDelimiters(elem);
-
         IWorkspaceRunnable runnable= new IWorkspaceRunnable() {
             public void run(IProgressMonitor monitor) throws CoreException {
                 performDummySearch();
@@ -459,7 +425,6 @@ public class JavaProjectHelper {
         return jproject.getPackageFragmentRoot(path.toString());
     }
 
-
     /**
      * Copies the library into the project and adds it as library entry.
      * @param jproject The parent project
@@ -538,11 +503,9 @@ public class JavaProjectHelper {
 
     public static IPackageFragmentRoot addRTJar13(IJavaProject jproject) throws Exception {
         IPath[] rtJarPath= findRtJar(RT_STUBS_13);
-
-        Map options= jproject.getOptions(false);
+        Map<String, String> options= jproject.getOptions(false);
         JavaProjectHelper.set13CompilerOptions(options);
         jproject.setOptions(options);
-
         return addLibrary(jproject, rtJarPath[0], rtJarPath[1], rtJarPath[2]);
     }
 
@@ -554,11 +517,9 @@ public class JavaProjectHelper {
 
     public static IPackageFragmentRoot addRTJar16(IJavaProject jproject) throws Exception {
         IPath[] rtJarPath= findRtJar(RT_STUBS_16);
-
-        Map options= jproject.getOptions(false);
+        Map<String, String> options= jproject.getOptions(false);
         JavaProjectHelper.set16CompilerOptions(options);
         jproject.setOptions(options);
-
         return addLibrary(jproject, rtJarPath[0], rtJarPath[1], rtJarPath[2]);
     }
 
@@ -649,14 +610,14 @@ public class JavaProjectHelper {
     public static void removeFromClasspath(IJavaProject jproject, IPath path) throws Exception {
         IClasspathEntry[] oldEntries= jproject.getRawClasspath();
         int nEntries= oldEntries.length;
-        ArrayList list= new ArrayList(nEntries);
+        List<IClasspathEntry> list= new ArrayList<IClasspathEntry>(nEntries);
         for (int i= 0 ; i < nEntries ; i++) {
             IClasspathEntry curr= oldEntries[i];
             if (!path.equals(curr.getPath())) {
                 list.add(curr);
             }
         }
-        IClasspathEntry[] newEntries= (IClasspathEntry[])list.toArray(new IClasspathEntry[list.size()]);
+        IClasspathEntry[] newEntries= list.toArray(new IClasspathEntry[list.size()]);
         jproject.setRawClasspath(newEntries, null);
     }
 
@@ -717,9 +678,9 @@ public class JavaProjectHelper {
      * @throws IOException import failed
      */
     public static void importResources(IContainer importTarget, Bundle bundle, String bundleSourcePath) throws Exception {
-        Enumeration entryPaths= bundle.getEntryPaths(bundleSourcePath);
+        Enumeration<String> entryPaths= bundle.getEntryPaths(bundleSourcePath);
         while (entryPaths.hasMoreElements()) {
-            String path= (String) entryPaths.nextElement();
+            String path= entryPaths.nextElement();
             IPath name= new Path(path.substring(bundleSourcePath.length()));
             if (path.endsWith("/")) {
                 IFolder folder= importTarget.getFolder(name);
@@ -768,4 +729,3 @@ public class JavaProjectHelper {
         return roots;
     }
 }
-

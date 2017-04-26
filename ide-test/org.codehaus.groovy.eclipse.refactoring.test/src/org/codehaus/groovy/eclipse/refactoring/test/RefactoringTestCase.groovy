@@ -16,6 +16,8 @@
 package org.codehaus.groovy.eclipse.refactoring.test
 
 import org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticipant
+import org.codehaus.groovy.eclipse.refactoring.test.internal.JavaProjectHelper
+import org.codehaus.groovy.eclipse.refactoring.test.internal.TestOptions
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantShared
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantSingle
 import org.eclipse.core.resources.IResource
@@ -39,8 +41,6 @@ import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType
 import org.eclipse.jdt.internal.corext.util.Strings
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.util.CoreUtility
-import org.eclipse.jdt.testplugin.JavaProjectHelper
-import org.eclipse.jdt.testplugin.TestOptions
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.ChangeDescriptor
 import org.eclipse.ltk.core.refactoring.CheckConditionsOperation
