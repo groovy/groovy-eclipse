@@ -393,6 +393,18 @@ final class CodeSelectTypesTests extends BrowsingTestCase {
     }
 
     @Test
+    void testSelectDef1() {
+        String contents = 'class C { def x() { } }'
+        assertCodeSelect([contents], 'def', null)
+    }
+
+    @Test
+    void testSelectDef2() {
+        String contents = 'class C { Object x() { def y } }'
+        assertCodeSelect([contents], 'def', null)
+    }
+
+    @Test
     void testSelectThis1() {
         // Java Editor doesn't code select on 'this' variable expression
         String contents = 'class C { def x() { this } }'

@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -58,7 +59,8 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Object[] result = findNodeForRegion(module, select);
                 ASTNode node = (ASTNode) result[0];
                 Region region = (Region) result[1];
-                if (node != null && !(node instanceof VariableExpression && ((VariableExpression) node).isThisExpression())) {
+                if (node != null && !(node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) &&
+                        !(node == ClassHelper.DYNAMIC_TYPE && length == 3 && String.valueOf(contents, start, length).equals("def"))) {
                     // shortcut: check to see if we are looking for this type itself
                     if (isTypeDeclaration(module, node)) {
                         return returnThisNode(unit, node);
