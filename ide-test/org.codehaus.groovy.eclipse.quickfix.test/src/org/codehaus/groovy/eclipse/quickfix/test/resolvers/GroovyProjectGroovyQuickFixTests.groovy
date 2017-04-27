@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddGroovyRuntimeResolver
@@ -27,7 +30,6 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaModelMarker
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
@@ -276,7 +278,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
     @Test
     void testAddImportGRECLIPSE1612() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+        assumeTrue(isAtLeastGroovy(20))
         addJavaSource('''\
             public class FooJava {
               public static String getProperty() {
@@ -299,7 +301,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
     @Test
     void testGRECLIPSE1777() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        assumeTrue(isAtLeastGroovy(21))
         def unit = addGroovySource('''\
             @groovy.transform.CompileStatic
             class D {

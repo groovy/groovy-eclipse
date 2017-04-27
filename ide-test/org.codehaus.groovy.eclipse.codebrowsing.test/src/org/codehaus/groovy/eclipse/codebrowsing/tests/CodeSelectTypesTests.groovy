@@ -15,8 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
+
 import org.eclipse.jdt.core.SourceRange
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.junit.Ignore
 import org.junit.Test
 
@@ -116,7 +118,7 @@ final class CodeSelectTypesTests extends BrowsingTestCase {
 
     @Test
     void testSelectAnnotationClass3() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return // CompileDynamic was added in 2.1
+        assumeTrue(isAtLeastGroovy(21)) // CompileDynamic was added in 2.1
         // CompileDynamic is an AnnotationCollector, so it is not in the AST after transformation
         String contents = 'import groovy.transform.CompileDynamic; @CompileDynamic class Type { }'
         assertCodeSelect([contents], 'CompileDynamic')
@@ -124,21 +126,21 @@ final class CodeSelectTypesTests extends BrowsingTestCase {
 
     @Test
     void testSelectAnnotationClass4() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return // AnnotationCollector was added in 2.1
+        assumeTrue(isAtLeastGroovy(21)) // AnnotationCollector was added in 2.1
         String contents = 'import groovy.transform.*; @AnnotationCollector([EqualsAndHashCode]) public @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
     void testSelectAnnotationClass4a() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return // AnnotationCollector was added in 2.1
+        assumeTrue(isAtLeastGroovy(21)) // AnnotationCollector was added in 2.1
         String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector public @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
     void testSelectAnnotationClass5() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        assumeTrue(isAtLeastGroovy(21)) // enum constant annotation support was added in 2.1
         String another = 'import java.lang.annotation.*; @Target(ElementType.FIELD) @interface Tag { String value() }'
         String contents = 'enum Foo { @Tag("Bar") Baz }'
         assertCodeSelect([another, contents], 'Tag')
@@ -351,6 +353,46 @@ final class CodeSelectTypesTests extends BrowsingTestCase {
     }
 
     @Test
+    void testSelectCatchParamType() {
+        String contents = 'try { throw new Exception() } catch (Exception ex) { ex.printStackTrace() }'
+        assertCodeSelect([contents], 'Exception')
+    }
+
+    @Test
+    void testSelectForEachParamType() {
+        String contents = 'List<String> list; for (String s : list) { println s }'
+        assertCodeSelect([contents], 'String')
+    }
+
+    @Test
+    void testSelectForEachInParamType() {
+        String contents = 'List<String> list; for (String s in list) { println s }'
+        assertCodeSelect([contents], 'String')
+    }
+
+    @Test
+    void testSelectForEachInParamTypeTC() {
+        assumeTrue(isAtLeastGroovy(20)) // TypeChecked was added in 2.0
+        String contents = '@groovy.transform.TypeChecked def m() { List<String> list; for (String s in list) { println s } }'
+        assertCodeSelect([contents], 'String')
+    }
+
+    @Test
+    void testSelectForEachInParamTypeCS() {
+        assumeTrue(isAtLeastGroovy(20)) // CompileStatic was added in 2.0
+        // @see StaticCompilationVisitor.visitForLoop -- param type is set to class node from 'List<String>', which impacts code select
+        String contents = '@groovy.transform.CompileStatic def m() { List<String> list; for (String s in list) { println s } }'
+        assertCodeSelect([contents], 'String')
+    }
+
+    @Test @Ignore('Is this just shorthand for getClass()?')
+    void testSelectClass() {
+        // Java Editor doesn't code select on 'class' literal expression
+        String contents = 'String.class'
+        assertCodeSelect([contents], 'class', null)
+    }
+
+    @Test
     void testSelectThis1() {
         // Java Editor doesn't code select on 'this' variable expression
         String contents = 'class C { def x() { this } }'
@@ -475,21 +517,21 @@ final class CodeSelectTypesTests extends BrowsingTestCase {
 
     @Test
     void testSelectAnnotationOnMethod2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return; // CompileDynamic was added in 2.0
+        assumeTrue(isAtLeastGroovy(20)) // CompileStatic was added in 2.0
         String contents = 'import groovy.transform.*; class Type { @CompileStatic void method() {} }'
         assertCodeSelect([contents], 'CompileStatic')
     }
 
     @Test
     void testSelectAnnotationOnMethod3() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return; // CompileDynamic was added in 2.1
+        assumeTrue(isAtLeastGroovy(21)) // CompileDynamic was added in 2.1
         String contents = 'import groovy.transform.*; class Type { @CompileDynamic void method() {} }'
         assertCodeSelect([contents], 'CompileDynamic')
     }
 
     @Test
     void testSelectAnnotationOnMethod4() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return; // TypeChecked was added in 2.0
+        assumeTrue(isAtLeastGroovy(20)) // TypeChecked was added in 2.0
         String contents = 'import groovy.transform.*; class Type { @TypeChecked(TypeCheckingMode.SKIP) void method() {} }'
         assertCodeSelect([contents], 'TypeChecked')
         assertCodeSelect([contents], 'TypeCheckingMode')
@@ -660,13 +702,13 @@ final class CodeSelectTypesTests extends BrowsingTestCase {
 
     // javadocs
 
-    @Ignore @Test
+    @Test @Ignore('not yet implemented')
     void testSelectTypeInJavadocLink() {
         String contents = '/** {@link java.util.regex.Pattern} */ class X { }'
         assertCodeSelect([contents], 'Pattern')
     }
 
-    @Ignore @Test
+    @Test @Ignore('not yet implemented')
     void testSelectTypeInJavadocLink2() {
         String contents = 'import java.util.regex.Pattern; /** {@link Pattern} */ class X { }'
         assertCodeSelect([contents], 'Pattern')

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
     }
 
     protected static boolean isNumber(ClassNode type) {
-        return ClassHelper.isNumberType(type) || type == ClassHelper.BigDecimal_TYPE || type == ClassHelper.BigInteger_TYPE;
+        return ClassHelper.isNumberType(type) || ClassHelper.BigDecimal_TYPE.equals(type) || ClassHelper.BigInteger_TYPE.equals(type);
     }
 
     protected static boolean isStatic(ASTNode node) {

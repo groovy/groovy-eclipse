@@ -15,11 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
@@ -67,7 +68,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
 
     @Test
     void testAnno2() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        assumeTrue(isAtLeastGroovy(21))
         String contents = '@Compile class Foo { }'
         def proposals = getProposals(contents, '@Compile')
 
@@ -83,7 +84,7 @@ final class AnnotationCompletionTests extends CompletionTestCase {
 
     @Test
     void testAnno2a() { // checks camel case matching
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
+        assumeTrue(isAtLeastGroovy(21))
         String contents = '@ComDyn class Foo { }'
         def proposals = getProposals(contents, '@ComDyn')
         assertThat(proposals).includes('CompileDynamic').hasSize(1, 'Only @CompileDynamic should have been proposed\n')

@@ -1222,6 +1222,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testEnumPositions_GRE1072() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) return;
         runConformTest(new String[] {
             "X.groovy",
             "enum Color {\n" +

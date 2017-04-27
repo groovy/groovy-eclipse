@@ -31,10 +31,10 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.regex.Matcher;
 
 import groovy.lang.Tuple;
@@ -125,9 +125,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             IO_GROOVY_METHODS = null;
         }
     }
-    // not available on all platforms
-    // public static final ClassNode PLUGIN5_GM_CLASS_NODE = ClassHelper.make(org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods.class);
-    // public static final ClassNode PLUGIN6_GM_CLASS_NODE = ClassHelper.make(org.codehaus.groovy.vmplugin.v6.PluginDefaultGroovyMethods.class);
 
     // only exists on 2.1 and later
     public static ClassNode DELEGATES_TO;
@@ -172,14 +169,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode CLASS_ARRAY_CLASS_NODE = CLASS_CLASS_NODE.makeArray();
 
     // primitive wrapper classes
-    public static final ClassNode INTEGER_CLASS_NODE = ClassHelper.Integer_TYPE;
-    public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;
-    public static final ClassNode SHORT_CLASS_NODE = ClassHelper.Short_TYPE;
-    public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.Float_TYPE;
-    public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.Double_TYPE;
-    public static final ClassNode BYTE_CLASS_NODE = ClassHelper.Byte_TYPE;
     public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.Boolean_TYPE;
     public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.Character_TYPE;
+    public static final ClassNode BYTE_CLASS_NODE = ClassHelper.Byte_TYPE;
+    public static final ClassNode INTEGER_CLASS_NODE = ClassHelper.Integer_TYPE;
+    public static final ClassNode SHORT_CLASS_NODE = ClassHelper.Short_TYPE;
+    public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;
+    public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.Float_TYPE;
+    public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.Double_TYPE;
 
     //--------------------------------------------------------------------------
 
@@ -231,8 +228,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                     if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) &&
                                             args.size() > i && args.get(i) instanceof ClosureExpression &&
                                             annotation.getMember("value") instanceof ClassExpression) {
-                                        delegatesToClosures = new HashMap<ClosureExpression, ClassNode>(3);
-                                        delegatesToClosures.put((ClosureExpression) args.get(i), annotation.getMember("value").getType());
+                                        delegatesToClosures = Collections.singletonMap(
+                                            (ClosureExpression) args.get(i), annotation.getMember("value").getType());
                                     }
                                 }
                             }
@@ -242,7 +239,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
             if (delegatesToClosures == null) {
                 delegatesToClosures = Collections.emptyMap();
-
             }
         }
 
@@ -263,12 +259,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * the enclosing method call is the one where there are the current node is part of an argument list
          */
-        final Stack<CallAndType> enclosingCallStack = new Stack<VariableScope.CallAndType>();
+        final LinkedList<CallAndType> enclosingCallStack = new LinkedList<VariableScope.CallAndType>();
         /**
          * Node currently being evaluated, or null if none
          */
-        final Stack<ASTNode> nodeStack = new Stack<ASTNode>();
-
+        final LinkedList<ASTNode> nodeStack = new LinkedList<ASTNode>();
         /**
          * true iff current scope is implicit run method of script
          */
@@ -333,9 +328,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public ASTNode getEnclosingNode() {
         if (shared.nodeStack.size() > 1) {
-            ASTNode current = shared.nodeStack.pop();
-            ASTNode enclosing = shared.nodeStack.peek();
-            shared.nodeStack.push(current);
+            ASTNode current = shared.nodeStack.removeLast();
+            ASTNode enclosing = shared.nodeStack.getLast();
+            shared.nodeStack.add(current);
             return enclosing;
         } else {
             return null;
@@ -347,18 +342,18 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public void setCurrentNode(ASTNode currentNode) {
-        shared.nodeStack.push(currentNode);
+        shared.nodeStack.add(currentNode);
     }
 
     public void forgetCurrentNode() {
         if (!shared.nodeStack.isEmpty()) {
-            shared.nodeStack.pop();
+            shared.nodeStack.removeLast();
         }
     }
 
     public ASTNode getCurrentNode() {
         if (!shared.nodeStack.isEmpty()) {
-            return shared.nodeStack.peek();
+            return shared.nodeStack.getLast();
         } else {
             return null;
         }
@@ -452,10 +447,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public ClassNode getDelegateOrThis() {
         VariableInfo info = getDelegateOrThisInfo();
         return info != null ? info.type : null;
-    }
-
-    public boolean isThisOrSuper(Variable var) {
-        return var.getName().equals("this") || var.getName().equals("super");
     }
 
     public void addVariable(String name, ClassNode type, ClassNode declaringType) {
@@ -734,11 +725,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return clone;
     }
 
-    public static ClassNode clonedTuple() {
-        // the typle class is not parameterized in Groovy 1.7, so just return list.
-        return clonedList();
-    }
-
     private static void cleanGenerics(GenericsType gt) {
         gt.getType().setGenericsTypes(null);
         gt.setName("java.lang.Object");
@@ -843,16 +829,16 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (shared.enclosingCallStack.isEmpty()) {
             return null;
         } else {
-            return shared.enclosingCallStack.peek();
+            return shared.enclosingCallStack.getLast();
         }
     }
 
     public void addEnclosingMethodCall(CallAndType enclosingMethodCall) {
-        shared.enclosingCallStack.push(enclosingMethodCall);
+        shared.enclosingCallStack.add(enclosingMethodCall);
     }
 
     public void forgetEnclosingMethodCall() {
-        shared.enclosingCallStack.pop();
+        shared.enclosingCallStack.removeLast();
     }
 
     public boolean isTopLevel() {
@@ -1062,6 +1048,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static boolean isParameterizedClosure(ClassNode type) {
         return CLOSURE_CLASS_NODE.equals(type) &&  type.isUsingGenerics();
+    }
+
+    public static boolean isThisOrSuper(Variable var) {
+        return var.getName().equals("this") || var.getName().equals("super");
     }
 
     public static boolean isVoidOrObject(ClassNode type) {

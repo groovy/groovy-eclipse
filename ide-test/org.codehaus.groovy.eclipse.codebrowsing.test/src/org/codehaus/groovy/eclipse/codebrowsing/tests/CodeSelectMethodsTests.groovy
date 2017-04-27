@@ -15,16 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.junit.Assert.*
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod
-import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.core.ILocalVariable
 import org.eclipse.jdt.core.IMethod
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.junit.Test
 
 final class CodeSelectMethodsTests extends BrowsingTestCase {
@@ -62,7 +60,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         String contents = '[a: Number].keySet()'
         IJavaElement elem = assertCodeSelect([contents], 'keySet')
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assertEquals('java.util.Set <java.lang.String>', method.getReturnType().toString(false))
+        assert method.returnType.toString(false) == 'java.util.Set <java.lang.String>'
     }
 
     @Test
@@ -70,7 +68,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         String contents = '[a: Number].values()'
         IJavaElement elem = assertCodeSelect([contents], 'values')
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assertEquals('java.util.Collection <java.lang.Class>', method.getReturnType().toString(false))
+        assert method.returnType.toString(false) == 'java.util.Collection <java.lang.Class>'
     }
 
     @Test
@@ -78,7 +76,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         String contents = '[a: Number].entrySet()'
         IJavaElement elem = assertCodeSelect([contents], 'entrySet')
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assertEquals('java.util.Set <java.util.Map$Entry>', method.getReturnType().toString(false))
+        assert method.returnType.toString(false) == 'java.util.Set <java.util.Map$Entry>'
     }
 
     @Test
@@ -86,14 +84,14 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         String contents = '[a: Number].getAt("a")'
         IJavaElement elem = assertCodeSelect([contents], 'getAt')
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assertEquals('java.lang.Class <java.lang.Number>', method.getReturnType().toString(false))
+        assert method.returnType.toString(false) == 'java.lang.Class <java.lang.Number>'
     }
 
     @Test
     void testCodeSelectClosure() {
         String contents = 'def x = { t -> print t }\nx("hello")'
         IJavaElement elem = assertCodeSelect([contents], 'x')
-        assertEquals('QClosure;', ((ILocalVariable) elem).getTypeSignature())
+        assert elem.typeSignature == 'QClosure;'
     }
 
     @Test
@@ -146,8 +144,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
             '((SubInterface) bar).foo(\"string\");\n}}'
 
         IJavaElement elem = assertCodeSelect([contents, contents2, contents3, contents4], 'foo')
-        assertEquals('Declaring type is expected to be SuperInterface', 'SuperInterface',
-            ((MethodNode) ((GroovyResolvedSourceMethod) elem).getInferredElement()).getDeclaringClass().getNameWithoutPackage())
+        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'SuperInterface'
     }
 
     @Test
@@ -210,7 +207,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
     void testCodeSelectStaticMethod1() {
         String contents = 'class Parent {\n  static p() {}\n}\nclass Child extends Parent {\n  def c() {\n    p()\n  }\n}'
         IJavaElement elem = assertCodeSelect([contents], 'p')
-        assertEquals('Parent', elem.getParent().getElementName())
+        assert elem.parent.elementName == 'Parent'
     }
 
     @Test
@@ -218,7 +215,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         String another = 'class Parent {\n    static p() {}\n}'
         String contents = 'class Child extends Parent {\n  def c() {\n    p()\n  }\n}'
         IJavaElement elem = assertCodeSelect([another, contents], 'p')
-        assertEquals('Parent', elem.getParent().getElementName())
+        assert elem.parent.elementName == 'Parent'
     }
 
     @Test
@@ -232,12 +229,12 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         String contents = 'def empty = Collections.&emptyList'
         IJavaElement elem = assertCodeSelect([contents], 'emptyList')
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assertEquals('java.util.List <T>', method.getReturnType().toString(false)) // want T to be java.lang.String
+        assert method.returnType.toString(false) == 'java.util.List <T>' // want T to be java.lang.String
     }
 
     @Test
     void testCodeSelectStaticMethod5() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return
+        assumeTrue(isAtLeastGroovy(20))
         String contents = 'import static java.util.Collections.singletonList\n' +
             '@groovy.transform.TypeChecked\n' +
             'class Foo { static {\n' +
@@ -245,7 +242,7 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
             '}}'
         IJavaElement elem = assertCodeSelect([contents], 'singletonList')
         MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assertEquals('java.util.List <java.lang.String>', method.getReturnType().toString(false))
+        assert method.returnType.toString(false) == 'java.util.List <java.lang.String>'
     }
 
     @Test
@@ -272,24 +269,36 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
     void testCodeSelectOverloadedMethod1() {
         String contents = '\"\".substring(0)'
         IJavaElement elem = assertCodeSelect([contents], 'substring')
-        assertEquals('Wrong number of parameters to method', 1, ((IMethod) elem).getParameterTypes().length)
+        assert ((IMethod) elem).getParameterTypes().length == 1 : 'Wrong number of parameters to method'
     }
 
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod2() {
         String contents = '\"\".substring(0,1)'
         IJavaElement elem = assertCodeSelect([contents], 'substring')
-        assertEquals('Wrong number of parameters to method', 2, ((IMethod) elem).getParameterTypes().length)
+        assert ((IMethod) elem).getParameterTypes().length == 2 : 'Wrong number of parameters to method'
     }
 
     //
+
+    private IMethod assertConstructor(String packName, String className, String toSearch, String contents) {
+        ICompilationUnit unit = addGroovySource(contents, className, packName)
+        prepareForCodeSelect(unit)
+
+        IJavaElement[] elems = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length())
+        assert elems.length == 1 : 'Should have found a selection'
+        String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1)
+        assert elems[0].elementName == elementName : "Should have found constructor '$elementName'"
+        assert elems[0].isConstructor() : 'Should be a constructor'
+        return elems[0]
+    }
 
     @Test
     void testCodeSelectConstructor() {
         String contents = 'def x = new java.util.Date()'
         IJavaElement elem = assertCodeSelect([contents], 'Date')
-        assertTrue('Expected method not type', elem instanceof IMethod)
-        assertTrue('Expected ctor not method', ((IMethod) elem).isConstructor())
+        assert elem instanceof IMethod : 'Expected method not type'
+        assert ((IMethod) elem).isConstructor() : 'Expected ctor not method'
 
         // check the preceding elements for selection bleedthrough
         assertCodeSelect([contents], 'util', 'java.util')
@@ -336,21 +345,21 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
     void testCodeSelectConstuctorMultipleConstructors() {
         addGroovySource('class Foo { Foo() { }\nFoo(a) { } }', 'Foo', 'p')
         IMethod method = assertConstructor('p', 'Bar', 'Foo', 'new Foo()')
-        assertEquals('Should have found constructor with no args', 0, method.getParameters().length)
+        assert method.parameters.length == 0 : 'Should have found constructor with no args'
     }
 
     @Test
     void testCodeSelectConstuctorMultipleConstructors2() {
         addGroovySource('class Foo { Foo() { } \n Foo(a) { } }', 'Foo', 'p')
         IMethod method = assertConstructor('p', 'Bar', 'Foo', 'new Foo(0)')
-        assertEquals('Should have found constructor with 1 arg', 1, method.getParameters().length)
+        assert method.parameters.length == 1 : 'Should have found constructor with 1 arg'
     }
 
     @Test
     void testCodeSelectConstuctorMultipleConstructors3() {
         IMethod method = assertConstructor('p', 'Bar', 'Date', 'new Date(0)')
-        assertEquals('Should have found constructor with 1 arg', 1, method.getParameters().length)
-        assertEquals('Should have found constructor Date(long)', 'J', method.getParameterTypes()[0])
+        assert method.parameters.length == 1: 'Should have found constructor with 1 arg'
+        assert method.parameterTypes[0] == 'J' : 'Should have found constructor Date(long)'
     }
 
     @Test
@@ -359,18 +368,6 @@ final class CodeSelectMethodsTests extends BrowsingTestCase {
         addGroovySource('class Foo { Foo(String s1, String s2) { } \n Foo(String s1) { } }', 'Foo', 'p')
         addGroovySource('interface Bar { String CONST = \"whatever\" }', 'Bar', 'p')
         IMethod method = assertConstructor('p', 'Baz', 'Foo', 'new Foo(Bar.CONST)')
-        assertEquals('Should have found constructor with 1 arg', 1, method.getParameters().length)
-    }
-
-    private IMethod assertConstructor(String packName, String className, String toSearch, String contents) {
-        ICompilationUnit unit = addGroovySource(contents, className, packName)
-        prepareForCodeSelect(unit)
-
-        IJavaElement[] elt = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length())
-        assertEquals('Should have found a selection', 1, elt.length)
-        String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1)
-        assertEquals('Should have found constructor \"' + elementName + '\"', elementName, elt[0].getElementName())
-        assertTrue('Should be a constructor', ((IMethod) elt[0]).isConstructor())
-        return (IMethod) elt[0]
+        assert method.parameters.length == 1 : 'Should have found constructor with 1 arg'
     }
 }

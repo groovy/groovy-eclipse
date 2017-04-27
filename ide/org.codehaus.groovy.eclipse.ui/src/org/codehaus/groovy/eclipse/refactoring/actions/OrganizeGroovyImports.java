@@ -120,7 +120,7 @@ public class OrganizeGroovyImports {
             Parameter[] parameters = expression.getParameters();
             if (parameters != null) {
                 for (Parameter param : parameters) {
-                    handleType(param.getType(), false);
+                    handleType(param.getOriginType(), false);
                 }
             }
             super.visitClosureExpression(expression);
@@ -200,7 +200,7 @@ public class OrganizeGroovyImports {
         public void visitConstructor(ConstructorNode node) {
             if (!node.isSynthetic()) {
                 for (Parameter param : node.getParameters()) {
-                    handleType(param.getType(), false);
+                    handleType(param.getOriginType(), false);
                 }
             }
             super.visitConstructor(node);
@@ -224,7 +224,7 @@ public class OrganizeGroovyImports {
             if (!node.isSynthetic()) {
                 handleType(node.getReturnType(), false);
                 for (Parameter param : node.getParameters()) {
-                    handleType(param.getType(), false);
+                    handleType(param.getOriginType(), false);
                 }
                 ClassNode[] exceptions = node.getExceptions();
                 if (exceptions != null) {
@@ -279,7 +279,7 @@ public class OrganizeGroovyImports {
         public void visitForLoop(ForStatement node) {
             if (!(node.getCollectionExpression() instanceof ClosureListExpression)) {
                 // check the type node of "for (Item i in x)" but skip "for (i in x)"
-                Parameter parm = node.getVariable(); ClassNode type = parm.getType();
+                ClassNode type = node.getVariable().getOriginType();
                 if (type.getStart() > 0) {
                     handleType(type, false);
                 }

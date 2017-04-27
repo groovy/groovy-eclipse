@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase
@@ -25,7 +26,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.junit.Ignore
@@ -126,7 +126,7 @@ final class RenameMethodTests extends RefactoringTestCase {
 
     @Test // GRECLIPSE-1538
     void test11() {
-        assumeTrue(GroovyUtils.isAtLeastGroovy(21))
+        assumeTrue(isAtLeastGroovy(21))
         runTest('A', 'getFoo', 'foo', [], true, false)
     }
 

@@ -583,6 +583,31 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL))
     }
 
+    void testCatchParamWithInstanceOf() {
+        // don't want PARAMETER
+        String contents = '''\
+            class X {
+              def m() {
+                try {
+                } catch (Exception ex) {
+                  if (ex instanceof RuntimeException) {
+                    ex // instanceof flow typing caused catch param check to break down
+                  } else {
+                    ex
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('m()'),    1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('ex)'),    2, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ex in'),  2, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ex //'),  2, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('ex'), 2, VARIABLE))
+    }
+
     void testForEachParam() {
         // don't want PARAMETER
         String contents = '''\
@@ -616,6 +641,30 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('loop'), 'loop'.length(), METHOD),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
+    }
+
+    void testForEachInParamWithInstanceOf() {
+        // don't want PARAMETER
+        String contents = '''\
+            class X {
+              def loop() {
+                for (x in []) {
+                  if (x instanceof String) {
+                    x // instanceof flow typing caused for-each param check to break down
+                  } else {
+                    x
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('x ins'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('x // '), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 

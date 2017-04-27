@@ -562,7 +562,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             if (param.getInitialExpression() != null) {
                 param.getInitialExpression().visit(this);
             }
-            check(param.getType(), param.getStart(), param.getNameStart() - 1);
+            check(param.getOriginType(), param.getStart(), param.getNameStart() - 1);
         }
     }
 

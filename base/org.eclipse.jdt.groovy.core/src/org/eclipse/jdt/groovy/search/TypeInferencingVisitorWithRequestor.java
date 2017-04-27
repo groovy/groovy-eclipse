@@ -759,7 +759,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 super.visitAnnotation(node);
                 // visit attribute labels
                 for (String name : node.getMembers().keySet()) {
-                    MethodNode meth = node.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY);
+                    MethodNode meth = node.getClassNode().getMethod(name, NO_PARAMETERS);
                     ASTNode attr; TypeLookupResult noLookup;
                     if (meth != null) {
                         attr = meth; // no Groovy AST node exists for name
@@ -986,24 +986,23 @@ assert primaryExprType != null && dependentExprType != null;
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
 
-            ClassNode[] implicitParamType = findImplicitParamType(scope, node);
+            ClassNode[] inferredParamTypes = inferClosureParamTypes(scope, node);
             Parameter[] parameters = node.getParameters(); final int n;
             if (parameters != null && (n = parameters.length) > 0) {
                 handleParameterList(parameters);
-
-                // only set the implicit param type of the parametrers if it is not explicitly defined
+                // TODO: If this is moved above handleParameterList, the inferred type will be available to the param nodes as well.
                 for (int i = 0; i < n; i += 1) {
                     Parameter parameter = parameters[i];
-                    if (implicitParamType[i] != VariableScope.OBJECT_CLASS_NODE &&
-                            parameter.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
-                        parameter.setType(implicitParamType[i]);
+                    // only reset the type of the parametrers if it is not explicitly defined
+                    if (inferredParamTypes[i] != VariableScope.OBJECT_CLASS_NODE && parameter.isDynamicTyped()) {
+                        parameter.setType(inferredParamTypes[i]);
                         scope.addVariable(parameter);
                     }
                 }
             } else
             // it variable only exists if there are no explicit parameters
-            if (implicitParamType[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
-                scope.addVariable("it", implicitParamType[0], VariableScope.OBJECT_CLASS_NODE);
+            if (inferredParamTypes[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
+                scope.addVariable("it", inferredParamTypes[0], VariableScope.OBJECT_CLASS_NODE);
             }
             if (scope.lookupNameInCurrentScope("it") == null) {
                 inferItType(node, scope);
@@ -1283,8 +1282,8 @@ assert primaryExprType != null && dependentExprType != null;
                     b.getLeftExpression() instanceof VariableExpression) {
                 VariableExpression v = (VariableExpression) b.getLeftExpression();
                 VariableScope.VariableInfo i = scopes.getLast().lookupName(v.getName());
-                if (GroovyUtils.isAssignable(b.getRightExpression().getType(), i.type)) {
-                    s = new VariableScope(scopes.getLast(), node.getIfBlock(), false);
+                if (i != null && GroovyUtils.isAssignable(b.getRightExpression().getType(), i.type)) {
+                    s = new VariableScope(scopes.getLast(), i.scopeNode /* use the same node */, false);
                     s.addVariable(v.getName(), b.getRightExpression().getType(), v.getDeclaringClass());
                     scopes.add(s);
                 }
@@ -1294,6 +1293,7 @@ assert primaryExprType != null && dependentExprType != null;
         node.getIfBlock().visit(this);
 
         if (s != null) scopes.removeLast();
+        // TODO: else, check for "if (!(x instanceof y)) { ... } else { ... }" and adjust scope of else block
 
         node.getElseBlock().visit(this);
     }
@@ -1790,7 +1790,7 @@ assert primaryExprType != null && dependentExprType != null;
                 }
 
                 // visit the parameter type
-                visitClassReference(param.getType());
+                visitClassReference(param.getOriginType());
 
                 visitAnnotations(param);
 
@@ -2518,60 +2518,6 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     /**
-     * Determines if the parameter type can be implicitly determined.  We look for
-     * DGM method calls that take closures and see what kind of type they expect.
-     *
-     * @return array of {@link ClassNode}s specifying the inferred types of the closure's parameters
-     */
-    private static ClassNode[] findImplicitParamType(VariableScope scope, ClosureExpression closure) {
-        int numParams = closure.getParameters() == null ? 0 : closure.getParameters().length;
-        if (numParams == 0) {
-            // implicit parameter
-            numParams += 1;
-        }
-        ClassNode[] allInferred = new ClassNode[numParams];
-
-        CallAndType call = scope.getEnclosingMethodCallExpression();
-        if (call != null) {
-            String methodName = call.call.getMethodAsString();
-            ClassNode delegateType = call.declaringType;
-
-            ClassNode inferredType; // TODO: Could this use the Closure annotations to determine the type?
-            if (dgmClosureMethods.contains(methodName)) {
-                inferredType = VariableScope.extractElementType(delegateType);
-            } else if (dgmClosureIdentityMethods.contains(methodName)) {
-                inferredType = VariableScope.clone(delegateType);
-            } else {
-                // inferredType might be null
-                inferredType = dgmClosureMethodsMap.get(methodName);
-            }
-
-            if (inferredType != null) {
-                Arrays.fill(allInferred, inferredType);
-                // special cases: eachWithIndex has last element an integer
-                if (methodName.equals("eachWithIndex") && allInferred.length > 1) {
-                    allInferred[allInferred.length - 1] = VariableScope.INTEGER_CLASS_NODE;
-                }
-                // if declaring type is a map and
-                if (delegateType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
-                    if ((dgmClosureMaybeMap.contains(methodName) && numParams == 2) ||
-                            (methodName.equals("eachWithIndex") && numParams == 3)) {
-                        GenericsType[] typeParams = inferredType.getGenericsTypes();
-                        if (typeParams != null && typeParams.length == 2) {
-                            allInferred[0] = typeParams[0].getType();
-                            allInferred[1] = typeParams[1].getType();
-                        }
-                    }
-
-                }
-                return allInferred;
-            }
-        }
-        Arrays.fill(allInferred, VariableScope.OBJECT_CLASS_NODE);
-        return allInferred;
-    }
-
-    /**
      * @return the method name associated with this unary operator
      */
     private static String findUnaryOperatorName(String text) {
@@ -2596,7 +2542,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     /**
-     * Make assumption that no one has overloaded the basic arithmetic operations on numbers.
+     * Makes assumption that no one has overloaded the basic arithmetic operations on numbers.
      * These operations will bypass the mop in most situations anyway.
      */
     private static boolean isArithmeticOperationOnNumberOrStringOrList(String text, ClassNode lhs, ClassNode rhs) {
@@ -2625,6 +2571,63 @@ assert primaryExprType != null && dependentExprType != null;
             default:
                 return false;
         }
+    }
+
+    /**
+     * Determines if the parameter type can be implicitly determined.  We look for
+     * DGM method calls that take closures and see what kind of type they expect.
+     *
+     * @return array of {@link ClassNode}s specifying the inferred types of the closure's parameters
+     */
+    private static ClassNode[] inferClosureParamTypes(VariableScope scope, ClosureExpression closure) {
+        int paramCount = closure.getParameters() == null ? 0 : closure.getParameters().length;
+        if (paramCount == 0) {
+            // implicit parameter
+            paramCount += 1;
+        }
+
+        ClassNode[] inferredTypes = new ClassNode[paramCount];
+
+        // TODO: Could this use the Closure annotations to determine the type?
+
+        CallAndType call = scope.getEnclosingMethodCallExpression();
+        if (call != null) {
+            ClassNode delegateType = call.declaringType;
+            String methodName = call.call.getMethodAsString();
+
+            ClassNode inferredType;
+            if (dgmClosureMethods.contains(methodName)) {
+                inferredType = VariableScope.extractElementType(delegateType);
+            } else if (dgmClosureIdentityMethods.contains(methodName)) {
+                inferredType = VariableScope.clone(delegateType);
+            } else {
+                // inferredType might be null
+                inferredType = dgmClosureMethodsMap.get(methodName);
+            }
+
+            if (inferredType != null) {
+                Arrays.fill(inferredTypes, inferredType);
+                // special cases: eachWithIndex has last element an integer
+                if (methodName.equals("eachWithIndex") && inferredTypes.length > 1) {
+                    inferredTypes[inferredTypes.length - 1] = VariableScope.INTEGER_CLASS_NODE;
+                }
+                // if declaring type is a map and
+                if (delegateType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
+                    if ((dgmClosureMaybeMap.contains(methodName) && paramCount == 2) ||
+                            (methodName.equals("eachWithIndex") && paramCount == 3)) {
+                        GenericsType[] typeParams = inferredType.getGenericsTypes();
+                        if (typeParams != null && typeParams.length == 2) {
+                            inferredTypes[0] = typeParams[0].getType();
+                            inferredTypes[1] = typeParams[1].getType();
+                        }
+                    }
+                }
+                return inferredTypes;
+            }
+        }
+
+        Arrays.fill(inferredTypes, VariableScope.OBJECT_CLASS_NODE);
+        return inferredTypes;
     }
 
     private static boolean isEnumInit(StaticMethodCallExpression node) {

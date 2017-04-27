@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
+
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
@@ -63,8 +65,7 @@ final class ConstructorCompletionTests extends CompletionTestCase {
 
     @Test
     void testContructorCompletionWithinEnumDeclaration1() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return
-
+        assumeTrue(isAtLeastGroovy(21))
         String contents = "class YYY { YYY() { } }\nenum F {\n" +
             "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}"
         String expected = "class YYY { YYY() { } }\nenum F {\n" +

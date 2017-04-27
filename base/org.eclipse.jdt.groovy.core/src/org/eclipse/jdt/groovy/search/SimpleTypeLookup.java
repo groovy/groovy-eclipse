@@ -195,7 +195,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return ((FieldNode) var).getDeclaringClass();
             } else if (var instanceof PropertyNode) {
                 return ((PropertyNode) var).getDeclaringClass();
-            } else if (scope.isThisOrSuper((VariableExpression) node)) { // use 'node' because 'var' may be null
+            } else if (VariableScope.isThisOrSuper((VariableExpression) node)) { // use 'node' because 'var' may be null
                 // this or super expression, but it is not bound, probably because concrete ast was requested
                 return scope.lookupName(((VariableExpression) node).getName()).declaringType;
             }
@@ -463,7 +463,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         if (variableInfo != null && !(decl instanceof MethodNode)) {
             type = variableInfo.type;
-            if (scope.isThisOrSuper(var)) decl = type;
+            if (VariableScope.isThisOrSuper(var)) decl = type;
             declaringType = getMorePreciseType(declaringType, variableInfo);
             newConfidence = TypeConfidence.findLessPrecise(confidence, TypeConfidence.INFERRED);
         }
