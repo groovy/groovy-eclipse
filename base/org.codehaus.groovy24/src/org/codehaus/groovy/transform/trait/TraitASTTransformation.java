@@ -73,9 +73,13 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.transform.trait.SuperCallTraitTransformer.UNRESOLVED_HELPER_CLASS;
 
 /**
- * Handles generation of code for the @Trait annotation. A class annotated with @Trait will generate, instead: <ul>
- * <li>an <i>interface</i> with the same name</li> <li>an utility inner class that will be used by the compiler to
- * handle the trait</li> </ul>
+ * Handles generation of code for the traits (trait keyword is equivalent to using the @Trait annotation).
+ * A class annotated with @Trait will generate, instead:
+ * <ul>
+ * <li>an <i>interface</i> with the same name</li>
+ * <li>a utility inner class that will be used by the compiler to implement the trait</li>
+ * <li>potentially a utility inner class to assist with implementing trait fields</li>
+ * </ul>
  *
  * @author Cedric Champeau
  */
@@ -240,7 +244,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         // GRECLIPSE end
 
         // visit AST xforms
-        registerASTTranformations(helper);
+        registerASTTransformations(helper);
 
         unit.getAST().addClass(helper);
         if (fieldHelper != null) {
@@ -274,7 +278,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         return initializer;
     }
 
-    private void registerASTTranformations(final ClassNode helper) {
+    private void registerASTTransformations(final ClassNode helper) {
         ASTTransformationCollectorCodeVisitor collector = new ASTTransformationCollectorCodeVisitor(
                 unit, compilationUnit.getTransformLoader()
         );
@@ -418,21 +422,21 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         Expression initialExpression = field.getInitialExpression();
         MethodNode selectedMethod = field.isStatic()?staticInitializer:initializer;
         if (initialExpression != null) {
+            VariableExpression thisObject = new VariableExpression(selectedMethod.getParameters()[0]);
+            ExpressionStatement initCode = new ExpressionStatement(initialExpression);
+            processBody(thisObject, initCode, trait, helper, fieldHelper, knownFields);
             if (field.isFinal()) {
                 String baseName = field.isStatic() ? Traits.STATIC_INIT_METHOD : Traits.INIT_METHOD;
                 MethodNode fieldInitializer = new MethodNode(
                         baseName + Traits.remappedFieldName(trait, field.getName()),
                         ACC_STATIC | ACC_PUBLIC | ACC_SYNTHETIC,
                         field.getOriginType(),
-                        Parameter.EMPTY_ARRAY,
+                        new Parameter[]{createSelfParameter(trait, field.isStatic())},
                         ClassNode.EMPTY_ARRAY,
-                        returnS(initialExpression)
+                        returnS(initCode.getExpression())
                 );
                 helper.addMethod(fieldInitializer);
             }
-            VariableExpression thisObject = new VariableExpression(selectedMethod.getParameters()[0]);
-            ExpressionStatement initCode = new ExpressionStatement(initialExpression);
-            processBody(thisObject, initCode, trait, helper, fieldHelper, knownFields);
             BlockStatement code = (BlockStatement) selectedMethod.getCode();
             MethodCallExpression mce;
             if (field.isStatic()) {
@@ -483,7 +487,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                 ACC_STATIC | ACC_PUBLIC | ACC_FINAL | ACC_SYNTHETIC,
                 field.getOriginType(),
                 fieldHelper,
-                field.isFinal() ? initialExpression : null
+                null
         );
         // copy annotations from field to dummy field
         List<AnnotationNode> copied = new LinkedList<AnnotationNode>();

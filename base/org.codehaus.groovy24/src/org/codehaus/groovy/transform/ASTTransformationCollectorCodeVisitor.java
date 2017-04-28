@@ -108,12 +108,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         
         for (AnnotationNode annotation : node.getAnnotations()) {
             // GRECLIPSE edit
-            //Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
-            //if (transformClassAnnotation == null) {
-            //    // skip if there is no such annotation
-            //    continue;
-            //}
-            //addTransformsToClassNode(annotation, transformClassAnnotation);
+            /*Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
+            if (transformClassAnnotation == null) {
+                // skip if there is no such annotation
+                continue;
+            }
+            addTransformsToClassNode(annotation, transformClassAnnotation);
+            */
             if (!this.allowTransforms && !isAllowed(annotation.getClassNode().getName())) {
                 continue;
             }

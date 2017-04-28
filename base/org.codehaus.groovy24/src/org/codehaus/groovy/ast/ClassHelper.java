@@ -28,13 +28,14 @@ import org.codehaus.groovy.util.ReferenceBundle;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.lang.annotation.Annotation;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Modifier;
 
@@ -88,31 +89,19 @@ public class ClassHelper {
         void_WRAPPER_TYPE = makeCached(Void.class),   METACLASS_TYPE = makeCached(MetaClass.class),
         Iterator_TYPE = makeCached(Iterator.class),
 
+        Enum_Type = makeWithoutCaching(Enum.class),
+        Annotation_TYPE = makeCached(Annotation.class),
+        ELEMENT_TYPE_TYPE = makeCached(ElementType.class),
+
         // uncached constants.
         CLASS_Type = makeWithoutCaching(Class.class), COMPARABLE_TYPE = makeWithoutCaching(Comparable.class),        
         GENERATED_CLOSURE_Type = makeWithoutCaching(GeneratedClosure.class),
         GROOVY_OBJECT_SUPPORT_TYPE = makeWithoutCaching(GroovyObjectSupport.class),
         GROOVY_OBJECT_TYPE = makeWithoutCaching(GroovyObject.class),
-        GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class),
-        
-        // GRECLIPSE edit
-        // GROOVY-6184 Resolve the enum and annotation ClassNodes
-        //Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
-        //Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
-        Enum_Type = make(Enum.class, true),
-        Annotation_TYPE = make(Annotation.class, true),
-        // GRECLIPSE end
-        ELEMENT_TYPE_TYPE = new ClassNode("java.lang.annotation.ElementType",0,Enum_Type)
+        GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class)
         ;
-        
-    // GRECLIPSE GROOVY-6184
-    //static {
-    //    Enum_Type.isPrimaryNode = false;
-    //    Annotation_TYPE.isPrimaryNode = false;
-    //}
-    // GRECLIPSE end
     
-    private static ClassNode[] types = new ClassNode[] {
+    private static final ClassNode[] types = new ClassNode[] {
         OBJECT_TYPE,
         boolean_TYPE, char_TYPE, byte_TYPE, short_TYPE,
         int_TYPE, long_TYPE, double_TYPE, float_TYPE,
