@@ -20,6 +20,8 @@ import static org.eclipse.jdt.ui.PreferenceConstants.*
 
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jface.preference.IPreferenceStore
+import org.junit.Before
+import org.junit.Test
 
 /**
  * Some additional tests for the GroovyAutoIndenter. There is no particular
@@ -29,18 +31,16 @@ import org.eclipse.jface.preference.IPreferenceStore
  * class, and therefore we can write tests in Groovy syntax (and use """ quoted
  * strings for specifying test input.
  */
-final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
+final class GroovyAutoIndenterTests2 extends GroovyEditorTestCase {
 
-    @Override
-    protected void setUp() {
-        super.setUp()
-
+    @Before
+    void setUp() {
         setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.TRUE)
         setJavaPreference(FORMATTER_TAB_CHAR, JavaCore.SPACE)
         setJavaPreference(FORMATTER_TAB_SIZE, '4')
     }
 
-    // GRECLIPSE-786
+    @Test // GRECLIPSE-786
     void testGSPAutoIndenting() {
         String text = '''\
             <html>
@@ -114,7 +114,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             %>'''.stripIndent(10)))
     }
 
-    // GRECLIPSE-771
+    @Test // GRECLIPSE-771
     void testIndentAfterMultilineString() {
         makeEditor('''\
                 static foo = """
@@ -135,6 +135,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
      * This case is handled differently (much like the begin and end token of
      * the MLS are like opening and closing braces. So test this separately.
      */
+    @Test
     void testIndentAfterMultilineStringWithTokens() {
         makeEditor('''\
                 static letter = """
@@ -150,7 +151,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                 <***>'''.stripIndent())
     }
 
-    // GRECLIPSE-744
+    @Test // GRECLIPSE-744
     void testIndentAfterBuilderProperty() {
         makeEditor('''\
             class Foo {
@@ -174,7 +175,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             '''.stripIndent())
     }
 
-    // GRECLIPSE-744
+    @Test // GRECLIPSE-744
     void testIndentAfterMultilineMapLiteral() {
         makeEditor('''\
             class Foo {
@@ -198,7 +199,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             '''.stripIndent())
     }
 
-    // GRECLIPSE-744
+    @Test // GRECLIPSE-744
     void testIndentAfterStaticProperty() {
         makeEditor('''\
             class Bagaga {
@@ -218,6 +219,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             '''.stripIndent().replaceAll('\\|', ''))
     }
 
+    @Test
     void testIndentAfterIfStatement1() {
         makeEditor("""\
             class Bagaga {
@@ -239,6 +241,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testIndentAfterIfStatement2() {
         makeEditor("""\
             class Bagaga {
@@ -262,6 +265,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testIndentAfterIfStatement3() {
         makeEditor("""\
             class Bagaga {
@@ -287,6 +291,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testIndentAfterIfStatement3a() {
         makeEditor("""\
             class Bagaga {
@@ -314,6 +319,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testIndentAfterElseStatement1() {
         makeEditor("""\
             class Bagaga {
@@ -339,6 +345,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testIndentAfterElseStatement2() {
         makeEditor("""\
             class Bagaga {
@@ -366,6 +373,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testIndentAfterElseStatement3() {
         // count of braces on line is slightly different in this case
         makeEditor("""\
@@ -396,6 +404,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testGRE757() {
         makeEditor("""\
             class Bagaga {
@@ -453,6 +462,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testGRE620() {
         makeEditor("""\
             class Bagaga {
@@ -474,6 +484,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testGRE295() {
         makeEditor("""\
             class BracketBug {
@@ -497,6 +508,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """)
     }
 
+    @Test
     void testGRE761() {
         makeEditor("""\
             def dodo()
@@ -516,6 +528,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testEnterPressedAtEndOfFile() {
         makeEditor("""\
             def dodo()
@@ -533,6 +546,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
                 ${CARET}""".stripIndent())
     }
 
+    @Test
     void testEnterPressedInEmptyFile() {
         makeEditor("${CARET}")
 
@@ -541,6 +555,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
         assertEditorContents("\n${CARET}")
     }
 
+    @Test
     void testEnterPressedAtBeginningOfFile() {
         makeEditor "$CARET\ndef foo() {\n}"
 
@@ -549,6 +564,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
         assertEditorContents "\n$CARET\ndef foo() {\n}"
     }
 
+    @Test
     void testEnterPressedAfterLongCommentAtBeginningOfFile() {
         makeEditor("""\
             /*
@@ -566,6 +582,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             ${CARET}""".stripIndent())
     }
 
+    @Test
     void testEnterAfterHalfAComment() {
         makeEditor("""\
             /*
@@ -583,6 +600,7 @@ final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
             """.stripIndent())
     }
 
+    @Test
     void testEnterInWhiteSpaceFile() {
         makeEditor("""
 
@@ -600,6 +618,7 @@ ${CARET}""")
 ${CARET}""")
     }
 
+    @Test
     void testEnterPressedInsideToken() {
         makeEditor("""\
             def dodo() {
@@ -617,7 +636,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
-    // GRECLIPSE-763
+    @Test // GRECLIPSE-763
     void testSmartPaste1() {
         makeEditor("""\
             def doit() {
@@ -637,6 +656,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testSmartPaste2() {
         makeEditor("""\
             def doit() {
@@ -666,6 +686,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testSmartPasteWrongFirstLine() {
         makeEditor("""\
             def doit() {
@@ -696,7 +717,7 @@ ${CARET}""")
         // Indent is only 3 on caret line and previous; is this a bug?
     }
 
-    // GRECLIPSE-767
+    @Test // GRECLIPSE-767
     void testSmartTab() {
         makeEditor("""\
             package com.kameleoon.pixel
@@ -723,6 +744,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testSmartTabMiddleOfWhiteSpace() {
         makeEditor("""\
             public class Blah {
@@ -739,6 +761,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testSmartTabEndOfWhiteSpace() {
         makeEditor("""\
             public class Blah {
@@ -755,6 +778,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testSmartTabOnCloseBrace() {
         makeEditor("""\
             public class Blah {
@@ -771,6 +795,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testSmartTabIncompleteMultiLineString() {
         makeEditor """\
             class Foo {
@@ -793,6 +818,7 @@ ${CARET}""")
             """.stripIndent()
     }
 
+    @Test
     void testAutoCloseBracesInGString1() {
         makeEditor('''\
             public class Blah {
@@ -813,6 +839,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
+    @Test
     void testAutoCloseBracesInGString2() {
         makeEditor('''\
             public class Blah {
@@ -833,6 +860,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
+    @Test
     void testAutoCloseBracesInGString3() {
         makeEditor('''\
             public class Blah {
@@ -853,6 +881,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
+    @Test
     void testAutoCloseBracesInGString4() {
         makeEditor('''\
             public class Blah {
@@ -873,6 +902,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
+    @Test
     void testAutoCloseBracesInMultilineGString() {
         makeEditor('''\
             public class Blah {
@@ -897,7 +927,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
-    // GRECLIPSE-1262
+    @Test // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs1() {
         makeEditor('''\
             def x = { yyy -><***>
@@ -912,7 +942,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
-    // GRECLIPSE-1262
+    @Test // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs2() {
         makeEditor('''\
             def xxx() {
@@ -931,7 +961,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
-    // GRECLIPSE-1475
+    @Test // GRECLIPSE-1475
     void testAutoIndentCurly1() {
         makeEditor('''\
             def xxx() {
@@ -950,7 +980,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
-    // GRECLIPSE-1475
+    @Test // GRECLIPSE-1475
     void testAutoIndentCurly2() {
         makeEditor('''\
             def xxx() {
@@ -969,7 +999,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
-    // GRECLIPSE-1475
+    @Test // GRECLIPSE-1475
     void testAutoIndentCurly3() {
         makeEditor('''\
             def xxx() {
@@ -988,7 +1018,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
-    // GRECLIPSE-1475
+    @Test // GRECLIPSE-1475
     void testAutoIndentCurly4() {
         makeEditor('''\
             def xxx() {
@@ -1006,6 +1036,7 @@ ${CARET}""")
             '''.stripIndent())
     }
 
+    @Test
     void testAutoIndentCurly5() {
         setJavaPreference(EDITOR_CLOSE_BRACES, IPreferenceStore.FALSE)
         makeEditor("""\
@@ -1021,6 +1052,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testAutoIndentCurly6() {
         makeEditor("""\
             if (something)${CARET}
@@ -1036,6 +1068,7 @@ ${CARET}""")
             """.stripIndent())
     }
 
+    @Test
     void testMuliLineCommentPaste1() {
         makeEditor('''
 <***>
@@ -1055,6 +1088,7 @@ ${CARET}""")
 ''')
     }
 
+    @Test
     void testMuliLineCommentPaste2() {
         makeEditor('''if (0){
     <***>
@@ -1071,6 +1105,7 @@ ${CARET}""")
 }''')
     }
 
+    @Test
     void testMuliLineCommentPaste3() {
         makeEditor('''if (0){
     <***>
@@ -1087,6 +1122,7 @@ ${CARET}""")
 }''')
     }
 
+    @Test
     void testMuliLineCommentPaste4() {
         makeEditor('')
 
@@ -1099,6 +1135,7 @@ ${CARET}""")
  */<***>''')
     }
 
+    @Test
     void testMuliLineCommentPaste5() {
         makeEditor('\n<***>')
 
@@ -1118,6 +1155,7 @@ ${CARET}""")
  */<***>''')
     }
 
+    @Test
     void testMuliLineStringPaste1() {
         makeEditor('''\
             if (0){
@@ -1137,6 +1175,7 @@ ${CARET}""")
             }'''.stripIndent())
     }
 
+    @Test
     void testMuliLineStringPaste2() {
         makeEditor('''\
             if (0){
@@ -1156,6 +1195,7 @@ ${CARET}""")
             }'''.stripIndent())
     }
 
+    @Test
     void testMuliLineStringPaste3() {
         makeEditor('''\
             if (0){
@@ -1175,6 +1215,7 @@ ${CARET}""")
             }'''.stripIndent())
     }
 
+    @Test
     void testMuliLineStringPaste4() {
         makeEditor('''\
             if (i ==0){

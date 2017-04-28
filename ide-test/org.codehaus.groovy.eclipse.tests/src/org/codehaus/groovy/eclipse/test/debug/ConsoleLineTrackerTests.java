@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,48 +36,50 @@ import org.eclipse.jface.text.Region;
 import org.eclipse.ui.console.IHyperlink;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.console.IPatternMatchListener;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
- * @author Andrew Eisenberg
- *
- * Tests that breakpoint locations are as expected
- *
+ * Tests that breakpoint locations are as expected.
  */
-public class ConsoleLineTrackerTests extends EclipseTestCase {
+public final class ConsoleLineTrackerTests extends EclipseTestCase {
 
     GroovyConsoleLineTracker lineTracker;
     MockConsole console;
     IDocument doc;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         doc = new Document();
         console = new MockConsole(doc);
         lineTracker = new GroovyConsoleLineTracker();
         lineTracker.init(console);
     }
 
+    @Test
     public void testNoLink() throws Exception {
         testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "");
         String contents = "ahdhjkfsfds";
         doc.set(contents);
         lineTracker.lineAppended(new Region(0, contents.length()));
-        assertNull("Should not have found any hyperlinks", console.getLastLink());
+        Assert.assertNull("Should not have found any hyperlinks", console.getLastLink());
     }
 
+    @Test
     public void testLink() throws Exception {
         testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "");
         String contents = "at f.Bar.run(Bar.groovy:2)";
         doc.set(contents);
         lineTracker.lineAppended(new Region(0, contents.length()));
-        assertNotNull("Should have found a hyperlink", console.getLastLink());
+        Assert.assertNotNull("Should have found a hyperlink", console.getLastLink());
         FileLink link = (FileLink) console.getLastLink();
         IFile file = (IFile) ReflectionUtils.getPrivateField(FileLink.class, "fFile", link);
-        assertTrue("File should exist", file.isAccessible());
-        assertEquals("File name is wrong", "Bar.groovy", file.getName());
+        Assert.assertTrue("File should exist", file.isAccessible());
+        Assert.assertEquals("File name is wrong", "Bar.groovy", file.getName());
     }
 
+    @Test
     public void testAmbiguousLink() throws Exception {
         testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "");
         testProject.createOtherSourceFolder();
@@ -87,16 +89,16 @@ public class ConsoleLineTrackerTests extends EclipseTestCase {
         String contents = "at f.Bar.run(Bar.groovy:2)";
         doc.set(contents);
         lineTracker.lineAppended(new Region(0, contents.length()));
-        assertNotNull("Should have found a hyperlink", console.getLastLink());
+        Assert.assertNotNull("Should have found a hyperlink", console.getLastLink());
         FileLink link = (FileLink) console.getLastLink();
         Object file = ReflectionUtils.getPrivateField(FileLink.class, "fFile", link);
-        assertNull("File should be null since the selection is ambiguous", file);
+        Assert.assertNull("File should be null since the selection is ambiguous", file);
 
         IFile[] files = (IFile[]) ReflectionUtils.getPrivateField(AmbiguousFileLink.class, "files", link);
 
-        assertEquals("Should have found 2 files", 2, files.length);
-        assertEquals("File name is wrong", "Bar.groovy", files[0].getName());
-        assertEquals("File name is wrong", "Bar.groovy", files[1].getName());
+        Assert.assertEquals("Should have found 2 files", 2, files.length);
+        Assert.assertEquals("File name is wrong", "Bar.groovy", files[0].getName());
+        Assert.assertEquals("File name is wrong", "Bar.groovy", files[1].getName());
     }
 }
 

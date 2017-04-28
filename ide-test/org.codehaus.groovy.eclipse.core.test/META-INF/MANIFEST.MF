@@ -4,8 +4,5 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core.test;singleton:=true
 Bundle-Name: Groovy Core Tests
 Bundle-Version: 2.9.2.qualifier
-Bundle-ClassPath: .,
- lib/commons-io-1.3.1.jar
-Export-Package: org.codehaus.groovy.eclipse.core
+Export-Package: org.codehaus.groovy.eclipse.core.test
 Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"
-Eclipse-BundleShape: dir

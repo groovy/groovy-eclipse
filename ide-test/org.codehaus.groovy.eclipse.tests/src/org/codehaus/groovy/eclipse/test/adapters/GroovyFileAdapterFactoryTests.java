@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,54 +18,55 @@ package org.codehaus.groovy.eclipse.test.adapters;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.resources.IFile;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Tests the Groovy File Adapter Factory
- *
- * @author David Kerber
+ * Tests the Groovy File Adapter Factory.
  */
-public class GroovyFileAdapterFactoryTestCase extends EclipseTestCase {
+public final class GroovyFileAdapterFactoryTests extends EclipseTestCase {
 
+    @Test
     public void testFileAdapter() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy",
-            "class MainClass { static void main(String[] args){}}");
+        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", "class MainClass { static void main(String[] args){}}");
         buildAll();
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/MainClass.groovy");
-        assertNotNull(script);
+        Assert.assertNotNull(script);
         @SuppressWarnings("cast")
         ClassNode node = (ClassNode) script.getAdapter(ClassNode.class);
-        assertEquals("pack1.MainClass", node.getName());
-        assertFalse(node.isInterface());
-        assertNotNull(node.getMethods("main"));
+        Assert.assertEquals("pack1.MainClass", node.getName());
+        Assert.assertFalse(node.isInterface());
+        Assert.assertNotNull(node.getMethods("main"));
     }
 
+    @Test
     public void testFileAdapterCompileError() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy",
-            "class OtherClass { static void main(String[] args");
+        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy", "class OtherClass { static void main(String[] args");
         buildAll();
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/OtherClass.groovy");
         @SuppressWarnings("cast")
         ClassNode node = (ClassNode) script.getAdapter(ClassNode.class);
-        assertEquals("pack1.OtherClass", node.getName());
-        assertFalse(node.isInterface());
-        assertNotNull(node.getMethods("main"));
+        Assert.assertEquals("pack1.OtherClass", node.getName());
+        Assert.assertFalse(node.isInterface());
+        Assert.assertNotNull(node.getMethods("main"));
     }
 
+    @Test
     public void testFileAdapterHorendousCompileError() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy",
-            "class C {\n  abstract def foo() {}\n" + "}");
+        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy", "class C {\n  abstract def foo() {}\n" + "}");
         buildAll();
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/OtherClass.groovy");
         @SuppressWarnings("cast")
         ClassNode node = (ClassNode) script.getAdapter(ClassNode.class);
-        assertNull(node);
+        Assert.assertNull(node);
     }
 
+    @Test
     public void testFileAdapterNotGroovyFile() throws Exception {
         testProject.createFile("NotGroovy.file", "this is not a groovy file");
         buildAll();
         final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file");
-        assertNotNull(notScript);
-        assertNull(notScript.getAdapter(ClassNode.class));
+        Assert.assertNotNull(notScript);
+        Assert.assertNull(notScript.getAdapter(ClassNode.class));
     }
 }

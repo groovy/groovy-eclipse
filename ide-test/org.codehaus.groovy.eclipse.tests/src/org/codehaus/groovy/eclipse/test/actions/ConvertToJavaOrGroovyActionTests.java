@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,68 +20,64 @@ import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyOrJavaAction;
 import org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IActionDelegate;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Tests the commands RenameToGroovy and RenameToJava
- *
- * @author Andrew Eisenberg
- * @created Aug 26, 2009
+ * Tests the commands RenameToGroovy and RenameToJava.
  */
-public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
+public final class ConvertToJavaOrGroovyActionTests extends EclipseTestCase {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
+    @Test
     public void testRenameToGroovy() throws Exception {
         ICompilationUnit unit = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
         IResource file = unit.getResource();
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToGroovyAction();
         action.selectionChanged(null, ss);
         action.run(null);
         waitForJobAndRefresh(file);
-        assertFalse(file.getName() + " should not exist", file.exists());
+        Assert.assertFalse(file.getName() + " should not exist", file.exists());
 
         file = file.getParent().getFile(new Path("Bar.groovy"));
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
     }
 
+    @Test
     public void testRenameToJava() throws Exception {
         IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }").getResource();
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToJavaAction();
         action.selectionChanged(null, ss);
         action.run(null);
         waitForJobAndRefresh(file);
-        assertFalse(file.getName() + " should not exist", file.exists());
+        Assert.assertFalse(file.getName() + " should not exist", file.exists());
 
         file = file.getParent().getFile(new Path("Bar.java"));
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
     }
 
+    @Test
     public void testRenameToGroovyAndBack() throws Exception {
         ICompilationUnit unit = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }");
         IResource file = unit.getResource();
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToGroovyAction();
         action.selectionChanged(null, ss);
         action.run(null);
         waitForJobAndRefresh(file);
-        assertFalse(file.getName() + " should not exist", file.exists());
+        Assert.assertFalse(file.getName() + " should not exist", file.exists());
 
         file = file.getParent().getFile(new Path("Bar.groovy"));
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
 
         // now back again
         ss = new StructuredSelection(file);
@@ -89,24 +85,25 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.selectionChanged(null, ss);
         action.run(null);
         waitForJobAndRefresh(file);
-        assertFalse(file.getName() + " should not exist", file.exists());
+        Assert.assertFalse(file.getName() + " should not exist", file.exists());
 
         file = file.getParent().getFile(new Path("Bar.java"));
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
     }
 
+    @Test
     public void testRenameToJavaAndBack() throws Exception {
         IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }").getResource();
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
         StructuredSelection ss = new StructuredSelection(file);
         IActionDelegate action = new RenameToJavaAction();
         action.selectionChanged(null, ss);
         action.run(null);
         waitForJobAndRefresh(file);
-        assertFalse(file.getName() + " should not exist", file.exists());
+        Assert.assertFalse(file.getName() + " should not exist", file.exists());
 
         file = file.getParent().getFile(new Path("Bar.java"));
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
 
         // now back again
         ss = new StructuredSelection(file);
@@ -114,14 +111,13 @@ public class ConvertToJavaOrGroovyActionTest extends EclipseTestCase {
         action.selectionChanged(null, ss);
         action.run(null);
         waitForJobAndRefresh(file);
-        assertFalse(file.getName() + " should not exist", file.exists());
+        Assert.assertFalse(file.getName() + " should not exist", file.exists());
 
         file = file.getParent().getFile(new Path("Bar.groovy"));
-        assertTrue(file.getName() + " should exist", file.exists());
+        Assert.assertTrue(file.getName() + " should exist", file.exists());
     }
 
-    private void waitForJobAndRefresh(IResource file)
-            throws InterruptedException, CoreException {
+    private void waitForJobAndRefresh(IResource file) throws Exception {
         Job.getJobManager().join(RenameToGroovyOrJavaAction.class, null);
         file.getParent().refreshLocal(IResource.DEPTH_INFINITE, null);
     }

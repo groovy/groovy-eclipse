@@ -18,7 +18,7 @@ package org.codehaus.groovy.alltests
 import junit.framework.*
 import org.codehaus.groovy.eclipse.codeassist.tests.*
 import org.codehaus.groovy.eclipse.codebrowsing.tests.*
-import org.codehaus.groovy.eclipse.core.AllCoreTests
+import org.codehaus.groovy.eclipse.core.test.*
 import org.codehaus.groovy.eclipse.dsl.tests.AllDSLTests
 import org.codehaus.groovy.eclipse.junit.test.*
 import org.codehaus.groovy.eclipse.quickfix.test.*
@@ -88,7 +88,16 @@ final class AllGroovyTests {
             FindSurroundingNodeTests,
             IsSameExpressionTests,
             PartialVisitTests))
-        suite.addTest(AllCoreTests.suite())
+        suite.addTest(adapt('org.codehaus.groovy.eclipse.core.tests',
+            ArrayUtilsTests,
+            AstPositionTests,
+            ClasspathContainerTests,
+            ErrorRecoveryTests,
+            ExpressionFinderTests,
+            StringSourceBufferTests,
+            SyntheticMemberSearchTests,
+            TokenStreamTests,
+            UnrecoverableErrorTests))
         suite.addTest(AllDSLTests.suite())
         suite.addTest(adapt('org.codehaus.groovy.eclipse.junit.tests',
             JUnit3TestFinderTests,

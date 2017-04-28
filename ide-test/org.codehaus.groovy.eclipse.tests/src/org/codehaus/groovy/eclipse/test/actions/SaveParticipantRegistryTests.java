@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,41 +21,41 @@ import org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.SaveParticipantRegistry;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Tests that the {@link DelegatingCleanUpPostSaveListener} can be properly
- * installed and uninstalled
- *
- * @author Andrew Eisenberg
- * @created Aug 26, 2009
+ * installed and uninstalled.
  */
-public class SaveParticipantRegistryTest extends EclipseTestCase {
+public final class SaveParticipantRegistryTests extends EclipseTestCase {
 
+    @Test
     public void testInstallUninstallPostSaveCleanUp() throws Exception {
         SaveParticipantRegistry registry = JavaPlugin.getDefault().getSaveParticipantRegistry();
 
         // the groovy plugin is already started, so we should have the delegating clean up
         IPostSaveListener listener = registry.getSaveParticipantDescriptor(CleanUpPostSaveListener.POSTSAVELISTENER_ID).getPostSaveListener();
-        assertTrue("Should have found a DelegatingCleanUpPostSaveListener, but instead found " +
+        Assert.assertTrue("Should have found a DelegatingCleanUpPostSaveListener, but instead found " +
                 listener.getClass().getCanonicalName() + " this means that the delegating listener was not installed.",
                 listener instanceof DelegatingCleanUpPostSaveListener);
 
         try {
             DelegatingCleanUpPostSaveListener.installCleanUp();
         } catch (ClassCastException e) {
-            fail("Should not have thrown a class cast exception, but an error should be logged in the error log");
+            Assert.fail("Should not have thrown a class cast exception, but an error should be logged in the error log");
         }
 
         DelegatingCleanUpPostSaveListener.uninstallCleanUp();
         listener = registry.getSaveParticipantDescriptor(CleanUpPostSaveListener.POSTSAVELISTENER_ID).getPostSaveListener();
-        assertTrue("Should have found a DelegatingCleanUpPostSaveListener, but instead found " +
+        Assert.assertTrue("Should have found a DelegatingCleanUpPostSaveListener, but instead found " +
                 listener.getClass().getCanonicalName() + " this means that the delegating listener was not uninstalled.",
                 listener instanceof CleanUpPostSaveListener);
 
 
         DelegatingCleanUpPostSaveListener.installCleanUp();
         listener = registry.getSaveParticipantDescriptor(CleanUpPostSaveListener.POSTSAVELISTENER_ID).getPostSaveListener();
-        assertTrue("Should have found a DelegatingCleanUpPostSaveListener, but instead found " +
+        Assert.assertTrue("Should have found a DelegatingCleanUpPostSaveListener, but instead found " +
                 listener.getClass().getCanonicalName() + " this means that the delegating listener was not installed.",
                 listener instanceof DelegatingCleanUpPostSaveListener);
     }

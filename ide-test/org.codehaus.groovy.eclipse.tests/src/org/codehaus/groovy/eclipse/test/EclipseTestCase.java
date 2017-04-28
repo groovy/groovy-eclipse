@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test;
 
 import java.util.Hashtable;
 
-import junit.framework.TestCase;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -25,25 +24,32 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * Provides a fresh Groovy project to each test method.
  */
-public abstract class EclipseTestCase extends TestCase {
+public abstract class EclipseTestCase {
+
+    @Rule
+    public TestName test = new TestName();
 
     protected TestProject testProject;
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public final void setUpTestCase() throws Exception {
         System.out.println("----------------------------------------");
-        System.out.println("Starting: " + getName());
+        System.out.println("Starting: " + test.getMethodName());
 
         testProject = new TestProject();
         TestProject.setAutoBuilding(false);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public final void tearDownTestCase() throws Exception {
         try {
             testProject.dispose();
             testProject = null;

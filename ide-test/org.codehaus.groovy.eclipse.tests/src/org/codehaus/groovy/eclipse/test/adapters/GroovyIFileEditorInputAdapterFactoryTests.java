@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,69 +20,71 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Tests the Groovy File Adapter Factory
- *
- * @author David Kerber
+ * Tests the Groovy File Adapter Factory.
  */
-public class GroovyIFileEditorInputAdapterFactoryTestCase extends EclipseTestCase {
+public final class GroovyIFileEditorInputAdapterFactoryTests extends EclipseTestCase {
 
+    @Test
     public void testIFileEditorInputAdapter() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy",
-            "class MainClass { static void main(String[] args");
+        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", "class MainClass { static void main(String[] args");
 
         buildAll();
 
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/MainClass.groovy");
 
-        assertNotNull(script);
+        Assert.assertNotNull(script);
 
         IFileEditorInput editor = new FileEditorInput(script);
         @SuppressWarnings("cast")
         ClassNode node = (ClassNode) editor.getAdapter(ClassNode.class);
 
-        assertEquals("pack1.MainClass", node.getName());
-        assertFalse(node.isInterface());
-        assertNotNull(node.getMethods("main"));
+        Assert.assertEquals("pack1.MainClass", node.getName());
+        Assert.assertFalse(node.isInterface());
+        Assert.assertNotNull(node.getMethods("main"));
     }
 
+    @Test
     public void testIFileEditorInputAdapterCompileError() throws Exception {
-        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy",
-            "class OtherClass { static void main(String[] args");
+        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy", "class OtherClass { static void main(String[] args");
 
         buildAll();
 
         final IFile script = (IFile) testProject.getProject().findMember("src/pack1/OtherClass.groovy");
-        assertNotNull(script);
+        Assert.assertNotNull(script);
         IFileEditorInput editor = new FileEditorInput(script);
         @SuppressWarnings("cast")
         ClassNode node = (ClassNode) editor.getAdapter(ClassNode.class);
 
-        assertEquals("pack1.OtherClass", node.getName());
-        assertFalse(node.isInterface());
-        assertNotNull(node.getMethods("main"));
+        Assert.assertEquals("pack1.OtherClass", node.getName());
+        Assert.assertFalse(node.isInterface());
+        Assert.assertNotNull(node.getMethods("main"));
     }
 
+    @Test
     public void testIFileEditorInputAdapterHorendousCompileError() throws Exception {
         testProject.createFile("NotGroovy.file", "class C {\n abstract def foo() {}\n" + "}");
 
         buildAll();
 
         final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file");
-        assertNotNull(notScript);
+        Assert.assertNotNull(notScript);
         IFileEditorInput editor = new FileEditorInput(notScript);
-        assertNull(editor.getAdapter(ClassNode.class));
+        Assert.assertNull(editor.getAdapter(ClassNode.class));
     }
 
+    @Test
     public void testIFileEditorInputAdapterNotGroovyFile() throws Exception {
         testProject.createFile("NotGroovy.file", "this is not a groovy file");
 
         buildAll();
 
         final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file");
-        assertNotNull(notScript);
+        Assert.assertNotNull(notScript);
         IFileEditorInput editor = new FileEditorInput(notScript);
-        assertNull(editor.getAdapter(ClassNode.class));
+        Assert.assertNull(editor.getAdapter(ClassNode.class));
     }
 }

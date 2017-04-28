@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,14 @@ package org.codehaus.groovy.eclipse.test.ui;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * @author kdvolder
- * @created 2010-05-20
- */
-public final class GroovyAutoIndenterTests extends GroovyEditorTest {
+public final class GroovyAutoIndenterTests extends GroovyEditorTestCase {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // tests are sensitive to tab/space settings so ensure they are set to predictable default values
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB);
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "4");
@@ -35,19 +33,22 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
     /**
      * A simple test just to see whether our scaffolding for testing the editor works.
      */
+    @Test
     public void testScaffolding() throws Exception {
         makeEditor("<***>");
         send('a');
-        assertEquals("a", getText());
+        Assert.assertEquals("a", getText());
         assertEditorContents("a<***>");
     }
 
+    @Test
     public void test1() throws Exception {
         makeEditor("<***>");
         send("class Foo {\n");
         assertEditorContents("class Foo {\n\t<***>\n}");
     }
 
+    @Test
     public void test2() throws Exception {
         makeEditor(
                 "class Foo {\n" +
@@ -62,6 +63,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "}\n\n");
     }
 
+    @Test
     public void test3() throws Exception {
         makeEditor(
                 "class Foo {\n" +
@@ -83,6 +85,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "}\n\n");
     }
 
+    @Test
     public void testGRE631() throws Exception {
         makeEditor(
                 "class Foo {\n" +
@@ -112,6 +115,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
      * Check whether we are picking up on changed tab/space preferences set
      * for the Java Editor.
      */
+    @Test
     public void testSpaces() throws Exception {
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE);
         makeEditor(
@@ -131,6 +135,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
      * GRE_751: Pasting text into a multiline string should not perform any
      * transformations.
      */
+    @Test
     public void testPasteInMultiLineString() throws Exception {
         String initial = "class Foo {\n" +
                 "\tdef command = \"\"\"<***>\"\"\"\n" +
@@ -145,6 +150,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
      * Check whether we are also picking up on changed tab/space preferences
      * even if they are change happens after the editor was already opened.
      */
+    @Test
     public void testSpacesOptionSetAfterOpen() throws Exception {
         makeEditor(
                 "class Foo {\n" +
@@ -163,6 +169,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
     /**
      * Check whether autoindentor works correct for mixed tab/spaces mode.
      */
+    @Test
     public void testMixedTabsAndSpaces() throws Exception {
         makeEditor(
                 "class Foo {\n" +
@@ -188,6 +195,7 @@ public final class GroovyAutoIndenterTests extends GroovyEditorTest {
     /**
      * Similar to above, but also check whether it counts the tabs on previous lines correctly.
      */
+    @Test
     public void testMixedTabsAndSpaces2() throws Exception {
         makeEditor(
                 "class Foo {\n" +

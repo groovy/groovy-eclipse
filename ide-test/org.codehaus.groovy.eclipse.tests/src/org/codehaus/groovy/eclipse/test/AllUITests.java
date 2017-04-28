@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.test;
 
+import junit.framework.JUnit4TestAdapter;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.codehaus.groovy.eclipse.test.actions.AddImportOnSelectionTests;
 import org.codehaus.groovy.eclipse.test.actions.AliasingOrganizeImportsTest;
-import org.codehaus.groovy.eclipse.test.actions.ConvertToJavaOrGroovyActionTest;
-import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTestCase;
+import org.codehaus.groovy.eclipse.test.actions.ConvertToJavaOrGroovyActionTests;
+import org.codehaus.groovy.eclipse.test.actions.GroovyNatureActionTests;
 import org.codehaus.groovy.eclipse.test.actions.OrganizeImportsTest;
-import org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTest;
-import org.codehaus.groovy.eclipse.test.adapters.GroovyFileAdapterFactoryTestCase;
-import org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFactoryTestCase;
+import org.codehaus.groovy.eclipse.test.actions.SaveParticipantRegistryTests;
+import org.codehaus.groovy.eclipse.test.adapters.GroovyFileAdapterFactoryTests;
+import org.codehaus.groovy.eclipse.test.adapters.GroovyIFileEditorInputAdapterFactoryTests;
 import org.codehaus.groovy.eclipse.test.adapters.IsMainTesterTests;
 import org.codehaus.groovy.eclipse.test.core.util.ExpressionFinderTestCase;
 import org.codehaus.groovy.eclipse.test.debug.BreakpointLocationTests;
@@ -40,8 +41,8 @@ import org.codehaus.groovy.eclipse.test.ui.GroovyTagScannerTests;
 import org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests;
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtenderTests;
 import org.codehaus.groovy.eclipse.test.ui.SemanticHighlightingTests;
-import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTest;
-import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTest;
+import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTests;
+import org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTests;
 import org.codehaus.groovy.eclipse.ui.search.FindOccurrencesTests;
 
 public final class AllUITests {
@@ -53,15 +54,15 @@ public final class AllUITests {
         // actions
         suite.addTest(new EclipseTestSetup(newTestSuite("Organize Imports",
                 OrganizeImportsTest.class, AliasingOrganizeImportsTest.class)));
-        suite.addTestSuite(AddImportOnSelectionTests.class);
-        suite.addTestSuite(ConvertToJavaOrGroovyActionTest.class);
-        suite.addTestSuite(GroovyNatureActionTestCase.class);
-        suite.addTestSuite(SaveParticipantRegistryTest.class);
+        suite.addTest(new JUnit4TestAdapter(AddImportOnSelectionTests.class));
+        suite.addTest(new JUnit4TestAdapter(ConvertToJavaOrGroovyActionTests.class));
+        suite.addTest(new JUnit4TestAdapter(GroovyNatureActionTests.class));
+        suite.addTest(new JUnit4TestAdapter(SaveParticipantRegistryTests.class));
 
         // adapters
-        suite.addTestSuite(GroovyFileAdapterFactoryTestCase.class);
-        suite.addTestSuite(GroovyIFileEditorInputAdapterFactoryTestCase.class);
-        suite.addTestSuite(IsMainTesterTests.class);
+        suite.addTest(new JUnit4TestAdapter(GroovyFileAdapterFactoryTests.class));
+        suite.addTest(new JUnit4TestAdapter(GroovyIFileEditorInputAdapterFactoryTests.class));
+        suite.addTest(new JUnit4TestAdapter(IsMainTesterTests.class));
 
         // core.util
         suite.addTestSuite(ExpressionFinderTestCase.class);
@@ -69,22 +70,22 @@ public final class AllUITests {
         // debug
         suite.addTest(new EclipseTestSetup(newTestSuite("Debug Breakpoints",
                 BreakpointLocationTests.class, DebugBreakpointsTests.class)));
-        suite.addTestSuite(ConsoleLineTrackerTests.class);
-        suite.addTestSuite(GroovyLauncherShortcutTests.class);
+        suite.addTest(new JUnit4TestAdapter(ConsoleLineTrackerTests.class));
+        suite.addTest(new JUnit4TestAdapter(GroovyLauncherShortcutTests.class));
 
         // ui (except ErrorLogTest)
         suite.addTest(new EclipseTestSetup(newTestSuite("Editor Enhancements",
                 BracketInserterTests.class, SemanticHighlightingTests.class)));
-        suite.addTestSuite(GroovyAutoIndenterTests.class);
-        suite.addTestSuite(GroovyAutoIndenterTests2.class);
+        suite.addTest(new JUnit4TestAdapter(GroovyAutoIndenterTests.class));
+        suite.addTest(new JUnit4TestAdapter(GroovyAutoIndenterTests2.class));
         suite.addTestSuite(GroovyPartitionScannerTests.class);
         suite.addTestSuite(GroovyTagScannerTests.class);
-        suite.addTestSuite(HighlightingExtenderTests.class);
-        suite.addTestSuite(OutlineExtenderTests.class);
+        suite.addTest(new JUnit4TestAdapter(HighlightingExtenderTests.class));
+        suite.addTest(new JUnit4TestAdapter(OutlineExtenderTests.class));
 
         // wizards
-        suite.addTestSuite(NewGroovyTestCaseWizardTest.class);
-        suite.addTestSuite(NewGroovyTypeWizardTest.class);
+        suite.addTest(new JUnit4TestAdapter(NewGroovyTestCaseWizardTests.class));
+        suite.addTest(new JUnit4TestAdapter(NewGroovyTypeWizardTests.class));
 
         // ..ui.search
         suite.addTest(FindOccurrencesTests.suite());

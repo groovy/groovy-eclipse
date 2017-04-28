@@ -7,6 +7,7 @@ Bundle-Version: 2.9.2.qualifier
 Export-Package: org.codehaus.groovy.alltests
 Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.codebrowsing.tests,
+ org.codehaus.groovy.eclipse.core.test,
  org.codehaus.groovy.eclipse.dsl.tests,
  org.codehaus.groovy.eclipse.junit.test,
  org.codehaus.groovy.eclipse.quickfix.test,
@@ -15,5 +16,4 @@ Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.refactoring.test.extract,
  org.codehaus.groovy.eclipse.refactoring.test.formatter,
  org.codehaus.groovy.eclipse.refactoring.test.rename
-Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"

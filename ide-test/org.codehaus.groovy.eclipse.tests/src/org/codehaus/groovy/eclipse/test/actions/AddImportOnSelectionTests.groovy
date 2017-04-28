@@ -17,14 +17,15 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import static org.junit.Assert.*
 
-import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTest
+import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestCase
 import org.eclipse.jdt.ui.PreferenceConstants
+import org.junit.Before
+import org.junit.Test
 
-final class AddImportOnSelectionTests extends GroovyEditorTest {
+final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
-    @Override
-    protected void setUp() {
-        super.setUp()
+    @Before
+    void setUp() {
         // filter some type suggestions to prevent the import select dialog during tests
         setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'com.sun.*;org.omg.*')
         // ensure consistent ordering of imports regardless of the target platform's defaults
@@ -36,61 +37,73 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         editor.getAction('AddImport').run()
     }
 
+    @Test
     void testAddImportOnScriptVarType1() {
         addImportOnSelection "P${CARET}attern p = ~/123/"
         assertEditorContents "import java.util.regex.Pattern\n\nPattern p = ~/123/"
     }
 
+    @Test
     void testAddImportOnScriptVarType1a() {
         addImportOnSelection "java.util.regex.P${CARET}attern p = ~/123/"
         assertEditorContents "import java.util.regex.Pattern\n\nPattern p = ~/123/"
     }
 
+    @Test
     void testAddImportOnScriptVarType2() {
         addImportOnSelection "P${CARET}attern[] p = [~/123/]"
         assertEditorContents "import java.util.regex.Pattern\n\nPattern[] p = [~/123/]"
     }
 
+    @Test
     void testAddImportOnScriptVarType2a() {
         addImportOnSelection "java.util.regex.P${CARET}attern[] p = [~/123/]"
         assertEditorContents "import java.util.regex.Pattern\n\nPattern[] p = [~/123/]"
     }
 
+    @Test
     void testAddImportOnScriptVarValue1() {
         addImportOnSelection "def p = P${CARET}attern.compile('123')"
         assertEditorContents "import java.util.regex.Pattern\n\ndef p = Pattern.compile('123')"
     }
 
+    @Test
     void testAddImportOnScriptVarValue1a() {
         addImportOnSelection "def p = java.util.regex.P${CARET}attern.compile('123')"
         assertEditorContents "import java.util.regex.Pattern\n\ndef p = Pattern.compile('123')"
     }
 
+    @Test
     void testAddImportOnScriptVarValue2() {
         addImportOnSelection "def p = Pattern.c${CARET}ompile('123')"
         assertEditorContents "import static java.util.regex.Pattern.compile\n\ndef p = compile('123')"
     }
 
+    @Test
     void testAddImportOnScriptVarValue2a() {
         addImportOnSelection "def p = java.util.regex.Pattern.c${CARET}ompile('123')"
         assertEditorContents "import static java.util.regex.Pattern.compile\n\ndef p = compile('123')"
     }
 
+    @Test
     void testAddImportOnScriptVarValue3() {
         addImportOnSelection "def unit = Time${CARET}Unit.SECONDS"
         assertEditorContents "import java.util.concurrent.TimeUnit\n\ndef unit = TimeUnit.SECONDS"
     }
 
+    @Test
     void testAddImportOnScriptVarValue3a() {
         addImportOnSelection "def unit = java.util.concurrent.Time${CARET}Unit.SECONDS"
         assertEditorContents "import java.util.concurrent.TimeUnit\n\ndef unit = TimeUnit.SECONDS"
     }
 
+    @Test
     void testAddImportOnScriptVarValue4() {
         addImportOnSelection "def unit = TimeUnit.SEC${CARET}ONDS"
         assertEditorContents "import static java.util.concurrent.TimeUnit.SECONDS\n\ndef unit = SECONDS"
     }
 
+    @Test
     void testAddImportOnScriptVarValue4a() {
         addImportOnSelection "def unit = java.util.concurrent.TimeUnit.SEC${CARET}ONDS"
         assertEditorContents "import static java.util.concurrent.TimeUnit.SECONDS\n\ndef unit = SECONDS"
@@ -98,66 +111,79 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // types
 
+    @Test
     void testAddImportOnSuperType1() {
         addImportOnSelection "class B extends B${CARET}ufferedReader {}"
         assertEditorContents "import java.io.BufferedReader\n\nclass B extends BufferedReader {}"
     }
 
+    @Test
     void testAddImportOnSuperType1a() {
         addImportOnSelection "class B extends java.io.B${CARET}ufferedReader {}"
         assertEditorContents "import java.io.BufferedReader\n\nclass B extends BufferedReader {}"
     }
 
+    @Test
     void testAddImportOnSuperInterface1() {
         addImportOnSelection "class C implements java.util.concurrent.C${CARET}allable {}"
         assertEditorContents "import java.util.concurrent.Callable\n\nclass C implements Callable {}"
     }
 
+    @Test
     void testAddImportOnSuperInterface1a() {
         addImportOnSelection "class C implements java.util.concurrent.C${CARET}allable {}"
         assertEditorContents "import java.util.concurrent.Callable\n\nclass C implements Callable {}"
     }
 
+    @Test
     void testAddImportOnSuperInterfaceGenerics1() {
         addImportOnSelection "class C implements java.util.concurrent.Callable<P${CARET}attern> {}"
         assertEditorContents "import java.util.regex.Pattern\n\nclass C implements java.util.concurrent.Callable<Pattern> {}"
     }
 
+    @Test
     void testAddImportOnSuperInterfaceGenerics1a() {
         addImportOnSelection "class C implements java.util.concurrent.Callable<java.util.regex.P${CARET}attern> {}"
         assertEditorContents "import java.util.regex.Pattern\n\nclass C implements java.util.concurrent.Callable<Pattern> {}"
     }
 
+    @Test
     void testAddImportOnTypeCast1() {
         addImportOnSelection "def x = (Collect${CARET}ion) [1,2,3]"
         assertEditorContents "import java.util.Collection\n\ndef x = (Collection) [1,2,3]"
     }
 
+    @Test
     void testAddImportOnTypeCast1a() {
         addImportOnSelection "def x = (java.util.Collect${CARET}ion) [1,2,3]"
         assertEditorContents "import java.util.Collection\n\ndef x = (Collection) [1,2,3]"
     }
 
+    @Test
     void testAddImportOnTypeCoercion1() {
         addImportOnSelection "def x = [1,2,3] as Hash${CARET}Set"
         assertEditorContents "import java.util.HashSet\n\ndef x = [1,2,3] as HashSet"
     }
 
+    @Test
     void testAddImportOnTypeCoercion1a() {
         addImportOnSelection "def x = [1,2,3] as java.util.Hash${CARET}Set"
         assertEditorContents "import java.util.HashSet\n\ndef x = [1,2,3] as HashSet"
     }
 
+    @Test
     void testAddImportOnLocalClass0() {
         addImportOnSelection "package a.b.c class F${CARET}oo {}"
         assertEditorContents "package a.b.c class Foo {}"
     }
 
+    @Test
     void testAddImportOnInnerClass0() {
         addImportOnSelection "package a.b.c class Foo { class B${CARET}ar {} }"
         assertEditorContents "package a.b.c class Foo { class Bar {} }"
     }
 
+    @Test
     void testAddImportOnAnonymousInnerClass() {
         addImportOnSelection "class C { def meth() { def x = new ArrayL${CARET}ist() {}; } }"
         assertEditorContents "import java.util.ArrayList\n\nclass C { def meth() { def x = new ArrayList() {}; } }"
@@ -165,51 +191,61 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // inner/outer variations
 
+    @Test
     void testAddImportOnInnerClass1() {
         addImportOnSelection "Map.E${CARET}ntry entry = null"
         assertEditorContents "import java.util.Map.Entry\n\nEntry entry = null"
     }
 
+    @Test
     void testAddImportOnInnerClass1a() {
         addImportOnSelection "Map.Entry${CARET} entry = null"
         assertEditorContents "import java.util.Map.Entry\n\nEntry entry = null"
     }
 
+    @Test
     void testAddImportOnInnerClass1b() {
         addImportOnSelection "Map.${CARET}Entry entry = null"
         assertEditorContents "import java.util.Map.Entry\n\nEntry entry = null"
     }
 
+    @Test
     void testAddImportOnOuterClass1() {
         addImportOnSelection "M${CARET}ap.Entry entry = null"
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    @Test
     void testAddImportOnOuterClass1a() {
         addImportOnSelection "Map${CARET}.Entry entry = null"
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    @Test
     void testAddImportOnOuterClass1b() {
         addImportOnSelection "${CARET}Map.Entry entry = null"
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    @Test
     void testAddImportOnQualifiedOuterClass1() {
         addImportOnSelection "java.util.M${CARET}ap.Entry entry = null"
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    @Test
     void testAddImportOnQualifiedOuterClass1a() {
         addImportOnSelection "java.util.Map${CARET}.Entry entry = null"
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    @Test
     void testAddImportOnQualifiedOuterClass1b() {
         addImportOnSelection "java.util.${CARET}Map.Entry entry = null"
         assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
     }
 
+    @Test
     void testAddImportOnInnerClass2() {
         testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
 
@@ -217,6 +253,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         assertEditorContents "import a.b.c.d.E\n\nE.F.G.H"
     }
 
+    @Test
     void testAddImportOnInnerClass2a() {
         testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
 
@@ -224,6 +261,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         assertEditorContents "import a.b.c.d.E\n\nE.F.G.H"
     }
 
+    @Test
     void testAddImportOnInnerClass2b() {
         testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
 
@@ -231,6 +269,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         assertEditorContents "import a.b.c.d.E.F\n\nF.G.H"
     }
 
+    @Test
     void testAddImportOnInnerClass2c() {
         testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
 
@@ -238,6 +277,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         assertEditorContents "import a.b.c.d.E.F.G\n\nG.H"
     }
 
+    @Test
     void testAddImportOnInnerClass2d() {
         testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
 
@@ -245,31 +285,37 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
         assertEditorContents "import static a.b.c.d.E.F.G.H\n\nH"
     }
 
+    @Test
     void testAddImportOnPackageQualifier1() {
         addImportOnSelection "java.util.con${CARET}current.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
     }
 
+    @Test
     void testAddImportOnPackageQualifier2() {
         addImportOnSelection "java.ut${CARET}il.concurrent.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
     }
 
+    @Test
     void testAddImportOnPackageQualifier3() {
         addImportOnSelection "ja${CARET}va.util.concurrent.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
     }
 
+    @Test
     void testAddImportOnPackageQualifier3a() {
         addImportOnSelection "java${CARET}.util.concurrent.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
     }
 
+    @Test
     void testAddImportOnPackageQualifier3b() {
         addImportOnSelection "${CARET}java.util.concurrent.Callable call = null"
         assertEditorContents "java.util.concurrent.Callable call = null"
     }
 
+    @Test
     void testAddImportOnPackageQualifier4() {
         testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
 
@@ -279,16 +325,19 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // constructors/initializers
 
+    @Test
     void testAddImportOnConstructorCall1() {
         addImportOnSelection "def d = new java.util.Da${CARET}te(123L)"
         assertEditorContents "import java.util.Date\n\ndef d = new Date(123L)"
     }
 
+    @Test
     void testAddImportOnConstructorCall2() {
         addImportOnSelection "def l = new java.util.Array${CARET}List<String>()"
         assertEditorContents "import java.util.ArrayList\n\ndef l = new ArrayList<String>()"
     }
 
+    @Test
     void testAddImportOnConstructorParam() {
         addImportOnSelection """\
             class C {
@@ -304,6 +353,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnConstructorParamGenerics() {
         addImportOnSelection """\
             class C {
@@ -319,6 +369,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnConstructorBody() {
         addImportOnSelection """\
             class C {
@@ -338,6 +389,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnTypeInClassInit() {
         addImportOnSelection """\
             class C {
@@ -357,6 +409,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnTypeInStaticInit() {
         addImportOnSelection """\
             class C {
@@ -378,6 +431,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // fields
 
+    @Test
     void testAddImportOnFieldType() {
         addImportOnSelection """\
             class C {
@@ -393,6 +447,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnLazyFieldType() {
         addImportOnSelection """\
             class C {
@@ -408,6 +463,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnFieldTypeGenerics() {
         addImportOnSelection """\
             class C {
@@ -423,6 +479,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnFieldInit() {
         addImportOnSelection """\
             class C {
@@ -438,6 +495,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnFieldInit2() {
         addImportOnSelection """\
             class C {
@@ -455,6 +513,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // methods
 
+    @Test
     void testAddImportOnMethodReturnType() {
         addImportOnSelection """\
             class C {
@@ -470,6 +529,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodReturnTypeGenerics() {
         addImportOnSelection """\
             import java.util.concurrent.Callable
@@ -486,6 +546,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodGenerics0() {
         addImportOnSelection """\
             class C {
@@ -499,6 +560,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodGenerics1() {
         addImportOnSelection """\
             class C {
@@ -512,6 +574,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodGenerics2() {
         addImportOnSelection """\
             class C {
@@ -527,6 +590,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodTypeParam() {
         addImportOnSelection """\
             class C {
@@ -540,6 +604,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodParams() {
         addImportOnSelection """\
             class C {
@@ -557,6 +622,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodParamGenerics() {
         addImportOnSelection """\
             class C {
@@ -572,6 +638,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodCallGenerics() {
         addImportOnSelection """\
             def callables = Collections.<java.util.concurrent.C${CARET}allable>emptyList()
@@ -583,6 +650,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnCtorCallGenerics() {
         addImportOnSelection """\
             def callables = new ArrayList<java.util.concurrent.C${CARET}allable>()
@@ -596,26 +664,31 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // annotations
 
+    @Test
     void testAddImportOnClassAnnotation() {
         addImportOnSelection "@groovy.transform.T${CARET}ypeChecked class C {}"
         assertEditorContents "import groovy.transform.TypeChecked\n\n@TypeChecked class C {}"
     }
 
+    @Test
     void testAddImportOnImportAnnotation() {
         addImportOnSelection "@javax.annotation.G${CARET}enerated import java.lang.StringBuffer\n\nStringBuffer sb"
         assertEditorContents "@Generated import java.lang.StringBuffer\n\nimport javax.annotation.Generated\n\nStringBuffer sb"
     }
 
+    @Test
     void testAddImportOnPackageAnnotation() {
         addImportOnSelection "@javax.annotation.G${CARET}enerated package a.b.c\ndef x"
         assertEditorContents "@Generated package a.b.c\n\nimport javax.annotation.Generated\n\ndef x"
     }
 
+    @Test
     void testAddImportOnAnnotationAnnotation() {
         addImportOnSelection "@java.lang.annotation.D${CARET}ocumented @interface Tag {}"
         assertEditorContents "import java.lang.annotation.Documented\n\n@Documented @interface Tag {}"
     }
 
+    @Test
     void testAddImportOnFieldAnnotation() {
         addImportOnSelection """\
             class C {
@@ -631,6 +704,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodAnnotation() {
         addImportOnSelection """\
             class C {
@@ -648,6 +722,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodParamAnnotation() {
         addImportOnSelection """\
             class C {
@@ -663,6 +738,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnLocalVariableAnnotation() {
         addImportOnSelection """\
             class C {
@@ -684,6 +760,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // closures
 
+    @Test
     void testAddImportOnClosureParams1() {
         addImportOnSelection """\
             def cl = { P${CARET}attern p ->
@@ -699,6 +776,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnClosureParams1a() {
         addImportOnSelection """\
             def cl = { java.util.regex.P${CARET}attern p ->
@@ -714,6 +792,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnClosureParams2() {
         addImportOnSelection """\
             def cl = { P${CARET}attern[] p ->
@@ -729,6 +808,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnClosureParams2a() {
         addImportOnSelection """\
             def cl = { java.util.regex.P${CARET}attern[] p ->
@@ -744,6 +824,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnClosureParamGenerics1() {
         addImportOnSelection """\
             def cl = { List<P${CARET}attern> p ->
@@ -759,6 +840,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnClosureParamGenerics1a() {
         addImportOnSelection """\
             def cl = { List<java.util.regex.P${CARET}attern> p ->
@@ -774,6 +856,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnClosureStatement() {
         addImportOnSelection """\
             def cl = { P${CARET}attern.compile(it) }
@@ -785,6 +868,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnMethodPointer() {
         addImportOnSelection """\
             def cl = P${CARET}attern.&compile
@@ -798,6 +882,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // non-method parameters
 
+    @Test
     void testAddImportOnCountingLoopParams1() {
         addImportOnSelection """\
             for (java.math.BigI${CARET}nteger i = 0; i < 10; i += 1) {
@@ -811,6 +896,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnCountingLoopParams2() {
         addImportOnSelection """\
             for (java.util.I${CARET}terator i = [].iterator(); i.hasNext();) {
@@ -824,6 +910,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnForEachLoopParams1() {
         addImportOnSelection """\
             for (P${CARET}attern p : []) {
@@ -837,6 +924,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnForEachLoopParams1a() {
         addImportOnSelection """\
             for (java.util.concurrent.C${CARET}allable c : []) {
@@ -850,6 +938,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnForInLoopParams1() {
         addImportOnSelection """\
             for (P${CARET}attern p in []) {
@@ -863,6 +952,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnForInLoopParams1a() {
         addImportOnSelection """\
             for (java.util.concurrent.C${CARET}allable c in []) {
@@ -876,6 +966,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportOnCatchBlockParams() {
         addImportOnSelection """\
             try {
@@ -895,6 +986,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
 
     // miscellaneous
 
+    @Test
     void testAddImportInInnerClassBody() {
         addImportOnSelection """\
             class Foo {
@@ -920,6 +1012,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInStaticInnerClassBody() {
         addImportOnSelection """\
             class Foo {
@@ -945,6 +1038,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInAnonymousInnerClassBody() {
         addImportOnSelection """\
             class C {
@@ -964,6 +1058,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInGString1() {
         addImportOnSelection """\
             String s = "units: \${Time${CARET}Unit.SECONDS.name()}"
@@ -975,6 +1070,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInGString1a() {
         addImportOnSelection """\
             String s = "units: \${java.util.concurrent.Time${CARET}Unit.SECONDS.name()}"
@@ -986,6 +1082,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInMultilineGString1() {
         addImportOnSelection """\
             String s = \"\"\"units: \${Time${CARET}Unit.SECONDS.name()}\"\"\"
@@ -997,6 +1094,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInMultilineGString1a() {
         addImportOnSelection """\
             String s = \"\"\"units: \${java.util.concurrent.Time${CARET}Unit.SECONDS.name()}\"\"\"
@@ -1008,6 +1106,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInSlashyGString1() {
         addImportOnSelection """\
             String s = /units: \${Time${CARET}Unit.SECONDS.name()}/
@@ -1019,6 +1118,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInSlashyGString1a() {
         addImportOnSelection """\
             String s = /units: \${java.util.concurrent.Time${CARET}Unit.SECONDS.name()}/
@@ -1030,6 +1130,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInDollarSlashyGString1() {
         addImportOnSelection """\
             String s = \$/units: \${Time${CARET}Unit.SECONDS.name()}/\$
@@ -1041,6 +1142,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testAddImportInDollarSlashyGString1a() {
         addImportOnSelection """\
             String s = \$/units: \${java.util.concurrent.Time${CARET}Unit.SECONDS.name()}/\$
@@ -1052,12 +1154,14 @@ final class AddImportOnSelectionTests extends GroovyEditorTest {
             """.stripIndent()
     }
 
+    @Test
     void testTryAddConflictingType() {
         addImportOnSelection "import a.b.c.Pattern\n\ndef pat = java.util.regex.Pat${CARET}tern.compile('123')"
         assertEditorContents "import a.b.c.Pattern\n\ndef pat = java.util.regex.Pattern.compile('123')"
         assertStatusLineText "Import would conflict with an other import declaration or visible type."
     }
 
+    @Test
     void testTryAddUnresolvedType() {
         addImportOnSelection "def x = Unresolvable${CARET}ClassName.WHATEVER"
         assertEditorContents "def x = UnresolvableClassName.WHATEVER"

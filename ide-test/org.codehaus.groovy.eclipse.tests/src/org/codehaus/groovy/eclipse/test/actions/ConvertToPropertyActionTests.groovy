@@ -18,9 +18,10 @@ package org.codehaus.groovy.eclipse.test.actions
 import static org.eclipse.jdt.core.JavaCore.*
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
 
-import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTest
+import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestCase
+import org.junit.Test
 
-final class ConvertToPropertyActionTests extends GroovyEditorTest {
+final class ConvertToPropertyActionTests extends GroovyEditorTestCase {
 
     private static final String ACTION_ID = 'org.codehaus.groovy.eclipse.ui.convertToProperty'
 
@@ -29,78 +30,93 @@ final class ConvertToPropertyActionTests extends GroovyEditorTest {
         editor.getAction(ACTION_ID).run()
     }
 
+    @Test
     void testGetterToProperty() {
         convertToProperty "new Date().get${CARET}Hours();"
         assertEditorContents "new Date().hours;"
     }
 
+    @Test
     void testIsserToProperty() {
         convertToProperty "[].is${CARET}Empty();"
         assertEditorContents "[].empty;"
     }
 
+    @Test
     void testSetterToProperty() {
         convertToProperty "new Date().set${CARET}Time(1234L);"
         assertEditorContents "new Date().time = 1234L;"
     }
 
+    @Test
     void testChainedGetterProperty() {
         convertToProperty "getClass().getResource('URL').g${CARET}etText()"
         assertEditorContents "getClass().getResource('URL').text"
     }
 
+    @Test
     void testChainedIsserToProperty() {
         convertToProperty "Thread.currentThread().isInter${CARET}rupted()"
         assertEditorContents "Thread.currentThread().interrupted"
     }
 
+    @Test
     void testChainedSetterToProperty() {
         convertToProperty "Calendar.getInstance().setTime${CARET}Zone(null)"
         assertEditorContents "Calendar.getInstance().timeZone = null"
     }
 
+    @Test
     void testGStringGetterProperty() {
         convertToProperty "\"Time: \${new Date().get${CARET}Time()}\""
         assertEditorContents "\"Time: \${new Date().time}\""
     }
 
+    @Test
     void testGStringIsserProperty() {
         convertToProperty "def list = []; \"Empty?: \${list.is${CARET}Empty()}\""
         assertEditorContents "def list = []; \"Empty?: \${list.empty}\""
     }
 
+    @Test
     void testImplicitGetterToProperty() {
         convertToProperty "new Date().with { get${CARET}Hours() }"
         assertEditorContents "new Date().with { hours }"
     }
 
+    @Test
     void testImplicitIsserToProperty() {
         testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { static void isSomething() {} }'
         convertToProperty "Foo.isSome${CARET}thing()"
         assertEditorContents "Foo.something"
     }
 
+    @Test
     void testImplicitSetterToProperty() {
         convertToProperty "new Date().with { set${CARET}Time(1234L) }"
         assertEditorContents "new Date().with { time = 1234L }"
     }
 
+    @Test
     void testStaticGetterToProperty() {
         convertToProperty "import java.lang.management.*; ManagementFactory.getRun${CARET}timeMXBean()"
         assertEditorContents "import java.lang.management.*; ManagementFactory.runtimeMXBean"
     }
 
+    @Test
     void testStaticIsserToProperty() {
         testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { static void isSomething() {} }'
         convertToProperty "Foo.isSome${CARET}thing();"
         assertEditorContents "Foo.something;"
     }
 
+    @Test
     void testStaticSetterToProperty() {
         convertToProperty "URL.setURL${CARET}StreamHandlerFactory(null)"
         assertEditorContents "URL.uRLStreamHandlerFactory = null"
     }
 
+    @Test
     void testSpaceBeforeAssignmentPreference() {
         try {
             setJavaPreference(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR, DO_NOT_INSERT)
@@ -113,6 +129,7 @@ final class ConvertToPropertyActionTests extends GroovyEditorTest {
         }
     }
 
+    @Test
     void testSpaceAfterAssignmentPreference() {
         try {
             setJavaPreference(FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR, DO_NOT_INSERT)
@@ -125,58 +142,69 @@ final class ConvertToPropertyActionTests extends GroovyEditorTest {
         }
     }
 
+    @Test
     void testNoConversion0() {
         convertToProperty "new Da${CARET}te()"
         assertEditorContents "new Date()"
     }
 
+    @Test
     void testNoConversion1() {
         convertToProperty "[:].ge${CARET}t('key')"
         assertEditorContents "[:].get('key')"
     }
 
+    @Test
     void testNoConversion2() {
         convertToProperty "[:].ge${CARET}tAt('key')"
         assertEditorContents "[:].getAt('key')"
     }
 
+    @Test
     void testNoConversion3() {
         convertToProperty "[:].pu${CARET}t('key', 'val')"
         assertEditorContents "[:].put('key', 'val')"
     }
 
+    @Test
     void testNoConversion4() {
         convertToProperty "System.get${CARET}Property('abc')"
         assertEditorContents "System.getProperty('abc')"
     }
 
+    @Test
     void testNoConversion5() {
         convertToProperty "System.set${CARET}Property('abc', 'xyz')"
         assertEditorContents "System.setProperty('abc', 'xyz')"
     }
 
+    @Test
     void testNoConversion6() {
         convertToProperty "System.current${CARET}TimeMillis()"
         assertEditorContents "System.currentTimeMillis()"
     }
 
+    @Test
     void testNoConversion7() {
         convertToProperty "Calendar.getInstance().is${CARET}Set(Calendar.YEAR)"
         assertEditorContents "Calendar.getInstance().isSet(Calendar.YEAR)"
     }
 
+    @Test
     void testNoConversion8() {
         testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { void setSomething() {} }'
         convertToProperty "new Foo().set${CARET}Something()"
         assertEditorContents "new Foo().setSomething()"
     }
 
+    @Test
     void testNoConversion9() {
         testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { void setSomething(Object... args) {} }'
         convertToProperty "new Foo().set${CARET}Something()"
         assertEditorContents "new Foo().setSomething()"
     }
 
+    @Test
     void testNoConversion10() {
         convertToProperty "new Date().set${CARET}Time(time: 1234L)"
         assertEditorContents "new Date().setTime(time: 1234L)"

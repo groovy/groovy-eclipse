@@ -33,15 +33,15 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
+import org.junit.After;
+import org.junit.Assert;
 
 /**
  * A test class, meant to be subclasses. Provides utilities for initializing
  * an editor with some text contents, sending keystrokes and commands to
  * the editor and verifying the effect on the contents of the editor.
- *
- * @author Kris De Volder
  */
-public abstract class GroovyEditorTest extends EclipseTestCase {
+public abstract class GroovyEditorTestCase extends EclipseTestCase {
 
     /**
      * Special string pattern that indicates the position of the caret
@@ -54,15 +54,10 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
      */
     protected GroovyEditor editor;
 
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            GroovyIndentationService.disposeLast(); // clear the cached reference
-            GroovyPlugin.getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
-        } finally {
-            editor = null;
-            super.tearDown();
-        }
+    @After
+    public final void tearDownEditors() throws Exception {
+        GroovyIndentationService.disposeLast(); // clear the cached reference
+        GroovyPlugin.getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
     }
 
     /**
@@ -172,12 +167,12 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
         if (File.separatorChar == '\\') {
             actual = actual.replace("\r\n", "\n");
         }
-        assertEquals(expected, actual);
+        Assert.assertEquals(expected, actual);
     }
 
     protected void assertStatusLineText(String expected) throws Exception {
         Object manager = ReflectionUtils.throwableExecutePrivateMethod(AbstractTextEditor.class, "getStatusLineManager", new Class[0], editor, new Object[0]);
         String actual = (String) ReflectionUtils.throwableGetPrivateField(manager.getClass(), "message", manager);
-        assertEquals(expected, actual);
+        Assert.assertEquals(expected, actual);
     }
 }

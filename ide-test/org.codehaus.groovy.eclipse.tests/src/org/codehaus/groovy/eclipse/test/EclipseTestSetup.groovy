@@ -40,7 +40,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
  * <p>
  * NOTE: removeSources() can be called in tearDown() to prep for next test case.
  */
-class EclipseTestSetup extends TestSetup {
+final class EclipseTestSetup extends TestSetup {
 
     private static TestProject testProject
 
