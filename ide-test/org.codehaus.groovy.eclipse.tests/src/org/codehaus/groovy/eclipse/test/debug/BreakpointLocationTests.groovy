@@ -15,61 +15,25 @@
  */
 package org.codehaus.groovy.eclipse.test.debug
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
-import org.codehaus.groovy.eclipse.debug.ui.ToggleBreakpointAdapter
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.debug.core.IBreakpointManager
-import org.eclipse.debug.core.model.IBreakpoint
-import org.eclipse.jdt.internal.debug.ui.actions.ActionDelegateHelper
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.eclipse.debug.ui.ValidBreakpointLocationFinder
 import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.ITextSelection
-import org.eclipse.jface.text.TextSelection
-import org.eclipse.ui.texteditor.ITextEditor
-import org.junit.After
-import org.junit.Before
+import org.eclipse.jface.text.IDocument
 import org.junit.Test
 
-final class DebugBreakpointsTests extends BreakpointTestCase {
-
-    private ITextEditor editor, former
-
-    @Before
-    void setUp() {
-        editor = EclipseTestSetup.openInEditor(unit)
-        former = ActionDelegateHelper.default.textEditor
-        ActionDelegateHelper.default.textEditor = editor
-    }
-
-    @After
-    void tearDown() {
-        ActionDelegateHelper.default.textEditor = former
-        GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
-    }
+/**
+ * Tests that breakpoint locations are as expected.
+ */
+final class BreakpointLocationTests extends BreakpointTestCase {
 
     private void doBreakpointTest(int i) {
-        ToggleBreakpointAdapter adapter = new ToggleBreakpointAdapter()
-
-        String text = String.valueOf(unit.getContents())
-        ITextSelection selection = new TextSelection(new Document(text), text.indexOf('// ' + i) - 3, 3)
-        boolean canToggle = adapter.canToggleLineBreakpoints(editor, selection)
-        assert canToggle : 'Should be able to toggle breakpoint at section ' + i
-
-        IBreakpointManager breakpointManager = DebugPlugin.default.breakpointManager
-        IBreakpoint[] breakpoints = breakpointManager.breakpoints
-        int initialNumBreakpoints = breakpoints.length
-        try {
-            adapter.toggleLineBreakpoints(editor, selection)
-            SynchronizationUtils.joinBackgroudActivities()
-        } finally {
-            IBreakpoint[] newBreakpoints = breakpointManager.breakpoints
-            assert newBreakpoints.length == initialNumBreakpoints + 1 : 'Unexpected number of breakpoints'
-            for (breakpoint in newBreakpoints) {
-                breakpointManager.removeBreakpoint(breakpoint, true)
-            }
-            assert breakpointManager.breakpoints.length == 0 : 'Should have deleted all breakpoints'
-        }
+        IDocument document = new Document(String.valueOf(unit.contents))
+        int location = document.get().indexOf('// ' + i) - 3
+        int line = document.getLineOfOffset(location) + 1
+        ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(line)
+        ASTNode node = finder.findValidBreakpointLocation(unit.moduleNode)
+        assert node != null : 'Could not find a breakpoint for line ' + line
+        assert node.getLineNumber() == line : 'Wrong expected line number'
     }
 
     @Test

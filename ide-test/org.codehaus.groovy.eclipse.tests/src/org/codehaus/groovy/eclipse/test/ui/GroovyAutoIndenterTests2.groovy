@@ -23,14 +23,6 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Some additional tests for the GroovyAutoIndenter. There is no particular
- * reason to put these tests here rather than in the GroovyAutoIndenter class.
- * <p>
- * The only real reason is that this class (GroovyAutoIndenter2) is a .groovy
- * class, and therefore we can write tests in Groovy syntax (and use """ quoted
- * strings for specifying test input.
- */
 final class GroovyAutoIndenterTests2 extends GroovyEditorTestCase {
 
     @Before

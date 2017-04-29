@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,11 @@ import static org.codehaus.groovy.eclipse.core.model.GroovyRuntime.ensureGroovyC
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.ICommand;
@@ -68,11 +67,11 @@ public class TestProject {
 
     private IPackageFragmentRoot sourceFolder;
 
-    public TestProject() throws CoreException {
+    public TestProject() throws Exception {
         this(TEST_PROJECT_NAME);
     }
 
-    public TestProject(String name) throws CoreException {
+    public TestProject(String name) throws Exception {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         project = root.getProject(name);
         if (!project.exists()) {
@@ -108,7 +107,7 @@ public class TestProject {
         return new GroovyProjectFacade(javaProject);
     }
 
-    public boolean hasGroovyContainer() throws JavaModelException {
+    public boolean hasGroovyContainer() throws Exception {
         IClasspathEntry[] entries = javaProject.getRawClasspath();
         for (int i = 0, n = entries.length; i < n; i += 1) {
             if (entries[i].getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
@@ -120,14 +119,14 @@ public class TestProject {
     }
 
     /** Adds base Java nature and classpath entries to project. */
-    private void prepareForJava() throws CoreException {
+    private void prepareForJava() throws Exception {
         addNature(JavaCore.NATURE_ID);
 
         javaProject.setRawClasspath(new IClasspathEntry[] {JavaRuntime.getDefaultJREContainerEntry()}, null);
     }
 
     /** Adds base Groovy nature and classpath entries to project. */
-    private void prepareForGroovy() throws CoreException {
+    private void prepareForGroovy() throws Exception {
         addNature(GroovyNature.GROOVY_NATURE);
 
         if (!hasGroovyContainer()) {
@@ -135,7 +134,7 @@ public class TestProject {
         }
     }
 
-    public IPackageFragment createPackage(String name) throws CoreException {
+    public IPackageFragment createPackage(String name) throws Exception {
         return sourceFolder.createPackageFragment(name, true, null);
     }
 
@@ -143,7 +142,7 @@ public class TestProject {
         sourceFolder.getPackageFragment(name).delete(true, null);
     }
 
-    public ICompilationUnit createJavaType(IPackageFragment packageFrag, String fileName, CharSequence source) throws JavaModelException {
+    public ICompilationUnit createJavaType(IPackageFragment packageFrag, String fileName, CharSequence source) throws Exception {
         StringBuilder buf = new StringBuilder();
         if (!packageFrag.isDefaultPackage()) {
             buf.append("package ");
@@ -159,19 +158,20 @@ public class TestProject {
         return unit;
     }
 
-    public ICompilationUnit createJavaTypeAndPackage(String packageName, String fileName, CharSequence source) throws CoreException {
+    public ICompilationUnit createJavaTypeAndPackage(String packageName, String fileName, CharSequence source) throws Exception {
         return createJavaType(createPackage(packageName), fileName, source);
     }
 
-    public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, InputStream source) throws CoreException, IOException {
-        return createGroovyType(createPackage(packageName), fileName, IOUtils.toString(source));
+    @SuppressWarnings("deprecation")
+    public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, InputStream source) throws Exception {
+        return createGroovyType(createPackage(packageName), fileName, DefaultGroovyMethods.getText(source));
     }
 
-    public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, CharSequence source) throws CoreException {
+    public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, CharSequence source) throws Exception {
         return createGroovyType(createPackage(packageName), fileName, source);
     }
 
-    public ICompilationUnit createGroovyType(IPackageFragment packageFrag, String fileName, CharSequence source) throws CoreException {
+    public ICompilationUnit createGroovyType(IPackageFragment packageFrag, String fileName, CharSequence source) throws Exception {
         StringBuilder buf = new StringBuilder();
         if (!packageFrag.isDefaultPackage()) {
             buf.append("package ");
@@ -187,7 +187,7 @@ public class TestProject {
         return unit;
     }
 
-    public void addBuilder(String newBuilder) throws CoreException {
+    public void addBuilder(String newBuilder) throws Exception {
         final IProjectDescription description = project.getDescription();
         ICommand[] commands = description.getBuildSpec();
         ICommand newCommand = new BuildCommand();
@@ -199,7 +199,7 @@ public class TestProject {
         project.setDescription(description, null);
     }
 
-    public void addNature(String natureId) throws CoreException {
+    public void addNature(String natureId) throws Exception {
         final IProjectDescription description = project.getDescription();
         final String[] ids = description.getNatureIds();
         final String[] newIds = new String[ids.length+1];
@@ -209,7 +209,7 @@ public class TestProject {
         project.setDescription(description, null);
     }
 
-    public void removeNature(String natureId) throws CoreException {
+    public void removeNature(String natureId) throws Exception {
         final IProjectDescription description = project.getDescription();
         final String[] ids = description.getNatureIds();
         for (int i = 0; i < ids.length; ++i) {
@@ -233,12 +233,12 @@ public class TestProject {
         return newIds;
     }
 
-    public void dispose() throws CoreException {
+    public void dispose() throws Exception {
         deleteWorkingCopies();
         Util.delete(project);
     }
 
-    public void deleteContents() throws CoreException {
+    public void deleteContents() throws Exception {
         deleteWorkingCopies();
         IPackageFragment[] frags = javaProject.getPackageFragments();
         for (IPackageFragment frag : frags) {
@@ -248,7 +248,7 @@ public class TestProject {
         }
     }
 
-    private void deleteWorkingCopies() throws JavaModelException {
+    private void deleteWorkingCopies() throws Exception {
         SynchronizationUtils.joinBackgroudActivities();
 
         ICompilationUnit[] workingCopies = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
@@ -263,19 +263,19 @@ public class TestProject {
         System.gc();
     }
 
-    private IFolder createBinFolder() throws CoreException {
+    private IFolder createBinFolder() throws Exception {
         final IFolder binFolder = project.getFolder("bin");
         if (!binFolder.exists())
             ensureExists(binFolder);
         return binFolder;
     }
 
-    private void createOutputFolder(IFolder binFolder) throws JavaModelException {
+    private void createOutputFolder(IFolder binFolder) throws Exception {
         IPath outputLocation = binFolder.getFullPath();
         javaProject.setOutputLocation(outputLocation, null);
     }
 
-    private IPackageFragmentRoot createSourceFolder() throws CoreException {
+    private IPackageFragmentRoot createSourceFolder() throws Exception {
         IFolder folder = project.getFolder("src");
         if (!folder.exists()) ensureExists(folder);
         final IClasspathEntry[] entries = javaProject.getResolvedClasspath(false);
@@ -293,19 +293,19 @@ public class TestProject {
         return root;
     }
 
-    public IPackageFragmentRoot createOtherSourceFolder() throws CoreException {
+    public IPackageFragmentRoot createOtherSourceFolder() throws Exception {
         return createOtherSourceFolder(null);
     }
 
-    public IPackageFragmentRoot createOtherSourceFolder(String outPath) throws CoreException {
+    public IPackageFragmentRoot createOtherSourceFolder(String outPath) throws Exception {
         return createSourceFolder("other", outPath);
     }
 
-    public IPackageFragmentRoot createSourceFolder(String path, String outPath) throws CoreException {
+    public IPackageFragmentRoot createSourceFolder(String path, String outPath) throws Exception {
         return createSourceFolder(path, outPath, null);
     }
 
-    public IPackageFragmentRoot createSourceFolder(String path, String outPath, IPath[] exclusionPattern) throws CoreException {
+    public IPackageFragmentRoot createSourceFolder(String path, String outPath, IPath[] exclusionPattern) throws Exception {
         IFolder folder = project.getFolder(path);
         if (!folder.exists()) {
             ensureExists(folder);
@@ -329,14 +329,14 @@ public class TestProject {
 
     }
 
-    private void ensureExists(IFolder folder) throws CoreException {
+    private void ensureExists(IFolder folder) throws Exception {
         if (folder.getParent().getType() == IResource.FOLDER && !folder.getParent().exists()) {
             ensureExists((IFolder) folder.getParent());
         }
         folder.create(false, true, null);
     }
 
-    public void addProjectReference(IJavaProject referent) throws JavaModelException {
+    public void addProjectReference(IJavaProject referent) throws Exception {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
         System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
@@ -344,7 +344,7 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
     }
 
-    public void addJarFileToClasspath(IPath path) throws JavaModelException {
+    public void addJarFileToClasspath(IPath path) throws Exception {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
         System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
@@ -356,13 +356,13 @@ public class TestProject {
         SynchronizationUtils.waitForIndexingToComplete(getJavaProject());
     }
 
-    public void fullBuild() throws CoreException {
+    public void fullBuild() throws Exception {
         SimpleProgressMonitor spm = new SimpleProgressMonitor("full build of "+this.getProject().getName());
         this.getProject().build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD, spm);
         spm.waitForCompletion();
     }
 
-    public String getProblems() throws CoreException {
+    public String getProblems() throws Exception {
         IMarker[] markers = getProject().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE);
         if (markers == null || markers.length == 0) {
             return null;
@@ -401,7 +401,7 @@ public class TestProject {
         return file;
     }
 
-    private void createFolder(IContainer parent) throws CoreException {
+    private void createFolder(IContainer parent) throws Exception {
         if (!parent.getParent().exists()) {
             assertEquals("Project doesn't exist " + parent.getParent(), parent.getParent().getType(), IResource.FOLDER);
             createFolder(parent.getParent());
@@ -409,7 +409,7 @@ public class TestProject {
         ((IFolder) parent).create(true, true, null);
     }
 
-    public ICompilationUnit[] createUnits(String[] packages, String[] cuNames, String[] cuContents) throws CoreException {
+    public ICompilationUnit[] createUnits(String[] packages, String[] cuNames, String[] cuContents) throws Exception {
         ICompilationUnit[] units = new ICompilationUnit[packages.length];
         for (int i = 0, n = cuContents.length; i < n; i += 1) {
             units[i] = createPackage(packages[i]).createCompilationUnit(cuNames[i], cuContents[i], false, null);
@@ -417,7 +417,7 @@ public class TestProject {
         return units;
     }
 
-    public static void addEntry(IProject project, IClasspathEntry entryPath) throws JavaModelException {
+    public static void addEntry(IProject project, IClasspathEntry entryPath) throws Exception {
         IClasspathEntry[] classpath = getClasspath(project);
         IClasspathEntry[] newClaspath = new IClasspathEntry[classpath.length + 1];
         System.arraycopy(classpath, 0, newClaspath, 0, classpath.length);
@@ -435,15 +435,15 @@ public class TestProject {
         }
     }
 
-    public static void addExternalLibrary(IProject project, String jar) throws JavaModelException {
+    public static void addExternalLibrary(IProject project, String jar) throws Exception {
         addExternalLibrary(project, jar, false);
     }
 
-    public static void addExternalLibrary(IProject project, String jar, boolean isExported) throws JavaModelException {
+    public static void addExternalLibrary(IProject project, String jar, boolean isExported) throws Exception {
         addEntry(project, JavaCore.newLibraryEntry(new Path(jar), null, null, isExported));
     }
 
-    public static void setClasspath(IProject project, IClasspathEntry[] entries) throws JavaModelException {
+    public static void setClasspath(IProject project, IClasspathEntry[] entries) throws Exception {
         IJavaProject javaProject = JavaCore.create(project);
         javaProject.setRawClasspath(entries, null);
     }

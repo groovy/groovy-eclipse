@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.alltests
 
-import junit.framework.*
 import org.codehaus.groovy.eclipse.codeassist.tests.*
 import org.codehaus.groovy.eclipse.codebrowsing.tests.*
 import org.codehaus.groovy.eclipse.core.test.*
@@ -27,14 +26,20 @@ import org.codehaus.groovy.eclipse.quickfix.test.templates.*
 import org.codehaus.groovy.eclipse.refactoring.test.extract.*
 import org.codehaus.groovy.eclipse.refactoring.test.formatter.*
 import org.codehaus.groovy.eclipse.refactoring.test.rename.*
-import org.codehaus.groovy.eclipse.test.AllUITests
-import org.codehaus.groovy.frameworkadapter.util.CompilerChooser
+import org.codehaus.groovy.eclipse.test.ErrorLogTest
+import org.codehaus.groovy.eclipse.test.actions.*
+import org.codehaus.groovy.eclipse.test.adapters.*
+import org.codehaus.groovy.eclipse.test.core.util.*
+import org.codehaus.groovy.eclipse.test.debug.*
+import org.codehaus.groovy.eclipse.test.search.*
+import org.codehaus.groovy.eclipse.test.ui.*
+import org.codehaus.groovy.eclipse.test.wizards.*
 
 final class AllGroovyTests {
 
-    static Test suite() {
+    static junit.framework.Test suite() {
         // ensure that the compiler chooser starts up
-        CompilerChooser compiler = GroovyTestSuiteSupport.initializeCompilerChooser()
+        def compiler = GroovyTestSuiteSupport.initializeCompilerChooser()
 
         // use syserr to see the messages in the build log; sysout seems to disapear without a trace on build server
         System.err.println '------------ AllGroovyTests ------------'
@@ -42,9 +47,9 @@ final class AllGroovyTests {
         System.err.println 'active Groovy version (specified) = ' + compiler.activeSpecifiedVersion
         System.err.println '----------------------------------------'
 
-        TestSuite suite = new TestSuite(AllGroovyTests.class.name)
-        suite.addTest(new JUnit4TestAdapter(SanityTests))
-        suite.addTest(AllUITests.suite()) // first for 'ErrorLogTest'
+        def suite = new junit.framework.TestSuite(AllGroovyTests.class.name)
+        suite.addTest(new junit.framework.JUnit4TestAdapter(ErrorLogTest))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(SanityTests))
         suite.addTest(adapt('org.codehaus.groovy.eclipse.codeassist.tests',
             AnnotationCompletionTests,
             CommandChainCompletionTests,
@@ -89,14 +94,10 @@ final class AllGroovyTests {
             IsSameExpressionTests,
             PartialVisitTests))
         suite.addTest(adapt('org.codehaus.groovy.eclipse.core.tests',
-            ArrayUtilsTests,
             AstPositionTests,
             ClasspathContainerTests,
             ErrorRecoveryTests,
-            ExpressionFinderTests,
-            StringSourceBufferTests,
             SyntheticMemberSearchTests,
-            TokenStreamTests,
             UnrecoverableErrorTests))
         suite.addTest(AllDSLTests.suite())
         suite.addTest(adapt('org.codehaus.groovy.eclipse.junit.tests',
@@ -131,13 +132,50 @@ final class AllGroovyTests {
             RenameTypeTests,
             MoveCURefactoringTests,
             SyntheticAccessorRenamingTests))
+        suite.addTest(adapt('org.codehaus.groovy.eclipse.ui.tests',
+            // actions
+            AddImportOnSelectionTests,
+            AliasingOrganizeImportsTests,
+            ConvertToJavaOrGroovyActionTests,
+            ConvertToPropertyActionTests,
+            GroovyNatureActionTests,
+            OrganizeImportsTests,
+            SaveParticipantRegistryTests,
+            // adapters
+            GroovyFileAdapterFactoryTests,
+            GroovyIFileEditorInputAdapterFactoryTests,
+            IsMainTesterTests,
+            // core.util
+            ArrayUtilsTests,
+            ExpressionFinderTests,
+            StringSourceBufferTests,
+            TokenStreamTests,
+            // debug
+            BreakpointLocationTests,
+            ConsoleLineTrackerTests,
+            DebugBreakpointsTests,
+            GroovyLauncherShortcutTests,
+            // search
+            FindOccurrencesTests,
+            // ui
+            BracketInserterTests,
+            GroovyAutoIndenterTests,
+            GroovyAutoIndenterTests2,
+            GroovyPartitionScannerTests,
+            GroovyTagScannerTests,
+            HighlightingExtenderTests,
+            OutlineExtenderTests,
+            SemanticHighlightingTests,
+            // wizards
+            NewGroovyTestCaseWizardTests,
+            NewGroovyTypeWizardTests))
         return suite
     }
 
-    private static Test adapt(String name, Class... tests) {
-        TestSuite suite = new TestSuite(name)
+    private static junit.framework.Test adapt(String name, Class... tests) {
+        def suite = new junit.framework.TestSuite(name)
         for (test in tests) {
-            suite.addTest(new JUnit4TestAdapter(test))
+            suite.addTest(new junit.framework.JUnit4TestAdapter(test))
         }
         return suite
     }

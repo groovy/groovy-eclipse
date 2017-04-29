@@ -32,7 +32,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
- * A simple type lookup that all expressions are of type {@link HTML}
+ * A simple type lookup that all expressions are of type {@link HTML}.
  */
 public class TestTypeLookup implements ITypeLookup {
 
@@ -67,5 +67,4 @@ public class TestTypeLookup implements ITypeLookup {
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
         // do nothing
     }
-
 }

@@ -17,16 +17,14 @@ package org.codehaus.groovy.eclipse.dsl.tests.internal;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 import org.junit.Assert;
@@ -94,23 +92,9 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
     private final Map<String,String> aliases;
     private boolean aliasesLocked = false; //Set to true when we start parsing the workloadDefinition
 
+    @SuppressWarnings("deprecation")
     public InferencerWorkload(File workloadDefinitionFile, String ... extraAliases) throws Exception {
-        this(extractContents(workloadDefinitionFile), extraAliases);
-    }
-
-    private static String extractContents(File workloadDefinitionFile) throws Exception {
-        Reader r = new FileReader(workloadDefinitionFile);
-        BufferedReader br = new BufferedReader(r);
-        StringBuilder sb = new StringBuilder();
-        try {
-            String line;
-            while ((line  = br.readLine()) != null) {
-                sb.append(line + "\n");
-            }
-        } finally {
-            br.close();
-        }
-        return sb.toString();
+        this(DefaultGroovyMethods.getText(workloadDefinitionFile), extraAliases);
     }
 
     /**

@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -38,6 +36,7 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.core.internal.resources.Folder;
 import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.IFile;
@@ -275,19 +274,9 @@ public abstract class DSLInferencingTestCase extends AbstractInferencingTest {
         assertUnknownConfidence(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
     }
 
+    @SuppressWarnings("deprecation")
     protected String getTestResourceContents(String fileName) throws Exception {
-        InputStream stream = getTestResourceStream(fileName);
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-            StringBuilder buffer = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                buffer.append(line).append('\n');
-            }
-            return buffer.toString();
-        } finally {
-            stream.close();
-        }
+        return DefaultGroovyMethods.getText(getTestResourceStream(fileName));
     }
 
     protected InputStream getTestResourceStream(String fileName) throws Exception {

@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test
 
-import junit.extensions.TestSetup
-import junit.framework.Test
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IFile
@@ -40,20 +38,19 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
  * <p>
  * NOTE: removeSources() can be called in tearDown() to prep for next test case.
  */
-final class EclipseTestSetup extends TestSetup {
+final class EclipseTestSetup {
 
     private static TestProject testProject
 
-    EclipseTestSetup(Test test) {
-        super(test)
+    EclipseTestSetup(Object test) {
     }
 
-    protected void setUp() {
+    void setUp() {
         testProject = new TestProject()
         testProject.autoBuilding = false
     }
 
-    protected void tearDown() {
+    void tearDown() {
         def defaults = {
             storePreferences.@properties.keys().each { k ->
                 if (!isDefault(k)) {

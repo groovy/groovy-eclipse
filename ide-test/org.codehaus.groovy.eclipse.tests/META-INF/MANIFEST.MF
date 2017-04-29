@@ -4,22 +4,26 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.tests;singleton:=true
 Bundle-Name: Groovy UI Tests
 Bundle-Version: 2.9.2.qualifier
-Bundle-ClassPath: .,
- lib/commons-io-1.3.1.jar
 Export-Package: org.codehaus.groovy.eclipse.test,
  org.codehaus.groovy.eclipse.test.actions,
  org.codehaus.groovy.eclipse.test.adapters,
- org.codehaus.groovy.eclipse.test.ui
+ org.codehaus.groovy.eclipse.test.core.util,
+ org.codehaus.groovy.eclipse.test.debug,
+ org.codehaus.groovy.eclipse.test.search,
+ org.codehaus.groovy.eclipse.test.ui,
+ org.codehaus.groovy.eclipse.test.wizards
 Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
  org.codehaus.groovy.eclipse.refactoring.formatter,
  org.eclipse.core.filesystem,
  org.eclipse.debug.core,
  org.eclipse.debug.core.model,
  org.eclipse.debug.internal.ui,
+ org.eclipse.debug.internal.ui.preferences,
  org.eclipse.debug.ui.console,
  org.eclipse.jdt.internal.debug.ui.actions,
  org.eclipse.jdt.junit.wizards,
  org.eclipse.jdt.launching,
+ org.eclipse.ltk.core.refactoring,
  org.eclipse.ui.console,
  org.eclipse.ui.internal.views.log
 Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="2.9.2";visibility:=reexport,
@@ -28,4 +32,3 @@ Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="2.9.2";visibility
  org.eclipse.ui.forms;visibility:=reexport,
  org.eclipse.ui.ide;visibility:=reexport,
  org.eclipse.ui;visibility:=reexport
-Eclipse-BundleShape: dir

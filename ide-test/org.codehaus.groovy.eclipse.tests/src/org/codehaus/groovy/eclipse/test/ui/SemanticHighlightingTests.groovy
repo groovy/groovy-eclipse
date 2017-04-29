@@ -16,10 +16,8 @@
 package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
+import static org.junit.Assert.assertEquals
 
-import junit.framework.Test
-import junit.framework.TestCase
-import junit.framework.TestSuite
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
@@ -29,17 +27,34 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
+import org.junit.After
+import org.junit.AfterClass
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Ignore
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TestName
 
-final class SemanticHighlightingTests extends TestCase {
+final class SemanticHighlightingTests {
 
-    static Test suite() {
-        new EclipseTestSetup(new TestSuite(SemanticHighlightingTests))
+    @BeforeClass
+    static final void setUpClass() {
+        new EclipseTestSetup(null).setUp()
     }
 
-    @Override
-    protected void setUp() {
+    @AfterClass
+    static final void tearDownClass() {
+        new EclipseTestSetup(null).tearDown()
+    }
+
+    @Rule
+    public TestName test = new TestName()
+
+    @Before
+    void setUp() {
         println '----------------------------------------'
-        println 'Starting: ' + getName()
+        println 'Starting: ' + test.getMethodName()
 
         GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
 
@@ -47,11 +62,12 @@ final class SemanticHighlightingTests extends TestCase {
             'public @Deprecated class Java {\n  @Deprecated public static final String CONST = "";\n}', 'Java', 'other')
     }
 
-    @Override
-    protected void tearDown() {
+    @After
+    void tearDown() {
         EclipseTestSetup.removeSources()
     }
 
+    @Test
     void testFields() {
         String contents = '''\
             class X {
@@ -69,6 +85,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('four'), 'four'.length(), FIELD))
     }
 
+    @Test
     void testStaticFields() {
         String contents = '''\
             class X {
@@ -85,6 +102,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('FOO'), 3, STATIC_FIELD))
     }
 
+    @Test
     void testStaticFinals() {
         String contents = '''\
             Math.PI
@@ -98,6 +116,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('STREAM_MAGIC'), 'STREAM_MAGIC'.length(), STATIC_VALUE))
     }
 
+    @Test
     void testStaticFinals2() {
         String contents = '''\
             import static java.lang.Math.PI
@@ -110,6 +129,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
     }
 
+    @Test
     void testMethods() {
         String contents = '''\
             import groovy.transform.PackageScope
@@ -130,6 +150,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('e('), 1, METHOD))
     }
 
+    @Test
     void testStaticMethods() {
         String contents = '''\
             class X {
@@ -142,6 +163,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('FOO'), 'FOO'.length(), STATIC_CALL))
     }
 
+    @Test
     void testStaticMethods2() {
         String contents = '''\
             class X {
@@ -159,6 +181,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('emptySet'), 'emptySet'.length(), STATIC_CALL))
     }
 
+    @Test
     void testStaticMethods3() {
         String contents = '''\
             import static java.util.Collections.singletonList
@@ -175,6 +198,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('singletonList'), 'singletonList'.length(), STATIC_CALL))
     }
 
+    @Test
     void testStaticMethods4() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return
 
@@ -197,7 +221,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('valueOf'), 'valueOf'.length(), STATIC_CALL))
     }
 
-    // GRECLIPSE-1138
+    @Test // GRECLIPSE-1138
     void testMultipleStaticMethods() {
         String contents = '''\
             f(1,2)
@@ -220,6 +244,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('b)'), 1, PARAMETER))
     }
 
+    @Test
     void testMethodsAsProperties() {
         String contents = '''\
             import java.lang.management.ManagementFactory
@@ -236,6 +261,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('getInputArguments'), 'getInputArguments'.length(), METHOD_CALL))
     }
 
+    @Test
     void testMethodsAsProperties2() {
         EclipseTestSetup.addGroovySource '''\
             class Foo {
@@ -252,6 +278,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('value'), 5, STATIC_CALL))
     }
 
+    @Test
     void testMethodsAsProperties3() {
         EclipseTestSetup.addGroovySource '''\
             interface Bar { def getOne() }
@@ -275,6 +302,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('two'),  3, METHOD_CALL))
     }
 
+    @Test
     void testDefaultGroovyMethods() {
         String contents = '["one", "two"].grep().first()'
 
@@ -285,6 +313,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('first'), 5, METHOD_CALL))
     }
 
+    @Test
     void testDefaultGroovyMethods2() {
         String contents = '(["one", "two"] as String[]).first()'
 
@@ -293,6 +322,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('first'), 5, METHOD_CALL))
     }
 
+    @Test
     void testUseCategoryMethods() {
         String contents = '''\
             use(groovy.time.TimeCategory) {
@@ -308,12 +338,14 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), METHOD_CALL))
     }
 
+    @Test
     void testNotCategoryMethod() {
         String contents = 'def x = "equals"' // equals is a DGM and had been improperly identified by CategoryTypeLookup
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE))
     }
 
+    @Test
     void testVariadicMehtods() {
         String contents = '''\
             class X {
@@ -341,6 +373,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
 
+    @Test
     void testParamsAndLocals() {
         String contents = '''\
             class X {
@@ -371,6 +404,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('i)'), 1, VARIABLE))
     }
 
+    @Test
     void testNamedParams1() {
         String contents = '''\
             class Person { String firstName, lastName }
@@ -388,6 +422,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), FIELD))
     }
 
+    @Test
     void testNamedParams1a() {
         String contents = '''\
             class Person {
@@ -411,6 +446,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY))
     }
 
+    @Test
     void testNamedParams2() {
         String contents = '''\
             def map = Collections.singletonMap(key: 'k', value: 'v')
@@ -423,6 +459,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), MAP_KEY))
     }
 
+    @Test
     void testMultiAssign() {
         String contents = '''\
             def (a, b) = ['one', 'two']
@@ -433,6 +470,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE))
     }
 
+    @Test
     void testChainAssign() {
         String contents = '''\
             class C {
@@ -452,6 +490,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
     }
 
+    @Test
     void testChainAssign2() {
         String contents = '''\
             class C {
@@ -470,6 +509,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD))
     }
 
+    @Test
     void testChainAssign3() {
         String contents = '''\
             class C {
@@ -490,6 +530,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD))
     }
 
+    @Test
     void testChainAssign4() {
         // property notation that maps to setter; this kind of chain assignment does work
         String contents = '''\
@@ -522,6 +563,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('zero'), 4, METHOD_CALL))
     }
 
+    @Test
     void testChainAssign4a() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return
 
@@ -558,6 +600,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('zero'), 4, METHOD_CALL))
     }
 
+    @Test
     void testCatchParam() {
         // don't want PARAMETER
         String contents = '''\
@@ -583,6 +626,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL))
     }
 
+    @Test
     void testCatchParamWithInstanceOf() {
         // don't want PARAMETER
         String contents = '''\
@@ -608,6 +652,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('ex'), 2, VARIABLE))
     }
 
+    @Test
     void testForEachParam() {
         // don't want PARAMETER
         String contents = '''\
@@ -626,6 +671,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
+    @Test
     void testForEachInParam() {
         // don't want PARAMETER
         String contents = '''\
@@ -644,6 +690,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
+    @Test
     void testForEachInParamWithInstanceOf() {
         // don't want PARAMETER
         String contents = '''\
@@ -668,6 +715,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
+    @Test
     void testImplicitParam() {
         String contents = '''\
             def f = { it * "string" }
@@ -678,6 +726,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('it'), 2, GROOVY_CALL))
     }
 
+    @Test
     void testThisAndSuper() {
         // the keywords super and this are identified/highlighted by GroovyTagScanner
         String contents = '''\
@@ -693,6 +742,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE))
     }
 
+    @Test
     void testCtorCalls() {
         // the keywords super and this are identified/highlighted by GroovyTagScanner
         String contents = '''\
@@ -717,6 +767,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CTOR_CALL))
     }
 
+    @Test
     void testEnumDefs() {
         String contents = '''\
             enum X {
@@ -750,6 +801,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('alt'), 3, FIELD))
     }
 
+    @Test
     void testEnumAnno() {
         EclipseTestSetup.addGroovySource '''\
             import java.lang.annotation.*
@@ -768,6 +820,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE))
     }
 
+    @Test
     void testAnnoElems() {
         String contents = '''\
             @Grab( module = 'something:anything' )
@@ -785,6 +838,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('extensions'), 'extensions'.length(), GroovyUtils.isAtLeastGroovy(21) ? TAG_KEY : UNKNOWN))
     }
 
+    @Test
     void testAnnoElems2() {
         String contents = '''\
             class C {
@@ -801,6 +855,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
     }
 
+    @Test
     void testGString() {
         String contents = '''\
             class X {
@@ -822,6 +877,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('$k') + 1, 1, VARIABLE))
     }
 
+    @Test
     void testGString2() {
         String contents = '''\
             class X {
@@ -843,6 +899,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('k}'), 1, VARIABLE))
     }
 
+    @Test
     void testGString3() {
         String contents = 'def a, b = "/$a/b/c"' // no regex at offset 15
         assertHighlighting(contents,
@@ -851,29 +908,34 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('$a') + 1, 1, VARIABLE))
     }
 
+    @Test
     void testRegex() {
         String contents = '/fdsfasdfas/'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('/fdsfasdfas/'), '/fdsfasdfas/'.length(), REGEXP))
     }
 
+    @Test
     void testSlashyString0() {
         String contents = '// just a comment'
         assertHighlighting(contents)
     }
 
+    @Test
     void testSlashyString1() {
         String contents = '/ends with dollar$/'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('/ends with dollar$/'), '/ends with dollar$/'.length(), REGEXP))
     }
 
+    @Test
     void testSlashyString2() {
         String contents = '/$/'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('/$/'), '/$/'.length(), REGEXP))
     }
 
+    @Test
     void testSlashyString3() {
         String contents = 'def a = /a/\ndef b = /$a/'
         assertHighlighting(contents,
@@ -884,6 +946,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE))
     }
 
+    @Test
     void testSlashyString4() {
         String contents = 'def a = /a/\ndef b = /${a}/'
         assertHighlighting(contents,
@@ -894,36 +957,42 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE))
     }
 
+    @Test
     void testSlashyString5() {
         String contents = '/\\/with slash/'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('/\\/with slash/'), '/\\/with slash/'.length(), REGEXP))
     }
 
+    @Test
     void testSlashyString6() {
         String contents = '/with slash\\//'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('/with slash\\//'), '/with slash\\//'.length(), REGEXP))
     }
 
+    @Test
     void testMultiLineSlashyString1() {
         String contents = '$/\nSlashy String\n/$'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('$/\nSlashy String\n/$'), '$/\nSlashy String\n/$'.length(), REGEXP))
     }
 
+    @Test
     void testMultiLineSlashyString2() {
         String contents = '$/\nSlashy$ String\n/$'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('$/\nSlashy$ String\n/$'), '$/\nSlashy$ String\n/$'.length(), REGEXP))
     }
 
+    @Test
     void testMultiLineSlashyString3() {
         String contents = '$/\nSlashy String$\n/$'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('$/\nSlashy String$\n/$'), '$/\nSlashy String$\n/$'.length(), REGEXP))
     }
 
+    @Test
     void testMultiLineSlashyString4() {
         String contents = 'def a = /a/\ndef b = $/\n${a}$\n/$'
         assertHighlighting(contents,
@@ -934,6 +1003,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n${a}$\n/$'.length(), REGEXP))
     }
 
+    @Test
     void testMultiLineSlashyString5() {
         String contents = 'def a = /a/\ndef b = $/\n$a$\n/$'
         assertHighlighting(contents,
@@ -944,12 +1014,14 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n$a$\n/$'.length(), REGEXP))
     }
 
+    @Test
     void testUnknown() {
         String contents = 'unknown'
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('unknown'), 'unknown'.length(), UNKNOWN))
     }
 
+    @Test
     void testDeprecated() {
         String contents = 'import other.Java\nJava.CONST'
         assertHighlighting(contents,
@@ -958,6 +1030,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
     }
 
+    @Test
     void testDeprecated2() {
         String contents = '@Deprecated\nclass FOO {\n FOO x }'
         assertHighlighting(contents,
@@ -966,6 +1039,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 'x'.length(), FIELD))
     }
 
+    @Test
     void testDeprecated3() {
         String contents = 'class FOO {\n @Deprecated FOO x\n def y() { x } }'
         assertHighlighting(contents,
@@ -974,6 +1048,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 'x'.length(), DEPRECATED))
     }
 
+    @Test
     void testNumberWithSuffix() {
         String contents = ' 11 '
         assertHighlighting(contents,
@@ -1020,42 +1095,49 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(1, 2, NUMBER))
     }
 
+    @Test
     void testOctal() {
         String contents = ' 01 '
         assertHighlighting(contents,
             new HighlightedTypedPosition(1, 2, NUMBER))
     }
 
+    @Test
     void testHex() {
         String contents = ' 0x1fff '
         assertHighlighting(contents,
             new HighlightedTypedPosition(1, 6, NUMBER))
     }
 
+    @Test
     void testDecimal() {
         String contents = ' 8881.23 '
         assertHighlighting(contents,
             new HighlightedTypedPosition(1, 7, NUMBER))
     }
 
+    @Test
     void testExponent() {
         String contents = ' 1.23e-23 '
         assertHighlighting(contents,
                 new HighlightedTypedPosition(1, 8, NUMBER))
     }
 
+    @Test
     void testUnaryPlus() {
         String contents = ' +1 '
         assertHighlighting(contents,
             new HighlightedTypedPosition(1, 2, NUMBER))
     }
 
+    @Test
     void testUnaryMinus() {
         String contents = ' -1 '
         assertHighlighting(contents,
             new HighlightedTypedPosition(1, 2, NUMBER))
     }
 
+    @Test
     void testNumberRange() {
         String contents = ' 0..<100 '
         assertHighlighting(contents,
@@ -1063,7 +1145,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('100'), 3, NUMBER))
     }
 
-    // GRECLIPSE-878
+    @Test // GRECLIPSE-878
     void testMapKey1() {
         String contents = 'def map = [key: "value"]'
 
@@ -1072,6 +1154,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY))
     }
 
+    @Test
     void testMapKey2() {
         String contents = '''\
             def key = "key1"
@@ -1085,6 +1168,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('key2'), 'key2'.length(), MAP_KEY))
     }
 
+    @Test
     void testUseBlock() {
         String contents = '''\
             use (groovy.time.TimeCategory) {
@@ -1105,6 +1189,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('now'),                      3, METHOD_CALL))
     }
 
+    @Test
     void testWithBlock() {
         EclipseTestSetup.addGroovySource '''\
             class Foo {
@@ -1128,6 +1213,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('length'),  6, METHOD_CALL))
     }
 
+    @Test
     void testWithBlock2() {
         String contents = '''\
             class X { static {
@@ -1153,6 +1239,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 
+    @Test
     void testWithBlock3() {
         String contents = '''\
             @groovy.transform.TypeChecked
@@ -1179,6 +1266,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 
+    @Test
     void testWithBlock4() {
         String contents = '''\
             @groovy.transform.CompileStatic
@@ -1205,6 +1293,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
     }
 
+    @Test
     void testWithBlock5() {
         String contents = '''\
             @groovy.transform.CompileStatic
@@ -1229,6 +1318,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('readOnly'), 8, UNKNOWN))
     }
 
+    @Test
     void testWithBlock6() {
         String contents = '''\
             @groovy.transform.CompileStatic
@@ -1254,6 +1344,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('writeOnly'), 9, METHOD_CALL))
     }
 
+    @Test
     void testLazyInitExpr() {
         String contents = '''\
             class X {
@@ -1268,6 +1359,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD))
     }
 
+    @Test
     void testScriptField() {
         String contents = '''\
             @groovy.transform.Field List list = [1, 2]
@@ -1281,6 +1373,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('list'), 4, FIELD));
     }
 
+    @Test
     void testMethodPointer() {
         String contents = '''\
             def x = ''.&length
@@ -1294,6 +1387,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('random'), 'random'.length(), STATIC_CALL))
     }
 
+    @Test
     void testMethodOverload() {
         // overloads with generics caused confusion in TypeInferencingVisitor
         String contents = '''\
@@ -1313,6 +1407,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('inputs'), 'inputs'.length(), PARAMETER))
     }
 
+    @Test
     void testMemoizedMethod() {
         String contents = '''\
             import groovy.transform.*
@@ -1330,6 +1425,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('param;'), 5, PARAMETER))
     }
 
+    @Test
     void testMemoizedStatic() {
         String contents = '''\
             import groovy.transform.*
@@ -1347,6 +1443,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('param +'), 5, PARAMETER))
     }
 
+    @Test
     void testSynchedMethods() {
         String contents = '''\
             import groovy.transform.*
@@ -1378,7 +1475,8 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
 
-    void _testTailCallMethods() {
+    @Test @Ignore('list and count have been transformed into something, which hampers refactoring and semantic highlighting')
+    void testTailCallMethods() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return
 
         String contents = '''\
@@ -1386,8 +1484,6 @@ final class SemanticHighlightingTests extends TestCase {
             class X {
               @TailRecursive
               int sizeOfList(List list, int count = 0) {
-                // list and count have been transformed into something,
-                // which hampers refactoring and semantic highlighting
                 if (list.size() == 0) {
                   count;
                 } else {
@@ -1413,6 +1509,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER))
     }
 
+    @Test
     void testTypeCheckedMethods() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return
 
@@ -1439,6 +1536,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE))
     }
 
+    @Test
     void testStaticCompiledMethods() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return
 
@@ -1464,6 +1562,7 @@ final class SemanticHighlightingTests extends TestCase {
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE))
     }
 
+    @Test
     void testSpockStyleMethods() {
         // make sure these retain string highlighting
         assertHighlighting('class X { def "test case name"() {} }')
@@ -1472,6 +1571,7 @@ final class SemanticHighlightingTests extends TestCase {
         assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }')
     }
 
+    @Test
     void testTraits() {
         if (GroovyUtils.GROOVY_LEVEL < 23) return
 
