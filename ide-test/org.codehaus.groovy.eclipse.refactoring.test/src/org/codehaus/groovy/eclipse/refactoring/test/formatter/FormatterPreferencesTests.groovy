@@ -24,47 +24,28 @@ import org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences
 import org.codehaus.groovy.eclipse.refactoring.formatter.IFormatterPreferences
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.junit.After
-import org.junit.AfterClass
 import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestName
 
 /**
  * Tests if the FormatterPreferences are taken from the right preference stores.
  */
-final class FormatterPreferencesTests {
-
-    @BeforeClass
-    static void setUpClass() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static void tearDownClass() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
+final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
 
     private GroovyCompilationUnit gunit
 
     @Before
     void setUp() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-
-        gunit = EclipseTestSetup.addGroovySource('class Test { }', 'Test', 'nice.pkg')
+        gunit = addGroovySource('class Test { }', 'Test', 'nice.pkg')
     }
 
     @After
@@ -79,7 +60,6 @@ final class FormatterPreferencesTests {
         }
         new FormatterPreferenceInitializer().initializeDefaultPreferences()
         JavaCore.setOptions(JavaCore.getDefaultOptions());
-        EclipseTestSetup.removeSources()
     }
 
     /**
@@ -114,7 +94,7 @@ final class FormatterPreferencesTests {
      */
     @Test
     void testTabRelatedPrefs() {
-        IPreferenceStore projectPrefs = new ScopedPreferenceStore(new ProjectScope(gunit.getJavaProject().getProject()), JavaCore.PLUGIN_ID)
+        IPreferenceStore projectPrefs = new ScopedPreferenceStore(new ProjectScope(gunit.javaProject.project), JavaCore.PLUGIN_ID)
         assert projectPrefs.contains(FORMATTER_TAB_CHAR) : 'Using the wrong preferences store?'
         assert projectPrefs.contains(FORMATTER_TAB_SIZE) : 'Using the wrong preferences store?'
 
@@ -150,7 +130,7 @@ final class FormatterPreferencesTests {
      */
     @Test
     void testIndentEmptyLinesPrefs() {
-        IPreferenceStore projectPrefs = new ScopedPreferenceStore(new ProjectScope(gunit.getJavaProject().getProject()), JavaCore.PLUGIN_ID)
+        IPreferenceStore projectPrefs = new ScopedPreferenceStore(new ProjectScope(gunit.javaProject.project), JavaCore.PLUGIN_ID)
         assert projectPrefs.contains(FORMATTER_INDENT_EMPTY_LINES) : 'Using the wrong preferences store?'
 
         projectPrefs.setValue(FORMATTER_INDENT_EMPTY_LINES, TRUE)
@@ -168,7 +148,7 @@ final class FormatterPreferencesTests {
      */
     @Test
     void testIndentEmptyLinesFromCore() {
-        EclipseTestSetup.setJavaPreference(FORMATTER_INDENT_EMPTY_LINES, TRUE)
+        setJavaPreference(FORMATTER_INDENT_EMPTY_LINES, TRUE)
         IFormatterPreferences formatPrefs = new FormatterPreferences(gunit)
         assert formatPrefs.isIndentEmptyLines()
     }
@@ -179,7 +159,7 @@ final class FormatterPreferencesTests {
      */
     @Test
     void testTabRelatedPrefsFromCore() {
-        EclipseTestSetup.setJavaPreference(FORMATTER_TAB_SIZE, 13.toString())
+        setJavaPreference(FORMATTER_TAB_SIZE, 13.toString())
         IFormatterPreferences formatPrefs = new FormatterPreferences(gunit)
         assert formatPrefs.getTabSize() == 13
     }
@@ -191,11 +171,11 @@ final class FormatterPreferencesTests {
      */
     @Test
     void testRefreshPrefsFromCore() {
-        EclipseTestSetup.setJavaPreference(FORMATTER_TAB_SIZE, 13.toString())
+        setJavaPreference(FORMATTER_TAB_SIZE, 13.toString())
         FormatterPreferences formatPrefs = new FormatterPreferences(gunit)
         assert formatPrefs.getTabSize() == 13
 
-        EclipseTestSetup.setJavaPreference(FORMATTER_TAB_SIZE, 7.toString())
+        setJavaPreference(FORMATTER_TAB_SIZE, 7.toString())
         formatPrefs = new FormatterPreferences(gunit)
         assert formatPrefs.getTabSize() == 7
     }

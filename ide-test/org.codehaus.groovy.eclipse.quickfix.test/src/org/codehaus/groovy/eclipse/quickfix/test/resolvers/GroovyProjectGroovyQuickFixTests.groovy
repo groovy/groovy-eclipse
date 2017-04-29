@@ -25,7 +25,6 @@ import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsRes
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.ICompilationUnit
@@ -326,7 +325,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     void testAddGroovyRuntime() {
         GroovyRuntime.removeGroovyClasspathContainer(topLevelUnit.getJavaProject())
         def testProject = topLevelUnit.getJavaProject().getProject()
-        EclipseTestSetup.buildProject()
+        buildProject()
 
         IMarker[] markers = testProject.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
         Assume.assumeTrue(/*'Should have found problems in this project',*/ markers != null && markers.length > 0)
@@ -336,7 +335,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         assert resolvers.get(0) instanceof AddGroovyRuntimeResolver : 'Wrong type of resolver'
 
         resolvers.get(0).getQuickFixProposals().get(0).apply(null)
-        EclipseTestSetup.buildProject()
+        buildProject()
 
         markers = testProject.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
         assert !markers : 'Should not have found problems in this project'

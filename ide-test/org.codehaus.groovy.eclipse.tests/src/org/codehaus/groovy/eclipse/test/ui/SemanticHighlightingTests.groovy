@@ -22,49 +22,22 @@ import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
-import org.junit.After
-import org.junit.AfterClass
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Ignore
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestName
 
-final class SemanticHighlightingTests {
-
-    @BeforeClass
-    static final void setUpClass() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownClass() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
+final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-
         GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true)
 
-        EclipseTestSetup.addJavaSource(
-            'public @Deprecated class Java {\n  @Deprecated public static final String CONST = "";\n}', 'Java', 'other')
-    }
-
-    @After
-    void tearDown() {
-        EclipseTestSetup.removeSources()
+        addJavaSource('public @Deprecated class Java {\n  @Deprecated public static final String CONST = "";\n}', 'Java', 'other')
     }
 
     @Test
@@ -263,7 +236,7 @@ final class SemanticHighlightingTests {
 
     @Test
     void testMethodsAsProperties2() {
-        EclipseTestSetup.addGroovySource '''\
+        addGroovySource '''\
             class Foo {
               private static final String value = ''
               static String getValue() {
@@ -280,7 +253,7 @@ final class SemanticHighlightingTests {
 
     @Test
     void testMethodsAsProperties3() {
-        EclipseTestSetup.addGroovySource '''\
+        addGroovySource '''\
             interface Bar { def getOne() }
             interface Baz extends Bar { def getTwo() }
             '''.stripIndent()
@@ -803,7 +776,7 @@ final class SemanticHighlightingTests {
 
     @Test
     void testEnumAnno() {
-        EclipseTestSetup.addGroovySource '''\
+        addGroovySource '''\
             import java.lang.annotation.*
             @Target(ElementType.FIELD)
             @Retention(RetentionPolicy.RUNTIME)
@@ -1191,7 +1164,7 @@ final class SemanticHighlightingTests {
 
     @Test
     void testWithBlock() {
-        EclipseTestSetup.addGroovySource '''\
+        addGroovySource '''\
             class Foo {
               String val
             }
@@ -1599,7 +1572,7 @@ final class SemanticHighlightingTests {
     private int counter
 
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
-        def references = new GatherSemanticReferences(EclipseTestSetup.addGroovySource(contents, "Highlighting${++counter}"))
+        def references = new GatherSemanticReferences(addGroovySource(contents, "Highlighting${++counter}"))
         references.factory = new TypeInferencingVisitorFactory() {
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)

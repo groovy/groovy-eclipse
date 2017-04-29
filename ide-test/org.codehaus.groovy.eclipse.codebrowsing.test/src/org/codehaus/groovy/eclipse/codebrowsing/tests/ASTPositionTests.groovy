@@ -28,7 +28,7 @@ import org.eclipse.jdt.groovy.core.util.JavaConstants
 import org.junit.Before
 import org.junit.Test
 
-final class ASTPositionTests extends BrowsingTestCase {
+final class ASTPositionTests extends BrowsingTestSuite {
 
     private WorkingCopyOwner workingCopyOwner
     private IProblemRequestor problemRequestor

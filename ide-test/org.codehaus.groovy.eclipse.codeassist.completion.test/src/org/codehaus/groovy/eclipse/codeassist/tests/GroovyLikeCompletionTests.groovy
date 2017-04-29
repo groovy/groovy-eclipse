@@ -29,7 +29,7 @@ import org.junit.Test
 /**
  * Tests that completion proposals are sufficiently groovy-like in their output.
  */
-final class GroovyLikeCompletionTests extends CompletionTestCase {
+final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     private static final String SCRIPTCONTENTS =
         "any\n" +

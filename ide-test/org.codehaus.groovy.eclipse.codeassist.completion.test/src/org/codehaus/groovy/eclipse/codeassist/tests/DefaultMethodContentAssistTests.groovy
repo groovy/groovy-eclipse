@@ -21,7 +21,7 @@ import org.junit.Test
 /**
  * Tests that default methods are properly handled in content assist.
  */
-final class DefaultMethodContentAssistTests extends CompletionTestCase {
+final class DefaultMethodContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testDefaultMethods1() {

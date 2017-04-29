@@ -15,12 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.test.debug
 
-import junit.framework.AssertionFailedError
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.TestProject
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.ILaunch
@@ -32,9 +33,8 @@ import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.IPackageFragment
-import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaApplicationLaunchShortcut
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
@@ -42,7 +42,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-final class GroovyLauncherShortcutTests extends EclipseTestCase {
+final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
 
     private static class MockGroovyScriptLaunchShortcut extends GroovyScriptLaunchShortcut {
         @Override
@@ -77,76 +77,70 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
 
     @Test // single script
     void testScriptLaunch1() {
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print \'test me\'')
+        ICompilationUnit unit = addGroovySource('print \'test me\'', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script references other script
     void testScriptLaunch2() {
-        ICompilationUnit unit1 = createGroovyCompilationUnit('Other.groovy', 'class Other{ def foo() { return \"hi!\" } }')
-        testProject.waitForIndexer()
-        IType otherType = unit1.getType('Other')
-        Assert.assertTrue(otherType.exists())
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print new Other().foo()')
+        addGroovySource('class Other{ def foo() { return \"hi!\" } }', 'Other')
+
+        ICompilationUnit unit = addGroovySource('print new Other().foo()', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script references java
     void testScriptLaunch3() {
-        createJavaCompilationUnit('Other.java', 'class Other{ String foo() { return \"hi!\"; } }')
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print new Other().foo()')
+        addJavaSource('class Other{ String foo() { return \"hi!\"; } }', 'Other')
+
+        ICompilationUnit unit = addGroovySource('print new Other().foo()', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script references script in other source folder
     void testScriptLaunch4() {
-        IPackageFragmentRoot newRoot = createSourceFolder()
-        IPackageFragment newFrag = createFragment(newRoot)
-        createGroovyCompilationUnit(newFrag, 'Other.groovy', 'class Other{ def foo() { return \"hi!\" } }')
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print new other.Other().foo()')
+        addGroovySource('class Other{ def foo() { return \"hi!\" } }', 'Other', 'other', addSourceFolder('src2'))
+
+        ICompilationUnit unit = addGroovySource('print new other.Other().foo()', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script references java in other source folder
     void testScriptLaunch5() {
-        IPackageFragmentRoot newRoot = createSourceFolder()
-        IPackageFragment newFrag = createFragment(newRoot)
-        createJavaCompilationUnit(newFrag, 'Other.java', 'class Other{ String foo() { return \"hi!\"; } }')
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print new other.Other().foo()')
+        addGroovySource('class Other{ String foo() { return \"hi!\"; } }', 'Other', 'other', addSourceFolder('src2'))
+
+        ICompilationUnit unit = addGroovySource('print new other.Other().foo()', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script in non-default source folder
     void testScriptLaunch6() {
-        IPackageFragmentRoot newRoot = createSourceFolder()
-        IPackageFragment newFrag = createFragment(newRoot)
-        createGroovyCompilationUnit('otherOther', 'Other.groovy', 'class Other{ def foo() { return \"hi!\" } }')
-        ICompilationUnit unit = createGroovyCompilationUnit(newFrag, 'Launch.groovy', 'print new otherOther.Other().foo()')
+        addGroovySource('class Other{ def foo() { return \"hi!\" } }', 'Other', 'otherOther')
+
+        ICompilationUnit unit = addGroovySource('print new otherOther.Other().foo()', 'Launch', 'other', addSourceFolder('src2'))
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script references script with non-default output folder
     void testScriptLaunch7() {
-        IPackageFragmentRoot newRoot = createSourceFolder('otherOut')
-        IPackageFragment newFrag = createFragment(newRoot)
-        createGroovyCompilationUnit(newFrag, 'Other.groovy', 'class Other{ def foo() { return \"hi!\" } }')
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print new other.Other().foo()')
+        addGroovySource('class Other{ def foo() { return \"hi!\" } }', 'Other', 'other', addSourceFolder('src2'))
+
+        ICompilationUnit unit = addGroovySource('print new other.Other().foo()', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
 
     @Test // script references java with non-default output folder
     void testScriptLaunch8() {
-        IPackageFragmentRoot newRoot = createSourceFolder('otherOut')
-        IPackageFragment newFrag = createFragment(newRoot)
-        createJavaCompilationUnit(newFrag, 'Other.java', 'class Other{ String foo() { return \"hi!\"; } }')
-        ICompilationUnit unit = createGroovyCompilationUnit('Launch.groovy', 'print new other.Other().foo()')
+        addGroovySource('class Other{ String foo() { return \"hi!\"; } }', 'Other', 'other', addSourceFolder('src2'))
+
+        ICompilationUnit unit = addGroovySource('print new other.Other().foo()', 'Launch')
         IType launchType = unit.getType('Launch')
         launchScriptAndAssertExitValue(launchType)
     }
@@ -155,11 +149,10 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
     void testScriptLaunch9() {
         TestProject otherProject = new TestProject('OtherProject')
         try {
-            testProject.addProjectReference(otherProject.getJavaProject())
-            otherProject.createGroovyTypeAndPackage('pack', 'Other.groovy', 'class Other { String foo() { return \"hi!\"; } }')
-            otherProject.fullBuild()
-            ICompilationUnit unit = createGroovyCompilationUnit('thisPack', 'Launch.groovy', 'print new pack.Other().foo()')
-            testProject.fullBuild()
+            otherProject.createGroovyTypeAndPackage('pack', 'Other.groovy', 'class Other { String foo() { return "hi!" } }')
+            addProjectReference(otherProject.javaProject)
+
+            ICompilationUnit unit = addGroovySource('print new pack.Other().foo()', 'Launch')
             IType launchType = unit.getType('Launch')
             launchScriptAndAssertExitValue(launchType)
         } finally {
@@ -171,11 +164,10 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
     void testScriptLaunch10() {
         TestProject otherProject = new TestProject('OtherProject')
         try {
-            testProject.addProjectReference(otherProject.getJavaProject())
-            otherProject.createJavaTypeAndPackage('pack', 'Other.java', 'public class Other { public String foo() { return \"hi!\"; } }')
-            otherProject.fullBuild()
-            ICompilationUnit unit = createGroovyCompilationUnit('thisPack', 'Launch.groovy', 'print new pack.Other().foo()')
-            testProject.fullBuild()
+            otherProject.createJavaTypeAndPackage('pack', 'Other.java', 'public class Other { public String foo() { return "hi!"; } }')
+            addProjectReference(otherProject.javaProject)
+
+            ICompilationUnit unit = addGroovySource('print new pack.Other().foo()', 'Launch')
             IType launchType = unit.getType('Launch')
             launchScriptAndAssertExitValue(launchType)
         } finally {
@@ -220,11 +212,11 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
             IPath runtimeJarPath = CompilerUtils.getExportedGroovyAllJar()
             p1.addJarFileToClasspath(runtimeJarPath)
 
-            IFile f1 = p1.getProject().getFile('empty.jar')
+            IFile f1 = p1.project.getFile('empty.jar')
             f1.create(new ByteArrayInputStream(new byte[0]), false, null)
             p1.addJarFileToClasspath(f1.getFullPath())
 
-            IFile f2 = p2.getProject().getFile('empty2.jar')
+            IFile f2 = p2.project.getFile('empty2.jar')
             f2.create(new ByteArrayInputStream(new byte[0]), false, null)
             p1.addJarFileToClasspath(f2.getFullPath())
 
@@ -268,50 +260,17 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
         return classpath
     }
 
-    private IPackageFragment createFragment(IPackageFragmentRoot newRoot) {
-        return newRoot.createPackageFragment('other', true, null)
-    }
+    private void launchScriptAndAssertExitValue(IType launchType, int timeoutSeconds = 20) {
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("Launcher test workspace build")
+        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, spm)
+        spm.waitForCompletion()
 
-    private IPackageFragmentRoot createSourceFolder() {
-        return testProject.createOtherSourceFolder()
-    }
-
-    private IPackageFragmentRoot createSourceFolder(String outFolder) {
-        return testProject.createOtherSourceFolder(outFolder)
-    }
-
-    private ICompilationUnit createGroovyCompilationUnit(IPackageFragment frag, String unitName, String contents) {
-        return testProject.createGroovyType(frag, unitName, contents)
-    }
-
-    private ICompilationUnit createGroovyCompilationUnit(String unitName, String contents) {
-        return createGroovyCompilationUnit('', unitName, contents)
-    }
-
-    private ICompilationUnit createGroovyCompilationUnit(String packageName, String unitName, String contents) {
-        ICompilationUnit unit = testProject.createGroovyTypeAndPackage(packageName, unitName, contents)
-        testProject.fullBuild()
-        return unit
-    }
-
-    private ICompilationUnit createJavaCompilationUnit(String unitName, String contents) {
-        return testProject.createJavaTypeAndPackage('', unitName, contents)
-    }
-
-    private ICompilationUnit createJavaCompilationUnit(IPackageFragment frag, String unitName, String contents) {
-        return testProject.createJavaType(frag, unitName, contents)
-    }
-
-    private void launchScriptAndAssertExitValue(IType launchType) {
-        launchScriptAndAssertExitValue(launchType, 20)
-    }
-
-    private void launchScriptAndAssertExitValue(final IType launchType, final int timeoutSeconds) {
-        String problems = testProject.getProblems()
+        /*String problems = testProject.getProblems()
         if (problems != null) {
             Assert.fail('Compile problems:\n' + problems)
-        }
-        Runnable runner = new Runnable() {
+        }*/
+
+        def runner = new Runnable() {
             void run() {
                 MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut()
                 ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(
@@ -320,12 +279,12 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
                 ILaunch launch = config.launch('run', new NullProgressMonitor())
                 final StringBuilder stdout = new StringBuilder()
                 final StringBuilder stderr = new StringBuilder()
-                launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().addListener(new IStreamListener() {
+                launch.processes[0].streamsProxy.outputStreamMonitor.addListener(new IStreamListener() {
                     void streamAppended(String text, IStreamMonitor monitor) {
                         stdout.append(text)
                     }
                 })
-                launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().addListener(new IStreamListener() {
+                launch.processes[0].streamsProxy.errorStreamMonitor.addListener(new IStreamListener() {
                     void streamAppended(String text, IStreamMonitor monitor) {
                         stderr.append(text)
                     }
@@ -355,13 +314,13 @@ final class GroovyLauncherShortcutTests extends EclipseTestCase {
             }
         }
 
-        AssertionFailedError currentException = null
+        def currentException = null
         for (attempt in 1..4) {
             try {
                 runner.run()
                 // success
                 return
-            } catch (AssertionFailedError e) {
+            } catch (AssertionError e) {
                 currentException = e
                 println('Launch failed on attempt ' + attempt + ' retrying.')
             }

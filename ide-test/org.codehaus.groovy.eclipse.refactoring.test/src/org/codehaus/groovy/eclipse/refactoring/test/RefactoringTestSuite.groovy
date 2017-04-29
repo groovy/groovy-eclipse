@@ -60,7 +60,7 @@ import org.junit.Rule
 import org.junit.rules.TestName
 import org.osgi.framework.FrameworkUtil
 
-abstract class RefactoringTestCase {
+abstract class RefactoringTestSuite {
 
     private static boolean fWasAutobuild
     private static Hashtable<String, String> fWasOptions
@@ -113,8 +113,8 @@ abstract class RefactoringTestCase {
 
     @Before
     final void setUpTestCase() {
-        System.out.println('----------------------------------------')
-        System.out.println('Starting: ' + test.getMethodName())
+        println '----------------------------------------'
+        println 'Starting: ' + test.getMethodName()
 
         RefactoringCore.getUndoManager().flush()
         ForcePreviewParticipant.mute()
@@ -416,7 +416,7 @@ abstract class RefactoringTestCase {
     }
 
     protected static String getFileContents(String fileName) {
-        return FrameworkUtil.getBundle(RefactoringTestCase).getEntry('/resources/' + fileName).openStream().text
+        return FrameworkUtil.getBundle(RefactoringTestSuite).getEntry('/resources/' + fileName).openStream().text
     }
 
     /*protected static IField[] getFields(IType type, String[] names) {

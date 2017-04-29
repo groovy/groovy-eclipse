@@ -24,7 +24,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-final class GroovyAutoIndenterTests extends GroovyEditorTestCase {
+final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
 
     @Before
     void setUp() {

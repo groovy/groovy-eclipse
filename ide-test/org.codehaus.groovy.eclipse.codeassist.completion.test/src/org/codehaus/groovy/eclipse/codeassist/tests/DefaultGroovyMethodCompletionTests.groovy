@@ -24,7 +24,7 @@ import org.junit.Test
 /**
  * Tests DefaultGroovyMethods that they appear when and where expected.
  */
-final class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
+final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     private static final String CONTENTS = "class Class { public Class() {\n }\n void doNothing(int x) { this.toString(); new Object().toString(); } }"
     private static final String SCRIPTCONTENTS = "def x = 9\nx++\nnew Object().toString()\nnew Thread().startD"

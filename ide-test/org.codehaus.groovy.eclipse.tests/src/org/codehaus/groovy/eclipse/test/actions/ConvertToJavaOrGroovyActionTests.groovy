@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.test.actions
 import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction
 import org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyOrJavaAction
 import org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.jobs.Job
@@ -31,12 +31,11 @@ import org.junit.Test
 /**
  * Tests the commands RenameToGroovy and RenameToJava.
  */
-final class ConvertToJavaOrGroovyActionTests extends EclipseTestCase {
+final class ConvertToJavaOrGroovyActionTests extends GroovyEclipseTestSuite {
 
     @Test
     void testRenameToGroovy() {
-        ICompilationUnit unit = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }")
-        IResource file = unit.getResource()
+        IResource file = addJavaSource("class Bar { }", "Bar", "foo").getResource()
         Assert.assertTrue(file.getName() + " should exist", file.exists())
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToGroovyAction()
@@ -51,7 +50,7 @@ final class ConvertToJavaOrGroovyActionTests extends EclipseTestCase {
 
     @Test
     void testRenameToJava() {
-        IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }").getResource()
+        IResource file = addGroovySource("class Bar { }", "Bar", "foo").getResource()
         Assert.assertTrue(file.getName() + " should exist", file.exists())
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToJavaAction()
@@ -66,8 +65,7 @@ final class ConvertToJavaOrGroovyActionTests extends EclipseTestCase {
 
     @Test
     void testRenameToGroovyAndBack() {
-        ICompilationUnit unit = testProject.createJavaTypeAndPackage("foo", "Bar.java", "class Bar { }")
-        IResource file = unit.getResource()
+        IResource file = addJavaSource("class Bar { }", "Bar", "foo").getResource()
         Assert.assertTrue(file.getName() + " should exist", file.exists())
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToGroovyAction()
@@ -93,7 +91,7 @@ final class ConvertToJavaOrGroovyActionTests extends EclipseTestCase {
 
     @Test
     void testRenameToJavaAndBack() {
-        IResource file = testProject.createGroovyTypeAndPackage("foo", "Bar.groovy", "class Bar { }").getResource()
+        IResource file = addGroovySource("class Bar { }", "Bar", "foo").getResource()
         Assert.assertTrue(file.getName() + " should exist", file.exists())
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToJavaAction()

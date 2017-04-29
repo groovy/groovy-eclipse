@@ -15,27 +15,26 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase
+import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.core.resources.IProject
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
 
-final class DSLNamedArgContentAssistTests extends CompletionTestCase {
+final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        EclipseTestSetup.withProject { IProject project ->
+        addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
+        withProject { IProject project ->
             GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true)
           //GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project)
         }
     }
 
     private void createDSL(String contents) {
-        EclipseTestSetup.addPlainText(contents, 'MyDsld.dsld')
+        addPlainText(contents, 'MyDsld.dsld')
     }
 
     //

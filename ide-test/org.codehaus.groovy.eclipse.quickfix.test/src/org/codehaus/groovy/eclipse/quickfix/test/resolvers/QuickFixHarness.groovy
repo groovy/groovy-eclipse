@@ -27,8 +27,7 @@ import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType
 import org.codehaus.groovy.eclipse.quickfix.proposals.QuickFixProblemContext
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver.AddMissingImportProposal
-import org.codehaus.groovy.eclipse.quickfix.test.QuickFixTestCase
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.quickfix.test.QuickFixTestSuite
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.ICompilationUnit
@@ -40,7 +39,7 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 /**
  * Harness class containing helper methods for Groovy Quick Fix testing.
  */
-abstract class QuickFixHarness extends QuickFixTestCase {
+abstract class QuickFixHarness extends QuickFixTestSuite {
 
     /**
      * Tests the selection of a type to import with only one proposal.
@@ -308,8 +307,8 @@ abstract class QuickFixHarness extends QuickFixTestCase {
     }
 
     protected IMarker[] getCompilationUnitJDTFailureMarkers(ICompilationUnit unit) throws Exception {
-        EclipseTestSetup.buildProject()
-        EclipseTestSetup.waitForIndex()
-        return unit.getResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
+        buildProject()
+        waitForIndex()
+        return unit.resource.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
     }
 }

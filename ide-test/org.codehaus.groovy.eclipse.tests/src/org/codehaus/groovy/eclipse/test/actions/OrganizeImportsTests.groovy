@@ -18,14 +18,13 @@ package org.codehaus.groovy.eclipse.test.actions
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.junit.Ignore
 import org.junit.Test
 
 /**
  * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}.
  */
-final class OrganizeImportsTests extends OrganizeImportsTestCase {
+final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testAddImport1() {
@@ -509,7 +508,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestCase {
 
     @Test
     void testRetainImport10() {
-        EclipseTestSetup.addJavaSource('interface I { static String NLS = "nls"; }', 'I', 'p')
+        addJavaSource('interface I { static String NLS = "nls"; }', 'I', 'p')
 
         String contents = '''\
             import static p.I.NLS

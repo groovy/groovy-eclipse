@@ -23,7 +23,7 @@ import org.junit.Test
 /**
  * Tests that Completions show static import proposals.
  */
-final class StaticImportsCompletionTests extends CompletionTestCase {
+final class StaticImportsCompletionTests extends CompletionTestSuite {
 
     @Test
     void testStaticImportField() {

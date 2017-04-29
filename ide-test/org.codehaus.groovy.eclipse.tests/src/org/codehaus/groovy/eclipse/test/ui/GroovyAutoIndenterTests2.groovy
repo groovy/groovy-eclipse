@@ -23,7 +23,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.junit.Before
 import org.junit.Test
 
-final class GroovyAutoIndenterTests2 extends GroovyEditorTestCase {
+final class GroovyAutoIndenterTests2 extends GroovyEditorTestSuite {
 
     @Before
     void setUp() {

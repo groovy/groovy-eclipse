@@ -142,15 +142,19 @@ public class TestProject {
         sourceFolder.getPackageFragment(name).delete(true, null);
     }
 
+    private void appendPackage(StringBuilder b, IPackageFragment p, CharSequence source) {
+        if (!p.isDefaultPackage() && (source.length() < 8 || !source.subSequence(0, 7).toString().equals("package"))) {
+            b.append("package ");
+            b.append(p.getElementName());
+            b.append(";");
+            b.append(System.getProperty("line.separator"));
+            b.append(System.getProperty("line.separator"));
+        }
+    }
+
     public ICompilationUnit createJavaType(IPackageFragment packageFrag, String fileName, CharSequence source) throws Exception {
         StringBuilder buf = new StringBuilder();
-        if (!packageFrag.isDefaultPackage()) {
-            buf.append("package ");
-            buf.append(packageFrag.getElementName());
-            buf.append(";");
-            buf.append(System.getProperty("line.separator"));
-            buf.append(System.getProperty("line.separator"));
-        }
+        appendPackage(buf, packageFrag, source);
         buf.append(source);
 
         ICompilationUnit unit = packageFrag.createCompilationUnit(fileName, buf.toString(), false, null);
@@ -173,13 +177,7 @@ public class TestProject {
 
     public ICompilationUnit createGroovyType(IPackageFragment packageFrag, String fileName, CharSequence source) throws Exception {
         StringBuilder buf = new StringBuilder();
-        if (!packageFrag.isDefaultPackage()) {
-            buf.append("package ");
-            buf.append(packageFrag.getElementName());
-            buf.append(";");
-            buf.append(System.getProperty("line.separator"));
-            buf.append(System.getProperty("line.separator"));
-        }
+        appendPackage(buf, packageFrag, source);
         buf.append(source);
 
         ICompilationUnit unit = packageFrag.createCompilationUnit(fileName, buf.toString(), false, null);

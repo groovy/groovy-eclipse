@@ -18,50 +18,20 @@ package org.codehaus.groovy.eclipse.test.search
 import java.lang.reflect.Array
 
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils
-import org.junit.After
-import org.junit.AfterClass
 import org.junit.Assert
-import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Ignore
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestName
 
 /**
  * Tests for {@link GroovyOccurrencesFinder}.
  */
-public final class FindOccurrencesTests {
-
-    @BeforeClass
-    static final void setUpClass() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownClass() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    void setUp() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-    }
-
-    @After
-    void tearDown() {
-        EclipseTestSetup.removeSources()
-    }
+public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     private void doTest(String contents, int start, int length, int... expected) {
-        GroovyCompilationUnit unit = EclipseTestSetup.addGroovySource(contents, 'Occurrences')
+        GroovyCompilationUnit unit = addGroovySource(contents, 'Occurrences')
         unit.becomeWorkingCopy(null)
         try {
             GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder()
@@ -314,7 +284,7 @@ public final class FindOccurrencesTests {
 
     @Test // GRECLIPSE-1023; inner class in other file
     void testInnerClass4() {
-        EclipseTestSetup.addGroovySource(
+        addGroovySource(
                 'class Other {\n' +
                 '  class Inner { }\n' +
                 '}', 'Other')
@@ -587,7 +557,7 @@ public final class FindOccurrencesTests {
 
     @Test
     void testStaticImports1() {
-        EclipseTestSetup.addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
         String contents =
                 'import static p.Other.FOO\n' +
                 'FOO\n' +
@@ -602,7 +572,7 @@ public final class FindOccurrencesTests {
 
     @Test
     void testStaticImports2() {
-        EclipseTestSetup.addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
         String contents =
                 'import static p.Other.BAR\n' +
                 'BAR\n' +
@@ -617,7 +587,7 @@ public final class FindOccurrencesTests {
 
     @Test
     void testStaticImports3() {
-        EclipseTestSetup.addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
         String contents =
                 'import static p.Other.BAR\n' +
                 'import p.Other\n' +

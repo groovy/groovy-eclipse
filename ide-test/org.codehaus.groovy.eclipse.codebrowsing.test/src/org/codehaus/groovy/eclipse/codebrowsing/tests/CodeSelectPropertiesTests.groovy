@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.junit.Test
 
-final class CodeSelectPropertiesTests extends BrowsingTestCase {
+final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
     @Test
     void testGettersAndField1() {

@@ -17,49 +17,49 @@ package org.codehaus.groovy.eclipse.test.ui
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.eclipse.jface.text.rules.IRule
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.junit.Before
 import org.junit.Test
 
-final class HighlightingExtenderTests extends EclipseTestCase {
+final class HighlightingExtenderTests extends GroovyEclipseTestSuite {
 
     private final HighlightingExtenderRegistry registry = GroovyPlugin.default.textTools.highlightingExtenderRegistry
 
     @Before
     void setUp() {
         registry.initialize()
+        addNature(Extender1.NATURE1, Extender2.NATURE2)
     }
 
     @Test
     void testHighlightingExtender1() {
-        testProject.addNature(Extender1.NATURE1)
-        testProject.addNature(Extender2.NATURE2)
-        List<IRule> extraRules = registry.getAdditionalRulesForProject(testProject.getProject())
-        assert extraRules.get(0) == Extender2.RULE
+        withProject {
+            def extraRules = registry.getAdditionalRulesForProject(it)
+            assert extraRules[0] == Extender2.RULE
+        }
     }
 
     @Test
     void testHighlightingExtender2() {
-        testProject.addNature(Extender1.NATURE1)
-        testProject.addNature(Extender2.NATURE2)
-        List<String> extraKeywords = registry.getExtraGJDKKeywordsForProject(testProject.getProject())
-        assert extraKeywords.get(0) == Extender1.GJDK_KEYWORD
+        withProject {
+            def extraKeywords = registry.getExtraGJDKKeywordsForProject(it)
+            assert extraKeywords[0] == Extender1.GJDK_KEYWORD
+        }
     }
 
     @Test
     void testHighlightingExtender3() {
-        testProject.addNature(Extender1.NATURE1)
-        testProject.addNature(Extender2.NATURE2)
-        List<String> extraKeywords = registry.getExtraGroovyKeywordsForProject(testProject.getProject())
-        assert extraKeywords.get(0) == Extender1.GROOVY_KEYWORD
+        withProject {
+            def extraKeywords = registry.getExtraGroovyKeywordsForProject(it)
+            assert extraKeywords[0] == Extender1.GROOVY_KEYWORD
+        }
     }
 
     @Test
     void testHighlightingExtender4() {
-        testProject.addNature(Extender1.NATURE1)
-        testProject.addNature(Extender2.NATURE2)
-        List<IRule> extraInitialRules = registry.getInitialAdditionalRulesForProject(testProject.getProject())
-        assert extraInitialRules.get(0) == Extender2.INITIAL_RULE
+        withProject {
+            def extraInitialRules = registry.getInitialAdditionalRulesForProject(it)
+            assert extraInitialRules[0] == Extender2.INITIAL_RULE
+        }
     }
 }

@@ -16,14 +16,14 @@
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ConvertGroovyLocalToFieldRefactoring
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
-final class ConvertLocalToFieldTests extends RefactoringTestCase {
+final class ConvertLocalToFieldTests extends RefactoringTestSuite {
 
     @Override
     protected String getRefactoringPath() {

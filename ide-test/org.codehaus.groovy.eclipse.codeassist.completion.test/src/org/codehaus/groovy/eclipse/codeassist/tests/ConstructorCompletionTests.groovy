@@ -28,7 +28,7 @@ import org.junit.Test
  * Tests that constructor completions are working properly.  Ensures that the
  * resulting document has the correct text in it.
  */
-final class ConstructorCompletionTests extends CompletionTestCase {
+final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {

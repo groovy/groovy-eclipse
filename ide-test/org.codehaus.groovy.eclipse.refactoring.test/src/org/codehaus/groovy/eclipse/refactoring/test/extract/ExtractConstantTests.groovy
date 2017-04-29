@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.refactoring.test.extract
 import static org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTestsData.*
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyConstantRefactoring
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.corext.util.JdtFlags
@@ -26,7 +26,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
-final class ExtractConstantTests extends RefactoringTestCase {
+final class ExtractConstantTests extends RefactoringTestSuite {
 
     private static final String FOO_BAR = 'Foo + Bar'
     private static final String FOO_BAR_FRAX = 'Foo+Bar+A.frax()'

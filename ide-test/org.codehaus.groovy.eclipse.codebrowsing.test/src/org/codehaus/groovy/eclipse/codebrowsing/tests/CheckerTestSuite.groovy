@@ -23,34 +23,22 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
-import org.codehaus.groovy.eclipse.test.TestProject
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
-import org.junit.rules.TestName
 
-abstract class CheckerTestCase {
+abstract class CheckerTestSuite extends GroovyEclipseTestSuite {
 
-    private TestProject testProject
     private GroovySnippetCompiler compiler
 
-    @Rule
-    public TestName test = new TestName()
-
     @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-
-        testProject = new TestProject()
-        TestProject.setAutoBuilding(false)
-        compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade())
+    final void setUpCheckerTestCase() {
+        compiler = getGroovySnippetCompiler()
     }
 
     @After
-    final void tearDownTestCase() {
+    final void tearDownCheckerTestCase() {
         compiler.cleanup()
-        testProject.dispose()
     }
 
     protected ModuleNode createModuleFromText(String text) {

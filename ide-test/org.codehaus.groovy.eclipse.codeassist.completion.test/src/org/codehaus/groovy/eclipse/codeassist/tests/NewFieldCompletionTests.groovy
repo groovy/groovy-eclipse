@@ -23,7 +23,7 @@ import org.junit.Test
 /**
  * Tests that new fields are created properly.
  */
-final class NewFieldCompletionTests extends CompletionTestCase {
+final class NewFieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testNewFieldSimple() {

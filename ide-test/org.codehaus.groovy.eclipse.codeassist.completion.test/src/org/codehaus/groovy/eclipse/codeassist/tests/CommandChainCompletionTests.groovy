@@ -23,7 +23,7 @@ import org.junit.Test
 /**
  * Tests for command chain style method invocation.
  */
-final class CommandChainCompletionTests extends CompletionTestCase {
+final class CommandChainCompletionTests extends CompletionTestSuite {
 
     private static final String INITIAL_CONTENTS =
             "class Inner {\n" +

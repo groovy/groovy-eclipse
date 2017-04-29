@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.junit.Test
 
-final class GuessingCompletionTests extends CompletionTestCase {
+final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Test
     void testParamGuessing1() throws Exception {

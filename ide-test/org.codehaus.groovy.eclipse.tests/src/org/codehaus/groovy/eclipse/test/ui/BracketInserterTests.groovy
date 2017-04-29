@@ -16,62 +16,32 @@
 package org.codehaus.groovy.eclipse.test.ui
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.widgets.Event
-import org.junit.After
-import org.junit.AfterClass
 import org.junit.Assert
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestName
 
 /**
  * Tests {@link GroovyEditor.BracketInserter}.
  */
-final class BracketInserterTests {
-
-    @BeforeClass
-    static final void setUpClass() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownClass() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    void setUp() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-    }
-
-    @After
-    void tearDown() {
-        EclipseTestSetup.removeSources()
-    }
+final class BracketInserterTests extends GroovyEclipseTestSuite {
 
     private void assertClosing(String initialDoc, String expectedDoc, String inserted, int location) {
         // add extra spaces since the String rule fails for end of file
         initialDoc += '\n'
         expectedDoc += '\n'
 
-        ICompilationUnit unit = EclipseTestSetup.addGroovySource(initialDoc, 'BracketTesting', '')
-        GroovyEditor editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit)
+        def unit = addGroovySource(initialDoc, 'BracketTesting', '')
+        GroovyEditor editor = (GroovyEditor) openInEditor(unit)
 
-        Event e = new Event()
         assert inserted.length() == 1
-        e.character = inserted as char
-        e.doit = true
-        e.widget = editor.getViewer().getTextWidget()
-
+        Event e = new Event(
+            widget: editor.viewer.textWidget,
+            character: inserted as char,
+            doit: true
+        )
         VerifyEvent ve = new VerifyEvent(e)
         editor.getViewer().setSelectedRange(location, 0)
         editor.getGroovyBracketInserter().verifyKey(ve)

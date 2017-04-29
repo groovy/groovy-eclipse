@@ -15,56 +15,49 @@
  */
 package org.codehaus.groovy.eclipse.test.wizards
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
+import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
+
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.wizards.NewGroovyTestTypeWizardPage
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.IPackageFragment
-import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo
 import org.junit.Before
 import org.junit.Test
 
-final class NewGroovyTestCaseWizardTests extends NewGroovyWizardTestCase {
-
-    private IPackageFragment frag
+final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
-        frag = testProject.getSourceFolder().getPackageFragment('testPackage')
-        if (frag == null) {
-            frag = testProject.getSourceFolder().createPackageFragment('testPackage', false, null)
-        }
     }
 
-    private NewGroovyTestTypeWizardPage createdGroovyTestTypeWizardPage() {
-        NewTestCaseWizardPageTwo pageTwo = new NewTestCaseWizardPageTwo()
-        NewGroovyTestTypeWizardPage wizardPage = new NewGroovyTestTypeWizardPage(pageTwo)
-        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true)
-        wizardPage.setPackageFragment(frag, true)
+    private NewGroovyTestTypeWizardPage createGroovyTestTypeWizardPage() {
+        NewGroovyTestTypeWizardPage wizardPage = new NewGroovyTestTypeWizardPage(new NewTestCaseWizardPageTwo())
+            wizardPage.setPackageFragment(getPackageFragment('testPackage'), true)
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
         return wizardPage
     }
 
     @Test
     void testAddGroovyTestCaseNonGroovyProject() {
-        GroovyRuntime.removeGroovyNature(testProject.getProject())
-        NewGroovyTestTypeWizardPage page = createdGroovyTestTypeWizardPage()
+        removeNature(GROOVY_NATURE)
+        NewGroovyTestTypeWizardPage page = createGroovyTestTypeWizardPage()
         String testCaseName = 'NonGroovyProjectTestCase'
         page.setEnclosingTypeSelection(false, true)
         page.setTypeName(testCaseName, true)
         page.createType(new NullProgressMonitor())
-        IType type = page.getCreatedType()
+        def type = page.createdType
         assert type == null
     }
 
     @Test
     void testAddGroovyTestCaseGroovyProject() {
-        GroovyRuntime.addGroovyNature(testProject.getProject())
-        NewGroovyTestTypeWizardPage page = createdGroovyTestTypeWizardPage()
+        addNature(GROOVY_NATURE)
+        NewGroovyTestTypeWizardPage page = createGroovyTestTypeWizardPage()
         String testCaseName = 'GroovyProjectTestCase'
         page.setEnclosingTypeSelection(false, true)
         page.setTypeName(testCaseName, true)
         page.createType(new NullProgressMonitor())
-        IType type = page.getCreatedType()
-        assert type.getElementName() == testCaseName
+        def type = page.createdType
+        assert type.elementName == testCaseName
     }
 }

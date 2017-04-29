@@ -29,7 +29,7 @@ import org.junit.Test
  * And also that completion proposals that come from the {@link ContentAssistLocation#METHOD_CONTEXT}
  * location do not modify source.
  */
-final class ContextInformationTests extends CompletionTestCase {
+final class ContextInformationTests extends CompletionTestSuite {
 
     private void runTest(ICompilationUnit unit, String target, String proposalName, int proposalCount) {
         String source = unit.getSource()

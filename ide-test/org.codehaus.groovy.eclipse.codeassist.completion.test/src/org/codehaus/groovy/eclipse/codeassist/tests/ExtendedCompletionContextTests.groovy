@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.junit.Test
 
-final class ExtendedCompletionContextTests extends CompletionTestCase {
+final class ExtendedCompletionContextTests extends CompletionTestSuite {
 
     @Test
     void testExtendedContextInScript1() {

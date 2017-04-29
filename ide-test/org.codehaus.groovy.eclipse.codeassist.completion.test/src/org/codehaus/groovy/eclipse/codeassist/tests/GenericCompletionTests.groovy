@@ -20,7 +20,7 @@ import org.junit.Test
 /**
  * Tests completions of generic lists, maps, etc.
  */
-final class GenericCompletionTests extends CompletionTestCase {
+final class GenericCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAfterArrayAccesses1() {

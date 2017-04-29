@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IAnnotatable
@@ -34,7 +34,7 @@ import org.eclipse.ltk.core.refactoring.participants.RenameArguments
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring
 import org.junit.Test
 
-final class RenameFieldTests extends RefactoringTestCase {
+final class RenameFieldTests extends RefactoringTestSuite {
 
     @Override
     protected String getRefactoringPath() {

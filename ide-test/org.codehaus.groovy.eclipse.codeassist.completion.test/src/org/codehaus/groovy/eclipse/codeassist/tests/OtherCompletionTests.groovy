@@ -26,7 +26,7 @@ import org.junit.Test
 /**
  * Tests specific bug reports.
  */
-final class OtherCompletionTests extends CompletionTestCase {
+final class OtherCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {

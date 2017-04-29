@@ -18,16 +18,15 @@ package org.codehaus.groovy.eclipse.test.debug
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.eclipse.debug.ui.ValidBreakpointLocationFinder
 import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.IDocument
 import org.junit.Test
 
 /**
  * Tests that breakpoint locations are as expected.
  */
-final class BreakpointLocationTests extends BreakpointTestCase {
+final class BreakpointLocationTests extends BreakpointTestSuite {
 
     private void doBreakpointTest(int i) {
-        IDocument document = new Document(String.valueOf(unit.contents))
+        def document = new Document(String.valueOf(unit.contents))
         int location = document.get().indexOf('// ' + i) - 3
         int line = document.getLineOfOffset(location) + 1
         ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(line)

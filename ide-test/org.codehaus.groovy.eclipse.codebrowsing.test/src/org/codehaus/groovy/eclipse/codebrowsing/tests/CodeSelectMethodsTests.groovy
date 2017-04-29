@@ -25,7 +25,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMethod
 import org.junit.Test
 
-final class CodeSelectMethodsTests extends BrowsingTestCase {
+final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectDefaultParams1() {

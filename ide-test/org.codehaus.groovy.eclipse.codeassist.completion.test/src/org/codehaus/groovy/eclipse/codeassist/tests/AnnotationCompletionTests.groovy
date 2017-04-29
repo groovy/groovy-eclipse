@@ -19,19 +19,18 @@ import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-final class AnnotationCompletionTests extends CompletionTestCase {
+final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
         // filter some legacy packages
-        EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, 'com.sun.*;org.omg.*')
+        setJavaPreference(TYPEFILTER_ENABLED, 'com.sun.*;org.omg.*')
     }
 
     @Test

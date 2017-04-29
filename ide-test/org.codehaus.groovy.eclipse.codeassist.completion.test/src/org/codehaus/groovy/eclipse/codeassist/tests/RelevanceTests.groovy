@@ -21,7 +21,7 @@ import org.junit.Test
 /**
  * Tests to ensure proper ordering of completion proposals.
  */
-final class RelevanceTests extends CompletionTestCase {
+final class RelevanceTests extends CompletionTestSuite {
 
     private static String NEWLINE = "\n  "
     private static String THIS_TO = "this.to"

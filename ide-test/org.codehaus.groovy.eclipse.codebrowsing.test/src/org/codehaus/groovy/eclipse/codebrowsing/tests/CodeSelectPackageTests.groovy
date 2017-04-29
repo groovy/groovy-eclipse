@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import org.eclipse.jdt.core.IPackageFragment
 import org.junit.Test
 
-final class CodeSelectPackageTests extends BrowsingTestCase {
+final class CodeSelectPackageTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectOnPackageDeclaration() {

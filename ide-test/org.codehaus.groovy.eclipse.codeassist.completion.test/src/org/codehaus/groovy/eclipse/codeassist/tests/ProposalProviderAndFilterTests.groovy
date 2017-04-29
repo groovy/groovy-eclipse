@@ -20,7 +20,6 @@ import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider2
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.groovy.eclipse.test.ui.Extender1
 import org.codehaus.groovy.eclipse.test.ui.Extender2
 import org.eclipse.jdt.core.ICompilationUnit
@@ -31,7 +30,7 @@ import org.junit.Test
 /**
  * Tests for {@link IProposalFilter} and {@link IProposalProvider}.
  */
-final class ProposalProviderAndFilterTests extends CompletionTestCase {
+final class ProposalProviderAndFilterTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
@@ -43,12 +42,12 @@ final class ProposalProviderAndFilterTests extends CompletionTestCase {
 
     @After
     void tearDown() {
-        EclipseTestSetup.removeNature(Extender1.NATURE1, Extender2.NATURE2)
+        removeNature(Extender1.NATURE1, Extender2.NATURE2)
     }
 
     @Test
     void testProvidersAndFilters1() {
-        EclipseTestSetup.addNature(Extender2.NATURE2)
+        addNature(Extender2.NATURE2)
 
         String contents = "println th"
         ICompilationUnit unit = addGroovySource(contents, "File1", "")
@@ -62,7 +61,7 @@ final class ProposalProviderAndFilterTests extends CompletionTestCase {
 
     @Test
     void testProvidersAndFilters2() {
-        EclipseTestSetup.addNature(Extender1.NATURE1, Extender2.NATURE2)
+        addNature(Extender1.NATURE1, Extender2.NATURE2)
 
         String contents = "println th"
         ICompilationUnit unit = addGroovySource(contents, "File2", "")

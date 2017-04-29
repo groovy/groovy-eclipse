@@ -28,7 +28,7 @@ import org.osgi.framework.Version
 /**
  * Ensures type completion is working and that the resulting document remains well-formed.
  */
-final class TypeCompletionTests2 extends CompletionTestCase {
+final class TypeCompletionTests2 extends CompletionTestSuite {
 
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html"
     private static final String HTMLTableCaptionElement_PROPOSAL = "HTMLTableCaptionElement - org.w3c.dom.html"

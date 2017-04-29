@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase;
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -636,7 +636,7 @@ public class JavaProjectHelper {
     }
 
     public static IPath[] findRtJar(IPath rtStubsPath) throws Exception {
-        File rtStubs = new File(FileLocator.toFileURL(FrameworkUtil.getBundle(RefactoringTestCase.class).getEntry(rtStubsPath.toString())).getFile());
+        File rtStubs = new File(FileLocator.toFileURL(FrameworkUtil.getBundle(RefactoringTestSuite.class).getEntry(rtStubsPath.toString())).getFile());
         Assert.assertNotNull(rtStubs);
         Assert.assertTrue(rtStubs.exists());
         return new IPath[] {

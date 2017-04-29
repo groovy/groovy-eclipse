@@ -23,7 +23,7 @@ import org.eclipse.jface.text.Document
 import org.junit.Ignore
 import org.junit.Test
 
-final class ContentAssistLocationTests extends CompletionTestCase {
+final class ContentAssistLocationTests extends CompletionTestSuite {
 
     private void assertLocation(String contents, int offset, ContentAssistLocation location) {
         GroovyCompilationUnit unit = addGroovySource(contents, "File", "")

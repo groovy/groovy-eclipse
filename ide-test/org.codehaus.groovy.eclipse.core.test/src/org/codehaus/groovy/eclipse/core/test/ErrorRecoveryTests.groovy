@@ -16,19 +16,19 @@
 package org.codehaus.groovy.eclipse.core.test
 
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.internal.compiler.CompilationResult
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-final class ErrorRecoveryTests extends EclipseTestCase {
+final class ErrorRecoveryTests extends GroovyEclipseTestSuite {
 
     private GroovySnippetCompiler compiler
 
     @Before
     void setUp() {
-        compiler = new GroovySnippetCompiler(testProject.groovyProjectFacade)
+        compiler = getGroovySnippetCompiler()
     }
 
     @After

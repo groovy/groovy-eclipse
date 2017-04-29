@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ILocalVariable
@@ -26,7 +26,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring
 import org.junit.Test
 
-final class RenameLocalTests extends RefactoringTestCase {
+final class RenameLocalTests extends RefactoringTestSuite {
 
     @Override
     protected String getRefactoringPath() {

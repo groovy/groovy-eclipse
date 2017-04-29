@@ -15,76 +15,75 @@
  */
 package org.codehaus.groovy.eclipse.test.adapters
 
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester
 import org.eclipse.core.resources.IResource
-import org.junit.Assert
 import org.junit.Test
 
 /**
  * Tests to see if a groovy file has a runnable main method.
  */
-final class IsMainTesterTests extends EclipseTestCase {
+final class IsMainTesterTests extends GroovyEclipseTestSuite {
+
+    private void doTest(String text, boolean expected) {
+        IResource file = addGroovySource(text, 'MainClass', 'pack1').getResource()
+        GroovyResourcePropertyTester tester = new GroovyResourcePropertyTester()
+        boolean result = tester.test(file, 'hasMain', null, null)
+        assert result == expected : 'Should have ' + (expected ? '' : '*not*') + ' found a main method in class:\n' + text
+    }
 
     @Test
     void testHasMain1() {
-        doTest("class MainClass { static void main(String[] args){}}", true)
+        doTest('class MainClass { static void main(String[] args){}}', true)
     }
 
     @Test
     void testHasMain2() {
-        doTest("class MainClass { static main(args){}}", true)
+        doTest('class MainClass { static main(args){}}', true)
     }
 
     @Test
     void testHasMain2a() {
-        doTest("class MainClass { static def main(args){}}", true)
+        doTest('class MainClass { static def main(args){}}', true)
     }
 
     @Test
     void testHasMain3() {
         // not static
-        doTest("class MainClass { void main(String[] args){}}", false)
+        doTest('class MainClass { void main(String[] args){}}', false)
     }
 
     @Test
     void testHasMain3a() {
         // no args
-        doTest("class MainClass { static void main(){}}", false)
+        doTest('class MainClass { static void main(){}}', false)
     }
 
     @Test
     void testHasMain4() {
         // no script defined in this file
-        doTest("class OtherClass { def s() { } }", false)
+        doTest('class OtherClass { def s() { } }', false)
     }
 
     @Test
     void testHasMain5() {
         // has a script
-        doTest("thisIsPartOfAScript()\nclass OtherClass { def s() { } }", true)
+        doTest('thisIsPartOfAScript()\nclass OtherClass { def s() { } }', true)
     }
 
     @Test
     void testHasMain5a() {
         // has a script
-        doTest("class OtherClass { def s() { } }\nthisIsPartOfAScript()", true)
+        doTest('class OtherClass { def s() { } }\nthisIsPartOfAScript()', true)
     }
 
     @Test
     void testHasMain6() {
-        doTest("thisIsPartOfAScript()", true)
+        doTest('thisIsPartOfAScript()', true)
     }
 
     @Test
     void testHasMain7() {
-        doTest("def x() { } \nx()", true)
-    }
-
-    private void doTest(String text, boolean expected) {
-        IResource file = testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", text).getResource()
-        GroovyResourcePropertyTester tester = new GroovyResourcePropertyTester()
-        boolean result = tester.test(file, "hasMain", null, null)
-        Assert.assertEquals("Should have " + (expected ? "" : "*not*") + " found a main method in class:\n" + text, expected, result)
+        doTest('def x() { } \nx()', true)
     }
 }

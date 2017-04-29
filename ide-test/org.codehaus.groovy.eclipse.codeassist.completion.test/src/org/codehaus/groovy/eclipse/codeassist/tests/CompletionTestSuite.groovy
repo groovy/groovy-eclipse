@@ -25,7 +25,7 @@ import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingComp
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.CompletionProposal
@@ -39,7 +39,6 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
 import org.eclipse.jdt.groovy.search.TypeLookupResult
 import org.eclipse.jdt.groovy.search.VariableScope
-import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal
@@ -50,53 +49,15 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.rules.TestName
 
 /**
  * Includes utilities to help with all Content assist tests.
  */
-abstract class CompletionTestCase {
-
-    @BeforeClass
-    static final void setUpTestSuite() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownTestSuite() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-    }
-
-    @After
-    final void tearDownTestCase() {
-        EclipseTestSetup.removeSources()
-    }
-
-    protected CompilationUnit addJavaSource(CharSequence contents, String name, String pack) {
-        return EclipseTestSetup.addJavaSource(contents, name, pack)
-    }
-
-    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name, String pack) {
-        return EclipseTestSetup.addGroovySource(contents, name, pack)
-    }
+abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
-        EclipseTestSetup.waitForIndex()
-        JavaEditor editor = EclipseTestSetup.openInEditor(unit)
+        waitForIndex()
+        JavaEditor editor = openInEditor(unit)
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer()
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor)
         List<ICompletionProposal> proposals = computerClass.newInstance().computeCompletionProposals(context, null)
@@ -285,8 +246,8 @@ abstract class CompletionTestCase {
         }
 
         String groovyClassName = "CompletionTest"; // TODO: Create a more dynamic name?
-        ICompilationUnit gunit = addGroovySource(contents, groovyClassName, "")
-        EclipseTestSetup.buildProject()
+        ICompilationUnit gunit = addGroovySource(contents, groovyClassName)
+        buildProject()
 
         System.err.println("--- " + groovyClassName + ".groovy ---")
         System.err.println(contents)

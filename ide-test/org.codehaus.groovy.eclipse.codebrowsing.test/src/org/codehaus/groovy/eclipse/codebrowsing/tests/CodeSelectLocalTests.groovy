@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.junit.Test
 
-final class CodeSelectLocalTests extends BrowsingTestCase {
+final class CodeSelectLocalTests extends BrowsingTestSuite {
 
     @Test
     void testLocalVar1() {

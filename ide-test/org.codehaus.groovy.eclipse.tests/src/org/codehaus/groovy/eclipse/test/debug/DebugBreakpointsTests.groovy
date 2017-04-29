@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.debug
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.debug.ui.ToggleBreakpointAdapter
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointManager
@@ -31,13 +30,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-final class DebugBreakpointsTests extends BreakpointTestCase {
+final class DebugBreakpointsTests extends BreakpointTestSuite {
 
     private ITextEditor editor, former
 
     @Before
     void setUp() {
-        editor = EclipseTestSetup.openInEditor(unit)
+        editor = openInEditor(unit)
         former = ActionDelegateHelper.default.textEditor
         ActionDelegateHelper.default.textEditor = editor
     }

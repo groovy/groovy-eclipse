@@ -25,7 +25,7 @@ import org.junit.Test
  * Note that there is a limitation in how {@link FindAllOccurrencesVisitor}
  * works. This is described in the comments of the class under test.
  */
-final class IsSameExpressionTests extends CheckerTestCase {
+final class IsSameExpressionTests extends CheckerTestSuite {
 
     @Test
     void testIsSame1() {

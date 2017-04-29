@@ -19,7 +19,7 @@ import groovy.transform.PackageScope
 
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker.AmbiguousFileLink
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IFile
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.model.IStreamMonitor
@@ -41,7 +41,7 @@ import org.junit.Test
 /**
  * Tests that breakpoint locations are as expected.
  */
-final class ConsoleLineTrackerTests extends EclipseTestCase {
+final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
 
     GroovyConsoleLineTracker lineTracker
     MockConsole console
@@ -57,46 +57,43 @@ final class ConsoleLineTrackerTests extends EclipseTestCase {
 
     @Test
     void testNoLink() {
-        testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "")
-        String contents = "ahdhjkfsfds"
+        addGroovySource('', 'Bar', 'f')
+        String contents = 'ahdhjkfsfds'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
-        Assert.assertNull("Should not have found any hyperlinks", console.getLastLink())
+        Assert.assertNull('Should not have found any hyperlinks', console.getLastLink())
     }
 
     @Test
     void testLink() {
-        testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "")
-        String contents = "at f.Bar.run(Bar.groovy:2)"
+        addGroovySource('', 'Bar', 'f')
+        String contents = 'at f.Bar.run(Bar.groovy:2)'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
-        Assert.assertNotNull("Should have found a hyperlink", console.getLastLink())
+        Assert.assertNotNull('Should have found a hyperlink', console.getLastLink())
         FileLink link = (FileLink) console.getLastLink()
-        IFile file = (IFile) ReflectionUtils.getPrivateField(FileLink.class, "fFile", link)
-        Assert.assertTrue("File should exist", file.isAccessible())
-        Assert.assertEquals("File name is wrong", "Bar.groovy", file.getName())
+        IFile file = (IFile) ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
+        Assert.assertTrue('File should exist', file.isAccessible())
+        Assert.assertEquals('File name is wrong', 'Bar.groovy', file.getName())
     }
 
     @Test
     void testAmbiguousLink() {
-        testProject.createGroovyTypeAndPackage("f", "Bar.groovy", "")
-        testProject.createOtherSourceFolder()
-        testProject.getProject().getFolder("other/f").create(true, true, null)
-        testProject.getProject().getFile("other/f/Bar.groovy").create(new ByteArrayInputStream(new byte[0]), true, null)
-
-        String contents = "at f.Bar.run(Bar.groovy:2)"
+        addGroovySource('', 'Bar', 'f')
+        addGroovySource('', 'Bar', 'f', addSourceFolder('other'))
+        String contents = 'at f.Bar.run(Bar.groovy:2)'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
-        Assert.assertNotNull("Should have found a hyperlink", console.getLastLink())
+        Assert.assertNotNull('Should have found a hyperlink', console.getLastLink())
         FileLink link = (FileLink) console.getLastLink()
-        Object file = ReflectionUtils.getPrivateField(FileLink.class, "fFile", link)
-        Assert.assertNull("File should be null since the selection is ambiguous", file)
+        Object file = ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
+        Assert.assertNull('File should be null since the selection is ambiguous', file)
 
-        IFile[] files = (IFile[]) ReflectionUtils.getPrivateField(AmbiguousFileLink.class, "files", link)
+        IFile[] files = (IFile[]) ReflectionUtils.getPrivateField(AmbiguousFileLink.class, 'files', link)
 
-        Assert.assertEquals("Should have found 2 files", 2, files.length)
-        Assert.assertEquals("File name is wrong", "Bar.groovy", files[0].getName())
-        Assert.assertEquals("File name is wrong", "Bar.groovy", files[1].getName())
+        Assert.assertEquals('Should have found 2 files', 2, files.length)
+        Assert.assertEquals('File name is wrong', 'Bar.groovy', files[0].getName())
+        Assert.assertEquals('File name is wrong', 'Bar.groovy', files[1].getName())
     }
 }
 

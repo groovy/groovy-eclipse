@@ -18,9 +18,7 @@ package org.codehaus.groovy.eclipse.test.ui
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
-import org.eclipse.jdt.core.ICompilationUnit
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils
 import org.eclipse.jface.text.IDocument
 import org.eclipse.swt.SWT
@@ -38,7 +36,7 @@ import org.junit.Assert
  * an editor with some text contents, sending keystrokes and commands to
  * the editor and verifying the effect on the contents of the editor.
  */
-abstract class GroovyEditorTestCase extends EclipseTestCase {
+abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
 
     /**
      * Special string pattern that indicates the position of the caret
@@ -71,8 +69,8 @@ abstract class GroovyEditorTestCase extends EclipseTestCase {
             cursor = contents.indexOf(CARET)
             contents = contents.replace(CARET, '')
         }
-        ICompilationUnit unit = testProject.createGroovyTypeAndPackage('', 'Test.groovy', contents)
-        editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit)
+        def unit = addGroovySource(contents, 'Test')
+        editor = (GroovyEditor) openInEditor(unit)
         editor.setHighlightRange(cursor, 0, true)
         editor.setFocus()
     }
@@ -90,10 +88,11 @@ abstract class GroovyEditorTestCase extends EclipseTestCase {
      * Pretend to type a single character into the editor.
      */
     protected void send(char c) {
-        Event e = new Event()
-        e.character = c
-        e.doit = true
-        e.widget = editor.getViewer().getTextWidget()
+        Event e = new Event(
+            widget: editor.viewer.textWidget,
+            character: c,
+            doit: true
+        )
         e.widget.notifyListeners(SWT.KeyDown, e)
         // Note: I don't think it matters if we send a KeyDown event.
         // The editor/widget doesn't seem to care about it.
@@ -103,11 +102,12 @@ abstract class GroovyEditorTestCase extends EclipseTestCase {
      * Pretend to type a backwards Tab character (i.e. a tab character with the shift key pressed.
      */
     protected void sendBackTab() {
-        Event e = new Event()
-        e.character = '\t'
-        e.stateMask = SWT.SHIFT
-        e.doit = true
-        e.widget = editor.getViewer().getTextWidget()
+        Event e = new Event(
+            widget: editor.getViewer().getTextWidget(),
+            stateMask: SWT.SHIFT,
+            character: '\t',
+            doit: true
+        )
         e.widget.notifyListeners(SWT.KeyDown, e)
         // Note: I don't think it matters if we send a KeyDown event.
         // The editor/widget doesn't seem to care about it.

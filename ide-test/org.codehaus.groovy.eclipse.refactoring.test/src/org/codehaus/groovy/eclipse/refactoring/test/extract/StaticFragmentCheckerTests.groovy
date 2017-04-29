@@ -16,11 +16,11 @@
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
 import org.codehaus.groovy.ast.ModuleNode
-import org.codehaus.groovy.eclipse.codebrowsing.tests.CheckerTestCase
+import org.codehaus.groovy.eclipse.codebrowsing.tests.CheckerTestSuite
 import org.codehaus.groovy.eclipse.refactoring.core.extract.StaticExpressionChecker
 import org.junit.Test
 
-final class StaticFragmentCheckerTests extends CheckerTestCase {
+final class StaticFragmentCheckerTests extends CheckerTestSuite {
 
     @Test
     void testStaticExpressionChecker1() {

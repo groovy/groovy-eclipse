@@ -23,7 +23,7 @@ import org.junit.Test
 /**
  * Tests that Field completions are working properly.
  */
-final class FieldCompletionTests extends CompletionTestCase {
+final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testSafeDeferencing() {

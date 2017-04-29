@@ -24,7 +24,7 @@ import org.junit.Test
  * Tests that Local variable completions are working properly.
  * They should only be active when inside a script or in a closure.
  */
-final class LocalVariableCompletionTests extends CompletionTestCase {
+final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     private static final String CONTENTS = "class LocalsClass { public LocalsClass() {\n }\n void doNothing(int x) { def xxx\n def xx\n def y = { t -> print t\n }\n } }"
     private static final String SCRIPTCONTENTS = "def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n"

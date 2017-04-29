@@ -32,7 +32,7 @@ import org.junit.Test
 /**
  * Tests that Method completions are working properly.
  */
-final class MethodCompletionTests extends CompletionTestCase {
+final class MethodCompletionTests extends CompletionTestSuite {
 
     private static class MockGroovyMethodProposal extends GroovyMethodProposal {
         public MockGroovyMethodProposal(MethodNode method) {

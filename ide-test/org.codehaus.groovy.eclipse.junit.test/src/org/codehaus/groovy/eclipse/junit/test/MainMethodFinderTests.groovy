@@ -25,7 +25,7 @@ import org.junit.Test
 /**
  * Tests for {@link org.eclipse.jdt.internal.ui.util.MainMethodSearchEngine}.
  */
-final class MainMethodFinderTests extends JUnitTestCase {
+final class MainMethodFinderTests extends JUnitTestSuite {
 
     /**
      * @param expected fully-qualified type names

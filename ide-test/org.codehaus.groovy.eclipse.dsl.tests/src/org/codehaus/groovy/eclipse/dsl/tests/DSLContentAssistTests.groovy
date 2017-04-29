@@ -15,9 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase
+import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.jface.text.Document
@@ -25,7 +24,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
 
-final class DSLContentAssistTests extends CompletionTestCase {
+final class DSLContentAssistTests extends CompletionTestSuite {
 
     private static final String COMMAND_CHAIN_NO_ARGS = '''\
         contribute(currentType('Inner')) {
@@ -56,8 +55,8 @@ final class DSLContentAssistTests extends CompletionTestCase {
     @Before
     void setUp() {
         DSLInferencingTestCase.refreshExternalFoldersProject()
-        EclipseTestSetup.addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        EclipseTestSetup.withProject { IProject project ->
+        addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
+        withProject { IProject project ->
             GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true)
           //GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project)
         }
@@ -68,7 +67,7 @@ final class DSLContentAssistTests extends CompletionTestCase {
         int i = 0
         for (dsl in dsls) {
             println "Creating:\n$dsl"
-            IFile file = EclipseTestSetup.addPlainText(dsl, "dsl${i++}.dsld")
+            IFile file = addPlainText(dsl, "dsl${i++}.dsld")
             assert file.exists() : "File $file just created, but doesn't exist"
         }
         return dsls

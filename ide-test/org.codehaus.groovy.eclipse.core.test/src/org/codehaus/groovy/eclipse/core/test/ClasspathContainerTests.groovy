@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.core.test
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
@@ -27,7 +27,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-final class ClasspathContainerTests extends EclipseTestCase {
+final class ClasspathContainerTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
@@ -41,7 +41,7 @@ final class ClasspathContainerTests extends EclipseTestCase {
 
     @Test
     void testClassPathContainerContents() {
-        IClasspathContainer container = JavaModelManager.getJavaModelManager().getClasspathContainer(new Path('GROOVY_SUPPORT'), testProject.javaProject)
+        IClasspathContainer container = JavaModelManager.getJavaModelManager().getClasspathContainer(new Path('GROOVY_SUPPORT'), packageFragmentRoot.javaProject)
         IClasspathEntry[] entries = container.getClasspathEntries()
         List<IClasspathEntry> groovyAllEntries = entries.findAll { it.path.toPortableString().contains('groovy-all') }
         List<IClasspathEntry> nonPluginEntries = entries.findAll { !it.path.toPortableString().contains('/org.codehaus.groovy') }

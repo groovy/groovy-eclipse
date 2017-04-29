@@ -17,51 +17,13 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import static org.junit.Assert.*
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.SourceRange
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.rules.TestName
 
-abstract class BrowsingTestCase {
-
-    @BeforeClass
-    static final void setUpTestSuite() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownTestSuite() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-    }
-
-    @After
-    final void tearDownTestCase() {
-        EclipseTestSetup.removeSources()
-    }
-
-    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = nextFileName(), String pack = '') {
-        EclipseTestSetup.addGroovySource(contents, name, pack)
-    }
-
-    protected void addJavaSource(CharSequence contents, String name = nextFileName(), String pack = '') {
-        EclipseTestSetup.addJavaSource(contents, name, pack)
-    }
+abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
 
     protected IJavaElement assertCodeSelect(Iterable<? extends CharSequence> sources, String target, String elementName = target) {
         def unit = null
@@ -101,17 +63,17 @@ abstract class BrowsingTestCase {
 
     private static Random salt = new Random(System.currentTimeMillis())
 
-    protected static String nextFileName() {
+    protected String nextFileName() {
         "File${salt.nextInt(999999)}"
     }
 
-    protected static void prepareForCodeSelect(ICompilationUnit unit) {
+    protected void prepareForCodeSelect(ICompilationUnit unit) {
         if (unit instanceof GroovyCompilationUnit) {
             def problems = unit.getModuleInfo(true).result.problems
             problems?.findAll { it.error }?.each { println it }
         }
 
-        EclipseTestSetup.waitForIndex()
-        EclipseTestSetup.openInEditor(unit)
+        waitForIndex()
+        openInEditor(unit)
     }
 }

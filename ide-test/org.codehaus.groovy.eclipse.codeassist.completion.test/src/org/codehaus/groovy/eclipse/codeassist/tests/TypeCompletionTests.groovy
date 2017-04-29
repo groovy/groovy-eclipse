@@ -17,14 +17,13 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
 /**
  * Tests that type completions are working properly.
  */
-final class TypeCompletionTests extends CompletionTestCase {
+final class TypeCompletionTests extends CompletionTestSuite {
 
     private static final String HTML = "HTML"
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html"
@@ -258,22 +257,22 @@ final class TypeCompletionTests extends CompletionTestCase {
     @Test
     void testTypeFilter1() {
         try {
-            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "javax.swing.JFrame")
+            setJavaPreference(TYPEFILTER_ENABLED, "javax.swing.JFrame")
             ICompletionProposal[] proposals = createProposalsAtOffset("JFr", 2)
             proposalExists(proposals, "JFrame - javax.swing", 0, true)
         } finally {
-            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "")
+            setJavaPreference(TYPEFILTER_ENABLED, "")
         }
     }
 
     @Test
     void testTypeFilter2() {
         try {
-            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "javax.swing.*")
+            setJavaPreference(TYPEFILTER_ENABLED, "javax.swing.*")
             ICompletionProposal[] proposals = createProposalsAtOffset("JFr", 2)
             proposalExists(proposals, "JFrame - javax.swing", 0, true)
         } finally {
-            EclipseTestSetup.setJavaPreference(TYPEFILTER_ENABLED, "")
+            setJavaPreference(TYPEFILTER_ENABLED, "")
         }
     }
 }

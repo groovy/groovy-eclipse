@@ -16,8 +16,7 @@
 package org.codehaus.groovy.eclipse.quickfix.test.templates
 
 import org.codehaus.groovy.eclipse.quickfix.templates.TemplateProposalComputer
-import org.codehaus.groovy.eclipse.quickfix.test.QuickFixTestCase
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.quickfix.test.QuickFixTestSuite
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
@@ -29,12 +28,12 @@ import org.junit.Test
 /**
  * Tests the Groovy templates contributed by the quickfix plug-in.
  */
-final class GroovyTemplatesCompletionTests extends QuickFixTestCase {
+final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
 
     @Before
     void setUp() {
-        EclipseTestSetup.setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
-        EclipseTestSetup.setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
     }
 
     /**

@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.test.adapters
 
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IFile
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.part.FileEditorInput
@@ -26,63 +26,47 @@ import org.junit.Test
 /**
  * Tests the Groovy File Adapter Factory.
  */
-final class GroovyIFileEditorInputAdapterFactoryTests extends EclipseTestCase {
+final class GroovyIFileEditorInputAdapterFactoryTests extends GroovyEclipseTestSuite {
 
     @Test
     void testIFileEditorInputAdapter() {
-        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", "class MainClass { static void main(String[] args")
+        def unit = addGroovySource('class MainClass { static void main(String[] args', 'MainClass', 'pack1')
+        buildProject()
 
-        buildAll()
-
-        final IFile script = (IFile) testProject.getProject().findMember("src/pack1/MainClass.groovy")
-
-        Assert.assertNotNull(script)
-
-        IFileEditorInput editor = new FileEditorInput(script)
+        IFileEditorInput editor = new FileEditorInput(unit.getResource())
         ClassNode node = editor.getAdapter(ClassNode.class)
-
-        Assert.assertEquals("pack1.MainClass", node.getName())
+        Assert.assertEquals('pack1.MainClass', node.getName())
         Assert.assertFalse(node.isInterface())
-        Assert.assertNotNull(node.getMethods("main"))
+        Assert.assertNotNull(node.getMethods('main'))
     }
 
     @Test
     void testIFileEditorInputAdapterCompileError() {
-        testProject.createGroovyTypeAndPackage("pack1", "OtherClass.groovy", "class OtherClass { static void main(String[] args")
+        def unit = addGroovySource('class OtherClass { static void main(String[] args', 'OtherClass', 'pack1')
+        buildProject()
 
-        buildAll()
-
-        final IFile script = (IFile) testProject.getProject().findMember("src/pack1/OtherClass.groovy")
-        Assert.assertNotNull(script)
-        IFileEditorInput editor = new FileEditorInput(script)
+        IFileEditorInput editor = new FileEditorInput(unit.getResource())
         ClassNode node = editor.getAdapter(ClassNode.class)
-
-        Assert.assertEquals("pack1.OtherClass", node.getName())
+        Assert.assertEquals('pack1.OtherClass', node.getName())
         Assert.assertFalse(node.isInterface())
-        Assert.assertNotNull(node.getMethods("main"))
+        Assert.assertNotNull(node.getMethods('main'))
     }
 
     @Test
-    void testIFileEditorInputAdapterHorendousCompileError() {
-        testProject.createFile("NotGroovy.file", "class C {\n abstract def foo() {}\n" + "}")
+    void testIFileEditorInputAdapterCompileError2() {
+        def unit = addGroovySource('class C { abstract def foo() {} }', 'OtherClass', 'pack1')
+        buildProject()
 
-        buildAll()
-
-        final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file")
-        Assert.assertNotNull(notScript)
-        IFileEditorInput editor = new FileEditorInput(notScript)
+        IFileEditorInput editor = new FileEditorInput(unit.getResource())
         Assert.assertNull(editor.getAdapter(ClassNode.class))
     }
 
     @Test
     void testIFileEditorInputAdapterNotGroovyFile() {
-        testProject.createFile("NotGroovy.file", "this is not a groovy file")
+        def file = addPlainText('this is not a groovy file', 'NotGroovy.file')
+        buildProject()
 
-        buildAll()
-
-        final IFile notScript = (IFile) testProject.getProject().findMember("src/NotGroovy.file")
-        Assert.assertNotNull(notScript)
-        IFileEditorInput editor = new FileEditorInput(notScript)
+        IFileEditorInput editor = new FileEditorInput(file)
         Assert.assertNull(editor.getAdapter(ClassNode.class))
     }
 }

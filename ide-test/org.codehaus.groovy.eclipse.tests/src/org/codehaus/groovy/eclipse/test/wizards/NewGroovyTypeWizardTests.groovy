@@ -15,7 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.test.wizards
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
+import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
+import static org.junit.Assert.assertEquals
+
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.wizards.NewClassWizardPage
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IStatus
@@ -23,15 +26,18 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
 import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
 // Original source code:
 // http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.ui.tests/ui/org/eclipse/jdt/ui/tests/wizardapi/NewTypeWizardTest.java?revision=1.8
-final class NewGroovyTypeWizardTests extends NewGroovyWizardTestCase {
+final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
 
     // FIXKDV: the wizard has some options/controls that probably shouldn't be there
     //  For example a button to make a class public or default
@@ -39,6 +45,11 @@ final class NewGroovyTypeWizardTests extends NewGroovyWizardTestCase {
 
     @Before
     void setUp() {
+        setJavaPreference(PreferenceConstants.CODEGEN_ADD_COMMENTS, 'false')
+        setJavaPreference(PreferenceConstants.CODEGEN_USE_OVERRIDE_ANNOTATION, 'true')
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
+
         String newFileTemplate = '${filecomment}\n${package_declaration}\n\n${typecomment}\n${type_declaration}'
         StubUtility.setCodeTemplate(CodeTemplateContextType.NEWTYPE_ID, newFileTemplate, null)
         StubUtility.setCodeTemplate(CodeTemplateContextType.TYPECOMMENT_ID, '/**\n * Type\n */', null)
@@ -58,7 +69,7 @@ final class NewGroovyTypeWizardTests extends NewGroovyWizardTestCase {
      * Helper method to compare two strings for equality, while avoiding newline issues on different platforms.
      */
     private void assertEqualLines(String expected, String actual) {
-        assert actual == expected.replace('\n', System.getProperty('line.separator'))
+        assertEquals(expected.replace('\n', System.getProperty('line.separator')), actual)
     }
 
     /** Helper method to check an IStatus */
@@ -67,152 +78,131 @@ final class NewGroovyTypeWizardTests extends NewGroovyWizardTestCase {
         assert status.getMessage().contains(msgFragment) : 'Unexpected message: ' + status.getMessage()
     }
 
-    public void testNotGroovyProject() throws Exception {
-        GroovyRuntime.removeGroovyNature(testProject.getProject())
-        IPackageFragment frag = testProject.createPackage('test1')
-        NewClassWizardPage wizardPage= new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true)
-        wizardPage.setPackageFragment(frag, true)
-        assertStatus(IStatus.WARNING, 'is not a groovy project.  Groovy Nature will be added to project upon completion.', wizardPage.getStatus())
+    @Test
+    void testNotGroovyProject() {
+        removeNature(GROOVY_NATURE)
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+        assertStatus(IStatus.WARNING, 'is not a groovy project.  Groovy Nature will be added to project upon completion.', wizardPage.status)
     }
 
-    public void testExclusionFilters() throws Exception {
-        IPackageFragmentRoot root = testProject.createSourceFolder('other', null, [new Path('**/*.groovy')] as IPath[])
+    @Test
+    void testExclusionFilters() {
+        IPackageFragmentRoot root = addSourceFolder('other', new Path('**/*.groovy'))
         IPackageFragment frag = root.createPackageFragment('p', true, null)
-        NewClassWizardPage wizardPage= new NewClassWizardPage()
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
         wizardPage.setPackageFragmentRoot(root, true)
         wizardPage.setPackageFragment(frag, true)
         wizardPage.setTypeName('Nuthin', true)
-        assertStatus(IStatus.ERROR, 'Cannot create Groovy type because of exclusion patterns on the source folder.', wizardPage.getStatus())
+        assertStatus(IStatus.ERROR, 'Cannot create Groovy type because of exclusion patterns on the source folder.', wizardPage.status)
     }
 
-    public void testDiscouraedDefaultPackage() throws Exception {
-        GroovyRuntime.removeGroovyNature(testProject.getProject())
-        NewClassWizardPage wizardPage= new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true)
-        assertStatus(IStatus.WARNING, 'The use of the default package is discouraged.', wizardPage.getStatus())
+    @Test
+    void testDiscouraedDefaultPackage() {
+        removeNature(GROOVY_NATURE)
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        assertStatus(IStatus.WARNING, 'The use of the default package is discouraged.', wizardPage.status)
     }
 
     @Test
     void testCreateGroovyClass1() {
-        IPackageFragment pack1= testProject.getSourceFolder().createPackageFragment('test1', false, null)
-        NewClassWizardPage wizardPage= new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true)
-        wizardPage.setPackageFragment(pack1, true)
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
         wizardPage.setEnclosingTypeSelection(false, true)
         wizardPage.setTypeName('E', true)
-
         wizardPage.setSuperClass('', true)
-
-        List<String> interfaces= new ArrayList<String>()
-        wizardPage.setSuperInterfaces(interfaces, true)
-
+        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
         wizardPage.setMethodStubSelection(false, false, false, true)
         wizardPage.setAddComments(true, true)
         wizardPage.enableCommentControl(true)
 
         wizardPage.createType(new NullProgressMonitor())
 
-        String actual= wizardPage.getCreatedType().getCompilationUnit().getSource()
+        String expected = '''\
+            |/**
+            | * File
+            | */
+            |package test1
+            |
+            |/**
+            | * Type
+            | */
+            |class E {
+            |    /* class body */
+            |}
+            |'''.stripMargin()
 
-        StringBuffer buf= new StringBuffer()
-        buf.append('/**\n')
-        buf.append(' * File\n')
-        buf.append(' */\n')
-        buf.append('package test1\n')
-        buf.append('\n')
-        buf.append('/**\n')
-        buf.append(' * Type\n')
-        buf.append(' */\n')
-        buf.append('class E {\n')
-        buf.append('    /* class body */\n')
-        buf.append('}\n')
-        String expected= buf.toString()
-
-        assertEqualLines(expected, actual)
+        assertEqualLines(expected, wizardPage.createdType.compilationUnit.source)
     }
 
     @Test @Ignore('this test fails/crashes in Groovy. cause: problems resolving generic types?')
     void testCreateGroovyClass2GenericSuper() {
-        IPackageFragment pack1= testProject.getSourceFolder().createPackageFragment('test1', false, null)
-
-        NewClassWizardPage wizardPage= new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true)
-        wizardPage.setPackageFragment(pack1, true)
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
         wizardPage.setEnclosingTypeSelection(false, true)
         wizardPage.setTypeName('E', true)
-
         wizardPage.setSuperClass('java.util.ArrayList<String>', true)
-
-        List<String> interfaces= new ArrayList<String>()
-        wizardPage.setSuperInterfaces(interfaces, true)
-
+        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
         wizardPage.setMethodStubSelection(false, false, false, true)
         wizardPage.setAddComments(true, true)
         wizardPage.enableCommentControl(true)
 
         wizardPage.createType(null)
 
-        String actual= wizardPage.getCreatedType().getCompilationUnit().getSource()
+        String expected = '''\
+            |/**
+            | * File
+            | */
+            |package test1;
+            |
+            |import java.util.ArrayList;
+            |
+            |/**
+            | * Type
+            | */
+            |class E extends ArrayList<String> {
+            |    /* class body */
+            |}
+            |'''.stripMargin()
 
-        StringBuffer buf= new StringBuffer()
-        buf.append('/**\n')
-        buf.append(' * File\n')
-        buf.append(' */\n')
-        buf.append('package test1;\n')
-        buf.append('\n')
-        buf.append('import java.util.ArrayList;\n')
-        buf.append('\n')
-        buf.append('/**\n')
-        buf.append(' * Type\n')
-        buf.append(' */\n')
-        buf.append('class E extends ArrayList<String> {\n')
-        buf.append('    /* class body */\n')
-        buf.append('}\n')
-        String expected= buf.toString()
-
-        assertEqualLines(expected, actual)
+        assertEqualLines(expected, wizardPage.createdType.compilationUnit.source)
     }
 
     @Test
     void testCreateGroovyClass2() {
-        IPackageFragment pack1= testProject.getSourceFolder().createPackageFragment('test1', false, null)
-
-        NewClassWizardPage wizardPage= new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(testProject.getSourceFolder(), true)
-        wizardPage.setPackageFragment(pack1, true)
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
         wizardPage.setEnclosingTypeSelection(false, true)
         wizardPage.setTypeName('E', true)
-
         wizardPage.setSuperClass('ArrayList', true)
-
-        List<String> interfaces= new ArrayList<String>()
-        wizardPage.setSuperInterfaces(interfaces, true)
-
+        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
         wizardPage.setMethodStubSelection(false, false, false, true)
         wizardPage.setAddComments(true, true)
         wizardPage.enableCommentControl(true)
 
         wizardPage.createType(new NullProgressMonitor())
 
-        String actual= wizardPage.getCreatedType().getCompilationUnit().getSource()
+        String expected = '''\
+            |/**
+            | * File
+            | */
+            |package test1
+            |
+            |import java.util.ArrayList
+            |
+            |/**
+            | * Type
+            | */
+            |class E extends ArrayList {
+            |    /* class body */
+            |}
+            |'''.stripMargin()
 
-        StringBuffer buf= new StringBuffer()
-        buf.append('/**\n')
-        buf.append(' * File\n')
-        buf.append(' */\n')
-        buf.append('package test1\n')
-        buf.append('\n')
-        buf.append('import java.util.ArrayList\n')
-        buf.append('\n')
-        buf.append('/**\n')
-        buf.append(' * Type\n')
-        buf.append(' */\n')
-        buf.append('class E extends ArrayList {\n')
-        buf.append('    /* class body */\n')
-        buf.append('}\n')
-        String expected= buf.toString()
-
-        assertEqualLines(expected, actual)
+        assertEqualLines(expected, wizardPage.createdType.compilationUnit.source)
     }
 }

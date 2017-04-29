@@ -20,7 +20,6 @@ import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
 import org.eclipse.core.resources.IMarker
 import org.junit.Before
 import org.junit.Test
@@ -32,7 +31,7 @@ final class NonGroovyProjectQuickFixTests extends QuickFixHarness {
 
     @Before
     void setUp() {
-        EclipseTestSetup.removeNature(GROOVY_NATURE)
+        removeNature(GROOVY_NATURE)
     }
 
     @Test

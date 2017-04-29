@@ -20,7 +20,7 @@ import org.junit.Test
 /**
  * Tests for {@link org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports}.
  */
-final class AliasingOrganizeImportsTests extends OrganizeImportsTestCase {
+final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testRetainTypeAlias() {

@@ -35,7 +35,7 @@ import org.junit.Test
 /**
  * Tests to see that ASTFragments are created correctly.
  */
-final class ASTFragmentTests extends BrowsingTestCase {
+final class ASTFragmentTests extends BrowsingTestSuite {
 
     private class TestFragmentVisitor extends FragmentVisitor {
         private Stack<ASTFragmentKind> expectedKinds
@@ -91,7 +91,7 @@ final class ASTFragmentTests extends BrowsingTestCase {
     }
 
     private IASTFragment createFragmentFromText(String contents) {
-        GroovyCompilationUnit unit = addGroovySource(contents)
+        GroovyCompilationUnit unit = addGroovySource(contents, nextFileName())
         Statement statement = unit.getModuleNode().getStatementBlock().getStatements().get(0)
         Expression expr = statement instanceof ReturnStatement ? ((ReturnStatement) statement).getExpression() : ((ExpressionStatement) statement).getExpression()
         IASTFragment fragment = new ASTFragmentFactory().createFragment(expr)
@@ -100,7 +100,7 @@ final class ASTFragmentTests extends BrowsingTestCase {
     }
 
     private IASTFragment createFragmentFromText(String contents, int start, int end) {
-        GroovyCompilationUnit unit = addGroovySource(contents)
+        GroovyCompilationUnit unit = addGroovySource(contents, nextFileName())
         return new ASTFragmentFactory().createFragment(((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression(), start, end)
     }
 

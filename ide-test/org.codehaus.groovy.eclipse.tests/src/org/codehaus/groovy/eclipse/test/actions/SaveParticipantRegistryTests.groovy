@@ -19,7 +19,6 @@ import static org.junit.Assert.fail
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
 import org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
@@ -29,7 +28,7 @@ import org.junit.Test
 /**
  * Tests that the {@link DelegatingCleanUpPostSaveListener} can be properly installed and uninstalled.
  */
-final class SaveParticipantRegistryTests extends EclipseTestCase {
+final class SaveParticipantRegistryTests {
 
     private final GroovyPlugin activator = GroovyPlugin.default
 

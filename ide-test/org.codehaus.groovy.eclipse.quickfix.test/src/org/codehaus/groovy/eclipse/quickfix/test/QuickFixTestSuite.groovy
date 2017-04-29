@@ -15,53 +15,19 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test;
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
-import org.junit.After
-import org.junit.AfterClass
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.rules.TestName
 
-abstract class QuickFixTestCase {
-
-    @BeforeClass
-    static final void setUpTestSuite() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownTestSuite() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-    }
-
-    @After
-    final void tearDownTestCase() {
-        EclipseTestSetup.removeSources()
-    }
+abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
 
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'QuickFix', String pack = '') {
-        EclipseTestSetup.addGroovySource(contents, name, pack)
+        super.addGroovySource(contents, name, pack)
     }
 
     protected CompilationUnit addJavaSource(CharSequence contents, String name = 'QuickFix', String pack = '') {
-        EclipseTestSetup.addJavaSource(contents, name, pack)
-    }
-
-    protected JavaEditor openInEditor(ICompilationUnit unit) {
-        EclipseTestSetup.openInEditor(unit)
+        super.addJavaSource(contents, name, pack)
     }
 }

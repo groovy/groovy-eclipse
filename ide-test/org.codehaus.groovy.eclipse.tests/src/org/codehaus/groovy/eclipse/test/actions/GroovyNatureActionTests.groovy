@@ -15,34 +15,30 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
+
 import org.codehaus.groovy.eclipse.actions.AddGroovyNatureAction
 import org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction
-import org.codehaus.groovy.eclipse.core.builder.ConvertLegacyProject
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.eclipse.core.resources.ICommand
-import org.eclipse.core.resources.IProjectDescription
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.viewers.StructuredSelection
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-final class GroovyNatureActionTests extends EclipseTestCase {
+final class GroovyNatureActionTests extends GroovyEclipseTestSuite {
 
     private AddGroovyNatureAction addGroovyAction
     private RemoveGroovyNatureAction removeGroovyAction
-    private ConvertLegacyProject convert
 
     @Before
     void setUp() {
-        testProject.createGroovyTypeAndPackage("pack1", "MainClass.groovy", "class MainClass { static void main(args){ println \"Hello Groovy World\" } } ")
-        GroovyRuntime.removeGroovyNature(testProject.project)
+        addGroovySource('class MainClass { static void main(args){ println "Hello Groovy World" } } ', 'MainClass')
+        removeNature(GROOVY_NATURE)
+
         addGroovyAction = new AddGroovyNatureAction()
         removeGroovyAction = new RemoveGroovyNatureAction()
         removeGroovyAction.doNotAskToRemoveJars()
-        convert = new ConvertLegacyProject()
     }
 
     /**
@@ -50,25 +46,19 @@ final class GroovyNatureActionTests extends EclipseTestCase {
      */
     @Test
     void testAddGroovyNature() {
-        Assert.assertTrue("testProject must have the Java nature", testProject.getJavaProject().getProject().hasNature(JavaCore.NATURE_ID))
+        addGroovyAction.selectionChanged(null, new StructuredSelection(packageFragmentRoot.javaProject))
 
-        IStructuredSelection selection = new StructuredSelection([testProject.getJavaProject()] as Object[])
-
-        addGroovyAction.selectionChanged(null, selection)
-
-        Assert.assertFalse("testProject should not have Groovy nature before testing action", hasGroovyNature())
-        // groovy runtime added automatically for testProject and not removed in setUp
-        //assertFalse("testProject should not have Groovy jars after running remove nature action", hasGroovyJars())
+        assert !hasGroovyNature() : 'testProject should not have Groovy nature before testing action'
 
         addGroovyAction.run(null)
 
-        Assert.assertTrue("testProject should have Groovy nature after testing action", hasGroovyNature())
-        Assert.assertTrue("testProject should have Groovy jars after running remove nature action", testProject.hasGroovyContainer())
+        assert hasGroovyNature() : 'testProject should have Groovy nature after testing action'
+        assert hasGroovyContainer() : 'testProject should have Groovy jars after running remove nature action'
 
         addGroovyAction.run(null)
 
-        Assert.assertTrue("testProject should still have Groovy nature after testing action twice", hasGroovyNature())
-        Assert.assertTrue("testProject should have Groovy jars after running remove nature action", testProject.hasGroovyContainer())
+        assert hasGroovyNature() : 'testProject should still have Groovy nature after testing action twice'
+        assert hasGroovyContainer() : 'testProject should have Groovy jars after running remove nature action'
     }
 
     /**
@@ -76,71 +66,42 @@ final class GroovyNatureActionTests extends EclipseTestCase {
      */
     @Test
     void testGroovyNatureNotJavaProject() {
-        testProject.removeNature(JavaCore.NATURE_ID)
-        Assert.assertFalse(testProject.getJavaProject().getProject().hasNature(JavaCore.NATURE_ID))
+        removeNature(JavaCore.NATURE_ID)
+        try {
+            addGroovyAction.selectionChanged(null, new StructuredSelection(packageFragmentRoot.javaProject))
 
-        IStructuredSelection selection = new StructuredSelection([testProject.getProject()] as Object[])
-        addGroovyAction.selectionChanged(null, selection)
+            assert !hasGroovyNature() : 'testProject should not have Groovy nature before testing action'
 
-        Assert.assertFalse("testProject should not have Groovy nature before testing action", hasGroovyNature())
+            addGroovyAction.run(null)
 
-        addGroovyAction.run(null)
-
-        Assert.assertFalse("testProject should not have Groovy nature after testing action", hasGroovyNature())
+            assert !hasGroovyNature() : 'testProject should not have Groovy nature after testing action'
+        } finally {
+            addNature(JavaCore.NATURE_ID)
+        }
     }
 
     @Test
     void testRemoveGroovyNature() {
-        Assert.assertTrue("testProject must have the Java nature", testProject.getJavaProject().getProject().hasNature(JavaCore.NATURE_ID))
-
-        IStructuredSelection selection = new StructuredSelection([testProject.getJavaProject()] as Object[])
-
+        IStructuredSelection selection = new StructuredSelection(packageFragmentRoot.javaProject)
         addGroovyAction.selectionChanged(null, selection)
         removeGroovyAction.selectionChanged(null, selection)
 
-        Assert.assertFalse("testProject should not have Groovy nature before testing action", hasGroovyNature())
-        Assert.assertTrue("testProject should have Groovy jars after running add nature action", testProject.hasGroovyContainer())
+        assert !hasGroovyNature() : 'testProject should not have Groovy nature before testing action'
+        assert hasGroovyContainer() : 'testProject should have Groovy jars after running add nature action'
 
         removeGroovyAction.run(null)
 
-        Assert.assertFalse("testProject should not have Groovy nature after running remove nature action", hasGroovyNature())
-        Assert.assertFalse("testProject should not have Groovy jars after running remove nature action", testProject.hasGroovyContainer())
+        assert !hasGroovyNature() : 'testProject should not have Groovy nature after running remove nature action'
+        assert !hasGroovyContainer() : 'testProject should not have Groovy jars after running remove nature action'
 
         addGroovyAction.run(null)
 
-        Assert.assertTrue("testProject should have Groovy nature after testing action", hasGroovyNature())
-        Assert.assertTrue("testProject should have Groovy jars after running add nature action", testProject.hasGroovyContainer())
+        assert hasGroovyNature() : 'testProject should have Groovy nature after testing action'
+        assert hasGroovyContainer() : 'testProject should have Groovy jars after running add nature action'
 
         removeGroovyAction.run(null)
 
-        Assert.assertFalse("testProject should not have Groovy nature after running remove nature action", hasGroovyNature())
-        Assert.assertFalse("testProject should not have Groovy jars after running remove nature action", testProject.hasGroovyContainer())
-    }
-
-    @Test
-    void testConvertLegacyAction() {
-        // can't add old nature since it doesn't exist
-        //testProject.addNature(ConvertLegacyProject.OLD_NATURE)
-        testProject.addBuilder(ConvertLegacyProject.OLD_BUILDER)
-        convert.convertProject(testProject.getProject())
-        Assert.assertTrue("testProject should have Groovy nature after conversion", hasGroovyNature())
-        Assert.assertFalse("testProject should not have OLD Groovy nature after conversion", hasOldGroovyNature())
-        Assert.assertTrue("testProject should have Java builder after conversion", hasBuilder(JavaCore.BUILDER_ID))
-        Assert.assertFalse("testProject should not have OLD Groovy builder after conversion", hasBuilder(ConvertLegacyProject.OLD_BUILDER))
-    }
-
-    private boolean hasOldGroovyNature() {
-        return testProject.getProject().hasNature(ConvertLegacyProject.OLD_NATURE)
-    }
-
-    private boolean hasBuilder(String builderId) {
-        IProjectDescription desc = testProject.getProject().getDescription()
-        ICommand[] commands = desc.getBuildSpec()
-        for (ICommand command : commands) {
-            if (command.getBuilderName().equals(builderId)) {
-                return true
-            }
-        }
-        return false
+        assert !hasGroovyNature() : 'testProject should not have Groovy nature after running remove nature action'
+        assert !hasGroovyContainer() : 'testProject should not have Groovy jars after running remove nature action'
     }
 }

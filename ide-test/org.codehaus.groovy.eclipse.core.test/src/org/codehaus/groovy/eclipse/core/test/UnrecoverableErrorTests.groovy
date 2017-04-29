@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.core.test
 
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -26,13 +26,13 @@ import org.junit.Test
  * All of these tests should produce {@link ModuleNode}s with
  * {@code encounteredUnrecoverableError} set to {@code true}.
  */
-final class UnrecoverableErrorTests extends EclipseTestCase {
+final class UnrecoverableErrorTests extends GroovyEclipseTestSuite {
 
     private GroovySnippetCompiler compiler
 
     @Before
     void setUp() {
-        compiler = new GroovySnippetCompiler(testProject.groovyProjectFacade)
+        compiler = getGroovySnippetCompiler()
     }
 
     @After

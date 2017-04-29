@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
-final class InferencingCompletionTests extends CompletionTestCase {
+final class InferencingCompletionTests extends CompletionTestSuite {
 
     private static final String CONTENTS =
         "class TransformerTest {\nvoid testTransformer() {\ndef s = \"string\"\ns.st\n}}"

@@ -40,7 +40,7 @@ import org.junit.Test
 /**
  * Tests for {@link ConvertToMethodCompletionProposal}.
  */
-final class QuickAssistTests extends QuickFixTestCase {
+final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testConvertToClosure1() {

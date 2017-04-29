@@ -23,8 +23,7 @@ import org.codehaus.groovy.eclipse.editor.outline.OField
 import org.codehaus.groovy.eclipse.editor.outline.OMethod
 import org.codehaus.groovy.eclipse.editor.outline.OType
 import org.codehaus.groovy.eclipse.editor.outline.OutlineExtenderRegistry
-import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TCompilationUnit
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TGroovyOutlinePage
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TType
@@ -39,7 +38,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-final class OutlineExtenderTests extends EclipseTestCase {
+final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
     private final OutlineExtenderRegistry registry = GroovyPlugin.default.outlineTools.outlineExtenderRegistry
 
@@ -50,7 +49,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @After
     void tearDown() {
-        // must close all opened editors
+        removeNature(OutlineExtender1.NATURE, OutlineExtender2.NATURE)
         Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false)
     }
 
@@ -65,7 +64,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @Test
     void testStandardOutlineIfUnitNotApplyToExtender() {
-        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
 
         String contents = "class Z { }"
         GroovyOutlinePage outline = openFile("Z", contents)
@@ -76,7 +75,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @Test
     void testOutlineActivated() {
-        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
 
         String contents = "class X { }"
         GroovyOutlinePage outline = openFile("X", contents)
@@ -88,8 +87,8 @@ final class OutlineExtenderTests extends EclipseTestCase {
     @Test
     void testFirstDeclaredWins1() {
         // NOTE: addNature() appends to the head of the array
-        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
-        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
 
         String contents = "class XY { }"
         GroovyOutlinePage outline = openFile("XY", contents)
@@ -102,8 +101,8 @@ final class OutlineExtenderTests extends EclipseTestCase {
     @Test
     void testFirstDeclaredWins2() {
         // NOTE: addNature() appends to the head of the array
-        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
-        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
 
         String contents = "class XY { }"
         GroovyOutlinePage outline = openFile("XY", contents)
@@ -115,7 +114,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @Test
     void testOutlineTreeConsistency1() {
-        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
 
         String contents =
             "Integer field1 = 0 \n" +
@@ -137,7 +136,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @Test
     void testOutlineTreeConsistency2() {
-        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
 
         String contents =
             "inline1 { \n" +
@@ -161,7 +160,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @Test
     void testOutlineTreeSynchronized() {
-        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
 
         String contents =
             "Integer field1 = 0 \n" +
@@ -177,11 +176,11 @@ final class OutlineExtenderTests extends EclipseTestCase {
         assertIsField(tx.getChildren()[1], "field2", "QString;")
 
         // update content
-        GroovyEditor editor = (GroovyEditor) EclipseTestSetup.openInEditor(tu)
+        GroovyEditor editor = (GroovyEditor) openInEditor(tu)
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer()
         viewer.getTextWidget().setSelection(0)
         viewer.getTextWidget().insert("Long field3 = 100 \n")
-        buildAll()
+        buildProject()
         waitForIndex()
         tu.refresh()
 
@@ -197,7 +196,7 @@ final class OutlineExtenderTests extends EclipseTestCase {
 
     @Test
     void testUseGroovyScriptOutline() {
-        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
 
         String contents = "int yyy"
         GroovyOutlinePage outline = openFile("Z", contents)
@@ -262,9 +261,9 @@ final class OutlineExtenderTests extends EclipseTestCase {
     }
 
     private GroovyOutlinePage openFile(String className, String contents) {
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) testProject.createGroovyTypeAndPackage("", className + ".groovy", contents)
+        GroovyCompilationUnit unit = addGroovySource(contents, className)
         unit.reconcile(true, null)
-        GroovyEditor editor = (GroovyEditor) EclipseTestSetup.openInEditor(unit)
+        GroovyEditor editor = (GroovyEditor) openInEditor(unit)
 
         GroovyOutlinePage outline = editor.getOutlinePage()
         if (!unit.isWorkingCopy()) {

@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.SourceRange
 import org.junit.Ignore
 import org.junit.Test
 
-final class CodeSelectTypesTests extends BrowsingTestCase {
+final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectThisClass() {

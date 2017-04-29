@@ -18,10 +18,10 @@ package org.codehaus.groovy.eclipse.test.actions
 import static org.eclipse.jdt.core.JavaCore.*
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
 
-import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestCase
+import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestSuite
 import org.junit.Test
 
-final class ConvertToPropertyActionTests extends GroovyEditorTestCase {
+final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
 
     private static final String ACTION_ID = 'org.codehaus.groovy.eclipse.ui.convertToProperty'
 
@@ -86,7 +86,7 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestCase {
 
     @Test
     void testImplicitIsserToProperty() {
-        testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { static void isSomething() {} }'
+        addGroovySource 'class Foo { static void isSomething() {} }', 'Foo'
         convertToProperty "Foo.isSome${CARET}thing()"
         assertEditorContents "Foo.something"
     }
@@ -105,7 +105,7 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestCase {
 
     @Test
     void testStaticIsserToProperty() {
-        testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { static void isSomething() {} }'
+        addGroovySource 'class Foo { static void isSomething() {} }', 'Foo'
         convertToProperty "Foo.isSome${CARET}thing();"
         assertEditorContents "Foo.something;"
     }
@@ -192,14 +192,14 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestCase {
 
     @Test
     void testNoConversion8() {
-        testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { void setSomething() {} }'
+        addGroovySource 'class Foo { void setSomething() {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}Something()"
         assertEditorContents "new Foo().setSomething()"
     }
 
     @Test
     void testNoConversion9() {
-        testProject.createGroovyTypeAndPackage '', 'Foo.groovy', 'class Foo { void setSomething(Object... args) {} }'
+        addGroovySource 'class Foo { void setSomething(Object... args) {} }', 'Foo'
         convertToProperty "new Foo().set${CARET}Something()"
         assertEditorContents "new Foo().setSomething()"
     }

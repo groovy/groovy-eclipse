@@ -21,7 +21,7 @@ import org.junit.Test
 /**
  * Tests that content assist works as expected in inner classes.
  */
-final class InnerTypeCompletionTests extends CompletionTestCase {
+final class InnerTypeCompletionTests extends CompletionTestSuite {
 
     private static final String XXX = "xxx"
     private static final String HTML = "HTML"

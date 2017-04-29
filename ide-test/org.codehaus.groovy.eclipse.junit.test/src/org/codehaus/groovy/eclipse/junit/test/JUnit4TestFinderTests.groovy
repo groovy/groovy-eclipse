@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.junit.JUnitPropertyTester
 import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder
 import org.junit.Test
 
-final class JUnit4TestFinderTests extends JUnitTestCase {
+final class JUnit4TestFinderTests extends JUnitTestSuite {
 
     private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
         IType type = unit.getType(typeName)

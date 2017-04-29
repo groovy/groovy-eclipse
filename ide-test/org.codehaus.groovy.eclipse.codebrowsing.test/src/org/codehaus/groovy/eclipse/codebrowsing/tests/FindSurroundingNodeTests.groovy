@@ -24,7 +24,24 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.junit.Ignore
 import org.junit.Test
 
-final class FindSurroundingNodeTests extends BrowsingTestCase {
+final class FindSurroundingNodeTests extends BrowsingTestSuite {
+
+    private GroovyCompilationUnit checkRegion(String contents, Region initialRegion, Region expectedRegion) {
+        GroovyCompilationUnit unit = addGroovySource(contents, nextFileName())
+        return checkRegion(contents, unit, initialRegion, expectedRegion)
+    }
+
+    private GroovyCompilationUnit checkRegion(String contents, GroovyCompilationUnit unit, Region initialRegion, Region expectedRegion) {
+        FindSurroundingNode finder = new FindSurroundingNode(initialRegion)
+        IASTFragment result = finder.doVisitSurroundingNode(unit.getModuleNode())
+        Region actualRegion = new Region(result)
+        assertEquals("Expected text = |${getRegionText(expectedRegion, contents)}|\nActual text = |${getRegionText(actualRegion, contents)}|\n", expectedRegion, actualRegion)
+        return unit
+    }
+
+    private String getRegionText(Region region, String sourceString) {
+        return sourceString.substring(region.getOffset(), region.getEnd())
+    }
 
     @Test
     void testFindSurrounding1() {
@@ -284,25 +301,5 @@ final class FindSurroundingNodeTests extends BrowsingTestCase {
         initialRegion = expectedRegion
         expectedRegion = new Region(0, contents.length())
         unit = checkRegion(contents, initialRegion, expectedRegion)
-    }
-
-    private GroovyCompilationUnit checkRegion(String contents, Region initialRegion, Region expectedRegion) {
-        GroovyCompilationUnit unit = addGroovySource(contents)
-        return checkRegion(contents, unit, initialRegion, expectedRegion)
-    }
-
-    private GroovyCompilationUnit checkRegion(String contents, GroovyCompilationUnit unit, Region initialRegion, Region expectedRegion) {
-        FindSurroundingNode finder = new FindSurroundingNode(initialRegion)
-        IASTFragment result = finder.doVisitSurroundingNode(unit.getModuleNode())
-        Region actualRegion = new Region(result)
-        assertEquals(
-                "Expected text = |"+getRegionText(expectedRegion,contents)+"|\n" +
-                "Actual text = |"+getRegionText(actualRegion,contents)+"|\n",
-                expectedRegion, actualRegion)
-        return unit
-    }
-
-    private String getRegionText(Region region, String sourceString) {
-        return sourceString.substring(region.getOffset(), region.getEnd())
     }
 }

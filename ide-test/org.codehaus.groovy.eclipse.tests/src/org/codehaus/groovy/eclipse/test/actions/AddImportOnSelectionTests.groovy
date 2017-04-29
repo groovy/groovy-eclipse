@@ -17,12 +17,12 @@ package org.codehaus.groovy.eclipse.test.actions
 
 import static org.junit.Assert.*
 
-import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestCase
+import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestSuite
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.junit.Before
 import org.junit.Test
 
-final class AddImportOnSelectionTests extends GroovyEditorTestCase {
+final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
 
     @Before
     void setUp() {
@@ -247,7 +247,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
     @Test
     void testAddImportOnInnerClass2() {
-        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+        addGroovySource 'interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d'
 
         addImportOnSelection "E${CARET}.F.G.H"
         assertEditorContents "import a.b.c.d.E\n\nE.F.G.H"
@@ -255,7 +255,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
     @Test
     void testAddImportOnInnerClass2a() {
-        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+        addGroovySource 'interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d'
 
         addImportOnSelection "a.b.c.d.E${CARET}.F.G.H"
         assertEditorContents "import a.b.c.d.E\n\nE.F.G.H"
@@ -263,7 +263,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
     @Test
     void testAddImportOnInnerClass2b() {
-        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+        addGroovySource 'interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d'
 
         addImportOnSelection "a.b.c.d.E.F${CARET}.G.H"
         assertEditorContents "import a.b.c.d.E.F\n\nF.G.H"
@@ -271,7 +271,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
     @Test
     void testAddImportOnInnerClass2c() {
-        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+        addGroovySource 'interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d'
 
         addImportOnSelection "a.b.c.d.E.F.G${CARET}.H"
         assertEditorContents "import a.b.c.d.E.F.G\n\nG.H"
@@ -279,7 +279,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
     @Test
     void testAddImportOnInnerClass2d() {
-        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+        addGroovySource 'interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d'
 
         addImportOnSelection "a.b.c.d.E.F.G.H${CARET}"
         assertEditorContents "import static a.b.c.d.E.F.G.H\n\nH"
@@ -317,7 +317,7 @@ final class AddImportOnSelectionTests extends GroovyEditorTestCase {
 
     @Test
     void testAddImportOnPackageQualifier4() {
-        testProject.createGroovyTypeAndPackage 'a.b.c.d', 'E.groovy', 'interface E { interface F { interface G { String H = "I" } } }'
+        addGroovySource 'interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d'
 
         addImportOnSelection "a${CARET}.b.c.d.E.F.G.H"
         assertEditorContents "a.b.c.d.E.F.G.H"

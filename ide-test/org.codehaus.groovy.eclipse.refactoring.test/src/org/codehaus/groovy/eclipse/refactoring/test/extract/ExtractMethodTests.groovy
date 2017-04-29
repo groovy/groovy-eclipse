@@ -19,7 +19,7 @@ import groovyjarjarasm.asm.Opcodes
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSpec
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestPrefInitializer
-import org.codehaus.groovy.eclipse.test.TestProject
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -27,15 +27,13 @@ import org.eclipse.core.runtime.Platform
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 
 @RunWith(Parameterized)
-final class ExtractMethodTests {
+final class ExtractMethodTests extends GroovyEclipseTestSuite {
 
     @Parameters(name='{1}')
     static Iterable<Object[]> params() {
@@ -49,26 +47,11 @@ final class ExtractMethodTests {
 
     ExtractMethodTests(File file, String name) {
         spec = new RefactoringTestSpec(file)
-
-        println '----------------------------------------'
-        println "Starting: $name"
     }
 
-    private TestProject testProject
     private RefactoringTestSpec spec
     private GroovyCompilationUnit unit
     private ExtractGroovyMethodRefactoring refactoring
-
-    @Before
-    void setUp() {
-        testProject = new TestProject()
-        TestProject.autoBuilding = false
-    }
-
-    @After
-    void tearDown() {
-        testProject.dispose()
-    }
 
     @Test
     void test() {
@@ -87,16 +70,15 @@ final class ExtractMethodTests {
     }
 
     private void preAction() {
-        String fileName = 'File' + new Random(System.currentTimeMillis()).nextInt(99999) + '.groovy'
-        unit = testProject.createGroovyTypeAndPackage('', fileName, spec.document.get())
+        unit = addGroovySource(spec.document.get(), 'File' + new Random(System.currentTimeMillis()).nextInt(99999))
 
         int offset = spec.userSelection.offset
         int length = spec.userSelection.length
         RefactoringStatus status = new RefactoringStatus()
-        printf 'Attempting to extract new method from [%d,%d):%n %s%n', offset, offset + length, String.valueOf(unit.getContents()).substring(offset, offset + length)
+        printf 'Attempting to extract new method from [%d,%d):%n %s%n', offset, offset + length, String.valueOf(unit.contents).substring(offset, offset + length)
 
         refactoring = new ExtractGroovyMethodRefactoring(unit, offset, length, status)
-        refactoring.setPreferences(TestPrefInitializer.initializePreferences(spec.properties as HashMap, testProject.javaProject))
+        refactoring.setPreferences(TestPrefInitializer.initializePreferences(spec.properties as HashMap, unit.javaProject))
 
         assert status.getSeverity() == RefactoringStatus.OK : "Bad refactoring status on init: $status"
     }

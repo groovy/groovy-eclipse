@@ -20,7 +20,7 @@ import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.junit.launcher.JUnit3TestFinder
 import org.junit.Test
 
-final class JUnit3TestFinderTests extends JUnitTestCase {
+final class JUnit3TestFinderTests extends JUnitTestSuite {
 
     private void assertTypeIsTest(boolean expected, ICompilationUnit unit, String typeName, String reasonText = '') {
         IType type = unit.getType(typeName)

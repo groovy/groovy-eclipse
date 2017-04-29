@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.core.BinaryMember
 import org.eclipse.jdt.internal.core.BinaryMethod
 import org.junit.Test
 
-final class CodeSelectStaticImportsTests extends BrowsingTestCase {
+final class CodeSelectStaticImportsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectOnStaticImport1() {

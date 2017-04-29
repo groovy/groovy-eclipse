@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.refactoring.test.rename
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestCase
+import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IMethod
@@ -31,7 +31,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.junit.Ignore
 import org.junit.Test
 
-final class RenameMethodTests extends RefactoringTestCase {
+final class RenameMethodTests extends RefactoringTestSuite {
 
     @Override
     protected String getRefactoringPath() {

@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.test.actions
 
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
 import org.eclipse.jdt.core.search.TypeNameMatch
@@ -26,49 +26,23 @@ import org.eclipse.jface.text.Document
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.InsertEdit
 import org.eclipse.text.edits.TextEdit
-import org.junit.After
-import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.rules.TestName
 
-abstract class OrganizeImportsTestCase {
+abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
 
     protected static final String LINE_SEPARATOR = System.getProperty('line.separator')
 
-    @BeforeClass
-    static final void setUpTestSuite() {
-        new EclipseTestSetup(null).setUp()
-    }
-
-    @AfterClass
-    static final void tearDownTestSuite() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
     @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-
-        EclipseTestSetup.addJavaSource(CONTENTS_JAVA_SUPPORTING, 'Outer', 'other')
-        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING,    'Other', 'other')
-        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other2')
-        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other3')
-        EclipseTestSetup.addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other4')
+    final void setUpImportsTestCase() {
+        addJavaSource(CONTENTS_JAVA_SUPPORTING, 'Outer', 'other')
+        addGroovySource(CONTENTS_SUPPORTING,    'Other', 'other')
+        addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other2')
+        addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other3')
+        addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other4')
 
         // ensure consistent ordering of imports regardless of the target platform's defaults
-        EclipseTestSetup.setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
-    }
-
-    @After
-    final void tearDownTestCase() {
-        EclipseTestSetup.removeSources()
+        setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
     }
 
     private static final String CONTENTS_SUPPORTING = '''
@@ -92,8 +66,8 @@ abstract class OrganizeImportsTestCase {
     }
 
     protected void doAddImportTest(String pkgName, String resourceName, CharSequence contents, List<String> expectedImports) {
-        def unit = EclipseTestSetup.addGroovySource(contents, resourceName, pkgName)
-        EclipseTestSetup.waitForIndex()
+        def unit = addGroovySource(contents, resourceName, pkgName)
+        waitForIndex()
         IChooseImportQuery query = new NoChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
         TextEdit edit = organize.calculateMissingImports()
@@ -143,8 +117,8 @@ abstract class OrganizeImportsTestCase {
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
         def unit = createGroovyType('main', 'Main', originalContents)
-        EclipseTestSetup.buildProject()
-        EclipseTestSetup.waitForIndex()
+        buildProject()
+        waitForIndex()
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
@@ -167,7 +141,7 @@ abstract class OrganizeImportsTestCase {
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
         def unit = createGroovyType('main', 'Main', contents)
-        EclipseTestSetup.buildProject()
+        buildProject()
 
         def query = new ChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
@@ -179,7 +153,7 @@ abstract class OrganizeImportsTestCase {
     }
 
     protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
-        EclipseTestSetup.addGroovySource(normalizeLineEndings(contents), name, pack)
+        addGroovySource(normalizeLineEndings(contents), name, pack)
     }
 
     protected String normalizeLineEndings(CharSequence contents) {

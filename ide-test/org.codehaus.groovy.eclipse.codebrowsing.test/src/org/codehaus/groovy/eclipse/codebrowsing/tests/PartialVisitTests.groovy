@@ -32,7 +32,7 @@ import org.junit.Test
  * Ensures that the code select requestor properly avoids visiting ASTNodes that
  * are not in the same {@link IJavaElement} as the target node.
  */
-final class PartialVisitTests extends BrowsingTestCase {
+final class PartialVisitTests extends BrowsingTestSuite {
 
     private static class PartialCodeSelectRequestor extends CodeSelectRequestor {
         private final Set<String> skippedElements = new HashSet<String>()

@@ -26,7 +26,7 @@ import org.junit.Test
  * Note that there is a limitation in how {@link FindAllOccurrencesVisitor}
  * works. This is described in the comments of the class under test.
  */
-final class FindAllOccurrencesVisitorTests extends CheckerTestCase {
+final class FindAllOccurrencesVisitorTests extends CheckerTestSuite {
 
     @Test
     void testFindAllOccurrences1() {

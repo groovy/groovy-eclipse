@@ -15,53 +15,44 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import org.codehaus.groovy.eclipse.test.TestProject
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.CheckConditionsOperation
 import org.eclipse.ltk.core.refactoring.CreateChangeOperation
-import org.eclipse.ltk.core.refactoring.IUndoManager
 import org.eclipse.ltk.core.refactoring.PerformChangeOperation
 import org.eclipse.ltk.core.refactoring.Refactoring
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringDescriptor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import org.junit.After
 import org.junit.Assert
-import org.junit.Before
-import org.junit.Rule
-import org.junit.rules.TestName
 
-abstract class RenameRefactoringTestCase {
+abstract class RenameRefactoringTestSuite extends GroovyEclipseTestSuite {
 
-    @Rule
-    public TestName test = new TestName()
-
-    protected TestProject testProject
-
-    @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
-
-        testProject = new TestProject()
-        TestProject.setAutoBuilding(false)
+    protected static final class TestSource {
+        String pack, name, contents, finalContents
     }
 
-    @After
-    final void tearDownTestCase() {
-        testProject.dispose()
-        testProject = null
+    protected final ICompilationUnit[] createUnits(TestSource... sources) {
+        sources.collect {
+            ICompilationUnit unit
+            if (it.name.endsWith('.groovy')) {
+                unit = addGroovySource(it.contents, it.name - ~/.groovy$/, it.pack)
+            } else if (it.name.endsWith('.java')) {
+                unit = addJavaSource(it.contents, it.name - ~/.java$/, it.pack)
+            }
+            unit.discardWorkingCopy()
+            return unit
+        }.toArray(new ICompilationUnit[0])
     }
 
     protected void assertContents(ICompilationUnit[] existingUnits, List<String> expectedContents) {
         def sb = new StringBuilder()
         existingUnits.eachWithIndex { unit, i ->
             if (expectedContents[i] != null) {
-                String actualContents = String.valueOf(unit.getContents())
+                String actualContents = String.valueOf(unit.contents)
                 if (!actualContents.equals(expectedContents[i])) {
                     sb.append('\n-----EXPECTING-----\n')
                     sb.append(expectedContents[i])
@@ -70,9 +61,9 @@ abstract class RenameRefactoringTestCase {
                 }
             } else if (existingUnits[i].exists()) {
                 // unit should have been deleted
-                sb.append('\nUnit ' + unit.getElementName() + ' should have been deleted.\n')
+                sb.append('\nUnit ' + unit.elementName + ' should have been deleted.\n')
                 sb.append('Instead had the following contents:\n')
-                sb.append(unit.getContents())
+                sb.append(unit.contents)
             }
         }
         if (sb.length() > 0) Assert.fail('Refactoring produced unexpected results:' + sb)
@@ -80,7 +71,7 @@ abstract class RenameRefactoringTestCase {
 
     protected void assertContents(ICompilationUnit existingUnits, String expectedContents) {
         def sb = new StringBuilder()
-        String actualContents = String.valueOf(existingUnits.getContents())
+        String actualContents = String.valueOf(existingUnits.contents)
         if (!actualContents.equals(expectedContents)) {
             sb.append('\n-----EXPECTING-----\n')
             sb.append(expectedContents)
@@ -90,24 +81,21 @@ abstract class RenameRefactoringTestCase {
         if (sb.length() > 0) Assert.fail('Refactoring produced unexpected results:' + sb)
     }
 
-    protected RefactoringStatus performRefactoring(Refactoring ref, boolean providesUndo, boolean performOnFail) {
-        testProject.fullBuild()
-        testProject.waitForIndexer()
-        IUndoManager undoManager = getUndoManager()
-        final CreateChangeOperation create = new CreateChangeOperation(
-            new CheckConditionsOperation(ref, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
-        final PerformChangeOperation perform = new PerformChangeOperation(create)
-        perform.setUndoManager(undoManager, ref.getName())
-        IWorkspace workspace = ResourcesPlugin.getWorkspace()
-        executePerformOperation(perform, workspace)
+    protected RefactoringStatus performRefactoring(Refactoring refactor, boolean providesUndo) {
+        def create = new CreateChangeOperation(new CheckConditionsOperation(
+            refactor, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
+        def change = new PerformChangeOperation(create)
+        def undoer = RefactoringCore.getUndoManager()
+        change.setUndoManager(undoer, refactor.name)
+undoer.flush()
+        executePerformOperation(change, ResourcesPlugin.getWorkspace())
         RefactoringStatus status = create.getConditionCheckingStatus()
-        assert perform.changeExecuted() || !perform.changeExecutionFailed() : 'Change was not executed'
-        Change undo = perform.getUndoChange()
+        assert change.changeExecuted() || !change.changeExecutionFailed() : 'Change was not executed'
         if (providesUndo) {
-            assert undo != null : 'Undo does not exist'
-            assert undoManager.anythingToUndo() : 'Undo manager is empty'
+            assert change.undoChange != null : 'Undo does not exist'
+            assert undoer.anythingToUndo() : 'Undo manager is empty'
         } else {
-            assert undo == null : 'Undo manager contains undo but should not'
+            assert change.undoChange == null : 'Undo manager contains undo but should not'
         }
         return status
     }
@@ -116,13 +104,13 @@ abstract class RenameRefactoringTestCase {
      * Can ignore all errors that don't have anything to do with us.
      */
     protected RefactoringStatus ignoreKnownErrors(RefactoringStatus result) {
-        if (result.getSeverity() != RefactoringStatus.ERROR) {
+        if (result.severity != RefactoringStatus.ERROR) {
             return result
         }
-        for (entry in result.getEntries()) {
+        for (entry in result.entries) {
             // if this entries is known or it isn't an error,
             // then it can be ignored; otherwise not OK
-            if (!checkStringForKnownErrors(entry.getMessage()) && entry.isError()) {
+            if (!checkStringForKnownErrors(entry.message) && entry.isError()) {
                 return result
             }
         }
@@ -143,12 +131,6 @@ abstract class RenameRefactoringTestCase {
         assert refactoring != null : 'refactoring should not be null'
         assert status.isOK() : 'status should be ok, but was: ' + status
         return refactoring
-    }
-
-    protected IUndoManager getUndoManager() {
-        IUndoManager undoManager = RefactoringCore.getUndoManager()
-        undoManager.flush()
-        return undoManager
     }
 
     protected void executePerformOperation(PerformChangeOperation perform, IWorkspace workspace) {

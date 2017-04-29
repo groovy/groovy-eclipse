@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import org.eclipse.jdt.core.SourceRange
 import org.junit.Test
 
-final class CodeSelectGenericsTests extends BrowsingTestCase {
+final class CodeSelectGenericsTests extends BrowsingTestSuite {
 
     private static final String GENERICS_CLASS = '''\
         interface SomeInterface<T> { }

@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IField
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
@@ -29,28 +29,23 @@ import org.junit.Test
 /**
  * Testing the {@link SyntheticAccessorsRenameParticipant}.
  */
-final class SyntheticAccessorRenamingTests extends RenameRefactoringTestCase {
-
-    private static class TestSource {
-        String pack, name, contents, finalContents
-    }
+final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
 
     // assume we are renaming the first memebr of the first type to the new name
     private void performRefactoringAndUndo(String newName, TestSource... sources) {
-        def units = testProject.createUnits(sources*.pack as String[], sources*.name as String[], sources*.contents as String[])
-        def toRename = units[0].getTypes()[0].getChildren()[0]
+        def units = createUnits(sources)
+        def toRename = units[0].types[0].children[0]
         String id = toRename instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD
 
         RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(id)
-        descriptor.setUpdateReferences(true)
         descriptor.setJavaElement(toRename)
         descriptor.setNewName(newName)
         descriptor.setRenameGetters(false)
         descriptor.setRenameSetters(false)
-        descriptor.setProject(testProject.getProject().getName())
+        descriptor.setUpdateReferences(true)
 
         RenameRefactoring refactoring = (RenameRefactoring) createRefactoring(descriptor)
-        RefactoringStatus result = performRefactoring(refactoring, true, true)
+        RefactoringStatus result = performRefactoring(refactoring, true)
         assertContents(units, sources*.finalContents)
 
         // undo
@@ -352,11 +347,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestCase {
         ), new TestSource(
             pack: 'r', name: 'Script.groovy',
             contents: '''\
+                package r
                 p.First f = new p.First()
                 f.foo
                 f.getFoo()
                 '''.stripIndent(),
             finalContents: '''\
+                package r
                 p.First f = new p.First()
                 f.flar
                 f.getFlar()
@@ -405,11 +402,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestCase {
         ), new TestSource(
             pack: 'r', name: 'Script.groovy',
             contents: '''\
+                package r
                 p.First f = new p.First()
                 f.foo
                 f.isFoo()
                 '''.stripIndent(),
             finalContents: '''\
+                package r
                 p.First f = new p.First()
                 f.flar
                 f.isFlar()
@@ -458,11 +457,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestCase {
         ), new TestSource(
             pack: 'r', name: 'Script.groovy',
             contents: '''\
+                package r
                 p.First f = new p.First()
                 f.foo
                 f.setFoo()
                 '''.stripIndent(),
             finalContents: '''\
+                package r
                 p.First f = new p.First()
                 f.flar
                 f.setFlar()

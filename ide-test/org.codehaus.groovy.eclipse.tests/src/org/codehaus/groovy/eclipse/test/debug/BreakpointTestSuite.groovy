@@ -15,22 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.test.debug
 
-import org.codehaus.groovy.eclipse.test.EclipseTestSetup
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.junit.AfterClass
 import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.rules.TestName
 
-abstract class BreakpointTestCase {
+abstract class BreakpointTestSuite extends GroovyEclipseTestSuite {
 
-    protected static GroovyCompilationUnit unit
+    protected GroovyCompilationUnit unit
 
-    @BeforeClass
-    static final void setUpTestSuite() {
-        new EclipseTestSetup(null).setUp()
-        unit = EclipseTestSetup.addGroovySource('''\
+    @Before
+    final void setUpBreakpointTestCase() {
+        unit = addGroovySource '''\
             |
             |def t = [ x:1, y:2 ] // 1
             |
@@ -98,21 +93,8 @@ abstract class BreakpointTestCase {
             |    static z = {
             |        print 9  // 20
             |    }
-            |}'''.stripMargin(), 'BreakpointTesting')
+            |}'''.stripMargin(), 'BreakpointTesting'
+
         unit.makeConsistent(null)
-    }
-
-    @AfterClass
-    static final void tearDownTestSuite() {
-        new EclipseTestSetup(null).tearDown()
-    }
-
-    @Rule
-    public TestName test = new TestName()
-
-    @Before
-    final void setUpTestCase() {
-        println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
     }
 }
