@@ -91,7 +91,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
     }
 
     private IASTFragment createFragmentFromText(String contents) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextFileName())
+        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         Statement statement = unit.getModuleNode().getStatementBlock().getStatements().get(0)
         Expression expr = statement instanceof ReturnStatement ? ((ReturnStatement) statement).getExpression() : ((ExpressionStatement) statement).getExpression()
         IASTFragment fragment = new ASTFragmentFactory().createFragment(expr)
@@ -100,7 +100,7 @@ final class ASTFragmentTests extends BrowsingTestSuite {
     }
 
     private IASTFragment createFragmentFromText(String contents, int start, int end) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextFileName())
+        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         return new ASTFragmentFactory().createFragment(((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression(), start, end)
     }
 

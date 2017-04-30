@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.junit.Assume.assumeFalse
+
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IFile
@@ -54,11 +56,14 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        DSLInferencingTestCase.refreshExternalFoldersProject()
+        assumeFalse(Boolean.getBoolean('greclipse.dsld.disabled'))
+        assumeFalse(GroovyDSLCoreActivator.default.isDSLDDisabled())
+
         addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
+        DSLInferencingTestSuite.refreshExternalFoldersProject()
         withProject { IProject project ->
-            GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true)
-          //GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project)
+            GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
+          //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
         }
     }
 

@@ -70,7 +70,7 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
     }
 
     private void preAction() {
-        unit = addGroovySource(spec.document.get(), 'File' + new Random(System.currentTimeMillis()).nextInt(99999))
+        unit = addGroovySource(spec.document.get(), nextUnitName())
 
         int offset = spec.userSelection.offset
         int length = spec.userSelection.length

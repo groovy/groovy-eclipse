@@ -27,7 +27,7 @@ import org.junit.Test
 final class FindSurroundingNodeTests extends BrowsingTestSuite {
 
     private GroovyCompilationUnit checkRegion(String contents, Region initialRegion, Region expectedRegion) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextFileName())
+        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         return checkRegion(contents, unit, initialRegion, expectedRegion)
     }
 

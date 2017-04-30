@@ -186,7 +186,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         assertTrue("Declaration should be deprecated: " + requestor.result.declaration, hasDeprecatedFlag((AnnotatedNode) requestor.result.declaration));
     }
 
-    private boolean hasDeprecatedFlag(AnnotatedNode declaration) {
+    public static boolean hasDeprecatedFlag(AnnotatedNode declaration) {
         int flags;
 
         if (declaration instanceof PropertyNode) {

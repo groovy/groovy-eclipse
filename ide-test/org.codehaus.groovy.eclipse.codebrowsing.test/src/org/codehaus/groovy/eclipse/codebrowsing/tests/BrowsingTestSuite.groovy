@@ -28,7 +28,7 @@ abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
     protected IJavaElement assertCodeSelect(Iterable<? extends CharSequence> sources, String target, String elementName = target) {
         def unit = null
         sources.each {
-            unit = addGroovySource(it.toString(), nextFileName())
+            unit = addGroovySource(it.toString(), nextUnitName())
         }
         prepareForCodeSelect(unit)
 
@@ -47,7 +47,7 @@ abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected IJavaElement assertCodeSelect(CharSequence source, SourceRange targetRange, String elementName) {
-        GroovyCompilationUnit gunit = addGroovySource(source, nextFileName())
+        GroovyCompilationUnit gunit = addGroovySource(source, nextUnitName())
         prepareForCodeSelect(gunit)
 
         IJavaElement[] elems = gunit.codeSelect(targetRange.getOffset(), targetRange.getLength())
@@ -59,12 +59,6 @@ abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
             assertTrue(elems[0].exists())
             return elems[0]
         }
-    }
-
-    private static Random salt = new Random(System.currentTimeMillis())
-
-    protected String nextFileName() {
-        "File${salt.nextInt(999999)}"
     }
 
     protected void prepareForCodeSelect(ICompilationUnit unit) {

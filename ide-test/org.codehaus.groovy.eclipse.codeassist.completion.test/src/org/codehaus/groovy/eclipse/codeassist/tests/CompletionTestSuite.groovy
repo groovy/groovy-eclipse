@@ -245,7 +245,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
             addJavaSource("public class JavaClass { }\n" + javaContents, "JavaClass", "")
         }
 
-        String groovyClassName = "CompletionTest"; // TODO: Create a more dynamic name?
+        String groovyClassName = nextUnitName();
         ICompilationUnit gunit = addGroovySource(contents, groovyClassName)
         buildProject()
 

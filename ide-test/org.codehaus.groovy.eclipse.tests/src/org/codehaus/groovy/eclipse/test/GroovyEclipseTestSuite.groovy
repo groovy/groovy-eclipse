@@ -112,6 +112,12 @@ abstract class GroovyEclipseTestSuite {
 
     //--------------------------------------------------------------------------
 
+    private static final Random salt = new Random(System.currentTimeMillis())
+
+    protected static final String nextUnitName() {
+        "TestUnit${salt.nextInt(999999)}"
+    }
+
     protected final void setJavaPreference(String key, String val) {
         if (key.startsWith(JavaCore.PLUGIN_ID)) {
             def options = JavaCore.options

@@ -43,7 +43,7 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
      * @param which name of completion proposal to select and apply
      */
     protected void runTest(CharSequence contents, CharSequence expected, String target, String which = target) {
-        def editor = openInEditor(addGroovySource(contents.stripIndent(), nextFileName()))
+        def editor = openInEditor(addGroovySource(contents.stripIndent(), nextUnitName()))
         int offset = contents.stripIndent().toString().indexOf(target) + target.length()
         def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
 
@@ -61,12 +61,6 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         String actual = editor.viewer.document.get().replace('\r\n', '\n')
         assert actual == expect
     }
-
-    protected static String nextFileName() {
-        "File${salt.nextInt(999999)}"
-    }
-
-    private static final Random salt = new Random(System.currentTimeMillis())
 
     //--------------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,30 +22,26 @@ import java.util.Map;
 
 /**
  * Manages the current {@link IGroovyLogger} instance.
- * This class is a singleton
- * @author Andrew Eisenberg
- * @created Nov 24, 2010
+ *
+ * NOTE: This class is a singleton.
  */
 // Some code here borrowed from org.eclipse.ajdt.core.AJLog under EPL license
 // See http://www.eclipse.org/legal/epl-v10.html
 public class GroovyLogManager {
     public static final GroovyLogManager manager = new GroovyLogManager();
-    
+
     private GroovyLogManager() {
-        // uninstantiable
-        defaultLogger = new DefaultGroovyLogger();
-        timers = new HashMap<String, Long>();
     }
-    
-    private IGroovyLogger[] loggers = null;
-    
+
+    private IGroovyLogger[] loggers;
+
     // only use default logger if no others are registered
-    private IGroovyLogger defaultLogger;
-    
-    private Map<String, Long> timers;
+    private final IGroovyLogger defaultLogger = new DefaultGroovyLogger();
+
+    private final Map<String, Long> timers = new HashMap<String, Long>();
 
     private boolean useDefaultLogger;
-    
+
     /**
      * @return true if logger was added.  False if not
      * if not added, then this means the exact logger is already in the list
@@ -57,30 +53,29 @@ public class GroovyLogManager {
             newIndex = 0;
         } else {
             // check to see if already there
-            for (IGroovyLogger l : loggers) {
-                if (l == logger) {
+            for (IGroovyLogger igl : loggers) {
+                if (igl == logger) {
                     return false;
                 }
             }
-            
             newIndex = loggers.length;
-            IGroovyLogger[] newLoggers = new IGroovyLogger[newIndex+1];
+            IGroovyLogger[] newLoggers = new IGroovyLogger[newIndex + 1];
             System.arraycopy(loggers, 0, newLoggers, 0, newIndex);
             loggers = newLoggers;
         }
         loggers[newIndex] = logger;
         return true;
     }
-    
+
     /**
-     * Removes the logger from the logger list
-     * @return true iff found and removed
-     * false iff nothing found.
+     * Removes the logger from the logger list.
+     *
+     * @return true iff found and removed; false iff nothing found.
      */
     public boolean removeLogger(IGroovyLogger logger) {
-        if (logger != null) {
+        if (logger != null && loggers != null) {
             int foundIndex = -1;
-            for (int i = 0; i < loggers.length; i++) {
+            for (int i = 0, n = loggers.length; i < n; i += 1) {
                 if (loggers[i] == logger) {
                     foundIndex = i;
                 }
@@ -91,7 +86,7 @@ public class GroovyLogManager {
                     if (foundIndex > 0) {
                         System.arraycopy(loggers, 0, newLoggers, 0, foundIndex);
                     }
-                    System.arraycopy(loggers, foundIndex+1, newLoggers, foundIndex, loggers.length-foundIndex-1);
+                    System.arraycopy(loggers, foundIndex + 1, newLoggers, foundIndex, loggers.length - foundIndex - 1);
                     loggers = newLoggers;
                 } else {
                     loggers = null;
@@ -99,20 +94,18 @@ public class GroovyLogManager {
                 return true;
             }
         }
-        
         // not found
         return false;
     }
-    
-    
+
     public void logStart(String event) {
         timers.put(event, System.currentTimeMillis());
     }
-    
+
     public void logEnd(String event, TraceCategory category) {
         logEnd(event, category, null);
     }
-    
+
     public void logEnd(String event, TraceCategory category, String message) {
         Long then = timers.get(event);
         if (then != null) {
@@ -120,9 +113,9 @@ public class GroovyLogManager {
                 long now = System.currentTimeMillis();
                 long elapsed = now - then.longValue();
                 if ((message != null) && (message.length() > 0)) {
-                    log(category,"Event complete: "+elapsed + "ms: " + event + " (" + message + ")");
+                    log(category, "Event complete: " + elapsed + "ms: " + event + " (" + message + ")");
                 } else {
-                    log(category,"Event complete: "+elapsed + "ms: " + event);
+                    log(category, "Event complete: " + elapsed + "ms: " + event);
                 }
             }
             timers.remove(event);
@@ -132,12 +125,12 @@ public class GroovyLogManager {
     public void log(String message) {
         log(TraceCategory.DEFAULT, message);
     }
-    
+
     public void log(TraceCategory category, String message) {
         if (!hasLoggers()) {
             return;
         }
-        
+
         if (loggers != null) {
             for (IGroovyLogger logger : loggers) {
                 if (logger.isCategoryEnabled(category)) {
@@ -145,22 +138,22 @@ public class GroovyLogManager {
                 }
             }
         }
-        
+
         if (useDefaultLogger) {
             defaultLogger.log(category, message);
         }
     }
-    
+
     /**
-     * Call this method to check if any loggers are currently 
-     * installed.  Doing so can help avoid creating costly 
+     * Call this method to check if any loggers are currently
+     * installed.  Doing so can help avoid creating costly
      * logging messages unless required
      * @return
      */
     public boolean hasLoggers() {
         return loggers != null || useDefaultLogger;
     }
-    
+
     /**
      * enables/disables the default logger (printing to sysout
      * @param useDefaultLogger
@@ -168,15 +161,13 @@ public class GroovyLogManager {
     public void setUseDefaultLogger(boolean useDefaultLogger) {
         this.useDefaultLogger = useDefaultLogger;
     }
-    
+
     public void logException(TraceCategory cat, Throwable t) {
         if (hasLoggers()) {
             // only log if logger is available, otherwise, ignore
             StringWriter writer = new StringWriter();
             t.printStackTrace(new PrintWriter(writer));
-            log(cat, "Exception caught.\n" +
-                    writer.getBuffer());
+            log(cat, "Exception caught.\n" + writer.getBuffer());
         }
     }
-    
 }

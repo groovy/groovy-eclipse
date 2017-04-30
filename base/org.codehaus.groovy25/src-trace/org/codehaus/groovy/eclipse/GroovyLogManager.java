@@ -22,9 +22,8 @@ import java.util.Map;
 
 /**
  * Manages the current {@link IGroovyLogger} instance.
- * This class is a singleton
  *
- * @author Andrew Eisenberg
+ * NOTE: This class is a singleton.
  */
 // Some code here borrowed from org.eclipse.ajdt.core.AJLog under EPL license
 // See http://www.eclipse.org/legal/epl-v10.html
@@ -32,22 +31,20 @@ public class GroovyLogManager {
     public static final GroovyLogManager manager = new GroovyLogManager();
 
     private GroovyLogManager() {
-        defaultLogger = new DefaultGroovyLogger();
-        timers = new HashMap<>();
     }
-
-    // only use default logger if no others are registered
-    private IGroovyLogger defaultLogger;
 
     private IGroovyLogger[] loggers;
 
-    private Map<String, Long> timers;
+    // only use default logger if no others are registered
+    private final IGroovyLogger defaultLogger = new DefaultGroovyLogger();
+
+    private final Map<String, Long> timers = new HashMap<>();
 
     private boolean useDefaultLogger;
 
     /**
-     * @return true if logger was added.  False if not
-     * if not added, then this means the exact logger is already in the list
+     * @return true if logger was added; false if not if not added --
+     *         then this means the exact logger is already in the list
      */
     public boolean addLogger(IGroovyLogger logger) {
         int newIndex;
@@ -71,9 +68,9 @@ public class GroovyLogManager {
     }
 
     /**
-     * Removes the logger from the logger list
-     * @return true iff found and removed
-     * false iff nothing found.
+     * Removes the logger from the logger list.
+     *
+     * @return true iff found and removed; false iff nothing found
      */
     public boolean removeLogger(IGroovyLogger logger) {
         if (logger != null && loggers != null) {
@@ -150,16 +147,14 @@ public class GroovyLogManager {
     /**
      * Call this method to check if any loggers are currently
      * installed.  Doing so can help avoid creating costly
-     * logging messages unless required
-     * @return
+     * logging messages unless required.
      */
     public boolean hasLoggers() {
         return loggers != null || useDefaultLogger;
     }
 
     /**
-     * enables/disables the default logger (printing to sysout
-     * @param useDefaultLogger
+     * Enables/disables the default logger (printing to sysout).
      */
     public void setUseDefaultLogger(boolean useDefaultLogger) {
         this.useDefaultLogger = useDefaultLogger;
