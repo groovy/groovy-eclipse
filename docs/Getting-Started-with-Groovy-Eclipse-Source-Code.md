@@ -35,7 +35,7 @@ On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Inst
 
 ### Setup Groovy-Eclipse Compiler
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.1.8* button, and let Eclipse restart.
+On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.1.9* button, and let Eclipse restart.
 
 ### Install Execution Environment Descriptions
 
@@ -73,7 +73,7 @@ Groovy-Eclipse is a Groovy language tooling (similar to JDT, CDT eclipse compone
 
 ### org.eclipse.jdt.core
 
-This project is a patched version of the Eclipse JDT plug-in that hooks core low-level support for the Groovy language into JDT, since JDT does not provide extension support for this kind of integration. See the LanguageSupportFactory class references (and other classes from �groovy� folder under this project) in the project to locate integration points. Issues noticed in Java tooling may sometimes be caused by Groovy-Eclipse because of this project.
+This project is a patched version of the Eclipse JDT plug-in that hooks core low-level support for the Groovy language into JDT, since JDT does not provide extension support for this kind of integration. See the LanguageSupportFactory class references (and other classes from 'groovy' folder under this project) in the project to locate integration points. Issues noticed in Java tooling may sometimes be caused by Groovy-Eclipse because of this project.
 
 ### org.eclipse.jdt.groovy.core
 
@@ -89,7 +89,7 @@ Supports the ability to detect and switch between the available version of Groov
 
 ### org.codehaus.groovy.eclipse.junit.test
 
-Integrates JUnits written in Groovy into Eclipse�s JUnit framework.
+Integrates JUnits written in Groovy into Eclipse's JUnit framework.
 
 ### org.codehaus.groovy.eclipse.ant
 
@@ -113,7 +113,7 @@ Feature of Groovy source editor (.groovy files editor). Integration of code comp
 
 ### org.codehaus.groovy.eclipse.quickfix
 
-Feature of Groovy source editor (.groovy files editor). Integration of quick fix suggestions for Groovy language. Can either be activated by selecting a statements and pressing <Ctrl> + 1 or by clicking on the error annotation in the .groovy file editor�s overview ruler.
+Feature of Groovy source editor (.groovy files editor). Integration of quick fix suggestions for Groovy language. Can either be activated by selecting a statements and pressing <Ctrl> + 1 or by clicking on the error annotation in the .groovy file editor's overview ruler.
 
 ### org.codehaus.groovy.eclipse.dsl
 
@@ -123,7 +123,7 @@ Support for Groovy based Domain Specific Language. Provides contents assist, typ
 
 Groovy compiler tests.
 
-If a snippet of code is not building cleanly, it should be captured as a test case in [GroovySimpleTest.java](https://github.com/groovy/groovy-eclipse/blob/master/base-test/org.eclipse.jdt.groovy.core.tests.compiler/src/org/eclipse/jdt/groovy/core/tests/basic/GroovySimpleTest.java)  For each test, there is either a call to ‘runConformTest()’ if the snippet should successfully compile and run, or ‘runNegativeTest()’ if it should not compile (in which case it polices the error messages that will come out). Each test is simply the test code captured as a string and then expected output or expected errors. It is possible to pass multiple source files to these run methods.
+If a snippet of code is not building cleanly, it should be captured as a test case in [GroovySimpleTest.java](https://github.com/groovy/groovy-eclipse/blob/master/base-test/org.eclipse.jdt.groovy.core.tests.compiler/src/org/eclipse/jdt/groovy/core/tests/basic/GroovySimpleTest.java)  For each test, there is either a call to 'runConformTest()' if the snippet should successfully compile and run, or 'runNegativeTest()' if it should not compile (in which case it polices the error messages that will come out). Each test is simply the test code captured as a string and then expected output or expected errors. It is possible to pass multiple source files to these run methods.
 
 ### org.eclipse.jdt.groovy.core.tests.builder
 
@@ -218,27 +218,27 @@ Fork the Groovy-Eclipse repository, push your changes to it, and submit a pull r
 
 ## Debugging 'groovyc' Command
 
-Often defects are addressing something that doesn’t compile in Groovy Eclipse and yet compiles fine when compiled with a ‘groovyc’ command executed from command line interface. Such defects would require one to investigate differences between ‘groovyc’ command compilation (pure Groovy) and Groovy-Eclipse compilation. This involves debugging ‘groovyc’ command execution. There are 2 ways debugging ‘groovyc’ command:
+Often defects are addressing something that doesn't compile in Groovy Eclipse and yet compiles fine when compiled with a 'groovyc' command executed from command line interface. Such defects would require one to investigate differences between 'groovyc' command compilation (pure Groovy) and Groovy-Eclipse compilation. This involves debugging 'groovyc' command execution. There are 2 ways debugging 'groovyc' command:
 
-- Attach Eclipse debugger to ‘groovyc’ java process
+- Attach Eclipse debugger to 'groovyc' java process
 - Launch org.codehaus.groovy.tools.FileSystemCompiler as a Java Application
 
-It is recommended to have Groovy source from https://github.com/groovy/groovy­core in your workspace as code in Groovy Eclipse org.codehaus.groovy doesn’t exactly match the original groovy code and has a few Groovy Eclipse specific fixes.
+It is recommended to have Groovy source from https://github.com/groovy/groovy-core in your workspace as code in Groovy Eclipse org.codehaus.groovy doesn't exactly match the original groovy code and has a few Groovy Eclipse specific fixes.
 
-### Attach Eclipse Debugger to ‘groovyc’ java process
+### Attach Eclipse Debugger to 'groovyc' java process
 
 1. Execute the following in the console:
 	```
-	export JAVA_OPTS="­-Xdebug -­Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=5000,server=y,suspend=y"
+	export JAVA_OPTS="--Xdebug --Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=5000,server=y,suspend=y"
 	```
-1. Start ‘groovyc’ command from the console, e.g. ‘<path to groovyc>/groovyc <groovy files to compile>. Process should be suspended until debugger is attached.
-1. Create a new ‘Remote Java Application” launch configuration in Eclipse. Specify project from the workspace corresponding the version of Groovy for the ran ‘groovyc’ command, leave host as localhost, and specify the port 5000.
-1. Launch the created “Remote Java Application”.
+1. Start 'groovyc' command from the console, e.g. '<path to groovyc>/groovyc <groovy files to compile>. Process should be suspended until debugger is attached.
+1. Create a new 'Remote Java Application' launch configuration in Eclipse. Specify project from the workspace corresponding the version of Groovy for the ran 'groovyc' command, leave host as localhost, and specify the port 5000.
+1. Launch the created 'Remote Java Application'.
 
 ### Launch org.codehaus.groovy.tools.FileSystemCompiler as Java Application
 
-1. Create a new “Java Application” launch configuration in Eclipse.
+1. Create a new 'Java Application' launch configuration in Eclipse.
 1. Specify the project from the workspace corresponding the required Groovy version.
 1. Specify org.codehaus.groovy.tools.FileSystemCompiler as the Main class to launch.
-1. Specify groovy files to compile (absolute path) on the “Arguments” tab of the launch configuration dialog in the “Program Arguments” text box.
+1. Specify groovy files to compile (absolute path) on the 'Arguments' tab of the launch configuration dialog in the 'Program Arguments' text box.
 1. Run the newly created launch configuration.
