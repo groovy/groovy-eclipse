@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import groovyjarjarantlr.Token;
-import groovyjarjarantlr.TokenStreamException;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStreamException;
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.antlr.GroovySourceToken;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -34,15 +33,12 @@ import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.ITextSelection;
 
 /**
- * This class provides methods to retrieve tokens for a given IDocument
- * presumed to contain Groovy source code.
+ * Provides methods to retrieve tokens for a given IDocument presumed to
+ * contain Groovy source code.
  * <p>
  * A sophisticated implementation could try to work incrementally and invalidate
  * only some tokens when the document is changed. This implementation is rather
  * naive and clears the whole cache on every document change.
- *
- * @author kdvolder
- * @created 2010-05-26
  */
 public class GroovyDocumentScanner implements IDocumentListener {
 
@@ -107,6 +103,8 @@ public class GroovyDocumentScanner implements IDocumentListener {
                 token = nextToken();
                 result.add(token);
             } while (token.getType() != GroovyTokenTypeBridge.EOF);
+        } catch (BadLocationException bad) {
+            // document may be unreconciled
         } catch (Exception e) {
             if (logLimit-- > 0) {
                 Util.log(e);
