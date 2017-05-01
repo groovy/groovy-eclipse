@@ -46,8 +46,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
      */
     private static final File globalDsldLocation = getGlobalDsldLocation();
 
-
-    private final class DSLDClasspathContainer implements IClasspathContainer {
+    private static final class DSLDClasspathContainer implements IClasspathContainer {
         private IClasspathEntry[] entries;
 
         public IPath getPath() {
@@ -80,46 +79,43 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
             if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
                 return NO_ENTRIES;
             }
-
             List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>();
-
             if (globalDsldLocation != null && globalDsldLocation.exists()) {
                 IPath dsldPath = new Path(globalDsldLocation.getAbsolutePath());
                 newEntries.add(newLibraryEntry(dsldPath, null, null, false));
             }
-
             try {
                 IPath folder = CompilerUtils.findDSLDFolder();
                 if (folder != null) {
                     Assert.isTrue(folder.toFile().exists(), "Plugin DSLD location does not exist: " + folder);
-
                     newEntries.add(newLibraryEntry(folder, null, null));
                 }
             } catch (Exception e) {
                 GroovyDSLCoreActivator.logException(e);
             }
-
             return newEntries.toArray(NO_ENTRIES);
         }
     }
 
     private static File getGlobalDsldLocation() {
-        File location = null;
-        String dotGroovyLocation = CompilerUtils.getDotGroovyLocation();
-        if (dotGroovyLocation != null) {
-            dotGroovyLocation += "/greclipse/global_dsld_support";
-            location = new File(dotGroovyLocation);
-            if (!location.exists()) {
-                try {
-                    location.mkdirs();
-                } catch (SecurityException e) {
-                }
+        final String dotGroovyLocation;
+        if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled() ||
+                (dotGroovyLocation = CompilerUtils.getDotGroovyLocation()) == null) {
+            return null;
+        }
+
+        final File globalDsldDir = new File(dotGroovyLocation + "/greclipse/global_dsld_support");
+        if (!globalDsldDir.exists()) {
+            try {
+                globalDsldDir.mkdirs();
+            } catch (SecurityException e) {
             }
         }
-        if (location != null && location.exists()) {
-            return location;
+
+        if (globalDsldDir.exists()) {
+            return globalDsldDir;
         } else {
-            GroovyDSLCoreActivator.logWarning("Cannot create DSL support location at " + dotGroovyLocation + ". Location is read-only, or a security manager is preventing it.");
+            GroovyDSLCoreActivator.logWarning("Cannot create DSL support location at " + globalDsldDir.getPath() + ". Location is read-only, or a security manager is preventing it.");
             return null;
         }
     }
@@ -130,9 +126,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     public void initialize(final IPath containerPath, final IJavaProject javaProject) throws CoreException {
         this.javaProject = javaProject;
         IClasspathContainer container = new DSLDClasspathContainer();
-        JavaCore.setClasspathContainer(containerPath,
-                new IJavaProject[] { javaProject },
-                new IClasspathContainer[] {container}, null);
+        JavaCore.setClasspathContainer(containerPath, new IJavaProject[] {javaProject}, new IClasspathContainer[] {container}, null);
     }
 
     @Override
@@ -146,12 +140,10 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
         if (containerSuggestion instanceof DSLDClasspathContainer) {
             ((DSLDClasspathContainer) containerSuggestion).reset();
         }
-
         if (javaProject == null) {
             IClasspathContainer dsld = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, javaProject);
             if (dsld instanceof DSLDClasspathContainer) {
                 ((DSLDClasspathContainer) dsld).reset();
-
             }
         }
     }
