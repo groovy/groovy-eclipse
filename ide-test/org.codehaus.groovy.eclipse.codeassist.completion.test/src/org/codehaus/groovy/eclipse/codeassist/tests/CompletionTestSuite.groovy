@@ -244,15 +244,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         if (javaContents != null) {
             addJavaSource("public class JavaClass { }\n" + javaContents, "JavaClass", "")
         }
-
-        String groovyClassName = nextUnitName();
-        ICompilationUnit gunit = addGroovySource(contents, groovyClassName)
-        buildProject()
-
-        System.err.println("--- " + groovyClassName + ".groovy ---")
-        System.err.println(contents)
-        System.err.println("--- " + groovyClassName + ".groovy ---")
-
+        def gunit = addGroovySource(contents, nextUnitName())
         return createProposalsAtOffset(gunit, completionOffset)
     }
 
@@ -271,7 +263,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         }
 
         if (count >= maxCount) {
-            System.err.println("Reached maxcount(" + maxCount + ") attempts and still got no proposals - hopefully that is what the test expects")
+            println "Reached max ($maxCount) attempts and still got no proposals -- hopefully that is what the test expects"
         }
 
         return proposals

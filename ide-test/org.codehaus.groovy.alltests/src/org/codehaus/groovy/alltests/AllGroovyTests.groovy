@@ -152,13 +152,12 @@ import org.junit.runners.Suite
 final class AllGroovyTests {
     @BeforeClass
     static void setUp() {
-        // ensure that the compiler chooser starts up
+        // ensure that the compiler chooser is started
         def compiler = GroovyTestSuiteSupport.initializeCompilerChooser()
 
-        // use syserr to see the messages in the build log; sysout seems to disapear without a trace on build server
-        System.err.println '------------ AllGroovyTests ------------'
-        System.err.println 'active Groovy version = ' + compiler.activeVersion
-        System.err.println 'active Groovy version (specified) = ' + compiler.activeSpecifiedVersion
-        System.err.println '----------------------------------------'
+        println '------------ AllGroovyTests ------------'
+        println 'active Groovy version = ' + compiler.activeVersion
+        println 'active Groovy version (specified) = ' + compiler.activeSpecifiedVersion
+        println '----------------------------------------'
     }
 }

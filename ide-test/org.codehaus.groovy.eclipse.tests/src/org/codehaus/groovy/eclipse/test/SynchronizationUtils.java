@@ -112,7 +112,7 @@ public class SynchronizationUtils {
                 // do nothing
             }
         } catch (SWTException e) {
-            System.err.println(e);
+            e.printStackTrace();
         }
     }
 
