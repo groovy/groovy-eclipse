@@ -1512,8 +1512,7 @@ assert primaryExprType != null && dependentExprType != null;
             objType = primaryTypeStack.getLast();
         }
 
-        if (VariableScope.MAP_CLASS_NODE.equals(objType) && node.getObjectExpression() instanceof VariableExpression
-                && node.getProperty() instanceof ConstantExpression) {
+        if (VariableScope.MAP_CLASS_NODE.equals(objType) && node.getObjectExpression() instanceof VariableExpression && node.getProperty() instanceof ConstantExpression) {
             currentMapVariable = ((VariableExpression) node.getObjectExpression()).getAccessedVariable();
             Map<String, ClassNode> map = localMapProperties.get(currentMapVariable);
             if (map == null) {
@@ -1521,9 +1520,13 @@ assert primaryExprType != null && dependentExprType != null;
                 localMapProperties.put(currentMapVariable, map);
             }
             if (enclosingAssignment != null) {
-                map.put(((ConstantExpression) node.getProperty()).getConstantName(), enclosingAssignment.getRightExpression().getType());
+                //String key = ((ConstantExpression) node.getProperty()).getConstantName();
+                String key = (String) ((ConstantExpression) node.getProperty()).getValue();
+                ClassNode val = enclosingAssignment.getRightExpression().getType();
+                map.put(key, val);
             }
         }
+
         node.getProperty().visit(this);
         currentMapVariable = null;
 
@@ -2272,7 +2275,13 @@ assert primaryExprType != null && dependentExprType != null;
         if (TypeConfidence.UNKNOWN == result.confidence && VariableScope.MAP_CLASS_NODE.equals(result.declaringType)) {
             ClassNode inferredType = VariableScope.OBJECT_CLASS_NODE;
             if (currentMapVariable != null && node instanceof ConstantExpression) {
-                inferredType = localMapProperties.get(currentMapVariable).get(((ConstantExpression) node).getConstantName());
+                // recover inferred type from property map (see visitPropertyExpression)
+                Map<String, ClassNode> map = localMapProperties.get(currentMapVariable);
+                //String key = ((ConstantExpression) node).getConstantName();
+                String key = (String) ((ConstantExpression) node).getValue();
+                ClassNode val = map.get(key);
+                if (val != null)
+                    inferredType = val;
             }
             TypeLookupResult tlr = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope, result.extraDoc);
             tlr.enclosingAnnotation = result.enclosingAnnotation;
