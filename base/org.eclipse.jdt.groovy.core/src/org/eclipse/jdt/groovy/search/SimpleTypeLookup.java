@@ -734,7 +734,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (scopeNode instanceof MethodCallExpression) {
             probablyClassLiteral = (classExpr != ((MethodCallExpression) scopeNode).getObjectExpression());
         } else if (scopeNode instanceof PropertyExpression && classExpr.getEnd() > 0) {
-            probablyClassLiteral = String.valueOf(unit.getContents(), classExpr.getStart(), classExpr.getLength()).endsWith(".class");
+            try {
+                probablyClassLiteral = String.valueOf(unit.getContents(), classExpr.getStart(), classExpr.getLength()).endsWith(".class");
+            } catch (StringIndexOutOfBoundsException ex) {
+                probablyClassLiteral = false;
+            }
         } else {
             probablyClassLiteral = false;
         }
