@@ -180,11 +180,11 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testMoveBack() {
         performRefactoringAndUndo('p2', new TestSource(
             pack: 'p1', name: 'Groovy.groovy',
-            contents: 'package p1\nimport p2.Groovy2\npublic class Groovy { Groovy2 g }',
+            contents: 'package p1\nimport p2.Groovy2\n\npublic class Groovy { Groovy2 g }',
             finalContents: 'package p2\n\npublic class Groovy { Groovy2 g }'
         ), new TestSource(
             pack: 'p2', name: 'Groovy2.groovy',
-            contents: 'package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }',
+            contents: 'package p2\nimport p1.Groovy\n\npublic class Groovy2 extends Groovy { }',
             finalContents: 'package p2\n\npublic class Groovy2 extends Groovy { }'
         ))
     }

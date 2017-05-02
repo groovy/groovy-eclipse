@@ -35,17 +35,17 @@ import org.junit.runners.Parameterized.Parameters
 @RunWith(Parameterized)
 final class ExtractMethodTests extends GroovyEclipseTestSuite {
 
-    @Parameters(name='{1}')
+    @Parameters
     static Iterable<Object[]> params() {
         URL url = Platform.getBundle('org.codehaus.groovy.eclipse.refactoring.test').getEntry('/resources/ExtractMethod')
         new File(FileLocator.toFileURL(url).getFile()).listFiles({ File dir, String item ->
             item ==~ /ExtractMethod_Test_.*/
         } as FilenameFilter).collect {
-            [it, it.name - ~/.txt/] as Object[]
+            [it] as Object[]
         }
     }
 
-    ExtractMethodTests(File file, String name) {
+    ExtractMethodTests(File file) {
         spec = new RefactoringTestSpec(file)
     }
 

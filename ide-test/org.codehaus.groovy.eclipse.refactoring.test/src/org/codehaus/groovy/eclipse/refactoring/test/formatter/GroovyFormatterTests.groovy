@@ -30,7 +30,7 @@ import org.junit.runners.Parameterized.Parameters
 @RunWith(Parameterized)
 final class GroovyFormatterTests {
 
-    @Parameters(name='{1}')
+    @Parameters
     static Iterable<Object[]> params() {
         URL url = Platform.getBundle('org.codehaus.groovy.eclipse.refactoring.test').getEntry('/resources/Formatter')
         new File(FileLocator.toFileURL(url).getFile()).listFiles({ File dir, String item ->
