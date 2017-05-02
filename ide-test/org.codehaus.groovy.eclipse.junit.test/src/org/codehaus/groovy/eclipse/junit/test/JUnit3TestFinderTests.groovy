@@ -15,10 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.junit.test
 
+import static org.junit.Assume.assumeTrue
+
+import org.eclipse.core.runtime.Platform
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.junit.launcher.JUnit3TestFinder
+import org.junit.Before
 import org.junit.Test
+import org.osgi.framework.Version
 
 final class JUnit3TestFinderTests extends JUnitTestSuite {
 
@@ -26,6 +31,11 @@ final class JUnit3TestFinderTests extends JUnitTestSuite {
         IType type = unit.getType(typeName)
         assert type.exists() : "Groovy type $typeName should exist"
         assert new JUnit3TestFinder().isTest(type) == expected : "Groovy type $typeName should${expected ? '' : 'n\'t'} be a JUnit 3 test $reasonText"
+    }
+
+    @Before
+    void setUp() {
+        assumeTrue(Platform.getBundle('org.eclipse.jdt.core').getVersion().compareTo(Version.parseVersion('3.9.50')) >= 0)
     }
 
     @Test

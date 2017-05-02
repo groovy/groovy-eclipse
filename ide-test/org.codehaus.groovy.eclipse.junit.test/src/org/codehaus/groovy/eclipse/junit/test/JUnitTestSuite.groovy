@@ -30,9 +30,6 @@ abstract class JUnitTestSuite extends GroovyEclipseTestSuite {
         GroovyCompilationUnit unit = super.addGroovySource(contents, name, pack)
         buildProject()
         waitForIndex()
-
-        sleep(250) // wait for reconcile
-
         return unit
     }
 }

@@ -29,7 +29,6 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaModelMarker
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Test
 
@@ -328,7 +327,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         buildProject()
 
         IMarker[] markers = testProject.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
-        Assume.assumeTrue(/*'Should have found problems in this project',*/ markers != null && markers.length > 0)
+        assumeTrue(markers != null && markers.length > 0)
 
         List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit)
         assert resolvers.size() == 1 : 'Should have found exactly one resolver'
