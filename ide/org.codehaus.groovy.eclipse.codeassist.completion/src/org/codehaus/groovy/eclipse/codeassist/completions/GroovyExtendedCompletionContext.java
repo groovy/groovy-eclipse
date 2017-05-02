@@ -36,10 +36,10 @@ import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.SourceField;
 
 public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletionContext {
@@ -141,8 +141,10 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
 
                     ClassNode type = varInfo.type;
                     if (GroovyUtils.isAssignable(type, targetType)) {
-                        // note that parent, start location, and typeSignature are not important here
-                        nameElementMap.put(varName, ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));
+                        // NOTE: parent, source location, typeSignature, etc. are not important here
+                        int start = 0, until = varName.length() - 1;
+                        nameElementMap.put(varName, new LocalVariable(
+                            (JavaElement) getEnclosingElement(), varName, start, until, start, until, typeSignature, null, 0, false));
                     }
                 }
             }

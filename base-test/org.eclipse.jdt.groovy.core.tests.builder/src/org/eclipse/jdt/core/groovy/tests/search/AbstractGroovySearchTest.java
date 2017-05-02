@@ -47,6 +47,8 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.LocalVariable;
 
 /**
  * @author Andrew Eisenberg
@@ -298,15 +300,15 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
 
 
-    protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int declStart, MatchRegion[] matchLocations) throws JavaModelException {
+    protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int start, MatchRegion[] matchLocations) throws JavaModelException {
         String className = "First";
         String matchedVarName = "xxx";
+        int until = start + matchedVarName.length() - 1;
         GroovyCompilationUnit unit = createUnit(className, contents);
-        // Will need to call via reflection so can work on either.
-        // 3.6 version:
-        ILocalVariable var = ReflectionUtils.createLocalVariable(findType(className, unit).getChildren()[offsetInParent], matchedVarName, declStart, Signature.SIG_INT);
-        SearchPattern pattern = SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES);
+        JavaElement parent = (JavaElement) findType(className, unit).getChildren()[offsetInParent];
+        ILocalVariable var = new LocalVariable(parent, matchedVarName, start, until, start, until, Signature.SIG_INT, null, 0, false);
 
+        SearchPattern pattern = SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES);
         checkLocalVarMatches(contents, matchName, pattern, unit, matchLocations);
     }
 

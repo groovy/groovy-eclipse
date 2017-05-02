@@ -59,7 +59,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -279,9 +278,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
         } else {
             start = ((VariableExpression) var).getStart();
         }
-
+        int until = start + var.getName().length() - 1;
         String signature = GroovyUtils.getTypeSignature(type, false, false);
-        return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), start, signature);
+        return new LocalVariable((JavaElement) enclosingElement, var.getName(), start, until, start, until, signature, null, 0, false);
     }
 
     private String checkQualifiedType(TypeLookupResult result, IJavaElement enclosingElement) throws JavaModelException {

@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,11 +43,12 @@ import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.LocalVariableReferenceRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
 import org.eclipse.jdt.internal.corext.refactoring.rename.JavaRenameProcessor;
@@ -63,28 +64,19 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
-/**
- *
- * @author Andrew Eisenberg
- * @created Apr 1, 2010
- */
+
 public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
 
+    Variable variable;
     GroovyCompilationUnit unit;
-    Variable variable;  // initially null
-    CompilationUnitChange change;  // initially null
+    CompilationUnitChange change;
     ILocalVariable localVariable;
+
     GroovyRenameLocalVariableProcessor(ILocalVariable localVariable, String newName, RefactoringStatus status) {
         initialize(localVariable, newName, status);
     }
 
-    /**
-     * @param localVariable
-     * @param newName
-     * @param status
-     */
-    private void initialize(ILocalVariable localVariable, String newName,
-            RefactoringStatus status) {
+    private void initialize(ILocalVariable localVariable, String newName, RefactoringStatus status) {
         this.localVariable = localVariable;
         ICompilationUnit unit = (ICompilationUnit) localVariable.getAncestor(IJavaElement.COMPILATION_UNIT);
         if (unit instanceof GroovyCompilationUnit) {
@@ -103,22 +95,18 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
     }
 
     @Override
-    protected RenameModifications computeRenameModifications()
-            throws CoreException {
+    protected RenameModifications computeRenameModifications() throws CoreException {
         RenameModifications mods = new RenameModifications();
         mods.rename(localVariable, new RenameArguments(getNewElementName(), true));
         return mods;
     }
 
     @Override
-    protected RefactoringStatus doCheckFinalConditions(IProgressMonitor pm,
-            CheckConditionsContext context) throws CoreException,
-            OperationCanceledException {
-        // ensure that we are working on a working copy so that
-        // we can use == for testing nodes.
+    protected RefactoringStatus doCheckFinalConditions(IProgressMonitor pm, CheckConditionsContext context) throws CoreException, OperationCanceledException {
+        // ensure that we are working on a working copy so that we can use == for testing nodes.
         boolean wasWorkingCopy = true;
         try {
-            if (! unit.isWorkingCopy()) {
+            if (!unit.isWorkingCopy()) {
                 unit.becomeWorkingCopy(new SubProgressMonitor(pm, 10));
                 wasWorkingCopy = false;
             }
@@ -136,8 +124,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
     }
 
     /**
-     * Check to see if the new name shadows an existing name
-     * @return
+     * Checks to see if the new name shadows an existing name.
      */
     private RefactoringStatus checkShadowing() {
         IType type = (IType) localVariable.getAncestor(IJavaElement.TYPE);
@@ -169,16 +156,19 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
 
     @Override
     protected String[] getAffectedProjectNatures() throws CoreException {
-         return new String[] { JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE };
+        return new String[] {JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE};
     }
+
     @Override
     protected IFile[] getChangedFiles() throws CoreException {
-        return new IFile[] { ResourceUtil.getFile(unit) };
+        return new IFile[] {ResourceUtil.getFile(unit)};
     }
+
     @Override
     public int getSaveMode() {
         return RefactoringSaveHelper.SAVE_NOTHING;
     }
+
     public RefactoringStatus checkNewElementName(String newName)
             throws CoreException {
         if (localVariable.getElementName().equals(newName)) {
@@ -193,17 +183,14 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
     public String getCurrentElementName() {
         return localVariable.getElementName();
     }
+
     public Object getNewElement() throws CoreException {
-
-        // be compatible between 3.6 and 3.7+
-        return ReflectionUtils.createLocalVariable(localVariable.getParent(), getNewElementName(), localVariable.getNameRange()
-                .getOffset(), localVariable.getTypeSignature());
-
+        int start = localVariable.getNameRange().getOffset(), until = localVariable.getNameRange().getOffset() + getNewElementName().length() - 1;
+        return new LocalVariable((JavaElement) localVariable.getParent(), getNewElementName(), start, until, start, until, localVariable.getTypeSignature(), null, 0, false);
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor pm)
-            throws CoreException, OperationCanceledException {
+    public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException, OperationCanceledException {
         Variable variable = findVariable();
         if (variable == null) {
             return RefactoringStatus.createErrorStatus("Cannot find local variable " + localVariable.getElementName());
@@ -212,22 +199,25 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
     }
 
     @Override
-    public Change createChange(IProgressMonitor pm) throws CoreException,
-            OperationCanceledException {
+    public Change createChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
         return change;
     }
+
     @Override
     public Object[] getElements() {
         return new Object[] { localVariable };
     }
+
     @Override
     public String getIdentifier() {
         return RenameLocalGroovyVariableContribution.ID;
     }
+
     @Override
     public String getProcessorName() {
         return "Rename Local Variable (Groovy)";
     }
+
     @Override
     public boolean isApplicable() throws CoreException {
         if (unit == null) {
@@ -248,13 +238,8 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
         visitor.visitCompilationUnit(requestor);
         return requestor.getReferences();
-
     }
 
-    /**
-     * @return
-     * @throws JavaModelException
-     */
     private Variable findVariable() throws JavaModelException {
         ISourceRange sourceRange = localVariable.getSourceRange();
         ASTNodeFinder findLocalVar = new ASTNodeFinder(new Region(sourceRange.getOffset(), sourceRange.getLength()));
@@ -275,11 +260,10 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         change.setEdit(rootEdit);
         change.setKeepPreviewEdits(true);
 
-        for (int i = 0; i < allEdits.length; i++) {
-            rootEdit.addChild(allEdits[i]);
-            change.addTextEditGroup(new TextEditGroup(RefactoringCoreMessages.RenameTempRefactoring_changeName, allEdits[i]));
+        for (TextEdit edit : allEdits) {
+            rootEdit.addChild(edit);
+            change.addTextEditGroup(new TextEditGroup(RefactoringCoreMessages.RenameTempRefactoring_changeName, edit));
         }
         return change;
     }
-
 }
