@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.test.ui
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assert.assertEquals
-import static org.junit.Assume.assumeThat
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
@@ -175,7 +175,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testStaticMethods4() {
-        assumeThat(isAtLeastGroovy(20))
+        assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
             import static java.lang.Integer.valueOf
@@ -540,7 +540,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testChainAssign4a() {
-        assumeThat(isAtLeastGroovy(20))
+        assumeTrue(isAtLeastGroovy(20))
 
         // property notation that maps to setter; this kind of chain assignment does work
         // static compilation produces list of expressions (temp,call) for "_ = b.zero ="
@@ -1452,7 +1452,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test @Ignore('list and count have been transformed into something, which hampers refactoring and semantic highlighting')
     void testTailCallMethods() {
-        assumeThat(isAtLeastGroovy(23))
+        assumeTrue(isAtLeastGroovy(23))
 
         String contents = '''\
             import groovy.transform.*
@@ -1486,7 +1486,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testTypeCheckedMethods() {
-        assumeThat(isAtLeastGroovy(20))
+        assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
             import groovy.transform.*
@@ -1513,7 +1513,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testStaticCompiledMethods() {
-        assumeThat(isAtLeastGroovy(20))
+        assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
             import groovy.transform.*
@@ -1548,7 +1548,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testTraits() {
-        assumeThat(isAtLeastGroovy(23))
+        assumeTrue(isAtLeastGroovy(23))
 
         String contents = '''\
             trait Whatever {
