@@ -59,7 +59,6 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     @Before
     final void setUpDslTestCase() {
-        assumeFalse(Boolean.getBoolean('greclipse.dsld.disabled'))
         assumeFalse(GroovyDSLCoreActivator.default.isDSLDDisabled())
 
         GroovyLogManager.manager.addLogger(logger)

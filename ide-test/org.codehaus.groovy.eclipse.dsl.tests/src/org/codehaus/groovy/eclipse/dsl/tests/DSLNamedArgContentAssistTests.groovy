@@ -28,7 +28,6 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        assumeFalse(Boolean.getBoolean('greclipse.dsld.disabled'))
         assumeFalse(GroovyDSLCoreActivator.default.isDSLDDisabled())
 
         addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
