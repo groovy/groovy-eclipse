@@ -37,15 +37,83 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         super(name);
     }
 
+    private void runWarningFreeTest(String[] sources) {
+        runNegativeTest(sources, ""); // expect no compiler output (warnings or errors)
+    }
+
+    public void testGenericField() {
+        String[] sources = {
+            "A.groovy",
+            "class Foo {\n" +
+            "  List<String> bar\n" +
+            "}"
+        };
+
+        runWarningFreeTest(sources);
+    }
+
+    public void testGenericArrayField() {
+        String[] sources = {
+            "A.groovy",
+            "class Foo {\n" +
+            "  List<String>[] bar\n" +
+            "}"
+        };
+
+        runWarningFreeTest(sources);
+    }
+
     public void testGenericParam() {
         String[] sources = {
             "A.groovy",
             "class Foo {\n" +
-            "  public void m(List<String> ls) {}\n" +
+            "  public void m(List<String> bar) {}\n" +
             "}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
+    }
+
+    public void testGenericArrayParam() {
+        String[] sources = {
+            "A.groovy",
+            "class Foo {\n" +
+            "  public void m(List<String>[] bar) {}\n" +
+            "}"
+        };
+
+        if (complianceLevel < ClassFileConstants.JDK1_7) {
+            runWarningFreeTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. WARNING in A.groovy (at line 2)\n" +
+                "\tpublic void m(List<String>[] bar) {}\n" +
+                "\t              ^^^^^^^^^^^^^^^^^^\n" +
+                "Type safety: Potential heap pollution via varargs parameter bar\n" +
+                "----------\n");
+        }
+    }
+
+    public void testGenericVaragsParam() {
+        String[] sources = {
+            "A.groovy",
+            "class Foo {\n" +
+            "  public void m(List<String>... bar) {}\n" +
+            "}"
+        };
+
+        if (complianceLevel < ClassFileConstants.JDK1_7) {
+            runWarningFreeTest(sources);
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. WARNING in A.groovy (at line 2)\n" +
+                "\tpublic void m(List<String>... bar) {}\n" +
+                "\t              ^^^^^^^^^^^^^^^^^^^\n" +
+                "Type safety: Potential heap pollution via varargs parameter bar\n" +
+                "----------\n");
+        }
     }
 
     public void testCallingGenericConstructors() {
@@ -66,7 +134,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testGenericsPositions_GRE267_1() {
@@ -89,7 +157,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "setone").type));
@@ -108,7 +176,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "setone").type));
@@ -136,7 +204,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "setone").type));
@@ -156,7 +224,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(grabField(decl, "setone").type));
@@ -175,7 +243,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(grabField(decl, "setone").type));
@@ -202,7 +270,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "one").type));
@@ -221,7 +289,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(grabField(decl, "setone").type));
@@ -238,7 +306,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>14)Set<(16>24)(16>18)Map.(20>24)Entry<(26>31)String(33>36)List<(38>43)String>>>", stringify(grabField(decl, "foo").type));
@@ -253,7 +321,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "y");
+        runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         assertEquals("(12>20)(12>14)Map.(16>20)Entry<(22>27)String(29>32)List<(34>39)String>>", stringify(grabField(decl, "foo").type));
@@ -440,7 +508,6 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "p/StructureBase.groovy",
             "package test;\n" +
             "import java.nio.ByteBuffer;\n" +
-            "@SuppressWarnings('unchecked')\n" +
             "public class StructureBase implements Structure {\n" +
             "   protected final Structure str = null;\n" +
             "   StructureBase(Structure struct){\n" +
@@ -551,7 +618,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     // when GROOVY-5861 is fixed we can enable these 2 tests:
@@ -565,13 +632,13 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "p/StructureBase.groovy",
             "package test;\n" +
             "public class StructureBase {\n" +
-            "   public Field<?> get(Object arg0) {\n" +
-            "       return str.get(arg0);\n" +
-            "   }\n" +
+            "  public Field<?> get(Object arg0) {\n" +
+            "    return str.get(arg0);\n" +
+            "  }\n" +
             "}"
         };
 
-        runConformTest(sources, "Success");
+        runWarningFreeTest(sources);
     }
 
     public void _testGenericsAndGroovyJava_GRE278_3a() {
@@ -718,7 +785,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "Success");
+        runWarningFreeTest(sources);
     }
 
     public void testGenericsAndGroovyJava_GRE278_4() {
@@ -748,7 +815,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "test");
+        runWarningFreeTest(sources);
     }
 
     public void testGenericFields_JcallingG() {
@@ -768,7 +835,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "class G<T> { T field; }"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testGenericFields_GcallingJ() {
@@ -788,7 +855,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "class G<T> { public T field; }" // TODO why must this be public for the groovy code to see it?  If non public should it be instead defined as a property on the JDTClassNode rather than a field?
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testGroovyPropertyAccessorsGenerics() {
@@ -811,7 +878,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "123");
+        runWarningFreeTest(sources);
     }
 
     public void testGroovyGenerics() {
@@ -833,7 +900,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T> {}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testGreclipse1563() {
@@ -857,7 +924,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "class GClazz extends Clazz<Number> {}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     public void testGreclipse1563_2() {
@@ -884,7 +951,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "class GClazz extends Clazz<MyItem> {}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_JavaExtendsGroovy() {
@@ -904,7 +971,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T> {}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava() {
@@ -924,7 +991,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T> {public void set(T t) { }}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava2() {
@@ -954,7 +1021,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T extends I> {}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava2a() {
@@ -981,7 +1048,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T extends I> {}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava2b() {
@@ -1009,7 +1076,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T extends I> {}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava3() {
@@ -1060,7 +1127,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "abcsuccess");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava5() {
@@ -1077,7 +1144,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources,"success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava5a() {
@@ -1094,7 +1161,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava6() {
@@ -1113,7 +1180,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T> {public void set(T t) { }}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava7() {
@@ -1132,7 +1199,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "public class A<T> {public void set(T t) { }}\n"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava8() {
@@ -1154,7 +1221,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava9() {
@@ -1179,7 +1246,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testExtendingGenerics_GroovyExtendsJava10() {
@@ -1205,7 +1272,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     /**
@@ -1219,7 +1286,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         String[] sources = {
             "Groovy.groovy",
             "class Groovy {\n" +
-            "  static <T> List method(Class<T> factory, ClassLoader loader = Groovy.class.classLoader) {\n" +
+            "  static <T> List<T> method(Class<T> factory, ClassLoader loader = Groovy.class.classLoader) {\n" +
             "    null\n" +
             "  }\n" +
             "}",
@@ -1232,7 +1299,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     /**
@@ -1263,7 +1330,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     /**
@@ -1282,7 +1349,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     /**
@@ -1338,7 +1405,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "no error");
+        runWarningFreeTest(sources);
     }
 
     /**
@@ -1364,7 +1431,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     public void testImplementingInterface_JavaExtendingGroovyGenericType() {
@@ -1373,7 +1440,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "package p;\n" +
             "import java.util.List;\n"+
             "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-            "  public List m() { return null;}\n"+
+            "  public List<?> m() { return null;}\n"+
             "  public static void main(String[] argv) {\n"+
             "    System.out.println( \"success\");\n"+
             "  }\n"+
@@ -1382,11 +1449,11 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "p/I.groovy",
             "package p;\n"+
             "public interface I {\n" +
-            "  List m();\n"+
+            "  List<?> m();\n"+
             "}"
         };
 
-        runConformTest(sources, "success");
+        runWarningFreeTest(sources);
     }
 
     public void testImplementingInterface_JavaGenericsIncorrectlyExtendingGroovyGenerics() {
@@ -1471,7 +1538,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "hello world");
+        runWarningFreeTest(sources);
     }
 
     public void testReferencingFieldsGenerics_GreferingToJ() {
@@ -1501,7 +1568,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runConformTest(sources, "hello world");
+        runWarningFreeTest(sources);
     }
 
     public void testHalfFinishedGenericsProgram() {
@@ -1555,7 +1622,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runNegativeTest(sources, "");
+        runWarningFreeTest(sources);
     }
 
     public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
@@ -1568,7 +1635,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        runNegativeTest(sources, "");
+        runWarningFreeTest(sources);
     }
 
     public void testHalfFinishedGenericsProgramWithUnnecessarySuppression() {
@@ -1669,7 +1736,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "print 'a'\n"
         };
 
-        runConformTest(sources);
+        runWarningFreeTest(sources);
     }
 
     public void testJava7_2() {

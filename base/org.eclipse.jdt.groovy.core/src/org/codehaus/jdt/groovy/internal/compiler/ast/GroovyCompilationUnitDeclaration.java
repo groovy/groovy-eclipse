@@ -1675,7 +1675,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Create JDT Argument representations of Groovy parameters
+         * Creates JDT Argument representations of Groovy parameters.
          */
         private Argument[] createArguments(Parameter[] ps, boolean isMain) {
             if (ps == null || ps.length == 0) {
@@ -1703,17 +1703,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Convert from an array ClassNode into a TypeReference. Name of the node is expected to be something like java.lang.String[][]
-         * - primitives should be getting handled by the other create method (and have a sig like '[[I')
+         * Creates JDT TypeReference that represents the given array ClassNode.
+         * The name of the  node is expected to be like 'java.lang.String[][]'.
+         * Primitives should be handled by the other create method (sig like '[[I').
          */
-        private TypeReference createTypeReferenceForArrayNameTrailingBrackets(ClassNode node, int start, int end) {
+        private TypeReference createTypeReferenceForArrayNameTrailingBrackets(ClassNode node, int start, int until) {
             String name = node.getName();
             int dim = 0;
             int pos = name.length() - 2;
             ClassNode componentType = node;
             // jump back counting dimensions
             while (pos > 0 && name.charAt(pos) == '[') {
-                dim++;
+                dim += 1;
                 pos -= 2;
                 componentType = componentType.getComponentType();
             }
@@ -1733,23 +1734,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             // array component is something like La.b.c; ... or sometimes just [[Z (where Z is a type, not primitive)
             String arrayComponentTypename = name.substring(0, pos + 2);
-            if (arrayComponentTypename.indexOf(".") == -1) {
-                return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
-            } else {
-                return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
-            }
+            return createTypeReferenceForArrayName(arrayComponentTypename, componentType, dim, start, until);
         }
 
         /**
-         * Format will be [[I or [[Ljava.lang.String; - this latter form is really not right but groovy can produce it so we need to
-         * cope with it.
+         * Creates JDT TypeReference that represents the given array ClassNode.
+         * Format will be '[[I' or '[[Ljava.lang.String;'.  This latter form is
+         * really not right but Groovy can produce it so we need to cope with it.
          */
-        private TypeReference createTypeReferenceForArrayNameLeadingBrackets(ClassNode node, int start, int end) {
+        private TypeReference createTypeReferenceForArrayNameLeadingBrackets(ClassNode node, int start, int until) {
             String name = node.getName();
             int dim = 0;
             ClassNode componentType = node;
             while (name.charAt(dim) == '[') {
-                dim++;
+                dim += 1;
                 componentType = componentType.getComponentType();
             }
             if (componentType.isPrimitive()) {
@@ -1767,10 +1765,48 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (arrayComponentTypename.charAt(arrayComponentTypename.length() - 1) == ';') {
                     arrayComponentTypename = name.substring(dim + 1, name.length() - 1); // chop off '['s 'L' and ';'
                 }
-                if (arrayComponentTypename.indexOf(".") == -1) {
-                    return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
+                return createTypeReferenceForArrayName(arrayComponentTypename, componentType, dim, start, until);
+            }
+        }
+
+        private TypeReference createTypeReferenceForArrayName(String typeName, ClassNode typeNode, int dim, int start, int until) {
+            if (!typeNode.isUsingGenerics()) {
+                if (typeName.indexOf('.') < 0) {
+                    // For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
+                    // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the ']';
+                    // originalSourceEnd - the 'g'
+                    ArrayTypeReference atr = new ArrayTypeReference(typeName.toCharArray(), dim, toPos(start, until - 1));
+                    atr.originalSourceEnd = atr.sourceStart + typeName.length() - 1;
+                    return atr;
                 } else {
-                    return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
+                    // For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
+                    // When the ArrayQualifiedTypeReference is built we need these positions for the result: sourceStart - the 'j'; sourceEnd - the
+                    // final ']'; the positions computed for the reference components would be j..a l..g and N..r
+                    char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
+                    ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dim,
+                        positionsFor(compoundName, start, (until == -2 ? -2 : until - dim * 2)));
+                    aqtr.sourceEnd = until == -2 ? -2 : until - 1;
+                    return aqtr;
+                }
+            } else {
+                GenericsType[] generics = typeNode.getGenericsTypes();
+                TypeReference[] typeArgs = new TypeReference[generics.length];
+                for (int i = 0; i < generics.length; i += 1) {
+                    typeArgs[i] = createTypeReferenceForGenerics(generics[i]);
+                }
+
+                if (typeName.indexOf('.') < 0) {
+                    ParameterizedSingleTypeReference pstr = new ParameterizedSingleTypeReference(typeName.toCharArray(), typeArgs, dim, toPos(start, until - 1));
+                    pstr.originalSourceEnd = pstr.sourceStart + typeName.length() - 1; // TODO: Should this include generics?
+                    return pstr;
+                } else {
+                    char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
+                    TypeReference[][] compoundArgs = new TypeReference[compoundName.length][];
+                    compoundArgs[compoundName.length - 1] = typeArgs;
+                    ParameterizedQualifiedTypeReference pqtr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim,
+                        positionsFor(compoundName, start, (until == -2 ? -2 : until - dim * 2)));
+                    pqtr.sourceEnd = until == -2 ? -2 : until - 1;
+                    return pqtr;
                 }
             }
         }
@@ -2013,37 +2049,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
         private static final Pattern AND = Pattern.compile("^\\s*&\\s*");
         private static final Pattern EXTENDS = Pattern.compile("^\\s*extends\\s+");
-
-        /**
-         * Create a JDT ArrayTypeReference.<br>
-         * Positional information:
-         * <p>
-         * For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
-         * ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the ']';
-         * originalSourceEnd - the 'g'
-         */
-        private ArrayTypeReference createJDTArrayTypeReference(String arrayComponentTypename, int dimensions, int start, int end) {
-            ArrayTypeReference atr = new ArrayTypeReference(arrayComponentTypename.toCharArray(), dimensions, toPos(start, end - 1));
-            atr.originalSourceEnd = atr.sourceStart + arrayComponentTypename.length() - 1;
-            return atr;
-        }
-
-        /**
-         * Create a JDT ArrayQualifiedTypeReference.<br>
-         * Positional information:
-         * <p>
-         * For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
-         * When the ArrayQualifiedTypeReference is built we need these positions for the result: sourceStart - the 'j'; sourceEnd - the
-         * final ']'; the positions computed for the reference components would be j..a l..g and N..r
-         */
-        private ArrayQualifiedTypeReference createJDTArrayQualifiedTypeReference(String arrayComponentTypename, int dimensions,
-                int start, int end) {
-            char[][] compoundName = CharOperation.splitOn('.', arrayComponentTypename.toCharArray());
-            ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dimensions,
-                    positionsFor(compoundName, start, (end == -2 ? -2 : end - dimensions * 2)));
-            aqtr.sourceEnd = end == -2 ? -2 : end - 1;
-            return aqtr;
-        }
 
         private static final Map<Character, Integer> charToTypeId = new HashMap<Character, Integer>();
         private static final Map<String, Integer> nameToPrimitiveTypeId = new HashMap<String, Integer>();

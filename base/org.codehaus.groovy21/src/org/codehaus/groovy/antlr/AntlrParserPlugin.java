@@ -3512,7 +3512,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST node = typeNode.getFirstChild();
         if (node != null) {
             if (isType(INDEX_OP, node) || isType(ARRAY_DECLARATOR, node)) {
-                answer = makeType(node).makeArray();
+                // GRECLIPSE edit
+                //answer = makeType(node).makeArray();
+                answer = makeTypeWithArguments(node).makeArray();
+                // GRECLIPSE end
             } else {
                 answer = ClassHelper.make(qualifiedName(node));
                 if (answer.isUsingGenerics()) {
