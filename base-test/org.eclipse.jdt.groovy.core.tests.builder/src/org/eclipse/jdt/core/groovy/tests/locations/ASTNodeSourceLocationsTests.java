@@ -39,11 +39,12 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
+
 /**
  * Test the source locations of ASTNodes to ensure they are correct, especially
  * look into the changes that we force into them.
  */
-public class ASTNodeSourceLocationsTests  extends BuilderTests {
+public final class ASTNodeSourceLocationsTests  extends BuilderTests {
 
     public ASTNodeSourceLocationsTests(String name) {
         super(name);
@@ -53,157 +54,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         return buildTestSuite(ASTNodeSourceLocationsTests.class);
     }
 
-    public void testBinaryExpr1() throws Exception {
-        String contents =
-            "def map = [:]\n" +
-            "map = [:]";
-        checkBinaryExprSLocs(contents,
-                new BinaryExpressionSLocTester(),
-                "def map = [:]", "map = [:]");
-    }
-
-    public void testBinaryExpr2() throws Exception {
-        String contents =
-            "def foo = [1, 2] as Set\n" +
-            "foo == [1, 2] as Set";
-        checkBinaryExprSLocs(contents,
-                new BinaryExpressionSLocTester(),
-        "def foo = [1, 2] as Set", "foo == [1, 2] as Set");
-    }
-
-    public void testBinaryExpr3() throws Exception {
-        String contents =
-            "(foo == [1, 2] as Set)";
-        checkBinaryExprSLocs(contents,
-                new BinaryExpressionSLocTester(), "(foo == [1, 2] as Set)");
-    }
-
-    public void testBinaryExpr4() throws Exception {
-        String contents =
-            "((foo == [1, 2] as Set))";
-        checkBinaryExprSLocs(contents,
-        new BinaryExpressionSLocTester(), "((foo == [1, 2] as Set))");
-    }
-
-    public void testBinaryExpr5() throws Exception {
-        String contents =
-            "[:] + [:] +  [:]";
-        checkBinaryExprSLocsReverse(contents,
-        "[:] + [:] +  [:]",
-        "[:] + [:]");
-    }
-
-    public void testBinaryExpr6() throws Exception {
-        String contents =
-            "[:] << [:] + [:]";
-        checkBinaryExprSLocsReverse(contents,
-        "[:] << [:] + [:]",
-        "[:] + [:]");
-    }
-
-    // Not right!!! ending whitespace is included, but shouldm't be.
-    public void testBinaryExpr7() throws Exception {
-        String contents =
-            "  a = b   ";
-        checkBinaryExprSLocs(contents,
-                new BinaryExpressionSLocTester(), "a = b   ");
-    }
-
-    public void testMapExpression1() throws Exception {
-        checkBinaryExprSLocs("[:]",
-                new MapExpressionSLocTester(), "[:]");
-    }
-
-    public void testMapExpression2() throws Exception {
-        checkBinaryExprSLocs("[  :  ]",
-                new MapExpressionSLocTester(), "[  :  ]");
-    }
-
-    public void testMapExpression3() throws Exception {
-        checkBinaryExprSLocs("def x = [:]",
-                new MapExpressionSLocTester(), "[:]");
-    }
-
-    // fails because we are not smart about how we extend
-    // slocs for empty map expressions
-    public void _testMapExpression4() throws Exception {
-        checkBinaryExprSLocs("def x = [ : ]",
-                new MapExpressionSLocTester(), "[ : ]");
-    }
-
-    public void testMapEntryExpression1() throws Exception {
-        checkBinaryExprSLocs("[a:b]",
-                new MapEntryExpressionSLocTester(), "a:b");
-    }
-
-    public void testMapEntryExpression2() throws Exception {
-        checkBinaryExprSLocs("[a : b]",
-                new MapEntryExpressionSLocTester(), "a : b");
-    }
-
-    // has extra whitespace at end, but should not
-    public void testMapEntryExpression3() throws Exception {
-        checkBinaryExprSLocs("[a : b  ]",
-                new MapEntryExpressionSLocTester(), "a : b");
-    }
-
-    public void testMapEntryExpression4() throws Exception {
-        checkBinaryExprSLocs("[a : b, c : d]",
-                new MapEntryExpressionSLocTester(), "a : b", "c : d");
-    }
-
-
-    public void testMapEntryExpression5() throws Exception {
-        checkBinaryExprSLocs("def x = [a : b, c : d]",
-                new MapEntryExpressionSLocTester(), "a : b", "c : d");
-    }
-
-    public void testMapEntryExpression6() throws Exception {
-        checkBinaryExprSLocs("def x = [a : b] << [ c : d]",
-                new MapEntryExpressionSLocTester(), "a : b", "c : d");
-    }
-
-    public void testMapEntryExpression7() throws Exception {
-        checkBinaryExprSLocs("def x = [a : b, e : [ c : d]]",
-                new MapEntryExpressionSLocTester(), "a : b", "c : d", "e : [ c : d]");
-    }
-
-    public void testCastExpression1() throws Exception {
-        checkBinaryExprSLocs("foo as Set",
-                new CastExpressionSLocTester(), "foo as Set");
-    }
-
-    public void testCastExpression2() throws Exception {
-        checkBinaryExprSLocs("def x = foo as Set",
-                new CastExpressionSLocTester(), "foo as Set");
-    }
-
-    public void testCastExpression3() throws Exception {
-        checkBinaryExprSLocs("def x = foo as Set ",
-                new CastExpressionSLocTester(), "foo as Set");
-    }
-
-    public void testImportStatement1() throws Exception {
-        checkBinaryExprSLocs(
-            "import javax.swing.*\n" +
-            "import javax.swing.JFrame\n" +
-            "import javax.applet.*;\n" +
-            "import javax.applet.Applet;\n",
-            new ImportStatementSLocTester(),
-            "import javax.swing.*",
-            "import javax.swing.JFrame",
-            "import javax.applet.*",
-            "import javax.applet.Applet");
-    }
-
-    // GRECLIPSE-1270
-    public void testAssertStatement1() throws Exception {
-        checkBinaryExprSLocs("def meth() {\n  then:\n  assert x == 9\n}",
-                new AssertStatementSLocTester(), "assert x == 9");
-    }
-
-
-    class StartAndEnd {
+    private static class StartAndEnd {
         final int start;
         final int end;
         public StartAndEnd(int start, int end) {
@@ -225,16 +76,13 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-
-    abstract class AbstractSLocTester extends ClassCodeVisitorSupport {
+    private static abstract class AbstractSLocTester extends ClassCodeVisitorSupport {
         List<ASTNode> allCollectedNodes = new ArrayList<ASTNode>();
-
 
         void doTest(ModuleNode module, StartAndEnd...sae) {
             for (ClassNode c : (Iterable<ClassNode>) module.getClasses()) {
                 this.visitClass(c);
             }
-
             assertStartAndEnds(sae);
         }
 
@@ -260,7 +108,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    class ImportStatementSLocTester extends AbstractSLocTester {
+    private static class ImportStatementSLocTester extends AbstractSLocTester {
         @Override
         public void visitImports(ModuleNode module) {
             for (ImportNode node : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
@@ -269,7 +117,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    class BinaryExpressionSLocTester extends AbstractSLocTester {
+    private static class BinaryExpressionSLocTester extends AbstractSLocTester {
         @Override
         public void visitBinaryExpression(BinaryExpression expression) {
             super.visitBinaryExpression(expression);
@@ -277,7 +125,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    class MapExpressionSLocTester extends AbstractSLocTester {
+    private static class MapExpressionSLocTester extends AbstractSLocTester {
         @Override
         public void visitMapExpression(MapExpression expression) {
             super.visitMapExpression(expression);
@@ -285,7 +133,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    class MapEntryExpressionSLocTester extends AbstractSLocTester {
+    private static class MapEntryExpressionSLocTester extends AbstractSLocTester {
         @Override
         public void visitMapEntryExpression(MapEntryExpression expression) {
             super.visitMapEntryExpression(expression);
@@ -293,7 +141,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    class CastExpressionSLocTester extends AbstractSLocTester {
+    private static class CastExpressionSLocTester extends AbstractSLocTester {
         @Override
         public void visitCastExpression(CastExpression expression) {
             super.visitCastExpression(expression);
@@ -301,7 +149,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    class AssertStatementSLocTester extends AbstractSLocTester {
+    private static class AssertStatementSLocTester extends AbstractSLocTester {
         @Override
         public void visitAssertStatement(AssertStatement statement) {
             super.visitAssertStatement(statement);
@@ -309,13 +157,13 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         }
     }
 
-    private void checkBinaryExprSLocs(String contents, AbstractSLocTester tester, String... exprStrings) throws Exception {
+    private static void checkBinaryExprSLocs(String contents, AbstractSLocTester tester, String... exprStrings) throws Exception {
         StartAndEnd[] points = convertToPoints(contents, exprStrings);
         ModuleNode module = createModuleNodeFor(contents);
         tester.doTest(module, points);
     }
 
-    private void checkBinaryExprSLocsReverse(String contents, String...exprStrings) throws Exception {
+    private static void checkBinaryExprSLocsReverse(String contents, String...exprStrings) throws Exception {
         StartAndEnd[] points = convertToPoints(contents, exprStrings);
         List<StartAndEnd> list = Arrays.asList(points);
         Collections.reverse(list);
@@ -325,7 +173,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         tester.doTest(module, points);
     }
 
-    private StartAndEnd[] convertToPoints(String contents, String[] exprStrings) {
+    private static StartAndEnd[] convertToPoints(String contents, String[] exprStrings) {
         StartAndEnd[] points = new StartAndEnd[exprStrings.length];
         int prevEnd = 0;
         int prevStart = 0;
@@ -350,7 +198,7 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         return points;
     }
 
-    private ModuleNode createModuleNodeFor(String contents) throws Exception {
+    private static ModuleNode createModuleNodeFor(String contents) throws Exception {
         SourceUnit sourceUnit = new SourceUnit("Foo", contents, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
         sourceUnit.parse();
         sourceUnit.completePhase();
@@ -358,4 +206,180 @@ public class ASTNodeSourceLocationsTests  extends BuilderTests {
         return sourceUnit.getAST();
     }
 
+    //--------------------------------------------------------------------------
+
+    public void testBinaryExpr1() throws Exception {
+        checkBinaryExprSLocs(
+            "def map = [:]\n" +
+            "map = [:]",
+            new BinaryExpressionSLocTester(),
+            "def map = [:]", "map = [:]");
+    }
+
+    public void testBinaryExpr2() throws Exception {
+        checkBinaryExprSLocs(
+            "def foo = [1, 2] as Set\n" +
+            "foo == [1, 2] as Set",
+            new BinaryExpressionSLocTester(),
+            "def foo = [1, 2] as Set",
+            "foo == [1, 2] as Set");
+    }
+
+    public void testBinaryExpr3() throws Exception {
+        checkBinaryExprSLocs(
+            "(foo == [1, 2] as Set)",
+            new BinaryExpressionSLocTester(),
+            "(foo == [1, 2] as Set)");
+    }
+
+    public void testBinaryExpr4() throws Exception {
+        checkBinaryExprSLocs(
+            "((foo == [1, 2] as Set))",
+            new BinaryExpressionSLocTester(), 
+            "((foo == [1, 2] as Set))");
+    }
+
+    public void testBinaryExpr5() throws Exception {
+        checkBinaryExprSLocsReverse(
+            "[:] + [:] +  [:]",
+            "[:] + [:] +  [:]",
+            "[:] + [:]");
+    }
+
+    public void testBinaryExpr6() throws Exception {
+        checkBinaryExprSLocsReverse(
+            "[:] << [:] + [:]",
+            "[:] << [:] + [:]",
+            "[:] + [:]");
+    }
+
+    // Not right!!! ending whitespace is included, but shouldm't be.
+    public void testBinaryExpr7() throws Exception {
+        checkBinaryExprSLocs(
+            "  a = b   ",
+            new BinaryExpressionSLocTester(), 
+            "a = b   ");
+    }
+
+    public void testMapExpression1() throws Exception {
+        checkBinaryExprSLocs(
+            "[:]",
+            new MapExpressionSLocTester(), 
+            "[:]");
+    }
+
+    public void testMapExpression2() throws Exception {
+        checkBinaryExprSLocs(
+            "[  :  ]",
+            new MapExpressionSLocTester(), 
+            "[  :  ]");
+    }
+
+    public void testMapExpression3() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = [:]",
+            new MapExpressionSLocTester(), 
+            "[:]");
+    }
+
+    // fails because we are not smart about how we extend
+    // slocs for empty map expressions
+    public void _testMapExpression4() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = [ : ]",
+            new MapExpressionSLocTester(), 
+            "[ : ]");
+    }
+
+    public void testMapEntryExpression1() throws Exception {
+        checkBinaryExprSLocs(
+            "[a:b]",
+            new MapEntryExpressionSLocTester(), 
+            "a:b");
+    }
+
+    public void testMapEntryExpression2() throws Exception {
+        checkBinaryExprSLocs(
+            "[a : b]",
+            new MapEntryExpressionSLocTester(), 
+            "a : b");
+    }
+
+    // has extra whitespace at end, but should not
+    public void testMapEntryExpression3() throws Exception {
+        checkBinaryExprSLocs(
+            "[a : b  ]",
+            new MapEntryExpressionSLocTester(), 
+            "a : b");
+    }
+
+    public void testMapEntryExpression4() throws Exception {
+        checkBinaryExprSLocs(
+            "[a : b, c : d]",
+            new MapEntryExpressionSLocTester(), 
+            "a : b", "c : d");
+    }
+
+    public void testMapEntryExpression5() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = [a : b, c : d]",
+            new MapEntryExpressionSLocTester(), 
+            "a : b", "c : d");
+    }
+
+    public void testMapEntryExpression6() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = [a : b] << [ c : d]",
+            new MapEntryExpressionSLocTester(), 
+            "a : b", "c : d");
+    }
+
+    public void testMapEntryExpression7() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = [a : b, e : [ c : d]]",
+            new MapEntryExpressionSLocTester(), 
+            "a : b", "c : d", "e : [ c : d]");
+    }
+
+    public void testCastExpression1() throws Exception {
+        checkBinaryExprSLocs(
+            "foo as Set",
+            new CastExpressionSLocTester(), 
+            "foo as Set");
+    }
+
+    public void testCastExpression2() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = foo as Set",
+            new CastExpressionSLocTester(), 
+            "foo as Set");
+    }
+
+    public void testCastExpression3() throws Exception {
+        checkBinaryExprSLocs(
+            "def x = foo as Set ",
+            new CastExpressionSLocTester(), 
+            "foo as Set");
+    }
+
+    public void testImportStatement1() throws Exception {
+        checkBinaryExprSLocs(
+            "import javax.swing.*\n" +
+            "import javax.swing.JFrame\n" +
+            "import javax.applet.*;\n" +
+            "import javax.applet.Applet;\n",
+            new ImportStatementSLocTester(),
+            "import javax.swing.*",
+            "import javax.swing.JFrame",
+            "import javax.applet.*",
+            "import javax.applet.Applet");
+    }
+
+    // GRECLIPSE-1270
+    public void testAssertStatement1() throws Exception {
+        checkBinaryExprSLocs(
+            "def meth() {\n  then:\n  assert x == 9\n}",
+            new AssertStatementSLocTester(), 
+            "assert x == 9");
+    }
 }

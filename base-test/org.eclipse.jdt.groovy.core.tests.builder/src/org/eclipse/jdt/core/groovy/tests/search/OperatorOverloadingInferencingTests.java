@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,9 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import junit.framework.Test;
 
 /**
- * tests of operator overloading inferencing
- * @author Andrew Eisenberg
- * @created Dec 15, 2011
+ * Tests of operator overloading inferencing.
  */
-public class OperatorOverloadingInferencingTests extends AbstractInferencingTest {
+public final class OperatorOverloadingInferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(OperatorOverloadingInferencingTests.class);

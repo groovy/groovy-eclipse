@@ -18,7 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 /**
  * Tests that the inferred declaration is correct.
  */
-public class DeclarationInferencingTests extends AbstractInferencingTest {
+public final class DeclarationInferencingTests extends AbstractInferencingTest {
 
     public DeclarationInferencingTests(String name) {
         super(name);

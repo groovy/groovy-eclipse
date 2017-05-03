@@ -17,14 +17,12 @@ package org.codehaus.groovy.alltests
 
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 
-import junit.framework.Test
-import junit.framework.TestSuite
 // From org.eclipse.jdt.groovy.core.tests.builder plug-in:
 import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests
 import org.eclipse.jdt.core.groovy.tests.builder.BuildAccessRulesTests
 import org.eclipse.jdt.core.groovy.tests.builder.FullProjectTests
-import org.eclipse.jdt.core.groovy.tests.compiler.STCScriptsTests
-import org.eclipse.jdt.core.groovy.tests.compiler.ScriptFolderTests
+import org.eclipse.jdt.core.groovy.tests.builder.STCScriptsTests
+import org.eclipse.jdt.core.groovy.tests.builder.ScriptFolderTests
 import org.eclipse.jdt.core.groovy.tests.locations.ASTConverterTests
 import org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests
 import org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests
@@ -49,11 +47,11 @@ import org.eclipse.jdt.groovy.core.tests.basic.TransformationsTests
  * All Groovy-JDT integration tests.
  */
 final class GroovyJDTTests {
-    static Test suite() {
+    static junit.framework.Test suite() {
         // ensure that the compiler chooser starts up
         GroovyTestSuiteSupport.initializeCompilerChooser()
 
-        TestSuite suite = new TestSuite(GroovyJDTTests.class.name)
+        def suite = new junit.framework.TestSuite(GroovyJDTTests.class.name)
 
         suite.addTest(new junit.framework.JUnit4TestAdapter(SanityTests))
 
@@ -61,6 +59,8 @@ final class GroovyJDTTests {
         suite.addTest(BasicGroovyBuildTests.suite())
         suite.addTest(BuildAccessRulesTests.suite())
         suite.addTest(FullProjectTests.suite())
+        suite.addTest(ScriptFolderTests.suite())
+        suite.addTest(STCScriptsTests.suite())
 
         // Compiler tests
         suite.addTest(AnnotationsTests.suite())
@@ -68,8 +68,6 @@ final class GroovyJDTTests {
         suite.addTest(GenericsTests.suite())
         suite.addTest(GroovySimpleTest.suite())
         suite.addTest(GroovySimpleTests_Compliance_1_8.suite())
-        suite.addTest(ScriptFolderTests.suite())
-        suite.addTest(STCScriptsTests.suite())
         if (isAtLeastGroovy(23))
             suite.addTest(TraitsTests.suite())
         suite.addTest(TransformationsTests.suite())

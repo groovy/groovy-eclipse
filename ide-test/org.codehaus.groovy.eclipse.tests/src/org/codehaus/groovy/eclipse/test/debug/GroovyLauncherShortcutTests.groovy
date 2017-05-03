@@ -34,7 +34,7 @@ import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IType
-import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaApplicationLaunchShortcut
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After

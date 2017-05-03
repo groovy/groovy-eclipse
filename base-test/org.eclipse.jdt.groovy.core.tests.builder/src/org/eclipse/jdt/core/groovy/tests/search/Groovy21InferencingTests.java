@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,15 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import java.util.Arrays;
 
 import junit.framework.Test;
-
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.Activator;
 
 /**
- * Tests for all Groovy 2.1 specific things
- * for example, {@link groovy.lang.DelegatesTo}
- * @author Andrew Eisenberg
- * @created Feb 5, 2013
+ * Tests for all Groovy 2.1 specific things for example, {@link groovy.lang.DelegatesTo}.
  */
-public class Groovy21InferencingTests extends AbstractInferencingTest {
+public final class Groovy21InferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(Groovy21InferencingTests.class);

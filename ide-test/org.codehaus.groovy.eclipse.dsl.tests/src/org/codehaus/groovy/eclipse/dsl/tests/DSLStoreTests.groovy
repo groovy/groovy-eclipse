@@ -27,7 +27,7 @@ import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IStorage
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.junit.Test
 

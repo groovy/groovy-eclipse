@@ -42,7 +42,6 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.builder.Problem;
@@ -50,6 +49,7 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.osgi.framework.Version;
 
@@ -66,12 +66,122 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         return buildTestSuite(BasicGroovyBuildTests.class);
     }
 
+    private static MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
+        List<MethodNode> mns = jcn.getDeclaredMethods(selector);
+        for (MethodNode mn : mns) {
+            if (mn.getParameters().length == paramCount) {
+                return mn;
+            }
+        }
+        return null;
+    }
+
+    private static void compareMethodNodes(MethodNode jmn, MethodNode mn) {
+        System.out.println("\n\n\nComparing method nodes jmn=" + jmn + " mn=" + mn);
+        System.out.println("Comparing return types");
+        compareClassNodes(jmn.getReturnType(), mn.getReturnType(), 1);
+        compareParameterArrays(jmn.getParameters(), mn.getParameters(), 1);
+    }
+
+    private static void compareParameterArrays(Parameter[] jps, Parameter[] ps, int d) {
+        if (ps == null) {
+            if (jps != null) {
+                fail("Expected null parameters but was " + arrayToString(jps));
+            }
+        } else {
+            if (ps.length != jps.length) {
+                fail("Expected same number of parameters, should be " + arrayToString(ps) + " but was " + arrayToString(jps));
+            }
+            for (int p = 0; p < ps.length; p++) {
+                System.out.println("Comparing parameters jp=" + jps[p] + " p=" + ps[p]);
+                compareParameters(jps[p], ps[p], d + 1);
+            }
+        }
+    }
+
+    private static void compareParameters(Parameter jp, Parameter p,int d) {
+        compareClassNodes(jp.getType(),p.getType(),d+1);
+    }
+
+    // check whether these are identical (in everything except name!)
+    private static void compareClassNodes(ClassNode jcn, ClassNode cn, int d) {
+        System.out.println("Comparing ClassNodes\njcn=" + jcn.toString() + "\n cn=" + cn.toString());
+        assertEquals(cn.isGenericsPlaceHolder(), jcn.isGenericsPlaceHolder());
+
+        // Check GenericsType info
+        GenericsType[] gt_cn = cn.getGenericsTypes();
+        GenericsType[] gt_jcn = jcn.getGenericsTypes();
+        if (gt_cn == null) {
+            if (gt_jcn != null) {
+                fail("Should have been null but was " + arrayToString(gt_jcn));
+            }
+        } else {
+            if (gt_jcn == null) {
+                fail("Did not expect genericstypes to be null, should be " + arrayToString(gt_cn));
+            }
+            assertNotNull(gt_jcn);
+            assertEquals(gt_cn.length, gt_jcn.length);
+            for (int i = 0; i < gt_cn.length; i++) {
+                System.out.println("Comparing generics types information, index #" + i);
+                compareGenericsTypes(gt_jcn[i], gt_cn[i], d + 1);
+            }
+        }
+    }
+
+    private static void compareGenericsTypes(GenericsType jgt, GenericsType gt, int d) {
+        //      assertEquals(jgt.getText(),gt.getText());
+        assertEquals(jgt.getName(), gt.getName());
+        assertEquals(jgt.isPlaceholder(), gt.isPlaceholder());
+        assertEquals(jgt.isResolved(), gt.isResolved());
+        assertEquals(jgt.isWildcard(), gt.isWildcard());
+        compareType(jgt.getType(), gt.getType(), d + 1);
+        compareUpperBounds(jgt.getUpperBounds(), gt.getUpperBounds(), d + 1);
+        compareLowerBound(jgt.getLowerBound(), gt.getLowerBound(), d + 1);
+    }
+
+    private static void compareType(ClassNode jcn, ClassNode cn, int d) {
+        System.out.println("Compare type of GenericsType: jcn=" + jcn + " cn=" + cn);
+        compareClassNodes(jcn, cn, d + 1);
+    }
+
+    private static void compareUpperBounds(ClassNode[] jcnlist, ClassNode[] cnlist, int d) {
+        System.out.println("Comparing upper bounds: jcn=" + arrayToString(jcnlist) + " cn=" + arrayToString(cnlist));
+        if (cnlist == null) {
+            if (jcnlist != null) {
+                fail("Should be null but is " + arrayToString(jcnlist));
+            }
+        } else {
+            if (jcnlist == null) {
+                fail("Array not expected to be null, should be " + arrayToString(cnlist));
+            }
+            assertEquals(cnlist.length, cnlist.length);
+            for (int i = 0; i < cnlist.length; i++) {
+                compareClassNodes(jcnlist[i].redirect(), cnlist[i].redirect(), d + 1);
+            }
+        }
+    }
+
+    private static void compareLowerBound(ClassNode jcn, ClassNode cn, int d) {
+        System.out.println("Comparing lower bound");
+        if (jcn == null) {
+            assertNull(cn);
+        } else {
+            assertNotNull(cn);
+            compareClassNodes(jcn.redirect(), cn.redirect(), d + 1);
+        }
+    }
+
+    private static String toTask(String tasktag, String message) {
+        return tasktag + message;
+    }
+
+    //--------------------------------------------------------------------------
+
     /**
      * Testing that the classpath computation works for multi dependent
      * projects. This classpath will be used for the ast transform loader.
      */
-    public void testMultiProjectDependenciesAndAstTransformClasspath()
-            throws JavaModelException {
+    public void testMultiProjectDependenciesAndAstTransformClasspath() throws Exception {
 
         // Construct ProjectA
         IPath projectAPath = env.addProject("ProjectA");
@@ -229,8 +339,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         // System.out.println(">>"+classpathForProjectD);
     }
 
-    // build hello world and run it
-    public void testBuildJavaHelloWorld() throws JavaModelException {
+    public void testBuildJavaHelloWorld() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         fullBuild(projectPath);
@@ -397,89 +506,89 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         }
     }
 
-//	public void testCompileStatic_1506() throws Exception {
-//		try {
-//			if (GroovyUtils.GROOVY_LEVEL < 20) {
-//				return;
-//			}
-//			IPath projectPath = env.addProject("Project","1.6");
-//			env.addExternalJars(projectPath, Util.getJavaClassLibs());
-//			env.addGroovyJars(projectPath);
-//			fullBuild(projectPath);
-//			// remove old package fragment root so that names don't collide
-//			env.removePackageFragmentRoot(projectPath, "");
-//
-//			IPath root = env.addPackageFragmentRoot(projectPath, "src");
-//			env.setOutputFolder(projectPath, "bin");
-//
-//			JDTResolver.recordInstances = true;
-//
-//			env.addGroovyClass(root, "", "Foo",
-//					"import groovy.transform.CompileStatic\n"+
-//					"@CompileStatic\n"+
-//					"void method(String message) {\n"+
-//					"   Collection<Integer> cs;\n"+
-////					"   List<Integer> ls = new ArrayList<Integer>();\n"+
-////					"   ls.add(123);\n"+
-////					"   ls.add('abc');\n"+
-//					// GRECLIPSE-1511 code
-//					"	List<String> second = []\n"+
-//					"	List<String> artefactResources2\n"+
-//					"	second.addAll(artefactResources2)\n"+
-//					"}\n"+
-//					"interface ListOfFile extends ArrayList<File> {\n"+
-//					"}"
-//					);
-//
-//			incrementalBuild(projectPath);
-////			expectingCompiledClasses("Foo","List2");
-//			expectingNoProblems();
-//
-//			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-//
-//			// Access the jdtresolver bits and pieces
-//
-//			JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
-//
-//			assertNotNull(jcn);
-//			System.out.println("JDT ClassNode="+jcn);
-////			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
-////			System.out.println(jcn2);
-//
-////			List<File> C = new ArrayList<File>();
-//			ClassNode listcn = new ClassNode(java.util.Collection.class);
-//			VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
-//			listcn.lazyClassInit();
-//			System.out.println("Groovy ClassNode="+listcn);
-//
-////			IJavaProject ijp = env.getJavaProject("Project");
-////			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
-////					.getCompilationUnit();
-//
-//			// now find the class reference
-////			ClassNode cn = unit.getModuleNode().getClasses().get(1);
-////			System.out.println(cn);
-//
-//			// Compare java.util.List from JDTClassNode and List2 from groovy
-//			compareClassNodes(jcn.redirect(),listcn.redirect(),0);
-//			MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
-//			MethodNode rmn = getMethodNode(listcn,"add",1);
-//			compareMethodNodes(jmn,rmn);
-//
-//			jmn = getMethodNode(jcn,"addAll",1);
-//			rmn = getMethodNode(listcn,"addAll",1);
-//			compareMethodNodes(jmn,rmn);
-//
-//			// Want to compare type information in the
-//			// env.addClass(root, "", "Client", "public class Client {\n"
-//			// + "  { new Outer.Inner(); }\n" + "}\n");
-//			// incrementalBuild(projectPath);
-//			// expectingNoProblems();
-//			// expectingCompiledClasses("Client");
-//		} finally {
-//			JDTResolver.recordInstances = false;
-//		}
-//	}
+    public void _testCompileStatic_1506() throws Exception {
+        try {
+            if (GroovyUtils.GROOVY_LEVEL < 20) {
+                return;
+            }
+            IPath projectPath = env.addProject("Project","1.6");
+            env.addExternalJars(projectPath, Util.getJavaClassLibs());
+            env.addGroovyJars(projectPath);
+            fullBuild(projectPath);
+            // remove old package fragment root so that names don't collide
+            env.removePackageFragmentRoot(projectPath, "");
+
+            IPath root = env.addPackageFragmentRoot(projectPath, "src");
+            env.setOutputFolder(projectPath, "bin");
+
+            JDTResolver.recordInstances = true;
+
+            env.addGroovyClass(root, "", "Foo",
+                    "import groovy.transform.CompileStatic\n"+
+                    "@CompileStatic\n"+
+                    "void method(String message) {\n"+
+                    "   Collection<Integer> cs;\n"+
+//					"   List<Integer> ls = new ArrayList<Integer>();\n"+
+//					"   ls.add(123);\n"+
+//					"   ls.add('abc');\n"+
+                    // GRECLIPSE-1511 code
+                    "	List<String> second = []\n"+
+                    "	List<String> artefactResources2\n"+
+                    "	second.addAll(artefactResources2)\n"+
+                    "}\n"+
+                    "interface ListOfFile extends ArrayList<File> {\n"+
+                    "}"
+                    );
+
+            incrementalBuild(projectPath);
+//			expectingCompiledClasses("Foo","List2");
+            expectingNoProblems();
+
+            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+
+            // Access the jdtresolver bits and pieces
+
+            JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
+
+            assertNotNull(jcn);
+            System.out.println("JDT ClassNode="+jcn);
+//			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
+//			System.out.println(jcn2);
+
+//			List<File> C = new ArrayList<File>();
+            ClassNode listcn = new ClassNode(java.util.Collection.class);
+            VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
+            listcn.lazyClassInit();
+            System.out.println("Groovy ClassNode="+listcn);
+
+//			IJavaProject ijp = env.getJavaProject("Project");
+//			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
+//					.getCompilationUnit();
+
+            // now find the class reference
+//			ClassNode cn = unit.getModuleNode().getClasses().get(1);
+//			System.out.println(cn);
+
+            // Compare java.util.List from JDTClassNode and List2 from groovy
+            compareClassNodes(jcn.redirect(),listcn.redirect(),0);
+            MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
+            MethodNode rmn = getMethodNode(listcn,"add",1);
+            compareMethodNodes(jmn,rmn);
+
+            jmn = getMethodNode(jcn,"addAll",1);
+            rmn = getMethodNode(listcn,"addAll",1);
+            compareMethodNodes(jmn,rmn);
+
+            // Want to compare type information in the
+            // env.addClass(root, "", "Client", "public class Client {\n"
+            // + "  { new Outer.Inner(); }\n" + "}\n");
+            // incrementalBuild(projectPath);
+            // expectingNoProblems();
+            // expectingCompiledClasses("Client");
+        } finally {
+            JDTResolver.recordInstances = false;
+        }
+    }
 
     public void testCompileStatic_ArrayArray() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 20) {
@@ -681,134 +790,6 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         }
     }
 
-    private MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
-        List<MethodNode> mns = jcn.getDeclaredMethods(selector);
-        for (MethodNode mn: mns) {
-            if (mn.getParameters().length==paramCount) {
-                return mn;
-            }
-        }
-        return null;
-    }
-
-    private void compareMethodNodes(MethodNode jmn, MethodNode mn) {
-        System.out.println("\n\n\nComparing method nodes jmn="+jmn+" mn="+mn);
-        System.out.println("Comparing return types");
-        compareClassNodes(jmn.getReturnType(), mn.getReturnType(),1);
-        compareParameterArrays(jmn.getParameters(),mn.getParameters(),1);
-    }
-
-    private void compareParameterArrays(Parameter[] jps,
-            Parameter[] ps,int d) {
-        if (ps==null) {
-            if (jps!=null) {
-                fail("Expected null parameters but was "+arrayToString(jps));
-            }
-        } else {
-            if (ps.length!=jps.length) {
-                fail("Expected same number of parameters, should be "+arrayToString(ps)+" but was "+arrayToString(jps));
-            }
-            for (int p=0;p<ps.length;p++) {
-                System.out.println("Comparing parameters jp="+jps[p]+" p="+ps[p]);
-                compareParameters(jps[p],ps[p],d+1);
-            }
-        }
-    }
-
-    private void compareParameters(Parameter jp, Parameter p,int d) {
-        compareClassNodes(jp.getType(),p.getType(),d+1);
-    }
-
-    // check whether these are identical (in everything except name!)
-    private void compareClassNodes(ClassNode jcn, ClassNode cn,int d) {
-        System.out.println("Comparing ClassNodes\njcn="+jcn.toString()+"\n cn="+cn.toString());
-        assertEquals(cn.isGenericsPlaceHolder(),jcn.isGenericsPlaceHolder());
-
-        // Check GenericsType info
-        GenericsType[] gt_cn = cn.getGenericsTypes();
-        GenericsType[] gt_jcn = jcn.getGenericsTypes();
-        if (gt_cn==null) {
-            if (gt_jcn!=null) {
-                fail("Should have been null but was "+arrayToString(gt_jcn));
-            }
-        } else {
-            if (gt_jcn==null) {
-                fail("Did not expect genericstypes to be null, should be "+arrayToString(gt_cn));
-            }
-            assertNotNull(gt_jcn);
-            assertEquals(gt_cn.length,gt_jcn.length);
-            for (int i=0;i<gt_cn.length;i++) {
-                System.out.println("Comparing generics types information, index #"+i);
-                compareGenericsTypes(gt_jcn[i],gt_cn[i],d+1);
-            }
-        }
-    }
-
-    private void compareGenericsTypes(GenericsType jgt, GenericsType gt,int d) {
-        //			protected ClassNode[] upperBounds;
-        //		    protected ClassNode lowerBound;
-        //		    protected ClassNode type;
-        //		    protected String name;
-        //		    protected boolean placeholder;
-        //		    private boolean resolved;
-        //		    private boolean wildcard;
-//		assertEquals(jgt.getText(),gt.getText());
-        assertEquals(jgt.getName(),gt.getName());
-        assertEquals(jgt.isPlaceholder(),gt.isPlaceholder());
-        assertEquals(jgt.isResolved(),gt.isResolved());
-        assertEquals(jgt.isWildcard(),gt.isWildcard());
-        compareType(jgt.getType(),gt.getType(),d+1);
-        compareUpperBounds(jgt.getUpperBounds(),gt.getUpperBounds(),d+1);
-        compareLowerBound(jgt.getLowerBound(),gt.getLowerBound(),d+1);
-    }
-
-    private void compareType(ClassNode jcn, ClassNode cn,int d) {
-        System.out.println("Compare type of GenericsType: jcn="+jcn+" cn="+cn);
-        compareClassNodes(jcn, cn,d+1);
-    }
-
-    private String arrayToString(ClassNode[] cns) {
-        if (cns==null) {
-            return "NULL";
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (int i=0;i<cns.length;i++) {
-            if (i>0) sb.append(",");
-            sb.append(cns[i]);
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    private void compareUpperBounds(ClassNode[] jcnlist, ClassNode[] cnlist,int d) {
-        System.out.println("Comparing upper bounds: jcn="+arrayToString(jcnlist)+" cn="+arrayToString(cnlist));
-        if (cnlist==null) {
-            if (jcnlist!=null) {
-                fail("Should be null but is "+arrayToString(jcnlist));
-            }
-        } else {
-            if (jcnlist==null) {
-                fail("Array not expected to be null, should be "+arrayToString(cnlist));
-            }
-            assertEquals(cnlist.length,cnlist.length);
-            for (int i=0;i<cnlist.length;i++) {
-                compareClassNodes(jcnlist[i].redirect(), cnlist[i].redirect(),d+1);
-            }
-        }
-    }
-
-    private void compareLowerBound(ClassNode jcn,
-            ClassNode cn,int d) {
-        System.out.println("Comparing lower bound");
-        if (jcn==null) {
-            assertNull(cn);
-        } else {
-            assertNotNull(cn);
-            compareClassNodes(jcn.redirect(), cn.redirect(),d+1);
-        }
-    }
-
     public void testInners_983() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -873,7 +854,6 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         // expectingCompiledClasses("Client");
 
     }
-
 
     // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
     public void testCompileStatic2() throws Exception {
@@ -2001,9 +1981,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
-
     public void testAnnotationCollectorIncremental() throws Exception {
-
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
         }
@@ -2150,12 +2128,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
-    // http://jira.codehaus.org/browse/GRECLIPSE-558
-    /**
-     * The aim of this test is to verify the processing in
-     * ASTTransformationCollectorCodeVisitor - to check it finds everything it
-     * expects.
-     */
+    /** Verify the processing in ASTTransformationCollectorCodeVisitor - to check it finds everything it expects. */
     public void testSpock_GRE558() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2401,34 +2374,6 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         // System.out.println(cu);
     }
 
-    // private IJavaElement find(IJavaElement pkgFragmentRoot,String name) {
-    // try {
-    // IJavaElement[] kids = ((JavaElement)pkgFragmentRoot).getChildren();
-    // return findChild(kids,name,0);
-    // } catch (JavaModelException e) {
-    // e.printStackTrace();
-    // return null;
-    // }
-    // }
-
-    // private IJavaElement findChild(IJavaElement[] kids, String name, int
-    // depth) throws JavaModelException {
-    // if (depth>10) return null;
-    // for (IJavaElement kid: kids) {
-    // System.out.println(kid.getElementName());
-    // if (kid.getElementName().equals(name)) {
-    // return kid;
-    // }
-    // IJavaElement found =
-    // findChild(((JavaElement)kid).getChildren(),name,depth+1);
-    // if (found!=null) {
-    // return found;
-    // }
-    // }
-    // return null;
-    // }
-
-    // build .groovy file hello world then run it
     public void testBuildGroovy2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2655,8 +2600,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingCompiledClasses("pkg.GExtender");
     }
 
-    public void testIncrementalCompilationTheBasics2_changingJavaDependedUponByGroovy()
-            throws Exception {
+    public void testIncrementalCompilationTheBasics2_changingJavaDependedUponByGroovy() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -2739,15 +2683,6 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
-    // TODO test for this - package disagrees with file, shouldn't npe in
-    // binding locating code
-    // env.addGroovyClass(root, "pkg", "GHello",
-    // "package p1;\n"+
-    // "public class GHello {\n"+
-    // "   public int run() { return 12; }\n"+
-    // "}\n"
-    // );
-
     public void testSimpleTaskMarkerInSingleLineComment() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2789,12 +2724,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
-    private String toTask(String tasktag, String message) {
-        return tasktag + message;
-    }
-
-    public void testSimpleTaskMarkerInSingleLineCommentEndOfClass()
-            throws Exception {
+    public void testSimpleTaskMarkerInSingleLineCommentEndOfClass() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
@@ -2827,8 +2757,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
-    public void testSimpleTaskMarkerInSingleLineCommentEndOfClassCaseInsensitive()
-            throws Exception {
+    public void testSimpleTaskMarkerInSingleLineCommentEndOfClassCaseInsensitive() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
@@ -3267,8 +3196,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
-    public void testCopyGroovyResourceNonGroovyProject_GRECLIPSE653()
-            throws Exception {
+    public void testCopyGroovyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.removeGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3311,8 +3239,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 env.getWorkspace().getRoot().getFile(pathToBBin).exists());
     }
 
-    public void testCopyResourceNonGroovyProject_GRECLIPSE653()
-            throws Exception {
+    public void testCopyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.removeGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3391,7 +3318,6 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 env.getWorkspace().getRoot().getFile(pathToBBin).exists());
     }
 
-    // currently failing
     public void testNoDoubleResolve() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3807,314 +3733,303 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
-    //
-    // /*
-    // * Ensures that a task tag is not user editable
-    // * (regression test for bug 123721 two types of 'remove' for TODO task
-    // tags)
-    // */
-    // public void testTags3() throws CoreException {
-    // Hashtable options = JavaCore.getOptions();
-    //
-    // try {
-    // Hashtable newOptions = JavaCore.getOptions();
-    //			newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
-    //			newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
-    //
-    // JavaCore.setOptions(newOptions);
-    //
-    //			IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    //
-    // // remove old package fragment root so that names don't collide
-    //			env.removePackageFragmentRoot(projectPath, "");
-    //
-    //			IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //			env.setOutputFolder(projectPath, "bin");
-    //
-    //			IPath pathToA = env.addClass(root, "p", "A",
-    //				"package p; \n"+
-    //				"// TODO need to review\n" +
-    //				"public class A {\n" +
-    // "}");
-    //
-    // fullBuild(projectPath);
-    // IMarker[] markers = env.getTaskMarkersFor(pathToA);
-    // assertEquals("Marker should not be editable", Boolean.FALSE,
-    // markers[0].getAttribute(IMarker.USER_EDITABLE));
-    // } finally {
-    // JavaCore.setOptions(options);
-    // }
-    // }
-    //
-    // /*
-    // * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
-    // */
-    // public void testUnusedImport() throws Exception {
-    // Hashtable options = JavaCore.getOptions();
-    // Hashtable newOptions = JavaCore.getOptions();
-    // newOptions.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.WARNING);
-    //
-    // JavaCore.setOptions(newOptions);
-    //
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    //		env.addClass(root, "util", "MyException",
-    // "package util;\n" +
-    // "public class MyException extends Exception {\n" +
-    // "	private static final long serialVersionUID = 1L;\n" +
-    // "}"
-    //		);
-    //
-    //		env.addClass(root, "p", "Test",
-    // "package p;\n" +
-    // "import util.MyException;\n" +
-    // "public class Test {\n" +
-    // "	/**\n" +
-    // "	 * @throws MyException\n" +
-    // "	 */\n" +
-    // "	public void bar() {\n" +
-    // "	}\n" +
-    // "}"
-    // );
-    //
-    // fullBuild(projectPath);
-    // expectingNoProblems();
-    //
-    // JavaCore.setOptions(options);
-    // }
-    //
-    // /*
-    // * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
-    // */
-    // public void test98667() throws Exception {
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    //		env.addClass(root, "p1", "Aaa$Bbb$Ccc",
-    //			"package p1;\n" +
-    //			"\n" +
-    //			"public class Aaa$Bbb$Ccc {\n" +
-    //			"}"
-    // );
-    //
-    // fullBuild(projectPath);
-    // expectingNoProblems();
-    // }
-    //
-    // /**
-    // * @bug 164707: ArrayIndexOutOfBoundsException in JavaModelManager if
-    // source level == 6.0
-    // * @test Ensure that AIIOB does not longer happen with invalid source
-    // level string
-    // * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707"
-    // */
-    // public void testBug164707() throws Exception {
-    //		IPath projectPath = env.addProject("Project");
-    // IJavaProject javaProject = env.getJavaProject(projectPath);
-    // javaProject.setOption(JavaCore.COMPILER_SOURCE, "invalid");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    // fullBuild(projectPath);
-    // expectingNoProblems();
-    // }
-    //
-    // /**
-    // * @bug 75471: [prefs] no re-compile when loading settings
-    // * @test Ensure that changing project preferences is well taking into
-    // account while rebuilding project
-    // * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=75471"
-    // */
-    // public void _testUpdateProjectPreferences() throws Exception {
-    //
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    //		env.addClass(root, "util", "MyException",
-    // "package util;\n" +
-    // "public class MyException extends Exception {\n" +
-    // "	private static final long serialVersionUID = 1L;\n" +
-    // "}"
-    //		);
-    //
-    //		IPath cuPath = env.addClass(root, "p", "Test",
-    // "package p;\n" +
-    // "import util.MyException;\n" +
-    // "public class Test {\n" +
-    // "}"
-    // );
-    //
-    // fullBuild(projectPath);
-    // expectingSpecificProblemFor(
-    // projectPath,
-    //			new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
-    //
-    // IJavaProject project = env.getJavaProject(projectPath);
-    // project.setOption(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
-    // incrementalBuild(projectPath);
-    // expectingNoProblems();
-    // }
-    // public void _testUpdateWkspPreferences() throws Exception {
-    //
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    //		env.addClass(root, "util", "MyException",
-    // "package util;\n" +
-    // "public class MyException extends Exception {\n" +
-    // "	private static final long serialVersionUID = 1L;\n" +
-    // "}"
-    //		);
-    //
-    //		IPath cuPath = env.addClass(root, "p", "Test",
-    // "package p;\n" +
-    // "import util.MyException;\n" +
-    // "public class Test {\n" +
-    // "}"
-    // );
-    //
-    // fullBuild();
-    // expectingSpecificProblemFor(
-    // projectPath,
-    //			new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
-    //
-    // // Save preference
-    // JavaModelManager manager = JavaModelManager.getJavaModelManager();
-    // IEclipsePreferences preferences = manager.getInstancePreferences();
-    // String unusedImport = preferences.get(JavaCore.COMPILER_PB_UNUSED_IMPORT,
-    // null);
-    // try {
-    // // Modify preference
-    // preferences.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
-    // incrementalBuild();
-    // expectingNoProblems();
-    // }
-    // finally {
-    // if (unusedImport == null) {
-    // preferences.remove(JavaCore.COMPILER_PB_UNUSED_IMPORT);
-    // } else {
-    // preferences.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, unusedImport);
-    // }
-    // }
-    // }
-    //
-    // public void testTags4() throws Exception {
-    // Hashtable options = JavaCore.getOptions();
-    // Hashtable newOptions = JavaCore.getOptions();
-    //		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO!,TODO,TODO?");
-    //		newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "HIGH,NORMAL,LOW");
-    //
-    // JavaCore.setOptions(newOptions);
-    //
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    //		IPath pathToA = env.addClass(root, "p", "A",
-    //			"package p; \n"+
-    //			"// TODO! TODO? need to review the loop\n" +
-    //			"public class A {\n" +
-    // "}");
-    //
-    // fullBuild(projectPath);
-    // IMarker[] markers = env.getTaskMarkersFor(pathToA);
-    // assertEquals("Wrong size", 2, markers.length);
-    //
-    // try {
-    // IMarker marker = markers[1];
-    // Object priority = marker.getAttribute(IMarker.PRIORITY);
-    // String message = (String) marker.getAttribute(IMarker.MESSAGE);
-    // assertEquals("Wrong message", "TODO? need to review the loop", message);
-    // assertNotNull("No task priority", priority);
-    // assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW),
-    // priority);
-    //
-    // marker = markers[0];
-    // priority = marker.getAttribute(IMarker.PRIORITY);
-    // message = (String) marker.getAttribute(IMarker.MESSAGE);
-    // assertEquals("Wrong message", "TODO! need to review the loop", message);
-    // assertNotNull("No task priority", priority);
-    // assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH),
-    // priority);
-    // } catch (CoreException e) {
-    // assertTrue(false);
-    // }
-    // JavaCore.setOptions(options);
-    // }
+    /*
+     * Ensures that a task tag is not user editable
+     * (regression test for bug 123721 two types of 'remove' for TODO task tags)
+     */
+    public void testTags3() throws Exception {
+        Hashtable<String, String> options = JavaCore.getOptions();
+
+        try {
+            Hashtable<String, String> newOptions = JavaCore.getOptions();
+            newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
+            newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
+
+            JavaCore.setOptions(newOptions);
+
+            IPath projectPath = env.addProject("Project");
+            env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+            // remove old package fragment root so that names don't collide
+            env.removePackageFragmentRoot(projectPath, "");
+
+            IPath root = env.addPackageFragmentRoot(projectPath, "src");
+            env.setOutputFolder(projectPath, "bin");
+
+            IPath pathToA = env.addClass(root, "p", "A",
+                "package p; \n"+
+                    "// TODO need to review\n" +
+                    "public class A {\n" +
+                "}");
+
+            fullBuild(projectPath);
+            IMarker[] markers = env.getTaskMarkersFor(pathToA);
+            assertEquals("Marker should not be editable", Boolean.FALSE,
+                markers[0].getAttribute(IMarker.USER_EDITABLE));
+        } finally {
+            JavaCore.setOptions(options);
+        }
+    }
+
+    /*
+     * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
+     */
+    public void testUnusedImport() throws Exception {
+        Hashtable<String, String> options = JavaCore.getOptions();
+        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        newOptions.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.WARNING);
+
+        JavaCore.setOptions(newOptions);
+
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        env.addClass(root, "util", "MyException",
+            "package util;\n" +
+                "public class MyException extends Exception {\n" +
+                "	private static final long serialVersionUID = 1L;\n" +
+                "}"
+            );
+
+        env.addClass(root, "p", "Test",
+            "package p;\n" +
+                "import util.MyException;\n" +
+                "public class Test {\n" +
+                "	/**\n" +
+                "	 * @throws MyException\n" +
+                "	 */\n" +
+                "	public void bar() {\n" +
+                "	}\n" +
+                "}"
+            );
+
+        fullBuild(projectPath);
+        expectingNoProblems();
+
+        JavaCore.setOptions(options);
+    }
+
+    /*
+     * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
+     */
+    public void test98667() throws Exception {
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        env.addClass(root, "p1", "Aaa$Bbb$Ccc",
+            "package p1;\n" +
+                "\n" +
+                "public class Aaa$Bbb$Ccc {\n" +
+                "}"
+            );
+
+        fullBuild(projectPath);
+        expectingNoProblems();
+    }
+
+    /**
+     * @bug 164707: ArrayIndexOutOfBoundsException in JavaModelManager if source level == 6.0
+     * @test Ensure that AIIOB does not longer happen with invalid source level string
+     * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707"
+     */
+    public void testBug164707() throws Exception {
+        IPath projectPath = env.addProject("Project");
+        env.getJavaProject(projectPath).setOption(JavaCore.COMPILER_SOURCE, "invalid");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        fullBuild(projectPath);
+        expectingNoProblems();
+    }
+
+    /**
+     * @bug 75471: [prefs] no re-compile when loading settings
+     * @test Ensure that changing project preferences is well taking into account while rebuilding project
+     * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=75471"
+     */
+    public void _testUpdateProjectPreferences() throws Exception {
+
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        env.addClass(root, "util", "MyException",
+            "package util;\n" +
+                "public class MyException extends Exception {\n" +
+                "	private static final long serialVersionUID = 1L;\n" +
+                "}"
+            );
+
+        IPath cuPath = env.addClass(root, "p", "Test",
+            "package p;\n" +
+                "import util.MyException;\n" +
+                "public class Test {\n" +
+                "}"
+            );
+
+        fullBuild(projectPath);
+        expectingSpecificProblemFor(
+            projectPath,
+            new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
+
+        env.getJavaProject(projectPath).setOption(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
+        incrementalBuild(projectPath);
+        expectingNoProblems();
+    }
+
+    public void _testUpdateWkspPreferences() throws Exception {
+
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        env.addClass(root, "util", "MyException",
+            "package util;\n" +
+                "public class MyException extends Exception {\n" +
+                "	private static final long serialVersionUID = 1L;\n" +
+                "}"
+            );
+
+        IPath cuPath = env.addClass(root, "p", "Test",
+            "package p;\n" +
+                "import util.MyException;\n" +
+                "public class Test {\n" +
+                "}"
+            );
+
+        fullBuild();
+        expectingSpecificProblemFor(
+            projectPath,
+            new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
+
+        // Save preference
+        JavaModelManager manager = JavaModelManager.getJavaModelManager();
+        String unusedImport = manager.getInstancePreferences().get(JavaCore.COMPILER_PB_UNUSED_IMPORT, null);
+        try {
+            // Modify preference
+            manager.getInstancePreferences().put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
+            incrementalBuild();
+            expectingNoProblems();
+        }
+        finally {
+            if (unusedImport == null) {
+                manager.getInstancePreferences().remove(JavaCore.COMPILER_PB_UNUSED_IMPORT);
+            } else {
+                manager.getInstancePreferences().put(JavaCore.COMPILER_PB_UNUSED_IMPORT, unusedImport);
+            }
+        }
+    }
+
+    public void testTags4() throws Exception {
+        Hashtable<String, String> options = JavaCore.getOptions();
+        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO!,TODO,TODO?");
+        newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "HIGH,NORMAL,LOW");
+
+        JavaCore.setOptions(newOptions);
+
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        IPath pathToA = env.addClass(root, "p", "A",
+            "package p; \n"+
+                "// TODO! TODO? need to review the loop\n" +
+                "public class A {\n" +
+            "}");
+
+        fullBuild(projectPath);
+        IMarker[] markers = env.getTaskMarkersFor(pathToA);
+        assertEquals("Wrong size", 2, markers.length);
+
+        try {
+            IMarker marker = markers[1];
+            Object priority = marker.getAttribute(IMarker.PRIORITY);
+            String message = (String) marker.getAttribute(IMarker.MESSAGE);
+            assertEquals("Wrong message", "TODO? need to review the loop", message);
+            assertNotNull("No task priority", priority);
+            assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW),
+                priority);
+
+            marker = markers[0];
+            priority = marker.getAttribute(IMarker.PRIORITY);
+            message = (String) marker.getAttribute(IMarker.MESSAGE);
+            assertEquals("Wrong message", "TODO! need to review the loop", message);
+            assertNotNull("No task priority", priority);
+            assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_HIGH),
+                priority);
+        } catch (CoreException e) {
+            assertTrue(false);
+        }
+        JavaCore.setOptions(options);
+    }
 
     // When a groovy file name clashes with an existing type
-    // public void testBuildClash() throws Exception {
-    //		IPath projectPath = env.addProject("Project");
-    // env.addExternalJars(projectPath, Util.getJavaClassLibs());
-    // env.addGroovyJars(projectPath);
-    // fullBuild(projectPath);
-    //
-    // // remove old package fragment root so that names don't collide
-    //		env.removePackageFragmentRoot(projectPath, "");
-    //
-    //		IPath root = env.addPackageFragmentRoot(projectPath, "src");
-    //		env.setOutputFolder(projectPath, "bin");
-    //
-    // env.addGroovyClass(root, "", "Stack",
-    // "class StackTester {\n"+
-    // "   def o = new Stack();\n"+
-    // "   public static void main(String[] args) {\n"+
-    // "      System.out.println('>>'+new StackTester().o.getClass());\n"+
-    // "      System.out.println(\"Hello world\");\n"+
-    // "   }\n"+
-    // "}\n"
-    // );
-    //
-    // incrementalBuild(projectPath);
-    // expectingCompiledClasses("StackTester");
-    // expectingNoProblems();
-    // executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" +
-    // "Hello world\r\n", "");
-    //
-    //
-    // env.addGroovyClass(root, "", "Stack",
-    // "class StackTester {\n"+
-    // "   def o = new Stack();\n"+
-    // "   public static void main(String[] args) {\n"+
-    // "      System.out.println('>>'+new StackTester().o.getClass());\n"+
-    // "      System.out.println(\"Hello world\");\n"+
-    // "   }\n"+
-    // "}\n"
-    // );
-    //
-    // incrementalBuild(projectPath);
-    // expectingCompiledClasses("StackTester");
-    // expectingNoProblems();
-    // executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" +
-    // "Hello world\r\n", "");
-    // }
+    public void _testBuildClash() throws Exception {
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        env.addGroovyClass(root, "", "Stack",
+            "class StackTester {\n"+
+                "   def o = new Stack();\n"+
+                "   public static void main(String[] args) {\n"+
+                "      System.out.println('>>'+new StackTester().o.getClass());\n"+
+                "      System.out.println(\"Hello world\");\n"+
+                "   }\n"+
+                "}\n"
+            );
+
+        incrementalBuild(projectPath);
+        expectingCompiledClasses("StackTester");
+        expectingNoProblems();
+        executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + "Hello world\r\n", "");
+
+        env.addGroovyClass(root, "", "Stack",
+            "class StackTester {\n"+
+                "   def o = new Stack();\n"+
+                "   public static void main(String[] args) {\n"+
+                "      System.out.println('>>'+new StackTester().o.getClass());\n"+
+                "      System.out.println(\"Hello world\");\n"+
+                "   }\n"+
+                "}\n"
+            );
+
+        incrementalBuild(projectPath);
+        expectingCompiledClasses("StackTester");
+        expectingNoProblems();
+        executeClass(projectPath, "StackTester", ">>class java.util.Stack\r\n" + "Hello world\r\n", "");
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,9 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
-
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
-/**
- *
- * @author Andrew Eisenberg
- * @created Jun 29, 2012
- *
- */
-public class Groovy20InferencingTests extends AbstractInferencingTest {
+public final class Groovy20InferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(Groovy20InferencingTests.class);

@@ -34,6 +34,8 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
+import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -41,7 +43,6 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -50,9 +51,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 
-/**
- * @author Andrew Eisenberg
- */
 public abstract class AbstractGroovySearchTest extends BuilderTests {
 
     protected class MatchRegion {
@@ -319,7 +317,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
 
         visitor.visitCompilationUnit(typeRequestor);
 
-        assertEquals("Should have found " + matchLocations.length + " matches, but found: " + searchRequestor.printMatches(), matchLocations.length, searchRequestor.matches.size());
+        assertEquals("Should have found " + matchLocations.length + " matches, but found: " + searchRequestor.printMatches(), matchLocations.length, searchRequestor.getMatches().size());
 
         for (int i = 0, n = matchLocations.length; i < n; i += 1) {
             assertLocation(searchRequestor.getMatch(i), matchLocations[i].offset, matchLocations[i].length);
@@ -333,7 +331,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
 
         visitor.visitCompilationUnit(typeRequestor);
 
-        assertEquals("Should have found 2 matches, but found: " + searchRequestor.printMatches(), 2, searchRequestor.matches.size());
+        assertEquals("Should have found 2 matches, but found: " + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
         assertEquals("Incorrect match in " + searchRequestor.printMatches(), firstMatchEnclosingElement, searchRequestor.getElementNumber(0));
         assertLocation(searchRequestor.getMatch(0), secondContents.indexOf(matchText), matchText.length());
         assertEquals("Incorrect match in " + searchRequestor.printMatches(), secondMatchEnclosingElement, searchRequestor.getElementNumber(1));

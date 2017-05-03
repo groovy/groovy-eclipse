@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,9 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import junit.framework.Test;
 
 /**
- * Tests for PropertyNodes of JDTClassNodes
- * @author Andrew Eisenberg
- * @created Nov 13, 2009
- *
+ * Tests for PropertyNodes of JDTClassNodes.
  */
-public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
+public final class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(JDTPropertyNodeInferencingTests.class);

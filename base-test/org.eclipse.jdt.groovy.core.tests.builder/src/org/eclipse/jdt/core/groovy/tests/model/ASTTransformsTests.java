@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.eclipse.jdt.core.groovy.tests.model;
 import java.util.List;
 
 import junit.framework.Test;
-
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -36,12 +35,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 
-/**
- *
- * @author Andrew Eisenberg
- * @created May 3, 2010
- */
-public class ASTTransformsTests extends BuilderTests {
+public final class ASTTransformsTests extends BuilderTests {
 
     public static Test suite() {
         return buildTestSuite(ASTTransformsTests.class);

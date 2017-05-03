@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 4, 2009
- */
-public class LocationSupportTests extends TestCase {
+public final class LocationSupportTests extends TestCase {
 
     public void testLocationSupport() throws Exception {
         List<StringBuffer> sbuffers = new LinkedList<StringBuffer>();
@@ -92,6 +88,7 @@ public class LocationSupportTests extends TestCase {
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
     }
+
     public void testParserSourceLocationsOneLine() throws Exception {
         String content = "def x = 7";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -108,6 +105,7 @@ public class LocationSupportTests extends TestCase {
         assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
+
     public void testParserSourceLocationsNewLine() throws Exception {
         String content = "def x = 7\n";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -124,6 +122,7 @@ public class LocationSupportTests extends TestCase {
         assertEquals("".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
+
     public void testParserSourceLocationsClass() throws Exception {
         String content = "class X {\n }";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -254,8 +253,8 @@ public class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
         assertEquals(escapeSequence.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
-
     }
+
     public void testUnicodeEscapes2() throws Exception {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "\n\n\ndef x = 7";
@@ -271,8 +270,8 @@ public class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
         assertEquals(content.indexOf("def"), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
         assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
-
     }
+
     public void testUnicodeEscapes3() throws Exception {
         String escapeSequence = "/*\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9*/";
         String content = escapeSequence + "\n\n\ndef /*\\u00E9*/x = /*\\u00E9*/7";

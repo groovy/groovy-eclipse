@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import junit.framework.Test;
-
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -33,12 +33,9 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 
 /**
- * @author Andrew Eisenberg
- * @created Oct 29, 2009
- *
- * searches that make use of categories
+ * Tests searches that make use of categories.
  */
-public class CategorySearchTests extends AbstractGroovySearchTest {
+public final class CategorySearchTests extends AbstractGroovySearchTest {
 
     public CategorySearchTests(String name) {
         super(name);

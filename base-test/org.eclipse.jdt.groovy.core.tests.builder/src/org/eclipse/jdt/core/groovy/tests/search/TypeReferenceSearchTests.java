@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import junit.framework.Test;
-
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -38,12 +37,9 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 
 /**
- * @author Andrew Eisenberg
- * @created Sep 1, 2009
- *
- * Tests the groovy-specific type referencing search support
+ * Tests the groovy-specific type referencing search support.
  */
-public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
+public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
 
     public TypeReferenceSearchTests(String name) {
         super(name);

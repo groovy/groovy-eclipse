@@ -27,7 +27,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
+import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -49,7 +49,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  * <p>
  * Once setup like that it is usable for testing here.
  */
-public class FullProjectTests extends BuilderTests {
+public final class FullProjectTests extends BuilderTests {
 
     public static junit.framework.Test suite() {
         return buildTestSuite(FullProjectTests.class);
@@ -58,6 +58,40 @@ public class FullProjectTests extends BuilderTests {
     public FullProjectTests(String name) {
         super(name);
     }
+
+    private static void assertDoesNotContainMethod(ClassNode cn, String methodname) {
+        for (MethodNode mn : cn.getMethods()) {
+            if (mn.getName().equals(methodname)) {
+                fail("Found method named '" + methodname + "' in class '" + cn.getName() + "'");
+            }
+        }
+    }
+
+    private static void assertContainsMethod(ClassNode cn, String methodname) {
+        for (MethodNode mn : cn.getMethods()) {
+            if (mn.getName().equals(methodname)) {
+                return;
+            }
+        }
+        fail("Did not find method named '" + methodname + "' in class '" + cn.getName() + "'");
+    }
+
+    private static void assertContainsProblem(Set<IProblem> problems, String expected) {
+        for (IProblem problem : problems) {
+            if (problem.toString().contains(expected)) {
+                return;
+            }
+        }
+        fail("Expected '" + expected + "' in data '" + problems + "'");
+    }
+
+    private static void setTransformsOption(IJavaProject javaproject, String transformsSpec) {
+        Map<String, String> m = new HashMap<String, String>();
+        m.put(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile, transformsSpec);
+        javaproject.setOptions(m);
+    }
+
+    //--------------------------------------------------------------------------
 
     // Transforms during reconciling tests
     public void testReconcilingWithTransforms_notransformallowed() throws Exception {
@@ -309,39 +343,5 @@ public class FullProjectTests extends BuilderTests {
         ClassNode cn = classes.get(0);
         assertContainsMethod(cn, "getInstance");
         assertContainsMethod(cn, "method");
-    }
-
-    //
-
-    private static void assertDoesNotContainMethod(ClassNode cn, String methodname) {
-        for (MethodNode mn : cn.getMethods()) {
-            if (mn.getName().equals(methodname)) {
-                fail("Found method named '" + methodname + "' in class '" + cn.getName() + "'");
-            }
-        }
-    }
-
-    private static void assertContainsMethod(ClassNode cn, String methodname) {
-        for (MethodNode mn : cn.getMethods()) {
-            if (mn.getName().equals(methodname)) {
-                return;
-            }
-        }
-        fail("Did not find method named '" + methodname + "' in class '" + cn.getName() + "'");
-    }
-
-    private static void assertContainsProblem(Set<IProblem> problems, String expected) {
-        for (IProblem problem : problems) {
-            if (problem.toString().contains(expected)) {
-                return;
-            }
-        }
-        fail("Expected '" + expected + "' in data '" + problems + "'");
-    }
-
-    private static void setTransformsOption(IJavaProject javaproject, String transformsSpec) {
-        Map<String, String> m = new HashMap<String, String>();
-        m.put(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile, transformsSpec);
-        javaproject.setOptions(m);
     }
 }

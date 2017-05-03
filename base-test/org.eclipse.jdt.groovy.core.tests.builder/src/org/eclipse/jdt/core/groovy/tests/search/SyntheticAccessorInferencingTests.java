@@ -19,10 +19,8 @@ import junit.framework.Test;
 
 /**
  * Tests for synthetic accessor type inferencing.
- *
- * @author Andrew Eisenberg
  */
-public class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
+public final class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(SyntheticAccessorInferencingTests.class);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.core.groovy.tests.compiler;
+package org.eclipse.jdt.core.groovy.tests;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -38,6 +38,8 @@ import org.eclipse.jdt.groovy.core.util.JavaConstants;
  * Some utility methods to test the reconciler.
  */
 public class ReconcilerUtils {
+
+    private ReconcilerUtils() {}
 
     public static class SimpleWorkingCopyOwner extends WorkingCopyOwner {
         public final Set<IProblem> problems = new LinkedHashSet<IProblem>();
@@ -113,8 +115,7 @@ public class ReconcilerUtils {
         return results;
     }
 
-    private static List<ICompilationUnit> findAllUnits(IJavaProject project,
-            boolean onlyGroovy) throws JavaModelException {
+    private static List<ICompilationUnit> findAllUnits(IJavaProject project, boolean onlyGroovy) throws JavaModelException {
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
         List<ICompilationUnit> units = new ArrayList<ICompilationUnit>();
         for (IPackageFragmentRoot root : roots) {

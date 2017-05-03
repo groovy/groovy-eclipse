@@ -6,8 +6,8 @@ Bundle-Name: Builder Tests
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 3.3.100.qualifier
 Bundle-ClassPath: jdtcoretestsbuilder.jar
-Export-Package: org.eclipse.jdt.core.groovy.tests.builder,
- org.eclipse.jdt.core.groovy.tests.compiler,
+Export-Package: org.eclipse.jdt.core.groovy.tests,
+ org.eclipse.jdt.core.groovy.tests.builder,
  org.eclipse.jdt.core.groovy.tests.locations,
  org.eclipse.jdt.core.groovy.tests.model,
  org.eclipse.jdt.core.groovy.tests.search,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.core.groovy.tests.compiler;
+package org.eclipse.jdt.core.groovy.tests.builder;
 
 import java.util.Arrays;
-import java.util.List;
 
 import junit.framework.Test;
 
@@ -26,27 +25,11 @@ import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
-import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 
 /**
- * Tests that the Static Type cheking DSL is working as expected
- * @author Andrew Eisenberg
- * @created Feb 14, 2012
+ * Tests that the Static Type cheking DSL is working as expected.
  */
-public class STCScriptsTests extends BuilderTests {
-
-    class MockScriptFolderSelector extends ScriptFolderSelector {
-        // override to make accessible here
-        protected MockScriptFolderSelector(String preferences,
-                boolean isDisabled) {
-            super(toListOfString(preferences), isDisabled);
-        }
-    }
-
-    static List<String> toListOfString(String preferences) {
-        String[] splits = preferences.split(",");
-        return Arrays.asList(splits);
-    }
+public final class STCScriptsTests extends BuilderTests {
 
     public STCScriptsTests(String name) {
         super(name);
@@ -69,7 +52,17 @@ public class STCScriptsTests extends BuilderTests {
         }
     }
 
-    protected IPath createGenericProject() throws Exception {
+    @Override
+    protected void tearDown() throws Exception {
+        try {
+            super.tearDown();
+        } finally {
+            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
+            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
+        }
+    }
+
+    private IPath createGenericProject() throws Exception {
         if (genericProjectExists()) {
             return env.getProject("Project").getFullPath();
         }
@@ -84,20 +77,13 @@ public class STCScriptsTests extends BuilderTests {
         env.setOutputFolder(projectPath, "bin");
         return projectPath;
     }
-    protected boolean genericProjectExists() {
+
+    private boolean genericProjectExists() {
         return env.getProject("Project") != null && env.getProject("Project").exists();
     }
 
+    //--------------------------------------------------------------------------
 
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            super.tearDown();
-        } finally {
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
-        }
-    }
 
     public void testStaticTypeCheckingDSL1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
@@ -126,9 +112,9 @@ public class STCScriptsTests extends BuilderTests {
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found one problem in:\n" + Arrays.toString(problems), 1, problems.length);
-        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String). Please check if the declared type is right and if the method exists.",
-                problems[0].getMessage());
+        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String). Please check if the declared type is right and if the method exists.", problems[0].getMessage());
     }
+
     public void testStaticTypeCheckingDSL2() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
@@ -162,6 +148,4 @@ public class STCScriptsTests extends BuilderTests {
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
     }
-
-
 }

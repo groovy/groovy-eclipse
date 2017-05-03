@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.model;
 
-import static org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils.reconcile;
+import static org.eclipse.jdt.core.groovy.tests.ReconcilerUtils.reconcile;
 
 import java.util.Arrays;
 import java.util.HashMap;

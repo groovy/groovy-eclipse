@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.core.groovy.tests.compiler;
+package org.eclipse.jdt.core.groovy.tests.builder;
 
-import java.util.Arrays;
-import java.util.List;
+import java.io.File;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.groovy.tests.builder.ProjectUtils;
+import org.eclipse.jdt.core.groovy.tests.MockScriptFolderSelector;
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
@@ -40,24 +47,9 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
- * Tests that the script folder handling works
- * @author Andrew Eisenberg
- * @created Oct 7, 2010
+ * Tests that the script folder handling works.
  */
-public class ScriptFolderTests extends BuilderTests {
-
-    class MockScriptFolderSelector extends ScriptFolderSelector {
-        // override to make accessible here
-        protected MockScriptFolderSelector(String preferences,
-                boolean isDisabled) {
-            super(toListOfString(preferences), isDisabled);
-        }
-    }
-
-    static List<String> toListOfString(String preferences) {
-        String[] splits = preferences.split(",");
-        return Arrays.asList(splits);
-    }
+public final class ScriptFolderTests extends BuilderTests {
 
     public ScriptFolderTests(String name) {
         super(name);
@@ -91,7 +83,7 @@ public class ScriptFolderTests extends BuilderTests {
     }
 
     public void testScriptFolderDefaultSettings() throws Exception {
-        MockScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, true);
+        ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, true);
         assertScript("scripts/f/g/Foo.groovy", selector);
         assertScript("src/main/resources/f/g/Foo.groovy", selector);
         assertScript("src/test/resources/f/g/Foo.groovy", selector);
@@ -106,7 +98,7 @@ public class ScriptFolderTests extends BuilderTests {
     }
 
     public void testScriptFolderDefaultSettingsNoCopy() throws Exception {
-        MockScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"), true);
+        ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"), true);
         assertScriptNoCopy("scripts/f/g/Foo.groovy", selector);
         assertScriptNoCopy("src/main/resources/f/g/Foo.groovy", selector);
         assertScriptNoCopy("src/test/resources/f/g/Foo.groovy", selector);
@@ -121,7 +113,7 @@ public class ScriptFolderTests extends BuilderTests {
     }
 
     public void testScriptFolderDisabled() throws Exception {
-        MockScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, false);
+        ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, false);
         assertSource("scripts/f/g/Foo.groovy", selector);
         assertSource("src/main/resources/f/g/Foo.groovy", selector);
         assertSource("src/test/resources/f/g/Foo.groovy", selector);
@@ -136,7 +128,7 @@ public class ScriptFolderTests extends BuilderTests {
     }
 
     public void testScriptFolderCustomSettings() throws Exception {
-        MockScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,y,scroo/**/*.groovy,n", true);
+        ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,y,scroo/**/*.groovy,n", true);
         assertScript("scri/f/g/Foo.groovy", selector);
         assertScriptNoCopy("scroo/main/resources/f/g/Foo.groovy", selector);
         assertSource("src/test/resources/Foo.java", selector);
@@ -144,22 +136,11 @@ public class ScriptFolderTests extends BuilderTests {
 
     // mostly ensure that nothing horrific happens
     public void testScriptFolderInvalidSettings() throws Exception {
-        MockScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,scroo/**/*.groovy,n", true);
+        ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,scroo/**/*.groovy,n", true);
         assertScriptNoCopy("scri/f/g/Foo.groovy", selector);
         assertSource("scroo/main/resources/f/g/Foo.groovy", selector);
         assertSource("src/test/resources/Foo.java", selector);
     }
-
-    private void assertScript(String toCheck, MockScriptFolderSelector selector) {
-        assertEquals(toCheck + " should be a script", FileKind.SCRIPT, selector.getFileKind(toCheck.toCharArray()));
-    }
-    private void assertScriptNoCopy(String toCheck, MockScriptFolderSelector selector) {
-        assertEquals(toCheck + " should be a script", FileKind.SCRIPT_NO_COPY, selector.getFileKind(toCheck.toCharArray()));
-    }
-    private void assertSource(String toCheck, MockScriptFolderSelector selector) {
-        assertEquals(toCheck + " should be a script", FileKind.SOURCE, selector.getFileKind(toCheck.toCharArray()));
-    }
-
 
     // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
@@ -169,6 +150,7 @@ public class ScriptFolderTests extends BuilderTests {
         assertNoExists("Project/bin/Script.class");
         assertExists("Project/bin/Script.groovy");
     }
+
     public void testScriptInProjectNoCopy() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
@@ -176,6 +158,7 @@ public class ScriptFolderTests extends BuilderTests {
         assertNoExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
     }
+
     public void testScriptInProjectDisabled() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
@@ -183,6 +166,7 @@ public class ScriptFolderTests extends BuilderTests {
         assertExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
     }
+
     public void testSourceInProjectCompiled() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
@@ -196,10 +180,9 @@ public class ScriptFolderTests extends BuilderTests {
     public void testComplexScriptFolderProject() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
-        ProjectUtils.createPredefinedProject("ScriptFoldersProject");
+        createPredefinedProject("ScriptFoldersProject");
         env.cleanBuild();
         env.fullBuild();
-
 
         // project root is a source folder, but it is not a script folder
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
@@ -230,7 +213,7 @@ public class ScriptFolderTests extends BuilderTests {
     public void testComplexScriptFolderProjectNoCopy() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
-        ProjectUtils.createPredefinedProject("ScriptFoldersProject");
+        createPredefinedProject("ScriptFoldersProject");
         env.fullBuild();
 
         // project root is a source folder, but it is not a script folder
@@ -260,8 +243,8 @@ public class ScriptFolderTests extends BuilderTests {
 
     // This is the big test.
     public void testComplexScriptFolderProjectProjectSettings() throws Exception {
-        IProject project = ProjectUtils.createPredefinedProject("ScriptFoldersProject");
-        ProjectUtils.createPredefinedProject("ScriptFoldersProject2");
+        IProject project = createPredefinedProject("ScriptFoldersProject");
+        createPredefinedProject("ScriptFoldersProject2");
 
         IScopeContext projectScope = new ProjectScope(project);
         IEclipsePreferences preferences = projectScope.getNode(Activator.PLUGIN_ID);
@@ -315,8 +298,6 @@ public class ScriptFolderTests extends BuilderTests {
         assertExistsNotDerived("ScriptFoldersProject2/src3/p/Script3.groovy");
         assertExists("ScriptFoldersProject2/src3/Script3.class");
         assertExists("ScriptFoldersProject2/src3/p/Script3.class");
-
-
 
         // now disable
         Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "false");
@@ -418,13 +399,51 @@ public class ScriptFolderTests extends BuilderTests {
         assertNoExists("ScriptFoldersProject2/src3/p/Script3.class");
 
         Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "false");
-
     }
 
+    //--------------------------------------------------------------------------
 
+    private static IProject createPredefinedProject(final String projectName) throws Exception {
+        // copy files in project from source workspace to target workspace
+        String sourceWorkspacePath = new File(FileLocator.toFileURL(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("/")).getFile()).getAbsolutePath() + File.separator + "workspace";
+        String targetWorkspacePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getCanonicalPath();
 
+        // return null if source directory does not exist
+        if (!copyDirectory(new File(sourceWorkspacePath, projectName), new File(targetWorkspacePath, projectName))) {
+            return null;
+        }
 
-    protected CompilationUnit createScriptInGroovyProject(String name, String contents, boolean isGroovy) throws Exception {
+        // create project
+        final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+        if (!project.exists()) {
+            SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project "+projectName);
+            IWorkspaceRunnable populate = new IWorkspaceRunnable() {
+                public void run(IProgressMonitor monitor) throws CoreException {
+                    project.create(monitor);
+                }
+            };
+            ResourcesPlugin.getWorkspace().run(populate, spm);
+            spm.waitForCompletion();
+        }
+
+        // ensure open
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("opening project "+projectName);
+        project.open(spm);
+        spm.waitForCompletion();
+
+        IJavaProject jp = JavaCore.create(project);
+        if (jp == null) {
+            // project was not found
+            return null;
+        }
+        try {
+            jp.setOption("org.eclipse.jdt.core.compiler.problem.missingSerialVersion", "ignore");
+        } catch (NullPointerException npe) {
+        }
+        return jp.getProject();
+    }
+
+    private CompilationUnit createScriptInGroovyProject(String name, String contents, boolean isGroovy) throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyNature("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -449,25 +468,94 @@ public class ScriptFolderTests extends BuilderTests {
         return (CompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
-    private void assertExists(String projectRelativePath) {
+    private static void assertExists(String projectRelativePath) {
         IWorkspaceRoot root = env.getWorkspace().getRoot();
         IFile file = root.getFile(new Path(projectRelativePath));
         assertTrue("File should exist: " + file, file.exists());
         assertTrue("File should be derived: " + file, file.isDerived());
     }
 
-    private void assertExistsNotDerived(String projectRelativePath) {
+    private static void assertExistsNotDerived(String projectRelativePath) {
         IWorkspaceRoot root = env.getWorkspace().getRoot();
         IFile file = root.getFile(new Path(projectRelativePath));
         assertTrue("File should exist: " + file, file.exists());
         assertFalse("File should not be derived: " + file, file.isDerived());
     }
 
-    private void assertNoExists(String projectRelativePath) {
+    private static void assertNoExists(String projectRelativePath) {
         IWorkspaceRoot root = env.getWorkspace().getRoot();
         IFile file = root.getFile(new Path(projectRelativePath));
         assertFalse("File should not exist: " + file, file.exists());
     }
 
+    private static void assertScript(String toCheck, ScriptFolderSelector selector) {
+        assertEquals(toCheck + " should be a script", FileKind.SCRIPT, selector.getFileKind(toCheck.toCharArray()));
+    }
 
+    private static void assertScriptNoCopy(String toCheck, ScriptFolderSelector selector) {
+        assertEquals(toCheck + " should be a script", FileKind.SCRIPT_NO_COPY, selector.getFileKind(toCheck.toCharArray()));
+    }
+
+    private static void assertSource(String toCheck, ScriptFolderSelector selector) {
+        assertEquals(toCheck + " should be a script", FileKind.SOURCE, selector.getFileKind(toCheck.toCharArray()));
+    }
+
+    /**
+     * Copy the given source directory (and all its contents) to the given target directory.
+     */
+    private static boolean copyDirectory(File source, File target) throws Exception {
+        if (!source.exists()) {
+            return false;
+        }
+        if (!target.exists()) {
+            target.mkdirs();
+        }
+        File[] files = source.listFiles();
+        if (files == null) return true;
+        for (int i = 0; i < files.length; i++) {
+            File sourceChild = files[i];
+            String name =  sourceChild.getName();
+            if (name.equals("CVS")) continue;
+            File targetChild = new File(target, name);
+            if (sourceChild.isDirectory()) {
+                copyDirectory(sourceChild, targetChild);
+            } else {
+                copy(sourceChild, targetChild);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Copy file from src (path to the original file) to dest (path to the destination file).
+     */
+    public static void copy(File src, File dest) throws Exception {
+        String text = DefaultGroovyMethods.getText(src);
+        if (convertToIndependantLineDelimiter(src)) {
+            text = convertToIndependantLineDelimiter(text);
+        }
+        DefaultGroovyMethods.write(dest, text);
+    }
+
+    private static boolean convertToIndependantLineDelimiter(File file) {
+        String name = file.getName();
+        return (name.endsWith(".java") || name.endsWith(".aj"));
+    }
+
+    private static String convertToIndependantLineDelimiter(String source) {
+        if (source.indexOf('\n') == -1 && source.indexOf('\r') == -1) return source;
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0, length = source.length(); i < length; i++) {
+            char car = source.charAt(i);
+            if (car == '\r') {
+                buffer.append('\n');
+                if (i < length-1 && source.charAt(i+1) == '\n') {
+                    i++; // skip \n after \r
+                }
+            } else {
+                buffer.append(car);
+            }
+        }
+        return buffer.toString();
+    }
 }

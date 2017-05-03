@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.core.groovy.tests.builder;
+package org.eclipse.jdt.core.groovy.tests;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * A basic progress monitor that can be waited upon (via waitForCompletion()).
- *
- * @author Andy Clement
  */
 public class SimpleProgressMonitor implements IProgressMonitor {
 

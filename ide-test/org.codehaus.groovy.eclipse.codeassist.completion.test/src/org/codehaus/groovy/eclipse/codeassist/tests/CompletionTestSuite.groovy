@@ -32,7 +32,7 @@ import org.eclipse.jdt.core.CompletionProposal
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.JavaModelException
-import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.groovy.core.util.JavaConstants
 import org.eclipse.jdt.groovy.search.ITypeRequestor
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -538,10 +538,10 @@ public abstract class BuilderTests extends TestCase {
 		}
 	}
 
-	protected String arrayToString(Object[] array) {
-		StringBuffer buffer = new StringBuffer();
-		int length = array == null ? 0 : array.length;
-		for (int i = 0; i < length; i++) {
+	protected static String arrayToString(Object[] array) {
+		if (array == null) return "<null>";
+		StringBuilder buffer = new StringBuilder();
+		for (int i = 0, n = array.length; i < n; i += 1) {
 			if (array[i] != null) {
 				if (i > 0) buffer.append('\n');
 				buffer.append(array[i].toString());

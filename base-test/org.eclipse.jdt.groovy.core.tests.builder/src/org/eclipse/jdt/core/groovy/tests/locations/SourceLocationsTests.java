@@ -31,7 +31,6 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
@@ -48,7 +47,7 @@ import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 
 /**
- * Tests that source locations for groovy compilation units are computed properly
+ * Tests that source locations for groovy compilation units are computed properly.
  *
  * Source locations are deteremined by special marker comments in the code
  * markers /*m1s* / /*f1s* / /*t1s* / indicate start of method, field and type
@@ -58,7 +57,8 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
  * markers /*m1sb* / indicate the start of a method body
  * NOTE: the start of a type body is not being calculated correctly
  */
-public class SourceLocationsTests extends BuilderTests {
+public final class SourceLocationsTests extends BuilderTests {
+
     public SourceLocationsTests(String name) {
         super(name);
     }
@@ -67,6 +67,167 @@ public class SourceLocationsTests extends BuilderTests {
         return buildTestSuite(SourceLocationsTests.class);
     }
 
+    private static void assertUnitWithSingleType(String source, ICompilationUnit unit) throws Exception {
+        assertUnit(unit, source);
+
+        ASTParser newParser = ASTParser.newParser(JavaConstants.AST_LEVEL);
+        newParser.setSource(unit);
+        org.eclipse.jdt.core.dom.CompilationUnit ast = (org.eclipse.jdt.core.dom.CompilationUnit) newParser.createAST(null);
+        int maxLength = ((CompilationUnit) unit).getContents().length-1;
+        IType decl = unit.getTypes()[0];
+        AbstractTypeDeclaration typeDecl = (AbstractTypeDeclaration) ast.types().get(0);
+        assertDeclaration(decl, typeDecl, 0, source, maxLength);
+
+        IJavaElement[] children = decl.getChildren();
+        List<BodyDeclaration> bodyDecls = typeDecl.bodyDeclarations();
+        for (int i = 0, j= 0; i < children.length; i++, j++) {
+            // look for method variants that use default params
+            if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i-1].getElementName())) {
+                j--;
+            }
+            // check for multiple declaration fragments inside a field declaration
+            // start locations and end locations for fragments are not calculated entirely correctly
+            // the first fragment has a start and end of the entire declaration
+            // the subsequent fragments have a start at the name start and an end after the fragment's optional expression (or the name end if there is none.
+            // so, here check to see if the name start and source start are the same.  If so, then this is a second fragment
+
+            if (decl.isEnum()) {
+                // not properly testing synthetic enum members yet
+                IMember member = (IMember) children[i];
+                assertEquals(new SourceRange(0, 0), member.getSourceRange());
+            } else {
+                assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source, maxLength);
+            }
+        }
+    }
+
+    private static void assertDeclaration(IMember decl, BodyDeclaration bd, int methodNumber, String source, int maxLength) throws Exception {
+        char astKind;
+         if (decl instanceof IMethod) {
+            astKind = 'm';
+        } else if (decl instanceof IField) {
+            astKind = 'f';
+        } else {
+            astKind = 't';
+        }
+
+        String startTag = "/*" + astKind + methodNumber + "s*/";
+        int start = source.indexOf(startTag) + startTag.length();
+
+        String endTag = "/*" + astKind + methodNumber + "e*/";
+        int end = Math.min(source.indexOf(endTag) + endTag.length(), maxLength);
+
+        boolean ignore = false;
+        if (decl instanceof IField && (start == 6 || end == 6)) {
+             // a field with multiple variable declaration fragments
+             // this is not yet being calculated properly
+             ignore = true;
+        }
+
+
+        if (!ignore) {
+            ISourceRange declRange = decl.getSourceRange();
+            assertEquals(decl + "\nhas incorrect source start value", start, declRange.getOffset());
+            assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
+
+            // now check the AST
+            assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
+            int sourceEnd = bd.getStartPosition() + bd.getLength();
+            // It seems like field declarations should not include the trailing ';' in their source end if one exists
+            if (bd instanceof FieldDeclaration) sourceEnd --;
+            assertEquals(bd + "\nhas incorrect source end value", end, sourceEnd);
+        }
+
+        String nameStartTag = "/*" + astKind + methodNumber + "sn*/";
+        int nameStart = source.indexOf(nameStartTag) + nameStartTag.length();
+
+        String nameEndTag = "/*" + astKind + methodNumber + "en*/";
+        int nameEnd = source.indexOf(nameEndTag);
+        // because the name of the constructor is not stored in the Antlr AST,
+        // we calculate offsets of the constructor name by looking at the end
+        // of the modifiers and the start of the opening paren
+        if (decl instanceof IMethod && ((IMethod) decl).isConstructor()) {
+            nameEnd+= nameEndTag.length();
+        }
+
+        ISourceRange nameDeclRange = decl.getNameRange();
+        assertEquals(decl + "\nhas incorrect source start value", nameStart, nameDeclRange.getOffset());
+        assertEquals(decl + "\nhas incorrect source end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
+
+        // now check the AST
+        if (bd instanceof FieldDeclaration) {
+            FieldDeclaration fd = (FieldDeclaration) bd;
+            SimpleName name = ((VariableDeclarationFragment) fd.fragments().get(0)).getName();
+            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
+            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
+        }
+        if (bd instanceof MethodDeclaration) {
+            MethodDeclaration md = (MethodDeclaration) bd;
+            SimpleName name = md.getName();
+            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
+            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
+        }
+
+
+        if (decl.getElementType() == IJavaElement.METHOD) {
+            // body start is only calculated for methods
+            String bodyStartTag = "/*" + astKind + methodNumber + "sb*/";
+            int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
+            if (bd instanceof MethodDeclaration) {
+                MethodDeclaration md = (MethodDeclaration) bd;
+                // will be null for interfaces or abstract methods
+                if (md.getBody() != null) {
+                    int actualBodyStart = md.getBody().getStartPosition();
+                    assertEquals(bd + "\nhas incorrect body start value", bodyStart, actualBodyStart);
+                }
+            } else if (bd instanceof AnnotationTypeMemberDeclaration) {
+                // no body start to check
+            }
+        }
+    }
+
+    private static void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
+        IType script = unit.getTypes()[0];
+        IMethod runMethod = script.getMethod("run", new String[0]);
+        int start = source.indexOf(startText);
+        int end = source.lastIndexOf(endText)+endText.length();
+        assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
+        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset()+script.getSourceRange().getLength());
+        assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());
+        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset()+script.getSourceRange().getLength());
+    }
+
+    private static void assertUnit(ICompilationUnit unit, String source) throws Exception {
+        assertEquals(unit + "\nhas incorrect source start value", 0, unit.getSourceRange().getOffset());
+        assertEquals(unit + "\nhas incorrect source end value", source.length(), unit.getSourceRange().getLength());
+    }
+
+    private IPath createGenericProject() throws Exception {
+        IPath projectPath = env.addProject("Project", "1.5");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+
+        return root;
+    }
+
+    private ICompilationUnit createCompilationUnitFor(String pack, String name, String source) throws Exception {
+        IPath root = createGenericProject();
+        IPath path = env.addGroovyClass(root, pack, name, source);
+
+        fullBuild();
+        expectingNoProblems();
+        IFile groovyFile = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
+        return JavaCore.createCompilationUnitFrom(groovyFile);
+    }
+
+    //--------------------------------------------------------------------------
 
     public void testSourceLocations() throws Exception {
         String source = "package p1;\n"+
@@ -79,6 +240,7 @@ public class SourceLocationsTests extends BuilderTests {
         ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
         assertUnitWithSingleType(source, unit);
     }
+
     public void testSourceLocationsNoSemiColons() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -288,6 +450,7 @@ public class SourceLocationsTests extends BuilderTests {
         ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
         assertUnitWithSingleType(source, unit);
     }
+
     public void testSourceLocationsEnumDeclaration() throws Exception {
         String source = "package p1;\n"+
                 "/*t0s*/enum /*t0sn*/Hello/*t0en*/ {\n"+
@@ -307,175 +470,5 @@ public class SourceLocationsTests extends BuilderTests {
         fullBuild();
         expectingOnlySpecificProblemFor(root, new Problem(
                 "p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
-    }
-
-    // next test a variety of slocs for var decl fragments
-
-    private void assertUnitWithSingleType(String source, ICompilationUnit unit)
-            throws Exception, JavaModelException {
-        assertUnit(unit, source);
-
-        ASTParser newParser = ASTParser.newParser(JavaConstants.AST_LEVEL);
-        newParser.setSource(unit);
-        org.eclipse.jdt.core.dom.CompilationUnit ast = (org.eclipse.jdt.core.dom.CompilationUnit) newParser.createAST(null);
-        int maxLength = ((CompilationUnit) unit).getContents().length-1;
-        IType decl = unit.getTypes()[0];
-        AbstractTypeDeclaration typeDecl = (AbstractTypeDeclaration) ast.types().get(0);
-        assertDeclaration(decl, typeDecl, 0, source, maxLength);
-
-        IJavaElement[] children = decl.getChildren();
-        List<BodyDeclaration> bodyDecls = typeDecl.bodyDeclarations();
-        for (int i = 0, j= 0; i < children.length; i++, j++) {
-            // look for method variants that use default params
-            if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i-1].getElementName())) {
-                j--;
-            }
-            // check for multiple declaration fragments inside a field declaration
-            // start locations and end locations for fragments are not calculated entirely correctly
-            // the first fragment has a start and end of the entire declaration
-            // the subsequent fragments have a start at the name start and an end after the fragment's optional expression (or the name end if there is none.
-            // so, here check to see if the name start and source start are the same.  If so, then this is a second fragment
-
-            if (decl.isEnum()) {
-                // not properly testing synthetic enum members yet
-                IMember member = (IMember) children[i];
-                assertEquals(new SourceRange(0, 0), member.getSourceRange());
-            } else {
-                assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source, maxLength);
-            }
-        }
-    }
-
-
-
-    private void assertDeclaration(IMember decl, BodyDeclaration bd, int methodNumber, String source, int maxLength) throws Exception {
-        char astKind;
-         if (decl instanceof IMethod) {
-            astKind = 'm';
-        } else if (decl instanceof IField) {
-            astKind = 'f';
-        } else {
-            astKind = 't';
-        }
-
-        String startTag = "/*" + astKind + methodNumber + "s*/";
-        int start = source.indexOf(startTag) + startTag.length();
-
-        String endTag = "/*" + astKind + methodNumber + "e*/";
-        int end = Math.min(source.indexOf(endTag) + endTag.length(), maxLength);
-
-        boolean ignore = false;
-        if (decl instanceof IField && (start == 6 || end == 6)) {
-             // a field with multiple variable declaration fragments
-             // this is not yet being calculated properly
-             ignore = true;
-        }
-
-
-        if (!ignore) {
-            ISourceRange declRange = decl.getSourceRange();
-            assertEquals(decl + "\nhas incorrect source start value", start, declRange.getOffset());
-            assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
-
-            // now check the AST
-            assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
-            int sourceEnd = bd.getStartPosition() + bd.getLength();
-            // It seems like field declarations should not include the trailing ';' in their source end if one exists
-            if (bd instanceof FieldDeclaration) sourceEnd --;
-            assertEquals(bd + "\nhas incorrect source end value", end, sourceEnd);
-        }
-
-        String nameStartTag = "/*" + astKind + methodNumber + "sn*/";
-        int nameStart = source.indexOf(nameStartTag) + nameStartTag.length();
-
-        String nameEndTag = "/*" + astKind + methodNumber + "en*/";
-        int nameEnd = source.indexOf(nameEndTag);
-        // because the name of the constructor is not stored in the Antlr AST,
-        // we calculate offsets of the constructor name by looking at the end
-        // of the modifiers and the start of the opening paren
-        if (decl instanceof IMethod && ((IMethod) decl).isConstructor()) {
-            nameEnd+= nameEndTag.length();
-        }
-
-        ISourceRange nameDeclRange = decl.getNameRange();
-        assertEquals(decl + "\nhas incorrect source start value", nameStart, nameDeclRange.getOffset());
-        assertEquals(decl + "\nhas incorrect source end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
-
-        // now check the AST
-        if (bd instanceof FieldDeclaration) {
-            FieldDeclaration fd = (FieldDeclaration) bd;
-            SimpleName name = ((VariableDeclarationFragment) fd.fragments().get(0)).getName();
-            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
-            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
-        }
-        if (bd instanceof MethodDeclaration) {
-            MethodDeclaration md = (MethodDeclaration) bd;
-            SimpleName name = md.getName();
-            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
-            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
-        }
-
-
-        if (decl.getElementType() == IJavaElement.METHOD) {
-            // body start is only calculated for methods
-            String bodyStartTag = "/*" + astKind + methodNumber + "sb*/";
-            int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
-            if (bd instanceof MethodDeclaration) {
-                MethodDeclaration md = (MethodDeclaration) bd;
-                // will be null for interfaces or abstract methods
-                if (md.getBody() != null) {
-                    int actualBodyStart = md.getBody().getStartPosition();
-                    assertEquals(bd + "\nhas incorrect body start value", bodyStart, actualBodyStart);
-                }
-            } else if (bd instanceof AnnotationTypeMemberDeclaration) {
-                // no body start to check
-            }
-        }
-    }
-
-    private void assertUnit(ICompilationUnit unit, String source) throws Exception {
-        assertEquals(unit + "\nhas incorrect source start value", 0, unit.getSourceRange().getOffset());
-        assertEquals(unit + "\nhas incorrect source end value", source.length(), unit.getSourceRange().getLength());
-    }
-
-    private void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
-        IType script = unit.getTypes()[0];
-        IMethod runMethod = script.getMethod("run", new String[0]);
-        int start = source.indexOf(startText);
-        int end = source.lastIndexOf(endText)+endText.length();
-        assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
-        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset()+script.getSourceRange().getLength());
-        assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());
-        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset()+script.getSourceRange().getLength());
-    }
-
-    private IPath createGenericProject() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        return root;
-    }
-
-    private ICompilationUnit createCompilationUnitFor(String pack, String name, String source) throws Exception {
-        IPath root = createGenericProject();
-        IPath path = env.addGroovyClass(root, pack, name, source);
-
-        fullBuild();
-        expectingNoProblems();
-        IFile groovyFile = getFile(path);
-        return JavaCore.createCompilationUnitFrom(groovyFile);
-    }
-
-
-    private IFile getFile(IPath path) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
     }
 }

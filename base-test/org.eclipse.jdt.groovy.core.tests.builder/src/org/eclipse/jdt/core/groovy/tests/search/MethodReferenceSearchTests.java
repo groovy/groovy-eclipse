@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,20 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import java.util.List;
 
 import junit.framework.Test;
-
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 
-/**
- * @author Andrew Eisenberg
- * @created Oct 28, 2009
- *
- */
-public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
+public final class MethodReferenceSearchTests extends AbstractGroovySearchTest {
+
     public MethodReferenceSearchTests(String name) {
         super(name);
     }
@@ -288,7 +284,7 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
                 SearchEngine.createJavaSearchScope(new IJavaElement[] { first.getPackageFragmentRoot() }, false),
                 requestor, new NullProgressMonitor());
-        List<SearchMatch> matches = requestor.matches;
+        List<SearchMatch> matches = requestor.getMatches();
         assertEquals("Incorrect number of matches:\n" + matches, 6, matches.size());
 
         // two from Foo and two from other

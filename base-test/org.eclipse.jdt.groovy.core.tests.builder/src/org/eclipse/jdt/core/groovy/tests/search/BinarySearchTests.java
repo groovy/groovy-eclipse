@@ -16,7 +16,6 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
-
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -26,7 +25,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
+import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -36,10 +36,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 
-/**
- * @author Andrew Eisenberg
- */
-public class BinarySearchTests extends AbstractGroovySearchTest {
+public final class BinarySearchTests extends AbstractGroovySearchTest {
 
     public static Test suite() {
         return buildTestSuite(BinarySearchTests.class);
@@ -140,12 +137,12 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     }
 
     private void assertMatches(String toFind, MockSearchRequestor requestor, int allMatches, int firstMatches) {
-        if (requestor.matches.size() != allMatches) {
-            fail("Expecting " + allMatches + " matches, but found " + requestor.matches.size() + "\n" + requestor.printMatches());
+        if (requestor.getMatches().size() != allMatches) {
+            fail("Expecting " + allMatches + " matches, but found " + requestor.getMatches().size() + "\n" + requestor.printMatches());
         }
         int currIndex = groovyClassContents.indexOf("def doit") + "def doit".length();
         for (int i = 0; i < firstMatches; i += 1) {
-            SearchMatch match = requestor.matches.get(i);
+            SearchMatch match = requestor.getMatches().get(i);
             currIndex = groovyClassContents.indexOf(toFind, currIndex);
             assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
             assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());
@@ -153,7 +150,7 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
         }
         currIndex = groovyClassContents2.indexOf("def doit") + "def doit".length();
         for (int i = firstMatches; i < allMatches; i += 1) {
-            SearchMatch match = requestor.matches.get(i);
+            SearchMatch match = requestor.getMatches().get(i);
             currIndex = groovyClassContents2.indexOf(toFind, currIndex);
             assertEquals("Invalid start position in match " + i + "\n" + requestor.printMatches(), currIndex, match.getOffset());
             assertEquals("Invalid length in match " + i + "\n" + requestor.printMatches(), toFind.length(), match.getLength());

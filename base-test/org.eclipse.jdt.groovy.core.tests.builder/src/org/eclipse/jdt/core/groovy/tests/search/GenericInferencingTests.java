@@ -23,7 +23,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
+import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 public final class GenericInferencingTests extends AbstractInferencingTest {

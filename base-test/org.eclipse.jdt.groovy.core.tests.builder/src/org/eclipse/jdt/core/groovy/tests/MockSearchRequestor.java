@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.eclipse.jdt.core.groovy.tests.search;
+package org.eclipse.jdt.core.groovy.tests;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,14 +26,9 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchRequestor;
 
-/**
- * @author Andrew Eisenberg
- * @created Sep 1, 2009
- *
- */
 public class MockSearchRequestor extends SearchRequestor {
 
-    List<SearchMatch> matches = new ArrayList<SearchMatch>();
+    private final List<SearchMatch> matches = new ArrayList<SearchMatch>();
 
     @Override
     public void acceptSearchMatch(SearchMatch match) throws CoreException {
@@ -51,28 +46,28 @@ public class MockSearchRequestor extends SearchRequestor {
                 if (!lTypeRoot.equals(rTypeRoot)) {
                     return lTypeRoot.getElementName().compareTo(rTypeRoot.getElementName());
                 }
-                 return l.getOffset() - r.getOffset();
+                return l.getOffset() - r.getOffset();
             }
         });
     }
 
-    String printMatches() {
-        StringBuffer sb = new StringBuffer();
+    public String printMatches() {
+        StringBuilder sb = new StringBuilder();
         for (SearchMatch match : matches) {
             sb.append(MockPossibleMatch.printMatch(match));
         }
         return sb.toString();
     }
 
-    IJavaElement getElementNumber(int num) {
+    public IJavaElement getElementNumber(int num) {
         return (IJavaElement) getMatch(num).getElement();
     }
 
-    SearchMatch getMatch(int num) {
+    public SearchMatch getMatch(int num) {
         return matches.get(num);
     }
 
-    List<SearchMatch> getMatches() {
+    public List<SearchMatch> getMatches() {
         return matches;
     }
 }

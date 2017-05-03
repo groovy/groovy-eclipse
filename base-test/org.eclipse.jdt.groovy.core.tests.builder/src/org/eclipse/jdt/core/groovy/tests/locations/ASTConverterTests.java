@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,8 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
  * Tests that our changes to the ASTConverter do not break Java code.
- *
- * @author Andrew Eisenberg
- * @created Jul 30, 2010
  */
-public class ASTConverterTests extends TestCase {
+public final class ASTConverterTests extends TestCase {
 
     public static Test suite() {
         return buildTestSuite(ASTConverterTests.class);
@@ -44,6 +41,38 @@ public class ASTConverterTests extends TestCase {
     public ASTConverterTests(String name) {
         super(name);
     }
+
+    private static void checkJavaName(String contents, String expectedName) {
+        int start = contents.lastIndexOf(expectedName);
+        int length = expectedName.length();
+        SimpleName name = (SimpleName) findJavaNodeAt(contents, start, length);
+        assertEquals(expectedName, name.getIdentifier());
+        assertEquals("Invalid start position", start, name.getStartPosition());
+        assertEquals("Invalid length position", length, name.getLength());
+    }
+
+    private static ASTNode findJavaNodeAt(String contents, int start, int length) {
+        ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
+        Map<String, String> options = JavaCore.getOptions();
+        options.put(CompilerOptions.OPTION_Source, "1.5");
+        parser.setCompilerOptions(options);
+        parser.setSource(contents.toCharArray());
+        parser.setStatementsRecovery(true);
+        CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+        assertEquals("Compilation unit should not have any problems:\n" + printProblems(unit), 0, unit.getProblems().length);
+        return NodeFinder.perform(unit, start, length);
+    }
+
+    private static String printProblems(CompilationUnit unit) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < unit.getProblems().length; i++) {
+            sb.append(unit.getProblems()[i]);
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    //--------------------------------------------------------------------------
 
     public void testJavaASTConversionEnum() throws Exception {
         checkJavaName("enum MyNames {\n NAME1(0), NAME2(0);\n private MyNames(int val) { } }", "MyNames");
@@ -55,37 +84,5 @@ public class ASTConverterTests extends TestCase {
 
     public void testJavaASTConversionInterface() throws Exception {
         checkJavaName("interface MyNames {\n \n int myMethod(int val); }", "MyNames");
-    }
-
-
-    private void checkJavaName(String contents, String expectedName) {
-        int start = contents.lastIndexOf(expectedName);
-        int length = expectedName.length();
-        SimpleName name = (SimpleName) findJavaNodeAt(contents, start, length);
-        assertEquals(expectedName, name.getIdentifier());
-        assertEquals("Invalid start position", start, name.getStartPosition());
-        assertEquals("Invalid length position", length, name.getLength());
-    }
-
-    private ASTNode findJavaNodeAt(String contents, int start, int length) {
-        ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
-        Map<String, String> options = JavaCore.getOptions();
-        options.put(CompilerOptions.OPTION_Source, "1.5");
-        parser.setCompilerOptions(options);
-        parser.setSource(contents.toCharArray());
-        parser.setStatementsRecovery(true);
-        CompilationUnit unit = (CompilationUnit) parser.createAST(null);
-        assertEquals("Compilation unit should not have any problems:\n" + printProblems(unit), 0, unit.getProblems().length);
-
-        return NodeFinder.perform(unit, start, length);
-    }
-
-    private String printProblems(CompilationUnit unit) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < unit.getProblems().length; i++) {
-            sb.append(unit.getProblems()[i]);
-            sb.append("\n");
-        }
-        return sb.toString();
     }
 }
