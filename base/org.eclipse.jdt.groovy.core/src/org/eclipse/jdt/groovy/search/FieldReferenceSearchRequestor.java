@@ -60,17 +60,15 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         this.participant = participant;
         name = (char[]) ReflectionUtils.getPrivateField(VariablePattern.class, "name", pattern);
         char[] arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringSimpleName", pattern);
-        String declaringSimpleName = arr == null ? "" : new String(arr);
+        String declaringSimpleName = arr == null ? "" : String.valueOf(arr);
         arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringQualification", pattern);
-        String declaringQualification = ((arr == null || arr.length == 0) ? "" : (new String(arr) + "."));
+        String declaringQualification = ((arr == null || arr.length == 0) ? "" : (String.valueOf(arr) + "."));
         declaringQualifiedName = declaringQualification + declaringSimpleName;
 
-        readAccess = ((Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "readAccess", pattern)).booleanValue();
-        writeAccess = ((Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern)).booleanValue();
-        findDeclarations = ((Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findDeclarations", pattern))
-                .booleanValue();
-        findReferences = ((Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findReferences", pattern))
-                .booleanValue();
+        readAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "readAccess", pattern);
+        writeAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern);
+        findDeclarations = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findDeclarations", pattern);
+        findReferences = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findReferences", pattern);
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
@@ -119,43 +117,33 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
                 if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
                     isAssignment = true;
                 }
-
                 start = vnode.getStart();
                 end = start + vnode.getName().length();
             }
         }
 
-        if (doCheck && end > 0) {
-            // don't want to double accept nodes. This could happen with field and object initializers can get pushed into multiple
-            // constructors
+        if (doCheck && end > 0 && result.declaringType != null) {
+            // don't want to double accept nodes; this could happen with field and object initializers can get pushed into multiple constructors
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
                 boolean isCompleteMatch = qualifiedNameMatches(GroovyUtils.getBaseType(result.declaringType));
-                // GRECLIPSE-540 still unresolved is that all field and variable references are considered reads. We don't know
-                // about writes
-                if (isCompleteMatch
-                        && ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations))) {
+                // GRECLIPSE-540: Still unresolved is that all field and variable references are considered reads. We don't know about writes.
+                if (isCompleteMatch && ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations))) {
                     SearchMatch match = null;
 
                     // must translate from synthetic source to binary if necessary
-                    IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
-                            .getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
+                    IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
                     if (isDeclaration && findDeclarations) {
-                        match = new FieldDeclarationMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-                                - start, participant, realElement.getResource());
+                        match = new FieldDeclarationMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, participant, realElement.getResource());
                     } else if (!isDeclaration && findReferences) {
-                        match = new FieldReferenceMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end
-                                - start, !isAssignment, isAssignment, false, participant, realElement.getResource());
+                        match = new FieldReferenceMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, !isAssignment, isAssignment, false, participant, realElement.getResource());
                     }
                     if (match != null) {
                         try {
                             requestor.acceptSearchMatch(match);
                             acceptedPositions.add(position);
                         } catch (CoreException e) {
-                            Util.log(
-                                    e,
-                                    "Error reporting search match inside of " + realElement + " in resource "
-                                            + realElement.getResource());
+                            Util.log(e, "Error reporting search match inside of " + realElement + " in resource " + realElement.getResource());
                         }
                     }
                 }
@@ -187,16 +175,17 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
             return SearchMatch.A_INACCURATE;
         }
         switch (confidence) {
-            case EXACT:
-                return SearchMatch.A_ACCURATE;
-            default:
-                return SearchMatch.A_INACCURATE;
+        case EXACT:
+            return SearchMatch.A_ACCURATE;
+        default:
+            return SearchMatch.A_INACCURATE;
         }
     }
 
     /**
-     * check to see if this requestor has something to do with refactoring, if so, we always want an accurate match otherwise we get
-     * complaints in the refactoring wizard of "possible matches"
+     * Checks to see if this requestor has something to do with refactoring.
+     * If so, we always want an accurate match otherwise we get complaints
+     * in the refactoring wizard of "possible matches".
      */
     private boolean shouldAlwaysBeAccurate() {
         return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
