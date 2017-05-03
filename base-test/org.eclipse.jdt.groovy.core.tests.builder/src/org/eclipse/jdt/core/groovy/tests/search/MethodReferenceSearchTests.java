@@ -31,7 +31,7 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.junit.Test;
 
-public final class MethodReferenceSearchTests extends AbstractGroovySearchTest {
+public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInScript1() throws Exception {

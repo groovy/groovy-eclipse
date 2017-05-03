@@ -17,7 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.junit.Test;
 
-public final class LocalVariableReferenceSearchTests extends AbstractGroovySearchTest {
+public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     private static final String XXX = "xxx";
 

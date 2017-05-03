@@ -20,7 +20,7 @@ import org.junit.Test;
 /**
  * Tests that the inferred declaration is correct.
  */
-public final class DeclarationInferencingTests extends AbstractInferencingTest {
+public final class DeclarationInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testGettersAndField1() {

@@ -44,7 +44,7 @@ import org.junit.Test;
 /**
  * Tests the groovy-specific type referencing search support.
  */
-public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
+public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesScript1() throws Exception {

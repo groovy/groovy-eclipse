@@ -33,7 +33,7 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public final class GenericInferencingTests extends AbstractInferencingTest {
+public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testEnum1() {

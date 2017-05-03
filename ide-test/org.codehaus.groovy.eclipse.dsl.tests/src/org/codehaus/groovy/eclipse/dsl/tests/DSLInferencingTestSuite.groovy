@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest.doVisit
-import static org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest.printTypeName
+import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.doVisit
+import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.printTypeName
 import static org.junit.Assert.fail
 import static org.junit.Assume.assumeFalse
 
@@ -36,8 +36,7 @@ import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest.SearchRequestor
+import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
 import org.junit.After
@@ -109,19 +108,19 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertDeprecated(String contents, int exprStart, int exprEnd) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
+        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
         assert requestor.node != null : 'Did not find expected ASTNode'
-        assert AbstractInferencingTest.hasDeprecatedFlag(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
+        assert InferencingTestSuite.hasDeprecatedFlag(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
     }
 
     protected final void assertType(String contents, int exprStart, int exprEnd, String expectedType) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        AbstractInferencingTest.assertType(unit, exprStart, exprEnd, expectedType)
+        InferencingTestSuite.assertType(unit, exprStart, exprEnd, expectedType)
     }
 
     protected final void assertType(String contents, int exprStart, int exprEnd, String expectedType, String extraJavadoc) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        AbstractInferencingTest.assertType(unit, exprStart, exprEnd, expectedType, extraJavadoc, false)
+        InferencingTestSuite.assertType(unit, exprStart, exprEnd, expectedType, extraJavadoc, false)
     }
 
     protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
@@ -130,7 +129,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean expectingUnknown) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
+        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
         if (!expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
@@ -167,7 +166,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertUnknownConfidence(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
+        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
         if (requestor.result.confidence != TypeConfidence.UNKNOWN) {

@@ -55,7 +55,7 @@ import org.eclipse.jdt.internal.core.LocalVariable;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class AbstractGroovySearchTest extends BuilderTestSuite {
+public abstract class SearchTestSuite extends BuilderTestSuite {
 
     protected static class MatchRegion {
         final int offset;

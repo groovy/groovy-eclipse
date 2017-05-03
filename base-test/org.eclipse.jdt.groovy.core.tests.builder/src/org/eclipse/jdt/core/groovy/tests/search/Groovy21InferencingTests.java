@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * Tests for all Groovy 2.1 specific things for example, {@link groovy.lang.DelegatesTo}.
  */
-public final class Groovy21InferencingTests extends AbstractInferencingTest {
+public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Before
     public void setUp() {

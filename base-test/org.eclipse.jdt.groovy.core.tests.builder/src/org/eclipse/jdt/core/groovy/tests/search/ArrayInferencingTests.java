@@ -17,7 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.junit.Test;
 
-public final class ArrayInferencingTests extends AbstractInferencingTest {
+public final class ArrayInferencingTests extends InferencingTestSuite {
 
     private void assertExprType(String source, String target, String type) {
         final int offset = source.lastIndexOf(target);

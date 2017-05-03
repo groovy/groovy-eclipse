@@ -42,7 +42,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class BinarySearchTests extends AbstractGroovySearchTest {
+public final class BinarySearchTests extends SearchTestSuite {
 
     private String groovyClassContents =
             "package pack\n" +

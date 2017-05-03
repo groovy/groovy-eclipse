@@ -18,7 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.junit.Test;
 
-public final class FieldReferenceSearchTests extends AbstractGroovySearchTest {
+public final class FieldReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testFieldReferencesInScript1() throws Exception {

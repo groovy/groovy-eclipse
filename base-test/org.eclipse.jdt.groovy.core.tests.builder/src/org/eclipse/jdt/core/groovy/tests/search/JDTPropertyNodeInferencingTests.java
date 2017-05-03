@@ -21,7 +21,7 @@ import org.junit.Test;
 /**
  * Tests for PropertyNodes of JDTClassNodes.
  */
-public final class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
+public final class JDTPropertyNodeInferencingTests extends InferencingTestSuite {
 
     @Before
     public void setUp() throws Exception {

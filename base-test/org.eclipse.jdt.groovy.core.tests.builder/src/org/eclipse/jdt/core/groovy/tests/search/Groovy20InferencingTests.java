@@ -21,7 +21,7 @@ import static org.junit.Assume.assumeTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class Groovy20InferencingTests extends AbstractInferencingTest {
+public final class Groovy20InferencingTests extends InferencingTestSuite {
 
     @Before
     public void setUp() {

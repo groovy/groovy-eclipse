@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
+import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite;
 import org.junit.Assert;
 
 /**
@@ -218,7 +218,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
             StringBuilder sb = new StringBuilder();
             for (InferencerTask task : this) {
                 doneSomething = true;
-                String res = AbstractInferencingTest.checkType(unit, task.start, task.end, task.expectedResultType, task.expectedDeclaringType, assumeNoUnknowns, false);
+                String res = InferencingTestSuite.checkType(unit, task.start, task.end, task.expectedResultType, task.expectedDeclaringType, assumeNoUnknowns, false);
                 if (res != null) {
                     sb.append("\n\nInferencing failure:\n" + res);
                 }

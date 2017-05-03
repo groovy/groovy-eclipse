@@ -20,7 +20,7 @@ import org.junit.Test;
 /**
  * Tests of operator overloading inferencing.
  */
-public final class OperatorOverloadingInferencingTests extends AbstractInferencingTest {
+public final class OperatorOverloadingInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPlus1() throws Exception {

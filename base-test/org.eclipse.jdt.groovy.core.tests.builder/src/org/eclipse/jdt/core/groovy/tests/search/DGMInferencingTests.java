@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public final class DGMInferencingTests extends AbstractInferencingTest {
+public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM1() throws Exception {

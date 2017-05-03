@@ -44,7 +44,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
-public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
+public abstract class InferencingTestSuite extends SearchTestSuite {
 
     protected void assertType(String contents, String expectedType) {
         assertType(contents, 0, contents.length(), expectedType, false);

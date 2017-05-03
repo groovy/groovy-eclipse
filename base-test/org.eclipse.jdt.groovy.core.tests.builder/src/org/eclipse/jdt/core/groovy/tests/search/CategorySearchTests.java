@@ -37,7 +37,7 @@ import org.junit.Test;
 /**
  * Tests searches that make use of categories.
  */
-public final class CategorySearchTests extends AbstractGroovySearchTest {
+public final class CategorySearchTests extends SearchTestSuite {
 
     private static String CATEGORY_DEFN =
         "class Cat {\n" +

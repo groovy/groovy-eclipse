@@ -15,14 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest.doVisit
+import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.doVisit
 import static org.junit.Assert.assertEquals
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest
+import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
 import org.junit.Before
 import org.junit.Test
@@ -75,19 +75,19 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     @Test
     void testMetaDSL1() {
         GroovyCompilationUnit unit = addDsldSource('currentType')
-        AbstractInferencingTest.assertType(unit, 0, 'currentType'.length(), 'p.IPointcut')
+        InferencingTestSuite.assertType(unit, 0, 'currentType'.length(), 'p.IPointcut')
     }
 
     @Test
     void testMetaDSL2() {
         GroovyCompilationUnit unit = addDsldSource('registerPointcut')
-        AbstractInferencingTest.assertType(unit, 0, 'registerPointcut'.length(), 'java.lang.Void')
+        InferencingTestSuite.assertType(unit, 0, 'registerPointcut'.length(), 'java.lang.Void')
     }
 
     @Test
     void testMetaDSL3() {
         GroovyCompilationUnit unit = addDsldSource('supportsVersion')
-        AbstractInferencingTest.assertType(unit, 0, 'supportsVersion'.length(), 'java.lang.Void')
+        InferencingTestSuite.assertType(unit, 0, 'supportsVersion'.length(), 'java.lang.Void')
     }
 
     @Test

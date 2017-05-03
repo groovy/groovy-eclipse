@@ -18,7 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.junit.Test;
 
-public final class StaticInferencingTests extends AbstractInferencingTest {
+public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClassReference1() {

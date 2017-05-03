@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.dsl.tests
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest
+import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -771,7 +771,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         int start = contents.lastIndexOf('this')
         int end = start + 'this'.length()
         GroovyCompilationUnit unit = addGroovySource(contents, 'Search')
-        AbstractInferencingTest.assertType(unit, start, end, 'Search')
+        InferencingTestSuite.assertType(unit, start, end, 'Search')
 
     }
 

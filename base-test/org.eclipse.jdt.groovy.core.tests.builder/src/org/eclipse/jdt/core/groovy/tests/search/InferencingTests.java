@@ -30,7 +30,7 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.junit.Test;
 import org.osgi.framework.Version;
 
-public final class InferencingTests extends AbstractInferencingTest {
+public final class InferencingTests extends InferencingTestSuite {
 
     private void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);

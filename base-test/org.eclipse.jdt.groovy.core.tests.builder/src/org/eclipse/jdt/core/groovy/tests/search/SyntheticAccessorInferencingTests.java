@@ -20,7 +20,7 @@ import org.junit.Test;
 /**
  * Tests for synthetic accessor type inferencing.
  */
-public final class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
+public final class SyntheticAccessorInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testSyntheticAccessors() throws Exception {
