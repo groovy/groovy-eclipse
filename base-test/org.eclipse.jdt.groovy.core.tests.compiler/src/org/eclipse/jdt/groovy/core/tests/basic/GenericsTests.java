@@ -21,6 +21,7 @@ import junit.framework.Test;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -1281,7 +1282,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope#buildFieldsAndMethods()
      */
     public void testExtendingGenerics_GroovyExtendsJava11() {
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
+        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
 
         String[] sources = {
             "Groovy.groovy",

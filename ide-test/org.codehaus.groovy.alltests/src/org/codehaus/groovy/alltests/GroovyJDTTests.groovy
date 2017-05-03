@@ -33,7 +33,24 @@ import org.eclipse.jdt.core.groovy.tests.model.GroovyCompilationUnitTests
 import org.eclipse.jdt.core.groovy.tests.model.GroovyContentTypeTests
 import org.eclipse.jdt.core.groovy.tests.model.GroovyPartialModelTests
 import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests
-import org.eclipse.jdt.core.groovy.tests.search.AllSearchTests
+import org.eclipse.jdt.core.groovy.tests.search.ArrayInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.BinarySearchTests
+import org.eclipse.jdt.core.groovy.tests.search.CategorySearchTests
+import org.eclipse.jdt.core.groovy.tests.search.DGMInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.DeclarationInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.FieldReferenceSearchTests
+import org.eclipse.jdt.core.groovy.tests.search.GenericInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.GenericsMappingTest
+import org.eclipse.jdt.core.groovy.tests.search.Groovy20InferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.Groovy21InferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.InferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.JDTPropertyNodeInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.LocalVariableReferenceSearchTests
+import org.eclipse.jdt.core.groovy.tests.search.MethodReferenceSearchTests
+import org.eclipse.jdt.core.groovy.tests.search.OperatorOverloadingInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.StaticInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.SyntheticAccessorInferencingTests
+import org.eclipse.jdt.core.groovy.tests.search.TypeReferenceSearchTests
 // From org.eclipse.jdt.groovy.core.tests.compiler plug-in:
 import org.eclipse.jdt.groovy.core.tests.basic.AnnotationsTests
 import org.eclipse.jdt.groovy.core.tests.basic.ErrorRecoveryTests
@@ -51,18 +68,11 @@ final class GroovyJDTTests {
         // ensure that the compiler chooser starts up
         GroovyTestSuiteSupport.initializeCompilerChooser()
 
-        def suite = new junit.framework.TestSuite(GroovyJDTTests.class.name)
+        def suite = new junit.framework.TestSuite(GroovyJDTTests.name)
 
         suite.addTest(new junit.framework.JUnit4TestAdapter(SanityTests))
 
-        // Builder tests
-        suite.addTest(BasicGroovyBuildTests.suite())
-        suite.addTest(BuildAccessRulesTests.suite())
-        suite.addTest(FullProjectTests.suite())
-        suite.addTest(ScriptFolderTests.suite())
-        suite.addTest(STCScriptsTests.suite())
-
-        // Compiler tests
+        // Basic tests
         suite.addTest(AnnotationsTests.suite())
         suite.addTest(ErrorRecoveryTests.suite())
         suite.addTest(GenericsTests.suite())
@@ -70,24 +80,48 @@ final class GroovyJDTTests {
         suite.addTest(GroovySimpleTests_Compliance_1_8.suite())
         if (isAtLeastGroovy(23))
             suite.addTest(TraitsTests.suite())
-        suite.addTest(TransformationsTests.suite())
+            suite.addTest(TransformationsTests.suite())
+
+        // Builder tests
+        suite.addTest(new junit.framework.JUnit4TestAdapter(BasicGroovyBuildTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(BuildAccessRulesTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(FullProjectTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(ScriptFolderTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(STCScriptsTests))
 
         // Location tests
-        suite.addTest(ASTConverterTests.suite())
-        suite.addTest(ASTNodeSourceLocationsTests.suite())
-        suite.addTestSuite(LocationSupportTests.class)
-        suite.addTest(SourceLocationsTests.suite())
+        suite.addTest(new junit.framework.JUnit4TestAdapter(ASTConverterTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(ASTNodeSourceLocationsTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(LocationSupportTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(SourceLocationsTests))
 
         // Model tests
-        suite.addTest(ASTTransformsTests.suite())
-        suite.addTest(GroovyClassFileTests.suite())
-        suite.addTest(GroovyCompilationUnitTests.suite())
-        suite.addTest(GroovyContentTypeTests.suite())
-        suite.addTest(GroovyPartialModelTests.suite())
-        suite.addTest(MoveRenameCopyTests.suite())
+        suite.addTest(new junit.framework.JUnit4TestAdapter(ASTTransformsTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(GroovyClassFileTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(GroovyCompilationUnitTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(GroovyContentTypeTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(GroovyPartialModelTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(MoveRenameCopyTests))
 
         // Search tests
-        suite.addTest(AllSearchTests.suite())
+        suite.addTest(new junit.framework.JUnit4TestAdapter(ArrayInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(BinarySearchTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(CategorySearchTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(DeclarationInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(DGMInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(FieldReferenceSearchTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(GenericInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(GenericsMappingTest))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(Groovy20InferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(Groovy21InferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(InferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(JDTPropertyNodeInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(LocalVariableReferenceSearchTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(MethodReferenceSearchTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(OperatorOverloadingInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(StaticInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(SyntheticAccessorInferencingTests))
+        suite.addTest(new junit.framework.JUnit4TestAdapter(TypeReferenceSearchTests))
 
         return suite
     }

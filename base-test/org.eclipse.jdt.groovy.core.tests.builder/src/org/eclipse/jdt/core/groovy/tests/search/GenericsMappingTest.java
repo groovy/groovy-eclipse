@@ -15,17 +15,17 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.junit.Test;
 
 public final class GenericsMappingTest extends AbstractGroovySearchTest {
 
-    public GenericsMappingTest(String name) {
-        super(name);
-    }
-
-    // GRECLIPSE-1448 unresolved super types should use a redirect.
-    // resolved super types should not
+    @Test // GRECLIPSE-1448 unresolved super types should use a redirect; resolved super types should not
     public void testGenericsMapper() throws Exception {
         GroovyCompilationUnit unit = createUnit("Search", "class A { }\nclass B extends A { }\nclass C extends B { }");
         ClassNode classNode = unit.getModuleNode().getClasses().get(2);

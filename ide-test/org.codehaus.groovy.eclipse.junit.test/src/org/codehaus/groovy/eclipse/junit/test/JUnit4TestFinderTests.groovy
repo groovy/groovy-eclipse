@@ -17,9 +17,9 @@ package org.codehaus.groovy.eclipse.junit.test
 
 import static org.junit.Assume.assumeTrue
 
-import org.eclipse.core.runtime.Platform
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.junit.JUnitPropertyTester
 import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder
 import org.junit.Before
@@ -36,7 +36,7 @@ final class JUnit4TestFinderTests extends JUnitTestSuite {
 
     @Before
     void setUp() {
-        assumeTrue(Platform.getBundle('org.eclipse.jdt.core').getVersion().compareTo(Version.parseVersion('3.9.50')) >= 0)
+        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion('3.9.50')) >= 0)
     }
 
     @Test

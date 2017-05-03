@@ -19,7 +19,7 @@ import static org.junit.Assert.fail
 import static org.junit.Assume.assumeTrue
 
 import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.Platform
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.ui.IViewPart
 import org.eclipse.ui.internal.Workbench
 import org.eclipse.ui.internal.views.log.AbstractEntry
@@ -57,7 +57,7 @@ final class ErrorLogTest {
 
     @Test
     void testNoWarningsOnStartup() {
-        assumeTrue(Platform.getBundle('org.eclipse.jdt.core').getVersion().compareTo(Version.parseVersion('3.8')) >= 0)
+        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion('3.8')) >= 0)
 
         IViewPart view = Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().getActivePart().getSite().getPage().showView('org.eclipse.pde.runtime.LogView')
         if (view instanceof LogView) {

@@ -15,26 +15,23 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import junit.framework.Test;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assume.assumeTrue;
+
+import org.junit.Before;
+import org.junit.Test;
 
 public final class Groovy20InferencingTests extends AbstractInferencingTest {
 
-    public static Test suite() {
-        return buildTestSuite(Groovy20InferencingTests.class);
+    @Before
+    public void setUp() {
+        assumeTrue(isAtLeastGroovy(20));
     }
 
-    public Groovy20InferencingTests(String name) {
-        super(name);
-    }
-
-    // tests CompareToNullExpression
+    @Test // tests CompareToNullExpression
     public void testCompileStatic1() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
         String contents =
-                "import groovy.transform.CompileStatic;\n" +
+            "import groovy.transform.CompileStatic;\n" +
                 "class CompilingStatic {\n" +
                 "\n" +
                 "    @CompileStatic\n" +
@@ -46,87 +43,75 @@ public final class Groovy20InferencingTests extends AbstractInferencingTest {
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // tests CompareToNullExpression
+
+    @Test // tests CompareToNullExpression
     public void testCompileStatic2() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
-         String contents =
-                "import groovy.transform.CompileStatic;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @CompileStatic\n" +
-                        "    def foo(String args) {\n" +
-                        "        args== null\n" +
-                        "    }\n" +
-                        "}";
+        String contents =
+            "import groovy.transform.CompileStatic;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @CompileStatic\n" +
+                "    def foo(String args) {\n" +
+                "        args== null\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // tests CompareIdentityExpression
+
+    @Test // tests CompareIdentityExpression
     public void testCompileStatic3() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
-         String contents =
-                "import groovy.transform.CompileStatic;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @CompileStatic\n" +
-                        "    def foo(String args) {\n" +
-                        "        args== 9\n" +
-                        "    }\n" +
-                        "}";
+        String contents =
+            "import groovy.transform.CompileStatic;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @CompileStatic\n" +
+                "    def foo(String args) {\n" +
+                "        args== 9\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // tests CompareIdentityExpression
+
+    @Test // tests CompareIdentityExpression
     public void testCompileStatic4() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
         String contents =
-                "import groovy.transform.CompileStatic;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @CompileStatic\n" +
-                        "    def foo(String args) {\n" +
-                        "        9 == args\n" +
-                        "    }\n" +
-                        "}";
+            "import groovy.transform.CompileStatic;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @CompileStatic\n" +
+                "    def foo(String args) {\n" +
+                "        9 == args\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // tests CompareToNullExpression
+
+    @Test // tests CompareToNullExpression
     public void testCompileStatic5() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
-         String contents =
-                "import groovy.transform.CompileStatic;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @CompileStatic\n" +
-                        "    def foo(String args) {\n" +
-                        "        null== args\n" +
-                        "    }\n" +
-                        "}";
+        String contents =
+            "import groovy.transform.CompileStatic;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @CompileStatic\n" +
+                "    def foo(String args) {\n" +
+                "        null== args\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
 
-
-    // tests CompareToNullExpression
+    @Test // tests CompareToNullExpression
     public void testTypeChecked1() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
         String contents =
-                "import groovy.transform.TypeChecked;\n" +
+            "import groovy.transform.TypeChecked;\n" +
                 "class CompilingStatic {\n" +
                 "\n" +
                 "    @TypeChecked\n" +
@@ -138,74 +123,66 @@ public final class Groovy20InferencingTests extends AbstractInferencingTest {
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // tests CompareToNullExpression
+
+    @Test // tests CompareToNullExpression
     public void testTypeChecked2() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
-         String contents =
-                "import groovy.transform.TypeChecked;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @TypeChecked\n" +
-                        "    def foo(String args) {\n" +
-                        "        args== null\n" +
-                        "    }\n" +
-                        "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-    // tests CompareIdentityExpression
-    public void testTypeChecked3() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
-         String contents =
-                "import groovy.transform.TypeChecked;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @TypeChecked\n" +
-                        "    def foo(String args) {\n" +
-                        "        args== 9\n" +
-                        "    }\n" +
-                        "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-    // tests CompareIdentityExpression
-    public void testTypeChecked4() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
         String contents =
-                "import groovy.transform.TypeChecked;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @TypeChecked\n" +
-                        "    def foo(String args) {\n" +
-                        "        9 == args\n" +
-                        "    }\n" +
-                        "}";
+            "import groovy.transform.TypeChecked;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @TypeChecked\n" +
+                "    def foo(String args) {\n" +
+                "        args== null\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // tests CompareToNullExpression
+
+    @Test // tests CompareIdentityExpression
+    public void testTypeChecked3() throws Exception {
+        String contents =
+            "import groovy.transform.TypeChecked;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @TypeChecked\n" +
+                "    def foo(String args) {\n" +
+                "        args== 9\n" +
+                "    }\n" +
+                "}";
+        int start = contents.lastIndexOf("args");
+        int end = start + "args".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test // tests CompareIdentityExpression
+    public void testTypeChecked4() throws Exception {
+        String contents =
+            "import groovy.transform.TypeChecked;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @TypeChecked\n" +
+                "    def foo(String args) {\n" +
+                "        9 == args\n" +
+                "    }\n" +
+                "}";
+        int start = contents.lastIndexOf("args");
+        int end = start + "args".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test // tests CompareToNullExpression
     public void testTypeChecked5() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20 ) {
-            return;
-        }
-         String contents =
-                "import groovy.transform.TypeChecked;\n" +
-                        "class CompilingStatic {\n" +
-                        "\n" +
-                        "    @TypeChecked\n" +
-                        "    def foo(String args) {\n" +
-                        "        null== args\n" +
-                        "    }\n" +
-                        "}";
+        String contents =
+            "import groovy.transform.TypeChecked;\n" +
+                "class CompilingStatic {\n" +
+                "\n" +
+                "    @TypeChecked\n" +
+                "    def foo(String args) {\n" +
+                "        null== args\n" +
+                "    }\n" +
+                "}";
         int start = contents.lastIndexOf("args");
         int end = start + "args".length();
         assertType(contents, start, end, "java.lang.String");

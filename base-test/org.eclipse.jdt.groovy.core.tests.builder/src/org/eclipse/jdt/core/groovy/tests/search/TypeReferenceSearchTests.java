@@ -15,11 +15,16 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import junit.framework.Test;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -27,7 +32,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -35,42 +39,41 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.junit.Test;
 
 /**
  * Tests the groovy-specific type referencing search support.
  */
 public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
 
-    public TypeReferenceSearchTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(TypeReferenceSearchTests.class);
-    }
-
+    @Test
     public void testSearchForTypesScript1() throws Exception {
         doTestForTwoInScript("First f = new First()");
     }
 
+    @Test
     public void testSearchForTypesScript2() throws Exception {
         doTestForTwoInScript("First.class\nFirst.class");
     }
 
+    @Test
     public void testSearchForTypesScript3() throws Exception {
         doTestForTwoInScript("[First, First]");
     }
 
+    @Test
     public void testSearchForTypesScript4() throws Exception {
         // the key of a map is interpreted as a string
         // so don't put 'First' there
         doTestForTwoInScript("def x = [a : First]\nx[First.class]");
     }
 
+    @Test
     public void testSearchForTypesScript5() throws Exception {
         doTestForTwoInScript("x(First, First.class)");
     }
 
+    @Test
     public void testSearchForTypesScript6() throws Exception {
         // note that in "new First[ new First() ]", the first 'new First' is removed
         // by the AntlrPluginParser and so there is no way to search for it
@@ -78,40 +81,52 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         doTestForTwoInScript("[ new First(), First ]");
     }
 
+    @Test
     public void testSearchForTypesClosure1() throws Exception {
         doTestForTwoInScript("{ First first, First second -> print first; print second;}");
     }
 
+    @Test
     public void testSearchForTypesClosure2() throws Exception {
         doTestForTwoInScript("def x = { First first = new First() }");
     }
 
+    @Test
     public void testSearchForTypesClosure3() throws Exception {
         doTestForTwoInScript("def x = { First.class\n First.class }");
     }
 
+    @Test
     public void testSearchForTypesClass1() throws Exception {
         doTestForTwoInClass("class Second extends First { First x }");
     }
 
+    @Test
     public void testSearchForTypesClass2() throws Exception {
         doTestForTwoInClass("class Second extends First { First x() { } }");
     }
 
+    @Test
     public void testSearchForTypesClass3() throws Exception {
         doTestForTwoInClass("class Second extends First { def x(First y) { } }");
     }
 
+    @Test
     public void testSearchForTypesClass4() throws Exception {
         doTestForTwoInClass("class Second extends First { def x(First ... y) { } }");
     }
 
+    @Test
     public void testSearchForTypesClass5() throws Exception {
         doTestForTwoInClassUseWithDefaultMethod("class Second extends First { def x(y = new First()) { } }");
     }
+
+    @Test
     public void testSearchForTypesClass6() throws Exception {
         doTestForTwoInClassWithImplements("class Second implements First { def x(First y) { } }");
     }
+
+    @Test
     public void testSearchForTypesClass7() throws Exception {
         createUnit("other", "First", "class First { }");
         doTestForTwoInClass("class Second extends First {\n" +
@@ -120,14 +135,12 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
                 " y = new First()} }"); // yes
     }
 
+    @Test
     public void testSearchForTypesArray1() throws Exception {
         doTestForTwoInScript("First[] f = { First[] h -> h }");
     }
 
-    /**
-     * GRECLIPSE-650
-     * @throws Exception
-     */
+    @Test // GRECLIPSE-650
     public void testFindClassDeclaration() throws Exception {
         String firstContents = "class First { First x }";
         String secondContents = "class Second extends First {}";
@@ -147,9 +160,8 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
     /**
      * Tests whether queries looking for some type declaration with a name pattern like '*Tests' works
      * correctly.
-     *
-     * @throws Exception
      */
+    @Test
     public void testFindClassDeclarationWithPattern() throws Exception {
         //Code in here directly inspired and mostly copied from
         //com.springsource.sts.grails.core.junit.Grails20AwareTestFinder
@@ -207,15 +219,10 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
 
         assertEquals("Number of results found", 2, result.size());
 
-        assertElements(new HashSet<Object>(result),
-                //Expecteds:
-                songTestsType,
-                artistTestsType);
+        assertElements(new HashSet<Object>(result), songTestsType, artistTestsType);
     }
 
-    /**
-     * GRECLIPSE-628
-     */
+    @Test // GRECLIPSE-628
     public void testShouldntFindClassDeclarationInScript() throws Exception {
         String firstContents = "print 'me'";
         String secondContents = "print 'me'";
@@ -223,6 +230,7 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Should find no matches", 0, matches.size());
     }
 
+    @Test
     public void testInnerTypes1() throws Exception {
         String firstContents =
             "class Other {\n" +
@@ -267,6 +275,7 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong length " + match, len, match.getLength());
     }
 
+    @Test
     public void testInnerTypes2() throws Exception {
         String firstContents =
             "package p\n" +
@@ -313,6 +322,7 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong length " + match, len, match.getLength());
     }
 
+    @Test
     public void testInnerTypes3() throws Exception {
         String firstContents =
             "package p\n" +
@@ -354,6 +364,7 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong length " + match, len, match.getLength());
     }
 
+    @Test
     public void testConstructorWithDefaultArgsInCompileStatic() throws Exception {
         String firstContents =
                 "package p\n" +
@@ -382,19 +393,42 @@ public final class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong number of matches found\n" + matches, 3, matches.size());
     }
 
-    private void doTestForTwoInScript(String secondContents) throws JavaModelException {
+    //--------------------------------------------------------------------------
+
+    private static void assertElements(Set<Object> actualSet, Object... expecteds) {
+        Set<Object> expectedSet = new HashSet<Object>(Arrays.asList(expecteds));
+        StringBuilder msg = new StringBuilder();
+        for (Object expected : expectedSet) {
+            if (!actualSet.contains(expected)) {
+                msg.append("Expected but not found: "+expected+"\n");
+            }
+        }
+        for (Object actual : actualSet) {
+            if (!expectedSet.contains(actual)) {
+                msg.append("Found but not expected: "+actual+"\n");
+            }
+        }
+        if (!"".equals(msg.toString())) {
+            fail(msg.toString());
+        }
+    }
+
+    private void doTestForTwoInScript(String secondContents) throws Exception {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, true, 3);
     }
-    private void doTestForTwoInClass(String secondContents) throws JavaModelException {
+
+    private void doTestForTwoInClass(String secondContents) throws Exception {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, false, 0);
     }
-    private void doTestForTwoInClassUseWithDefaultMethod(String secondContents) throws JavaModelException {
+
+    private void doTestForTwoInClassUseWithDefaultMethod(String secondContents) throws Exception {
         // capture the default method that is created instead of the original method
         // it seems that the order of the method variants is switched depending on whether or not
         // concrete asts are requested.
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, false, 1);
     }
-    private void doTestForTwoInClassWithImplements(String secondContents) throws JavaModelException {
+
+    private void doTestForTwoInClassWithImplements(String secondContents) throws Exception {
         doTestForTwoTypeReferences(FIRST_CONTENTS_INTERFACE, secondContents, false, 0);
     }
 }

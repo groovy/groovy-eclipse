@@ -15,9 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
 
-import junit.framework.Test;
+import java.util.Map;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -25,22 +25,14 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Test;
 
 /**
  * Tests that our changes to the ASTConverter do not break Java code.
  */
-public final class ASTConverterTests extends TestCase {
-
-    public static Test suite() {
-        return buildTestSuite(ASTConverterTests.class);
-    }
-
-    public ASTConverterTests(String name) {
-        super(name);
-    }
+public final class ASTConverterTests {
 
     private static void checkJavaName(String contents, String expectedName) {
         int start = contents.lastIndexOf(expectedName);
@@ -74,14 +66,17 @@ public final class ASTConverterTests extends TestCase {
 
     //--------------------------------------------------------------------------
 
+    @Test
     public void testJavaASTConversionEnum() throws Exception {
         checkJavaName("enum MyNames {\n NAME1(0), NAME2(0);\n private MyNames(int val) { } }", "MyNames");
     }
 
+    @Test
     public void testJavaASTConversionClass() throws Exception {
         checkJavaName("class MyNames {\n \n private MyNames(int val) { } }", "MyNames");
     }
 
+    @Test
     public void testJavaASTConversionInterface() throws Exception {
         checkJavaName("interface MyNames {\n \n int myMethod(int val); }", "MyNames");
     }

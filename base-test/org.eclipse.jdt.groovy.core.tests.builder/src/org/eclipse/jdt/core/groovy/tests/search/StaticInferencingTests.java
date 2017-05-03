@@ -15,30 +15,24 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import junit.framework.Test;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import org.junit.Test;
 
 public final class StaticInferencingTests extends AbstractInferencingTest {
 
-    public static Test suite() {
-        return buildTestSuite(StaticInferencingTests.class);
-    }
-
-    public StaticInferencingTests(String name) {
-        super(name);
-    }
-
-    // Test various ways of accessing class objects
+    @Test
     public void testClassReference1() {
         String contents = "String";
         assertType(contents, "java.lang.Class<java.lang.String>");
     }
 
+    @Test
     public void testClassReference2() {
         String contents = "String.class";
         assertType(contents, "java.lang.Class<java.lang.String>");
     }
 
+    @Test
     public void testClassReference3() {
         String contents = "String.getClass()";
         int start = contents.indexOf("getClass");
@@ -47,6 +41,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
             : "java.lang.Class<? extends java.lang.Object>"); // should be <? extends java.lang.String>
     }
 
+    @Test
     public void testClassReference4() {
         String contents = "String.class.getCanonicalName()";
         int start = contents.indexOf("getCanonicalName");
@@ -54,6 +49,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testClassReference5() {
         String contents = "String.class.canonicalName";
         int start = contents.indexOf("canonicalName");
@@ -61,7 +57,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Test GRECLIPSE-1079 Accessing the methods/fields on class directly
+    @Test // GRECLIPSE-1079 Accessing the methods/fields on class directly
     public void testClassReference6() {
         String contents = "String.getCanonicalName()";
         int start = contents.indexOf("getCanonicalName");
@@ -69,6 +65,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testClassReference7() {
         String contents = "String.canonicalName";
         int start = contents.indexOf("canonicalName");
@@ -76,6 +73,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testClassReference8() {
         String contents = "class S { static { getCanonicalName() } }";
         int start = contents.indexOf("getCanonicalName");
@@ -83,7 +81,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Test GRECLIPSE-855.  Should be able to find the type, but with unknown confidence
+    @Test // GRECLIPSE-855: should be able to find the type, but with unknown confidence
     public void testNonStaticReference1() {
         String contents = "String.length()";
         int start = contents.indexOf("length");
@@ -91,6 +89,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "java.lang.String", false);
     }
 
+    @Test
     public void testNonStaticReference2() {
         String contents = "String.length";
         int start = contents.indexOf("length");
@@ -98,6 +97,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "java.lang.String", false);
     }
 
+    @Test
     public void testNonStaticReference3() {
         String contents = "class GGG { int length }\nGGG.length";
         int start = contents.lastIndexOf("length");
@@ -105,6 +105,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
 
+    @Test
     public void testNonStaticReference4() {
         String contents = "class GGG { int length }\nGGG.@length";
         int start = contents.lastIndexOf("length");
@@ -112,6 +113,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
 
+    @Test
     public void testNonStaticReference5() {
         String contents = "class GGG { int length() { } }\nGGG.length()";
         int start = contents.lastIndexOf("length");
@@ -119,6 +121,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
 
+    @Test
     public void testNonStaticReference6() {
         String contents = "class GGG { def length = { } }\nGGG.length()";
         int start = contents.lastIndexOf("length");
@@ -126,6 +129,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
 
+    @Test
     public void testNonStaticReference7() {
         String contents = "class GGG { int length() { } \nstatic {\nlength() } }";
         int start = contents.lastIndexOf("length");
@@ -133,6 +137,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
 
+    @Test
     public void testNonStaticReference8() {
         String contents = "class GGG { def length = { } \nstatic {\nlength() } }";
         int start = contents.lastIndexOf("length");
@@ -140,6 +145,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
 
+    @Test
     public void testStaticReference1() {
         String contents = "class GGG { static int length }\nGGG.length";
         int start = contents.lastIndexOf("length");
@@ -147,6 +153,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer", false);
     }
 
+    @Test
     public void testStaticImport1() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FOO";
@@ -155,6 +162,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer", false);
     }
 
+    @Test
     public void testStaticImport2() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FOO as BAR";
@@ -163,6 +171,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer", false);
     }
 
+    @Test
     public void testStaticImport3() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FOO\nFOO";
@@ -171,6 +180,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer", false);
     }
 
+    @Test
     public void testStaticImport4() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FOO as BAR\nFOO";
@@ -179,6 +189,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testStaticImport5() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FO";
@@ -187,6 +198,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testStaticImport6() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.BAR\nBAR";
@@ -198,6 +210,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean", false);
     }
 
+    @Test
     public void testStaticImport7() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FOO\nFOO";
@@ -206,6 +219,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "p.Other", false);
     }
 
+    @Test
     public void testStaticImport8() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.FOO as BAR\nFOO";
@@ -214,6 +228,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "p.Other", false);
     }
 
+    @Test
     public void testStaticImport9() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
         String contents = "import static p.Other.*\nFOO";
@@ -222,7 +237,7 @@ public final class StaticInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "p.Other", false);
     }
 
-    // GRECLIPSE-1544
+    @Test // GRECLIPSE-1544
     public void testSTCAndClassInstance() {
         String contents = "package pkg0\n" +
             "@groovy.transform.TypeChecked\n" +

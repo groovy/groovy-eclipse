@@ -16,6 +16,10 @@
 package org.eclipse.jdt.core.groovy.tests.model;
 
 import static org.eclipse.jdt.core.groovy.tests.ReconcilerUtils.reconcile;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -40,17 +44,11 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
+import org.junit.Test;
 
-public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
+public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
-    public static junit.framework.Test suite() {
-        return buildTestSuite(GroovyCompilationUnitTests.class);
-    }
-
-    public GroovyCompilationUnitTests(String name) {
-        super(name);
-    }
-
+    @Test
     public void testCreateJavaCompilationUnit() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -77,6 +75,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertFalse(unit instanceof GroovyCompilationUnit);
     }
 
+    @Test
     public void testCreateGroovyCompilationUnit() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(groovyFile);
@@ -84,6 +83,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertTrue("CompilationUnit " + groovyFile + " should be a Groovy compilation unit.", unit instanceof GroovyCompilationUnit);
     }
 
+    @Test
     public void testGetModuleNode1() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -94,6 +94,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         unit1.discardWorkingCopy();
     }
 
+    @Test
     public void testGetModuleNode2() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -107,6 +108,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         unit2.discardWorkingCopy();
     }
 
+    @Test
     public void testGetModuleNode3() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -118,7 +120,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         unit1.discardWorkingCopy();
     }
 
-    @SuppressWarnings("rawtypes")
+    @Test @SuppressWarnings("rawtypes")
     public void testGetModuleNode4() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -130,6 +132,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         unit1.discardWorkingCopy();
     }
 
+    @Test
     public void testGetModuleNode5() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -141,6 +144,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         unit1.discardWorkingCopy();
     }
 
+    @Test
     public void testGetModuleNode6() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -160,6 +164,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertTrue("Multiple calls to getModuleNode should return the same object if nothing has changed underneath", node3 == node4);
     }
 
+    @Test
     public void testGetModuleNode7() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -178,6 +183,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertTrue("ModuleNodeMapper should be empty when there are no working copies", moduleNodeMapperCacheSize >= ModuleNodeMapper.size());
     }
 
+    @Test
     public void testGetModuleNode8() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -186,6 +192,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertFalse("Multiple calls to getModuleNode should return the different objects if unit is not a working copy", node1 == node2);
     }
 
+    @Test
     public void testGetModuleNode9() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -197,6 +204,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertFalse("Multiple calls to getModuleNode should return the different objects after a call to reconcile with force problem detection", node1 == node2);
     }
 
+    @Test
     public void testGetModuleNode10() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -208,6 +216,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertTrue("Multiple calls to getModuleNode should return the same object after a call to reconcile with no force problem detection", node1 == node2);
     }
 
+    @Test
     public void testGetNewModuleNode() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
@@ -216,6 +225,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertTrue("getNewModuleNode() should have forced creation of a new module node", module1 != module2);
     }
 
+    @Test
     public void testMarkerAnnotation1() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -238,6 +248,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertMarkerAnnotation(annotation, "Anno2");
     }
 
+    @Test
     public void testMarkerAnnotation2() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -261,6 +272,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertMarkerAnnotation(annotation, "Anno2");
     }
 
+    @Test
     public void testMarkerAnnotation3() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -284,6 +296,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertMarkerAnnotation(annotation, "Anno2");
     }
 
+    @Test
     public void testMarkerAnnotation4() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -306,6 +319,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertMarkerAnnotation(annotation, "p.Anno2");
     }
 
+    @Test
     public void testMarkerAnnotation5() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -329,6 +343,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertMarkerAnnotation(annotation, "p.Anno2");
     }
 
+    @Test
     public void testMarkerAnnotation6() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -352,6 +367,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertMarkerAnnotation(annotation, "p.Anno2");
     }
 
+    @Test
     public void testSingleMemberAnnotation1() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -373,6 +389,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertSingleMemberAnnotation(type, "Target");
     }
 
+    @Test
     public void testSingleMemberAnnotation2() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -395,6 +412,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertSingleMemberAnnotation(field, "Target");
     }
 
+    @Test
     public void testSingleMemberAnnotation3() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -417,6 +435,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertSingleMemberAnnotation(method, "Target");
     }
 
+    @Test
     public void testSingleMemberAnnotation4() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -438,6 +457,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertSingleMemberAnnotation(type, "p.Target");
     }
 
+    @Test
     public void testSingleMemberAnnotation5() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -460,6 +480,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertSingleMemberAnnotation(field, "p.Target");
     }
 
+    @Test
     public void testSingleMemberAnnotation6() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -482,6 +503,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         assertSingleMemberAnnotation(method, "p.Target");
     }
 
+    @Test
     public void testAnonymousInner1() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -508,6 +530,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         }
     }
 
+    @Test
     public void testAnonymousInner2() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -541,6 +564,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         }
     }
 
+    @Test
     public void testAnonymousInner3() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -571,6 +595,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         }
     }
 
+    @Test
     public void testAnonymousInner4() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -608,7 +633,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         }
     }
 
-    // FIXADE TODO: anon inner classes not properly structured on field initializers
+    @Test // FIXADE TODO: anon inner classes not properly structured on field initializers
     public void testAnonymousInner5() throws Exception {
         IPath path = env.addGroovyClass(createAnnotationGroovyProject(), "p", "X",
             "package p;\n" +
@@ -632,7 +657,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         }
     }
 
-    // Test that classes in a script are not treated as anon inners
+    @Test // Test that classes in a script are not treated as anon inners
     public void testAnonymousInner6() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -663,6 +688,7 @@ public final class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTest
         }
     }
 
+    @Test
     public void testVariadicMethod1() throws Exception {
         IPath path = env.addGroovyClass(createEmptyGroovyProject(), "", "X",
             "class X {\n" +

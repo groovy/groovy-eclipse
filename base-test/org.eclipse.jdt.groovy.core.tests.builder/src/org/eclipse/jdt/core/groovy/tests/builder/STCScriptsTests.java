@@ -15,51 +15,39 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
+
 import java.util.Arrays;
 
-import junit.framework.Test;
-
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.builder.Problem;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests that the Static Type cheking DSL is working as expected.
  */
-public final class STCScriptsTests extends BuilderTests {
-
-    public STCScriptsTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(STCScriptsTests.class);
-    }
+public final class STCScriptsTests extends BuilderTestSuite {
 
     private boolean origEnabled;
     private String origPatterns;
 
-    @Override
-    protected void setUp() throws Exception {
-        try {
-            super.setUp();
-        } finally {
-            origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-            origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        }
+    @Before
+    public void setUp() throws Exception {
+        assumeTrue(isAtLeastGroovy(21));
+        origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            super.tearDown();
-        } finally {
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
-        }
+    @After
+    public void tearDown() throws Exception {
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
     }
 
     private IPath createGenericProject() throws Exception {
@@ -84,12 +72,8 @@ public final class STCScriptsTests extends BuilderTests {
 
     //--------------------------------------------------------------------------
 
-
+    @Test
     public void testStaticTypeCheckingDSL1() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
-
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Boolean.TRUE.toString());
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
@@ -115,11 +99,8 @@ public final class STCScriptsTests extends BuilderTests {
         assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String). Please check if the declared type is right and if the method exists.", problems[0].getMessage());
     }
 
+    @Test
     public void testStaticTypeCheckingDSL2() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
-
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Boolean.TRUE.toString());
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 

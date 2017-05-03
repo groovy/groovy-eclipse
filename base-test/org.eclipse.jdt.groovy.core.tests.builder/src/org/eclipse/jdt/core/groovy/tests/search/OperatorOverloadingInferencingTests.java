@@ -15,21 +15,14 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import junit.framework.Test;
+import org.junit.Test;
 
 /**
  * Tests of operator overloading inferencing.
  */
 public final class OperatorOverloadingInferencingTests extends AbstractInferencingTest {
 
-    public static Test suite() {
-        return buildTestSuite(OperatorOverloadingInferencingTests.class);
-    }
-
-    public OperatorOverloadingInferencingTests(String name) {
-        super(name);
-    }
-
+    @Test
     public void testPlus1() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -42,6 +35,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testPlus2() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -55,7 +49,17 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
-    public void testMinus() throws Exception {
+    @Test
+    public void testPlus3() throws Exception {
+        String contents =
+                "def xxx = [2]+[2]\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
+    }
+
+    @Test
+    public void testMinus1() throws Exception {
         String contents =
                 "class Foo { }\n" +
                 "class Bar {\n" +
@@ -66,14 +70,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
-    public void testPlus3() throws Exception {
-        String contents =
-                "def xxx = [2]+[2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
-    }
 
+    @Test
     public void testMinus2() throws Exception {
         String contents =
                 "def xxx = [2]-[2]\n" +
@@ -82,6 +80,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
     }
 
+    @Test
     public void testMultiply() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -94,6 +93,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testDivide() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -106,6 +106,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testMod() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -118,6 +119,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testAnd() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -130,6 +132,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testOr() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -142,6 +145,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testXor() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -154,6 +158,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testRightShift() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -166,6 +171,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testLeftShift() throws Exception {
         String contents =
                 "class Foo { }\n" +
@@ -178,8 +184,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
-    // lots of variants with getAt
-
+    @Test
     public void testGetAt1() {
         String contents =
                 "class Foo { }\n" +
@@ -192,6 +197,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Object");
     }
 
+    @Test
     public void testGetAt2() {
         String contents =
                 "class Foo{ }\n" +
@@ -202,6 +208,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testGetAt3() {
         String contents =
                 "class Foo{ }\n" +
@@ -212,6 +219,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
 
+    @Test
     public void testGetAt4() {
         String contents =
                 "class Foo{ }\n" +
@@ -222,6 +230,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
 
+    @Test
     public void testGetAt5() {
         String contents =
                 "class Foo{ }\n" +
@@ -232,6 +241,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testGetAt6() {
         String contents =
                 "class Foo{ }\n" +
@@ -242,6 +252,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
 
+    @Test
     public void testGetAt7() {
         String contents =
                 "class Foo{ }\n" +
@@ -252,6 +263,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
     }
 
+    @Test
     public void testGetAt8() {
         String contents =
                 "class Foo{ }\n" +
@@ -262,6 +274,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testGetAt9() {
         String contents =
                 "class Foo{ }\n" +
@@ -272,7 +285,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
     }
 
-
+    @Test
     public void testAttributeExpr1() throws Exception {
         String contents =
                 "class Foo {\n boolean str\n }\n" +
@@ -281,6 +294,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
     }
+
+    @Test
     public void testAttributeExpr2() throws Exception {
         String contents =
                 "class Foo {\n String str\n }\n" +
@@ -289,6 +304,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
     }
+
+    @Test
     public void testLongExpr1() throws Exception {
         String contents =
                 "class Foo {\n String str\n }\n" +
@@ -298,6 +315,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
     }
 
+    @Test
     public void testLongExpr2() throws Exception {
         String contents =
                 "class Foo {\n String str\n }\n" +
@@ -307,6 +325,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
 
+    @Test
     public void testLongExpr3() throws Exception {
         String contents =
                 "class Foo {\n Foo next() { }\n int previous() { }\n }\n" +
@@ -316,6 +335,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
     }
 
+    @Test
     public void testNumberPlusString1() throws Exception {
         String contents =
                 "def xxx = 1 + ''\n" +
@@ -323,6 +343,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.String");
     }
+
+    @Test
     public void testNumberPlusString2() throws Exception {
         String contents =
                 "def xxx = 1 + \"${this}\"\n" +
@@ -331,36 +353,54 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.String");
     }
 
+    @Test
     public void testCompleteExpr1() throws Exception {
         assertType("['']", "java.util.List<java.lang.String>");
     }
+
+    @Test
     public void testCompleteExpr2() throws Exception {
         assertType("this.class.name", "java.lang.String");
     }
+
+    @Test
     public void testCompleteExpr3() throws Exception {
         assertType("this.getClass().getName()", "java.lang.String");
     }
+
+    @Test
     public void testCompleteExpr4() throws Exception {
         assertType("this.getClass().getName() + 3", "java.lang.String");
     }
+
+    @Test
     public void testCompleteExpr5() throws Exception {
         assertType("4 + this.getClass().getName()", "java.lang.String");
     }
+
+    @Test
     public void testCompleteExpr6() throws Exception {
         assertType("new LinkedList<String>()[0]", "java.lang.String");
     }
+
+    @Test
     public void testCompleteExpr7() throws Exception {
         assertType("[1:3]", "java.util.Map<java.lang.Integer,java.lang.Integer>");
     }
+
+    @Test
     public void testCompleteExpr8() throws Exception {
         assertType("1..3", "groovy.lang.Range<java.lang.Integer>");
     }
 
+    @Test
     public void testPrefix1() throws Exception {
         String contents = "def x = 1\ndef xxx = -x\nxxx";
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
     }
+
+    @Test
     public void testPrefix2() throws Exception {
         String contents =
                 "class Foo { double positive() { } }\n" +
@@ -369,6 +409,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
+
+    @Test
     public void testPrefix3() throws Exception {
         String contents =
                 "class Foo { double negative() { } }\n" +
@@ -377,6 +419,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
+
+    @Test
     public void testPrefix4() throws Exception {
         String contents =
                 "class Foo { double next() { } }\n" +
@@ -385,6 +429,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
+
+    @Test
     public void testPrefix5() throws Exception {
         String contents =
                 "class Foo { double previous() { } }\n" +
@@ -393,6 +439,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
+
+    @Test
     public void testPrefix6() throws Exception {
         String contents =
                 "class Foo { double bitwiseNegate() { } }\n" +
@@ -402,6 +450,7 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
 
+    @Test
     public void testPostfix1() throws Exception {
         String contents =
                 "class Foo { double next() { } }\n" +
@@ -410,6 +459,8 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
+
+    @Test
     public void testPostfix2() throws Exception {
         String contents =
                 "class Foo { double previous() { } }\n" +
@@ -418,5 +469,4 @@ public final class OperatorOverloadingInferencingTests extends AbstractInferenci
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
     }
-
 }

@@ -15,6 +15,12 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,10 +45,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
-
-    public AbstractInferencingTest(String name) {
-        super(name);
-    }
 
     protected void assertType(String contents, String expectedType) {
         assertType(contents, 0, contents.length(), expectedType, false);
@@ -366,7 +368,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         return sb.toString();
     }
 
-    public class UnknownTypeRequestor implements ITypeRequestor {
+    public static class UnknownTypeRequestor implements ITypeRequestor {
         private List<ASTNode> unknownNodes = new ArrayList<ASTNode>();
 
         public List<ASTNode> getUnknownNodes() {

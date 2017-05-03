@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.model;
 
-import junit.framework.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -23,29 +24,20 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
+import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.junit.Test;
 
-/**
- * @author Andrew Eisenberg
- * @created Dec 1, 2009
- *
- */
-public class MoveRenameCopyTests extends BuilderTests {
-    public MoveRenameCopyTests(String name) {
-        super(name);
-    }
-    public static Test suite() {
-        return buildTestSuite(MoveRenameCopyTests.class);
-    }
+public final class MoveRenameCopyTests extends BuilderTestSuite {
 
-    final static String GROOVY_CLASS_CONTENTS = "class Groovy {\n" +
-            "Groovy() { }\n" +
-            "Groovy(arg1) { }\n" +
-            "}";
+    private static final String GROOVY_CLASS_CONTENTS = "class Groovy {\n" +
+        "  Groovy() { }\n" +
+        "  Groovy(arg1) { }\n" +
+        "}";
 
-    final static String GROOVY_SCRIPT_CONTENTS = "def x = 9";
+    private static final String GROOVY_SCRIPT_CONTENTS = "def x = 9";
 
+    @Test
     public void testRenameGroovyClass() throws Exception {
         GroovyCompilationUnit unit = createSimpleGroovyProject("foo", GROOVY_CLASS_CONTENTS);
         unit.rename("GroovyNew.groovy", true, null);
@@ -58,6 +50,7 @@ public class MoveRenameCopyTests extends BuilderTests {
         checkExist(unit);
     }
 
+    @Test
     public void testCopyGroovyClass() throws Exception {
         GroovyCompilationUnit unit = createSimpleGroovyProject("foo", GROOVY_CLASS_CONTENTS);
         unit.copy(unit.getParent(), unit, "GroovyNew.groovy", true, null);
@@ -67,6 +60,7 @@ public class MoveRenameCopyTests extends BuilderTests {
         checkExist(newUnit);
     }
 
+    @Test
     public void testMoveGroovyClass() throws Exception {
         GroovyCompilationUnit unit = createSimpleGroovyProject("foo.bar", GROOVY_CLASS_CONTENTS);
         IPackageFragment pack = unit.getPackageFragmentRoot().createPackageFragment("foo", true, null);
@@ -77,7 +71,7 @@ public class MoveRenameCopyTests extends BuilderTests {
         checkExist(newUnit);
     }
 
-
+    @Test
     public void testRenameGroovyScript() throws Exception {
         GroovyCompilationUnit unit = createSimpleGroovyProject("foo", GROOVY_SCRIPT_CONTENTS);
         unit.rename("GroovyNew.groovy", true, null);
@@ -90,6 +84,7 @@ public class MoveRenameCopyTests extends BuilderTests {
         checkExist(unit);
     }
 
+    @Test
     public void testCopyGroovyScript() throws Exception {
         GroovyCompilationUnit unit = createSimpleGroovyProject("foo", GROOVY_SCRIPT_CONTENTS);
         unit.copy(unit.getParent(), unit, "GroovyNew.groovy", true, null);
@@ -99,6 +94,7 @@ public class MoveRenameCopyTests extends BuilderTests {
         checkExist(newUnit);
     }
 
+    @Test
     public void testMoveGroovyScript() throws Exception {
         GroovyCompilationUnit unit = createSimpleGroovyProject("foo.bar", GROOVY_SCRIPT_CONTENTS);
         IPackageFragment pack = unit.getPackageFragmentRoot().createPackageFragment("foo", true, null);
@@ -109,6 +105,7 @@ public class MoveRenameCopyTests extends BuilderTests {
         checkExist(newUnit);
     }
 
+    //--------------------------------------------------------------------------
 
     private void checkNoExist(GroovyCompilationUnit unit) {
         assertFalse("Compilation unit " + unit.getElementName() + " should not exist", unit.exists());

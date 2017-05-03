@@ -15,7 +15,10 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import junit.framework.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -35,16 +38,11 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public final class BinarySearchTests extends AbstractGroovySearchTest {
-
-    public static Test suite() {
-        return buildTestSuite(BinarySearchTests.class);
-    }
-
-    public BinarySearchTests(String name) {
-        super(name);
-    }
 
     private String groovyClassContents =
             "package pack\n" +
@@ -99,10 +97,8 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
 
     private IJavaProject javaProject;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
         Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
         env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
 
@@ -115,10 +111,9 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
         groovyClassContents2 = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         javaProject = null;
-        super.tearDown();
     }
 
     private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws Exception {
@@ -160,18 +155,21 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
 
     //
 
+    @Test
     public void testClassDecl1() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
         MockSearchRequestor requestor = performSearch(type);
         assertMatches("AGroovyClass", requestor, 12, 2);
     }
 
+    @Test
     public void testClassDecl2() throws Exception {
         IType type = javaProject.findType("pack.OtherClass");
         MockSearchRequestor requestor = performSearch(type);
         assertMatches("OtherClass", requestor, 4, 2);
     }
 
+    @Test
     public void testFieldDecl1() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "age_1";
@@ -180,6 +178,7 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
         assertMatches(toFind, requestor, 4, 2);
     }
 
+    @Test
     public void testFieldDecl2() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "name_1";
@@ -188,6 +187,7 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
         assertMatches(toFind, requestor, 4, 2);
     }
 
+    @Test
     public void testMethodDecl() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "doit";
@@ -196,6 +196,7 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
         assertMatches(toFind, requestor, 4, 2);
     }
 
+    @Test
     public void testFieldRefInInitializer() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "fieldInInitializer";
@@ -204,6 +205,7 @@ public final class BinarySearchTests extends AbstractGroovySearchTest {
         assertMatches(toFind, requestor, 2, 1);
     }
 
+    @Test
     public void testMethodRefInInitializer() throws Exception {
         IType type = javaProject.findType("pack.AGroovyClass");
         String toFind = "referencedInInitializer";

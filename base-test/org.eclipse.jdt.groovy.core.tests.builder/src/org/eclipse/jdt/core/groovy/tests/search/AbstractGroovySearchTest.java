@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -36,12 +38,12 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
+import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -50,10 +52,12 @@ import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.junit.After;
+import org.junit.Before;
 
-public abstract class AbstractGroovySearchTest extends BuilderTests {
+public abstract class AbstractGroovySearchTest extends BuilderTestSuite {
 
-    protected class MatchRegion {
+    protected static class MatchRegion {
         final int offset;
         final int length;
         public MatchRegion(int offset, int length) {
@@ -76,20 +80,14 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
      */
     protected String defaultFileExtension = "groovy";
 
-    public AbstractGroovySearchTest(String name) {
-        super(name);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public final void setUpSearchTestCase() throws Exception {
         project = createSimpleGroovyProject();
         searchRequestor = new MockSearchRequestor();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public final void tearDownSearchTestCase() throws Exception {
         defaultFileExtension = "groovy";
     }
 
@@ -240,15 +238,14 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
                 firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 
-
     protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws Exception {
         return getAllMatches(firstContents, secondContents, false);
     }
 
     protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer) throws Exception {
         return getAllMatches(firstContents, secondContents, "", "", waitForIndexer);
-
     }
+
     protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, String firstPackage, String secondPackage, boolean waitForIndexer) throws Exception {
         String firstClassName = "First";
         String secondClassName = "Second";
@@ -296,7 +293,6 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         }
         return type;
     }
-
 
     protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int start, MatchRegion[] matchLocations) throws JavaModelException {
         String className = "First";

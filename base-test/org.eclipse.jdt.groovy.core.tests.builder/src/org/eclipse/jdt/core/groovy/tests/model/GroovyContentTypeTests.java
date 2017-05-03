@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,42 +15,33 @@
  */
 package org.eclipse.jdt.core.groovy.tests.model;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.Arrays;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.Test;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
+import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.core.util.Util;
-
-
+import org.junit.Test;
 
 /**
- * @author Andrew Eisenberg
- * @created Jul 7, 2009
- * Tests for checking that groovy files are not sent
- * to compiler when project has no groovy nature
+ * Tests for checking that groovy files are not sent to compiler when project has no groovy nature.
  */
-public class GroovyContentTypeTests extends BuilderTests {
-    public GroovyContentTypeTests(String name) {
-        super(name);
-    }
+public final class GroovyContentTypeTests extends BuilderTestSuite {
 
-    public static Test suite() {
-        return buildTestSuite(GroovyContentTypeTests.class);
-    }
-
+    @Test
     public void testContentTypes() throws Exception {
         Runnable runner = new Runnable() {
-
             public void run() {
                 char[][] groovyLikeExtensions = ContentTypeUtils.getGroovyLikeExtensions();
                 char[][] javaLikeExtensions = Util.getJavaLikeExtensions();
@@ -83,6 +74,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         runMultipleTimes(runner);
     }
 
+    @Test
     public void testJavaOnlyProject() throws Exception {
         final IProject proj = createProject();
         Runnable runner = new Runnable() {
@@ -100,6 +92,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         runMultipleTimes(runner);
     }
 
+    @Test
     public void testGroovyProject() throws Exception {
         final IProject proj = createProject();
         Runnable runner = new Runnable() {
@@ -117,9 +110,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         runMultipleTimes(runner);
     }
 
-
-    // Tests that a groovy project that is converted back to a plain java
-    // project will not have its groovy files compiled
+    @Test // a groovy project that is converted back to a plain java project will not have its groovy files compiled
     public void testGroovyThenJavaProject() throws Exception {
         final IProject proj = createProject();
         env.addGroovyJars(proj.getFullPath());
@@ -139,8 +130,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         runMultipleTimes(runner);
     }
 
-    // Tests that a groovy project that is converted back to a plain java
-    // project will not have its groovy files compiled
+    @Test // a groovy project that is converted back to a plain java project will not have its groovy files compiled
     public void testJavaThenGroovyProject() throws Exception {
         final IProject proj = createProject();
         Runnable runner = new Runnable() {
@@ -162,7 +152,9 @@ public class GroovyContentTypeTests extends BuilderTests {
         runMultipleTimes(runner);
     }
 
-    void checkGroovyProject(IProject proj) throws CoreException {
+    //--------------------------------------------------------------------------
+
+    private void checkGroovyProject(IProject proj) throws Exception {
         expectingNoProblems();
 
         // check that all source files exist
@@ -190,7 +182,8 @@ public class GroovyContentTypeTests extends BuilderTests {
         assertTrue(groovyClass + " should exist", groovyClass.exists());
         assertTrue(groovyTestClass + " should exist", groovyTestClass.exists());
     }
-    void checkJavaProject(IProject proj) throws CoreException {
+
+    private void checkJavaProject(IProject proj) throws Exception {
         expectingNoProblems();
 
         // force waiting for build to complete
@@ -223,7 +216,8 @@ public class GroovyContentTypeTests extends BuilderTests {
         assertFalse(groovyClass + " should not exist", groovyClass.exists());
         assertFalse(groovyTestClass + " should not exist", groovyTestClass.exists());
     }
-    IProject createProject() throws Exception {
+
+    private IProject createProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, org.eclipse.jdt.core.tests.util.Util.getJavaClassLibs());
         env.removePackageFragmentRoot(projectPath, "");
@@ -248,7 +242,7 @@ public class GroovyContentTypeTests extends BuilderTests {
                 "   }\n"+
                 "}\n"
                 );
-        IFile javaTestFile = getFile(javaTest);
+        IFile javaTestFile = ResourcesPlugin.getWorkspace().getRoot().getFile(javaTest);
         javaTestFile.move(javaTestFile.getParent().getFullPath().append("HelloJavatest.javatest"), true, null);
 
         IPath groovy = env.addClass(root, "p1", "HelloGroovy",
@@ -259,7 +253,7 @@ public class GroovyContentTypeTests extends BuilderTests {
                 "   }\n"+
                 "}\n"
                 );
-        IFile groovyFile = getFile(groovy);
+        IFile groovyFile = ResourcesPlugin.getWorkspace().getRoot().getFile(groovy);
         groovyFile.move(groovyFile.getParent().getFullPath().append("HelloGroovy.groovy"), true, null);
 
         IPath groovyTest = env.addClass(root, "p1", "HelloGroovytest",
@@ -270,13 +264,13 @@ public class GroovyContentTypeTests extends BuilderTests {
                 "   }\n"+
                 "}\n"
                 );
-        IFile groovyTestFile = getFile(groovyTest);
+        IFile groovyTestFile = ResourcesPlugin.getWorkspace().getRoot().getFile(groovyTest);
         groovyTestFile.move(groovyTestFile.getParent().getFullPath().append("HelloGroovytest.groovytest"), true, null);
 
         return env.getProject(projectPath);
     }
 
-    void charCharContains(char[][] charChar, String containsStr) {
+    private void charCharContains(char[][] charChar, String containsStr) {
         char[] contains = containsStr.toCharArray();
         for (char[] chars : charChar) {
             if (chars.length == contains.length) {
@@ -291,7 +285,8 @@ public class GroovyContentTypeTests extends BuilderTests {
         }
         fail("Should have found '" + new String(contains) + "' in '" + charCharToString(charChar) + "'");
     }
-    void charCharNoContains(char[][] charChar, String containsStr) {
+
+    private void charCharNoContains(char[][] charChar, String containsStr) {
         char[] contains = containsStr.toCharArray();
         for (char[] chars : charChar) {
             if (Arrays.equals(chars, contains)) {
@@ -301,7 +296,7 @@ public class GroovyContentTypeTests extends BuilderTests {
         }
     }
 
-    String charCharToString(char[][] charChar) {
+    private String charCharToString(char[][] charChar) {
         StringBuffer sb = new StringBuffer();
         for (char[] chars : charChar) {
             for (char c : chars) {
@@ -312,28 +307,20 @@ public class GroovyContentTypeTests extends BuilderTests {
         return sb.toString();
     }
 
-    IFile getFile(IPath path) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-    }
-
     private void runMultipleTimes(Runnable runner) {
         AssertionFailedError currentException = null;
         for (int attempt = 0; attempt < 4; attempt++) {
             try {
                 runner.run();
-
                 // success
                 return;
             } catch (AssertionFailedError e) {
                 currentException = e;
                 System.out.println("Launch failed on attempt " + attempt + " retrying.");
             }
-
         }
         if (currentException != null) {
             throw currentException;
         }
-
     }
-
 }

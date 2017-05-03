@@ -15,27 +15,22 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
+
 import java.util.Comparator;
 import java.util.List;
-
-import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.junit.Test;
 import org.osgi.framework.Version;
 
 public final class InferencingTests extends AbstractInferencingTest {
-
-    public static Test suite() {
-        return buildTestSuite(InferencingTests.class);
-    }
-
-    public InferencingTests(String name) {
-        super(name);
-    }
 
     private void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
@@ -57,6 +52,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     //--------------------------------------------------------------------------
 
+    @Test
     public void testLocalVar1() {
         String contents ="def x\nthis.x";
         int start = contents.lastIndexOf("x");
@@ -64,6 +60,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testLocalVar2() {
         String contents ="def x\ndef y = { this.x }";
         int start = contents.lastIndexOf("x");
@@ -71,6 +68,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testLocalVar2a() {
         String contents ="def x\ndef y = { this.x() }";
         int start = contents.lastIndexOf("x");
@@ -78,6 +76,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testLocalVar3() {
         String contents ="int x\ndef y = { x }";
         int start = contents.lastIndexOf("x");
@@ -85,6 +84,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalVar4() {
         String contents ="int x\ndef y = { x() }";
         int start = contents.lastIndexOf("x");
@@ -92,6 +92,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalMethod1() {
         String contents ="int x() { }\ndef y = { x() }";
         int start = contents.lastIndexOf("x");
@@ -99,6 +100,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalMethod2() {
         String contents ="int x() { }\ndef y = { x }";
         int start = contents.lastIndexOf("x");
@@ -106,6 +108,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalMethod3() {
         String contents ="int x() { }\ndef y = { def z = { x } }";
         int start = contents.lastIndexOf("x");
@@ -113,6 +116,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalMethod4() {
         String contents ="int x() { }\ndef y = { def z = { x() } }";
         int start = contents.lastIndexOf("x");
@@ -120,6 +124,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalMethod5() {
         String contents ="int x() { }\ndef y = { def z = { this.x() } }";
         int start = contents.lastIndexOf("x");
@@ -127,6 +132,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testLocalMethod6() {
         String contents ="def x\ndef y = { delegate.x() }";
         int start = contents.lastIndexOf("x");
@@ -134,6 +140,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testLocalMethod7() {
         String contents ="def x\ndef y = { delegate.x }";
         int start = contents.lastIndexOf("x");
@@ -141,15 +148,18 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testNumber1() {
         assertType("10", "java.lang.Integer");
     }
 
+    @Test
     public void testNumber1a() {
         // same as above, but test that whitespace is not included
         assertType("10 ", 0, 2, "java.lang.Integer");
     }
 
+    @Test
     public void testNumber2() {
         String contents ="def x = 1+2\nx";
         int start = contents.lastIndexOf("x");
@@ -157,18 +167,22 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testNumber3() {
         assertType("10L", "java.lang.Long");
     }
 
+    @Test
     public void testNumber4() {
         assertType("10++", "java.lang.Integer");
     }
 
+    @Test
     public void testNumber5() {
         assertType("++10", "java.lang.Integer");
     }
 
+    @Test
     public void testNumber6() {
         String contents = "(x <=> y).intValue()";
         int start = contents.indexOf("intValue");
@@ -176,19 +190,23 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testString1() {
         assertType("\"10\"", "java.lang.String");
     }
 
+    @Test
     public void testString2() {
         assertType("'10'", "java.lang.String");
     }
 
+    @Test
     public void testString3() {
         String contents = "def x = '10'";
         assertType(contents, contents.indexOf('\''), contents.lastIndexOf('\'')+1, "java.lang.String");
     }
 
+    @Test
     public void testString4() {
         String contents = "def x = false ? '' : ''\nx";
         int start = contents.lastIndexOf("x");
@@ -196,6 +214,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testMatcher1() {
         String contents = "def x = \"\" =~ /pattern/\nx";
         int start = contents.lastIndexOf("x");
@@ -203,6 +222,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.regex.Matcher");
     }
 
+    @Test
     public void testMatcher2() {
         String contents = "(\"\" =~ /pattern/).hasGroup()";
         int start = contents.indexOf("hasGroup");
@@ -210,6 +230,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testPattern1() {
         String contents ="def x = ~/pattern/\nx";
         int start = contents.lastIndexOf("x");
@@ -217,6 +238,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.regex.Pattern");
     }
 
+    @Test
     public void testPattern2() {
         String contents ="def x = \"\" ==~ /pattern/\nx";
         int start = contents.lastIndexOf("x");
@@ -224,16 +246,19 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testClosure1() {
         String contents = "def fn = { a, b -> a + b }";
         assertType(contents, 4, 6, "groovy.lang.Closure");
     }
 
+    @Test
     public void testClosure2() {
         String contents = "def fn = x.&y";
         assertType(contents, 4, 6, "groovy.lang.Closure");
     }
 
+    @Test
     public void testClosure3() {
         String contents =
                 "class Baz {\n" +
@@ -247,6 +272,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.net.URL");
     }
 
+    @Test
     public void testClosure4() {
         String contents =
             "class Baz {\n" +
@@ -274,6 +300,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Baz");
     }
 
+    @Test
     public void testClosure5() {
         String contents =
             "def x = {\n" +
@@ -296,6 +323,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testClosure6() {
         String contents =
             "def x = { def y = {\n" +
@@ -318,66 +346,77 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testSpread1() {
         String contents = "def z = [1,2]*.value";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + "value".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread2() {
         String contents = "[1,2,3]*.intValue()";
         int start = contents.lastIndexOf("intValue");
         assertType(contents, start, start + "intValue".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread3() {
         String contents = "[1,2,3]*.intValue()[0].value";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + "value".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread4() {
         String contents = "[x:1,y:2,z:3]*.getKey()";
         int start = contents.lastIndexOf("getKey");
         assertType(contents, start, start + "getKey".length(), "java.lang.String");
     }
 
+    @Test
     public void testSpread5() {
         String contents = "[x:1,y:2,z:3]*.getValue()";
         int start = contents.lastIndexOf("getValue");
         assertType(contents, start, start + "getValue".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread6() {
         String contents = "[x:1,y:2,z:3]*.key";
         int start = contents.lastIndexOf("key");
         assertType(contents, start, start + "key".length(), "java.lang.String");
     }
 
+    @Test
     public void testSpread7() {
         String contents = "[x:1,y:2,z:3]*.value";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + "value".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread8() {
         String contents = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
         int start = contents.lastIndexOf("toLowerCase");
         assertType(contents, start, start + "toLowerCase".length(), "java.lang.String");
     }
 
+    @Test
     public void testSpread9() {
         String contents = "[x:1,y:2,z:3]*.value[0].intValue()";
         int start = contents.lastIndexOf("intValue");
         assertType(contents, start, start + "intValue".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread10() {
         String contents = "[1,2,3]*.value[0].value";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + "value".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread11() {
         String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
             "strings*.bytes";
@@ -385,6 +424,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, start + "bytes".length(), "byte[]");
     }
 
+    @Test
     public void testSpread12() {
         String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
             "strings*.length()";
@@ -392,6 +432,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, start + "length".length(), "java.lang.Integer");
     }
 
+    @Test
     public void testSpread13() {
         String contents = "@groovy.transform.TypeChecked class Foo {\n" +
             "  static def meth() {\n" +
@@ -405,14 +446,17 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, start + "additionalBeanInfo".length(), "java.beans.BeanInfo[]");
     }
 
+    @Test
     public void testMap1() {
         assertType("[:]", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
+    @Test
     public void testBoolean1() {
         assertType("!x", "java.lang.Boolean");
     }
 
+    @Test
     public void testBoolean2() {
         String contents = "(x < y).booleanValue()";
         int start = contents.indexOf("booleanValue");
@@ -420,6 +464,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testBoolean3() {
         String contents = "(x <= y).booleanValue()";
         int start = contents.indexOf("booleanValue");
@@ -427,6 +472,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testBoolean4() {
         String contents = "(x >= y).booleanValue()";
         int start = contents.indexOf("booleanValue");
@@ -434,6 +480,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testBoolean5() {
         String contents = "(x != y).booleanValue()";
         int start = contents.indexOf("booleanValue");
@@ -441,6 +488,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testBoolean6() {
         String contents = "(x == y).booleanValue()";
         int start = contents.indexOf("booleanValue");
@@ -448,6 +496,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testBoolean7() {
         String contents = "(x in y).booleanValue()";
         int start = contents.indexOf("booleanValue");
@@ -455,36 +504,42 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testClassLiteral1() {
         String contents = "def foo = Number.class";
         int start = contents.indexOf("foo"), end = start + 3;
         assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
     }
 
+    @Test
     public void testClassLiteral2() {
         String contents = "def foo = java.lang.Number.class";
         int start = contents.indexOf("foo"), end = start + 3;
         assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
     }
 
+    @Test
     public void testClassLiteral3() {
         String contents = "def foo = Number";
         int start = contents.indexOf("foo"), end = start + 3;
         assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
     }
 
+    @Test
     public void testClassLiteral4() {
         String contents = "def foo = java.lang.Number";
         int start = contents.indexOf("foo"), end = start + 3;
         assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
     }
 
+    @Test
     public void testClassLiteral5() {
         String contents = "def foo = Map.Entry.class";
         int start = contents.indexOf("foo"), end = start + 3;
         assertType(contents, start, end, "java.lang.Class<java.util.Map$Entry>");
     }
 
+    @Test
     public void testConstructor1() {
         // GRECLIPSE-1229 constructors with map parameters
         String contents =
@@ -505,6 +560,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.PROPERTY);
     }
 
+    @Test
     public void testConstructor2() {
         String contents =
             "class O {\n" +
@@ -524,6 +580,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.PROPERTY);
     }
 
+    @Test
     public void testConstructor3() {
         String contents =
             "class O {\n" +
@@ -538,6 +595,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.PROPERTY);
     }
 
+    @Test
     public void testConstructor4() {
         String contents =
             "class O {\n" +
@@ -557,6 +615,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "null");
     }
 
+    @Test
     public void testConstructor5() {
         String contents =
             "class O {\n" +
@@ -576,6 +635,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "null");
     }
 
+    @Test
     public void testConstructor6() {
         String contents =
             "class O {\n" +
@@ -595,6 +655,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "null");
     }
 
+    @Test
     public void testSpecialConstructor1() {
         String contents =
             "class C {\n" +
@@ -609,6 +670,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "C");
     }
 
+    @Test
     public void testSpecialConstructor2() {
         String contents =
             "class C extends HashMap {\n" +
@@ -623,24 +685,28 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "java.util.HashMap");
     }
 
+    @Test
     public void testStaticMethodCall() {
         String contents = "Two.x()\n class Two {\n static String x() {\n \"\" } } ";
         String expr = "x";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
+    @Test
     public void testStaticMethodCall2() {
         String contents = "Two.x\n class Two {\n static String x() {\n \"\" } } ";
         String expr = "x";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
+    @Test
     public void testStaticMethodCall3() {
         String contents = "class Two {\n def other() { \n x() } \n static String x() {\n \"\" } } ";
         String expr = "x() ";  // extra space b/c static method call expression end offset is wrong
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
+    @Test
     public void testStaticMethodCall4() {
         String contents = "class Two {\n def other() { \n x } \n static String x() {\n \"\" } } ";
         String expr = "x";
@@ -648,6 +714,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLISPE-1244
+    @Test
     public void testStaticMethodCall5() {
         String contents =
             "class Parent {\n" +
@@ -663,6 +730,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLISPE-1244
+    @Test
     public void testStaticMethodCall6() {
         createUnit("Parent",
             "class Parent {\n" +
@@ -678,6 +746,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
     }
 
+    @Test
     public void testStaticMethodCall7() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
@@ -692,6 +761,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.Collection");
     }
 
+    @Test
     public void testStaticMethodCall8() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
@@ -706,6 +776,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.regex.Pattern");
     }
 
+    @Test
     public void testStaticMethodCall9() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
@@ -720,12 +791,14 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.regex.Pattern");
     }
 
+    @Test
     public void testSuperFieldReference() {
         String contents = "class B extends A {\n def other() { \n myOther } } \n class A { String myOther } ";
         String expr = "myOther";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
+    @Test
     public void testFieldWithInitializer1() {
         String contents = "class A {\ndef x = 9\n}\n new A().x";
         int start = contents.lastIndexOf('x');
@@ -733,6 +806,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testFieldWithInitializer2() {
         createUnit("A", "class A {\ndef x = 9\n}");
         String contents = "new A().x";
@@ -741,6 +815,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testTernaryExpression() {
         String contents = "def x = true ? 2 : 1\nx";
         int start = contents.lastIndexOf("x");
@@ -748,6 +823,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testElvisOperator() {
         String contents = "def x = 2 ?: 1\nx";
         int start = contents.lastIndexOf("x");
@@ -755,6 +831,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testRangeExpression1() {
         String contents = "def x = 0 .. 5\nx";
         int start = contents.lastIndexOf("x");
@@ -762,6 +839,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
     }
 
+    @Test
     public void testRangeExpression2() {
         String contents = "def x = 0 ..< 5\nx";
         int start = contents.lastIndexOf("x");
@@ -769,6 +847,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
     }
 
+    @Test
     public void testRangeExpression3() {
         String contents = "(1..10).getFrom()";
         int start = contents.lastIndexOf("getFrom");
@@ -776,6 +855,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Comparable<java.lang.Integer>");
     }
 
+    @Test
     public void testRangeExpression4() {
         String contents = "(1..10).getTo()";
         int start = contents.lastIndexOf("getTo");
@@ -783,6 +863,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Comparable<java.lang.Integer>");
     }
 
+    @Test
     public void testRangeExpression5() {
         String contents = "(1..10).step(0)";
         int start = contents.lastIndexOf("step");
@@ -790,6 +871,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
 
+    @Test
     public void testRangeExpression6() {
         String contents = "(1..10).step(0, { })";
         int start = contents.lastIndexOf("step");
@@ -797,6 +879,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Void");
     }
 
+    @Test
     public void testInnerClass1() {
         String contents = "class Outer { class Inner { } \nInner x }\nnew Outer().x ";
         int start = contents.lastIndexOf("x");
@@ -804,6 +887,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer$Inner");
     }
 
+    @Test
     public void testInnerClass2() {
         String contents = "class Outer { class Inner { class InnerInner{ } }\n Outer.Inner.InnerInner x }\nnew Outer().x ";
         int start = contents.lastIndexOf("x");
@@ -811,6 +895,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer$Inner$InnerInner");
     }
 
+    @Test
     public void testInnerClass3() {
         String contents = "class Outer { class Inner { def z() { \nnew Outer().x \n } } \nInner x }";
         int start = contents.indexOf("x");
@@ -818,6 +903,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer$Inner");
     }
 
+    @Test
     public void testInnerClass4() {
         String contents = "class Outer { class Inner { class InnerInner { def z() { \nnew Outer().x \n } } } \nInner x }";
         int start = contents.indexOf("x");
@@ -825,6 +911,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer$Inner");
     }
 
+    @Test
     public void testInnerClass5() {
         String contents = "class Outer { class Inner extends Outer { } }";
         int start = contents.lastIndexOf("Outer");
@@ -832,6 +919,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer");
     }
 
+    @Test
     public void testInnerClass6() {
         String contents = "class Outer extends RuntimeException { class Inner { def foo() throws Outer { } } }";
         int start = contents.lastIndexOf("Outer");
@@ -839,6 +927,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Outer");
     }
 
+    @Test
     public void testConstantFromSuper() {
         String contents =
             "public interface Constants {\n" +
@@ -854,6 +943,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testAssignementInInnerBlock() {
         String contents = "def xxx\n if (true) { xxx = \"\" \n xxx} ";
         int start = contents.lastIndexOf("xxx");
@@ -861,6 +951,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testAssignementInInnerBlock2() {
         String contents = "def xxx\n if (true) { xxx = \"\" \n }\n xxx";
         int start = contents.lastIndexOf("xxx");
@@ -868,6 +959,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE731a() {
         String contents = "def foo() { } \nString xxx = foo()\nxxx";
         int start = contents.lastIndexOf("xxx");
@@ -875,6 +967,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE731b() {
         String contents = "def foo() { } \ndef xxx = foo()\nxxx";
         int start = contents.lastIndexOf("xxx");
@@ -882,6 +975,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testGRECLIPSE731c() {
         String contents = "String foo() { } \ndef xxx = foo()\nxxx";
         int start = contents.lastIndexOf("xxx");
@@ -889,6 +983,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE731d() {
         String contents = "int foo() { } \ndef xxx = foo()\nxxx";
         int start = contents.lastIndexOf("xxx");
@@ -896,6 +991,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testGRECLIPSE731e() {
         // ignore assignments to object expressions
         String contents = "def foo() { } \nString xxx\nxxx = foo()\nxxx";
@@ -904,6 +1000,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE731f() {
         // ignore assignments to object expressions
         String contents = "class X { String xxx\ndef foo() { }\ndef meth() { xxx = foo()\nxxx } }";
@@ -912,8 +1009,10 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE1720() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
+
         String contents =
             "import groovy.transform.CompileStatic\n" +
             "@CompileStatic\n" +
@@ -929,6 +1028,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
+    @Test
     public void testCatchBlock1() {
         String catchString = "try {     } catch (NullPointerException e) { e }";
         int start = catchString.lastIndexOf("NullPointerException");
@@ -936,6 +1036,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(catchString, start, end, "java.lang.NullPointerException");
     }
 
+    @Test
     public void testCatchBlock2() {
         String catchString = "try {     } catch (NullPointerException e) { e }";
         int start = catchString.lastIndexOf("e");
@@ -943,6 +1044,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(catchString, start, end, "java.lang.NullPointerException");
     }
 
+    @Test
     public void testCatchBlock3() {
         String catchString = "try {     } catch (NullPointerException e) { e }";
         int start = catchString.indexOf("NullPointerException e");
@@ -950,6 +1052,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(catchString, start, end, "java.lang.NullPointerException");
     }
 
+    @Test
     public void testCatchBlock4() {
         String catchString2 = "try {     } catch (e) { e }";
         int start = catchString2.indexOf("e");
@@ -957,6 +1060,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(catchString2, start, end, "java.lang.Exception");
     }
 
+    @Test
     public void testCatchBlock5() {
         String catchString2 = "try {     } catch (e) { e }";
         int start = catchString2.lastIndexOf("e");
@@ -964,6 +1068,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(catchString2, start, end, "java.lang.Exception");
     }
 
+    @Test
     public void testAssignment1() {
         String contents = "String x = 7\nx";
         int start = contents.lastIndexOf("x");
@@ -971,6 +1076,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testAssignment2() {
         String contents = "String x\nx";
         int start = contents.lastIndexOf("x");
@@ -978,6 +1084,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testAssignment3() {
         String contents = "String x\nx = 7\nx"; // will be a GroovyCastException at runtime
         int start = contents.lastIndexOf("x");
@@ -985,6 +1092,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testAssignment4() {
         String contents = "String x() { \ndef x = 9\n x}";
         int start = contents.lastIndexOf("x");
@@ -992,6 +1100,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testAssignment5() {
         String contents = "String x() { \ndef x\nx = 9\n x}";
         int start = contents.lastIndexOf("x");
@@ -999,6 +1108,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testInClosure1() {
         String contents =
             "class Bar {\n" +
@@ -1010,6 +1120,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Bar");
     }
 
+    @Test
     public void testInClosure2() {
         String contents =
             "class Bar {\n" +
@@ -1021,6 +1132,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Search");
     }
 
+    @Test
     public void testInClosure2a() {
         String contents =
             "class Bar {\n" +
@@ -1032,6 +1144,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Bar");
     }
 
+    @Test
     public void testInClosure2b() {
         String contents =
             "class Bar {\n" +
@@ -1043,6 +1156,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Search");
     }
 
+    @Test
     public void testInClosure2c() {
         // closure in a closure and owner is outer closure
         String contents = "first {\n second {\n owner } }";
@@ -1051,6 +1165,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "groovy.lang.Closure<V extends java.lang.Object>");
     }
 
+    @Test
     public void testInClosure3() {
         String contents = "class Baz { }\n" +
             "class Bar {\n" +
@@ -1064,6 +1179,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Baz");
     }
 
+    @Test
     public void testInClosure4() {
         String contents =
             "''.foo {\n" +
@@ -1074,6 +1190,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testInClosure5() {
         String contents =
             "''.foo {\n" +
@@ -1084,6 +1201,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testInClosure6() {
         String contents =
             "''.foo {\n" +
@@ -1094,6 +1212,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testInClosure7() {
         String contents =
             "''.foo {\n" +
@@ -1104,6 +1223,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testInClosure8() {
         String contents =
             "new Date().with {\n" +
@@ -1114,6 +1234,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Long", false);
     }
 
+    @Test
     public void testInClosure9() {
         String contents =
             "new Date().with {\n" +
@@ -1124,6 +1245,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Void", false);
     }
 
+    @Test
     public void testInClosure10() {
         String contents =
             "new Date().with {\n" +
@@ -1137,6 +1259,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     // the declaring type of things inside of a closure should be the declaring
     // type of the method that calls the closure
+    @Test
     public void testInClosureDeclaringType1() {
         String contents =
             "class Baz {\n" +
@@ -1156,6 +1279,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Unknown references should have the declaring type of the closure
+    @Test
     public void testInClosureDeclaringType2() {
         String contents =
             "class Baz {\n" +
@@ -1172,6 +1296,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Unknown references should have the delegate type of the closure
+    @Test
     public void testInClosureDeclaringType3() {
         String contents =
             "class Baz {\n" +
@@ -1190,6 +1315,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // 'this' is always the enclosing type
+    @Test
     public void testInClosureDeclaringType4() {
         String contents =
             "class Bar {\n" +
@@ -1204,6 +1330,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // 'delegate' always has declaring type of closure
+    @Test
     public void testInClosureDeclaringType5() {
         String contents =
             "class Bar {\n" +
@@ -1218,6 +1345,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Unknown references should have the declaring type of the enclosing method
+    @Test
     public void testInClassDeclaringType1() {
         String contents =
             "class Baz {\n" +
@@ -1231,6 +1359,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Unknown references should have the declaring type of the enclosing closure
+    @Test
     public void testInClassDeclaringType2() {
         String contents =
             "class Baz {\n" +
@@ -1243,6 +1372,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Baz", false, true);
     }
 
+    @Test
     public void testDoubleClosure1() {
         String contents =
             "''.foo {\n" +
@@ -1256,6 +1386,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testDoubleClosure2() {
         String contents =
             "''.foo {\n" +
@@ -1269,6 +1400,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testDoubleClosure2a() {
         String contents =
             "''.foo {\n" +
@@ -1283,6 +1415,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // test DGM
+    @Test
     public void testDoubleClosure3() {
         String contents =
             "''.foo {\n" +
@@ -1296,6 +1429,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testDoubleClosure4() {
         String contents =
             "''.foo {\n" +
@@ -1309,6 +1443,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testDoubleClosure5() {
         String contents =
             "''.foo {\n" +
@@ -1322,6 +1457,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    @Test
     public void testDoubleClosure6() {
         String contents =
             "''.foo {\n" +
@@ -1335,6 +1471,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
+    @Test
     public void testDoubleClosure7() {
         String contents =
             "''.foo {\n" +
@@ -1350,8 +1487,10 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-1748
     // Closure type inference with @CompileStatic
+    @Test
     public void testClosureTypeInference1() {
-        if (GroovyUtils.GROOVY_LEVEL < 22) return;
+        assumeTrue(isAtLeastGroovy(22));
+
         String contents =
             "import groovy.beans.Bindable\n" +
             "import groovy.transform.CompileStatic\n" +
@@ -1375,8 +1514,10 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Closure type inference without @CompileStatic
+    @Test
     public void testClosureTypeInference2() {
-        if (GroovyUtils.GROOVY_LEVEL < 22) return;
+        assumeTrue(isAtLeastGroovy(22));
+
         String contents =
             "import groovy.beans.Bindable\n" +
             "class A {\n" +
@@ -1399,6 +1540,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     // GRECLIPSE-1751
     // Test 'with' operator. No annotations.
+    @Test
     public void testWithAndClosure1() throws Exception {
         createUnit("p", "D",
             "package p\n" +
@@ -1437,6 +1579,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Test 'with' operator. @TypeChecked annotation.
+    @Test
     public void testWithAndClosure2() throws Exception {
         createUnit("p", "D",
             "package p\n" +
@@ -1476,6 +1619,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Test 'with' operator. @CompileStatic annotation.
+    @Test
     public void testWithAndClosure3() throws Exception {
         createUnit("p", "D",
             "package p\n" +
@@ -1515,6 +1659,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Another test 'with' operator. @CompileStatic annotation.
+    @Test
     public void testWithAndClosure4() throws Exception {
         createUnit("p", "D",
             "package p\n" +
@@ -1549,6 +1694,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // Unknown references should have the declaring type of the enclosing closure
+    @Test
     public void testInScriptDeclaringType() {
         String contents = "other\n";
         int start = contents.lastIndexOf("other");
@@ -1556,6 +1702,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search", false, true);
     }
 
+    @Test
     public void testStaticImports1() {
         String contents = "import static javax.swing.text.html.HTML.NULL_ATTRIBUTE_VALUE\n" +
                           "NULL_ATTRIBUTE_VALUE";
@@ -1564,6 +1711,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testStaticImports2() {
         String contents = "import static javax.swing.text.html.HTML.getAttributeKey\n" +
                           "getAttributeKey('')";
@@ -1572,6 +1720,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "javax.swing.text.html.HTML$Attribute");
     }
 
+    @Test
     public void testStaticImports3() {
         String contents = "import static javax.swing.text.html.HTML.*\n" +
                           "NULL_ATTRIBUTE_VALUE";
@@ -1580,6 +1729,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testStaticImports4() {
         String contents = "import static javax.swing.text.html.HTML.*\n" +
                           "getAttributeKey('')";
@@ -1588,6 +1738,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "javax.swing.text.html.HTML$Attribute");
     }
 
+    @Test
     public void testDGM1() {
         String contents = "\"$print\"";
         String lookFor = "print";
@@ -1596,6 +1747,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "groovy.lang.Script");
     }
 
+    @Test
     public void testDGM2() {
         String contents = "\"${print}\"";
         String lookFor = "print";
@@ -1604,6 +1756,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "groovy.lang.Script");
     }
 
+    @Test
     public void testDGM3() {
         String contents = "class Foo {\n def m() {\n \"${print()}\"\n } }";
         String lookFor = "print";
@@ -1629,18 +1782,21 @@ public final class InferencingTests extends AbstractInferencingTest {
         "GetAt g\n" +
         "g[0].startsWith()";
 
+    @Test
     public void testGetAt1() {
         int start = CONTENTS_GETAT1.indexOf("startsWith");
         int end = start + "startsWith".length();
         assertDeclaringType(CONTENTS_GETAT1, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGetAt2() {
         int start = CONTENTS_GETAT1.lastIndexOf("startsWith");
         int end = start + "startsWith".length();
         assertDeclaringType(CONTENTS_GETAT1, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGetAt3() {
         int start = CONTENTS_GETAT2.indexOf("startsWith");
         int end = start + "startsWith".length();
@@ -1648,6 +1804,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
     }
 
+    @Test
     public void testGetAt4() {
         int start = CONTENTS_GETAT2.lastIndexOf("startsWith");
         int end = start + "startsWith".length();
@@ -1656,6 +1813,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-743
+    @Test
     public void testGetAt5() {
         String contents = "class A { }\n new A().getAt() ";
         int start = contents.lastIndexOf("getAt");
@@ -1664,6 +1822,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
+    @Test
     public void testGetAt6() {
         String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n new A().getAt('x')";
         int start = contents.lastIndexOf("getAt");
@@ -1672,6 +1831,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "A");
     }
 
+    @Test
     public void testGetAt7() {
         String contents = "class A {\n A getAt(prop) { \n new A() \n } }\n class B extends A { }\n new B().getAt('x')";
         int start = contents.lastIndexOf("getAt");
@@ -1680,6 +1840,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "A");
     }
 
+    @Test
     public void testListSort1() {
         String contents = "def list = []; list.sort()";
         int start = contents.lastIndexOf("sort");
@@ -1688,6 +1849,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
+    @Test
     public void testListSort2() {
         // Java 8 added sort(Comparator) to the List interface
         boolean jdkListSort;
@@ -1706,6 +1868,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1013
+    @Test
     public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
         int start = contents.indexOf("text");
@@ -1713,6 +1876,7 @@ public final class InferencingTests extends AbstractInferencingTest {
             ? "org.codehaus.groovy.runtime.ResourceGroovyMethods" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
+    @Test
     public void testInterfaceMethodsAsProperty() throws Exception {
         createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
         createUnit("foo", "Baz", "package foo; interface Baz extends Bar { def getTwo() }");
@@ -1725,6 +1889,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "foo.Baz");
     }
 
+    @Test
     public void testInterfaceMethodAsProperty2() throws Exception {
         createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
         createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
@@ -1737,6 +1902,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "foo.Baz");
     }
 
+    @Test
     public void testInterfaceMethodAsProperty3() throws Exception {
         createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
         createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
@@ -1749,6 +1915,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "foo.Baz");
     }
 
+    @Test
     public void testIndirectInterfaceMethod() throws Exception {
         createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
         createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
@@ -1761,6 +1928,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 6, "foo.Baz");
     }
 
+    @Test
     public void testIndirectInterfaceConstant() throws Exception {
         createUnit("I", "interface I { Number ONE = 1 }");
         createUnit("A", "abstract class A implements I { Number TWO = 2 }");
@@ -1773,6 +1941,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, start + 3, "A");
     }
 
+    @Test
     public void testObjectMethodOnInterface() {
         // Object is not in explicit type hierarchy of List
         String contents = "def meth(List list) { list.getClass() }";
@@ -1781,6 +1950,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
     }
 
+    @Test
     public void testObjectMethodOnInterfaceAsProperty() {
         // Object is not in explicit type hierarchy of List
         String contents = "def meth(List list) { list.class }";
@@ -1789,6 +1959,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
     }
 
+    @Test
     public void testClassReference1() {
         String contents = "String.substring";
         int textStart = contents.indexOf("substring");
@@ -1796,6 +1967,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, textStart, textEnd, "java.lang.String", false, true);
     }
 
+    @Test
     public void testClassReference2() {
         String contents = "String.getPackage()";
         int textStart = contents.indexOf("getPackage");
@@ -1803,6 +1975,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, textStart, textEnd, "java.lang.Package");
     }
 
+    @Test
     public void testClassReference3() {
         String contents = "String.class.getPackage()";
         int textStart = contents.indexOf("getPackage");
@@ -1810,6 +1983,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, textStart, textEnd, "java.lang.Package");
     }
 
+    @Test
     public void testClassReference4() {
         String contents = "String.class.package";
         int textStart = contents.indexOf("package");
@@ -1817,6 +1991,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, textStart, textEnd, "java.lang.Package");
     }
 
+    @Test
     public void testMultiDecl1() {
         String contents = "def (x, y) = []\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1825,6 +2000,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart + 1, "java.lang.Object");
     }
 
+    @Test
     public void testMultiDecl2() {
         String contents = "def (x, y) = [1]\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1833,6 +2009,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Integer");
     }
 
+    @Test
     public void testMultiDecl3() {
         String contents = "def (x, y) = [1,1]\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1841,6 +2018,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Integer");
     }
 
+    @Test
     public void testMultiDecl4() {
         String contents = "def (x, y) = [1,'']\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1849,6 +2027,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.String");
     }
 
+    @Test
     public void testMultiDecl6() {
         String contents = "def (x, y) = new ArrayList()\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1857,6 +2036,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Object");
     }
 
+    @Test
     public void testMultiDecl7() {
         String contents = "def (x, y) = new ArrayList<Double>()\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1865,6 +2045,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    @Test
     public void testMultiDecl8() {
         String contents = "Double[] meth() { }\ndef (x, y) = meth()\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1873,6 +2054,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    @Test
     public void testMultiDecl9() {
         String contents = "List<Double> meth() { }\ndef (x, y) = meth()\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1881,6 +2063,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    @Test
     public void testMultiDecl10() {
         String contents = "List<Double> field\ndef (x, y) = field\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1889,6 +2072,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    @Test
     public void testMultiDecl11() {
         String contents = "List<Double> field\ndef x\ndef y\n (x, y)= field\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1897,6 +2081,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    @Test
     public void testMultiDecl12() {
         String contents = "def (x, y) = 1d\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1905,6 +2090,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    @Test
     public void testMultiDecl13() {
         String contents = "def (int x, float y) = [1,2]\nx\ny";
         int xStart = contents.lastIndexOf("x");
@@ -1914,6 +2100,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1174 groovy casting
+    @Test
     public void testAsExpression1() {
         String contents = "(1 as int).intValue()";
         int start = contents.lastIndexOf("intValue");
@@ -1921,6 +2108,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1174 groovy casting
+    @Test
     public void testAsExpression2() {
         String contents = "class Flar { int x\n }\n(null as Flar).x";
         int start = contents.lastIndexOf("x");
@@ -1928,6 +2116,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar1() {
         String contents = "class SettingUndeclaredProperty {\n" +
             "    public void mymethod() {\n" +
@@ -1939,6 +2128,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar2() {
         String contents = "class SettingUndeclaredProperty {\n" +
             "     def r = {\n" +
@@ -1950,6 +2140,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar3() {
         String contents =
             "doesNotExist";
@@ -1958,6 +2149,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar4() {
         String contents = "doesNotExist = 9";
         int start = contents.lastIndexOf("doesNotExist");
@@ -1965,6 +2157,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar5() {
         String contents =
             "doesNotExist = 9\n" +
@@ -1974,6 +2167,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar6() {
         String contents =
             "def x = {\n" +
@@ -1984,6 +2178,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // GRECLIPSE-1264
+    @Test
     public void testImplicitVar7() {
         String contents =
             "def z() {\n" +
@@ -1994,6 +2189,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // nested expressions of various forms
+    @Test
     public void testNested1() {
         String contents =
             "(true ? 2 : 7) + 9";
@@ -2001,6 +2197,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // nested expressions of various forms
+    @Test
     public void testNested2() {
         String contents =
             "(true ? 2 : 7) + (true ? 2 : 7)";
@@ -2008,6 +2205,7 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // nested expressions of various forms
+    @Test
     public void testNested3() {
         String contents =
             "(8 ?: 7) + (8 ?: 7)";
@@ -2015,12 +2213,14 @@ public final class InferencingTests extends AbstractInferencingTest {
     }
 
     // nested expressions of various forms
+    @Test
     public void testNested4() {
         createUnit("Foo", "class Foo { int prop }");
         String contents = "(new Foo().@prop) + (8 ?: 7)";
         assertType(contents, "java.lang.Integer");
     }
 
+    @Test
     public void testPostfix() {
         String contents =
             "int i = 0\n" +
@@ -2030,7 +2230,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, start +1, "java.lang.Integer");
     }
 
-    // GRECLIPSE-1302
+    @Test // GRECLIPSE-1302
     public void testNothingIsUnknown() {
         assertNoUnknowns(
             "1 > 4\n" +
@@ -2042,6 +2242,7 @@ public final class InferencingTests extends AbstractInferencingTest {
             "[1,9][0]");
     }
 
+    @Test
     public void testNothingIsUnknownWithCategories() {
         assertNoUnknowns(
             "class Me {\n" +
@@ -2066,11 +2267,12 @@ public final class InferencingTests extends AbstractInferencingTest {
             "new Me().meth()");
     }
 
-    // GRECLIPSE-1304
+    @Test // GRECLIPSE-1304
     public void testNoGString1() {
         assertNoUnknowns("'$'\n'${}\n'${a}'\n'$a'");
     }
 
+    @Test
     public void testClosureReferencesSuperClass() {
         assertNoUnknowns(
             "class MySuper {\n" +
@@ -2087,7 +2289,7 @@ public final class InferencingTests extends AbstractInferencingTest {
             "}");
     }
 
-    // GRECLIPSE-1341
+    @Test // GRECLIPSE-1341
     public void testDeclarationAtBeginningOfMethod() {
         String contents =
             "class Problem2 {\n" +
@@ -2102,6 +2304,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE1348() {
         String contents =
             "class A {\n" +
@@ -2114,6 +2317,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testGRECLIPSE1348a() {
         String contents =
             "class A {\n" +
@@ -2126,6 +2330,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "A");
     }
 
+    @Test
     public void testAnonInner1() {
         String contents = "def foo = new Runnable() { void run() {} }";
         int start = contents.lastIndexOf("Runnable");
@@ -2133,6 +2338,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Runnable");
     }
 
+    @Test
     public void testAnonInner2() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }";
         int start = contents.lastIndexOf("Comparable");
@@ -2140,6 +2346,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Comparable<java.lang.String>");
     }
 
+    @Test
     public void testAnonInner3() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo()} }";
         int start = contents.lastIndexOf("compareTo");
@@ -2147,6 +2354,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search$1");
     }
 
+    @Test
     public void testAnonInner4() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
             "foo.compareTo";
@@ -2155,6 +2363,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search$1");
     }
 
+    @Test
     public void testAnonInner5() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
             "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
@@ -2164,7 +2373,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search$2");
     }
 
-    // GRECLIPSE-1638
+    @Test // GRECLIPSE-1638
     public void testInstanceOf1() {
         String contents =
             "def m(Object obj) {\n" +
@@ -2192,6 +2401,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf1a() {
         String contents =
             "def m(Object obj) {\n" +
@@ -2219,8 +2429,10 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         String contents =
             "@groovy.transform.TypeChecked\n" +
             "def m(Object obj) {\n" +
@@ -2248,8 +2460,10 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf3() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "def m(Object obj) {\n" +
@@ -2277,6 +2491,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf4() {
         String contents =
             "def m(Object obj) {\n" +
@@ -2325,6 +2540,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf5() {
         String contents =
             "def val = new Object()\n" +
@@ -2360,6 +2576,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf6() {
         String contents =
             "def val = new Object()\n" +
@@ -2389,6 +2606,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf7() {
         String contents =
             "def val = new Object()\n" +
@@ -2419,6 +2637,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    @Test
     public void testInstanceOf8() {
         String contents =
             "def val = new Object()\n" +
@@ -2449,7 +2668,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
-    // GRECLIPSE-554
+    @Test // GRECLIPSE-554
     public void testMapEntries1() {
         String contents =
             "def map = [:]\n" +
@@ -2473,6 +2692,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    @Test
     public void testThisInInnerClass1() {
         String contents =
             "class A {\n" +
@@ -2490,7 +2710,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "A");
     }
 
-    // GRECLIPSE-1798
+    @Test // GRECLIPSE-1798
     public void testFieldAndPropertyWithSameName() {
         createJavaUnit("Wrapper",
             "public class Wrapper<T> {\n" +

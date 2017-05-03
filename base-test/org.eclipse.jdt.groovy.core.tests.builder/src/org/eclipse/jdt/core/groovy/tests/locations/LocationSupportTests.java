@@ -15,10 +15,10 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.LinkedList;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -32,9 +32,11 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.junit.Test;
 
-public final class LocationSupportTests extends TestCase {
+public final class LocationSupportTests {
 
+    @Test
     public void testLocationSupport() throws Exception {
         List<StringBuffer> sbuffers = new LinkedList<StringBuffer>();
         sbuffers.add(new StringBuffer("123\n"));
@@ -55,6 +57,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals("Wrong offset found", 10, locations.findOffset(3, 3));
     }
 
+    @Test
     public void testParserSourceLocationsBlock() throws Exception {
         String content = "def x = 7\n  x++\n  def y = []";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -76,6 +79,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals("def x = 7\n  x++\n  def y = []".length(), ((ASTNode) module.getStatementBlock().getStatements().get(2)).getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsEmpty() throws Exception {
         String content = "";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -89,6 +93,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(content.length(), module.getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsOneLine() throws Exception {
         String content = "def x = 7";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -106,6 +111,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsNewLine() throws Exception {
         String content = "def x = 7\n";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -123,6 +129,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals("def x = 7".length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsClass() throws Exception {
         String content = "class X {\n }";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -138,6 +145,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(content.length(), ((ASTNode) module.getClasses().get(0)).getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsMethod() throws Exception {
         String content = "def x() { \n\n\n\n\n\n\n}";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -155,6 +163,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(content.length(), ((ASTNode) module.getMethods().get(0)).getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsMethod2() throws Exception {
         String content = "def \"x   \"    () { \n\n\n\n\n\n\n}";
         SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
@@ -172,6 +181,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(content.length(), ((ASTNode) module.getMethods().get(0)).getEnd());
     }
 
+    @Test
     public void testParserSourceLocationsClassMethodStatement() throws Exception {
         String content = "def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }";
 
@@ -199,6 +209,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }".length(), ((ASTNode) module.getClasses().get(1)).getEnd());
     }
 
+    @Test
     public void testGRECLIPSE887_ImportStatements() throws Exception {
         String content = "import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*";
 
@@ -238,6 +249,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(module.getStarImports().get(1).getEnd() - 1, cud.imports[3].declarationSourceEnd);
     }
 
+    @Test
     public void testUnicodeEscapes1() throws Exception {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "def x = 7";
@@ -255,6 +267,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
 
+    @Test
     public void testUnicodeEscapes2() throws Exception {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "\n\n\ndef x = 7";
@@ -272,6 +285,7 @@ public final class LocationSupportTests extends TestCase {
         assertEquals(content.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getEnd());
     }
 
+    @Test
     public void testUnicodeEscapes3() throws Exception {
         String escapeSequence = "/*\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9*/";
         String content = escapeSequence + "\n\n\ndef /*\\u00E9*/x = /*\\u00E9*/7";

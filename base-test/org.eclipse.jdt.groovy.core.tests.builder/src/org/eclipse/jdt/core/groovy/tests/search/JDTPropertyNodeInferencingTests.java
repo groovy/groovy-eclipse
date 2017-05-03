@@ -15,24 +15,16 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import junit.framework.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests for PropertyNodes of JDTClassNodes.
  */
 public final class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
 
-    public static Test suite() {
-        return buildTestSuite(JDTPropertyNodeInferencingTests.class);
-    }
-
-    public JDTPropertyNodeInferencingTests(String name) {
-        super(name);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         createJavaUnit("JavaUnit",
                 "class JavaUnit {\n" +
                 "  int getFoo() { " +
@@ -44,32 +36,37 @@ public final class JDTPropertyNodeInferencingTests extends AbstractInferencingTe
                 "}");
     }
 
-    // this one is currently passing because it does not make any use of property nodes
+    @Test // this one is currently passing because it does not make any use of property nodes
     public void testNodeFromJava1() throws Exception {
         String contents = "def x = new JavaUnit()\nx";
         assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "JavaUnit");
     }
 
+    @Test
     public void testPropertyNodeFromJava1() throws Exception {
         String contents = "new JavaUnit().foo";
         assertType(contents,contents.lastIndexOf("foo"),contents.length(), "java.lang.Integer");
     }
 
+    @Test
     public void testPropertyNodeFromJava2() throws Exception {
         String contents = "def x = new JavaUnit().foo\nx";
         assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "java.lang.Integer");
     }
+
+    @Test
     public void testPropertyNodeFromJava3() throws Exception {
         String contents = "def x = new JavaUnit().javaUnit.foo\nx";
         assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "java.lang.Integer");
     }
+
+    @Test
     public void testPropertyNodeFromJava4() throws Exception {
         String contents = "def x = new JavaUnit()\nx.javaUnit.foo";
         assertType(contents, contents.lastIndexOf("foo"), contents.lastIndexOf("foo")+"foo".length(), "java.lang.Integer");
     }
 
-    // now test something slightly different.  Ensure that a reference to a property coming
-    // from a binary groovy file can have its generated getter and setter seen.
+    @Test // a property coming from a binary groovy file can have its generated getter and setter seen
     public void testPropertyNodeReferenceInBinary1() throws Exception {
         String contents = "new AGroovyClass().getProp1()";
         env.addJar(project.getFullPath(), "lib/test-groovy-project.jar");

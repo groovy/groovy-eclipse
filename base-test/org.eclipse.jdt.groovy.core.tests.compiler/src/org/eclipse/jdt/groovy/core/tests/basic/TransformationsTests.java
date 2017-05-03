@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.osgi.framework.Version;
@@ -319,7 +320,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     // not a great test, needs work
     public void testCategory_STS3822() {
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
+        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
 
         String[] sources = {
             "bad.groovy",

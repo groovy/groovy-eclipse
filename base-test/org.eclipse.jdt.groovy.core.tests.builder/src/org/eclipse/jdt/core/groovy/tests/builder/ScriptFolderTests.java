@@ -15,9 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import java.io.File;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import junit.framework.Test;
+import java.io.File;
 
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.core.resources.IFile;
@@ -38,50 +40,37 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.MockScriptFolderSelector;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector.FileKind;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests that the script folder handling works.
  */
-public final class ScriptFolderTests extends BuilderTests {
-
-    public ScriptFolderTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(ScriptFolderTests.class);
-    }
+public final class ScriptFolderTests extends BuilderTestSuite {
 
     private boolean origEnabled;
     private String origPatterns;
 
-    @Override
-    protected void setUp() throws Exception {
-        try {
-            super.setUp();
-        } finally {
-            origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-            origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        }
+    @Before
+    public void setUp() throws Exception {
+        origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            super.tearDown();
-        } finally {
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
-        }
+    @After
+    public void tearDown() throws Exception {
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
     }
 
+    @Test
     public void testScriptFolderDefaultSettings() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, true);
         assertScript("scripts/f/g/Foo.groovy", selector);
@@ -97,6 +86,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertSource("src/test/resources/Foo.java", selector);
     }
 
+    @Test
     public void testScriptFolderDefaultSettingsNoCopy() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"), true);
         assertScriptNoCopy("scripts/f/g/Foo.groovy", selector);
@@ -112,6 +102,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertSource("src/test/resources/Foo.java", selector);
     }
 
+    @Test
     public void testScriptFolderDisabled() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, false);
         assertSource("scripts/f/g/Foo.groovy", selector);
@@ -127,6 +118,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertSource("src/test/resources/Foo.java", selector);
     }
 
+    @Test
     public void testScriptFolderCustomSettings() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,y,scroo/**/*.groovy,n", true);
         assertScript("scri/f/g/Foo.groovy", selector);
@@ -134,7 +126,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertSource("src/test/resources/Foo.java", selector);
     }
 
-    // mostly ensure that nothing horrific happens
+    @Test // mostly ensure that nothing horrific happens
     public void testScriptFolderInvalidSettings() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector("scri/**/*.groovy,scroo/**/*.groovy,n", true);
         assertScriptNoCopy("scri/f/g/Foo.groovy", selector);
@@ -142,7 +134,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertSource("src/test/resources/Foo.java", selector);
     }
 
-    // now that we have tested the settings, let's test that scripts are handled correctly
+    @Test // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
@@ -151,6 +143,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertExists("Project/bin/Script.groovy");
     }
 
+    @Test
     public void testScriptInProjectNoCopy() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
@@ -159,6 +152,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertNoExists("Project/bin/Script.groovy");
     }
 
+    @Test
     public void testScriptInProjectDisabled() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
@@ -167,6 +161,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertNoExists("Project/bin/Script.groovy");
     }
 
+    @Test
     public void testSourceInProjectCompiled() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
@@ -176,7 +171,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertNoExists("Project/bin/Script.java");
     }
 
-    // This is the big test.
+    @Test // This is the big test.
     public void testComplexScriptFolderProject() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
@@ -209,7 +204,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
     }
 
-    // as above, but don't copy
+    @Test // as above, but don't copy
     public void testComplexScriptFolderProjectNoCopy() throws Exception {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
@@ -241,7 +236,7 @@ public final class ScriptFolderTests extends BuilderTests {
         assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
     }
 
-    // This is the big test.
+    @Test // This is the big test.
     public void testComplexScriptFolderProjectProjectSettings() throws Exception {
         IProject project = createPredefinedProject("ScriptFoldersProject");
         createPredefinedProject("ScriptFoldersProject2");

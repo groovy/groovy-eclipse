@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
-import org.eclipse.core.runtime.Platform
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.preference.IPreferenceStore
@@ -183,7 +183,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = "package f\n\ndef x(HTML"
         String expected = "package f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML"
         // deal with some variance in JDT Core adding first import between package and script body
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
             expected = expected.replace("\n\n\n", "\n\n")
         }
 
@@ -195,7 +195,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = "package f;\n\ndef x(HTML"
         String expected = "package f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML"
         // deal with some variance in JDT Core adding first import between package and script body
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
             expected = expected.replace("\n\n\n", "\n\n")
         }
 
@@ -207,7 +207,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML"
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML"
         // deal with some variance in JDT Core adding first import between package and script body
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
             expected = expected.replace("\n\n\n", "\n\n")
         }
 
@@ -219,7 +219,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = "/**some stuff*/\npackage f;\n\ndef x(HTML"
         String expected = "/**some stuff*/\npackage f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML"
         // deal with some variance in JDT Core adding first import between package and script body
-        if (Platform.getBundle("org.eclipse.jdt.core").getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
             expected = expected.replace("\n\n\n", "\n\n")
         }
 

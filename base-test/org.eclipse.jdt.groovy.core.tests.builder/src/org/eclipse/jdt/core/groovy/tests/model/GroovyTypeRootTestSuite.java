@@ -18,22 +18,12 @@ package org.eclipse.jdt.core.groovy.tests.model;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
+import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.tests.util.Util;
 
-public abstract class AbstractGroovyTypeRootTests extends BuilderTests {
+public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
 
-    public AbstractGroovyTypeRootTests(String name) {
-        super(name);
-    }
-
-    protected IFile getFile(String path) {
-        return ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(path));
-    }
-
-    protected IFile createProject(boolean isGroovy) throws JavaModelException {
+    protected final IFile createProject(boolean isGroovy) throws Exception {
         IPath projectPath = env.addProject("Project");
         if (!isGroovy) {
             env.removeGroovyNature("Project");
@@ -55,7 +45,7 @@ public abstract class AbstractGroovyTypeRootTests extends BuilderTests {
                 "      print \"Hello world\"\n"+
                 "   }\n"+
                 "}\n"
-                );
+            );
             fullBuild(projectPath);
 
             return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
@@ -64,15 +54,15 @@ public abstract class AbstractGroovyTypeRootTests extends BuilderTests {
         return ResourcesPlugin.getWorkspace().getRoot().getFile(root);
     }
 
-    protected IFile createSimpleGroovyProject() throws JavaModelException {
+    protected final IFile createSimpleGroovyProject() throws Exception {
         return createProject(true);
     }
 
-    protected IFile createSimpleJavaProject() throws JavaModelException {
+    protected final IFile createSimpleJavaProject() throws Exception {
         return createProject(false);
     }
 
-    protected IPath createEmptyGroovyProject() throws Exception {
+    protected final IPath createEmptyGroovyProject() throws Exception {
         IPath projectPath = env.addProject("Project", "1.5");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -86,7 +76,7 @@ public abstract class AbstractGroovyTypeRootTests extends BuilderTests {
         return root;
     }
 
-    protected IPath createAnnotationGroovyProject() throws Exception {
+    protected final IPath createAnnotationGroovyProject() throws Exception {
         IPath root = createEmptyGroovyProject();
 
         env.addClass(root, "p", "Anno1.java",

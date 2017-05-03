@@ -15,22 +15,15 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import junit.framework.Test;
+import org.junit.Test;
 
 /**
  * Tests for synthetic accessor type inferencing.
  */
 public final class SyntheticAccessorInferencingTests extends AbstractInferencingTest {
 
-    public static Test suite() {
-        return buildTestSuite(SyntheticAccessorInferencingTests.class);
-    }
-
-    public SyntheticAccessorInferencingTests(String name) {
-        super(name);
-    }
-
-    public void testSyntheticAccessors1() throws Exception {
+    @Test
+    public void testSyntheticAccessors() throws Exception {
         String contents =
                 "// yes underlines and no content assist\n" +
                 "String getProperty1(param){}\n" +

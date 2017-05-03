@@ -15,6 +15,10 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +32,9 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Test;
 
 /**
  * These tests are about building and working with complete projects.
@@ -49,15 +52,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  * <p>
  * Once setup like that it is usable for testing here.
  */
-public final class FullProjectTests extends BuilderTests {
-
-    public static junit.framework.Test suite() {
-        return buildTestSuite(FullProjectTests.class);
-    }
-
-    public FullProjectTests(String name) {
-        super(name);
-    }
+public final class FullProjectTests extends BuilderTestSuite {
 
     private static void assertDoesNotContainMethod(ClassNode cn, String methodname) {
         for (MethodNode mn : cn.getMethods()) {
@@ -93,7 +88,7 @@ public final class FullProjectTests extends BuilderTests {
 
     //--------------------------------------------------------------------------
 
-    // Transforms during reconciling tests
+    @Test // Transforms during reconciling tests
     public void testReconcilingWithTransforms_notransformallowed() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -126,8 +121,10 @@ public final class FullProjectTests extends BuilderTests {
         assertDoesNotContainMethod(cn, "getInstance");
     }
 
+    @Test
     public void testReconcilingWithTransforms_singletonallowed() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -156,8 +153,10 @@ public final class FullProjectTests extends BuilderTests {
         assertContainsMethod(cn, "getInstance");
     }
 
+    @Test
     public void testReconcilingWithTransforms_singletonallowedspecialchar() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -186,6 +185,7 @@ public final class FullProjectTests extends BuilderTests {
         assertContainsMethod(cn, "getInstance");
     }
 
+    @Test
     public void testReconcilingWithTransforms_multipleButOnlyOneAllowed() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -220,6 +220,7 @@ public final class FullProjectTests extends BuilderTests {
         assertDoesNotContainMethod(cn, "method");
     }
 
+    @Test
     public void testReconcilingWithTransforms_multipleAndBothAllowed() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -254,8 +255,10 @@ public final class FullProjectTests extends BuilderTests {
         assertContainsMethod(cn, "method");
     }
 
+    @Test
     public void testReconcilingWithTransforms_compileStatic() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -280,10 +283,10 @@ public final class FullProjectTests extends BuilderTests {
         assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
     }
 
+    @Test
     public void testReconcilingWithTransforms_typeChecked() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -309,6 +312,7 @@ public final class FullProjectTests extends BuilderTests {
         assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
     }
 
+    @Test
     public void testReconcilingWithTransforms_multipleAndWildcard() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());

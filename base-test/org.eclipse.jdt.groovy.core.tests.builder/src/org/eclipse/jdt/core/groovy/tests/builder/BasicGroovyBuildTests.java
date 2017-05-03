@@ -15,12 +15,20 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
+
 import java.io.File;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -43,7 +51,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -51,19 +58,19 @@ import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
+import org.junit.After;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.osgi.framework.Version;
 
 /**
  * Basic tests for the builder - compiling and running some very simple java and groovy code
  */
-public final class BasicGroovyBuildTests extends BuilderTests {
+public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
-    public BasicGroovyBuildTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(BasicGroovyBuildTests.class);
+    @After
+    public void tearDown() {
+        JDTResolver.recordInstances = false;
     }
 
     private static MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
@@ -86,11 +93,11 @@ public final class BasicGroovyBuildTests extends BuilderTests {
     private static void compareParameterArrays(Parameter[] jps, Parameter[] ps, int d) {
         if (ps == null) {
             if (jps != null) {
-                fail("Expected null parameters but was " + arrayToString(jps));
+                fail("Expected null parameters but was " + Arrays.toString(jps));
             }
         } else {
             if (ps.length != jps.length) {
-                fail("Expected same number of parameters, should be " + arrayToString(ps) + " but was " + arrayToString(jps));
+                fail("Expected same number of parameters, should be " + Arrays.toString(ps) + " but was " + Arrays.toString(jps));
             }
             for (int p = 0; p < ps.length; p++) {
                 System.out.println("Comparing parameters jp=" + jps[p] + " p=" + ps[p]);
@@ -113,11 +120,11 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         GenericsType[] gt_jcn = jcn.getGenericsTypes();
         if (gt_cn == null) {
             if (gt_jcn != null) {
-                fail("Should have been null but was " + arrayToString(gt_jcn));
+                fail("Should have been null but was " + Arrays.toString(gt_jcn));
             }
         } else {
             if (gt_jcn == null) {
-                fail("Did not expect genericstypes to be null, should be " + arrayToString(gt_cn));
+                fail("Did not expect genericstypes to be null, should be " + Arrays.toString(gt_cn));
             }
             assertNotNull(gt_jcn);
             assertEquals(gt_cn.length, gt_jcn.length);
@@ -145,14 +152,14 @@ public final class BasicGroovyBuildTests extends BuilderTests {
     }
 
     private static void compareUpperBounds(ClassNode[] jcnlist, ClassNode[] cnlist, int d) {
-        System.out.println("Comparing upper bounds: jcn=" + arrayToString(jcnlist) + " cn=" + arrayToString(cnlist));
+        System.out.println("Comparing upper bounds: jcn=" + Arrays.toString(jcnlist) + " cn=" + Arrays.toString(cnlist));
         if (cnlist == null) {
             if (jcnlist != null) {
-                fail("Should be null but is " + arrayToString(jcnlist));
+                fail("Should be null but is " + Arrays.toString(jcnlist));
             }
         } else {
             if (jcnlist == null) {
-                fail("Array not expected to be null, should be " + arrayToString(cnlist));
+                fail("Array not expected to be null, should be " + Arrays.toString(cnlist));
             }
             assertEquals(cnlist.length, cnlist.length);
             for (int i = 0; i < cnlist.length; i++) {
@@ -181,6 +188,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
      * Testing that the classpath computation works for multi dependent
      * projects. This classpath will be used for the ast transform loader.
      */
+    @Test
     public void testMultiProjectDependenciesAndAstTransformClasspath() throws Exception {
 
         // Construct ProjectA
@@ -213,10 +221,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 + "      System.out.println(\"Hello world\");\n" + "   }\n"
                 + "}\n");
 
-        env.addRequiredProject(projectBPath, projectAPath, new IPath[] {}/*
-                                                                         * include
-                                                                         * all
-                                                                         */,
+        env.addRequiredProject(projectBPath, projectAPath, new IPath[] {}/* include all */,
                 new IPath[] {}/* exclude none */, true);
 
         // Construct ProjectC
@@ -233,10 +238,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 + "   public static void main(String[] args) {\n"
                 + "      System.out.println(\"Hello world\");\n" + "   }\n"
                 + "}\n");
-        env.addRequiredProject(projectCPath, projectBPath, new IPath[] {}/*
-                                                                         * include
-                                                                         * all
-                                                                         */,
+        env.addRequiredProject(projectCPath, projectBPath, new IPath[] {}/* include all */,
                 new IPath[] {}/* exclude none */, true);
 
         // Construct ProjectD
@@ -253,10 +255,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 + "   public static void main(String[] args) {\n"
                 + "      System.out.println(\"Hello world\");\n" + "   }\n"
                 + "}\n");
-        env.addRequiredProject(projectDPath, projectCPath, new IPath[] {}/*
-                                                                         * include
-                                                                         * all
-                                                                         */,
+        env.addRequiredProject(projectDPath, projectCPath, new IPath[] {}/* include all */,
                 new IPath[] {}/* exclude none */, true);
 
         // incrementalBuild(projectAPath);
@@ -269,8 +268,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
 //		executeClass(projectDPath, "p1.Hello", "Hello world", "");
 
-        String classpathForProjectD = CompilerUtils.calculateClasspath(env
-                .getJavaProject(projectDPath));
+        String classpathForProjectD = CompilerUtils.calculateClasspath(env.getJavaProject(projectDPath));
 
         StringTokenizer st = new StringTokenizer(classpathForProjectD,
                 File.pathSeparator);
@@ -339,6 +337,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         // System.out.println(">>"+classpathForProjectD);
     }
 
+    @Test
     public void testBuildJavaHelloWorld() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -359,9 +358,9 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello world", "");
-
     }
 
+    @Test
     public void testGenericsDefaultParams_1717() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -392,6 +391,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testNPEAnno_1398() throws Exception {
         IPath projectPath = env.addProject("Project", "1.5");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -422,178 +422,170 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingCompiledClasses("A");
     }
 
-    public void _testCompileStatic_1505() throws Exception {
-        try {
-            if (GroovyUtils.GROOVY_LEVEL < 20) {
-                return;
-            }
-            IPath projectPath = env.addProject("Project","1.6");
-            env.addExternalJars(projectPath, Util.getJavaClassLibs());
-            env.addGroovyJars(projectPath);
-            fullBuild(projectPath);
-            // remove old package fragment root so that names don't collide
-            env.removePackageFragmentRoot(projectPath, "");
+    @Test @Ignore
+    public void testCompileStatic_1505() throws Exception {
+        assumeTrue(isAtLeastGroovy(20));
 
-            IPath root = env.addPackageFragmentRoot(projectPath, "src");
-            env.setOutputFolder(projectPath, "bin");
+        IPath projectPath = env.addProject("Project","1.6");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
 
-            JDTResolver.recordInstances = true;
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-            env.addGroovyClass(root, "", "Foo",
-                    "import groovy.transform.CompileStatic\n"+
-                    "@CompileStatic\n"+
-                    "void method(String message) {\n"+
-                    "   Collection<Integer> cs;\n"+
+        JDTResolver.recordInstances = true;
+
+        env.addGroovyClass(root, "", "Foo",
+                "import groovy.transform.CompileStatic\n"+
+                "@CompileStatic\n"+
+                "void method(String message) {\n"+
+                "   Collection<Integer> cs;\n"+
 //					"   List<Integer> ls = new ArrayList<Integer>();\n"+
 //					"   ls.add(123);\n"+
 //					"   ls.add('abc');\n"+
-                    // GRECLIPSE-1511 code
-                    "	List<String> second = []\n"+
-                    "	List<String> artefactResources2\n"+
-                    "	second.addAll(artefactResources2)\n"+
-                    "}\n"
+                // GRECLIPSE-1511 code
+                "	List<String> second = []\n"+
+                "	List<String> artefactResources2\n"+
+                "	second.addAll(artefactResources2)\n"+
+                "}\n"
 //					"interface List2<E> extends Collection<E> {\n"+
 //					"  boolean add(E e);\n" +
 //					"}"
-                    );
+                );
 
-            incrementalBuild(projectPath);
+        incrementalBuild(projectPath);
 //			expectingCompiledClasses("Foo","List2");
-            expectingNoProblems();
+        expectingNoProblems();
 
-            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
 
-            // Access the jdtresolver bits and pieces
+        // Access the jdtresolver bits and pieces
 
-            JDTClassNode jcn = JDTResolver.getCachedNode("java.util.Collection<E>");
+        JDTClassNode jcn = JDTResolver.getCachedNode("java.util.Collection<E>");
 
-            assertNotNull(jcn);
-            System.out.println("JDT ClassNode="+jcn);
+        assertNotNull(jcn);
+        System.out.println("JDT ClassNode="+jcn);
 //			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
 //			System.out.println(jcn2);
 
-            ClassNode listcn = new ClassNode(java.util.Collection.class);
-            VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
-            listcn.lazyClassInit();
-            System.out.println("Groovy ClassNode="+listcn);
+        ClassNode listcn = new ClassNode(java.util.Collection.class);
+        VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
+        listcn.lazyClassInit();
+        System.out.println("Groovy ClassNode="+listcn);
 
 //			IJavaProject ijp = env.getJavaProject("Project");
 //			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
 //					.getCompilationUnit();
 
-            // now find the class reference
+        // now find the class reference
 //			ClassNode cn = unit.getModuleNode().getClasses().get(1);
 //			System.out.println(cn);
 
-            // Compare java.util.List from JDTClassNode and List2 from groovy
-            compareClassNodes(jcn.redirect(),listcn.redirect(),0);
-            MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
-            MethodNode rmn = getMethodNode(listcn,"add",1);
-            compareMethodNodes(jmn,rmn);
+        // Compare java.util.List from JDTClassNode and List2 from groovy
+        compareClassNodes(jcn.redirect(),listcn.redirect(),0);
+        MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
+        MethodNode rmn = getMethodNode(listcn,"add",1);
+        compareMethodNodes(jmn,rmn);
 
-            jmn = getMethodNode(jcn,"addAll",1);
-            rmn = getMethodNode(listcn,"addAll",1);
-            compareMethodNodes(jmn,rmn);
+        jmn = getMethodNode(jcn,"addAll",1);
+        rmn = getMethodNode(listcn,"addAll",1);
+        compareMethodNodes(jmn,rmn);
 
-            // Want to compare type information in the
-            // env.addClass(root, "", "Client", "public class Client {\n"
-            // + "  { new Outer.Inner(); }\n" + "}\n");
-            // incrementalBuild(projectPath);
-            // expectingNoProblems();
-            // expectingCompiledClasses("Client");
-        } finally {
-            JDTResolver.recordInstances = false;
-        }
+        // Want to compare type information in the
+        // env.addClass(root, "", "Client", "public class Client {\n"
+        // + "  { new Outer.Inner(); }\n" + "}\n");
+        // incrementalBuild(projectPath);
+        // expectingNoProblems();
+        // expectingCompiledClasses("Client");
     }
 
-    public void _testCompileStatic_1506() throws Exception {
-        try {
-            if (GroovyUtils.GROOVY_LEVEL < 20) {
-                return;
-            }
-            IPath projectPath = env.addProject("Project","1.6");
-            env.addExternalJars(projectPath, Util.getJavaClassLibs());
-            env.addGroovyJars(projectPath);
-            fullBuild(projectPath);
-            // remove old package fragment root so that names don't collide
-            env.removePackageFragmentRoot(projectPath, "");
+    @Test @Ignore
+    public void testCompileStatic_1506() throws Exception {
+        assumeTrue(isAtLeastGroovy(20));
 
-            IPath root = env.addPackageFragmentRoot(projectPath, "src");
-            env.setOutputFolder(projectPath, "bin");
+        IPath projectPath = env.addProject("Project","1.6");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
 
-            JDTResolver.recordInstances = true;
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-            env.addGroovyClass(root, "", "Foo",
-                    "import groovy.transform.CompileStatic\n"+
-                    "@CompileStatic\n"+
-                    "void method(String message) {\n"+
-                    "   Collection<Integer> cs;\n"+
+        JDTResolver.recordInstances = true;
+
+        env.addGroovyClass(root, "", "Foo",
+                "import groovy.transform.CompileStatic\n"+
+                "@CompileStatic\n"+
+                "void method(String message) {\n"+
+                "   Collection<Integer> cs;\n"+
 //					"   List<Integer> ls = new ArrayList<Integer>();\n"+
 //					"   ls.add(123);\n"+
 //					"   ls.add('abc');\n"+
-                    // GRECLIPSE-1511 code
-                    "	List<String> second = []\n"+
-                    "	List<String> artefactResources2\n"+
-                    "	second.addAll(artefactResources2)\n"+
-                    "}\n"+
-                    "interface ListOfFile extends ArrayList<File> {\n"+
-                    "}"
-                    );
+                // GRECLIPSE-1511 code
+                "	List<String> second = []\n"+
+                "	List<String> artefactResources2\n"+
+                "	second.addAll(artefactResources2)\n"+
+                "}\n"+
+                "interface ListOfFile extends ArrayList<File> {\n"+
+                "}"
+                );
 
-            incrementalBuild(projectPath);
+        incrementalBuild(projectPath);
 //			expectingCompiledClasses("Foo","List2");
-            expectingNoProblems();
+        expectingNoProblems();
 
-            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
 
-            // Access the jdtresolver bits and pieces
+        // Access the jdtresolver bits and pieces
 
-            JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
+        JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
 
-            assertNotNull(jcn);
-            System.out.println("JDT ClassNode="+jcn);
+        assertNotNull(jcn);
+        System.out.println("JDT ClassNode="+jcn);
 //			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
 //			System.out.println(jcn2);
 
 //			List<File> C = new ArrayList<File>();
-            ClassNode listcn = new ClassNode(java.util.Collection.class);
-            VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
-            listcn.lazyClassInit();
-            System.out.println("Groovy ClassNode="+listcn);
+        ClassNode listcn = new ClassNode(java.util.Collection.class);
+        VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
+        listcn.lazyClassInit();
+        System.out.println("Groovy ClassNode="+listcn);
 
 //			IJavaProject ijp = env.getJavaProject("Project");
 //			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
 //					.getCompilationUnit();
 
-            // now find the class reference
+        // now find the class reference
 //			ClassNode cn = unit.getModuleNode().getClasses().get(1);
 //			System.out.println(cn);
 
-            // Compare java.util.List from JDTClassNode and List2 from groovy
-            compareClassNodes(jcn.redirect(),listcn.redirect(),0);
-            MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
-            MethodNode rmn = getMethodNode(listcn,"add",1);
-            compareMethodNodes(jmn,rmn);
+        // Compare java.util.List from JDTClassNode and List2 from groovy
+        compareClassNodes(jcn.redirect(),listcn.redirect(),0);
+        MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
+        MethodNode rmn = getMethodNode(listcn,"add",1);
+        compareMethodNodes(jmn,rmn);
 
-            jmn = getMethodNode(jcn,"addAll",1);
-            rmn = getMethodNode(listcn,"addAll",1);
-            compareMethodNodes(jmn,rmn);
+        jmn = getMethodNode(jcn,"addAll",1);
+        rmn = getMethodNode(listcn,"addAll",1);
+        compareMethodNodes(jmn,rmn);
 
-            // Want to compare type information in the
-            // env.addClass(root, "", "Client", "public class Client {\n"
-            // + "  { new Outer.Inner(); }\n" + "}\n");
-            // incrementalBuild(projectPath);
-            // expectingNoProblems();
-            // expectingCompiledClasses("Client");
-        } finally {
-            JDTResolver.recordInstances = false;
-        }
+        // Want to compare type information in the
+        // env.addClass(root, "", "Client", "public class Client {\n"
+        // + "  { new Outer.Inner(); }\n" + "}\n");
+        // incrementalBuild(projectPath);
+        // expectingNoProblems();
+        // expectingCompiledClasses("Client");
     }
 
+    @Test
     public void testCompileStatic_ArrayArray() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -629,167 +621,152 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingCompiledClasses("IChooseImportQuery","ISourceRange","NoChoiceQuery","TypeNameMatch");
     }
 
+    @Test
     public void testCompileStatic_FileAddAll() throws Exception {
-        try {
-            if (GroovyUtils.GROOVY_LEVEL < 20) {
-                return;
-            }
-            IPath projectPath = env.addProject("Project","1.6");
-            env.addExternalJars(projectPath, Util.getJavaClassLibs());
-            env.addGroovyJars(projectPath);
-            fullBuild(projectPath);
-            // remove old package fragment root so that names don't collide
-            env.removePackageFragmentRoot(projectPath, "");
+        assumeTrue(isAtLeastGroovy(20));
 
-            IPath root = env.addPackageFragmentRoot(projectPath, "src");
-            env.setOutputFolder(projectPath, "bin");
+        IPath projectPath = env.addProject("Project","1.6");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
 
-            JDTResolver.recordInstances = true;
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-            env.addGroovyClass(root, "", "Foo",
-                    "import groovy.transform.CompileStatic\n"+
-                    "@CompileStatic\n"+
-                    "class Foo {\n"+
-                    "List<String> jvmArgs = new ArrayList<String>();\n"+
-                    " void method(String message) {\n"+
-                    "   List<String> cmd = ['java'];\n"+
-                    "	cmd.addAll(jvmArgs);\n"+
-                    " }\n"+
-                    "}\n"
-                    );
+        JDTResolver.recordInstances = true;
 
-            incrementalBuild(projectPath);
-            expectingNoProblems();
-            expectingCompiledClasses("Foo");
+        env.addGroovyClass(root, "", "Foo",
+                "import groovy.transform.CompileStatic\n"+
+                "@CompileStatic\n"+
+                "class Foo {\n"+
+                "List<String> jvmArgs = new ArrayList<String>();\n"+
+                " void method(String message) {\n"+
+                "   List<String> cmd = ['java'];\n"+
+                "	cmd.addAll(jvmArgs);\n"+
+                " }\n"+
+                "}\n"
+                );
 
-            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-        } finally {
-            JDTResolver.recordInstances = false;
-        }
+        incrementalBuild(projectPath);
+        expectingNoProblems();
+        expectingCompiledClasses("Foo");
+
+        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
     }
 
+    @Test
     public void testCompileStatic_ListFileArgIteratedOver() throws Exception {
-        try {
-            if (GroovyUtils.GROOVY_LEVEL < 20) {
-                return;
-            }
-            IPath projectPath = env.addProject("Project","1.6");
-            env.addExternalJars(projectPath, Util.getJavaClassLibs());
-            env.addGroovyJars(projectPath);
-            fullBuild(projectPath);
-            // remove old package fragment root so that names don't collide
-            env.removePackageFragmentRoot(projectPath, "");
+        assumeTrue(isAtLeastGroovy(20));
 
-            IPath root = env.addPackageFragmentRoot(projectPath, "src");
-            env.setOutputFolder(projectPath, "bin");
+        IPath projectPath = env.addProject("Project","1.6");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
 
-            JDTResolver.recordInstances = true;
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-            env.addGroovyClass(root, "", "Foo",
-                    "import groovy.transform.CompileStatic\n"+
-                    "class Foo {\n"+
-                    "@CompileStatic\n"+
-                    "private populateSourceDirectories() {\n"+
-                    "	List<File> pluginDependencies\n"+
-                    "  for (zip in pluginDependencies) {\n"+
-                    "    registerPluginZipWithScope(zip);\n"+
-                    "  }\n"+
-                    "}\n"+
-                    "private void registerPluginZipWithScope(File pluginzip) {}\n"+
-                    "}\n"
-                    );
+        JDTResolver.recordInstances = true;
 
-            incrementalBuild(projectPath);
-            expectingNoProblems();
-            expectingCompiledClasses("Foo");
+        env.addGroovyClass(root, "", "Foo",
+                "import groovy.transform.CompileStatic\n"+
+                "class Foo {\n"+
+                "@CompileStatic\n"+
+                "private populateSourceDirectories() {\n"+
+                "	List<File> pluginDependencies\n"+
+                "  for (zip in pluginDependencies) {\n"+
+                "    registerPluginZipWithScope(zip);\n"+
+                "  }\n"+
+                "}\n"+
+                "private void registerPluginZipWithScope(File pluginzip) {}\n"+
+                "}\n"
+                );
 
-            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-        } finally {
-            JDTResolver.recordInstances = false;
-        }
+        incrementalBuild(projectPath);
+        expectingNoProblems();
+        expectingCompiledClasses("Foo");
+
+        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
     }
 
+    @Test
     public void testCompileStatic_IterableParameter() throws Exception {
-        try {
-            if (GroovyUtils.GROOVY_LEVEL < 20) {
-                return;
-            }
-            IPath projectPath = env.addProject("Project","1.6");
-            env.addExternalJars(projectPath, Util.getJavaClassLibs());
-            env.addGroovyJars(projectPath);
-            fullBuild(projectPath);
-            // remove old package fragment root so that names don't collide
-            env.removePackageFragmentRoot(projectPath, "");
+        assumeTrue(isAtLeastGroovy(20));
 
-            IPath root = env.addPackageFragmentRoot(projectPath, "src");
-            env.setOutputFolder(projectPath, "bin");
+        IPath projectPath = env.addProject("Project","1.6");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
 
-            JDTResolver.recordInstances = true;
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-            env.addGroovyClass(root, "", "Foo",
-                    "import groovy.transform.CompileStatic\n"+
-                    "@CompileStatic\n"+
-                    "class Foo {\n"+
-                    "private populateSourceDirectories() {\n"+
-                    "	List<File> pluginDependencies\n"+
-                    "   foo(pluginDependencies);\n"+
-                    "}\n"+
-                    "private void foo(Iterable<File> iterable) {}\n"+
-                    "}\n"
-                    );
+        JDTResolver.recordInstances = true;
 
-            incrementalBuild(projectPath);
-            expectingNoProblems();
-            expectingCompiledClasses("Foo");
+        env.addGroovyClass(root, "", "Foo",
+                "import groovy.transform.CompileStatic\n"+
+                "@CompileStatic\n"+
+                "class Foo {\n"+
+                "private populateSourceDirectories() {\n"+
+                "	List<File> pluginDependencies\n"+
+                "   foo(pluginDependencies);\n"+
+                "}\n"+
+                "private void foo(Iterable<File> iterable) {}\n"+
+                "}\n"
+                );
 
-            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-        } finally {
-            JDTResolver.recordInstances = false;
-        }
+        incrementalBuild(projectPath);
+        expectingNoProblems();
+        expectingCompiledClasses("Foo");
+
+        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
     }
 
+    @Test
     public void testCompileStatic_BuildSettings() throws Exception {
-        try {
-            if (GroovyUtils.GROOVY_LEVEL < 20) {
-                return;
-            }
-            IPath projectPath = env.addProject("Project","1.6");
-            env.addExternalJars(projectPath, Util.getJavaClassLibs());
-            env.addGroovyJars(projectPath);
-            fullBuild(projectPath);
-            // remove old package fragment root so that names don't collide
-            env.removePackageFragmentRoot(projectPath, "");
+        assumeTrue(isAtLeastGroovy(20));
 
-            IPath root = env.addPackageFragmentRoot(projectPath, "src");
-            env.setOutputFolder(projectPath, "bin");
+        IPath projectPath = env.addProject("Project","1.6");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        fullBuild(projectPath);
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
 
-            JDTResolver.recordInstances = true;
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-            env.addGroovyClass(root, "", "BuildSettings",
-                    "import groovy.transform.CompileStatic\n"+
-                    "\n"+
-                    "class BuildSettings  {\n"+
-                    "\n"+
-                    "   List<File> compileDependencies = []\n"+
-                    "	List<File> defaultCompileDependencies = []\n"+
-                    "\n"+
-                    "    @CompileStatic\n"+
-                    "    void getCompileDependencies() {\n"+
-                    "        compileDependencies += defaultCompileDependencies\n"+
-                    "    }\n"+
-                    "\n"+
-                    "}\n");
+        JDTResolver.recordInstances = true;
 
-            incrementalBuild(projectPath);
-            expectingNoProblems();
-            expectingCompiledClasses("BuildSettings");
+        env.addGroovyClass(root, "", "BuildSettings",
+                "import groovy.transform.CompileStatic\n"+
+                "\n"+
+                "class BuildSettings  {\n"+
+                "\n"+
+                "   List<File> compileDependencies = []\n"+
+                "	List<File> defaultCompileDependencies = []\n"+
+                "\n"+
+                "    @CompileStatic\n"+
+                "    void getCompileDependencies() {\n"+
+                "        compileDependencies += defaultCompileDependencies\n"+
+                "    }\n"+
+                "\n"+
+                "}\n");
 
-            // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-        } finally {
-            JDTResolver.recordInstances = false;
-        }
+        incrementalBuild(projectPath);
+        expectingNoProblems();
+        expectingCompiledClasses("BuildSettings");
+
+        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
     }
 
+    @Test
     public void testInners_983() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -818,10 +795,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testCompileStatic() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -855,11 +832,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
-    // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
+    @Test // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
     public void testCompileStatic2() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -895,10 +871,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testCompileStatic3() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -922,10 +898,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingCompiledClasses("Foo");
     }
 
+    @Test
     public void testCompileStatic_MapEachClosure() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(20));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -954,6 +930,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void test1167() throws Exception {
         IPath projectPath = env.addProject("Project", "1.5");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1005,7 +982,8 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
-    public void _testScriptSupport() throws Exception {
+    @Test @Ignore
+    public void testScriptSupport() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -1031,6 +1009,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testTypeDuplication_GRE796_1() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1074,6 +1053,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         }
     }
 
+    @Test
     public void testTypeDuplication_GRE796_2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1117,7 +1097,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         }
     }
 
-    // script has no package statement
+    @Test // script has no package statement
     public void testClashingPackageAndType_1214() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1145,6 +1125,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "xyz", "abc", null);
     }
 
+    @Test
     public void testSlowAnotherAttempt_GRE870() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1717,6 +1698,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testSlow_GRE870() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1753,6 +1735,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testReallySlow_GRE870() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1830,6 +1813,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testClosureBasics() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1858,6 +1842,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "Coroutine", "246", "");
     }
 
+    @Test
     public void testPackageNames_GRE342_1() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1876,12 +1861,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
         incrementalBuild(projectPath);
 
-        expectingOnlySpecificProblemFor(
-                path,
-                new Problem(
-                        "p/X", "The declared package \"q\" does not match the expected package \"p\"", path, 8, 9, 60, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(path, new Problem("p/X", "The declared package \"q\" does not match the expected package \"p\"", path, 8, 9, 60, IMarker.SEVERITY_ERROR));
     }
 
+    @Test
     public void testPackageNames_GRE342_2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1895,17 +1878,14 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         env.setOutputFolder(projectPath, "bin");
 
         // q.X declared in p.X
-        IPath path = env.addGroovyClass(root, "p.q.r", "X", "package p.s.r.q\n"
-                + "class X {}");
+        IPath path = env.addGroovyClass(root, "p.q.r", "X", "package p.s.r.q\n" + "class X {}");
 
         incrementalBuild(projectPath);
 
-        expectingOnlySpecificProblemFor(
-                path,
-                new Problem(
-                        "p/q/r/X", "The declared package \"p.s.r.q\" does not match the expected package \"p.q.r\"", path, 8, 15, 60, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(path, new Problem("p/q/r/X", "The declared package \"p.s.r.q\" does not match the expected package \"p.q.r\"", path, 8, 15, 60, IMarker.SEVERITY_ERROR));
     }
 
+    @Test
     public void testPackageNames_GRE342_3() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -1927,16 +1907,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "X", "abc", "");
     }
 
+    @Test
     public void testAnnotationCollectorMultiProject() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            System.out.println("Skipping test. Need groovy 2.2 or above");
-            return;
-        }
-        Version version = JavaCore.getPlugin().getBundle().getVersion();
-        if (version.compareTo(new Version("3.9.50"))<0) {
-            System.out.println("Skipping test. Need greclipse for e43j8 or above");
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(21));
+        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version("3.9.50")) >= 0);
 
         // Construct 'annotation' project that defines annotation using 'AnnotationsCollector'
         IPath annotationProject = env.addProject("annotation");
@@ -1977,14 +1951,14 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         );
 
         fullBuild();
-        expectedCompiledClassCount(2);
+        expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.Widget");
         expectingNoProblems();
     }
 
+    @Test
     public void testAnnotationCollectorIncremental() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(21));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -2051,6 +2025,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "Book", "@NotNull()\n@Length()\n", "");
     }
 
+    @Test
     public void testClosureIncremental() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2129,6 +2104,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
     }
 
     /** Verify the processing in ASTTransformationCollectorCodeVisitor - to check it finds everything it expects. */
+    @Test
     public void testSpock_GRE558() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2174,6 +2150,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
      * being looked at here is that the incremental change is not directly to a
      * transformed file but to a file referenced from a transformed file.
      */
+    @Test
     public void testSpock_GRE605_1() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2228,6 +2205,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
      * changed. I am not 100% sure if one is needed or not - possibly it is...
      * hmmm
      */
+    @Test
     public void testSpock_GRE605_2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2273,7 +2251,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         // assertEquals(filesize,filesizeNow);
     }
 
-    // build .groovy file hello world then run it
+    @Test // build .groovy file hello world then run it
     public void testBuildGroovyHelloWorld() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2296,7 +2274,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
     }
 
-    // use funky main method
+    @Test // use funky main method
     public void testBuildGroovyHelloWorld2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2319,6 +2297,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
     }
 
+    @Test
     public void testGenericMethods() throws Exception {
         IPath projectPath = env.addProject("Project", "1.5");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2344,6 +2323,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testPropertyAccessorLocationChecks() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2374,6 +2354,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         // System.out.println(cu);
     }
 
+    @Test
     public void testBuildGroovy2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2394,6 +2375,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testLargeProjects_GRE1037() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2436,6 +2418,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         }
     }
 
+    @Test
     public void testIncrementalCompilationTheBasics() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2485,6 +2468,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testIncrementalCompilation1594() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2558,6 +2542,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testIncrementalGenericsAndBinaryTypeBindings_GRE566() throws Exception {
         IPath projectPath = env.addProject("GRE566", "1.5");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2600,6 +2585,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingCompiledClasses("pkg.GExtender");
     }
 
+    @Test
     public void testIncrementalCompilationTheBasics2_changingJavaDependedUponByGroovy() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2650,6 +2636,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testInnerClasses_GRE339() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -2683,6 +2670,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
+    @Test
     public void testSimpleTaskMarkerInSingleLineComment() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2714,16 +2702,13 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                     + rootProblems[i].getMessage() + "]"
                     + rootProblems[i].getEnd());
         }
-        // positions should be from the first character of the tag to the
-        // character after the last in the text
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem(
-                        "A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
+        // positions should be from the first character of the tag to the character after the last in the text
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testSimpleTaskMarkerInSingleLineCommentEndOfClass() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2749,14 +2734,12 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
         fullBuild(projectPath);
 
-        //Problem[] rootProblems = env.getProblemsFor(pathToA);
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem("A", toTask("todo", "two"), pathToA, 40, 48, -1, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "two"), pathToA, 40, 48, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testSimpleTaskMarkerInSingleLineCommentEndOfClassCaseInsensitive() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2789,14 +2772,12 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                     + rootProblems[i].getMessage() + "]"
                     + rootProblems[i].getEnd());
         }
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem(
-                        "A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 24, 36, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testTaskMarkerInMultiLineCommentButOnOneLine() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2822,19 +2803,12 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
         fullBuild(projectPath);
 
-        Problem[] rootProblems = env.getProblemsFor(pathToA);
-        for (int i = 0; i < rootProblems.length; i++) {
-            System.out.println(i + "  " + rootProblems[i] + "["
-                    + rootProblems[i].getMessage() + "]");
-        }
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem(
-                        "A", toTask("todo", "nothing"), pathToA, 16, 29, -1, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing"), pathToA, 16, 29, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testTaskMarkerInMultiLineButNoText() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2861,19 +2835,12 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
         fullBuild(projectPath);
 
-        Problem[] rootProblems = env.getProblemsFor(pathToA);
-        for (int i = 0; i < rootProblems.length; i++) {
-            System.out.println(i + "  " + rootProblems[i] + " ["
-                    + rootProblems[i].getMessage() + "]");
-        }
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem(
-                        "A", toTask("todo", ""), pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", ""), pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testTaskMarkerInMultiLineOutsideClass() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2901,20 +2868,12 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
         fullBuild(projectPath);
 
-        Problem[] rootProblems = env.getProblemsFor(pathToA);
-        for (int i = 0; i < rootProblems.length; i++) {
-            System.out.println(i + "  " + rootProblems[i] + " ["
-                    + rootProblems[i].getMessage() + "]");
-        }
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem(
-                        "A", toTask("todo", "nothing *"), pathToA, 20, 34, -1, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing *"), pathToA, 20, 34, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
-    // task marker inside a multi line comment inside a class
+    @Test // task marker inside a multi line comment inside a class
     public void testTaskMarkerInMultiLineInsideClass() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -2942,19 +2901,12 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
         fullBuild(projectPath);
 
-        Problem[] rootProblems = env.getProblemsFor(pathToA);
-        for (int i = 0; i < rootProblems.length; i++) {
-            System.out.println(i + "  " + rootProblems[i]);
-        }
-        expectingOnlySpecificProblemFor(
-                pathToA,
-                new Problem(
-                        "A", toTask("todo", "nothing *"), pathToA, 40, 54, -1, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", "nothing *"), pathToA, 40, 54, -1, IMarker.SEVERITY_ERROR));
 
         JavaCore.setOptions(options);
     }
 
-    // Testing tag priority
+    @Test // tag priority
     public void testTaskMarkerMixedPriorities() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -3019,6 +2971,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testTaskMarkerMultipleOnOneLineInSLComment() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -3081,6 +3034,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testTaskMarkerMultipleOnOneLineInMLComment() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -3143,7 +3097,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
-    // two on one line
+    @Test // two on one line
     public void testTaskMarkerSharedDescription() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -3196,6 +3150,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
+    @Test
     public void testCopyGroovyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.removeGroovyNature("Project");
@@ -3235,10 +3190,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         IFile bFile = env.getWorkspace().getRoot().getFile(pathToB);
         bFile.delete(true, null);
         incrementalBuild(projectPath);
-        assertFalse("File should not exist " + pathToBBin.toPortableString(),
-                env.getWorkspace().getRoot().getFile(pathToBBin).exists());
+        assertFalse("File should not exist " + pathToBBin.toPortableString(), env.getWorkspace().getRoot().getFile(pathToBBin).exists());
     }
 
+    @Test
     public void testCopyResourceNonGroovyProject_GRECLIPSE653() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.removeGroovyNature("Project");
@@ -3278,6 +3233,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 env.getWorkspace().getRoot().getFile(pathToBBin).exists());
     }
 
+    @Test
     public void testCopyResourceGroovyProject_GRECLIPSE653() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3318,6 +3274,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 env.getWorkspace().getRoot().getFile(pathToBBin).exists());
     }
 
+    @Test
     public void testNoDoubleResolve() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3345,7 +3302,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         assertEquals("Wrong classnode found", "java.net.URL", url.getName());
     }
 
-    // GRECLIPSE-1170
+    @Test // GRECLIPSE-1170
     public void testFieldInitializerFromOtherFile() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3397,11 +3354,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
 
     }
 
-    // GRECLIPSE-1727
+    @Test // GRECLIPSE-1727
     public void testTraitBasics() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 23) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(23));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3423,10 +3379,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testTraitIncremental() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 23) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(23));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3496,10 +3452,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "Runner", "Hello, name!", "");
     }
 
+    @Test
     public void testTraitBinary() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 23) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(23));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3583,10 +3539,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         executeClass(projectPath, "Runner", "new name", "");
     }
 
+    @Test
     public void testTraitGRE1776() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 23) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(23));
+
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3635,6 +3591,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
+    @Test
     public void testGRE1773() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3703,10 +3660,10 @@ public final class BasicGroovyBuildTests extends BuilderTests {
                 "}");
 
         incrementalBuild(projectPath);
-        expectingProblemsFor(class1, "Problem : Groovy:unexpected token: abstract @ line 3, column 5. [ resource : </Project/src/test/Class1.groovy> range : <41,42> category : <60> severity : <2>]");
+        expectingProblemsFor(class1, Arrays.asList("Problem : Groovy:unexpected token: abstract @ line 3, column 5. [ resource : </Project/src/test/Class1.groovy> range : <41,42> category : <60> severity : <2>]"));
         if (GroovyUtils.isAtLeastGroovy(20)) { // Groovy 1.8 has no @Override checking
-        expectingProblemsFor(class2, "Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <48,56> category : <60> severity : <2>]");
-        expectingProblemsFor(class3, "Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <48,56> category : <60> severity : <2>]");
+        expectingProblemsFor(class2, Arrays.asList("Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <48,56> category : <60> severity : <2>]"));
+        expectingProblemsFor(class3, Arrays.asList("Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <48,56> category : <60> severity : <2>]"));
         }
 
         // modify the body of the abstract class to fix build
@@ -3737,6 +3694,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
      * Ensures that a task tag is not user editable
      * (regression test for bug 123721 two types of 'remove' for TODO task tags)
      */
+    @Test
     public void testTags3() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
 
@@ -3774,6 +3732,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
     /*
      * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
      */
+    @Test
     public void testUnusedImport() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -3818,6 +3777,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
     /*
      * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
      */
+    @Test
     public void test98667() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3844,6 +3804,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
      * @test Ensure that AIIOB does not longer happen with invalid source level string
      * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707"
      */
+    @Test
     public void testBug164707() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.getJavaProject(projectPath).setOption(JavaCore.COMPILER_SOURCE, "invalid");
@@ -3857,7 +3818,8 @@ public final class BasicGroovyBuildTests extends BuilderTests {
      * @test Ensure that changing project preferences is well taking into account while rebuilding project
      * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=75471"
      */
-    public void _testUpdateProjectPreferences() throws Exception {
+    @Test @Ignore
+    public void testUpdateProjectPreferences() throws Exception {
 
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3892,7 +3854,8 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         expectingNoProblems();
     }
 
-    public void _testUpdateWkspPreferences() throws Exception {
+    @Test @Ignore
+    public void testUpdateWkspPreferences() throws Exception {
 
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
@@ -3940,6 +3903,7 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         }
     }
 
+    @Test
     public void testTags4() throws Exception {
         Hashtable<String, String> options = JavaCore.getOptions();
         Hashtable<String, String> newOptions = JavaCore.getOptions();
@@ -3989,8 +3953,8 @@ public final class BasicGroovyBuildTests extends BuilderTests {
         JavaCore.setOptions(options);
     }
 
-    // When a groovy file name clashes with an existing type
-    public void _testBuildClash() throws Exception {
+    @Test @Ignore // When a groovy file name clashes with an existing type
+    public void testBuildClash() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);

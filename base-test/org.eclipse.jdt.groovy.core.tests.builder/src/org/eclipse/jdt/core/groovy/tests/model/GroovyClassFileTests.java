@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.model;
 
-import junit.framework.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IClassFile;
@@ -24,26 +25,15 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.BinaryType;
-
+import org.junit.Test;
 
 /**
- * Tests that our support for class files with Groovy source attachments is working
- * @author Andrew Eisenberg
- * @created Oct 25, 2010
+ * Tests that our support for class files with Groovy source attachments is working.
  */
-public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
+public final class GroovyClassFileTests  extends GroovyTypeRootTestSuite {
 
-    public GroovyClassFileTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(GroovyClassFileTests.class);
-    }
-
-    // a class file in a groovy project should not include the non-source children
+    @Test // a class file in a groovy project should not include the non-source children
     public void testClassFileHasNoNonSourceChildren() throws Exception {
         IProject project = createSimpleGroovyProject().getProject();
         env.addJar(project.getFullPath(), "lib/test-groovy-project.jar");
@@ -58,7 +48,7 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         assertTrue("source range for prop2 should be valid", ((IMember) binaryType.getChildren()[1]).getSourceRange().getOffset() > 0);
     }
 
-    // a class file in a java project should include the non-source children
+    @Test // a class file in a java project should include the non-source children
     public void testClassFileInJavaProjectHasNonSourceChildren() throws Exception {
         IProject project = createSimpleJavaProject().getProject();
         env.addJar(project.getFullPath(), "lib/test-groovy-project.jar");
@@ -73,6 +63,7 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         assertTrue("source range for prop2 should be valid", binaryType.getField("prop2").getSourceRange().getOffset() > 0);
     }
 
+    @Test
     public void testCodeSelectInClassFile() throws Exception {
         IProject project = createSimpleJavaProject().getProject();
         env.addJar(project.getFullPath(), "lib/code-select/test-project-for-code-select.jar");
@@ -85,12 +76,12 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         // now select multiple locations in the file
         lookForProperties(classFile, contents, "prop1");
         lookForProperties(classFile, contents, "prop2");
-
-
     }
-    private void lookForProperties(IClassFile classFile, String contents, String prop)
-            throws JavaModelException {
-        int first = contents.indexOf(prop), second = contents.indexOf(prop, first+1), third = contents.indexOf(prop, second+1);
+
+    private void lookForProperties(IClassFile classFile, String contents, String prop) throws Exception {
+        int first = contents.indexOf(prop),
+            second = contents.indexOf(prop, first + 1),
+            third = contents.indexOf(prop, second + 1);
         IJavaElement[] found = classFile.codeSelect(first, prop.length());
         assertElementFound(prop, found);
         found = classFile.codeSelect(second, prop.length());
@@ -98,14 +89,10 @@ public class GroovyClassFileTests  extends AbstractGroovyTypeRootTests {
         found = classFile.codeSelect(third, prop.length());
         assertElementFound(prop, found);
     }
-    /**
-     * @param prop
-     * @param found
-     */
+
     private void assertElementFound(String prop, IJavaElement[] found) {
         assertEquals("Expected to find one element but didn't", 1, found.length);
         assertEquals("Expected to find a field but didn't", IJavaElement.FIELD, found[0].getElementType());
         assertEquals("Element found with wrong name", prop, found[0].getElementName());
     }
-
 }

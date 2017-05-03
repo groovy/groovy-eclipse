@@ -15,15 +15,14 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.junit.Test;
+
 /**
  * Tests that the inferred declaration is correct.
  */
 public final class DeclarationInferencingTests extends AbstractInferencingTest {
 
-    public DeclarationInferencingTests(String name) {
-        super(name);
-    }
-
+    @Test
     public void testGettersAndField1() {
         createUnit("Other",
                 "class Other {\n" +
@@ -37,6 +36,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testGettersAndField2() {
         createUnit("Other",
                 "class Other {\n" +
@@ -50,6 +50,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testGettersAndField3() {
         createUnit("Other",
                 "class Other {\n" +
@@ -62,6 +63,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testGettersAndField4() {
         createUnit("Other",
                 "class Other {\n" +
@@ -74,6 +76,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testGettersAndField5() {
         createUnit("Other",
                 "class Other {\n" +
@@ -91,6 +94,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testGettersAndField6() {
         createUnit("Other",
                 "class Other {\n" +
@@ -108,6 +112,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName1() {
         createUnit("A",
                 "class A {\n" +
@@ -123,6 +128,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName2() {
         createUnit("A",
                 "class A {\n" +
@@ -138,6 +144,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName3() {
         createUnit("A",
                 "class A {\n" +
@@ -153,6 +160,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName4() {
         createUnit("A",
                 "class A {\n" +
@@ -168,6 +176,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "A", false);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName5() {
         createUnit("A",
                 "class A {\n" +
@@ -183,6 +192,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "getField", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName6() {
         createUnit("A",
                 "class A {\n" +
@@ -198,6 +208,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "setField", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName7() {
         createUnit("A",
                 "class A {\n" +
@@ -213,6 +224,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName8() {
         createUnit("A",
                 "class A {\n" +
@@ -228,6 +240,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.METHOD);
     }
 
+    @Test
     public void testMethodAndFieldWithSameName9() {
         createUnit("A",
                 "class A {\n" +
@@ -243,7 +256,7 @@ public final class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
     }
 
-    // GRECLIPSE-1105
+    @Test // GRECLIPSE-1105
     public void testFluentInterfaceWithFieldNameConflicts() {
         createUnit("A",
                 "class A {\n" +

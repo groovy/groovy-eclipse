@@ -15,9 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
-import junit.framework.Test;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -40,11 +40,12 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.tests.builder.BuilderTests;
+import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.junit.Test;
 
 /**
  * Tests that source locations for groovy compilation units are computed properly.
@@ -57,15 +58,7 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
  * markers /*m1sb* / indicate the start of a method body
  * NOTE: the start of a type body is not being calculated correctly
  */
-public final class SourceLocationsTests extends BuilderTests {
-
-    public SourceLocationsTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(SourceLocationsTests.class);
-    }
+public final class SourceLocationsTests extends BuilderTestSuite {
 
     private static void assertUnitWithSingleType(String source, ICompilationUnit unit) throws Exception {
         assertUnit(unit, source);
@@ -229,6 +222,7 @@ public final class SourceLocationsTests extends BuilderTests {
 
     //--------------------------------------------------------------------------
 
+    @Test
     public void testSourceLocations() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -241,6 +235,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsNoSemiColons() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -253,6 +248,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsNoModifiers() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -265,6 +261,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsMultipleVariableFragments() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -274,6 +271,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsNoParameterTypes() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -285,6 +283,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsNoParameters() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -302,6 +301,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsDefaultParameters() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -316,6 +316,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsConstructor() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -328,6 +329,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsConstructorWithParam() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -340,6 +342,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsConstructorWithParamNoType() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -352,6 +355,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsConstructorWithDefaultParam() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -364,6 +368,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsForScript1() throws Exception {
         String source = "package p1;\n"+
         "def x";
@@ -372,6 +377,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnit(unit, source);
     }
 
+    @Test
     public void testSourceLocationsForScript2() throws Exception {
         String source = "package p1;\n"+
         "def x() { }";
@@ -380,6 +386,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnit(unit, source);
     }
 
+    @Test
     public void testSourceLocationsForScript3() throws Exception {
         String source = "package p1;\n"+
         "x() \n def x() { }";
@@ -388,6 +395,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnit(unit, source);
     }
 
+    @Test
     public void testSourceLocationsForScript4() throws Exception {
         String source = "package p1;\n"+
         "def x() { }\nx()";
@@ -396,6 +404,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnit(unit, source);
     }
 
+    @Test
     public void testSourceLocationsForScript5() throws Exception {
         String source = "package p1;\n"+
         "def x() { }\nx()\ndef y() { }";
@@ -404,6 +413,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnit(unit, source);
     }
 
+    @Test
     public void testSourceLocationsForScript6() throws Exception {
         String source = "package p1;\n"+
         "x()\n def x() { }\n\ndef y() { }\ny()";
@@ -412,6 +422,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnit(unit, source);
     }
 
+    @Test
     public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -424,6 +435,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsInterface() throws Exception {
         String source = "package p1;\n"+
                 "/*t0s*/interface /*t0sn*/Hello/*t0en*/ {\n"+
@@ -433,6 +445,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsAbstractClass() throws Exception {
         String source = "package p1;\n"+
                 "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n"+
@@ -442,6 +455,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsAnnotationDeclaration() throws Exception {
         String source = "package p1;\n"+
         "/*t0s*/@interface /*t0sn*/Hello/*t0en*/ {\n"+
@@ -451,6 +465,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    @Test
     public void testSourceLocationsEnumDeclaration() throws Exception {
         String source = "package p1;\n"+
                 "/*t0s*/enum /*t0sn*/Hello/*t0en*/ {\n"+
@@ -459,7 +474,7 @@ public final class SourceLocationsTests extends BuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
-    // STS-3878
+    @Test // STS-3878
     public void testErrorPositionForUnsupportedOperation() throws Exception {
         String source =
                 "def a = 'a'\n" +
@@ -468,7 +483,6 @@ public final class SourceLocationsTests extends BuilderTests {
         IPath root = createGenericProject();
         IPath path = env.addGroovyClass(root, "p", "Hello", source);
         fullBuild();
-        expectingOnlySpecificProblemFor(root, new Problem(
-                "p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(root, new Problem("p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 }

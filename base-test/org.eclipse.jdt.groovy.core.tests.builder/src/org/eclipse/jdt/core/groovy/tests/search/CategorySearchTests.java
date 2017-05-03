@@ -15,12 +15,13 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Test;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
@@ -31,24 +32,12 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
+import org.junit.Test;
 
 /**
  * Tests searches that make use of categories.
  */
 public final class CategorySearchTests extends AbstractGroovySearchTest {
-
-    public CategorySearchTests(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-        return buildTestSuite(CategorySearchTests.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
 
     private static String CATEGORY_DEFN =
         "class Cat {\n" +
@@ -123,27 +112,32 @@ public final class CategorySearchTests extends AbstractGroovySearchTest {
         "}\n" +
         "new CatTarget().doNothing 'jello'\n";
 
-
+    @Test
     public void testCategorySearch1() throws Exception {
         doCategorySearchTest(SIMPLE_CATEGORY, 4);
     }
 
+    @Test
     public void testCategorySearch2() throws Exception {
         doCategorySearchTest(CATEGORY_WITH_SUBTYPE, 4);
     }
 
+    @Test
     public void testCategorySearch3() throws Exception {
         doCategorySearchTest(CATEGORY_ASSIGNED, 4);
     }
 
+    @Test
     public void testCategorySearch4() throws Exception {
         doCategorySearchTest(CATEGORY_MULTIPLE_INNER, 4);
     }
 
+    @Test
     public void testCategorySearch5() throws Exception {
         doCategorySearchTest(CATEGORY_MULTIPLE_OUTER, 4);
     }
 
+    @Test
     public void testCategorySearch6() throws Exception {
         doCategorySearchTest(NO_CATEGORY, 0);
     }
@@ -185,5 +179,4 @@ public final class CategorySearchTests extends AbstractGroovySearchTest {
             assertEquals("Wrong length for " + MockPossibleMatch.printMatch(match), "doNothing".length(), match.getLength());
         }
     }
-
 }
