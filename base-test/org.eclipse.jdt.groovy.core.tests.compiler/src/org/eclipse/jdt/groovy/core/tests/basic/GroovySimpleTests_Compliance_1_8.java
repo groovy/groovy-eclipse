@@ -15,53 +15,37 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import java.util.Map;
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assume.assumeTrue;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSuite {
 
-public final class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTest {
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ErrorRecoveryTests.class.getName());
-        suite.addTest(buildUniqueComplianceTestSuite(GroovySimpleTests_Compliance_1_8.class, JDK1_8));
-        return suite;
+    @Before
+    public void setUp() {
+        assumeTrue(isAtLeastJava(JDK8));
+        assumeTrue(isAtLeastGroovy(23));
     }
 
-    public GroovySimpleTests_Compliance_1_8(String name) {
-        super(name);
-    }
-
+    @Test
     public void testDefaultAndStaticMethodInInterface() {
-        if (GroovyUtils.GROOVY_LEVEL < 23 || !isJRELevel(AbstractCompilerTest.F_1_8)) return;
+        String[] sources = {
+            "p/IExample.java",
+            "package p;\n" +
+            "public interface IExample {\n" +
+            "   void testExample();\n" +
+            "   static void callExample() {}\n" +
+            "   default void callDefault() {}\n" +
+            "}\n",
 
-        Map<String, String> customOptions = getCompilerOptions();
-        customOptions.put(CompilerOptions.OPTION_Source, VERSION_1_8);
+            "p/ExampleGr.groovy",
+            "package p\n" +
+            "class ExampleGr implements IExample {\n" +
+            "public void testExample() {}\n" + "}\n"
+        };
 
-        runConformTest(
-            true, // flush output directory
-            new String[] {
-                "p/IExample.java",
-                "package p;\n" + "public interface IExample {\n" +
-                "   void testExample();\n" +
-                "   static void callExample() {}\n" +
-                "   default void callDefault() {}\n" +
-                "}\n",
-
-                "p/ExampleGr.groovy",
-                "package p\n" + "class ExampleGr implements IExample {\n" +
-                "public void testExample() {}\n" + "}\n"
-            },
-            null, // no class libraries
-            customOptions, // custom options
-            "", // expected compiler log
-            "", // expected output string
-            null, // do not check error string
-            new JavacTestOptions("-source 1.8")
-        );
+        runConformTest(sources);
     }
 }

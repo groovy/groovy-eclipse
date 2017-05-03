@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 
+@SuppressWarnings("unused")
 public class ParticipantBuildTests extends BuilderTests {
 	public ParticipantBuildTests(String name) {
 		super(name);

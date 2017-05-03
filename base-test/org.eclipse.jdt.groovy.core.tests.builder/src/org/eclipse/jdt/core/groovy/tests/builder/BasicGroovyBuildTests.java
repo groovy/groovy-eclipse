@@ -415,8 +415,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("Anno", "Const");
         expectingNoProblems();
 
-        IPath pathToSecond = env.addGroovyClass(root, "", "A", "@Anno(Const.instance)\n" +
-                "class A {}");
+        env.addGroovyClass(root, "", "A", "@Anno(Const.instance)\n" + "class A {}");
         incrementalBuild(projectPath);
         expectingNoProblems();
         expectingCompiledClasses("A");

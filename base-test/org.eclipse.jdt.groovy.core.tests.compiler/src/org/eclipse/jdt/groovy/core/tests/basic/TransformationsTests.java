@@ -15,11 +15,13 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
+
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Test;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -31,27 +33,20 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.osgi.framework.Version;
 
-public final class TransformationsTests extends AbstractGroovyRegressionTest {
-
-    public static Test suite() {
-        return buildMinimalComplianceTestSuite(TransformationsTests.class, F_1_5);
-    }
-
-    public TransformationsTests(String name) {
-        super(name);
-    }
+public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     private String getJarPath(String entry) throws Exception {
         URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
         return FileLocator.resolve(url).getFile();
     }
 
-    //
-
+    @Test
     public void testAnnotationCollector() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {
             "Book.groovy",
@@ -87,6 +82,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "@NotNull()@Length(value=0)");
     }
 
+    @Test
     public void testBuiltInTransforms_Singleton() {
         String[] sources = {
             "Goo.groovy",
@@ -112,10 +108,10 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "abcd");
     }
 
-    // lazy option set in Singleton
+    @Test // lazy option set in Singleton
     public void testBuiltInTransforms_Singleton2() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (GroovyUtils.GROOVY_LEVEL < 22) return;
+        assumeTrue(isAtLeastGroovy(22));
 
         String[] sources = {
             "Goo.groovy",
@@ -145,9 +141,10 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "ctor running abcd");
     }
 
+    @Test
     public void testBuiltInTransforms_Singleton3() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (GroovyUtils.GROOVY_LEVEL < 22) return;
+        assumeTrue(isAtLeastGroovy(22));
 
         String[] sources = {
             "Goo.groovy",
@@ -177,6 +174,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "running ctor abcd");
     }
 
+    @Test
     public void testBuiltInTransforms_Category1() {
         String[] sources = {
             "Demo.groovy",
@@ -205,6 +203,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "300m");
     }
 
+    @Test
     public void testBuiltInTransforms_Category2() {
         String[] sources = {
             "Demo.groovy",
@@ -234,6 +233,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "300m");
     }
 
+    @Test
     public void testBuiltInTransforms_Category3() {
         String[] sources = {
             "Foo.groovy",
@@ -285,6 +285,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "I'm the James Bond's vehicle and I dive!");
     }
 
+    @Test
     public void testBuiltInTransforms_PackageScope() {
         // http://groovy.codehaus.org/PackageScope+transformation
         // Adjust the visibility of a property so instead of private it is package default
@@ -318,7 +319,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation);
     }
 
-    // not a great test, needs work
+    @Test // not a great test, needs work
     public void testCategory_STS3822() {
         if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
 
@@ -373,6 +374,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n"));
     }
 
+    @Test
     public void testDelegate() {
         String[] sources = {
             "Bar.groovy",
@@ -384,6 +386,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException");
     }
 
+    @Test
     public void testImmutable() {
         String[] sources = {
             "c/Main.java",
@@ -426,7 +429,8 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
      * still it is referencable from Java.  This is not possible with normal joint compilation.
      * currently have to 'turn on' support in GroovyClassScope.getAnyExtraMethods() - still thinking about this stuff...
      */
-    public void _testJavaAccessingTransformedGroovy_Singleton() {
+    @Test @Ignore
+    public void testJavaAccessingTransformedGroovy_Singleton() {
         String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
@@ -451,8 +455,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "abc");
     }
 
+    @Test
     public void testTypeChecked1() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -479,8 +484,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testTypeChecked2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -503,8 +509,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testTypeChecked3() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {
             "Foo.groovy",
@@ -520,9 +527,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
-    // https://issues.apache.org/jira/browse/GROOVY-8033
-    public void _testTypeChecked4() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8033")
+    public void testTypeChecked4() {
+        assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {
             "Foo.groovy",
@@ -538,8 +545,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testCompileStatic1() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -568,8 +576,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
      *
      * That method does a lot of equality by == testing against classnode constants, which doesn't work so well for us...
      */
+    @Test
     public void testCompileStatic2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -603,8 +612,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testCompileStatic3() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -619,8 +629,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testCompileStatic_1511() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -637,8 +648,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "abc");
     }
 
+    @Test
     public void testCompileStatic_1505() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "DynamicQuery.groovy",
@@ -659,8 +671,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "abc");
     }
 
-    public void _testCompileStatic_1506() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+    @Test @Ignore
+    public void testCompileStatic_1506() {
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "LoggerTest.groovy",
@@ -680,8 +693,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testCompileStatic4() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = {
@@ -706,8 +720,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testCompileDynamic() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {
             "A.groovy",
@@ -727,6 +742,7 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testTransforms_BasicLogging() throws Exception {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, getJarPath("astTransformations/transforms.jar"));
@@ -814,13 +830,10 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "Hello World\n" +
             "Ending greetWithLogging\n" +
             "done",
-            null,
-            true,
-            null,
-            options,
-            null);
+            options);
     }
 
+    @Test
     public void testTransforms_AtLog() {
         // See
         // https://jira.codehaus.org/browse/GRECLIPSE-1503
@@ -870,8 +883,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testJDTClassNode_1731() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
 
         // Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
         // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
@@ -932,7 +946,8 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "@a.SampleAnnotation()");
     }
 
-    public void _testGrab() {
+    @Test @Ignore("Grab is failing on CI server")
+    public void testGrab() {
         String[] sources = {
             "Printer.groovy",
             "@Grab('joda-time:joda-time:1.6')\n"+
@@ -953,7 +968,8 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
      * org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
      * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
      */
-    public void _testGrabWithErrors() {
+    @Test @Ignore("Grab is failing on CI server")
+    public void testGrabWithErrors() {
         String[] sources = {
             "Grab1.groovy",
             "@Grapes([\n"+
@@ -986,7 +1002,8 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    public void _testGrabScriptAndImports_GRE680() {
+    @Test @Ignore("Grab is failing on CI server")
+    public void testGrabScriptAndImports_GRE680() {
         String[] sources = {
             "Script.groovy",
             "import org.mortbay.jetty.Server\n"+
@@ -1001,8 +1018,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testGreclipse1506() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",
@@ -1021,8 +1039,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testGreclipse1514() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "C.groovy",
@@ -1038,8 +1057,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testGreclipse1515() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "C.groovy",
@@ -1060,8 +1080,9 @@ public final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testGreclipse1521() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Foo.groovy",

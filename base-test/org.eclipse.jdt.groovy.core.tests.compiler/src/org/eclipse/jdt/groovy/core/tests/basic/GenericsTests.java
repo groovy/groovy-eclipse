@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,33 +15,25 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import java.util.Map;
-
-import junit.framework.Test;
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.osgi.framework.Version;
 
-public final class GenericsTests extends AbstractGroovyRegressionTest {
-
-    public static Test suite() {
-        return buildMinimalComplianceTestSuite(GenericsTests.class, F_1_5);
-    }
-
-    public GenericsTests(String name) {
-        super(name);
-    }
+public final class GenericsTests extends GroovyCompilerTestSuite {
 
     private void runWarningFreeTest(String[] sources) {
         runNegativeTest(sources, ""); // expect no compiler output (warnings or errors)
     }
 
+    @Test
     public void testGenericField() {
         String[] sources = {
             "A.groovy",
@@ -53,6 +45,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericArrayField() {
         String[] sources = {
             "A.groovy",
@@ -64,6 +57,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericParam() {
         String[] sources = {
             "A.groovy",
@@ -75,6 +69,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericArrayParam() {
         String[] sources = {
             "A.groovy",
@@ -83,7 +78,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        if (complianceLevel < ClassFileConstants.JDK1_7) {
+        if (!isAtLeastJava(JDK7)) {
             runWarningFreeTest(sources);
         } else {
             runNegativeTest(sources,
@@ -96,6 +91,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         }
     }
 
+    @Test
     public void testGenericVaragsParam() {
         String[] sources = {
             "A.groovy",
@@ -104,7 +100,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "}"
         };
 
-        if (complianceLevel < ClassFileConstants.JDK1_7) {
+        if (!isAtLeastJava(JDK7)) {
             runWarningFreeTest(sources);
         } else {
             runNegativeTest(sources,
@@ -117,6 +113,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         }
     }
 
+    @Test
     public void testCallingGenericConstructors() {
         String[] sources = {
             "p/B.groovy",
@@ -138,6 +135,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericsPositions_GRE267_1() {
         String[] sources = {
             "X.groovy",
@@ -166,6 +164,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", stringify(grabField(decl,"setthree").type));
     }
 
+    @Test
     public void testGenericsPositions_GRE267_2() {
         String[] sources = {
             "X.groovy",
@@ -185,6 +184,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", stringify(grabField(decl, "setthree").type));
     }
 
+    @Test
     public void testGenericsPositions_GRE267_3() {
         String[] sources = {
             "X.groovy",
@@ -214,6 +214,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         //assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>", stringify(grabField(decl, "setfour")));
     }
 
+    @Test
     public void testGenericsPositions_4_GRE267() {
         String[] sources = {
             "X.groovy",
@@ -233,6 +234,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", stringify(grabField(decl, "setthree").type));
     }
 
+    @Test
     public void testGenericsPositions_5_GRE267() {
         String[] sources = {
             "X.groovy",
@@ -252,7 +254,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", stringify(grabField(decl, "setthree").type));
     }
 
-    public void _testGenericsPositions_6_GRE267() {
+    @Test @Ignore
+    public void testGenericsPositions_6_GRE267() {
         // FIXASC check tests after porting to recent 1.7 compiler
         // Multiple generified components in a reference
         String[] sources = {
@@ -279,6 +282,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", stringify(grabField(decl, "setthree").type));
     }
 
+    @Test
     public void testGenericsPositions_7_GRE267() {
         String[] sources = {
             "X.groovy",
@@ -298,6 +302,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", stringify(grabField(decl, "setthree").type));
     }
 
+    @Test
     public void testGenericsPositions_8_GRE267() {
         String[] sources = {
             "X.groovy",
@@ -313,6 +318,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(12>14)Set<(16>24)(16>18)Map.(20>24)Entry<(26>31)String(33>36)List<(38>43)String>>>", stringify(grabField(decl, "foo").type));
     }
 
+    @Test
     public void testGenericsPositions_9_GRE267() {
         String[] sources = {
             "X.groovy",
@@ -328,6 +334,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals("(12>20)(12>14)Map.(16>20)Entry<(22>27)String(29>32)List<(34>39)String>>", stringify(grabField(decl, "foo").type));
     }
 
+    @Test
     public void testGenericsAndGroovyJava_GRE278_1() {
         String[] sources = {
             "p/Field.java",
@@ -479,6 +486,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testGenericsAndGroovyJava_GRE278_2() {
         String[] sources = {
             "Main.java",
@@ -622,8 +630,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
-    // when GROOVY-5861 is fixed we can enable these 2 tests:
-    public void _testGenericsAndGroovyJava_GRE278_3() {
+    @Test @Ignore("when GROOVY-5861 is fixed we can enable this test")
+    public void testGenericsAndGroovyJava_GRE278_3() {
         String[] sources = {
             "p/Field.java",
             "package test;\n" +
@@ -642,7 +650,8 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
-    public void _testGenericsAndGroovyJava_GRE278_3a() {
+    @Test @Ignore("when GROOVY-5861 is fixed we can enable this test")
+    public void testGenericsAndGroovyJava_GRE278_3a() {
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
@@ -789,6 +798,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericsAndGroovyJava_GRE278_4() {
         String[] sources = {
             "Main.groovy",
@@ -819,6 +829,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericFields_JcallingG() {
         String[] sources = {
             "p/Code.java",
@@ -839,6 +850,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGenericFields_GcallingJ() {
         String[] sources = {
             "p/Code.groovy",
@@ -859,6 +871,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGroovyPropertyAccessorsGenerics() {
         String[] sources = {
             "p/C.java",
@@ -882,6 +895,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGroovyGenerics() {
         // GroovyBug: this surfaced the problem that the generics declarations are checked before resolution is complete -
         // had to change CompilationUnit so that resolve and checkGenerics are different stages in the SEMANTIC_ANALYSIS phase
@@ -904,8 +918,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGreclipse1563() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Inter.java",
@@ -928,8 +943,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testGreclipse1563_2() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Clazz.java",
@@ -955,6 +971,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_JavaExtendsGroovy() {
         // WMTW: GroovyCompilationUnit builds a correct representation of the groovy type A
         String[] sources = {
@@ -975,6 +992,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava() {
         // WMTW: JDT ClassNode builds a correct groovy representation of the A type
         String[] sources = {
@@ -995,6 +1013,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava2() {
         // test when the upper bound is not just 'Object'
         // WMTW: notice I and Impl are classes and not interfaces, because right now only the superclass stuff is set up correctly for nodes.
@@ -1025,6 +1044,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava2a() {
         // TODO create more variations around mixing types up (including generics bounds)
         // variation of above - the interface type is a java file and not a groovy file
@@ -1052,6 +1072,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava2b() {
         // WMTW: JDTClassNode correctly initializes interfaces based on binding interfaces
         // It needs the interface set for Impl to be defined correctly so that groovy can determine Impl extends I
@@ -1080,6 +1101,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava3() {
         // GRECLIPSE-430: the declaration of B violates the 'T extends I' specification of A
         String[] sources = {
@@ -1111,8 +1133,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava4() {
-        if (isJRELevel(AbstractCompilerTest.F_1_8)) return;
+        assumeFalse(isAtLeastJava(JDK8));
 
         String[] sources = {
             "p/B.groovy",
@@ -1131,8 +1154,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava5() {
-        if (isJRELevel(AbstractCompilerTest.F_1_8)) return;
+        assumeFalse(isAtLeastJava(JDK8));
 
         String[] sources = {
             "p/B.groovy",
@@ -1148,8 +1172,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava5a() {
-        if (isJRELevel(AbstractCompilerTest.F_1_8)) return;
+        assumeFalse(isAtLeastJava(JDK8));
 
         String[] sources = {
             "p/B.groovy",
@@ -1165,6 +1190,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava6() {
         String[] sources = {
             "p/B.groovy",
@@ -1184,6 +1210,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava7() {
         String[] sources = {
             "p/B.groovy",
@@ -1203,6 +1230,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava8() {
         // arrays
         String[] sources = {
@@ -1225,6 +1253,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava9() {
         String[] sources = {
             "p/B.groovy",
@@ -1250,6 +1279,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava10() {
         String[] sources = {
             "p/B.groovy",
@@ -1281,6 +1311,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      *
      * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope#buildFieldsAndMethods()
      */
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava11() {
         if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
 
@@ -1309,8 +1340,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      * java.lang.NullPointerException
      *     at org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope.fixupTypeParameters(GroovyClassScope.java:559)
      */
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava12() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Template.java",
@@ -1337,6 +1369,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
     /**
      * https://github.com/groovy/groovy-eclipse/issues/148
      */
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava13() {
         String[] sources = {
             "A.java",
@@ -1374,8 +1407,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
      */
-    public void _testExtendingGenerics_GroovyExtendsJava14() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+    @Test @Ignore
+    public void testExtendingGenerics_GroovyExtendsJava14() {
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "Main.groovy",
@@ -1409,11 +1443,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
-    /**
-     * https://github.com/groovy/groovy-eclipse/issues/221
-     */
+    @Test // https://github.com/groovy/groovy-eclipse/issues/221
     public void testExtendingGenerics_GroovyExtendsJava15() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
             "AttributeConverter.java",
@@ -1435,6 +1467,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testImplementingInterface_JavaExtendingGroovyGenericType() {
         String[] sources = {
             "p/C.java",
@@ -1457,6 +1490,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testImplementingInterface_JavaGenericsIncorrectlyExtendingGroovyGenerics() {
         String[] sources = {
             "p/C.java",
@@ -1485,6 +1519,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface_GroovyGenericsIncorrectlyExtendingJavaGenerics() {
         String[] sources = {
             "p/C.groovy",
@@ -1513,6 +1548,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testReferencingFieldsGenerics_JreferingToG() {
         String[] sources = {
             "p/C.java",
@@ -1542,6 +1578,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testReferencingFieldsGenerics_GreferingToJ() {
         String[] sources = {
             "p/C.groovy",
@@ -1572,6 +1609,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testHalfFinishedGenericsProgram() {
         String[] sources = {
             "Demo.groovy",
@@ -1613,6 +1651,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testHalfFinishedGenericsProgramWithCorrectSuppression() {
         String[] sources = {
             "Demo.groovy",
@@ -1626,6 +1665,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
         String[] sources = {
             "Demo.groovy",
@@ -1639,6 +1679,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testHalfFinishedGenericsProgramWithUnnecessarySuppression() {
         String[] sources = {
             "Demo.groovy",
@@ -1658,6 +1699,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testHalfFinishedGenericsProgramWithSuppressionValueSpeltWrong() {
         String[] sources = {
             "Demo.groovy",
@@ -1677,6 +1719,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testHalfFinishedGenericsProgramWithMultipleSuppressionValues() {
         String[] sources = {
             "Demo.groovy",
@@ -1696,6 +1739,7 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testHalfFinishedGenericsProgramWithMultipleSuppressionValuesWithOneSpeltWrong() {
         String[] sources = {
             "Demo.groovy",
@@ -1715,8 +1759,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testJava7() {
-        if (complianceLevel < ClassFileConstants.JDK1_7) return;
+        assumeTrue(isAtLeastJava(JDK7));
 
         String[] sources = {
             "A.java",
@@ -1740,8 +1785,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
         runWarningFreeTest(sources);
     }
 
+    @Test
     public void testJava7_2() {
-        if (complianceLevel >= ClassFileConstants.JDK1_7) return;
+        assumeFalse(isAtLeastJava(JDK7));
 
         String[] sources = {
             "A.java",
@@ -1773,8 +1819,9 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testJava7_3() {
-        if (complianceLevel >= ClassFileConstants.JDK1_7) return;
+        assumeFalse(isAtLeastJava(JDK7));
 
         String[] sources = {
             "A.java",
@@ -1802,10 +1849,11 @@ public final class GenericsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testTurningOffGenericsWarnings() {
-        Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
-
+//        Map<String, String> options = getCompilerOptions();
+//        options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
+//
 //      runConformTest(new String[] {
 //              "Assertions.groovy",
 //              "import spock.lang.*\n"+

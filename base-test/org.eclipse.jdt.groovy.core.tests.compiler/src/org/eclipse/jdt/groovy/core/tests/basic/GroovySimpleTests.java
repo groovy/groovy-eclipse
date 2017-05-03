@@ -15,12 +15,16 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -40,17 +44,12 @@ import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Ignore;
+import org.junit.Test;
 
-public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
+public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
-    public static Test suite() {
-        return buildMinimalComplianceTestSuite(GroovySimpleTest.class, F_1_6);
-    }
-
-    public GroovySimpleTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testClosureSyntax() {
         runNegativeTest(new String[] {
             "Foo.groovy",
@@ -76,6 +75,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testGreclipse1521_pre() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         runConformTest(new String[] {
@@ -84,6 +84,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
      }
 
+    @Test
     public void testGreclipse719() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -99,6 +100,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testGreclipse719_2() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -114,6 +116,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testDuplicateClassesUnnecessaryExceptions() {
         runNegativeTest(new String[] {
             "A.groovy",
@@ -133,6 +136,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testStaticProperty() {
         runConformTest(new String[] {
             "A.groovy",
@@ -147,7 +151,8 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
-    public void _testClash_GRE1076() {
+    @Test @Ignore
+    public void testClash_GRE1076() {
         runConformTest(new String[] {
             "com/foo/Bar/config.groovy",
             "package com.foo.Bar\n"+
@@ -160,7 +165,8 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
-    public void _testClash_GRE1076_2() {
+    @Test @Ignore
+    public void testClash_GRE1076_2() {
         runConformTest(new String[] {
             "com/foo/Bar.java",
             "package com.foo;\n"+
@@ -177,6 +183,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "def");
     }
 
+    @Test
     public void testUnreachable_1047() {
         runConformTest(new String[] {
             "MyException.java",
@@ -206,6 +213,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testUnreachable_1047_2() {
         runConformTest(new String[] {
             "MyException.java",
@@ -242,6 +250,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
      * is attempted because the SourceUnit isn't tagged as having succeeded that phase - the exception thrown
      * for the real problem jumps over the tagging process.
      */
+    @Test
     public void testDuplicateClassesUnnecessaryExceptions_GRE796() {
         runNegativeTest(new String[] {
             "spring/resources.groovy",
@@ -267,6 +276,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testDuplicateClassesUnnecessaryExceptions_GRE796_2() {
         runNegativeTest(new String[] {
             "spring/resources.groovy",
@@ -290,6 +300,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testGroovyColon_GRE801() {
         runNegativeTest(new String[] {
             "A.groovy",
@@ -305,6 +316,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testStaticOuter_GRE944() {
         runNegativeTest(new String[] {
             "A.groovy",
@@ -320,6 +332,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testCrashRatherThanError_GRE986() {
         runNegativeTest(new String[] {
             "A.groovy",
@@ -334,6 +347,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testAmbiguous_GRE945_gu() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -352,6 +366,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testAmbiguous_GRE945_jl() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -370,6 +385,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testAmbiguous_GRE945_bothFromSource() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -393,6 +409,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testAmbiguous_GRE945_bothFromSource_2() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -416,6 +433,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "def");
     }
 
+    @Test
     public void testAmbiguous_GRE945_bothFromSource_3() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -439,6 +457,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "def");
     }
 
+    @Test
     public void testAmbiguous_GRE945_ju() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -457,6 +476,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testAmbiguous_GRE945_jn() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -475,6 +495,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testAmbiguous_GRE945_gl() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -493,6 +514,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testAmbiguous_GRE945_ji() {
         runConformTest(new String[] {
             "Code.groovy",
@@ -511,6 +533,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "abc");
     }
 
+    @Test
     public void testStaticOuter_GRE944_2() {
         runNegativeTest(new String[] {
             "B.java",
@@ -535,6 +558,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testEnumStatic_GRE974() {
         runConformTest(new String[] {
             "A.groovy",
@@ -588,6 +612,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testVarargs_GRE925() {
         runConformTest(new String[] {
             "Test.java",
@@ -602,6 +627,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testPrimitiveLikeTypeNames_GRE891() {
             runConformTest(new String[] {
                 "Foo.java",
@@ -619,6 +645,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("[[LZ;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
+    @Test
     public void testPrimitiveLikeTypeNames_GRE891_2() {
         runConformTest(new String[] {
             "Foo.java",
@@ -636,6 +663,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("[[I",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
+    @Test
     public void testPrimitiveLikeTypeNames_GRE891_3() {
         runConformTest(new String[] {
             "Foo.java",
@@ -653,6 +681,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
+    @Test
     public void testAnonymousClasses_GE1531() {
         runNegativeTest(new String[] {
             "Foo.groovy",
@@ -672,6 +701,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         System.out.println(mn);
     }
 
+    @Test
     public void testPrimitiveLikeTypeNames_GRE891_4() {
         runConformTest(new String[] {
             "pkg/Foo.java",
@@ -695,6 +725,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
+    @Test
     public void testPrimitiveLikeTypeNames_GRE891_5() {
         runConformTest(new String[] {
             "pkg/Foo.java",
@@ -717,6 +748,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
          assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
 
+    @Test
     public void testOverridingFinalMethod() {
         runNegativeTest(new String[] {
             "Base.groovy",
@@ -738,6 +770,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testMixedModeInnerProperties_GRE597() {
         runConformTest(new String[] {
             "groovy/JoinGroovy.groovy",
@@ -766,6 +799,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "}"});
     }
 
+    @Test
     public void testMixedModeInnerProperties2_GRE597() {
         runConformTest(new String[] {
             "groovy/JoinGroovy.groovy",
@@ -795,6 +829,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "}"});
     }
 
+    @Test
     public void testStaticVariableInScript() {
         runNegativeTest(new String[] {
             "Script.groovy",
@@ -815,6 +850,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
+    @Test
     public void testStandaloneGroovyFile() {
         runConformTest(new String[] {
             "p/X.groovy",
@@ -827,6 +863,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testRecursion_GR531() {
         runNegativeTest(new String[] {
             "XXX.groovy",
@@ -845,6 +882,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testRecursion_GR531_2() {
         runNegativeTest(new String[] {
             "XXX.groovy",
@@ -866,6 +904,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testRecursion_GR531_3() {
         runNegativeTest(new String[] {
             "XXX.groovy",
@@ -899,6 +938,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testRecursion_GR531_4() {
         runNegativeTest(new String[] {
             "XXX.groovy",
@@ -924,6 +964,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     /**
      * First a class extending another.  The superclass gets augmented but not the subclass.
      */
+    @Test
     public void testClassHierarchiesAndGroovyObjectMethods() {
         try {
             GroovyClassScope.debugListener = new EventListener("augment");
@@ -949,6 +990,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     /**
      * Now a class implementing an interface.  The subclass gets augmented because the superclass did not.
      */
+    @Test
     public void testClassHierarchiesAndGroovyObjectMethods2() {
         try {
             GroovyClassScope.debugListener = new EventListener("augment");
@@ -978,6 +1020,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
      * perhaps the java type in the middle makes a difference.  Anyway by augmenting both of these we
      * are actually doing the same as groovyc, and that is the main thing.
      */
+    @Test
     public void testClassHierarchiesAndGroovyObjectMethods3() {
         try {
             GroovyClassScope.debugListener = new EventListener();
@@ -1002,6 +1045,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }
     }
 
+    @Test
     public void testStandaloneGroovyFile2() {
         runConformTest(new String[] {
             "p/X.groovy",
@@ -1027,6 +1071,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testParentIsObject_GRE528() {
         runConformTest(new String[] {
             "p/X.groovy",
@@ -1048,6 +1093,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testInnerTypes() {
         runConformTest(new String[] {
             "p/X.groovy",
@@ -1075,6 +1121,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testBrokenPackage() {
         runNegativeTest(new String[] {
             "Foo.groovy",
@@ -1089,6 +1136,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // GROOVY-4219
+    @Test
     public void testGRE637() {
         if (GroovyUtils.GROOVY_LEVEL < 22) return;
         runConformTest(new String[] {
@@ -1127,6 +1175,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testOverriding_GRE440() {
         runConformTest(new String[] {
             "Foo.groovy",
@@ -1143,6 +1192,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         //checkGCUDeclaration("Foo.groovy", "yyy");
     }
 
+    @Test
     public void testOverriding_GRE440_2() {
         runConformTest(new String[] {
             "Foo.java",
@@ -1159,6 +1209,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         //checkGCUDeclaration("Foo.java", "yyy");
     }
 
+    @Test
     public void testAliasing_GRE473() {
         runConformTest(new String[] {
                 "Foo.groovy",
@@ -1171,6 +1222,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "success [null][java.util.regex]");
     }
 
+    @Test
     public void testAliasing_GRE473_2() {
         runNegativeTest(new String[] {
                 "Foo.groovy",
@@ -1187,6 +1239,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
+    @Test
     public void testBrokenPackage2() {
         runNegativeTest(new String[] {
                 "Foo.groovy",
@@ -1201,6 +1254,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // does the second error now get reported after the package problem
+    @Test
     public void testBrokenPackage3() {
         runNegativeTest(new String[] {
                 "Foo.groovy",
@@ -1221,6 +1275,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
+    @Test
     public void testEnumPositions_GRE1072() {
         if (GroovyUtils.GROOVY_LEVEL < 20) return;
         runConformTest(new String[] {
@@ -1245,6 +1300,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>49 modifiersSourceStart=46 endPart1Position:46", stringifyFieldDecl(fDecl));
     }
 
+    @Test
     public void testEnumValues_GRE1071() {
         runConformTest(new String[] {
                 "X.groovy",
@@ -1256,6 +1312,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("[LH;",getReturnTypeOfMethod("X.groovy", "values"));
     }
 
+    @Test
     public void testAbstractCovariance_GRE272() {
         runNegativeTest(new String[] {
                 "A.java",
@@ -1277,6 +1334,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     // If GroovyFoo is processed *before* FooBase then the MethodVerifier15
     // hasn't had a chance to run on FooBase and create the synthetic bridge method
+    @Test
     public void testAbstractCovariance_GRE272_2() {
         runNegativeTest(new String[] {
                 "test/Bar.java",
@@ -1302,6 +1360,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testAbstractCovariance_GRE272_3() {
         runNegativeTest(new String[] {
                 "test/IFoo.java",
@@ -1328,6 +1387,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testAbstractCovariance_GRE272_4() {
         runNegativeTest(new String[] {
                 "test/IFoo.java",
@@ -1352,6 +1412,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testIncorrectReturnType_GRE292() {
         runNegativeTest(new String[] {
                 "Voidy.groovy",
@@ -1370,6 +1431,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
+    @Test
     public void testIncorrectReturnType_GRE292_3() {
         runNegativeTest(new String[] {
                 "Voidy.groovy",
@@ -1388,6 +1450,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
+    @Test
     public void testIncorrectReturnType_GRE292_2() {
         runNegativeTest(new String[] {
                 "Voidy.groovy",
@@ -1404,6 +1467,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
+    @Test
     public void testIncorrectReturnType_GRE292_4() {
         runNegativeTest(new String[] {
                 "Voidy.groovy",
@@ -1420,6 +1484,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "----------\n");
     }
 
+    @Test
     public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273() {
         runNegativeTest(new String[] {
             "X.groovy",
@@ -1531,6 +1596,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testMissingTypesForGeneratedBindingsGivesNPE_GRE273_2() {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -1541,6 +1607,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testAbstractClass_GRE274() {
         runNegativeTest(new String[] {
             "p/Foo.groovy",
@@ -1563,6 +1630,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testAbstractClass_GRE274_2() {
         runNegativeTest(new String[] {
             "p/Foo.groovy",
@@ -1585,6 +1653,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testConstructorsForEnumWrong_GRE285() {
         runNegativeTest(new String[] {
                 "TestEnum.groovy",
@@ -1608,7 +1677,8 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 },"");
     }
 
-    public void _testCrashingOnBadCode_GRE290() {
+    @Test @Ignore
+    public void testCrashingOnBadCode_GRE290() {
         runNegativeTest(new String[] {
             "Moo.groovy",
             "package com.omxgroup.scripting;\n"+
@@ -1630,6 +1700,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testCrashingOnBadCode_GRE290_2() {
         runNegativeTest(new String[] {
             "Moo.groovy",
@@ -1651,6 +1722,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // 'this' by itself isn't an error
+    @Test
     public void testCrashingOnBadCode_GRE290_3() {
         runNegativeTest(new String[] {
             "Moo.groovy",
@@ -1663,6 +1735,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "");
     }
 
+    @Test
     public void testCrashingOnBadCode_GRE290_4() {
         runNegativeTest(new String[] {
             "p/X.groovy",
@@ -1677,6 +1750,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testNPE_GRE291() {
         runNegativeTest(new String[] {
             "ContinueTestCase.groovy",
@@ -1694,6 +1768,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testMissingContext_GRE308() {
         runNegativeTest(new String[] {
             "DibDabs.groovy",
@@ -1713,6 +1788,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }
 
     // FIXASC less than ideal underlining for error location
+    @Test
     public void testMissingContext_GRE308_2() {
         runNegativeTest(new String[] {
             "DibDabs.groovy",
@@ -1733,6 +1809,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }
 
     // a valid script, no '.' after session2
+    @Test
     public void testInvalidScripts_GRE323_1() {
         runNegativeTest(new String[] {
             "Two.groovy",
@@ -1750,6 +1827,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testInvalidScripts_GRE323_1b() {
         runConformTest(new String[] {
             "Two.groovy",
@@ -1771,6 +1849,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     //	One.groovy: 10: expecting '}', found 'x' @ line 10, column 7.
     //    def x
     //        ^
+    @Test
     public void testInvalidScripts_GRE323_2() {
         // command expression syntax now allows this but it looks weird as
         runConformTest(new String[] {
@@ -1790,6 +1869,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // removed surrounding method
+    @Test
     public void testInvalidScripts_GRE323_3() {
         runNegativeTest(new String[] {
             "Three.groovy",
@@ -1805,6 +1885,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testInvalidScripts_GRE323_3b() {
         runConformTest(new String[] {
             "Three.groovy",
@@ -1821,6 +1902,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // no assignment for session2
+    @Test
     public void testInvalidScripts_GRE323_4() {
         runNegativeTest(new String[] {
             "Four.groovy",
@@ -1838,6 +1920,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testInvalidScripts_GRE323_4b() {
         runConformTest(new String[] {
             "Run.java",
@@ -1923,6 +2006,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 //		"\tat \n"
     }
 
+    @Test
     public void testInvalidScripts_GRE323_5() {
         runNegativeTest(new String[] {
             "Five.groovy",
@@ -1941,6 +2025,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testInvalidScripts_GRE323_5b() {
         runConformTest(new String[] {
             "Five.groovy",
@@ -1959,6 +2044,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"DEF");
     }
 
+    @Test
     public void testInvalidScripts_GRE323_6() {
         runConformTest(new String[] {
                 "Six.groovy",
@@ -1976,6 +2062,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"DEF");
     }
 
+    @Test
     public void testBridgeMethods_GRE336() {
         runNegativeTest(new String[] {
             "my/example/EnumBooleanMap.java",
@@ -2003,6 +2090,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"");
     }
 
+    @Test
     public void testInnerTypeReferencing_GRE339() {
         runConformTest(new String[] {
                 "Script.groovy",
@@ -2021,6 +2109,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // interface
+    @Test
     public void testInnerTypeReferencing_GRE339_2() {
         runConformTest(new String[] {
                 "Script.groovy",
@@ -2039,6 +2128,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // pure script
+    @Test
     public void testInnerTypeReferencing_GRE339_3() {
         runConformTest(new String[] {
                 "script.groovy",
@@ -2052,6 +2142,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "value");
     }
 
+    @Test
     public void testStaticProperties_GRE364() {
         runConformTest(new String[] {
                 "Foo.groovy",
@@ -2063,6 +2154,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "");
     }
 
+    @Test
     public void testStaticProperties_GRE364_2() {
         runConformTest(new String[] {
                 "Bar.java",
@@ -2074,6 +2166,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "");
     }
 
+    @Test
     public void testTransientMethod_GRE370() {
         runConformTest(new String[] {
                 "Foo.groovy",
@@ -2083,6 +2176,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "");
     }
 
+    @Test
     public void testNotSeriousEnough_GRE396() {
         runNegativeTest(new String[] {
 
@@ -2109,6 +2203,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testNotSeriousEnough_GRE396_2() {
         runNegativeTest(new String[] {
             "TrivialBug.groovy",
@@ -2134,6 +2229,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testStarImports_GRE421() {
         runConformTest(new String[] {
                 "Wibble.groovy",
@@ -2149,6 +2245,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // The getter for 'description' implements the interface
+    @Test
     public void testImplementingAnInterfaceViaProperty() {
         runConformTest(new String[] {
             "a/b/c/C.groovy",
@@ -2170,6 +2267,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Referencing from a groovy to a java type where the reference is through a member, not the hierarchy
+    @Test
     public void testReferencingOtherTypesInSamePackage() {
         runConformTest(new String[] {
             "a/b/c/C.groovy",
@@ -2190,6 +2288,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Ensures that the Point2D.Double reference is resolved in the context of X and not Y (if Y is used then the import isn't found)
+    @Test
     public void testMemberTypeResolution() {
         runConformTest(new String[] {
             "p/X.groovy",
@@ -2215,6 +2314,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testFailureWhilstAttemptingToReportError() {
         runNegativeTest(new String[] {
             "T.groovy",
@@ -2231,6 +2331,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testExtendingInterface1() {
         runNegativeTest(new String[] {
             "p/X.groovy",
@@ -2249,6 +2350,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testProtectedType() {
         runConformTest(new String[] {
             "p/Y.groovy",
@@ -2269,6 +2371,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "success");
     }
 
+    @Test
     public void testEnums() {
         runConformTest(new String[] {
             "p/X.groovy",
@@ -2279,6 +2382,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "");
     }
 
+    @Test
     public void testEnums2() {
         try {
             JDTResolver.recordInstances = true;
@@ -2325,6 +2429,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testNonTerminalMissingImport() {
         runNegativeTest(new String[] {
             "p/X.groovy",
@@ -2344,6 +2449,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testTypeClash() {
         runNegativeTest(new String[] {
             "p/X.groovy",
@@ -2362,6 +2468,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testCallStaticMethodFromGtoJ() {
         runConformTest(new String[] {
             "p/Foo.groovy",
@@ -2383,6 +2490,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "success");
     }
 
+    @Test
     public void testCallStaticMethodFromJtoG() {
         runConformTest(new String[] {
             "p/Foo.java",
@@ -2404,6 +2512,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "success");
     }
 
+    @Test
     public void testNotMakingInterfacesImplementGroovyObject() {
         runConformTest(new String[] {
             "p/X.java",
@@ -2421,6 +2530,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "success");
     }
 
+    @Test
     public void testExtendingInterface2() {
         runNegativeTest(new String[] {
             "p/X.groovy",
@@ -2440,6 +2550,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // WMTW: the type declaration building code creates the correct representation of A and adds the default constructor
+    @Test
     public void testExtendingGroovyWithJava1() {
         runConformTest(new String[] {
             // p.B
@@ -2465,6 +2576,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     // for resolution of JDT types
     // 2. needed to subclass ResolveVisitor - trying just to override resolve(ClassNode) right now
     // 3. needed to build JDTClassNode and needed it to initialize the superclass field
+    @Test
     public void testExtendingJavaWithGroovy1() {
         runConformTest(new String[] {
             // p.B
@@ -2484,6 +2596,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testExtendingJavaWithGroovyAndThenJava() {
         runConformTest(new String[] {
             // p.C
@@ -2509,6 +2622,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Groovy is allowed to have a public class like this in a file with a different name
+    @Test
     public void testPublicClassInWrongFile() {
         runConformTest(new String[] {
             "pkg/One.groovy",
@@ -2531,6 +2645,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
      * to CLASSGEN drives them all through.  It isn't necessarily a problem, but it conflicts with the model of dealing with one file at
      * a time...
      */
+    @Test
     public void testBuildingTwoGroovyFiles() {
         runConformTest(new String[] {
             // pkg.One
@@ -2546,6 +2661,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testExtendingGroovyInterfaceWithJava() {
         runConformTest(new String[] {
                 // pkg.C
@@ -2564,6 +2680,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testExtendingJavaInterfaceWithGroovy() {
         runConformTest(new String[] {
                 // pkg.C
@@ -2583,6 +2700,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // WMTM: the fix for the previous code that tracks why classes are generated
+    @Test
     public void testExtendingJavaWithGroovyAndThenJavaAndThenGroovy() {
         runConformTest(new String[] {
             // p.D
@@ -2609,6 +2727,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testImplementingInterface1() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2633,6 +2752,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface2() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -2652,6 +2772,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testImplementingInterface3() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2677,6 +2798,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface4() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -2697,6 +2819,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // WMTW: Groovy compilation unit scope adds the extra default import for java.util so List can be seen
+    @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2730,6 +2853,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testFieldPositioning01() {
         runNegativeTest(new String[] {
                 "p/C.groovy",
@@ -2747,6 +2871,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // FIXASC poor positional error for invalid field name - this test needs sorting out
+    @Test
     public void testFieldPositioning02() {
         runNegativeTest(new String[] {
             "p/C.groovy",
@@ -2763,6 +2888,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ArrayReferenceReturnType() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2796,6 +2922,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_QualifiedArrayReferenceReturnType() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2829,6 +2956,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ParamPosition() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2862,6 +2990,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_QualifiedParamPosition() {
         runNegativeTest(new String[] {
                 "p/C.java",
@@ -2895,6 +3024,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImplementingInterface_MethodWithParameters_GextendsJ() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -2917,6 +3047,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     // Test that the alias is recognized when referenced as superclass
     // WMTW: the code Scope.getShortNameFor()
+    @Test
     public void testImportAliasingGoober() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -2931,6 +3062,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "q.A.run");
     }
 
+    @Test
     public void testImportAliasing() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -2961,6 +3093,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "q.A.run r.A.run");
     }
 
+    @Test
     public void testImportAliasingAndOldReference() {
         runNegativeTest(new String[] {
                 "p/C.groovy",
@@ -2994,6 +3127,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImportInnerInner01() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3019,6 +3153,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "p.Wibble.Inner.Inner2.run");
     }
 
+    @Test
     public void testImportInnerClass01_JavaCase() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3044,6 +3179,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
+    @Test
     public void testImportInnerClass01_GroovyCase() {
         runConformTest(new String[] {
             "p/C.groovy",
@@ -3068,6 +3204,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "q.A.run");
     }
 
+    @Test
     public void testImportInnerClass() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3092,6 +3229,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "run");
     }
 
+    @Test
     public void testImportAliasingInnerClass() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3115,6 +3253,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "run");
     }
 
+    @Test
     public void testImplementingInterface_MethodWithParameters_JextendsG() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3135,6 +3274,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testImplementingInterface_MethodWithParameters2_JextendsG() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3155,6 +3295,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testImplementingInterface_MethodWithParameters2_GextendsJ() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3175,6 +3316,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testImplementingInterface_MethodWithParameters3_GextendsJ() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3195,6 +3337,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testImplementingInterface_MethodWithParameters3_JextendsG() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3215,6 +3358,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testCallingMethods_JcallingG() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3236,6 +3380,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testCallingMethods_GcallingJ() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3257,6 +3402,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testReferencingFields_JreferingToG() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3277,6 +3423,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testReferencingFields_GreferingToJ() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3297,6 +3444,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testCallingConstructors_JcallingG() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3318,6 +3466,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testCallingConstructors_GcallingJ() {
         runConformTest(new String[] {
                 "p/C.groovy",
@@ -3339,6 +3488,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testGroovyObjectsAreGroovyAtCompileTime() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3359,6 +3509,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testCallGroovyObjectMethods_invokeMethod() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3381,6 +3532,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testGroovyObjectsAreGroovyAtRunTime() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3401,6 +3553,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "true");
     }
 
+    @Test
     public void testGroovyBug() {
         runConformTest(new String[] {
                 "p/A.groovy",
@@ -3415,6 +3568,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "a");
     }
 
+    @Test
     public void testGroovyBug2() {
         runConformTest(new String[] {
 
@@ -3430,6 +3584,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
+    @Test
     public void testExtendingGroovyObjects_clinit() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3450,6 +3605,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "success");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases1() {
         // check no duplicate created for 'String getProp'
         runConformTest(new String[] {
@@ -3472,6 +3628,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "foo");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases2() {
         // check no duplicate created for 'boolean isProp'
         runConformTest(new String[] {
@@ -3494,6 +3651,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "false");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases3() {
         // although there is a getProp already defined, it takes a parameter
         // so a new one should still be generated
@@ -3517,6 +3675,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "foo");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases4() {
         // although there is a setProp already defined, it takes no parameters
         // so a new one should still be generated
@@ -3541,6 +3700,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "abc");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases5() {
         runNegativeTest(new String[] {
             "p/C.java",
@@ -3576,6 +3736,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases6() {
         runNegativeTest(new String[] {
             "p/C.java",
@@ -3603,6 +3764,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testGroovyPropertyAccessors() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3624,6 +3786,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "falsefalse");
     }
 
+    @Test
     public void testGroovyPropertyAccessors_Set() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3646,6 +3809,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "falsetrue");
     }
 
+    @Test
     public void testDefaultValueMethods() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3688,6 +3852,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
     }
 
+    @Test
     public void testDefaultValueMethods02() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3749,6 +3914,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
     }
 
+    @Test
     public void testDefaultValueConstructors() {
         runConformTest(new String[] {
                 "p/C.java",
@@ -3797,6 +3963,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
     }
 
+    @Test
     public void testDefaultValueConstructors02() {
         runConformTest(new String[] {
             "p/C.java",
@@ -3821,6 +3988,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testClashingMethodsWithDefaultParams() {
         runNegativeTest(new String[] {
                 "p/Code.groovy",
@@ -3840,6 +4008,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testCallingJavaFromGroovy1() throws Exception {
         runConformTest(new String[] {
                 "p/Code.groovy",
@@ -3861,6 +4030,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         //checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/Code.class", "Code", "");
     }
 
+    @Test
     public void testCallingJavaFromGroovy2() throws Exception {
         runConformTest(new String[] {
                 "p/Code.groovy",
@@ -3887,6 +4057,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testExtendingRawJavaType() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -3907,6 +4078,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testTypeVariableBoundIsRawType() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -3927,6 +4099,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"success");
     }
 
+    @Test
     public void testEnum() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -3944,6 +4117,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Type already implements invokeMethod(String,Object) - should not be an error, just don't add the method
+    @Test
     public void testDuplicateGroovyObjectMethods() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -3958,6 +4132,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testDuplicateGroovyObjectMethods2() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -3974,6 +4149,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testTwoTopLevelTypesInAFile() {
         runConformTest(new String[] {
                 "p/First.groovy",
@@ -3988,6 +4164,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testImports1() {
         runConformTest(new String[] {
                 "p/First.groovy",
@@ -4003,6 +4180,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testImports2() {
         runConformTest(new String[] {
                 "p/First.groovy",
@@ -4017,6 +4195,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testImportsBigDecimal1() {
         runConformTest(new String[] {
             "p/Main.java",
@@ -4035,6 +4214,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "3.14");
     }
 
+    @Test
     public void testImportsBigDecimal2() {
         runConformTest(new String[] {
             "p/Big.groovy",
@@ -4048,6 +4228,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "success");
     }
 
+    @Test
     public void testImportsBigDecimal3() {
         // this version has an import; that can make a difference...
         runConformTest(new String[] {
@@ -4063,6 +4244,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "success");
     }
 
+    @Test
     public void testImportsBigDecimal4() {
         runConformTest(new String[] {
             "p/Big.groovy",
@@ -4076,6 +4258,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "success");
     }
 
+    @Test
     public void testImportsBigInteger1() {
         runConformTest(new String[] {
             "p/Main.java",
@@ -4094,6 +4277,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "10");
     }
 
+    @Test
     public void testImportsBigInteger2() {
         runConformTest(new String[] {
             "p/Big.groovy",
@@ -4107,6 +4291,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "success");
     }
 
+    @Test
     public void testImportsBigInteger3() {
         runConformTest(new String[] {
             "p/Big.groovy",
@@ -4120,6 +4305,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }, "success");
     }
 
+    @Test
     public void testMultipleTypesInOneFile01() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -4134,6 +4320,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Refering to the secondary type from the primary (but internally to a method)
+    @Test
     public void testMultipleTypesInOneFile02() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -4149,6 +4336,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Refering to the secondary type from the primary - from a method param
+    @Test
     public void testMultipleTypesInOneFile03() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -4166,6 +4354,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Refering to the secondary type from the primary - from a method
+    @Test
     public void testJDKClasses() {
         runConformTest(new String[] {
                 "p/Foo.groovy",
@@ -4183,6 +4372,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Test that the (package visible) source type in another package is visible to a groovy type
+    @Test
     public void testVisibility() {
         runConformTest(new String[] {
                 "p/First.groovy",
@@ -4201,6 +4391,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"success");
     }
 
+    @Test
     public void testClosuresBasic() {
         runConformTest(new String[] {
             "Coroutine.groovy",
@@ -4216,6 +4407,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "123");
     }
 
+    @Test
     public void testScriptWithError() {
         runNegativeTest(new String[] {
             "Foo.groovy",
@@ -4230,6 +4422,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         );
     }
 
+    @Test
     public void testScript() {
         runConformTest(new String[] {
             "Foo.groovy",
@@ -4237,6 +4430,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"Coolio");
     }
 
+    @Test
     public void testScriptCallJava() {
         runConformTest(new String[] {
             "Foo.groovy",
@@ -4246,6 +4440,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"abc");
     }
 
+    @Test
     public void testExtraImports() throws Exception {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.*");
@@ -4273,10 +4468,10 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "  public static void m() {}\n"+
                 "}\n",
                 // @formatter:on
-                }, "done", null, true,
-                null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_exactType() throws Exception {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.Type");
@@ -4299,9 +4494,10 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "package com.foo\n" + "class Type {\n"
                         + "  public static void m() {}\n" + "}\n",
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_withSuffixDotStar() throws Exception {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
@@ -4325,13 +4521,13 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "package com.foo\n" + "class Type {\n"
                         + "  public static void m() {}\n" + "}\n",
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_withSuffixExactType() throws Exception {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".groovy=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type");
         options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
         // From:
         // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
@@ -4351,13 +4547,13 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "package com.foo\n" + "class Type {\n"
                         + "  public static void m() {}\n" + "}\n",
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_withSuffixExactType2() throws Exception {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".groovy=com.foo.Type;.groovy=com.foo.TypeB");
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type;.groovy=com.foo.TypeB");
         options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
         // From:
         // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
@@ -4381,13 +4577,13 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "package com.foo\n" + "class TypeB {\n"
                         + "  public static void m() {}\n" + "}\n",
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_noneMatchingSuffix() throws Exception {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".gradle=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".gradle=com.foo.Type");
         options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
         // From:
         // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
@@ -4407,13 +4603,13 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "package com.foo\n" + "class Type {\n"
                         + "  public static void m() {}\n" + "}\n",
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_typeDoesNotExist() throws Exception {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".groovy=com.foo.Type2");
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type2");
         options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
         // From:
         // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
@@ -4439,9 +4635,10 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                         + "\tType.m();\n"
                         + "\t^^^^\n"
                         + "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
-                        + "----------\n", null, true, options);
+                        + "----------\n", options);
     }
 
+    @Test
     public void testExtraImports_packageDoesNotExist() throws Exception {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
@@ -4471,9 +4668,10 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                         + "\tType.m();\n"
                         + "\t^^^^\n"
                         + "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
-                        + "----------\n", null, true, options);
+                        + "----------\n", options);
     }
 
+    @Test
     public void testExtraImports_multiple() throws Exception {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
@@ -4501,13 +4699,13 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "package com.foo\n" + "class Type2 {\n"
                         + "  public static void m() {}\n" + "}\n",
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
+    @Test
     public void testExtraImports_multipleSuffixes() throws Exception {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                "com.madeup.*;.groovy=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.madeup.*;.groovy=com.foo.Type");
         options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
         // From:
         // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
@@ -4528,10 +4726,10 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                         + "  public static void m() {}\n" + "}\n",
 
         // @formatter:on
-                }, "done", null, true, null, options, null);
+                }, "done", options);
     }
 
-    // Variable arguments
+    @Test // Variable arguments
     public void testInvokingVarargs01_JtoG() {
         runConformTest(new String[] {
             "p/Run.java",
@@ -4561,6 +4759,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012012");
     }
 
+    @Test
     public void testInvokingVarargs01_GtoJ() {
         runConformTest(new String[] {
             "p/Run.groovy",
@@ -4590,7 +4789,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012012");
     }
 
-    // In these two cases the methods also take other values
+    @Test // In these two cases the methods also take other values
     public void testInvokingVarargs02_JtoG() {
         runConformTest(new String[] {
             "p/Run.java",
@@ -4620,7 +4819,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012012");
     }
 
-    // Groovy doesn't care about '...' and will consider [] as varargs
+    @Test // Groovy doesn't care about '...' and will consider [] as varargs
     public void testInvokingVarargs03_JtoG() {
         runConformTest(new String[] {
             "p/Run.java",
@@ -4650,6 +4849,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012012");
     }
 
+    @Test
     public void testInners_1185() {
         runConformTest(new String[] {
             "WithInnerClass.groovy",
@@ -4668,6 +4868,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         });
     }
 
+    @Test
     public void testInvokingVarargs02_GtoJ() {
         runConformTest(new String[] {
             "p/Run.groovy",
@@ -4697,6 +4898,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012012");
     }
 
+    @Test
     public void testInvokingVarargsCtors01_JtoG() {
         runConformTest(new String[] {
             "p/Run.java",
@@ -4722,6 +4924,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012");
     }
 
+    @Test
     public void testInvokingVarargsCtors01_GtoJ() {
         runConformTest(new String[] {
             "p/Run.groovy",
@@ -4747,6 +4950,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"012012");
     }
 
+    @Test
     public void testPositions() {
         runNegativeTest(new String[] {
             "One.groovy",
@@ -4768,6 +4972,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     }
 
+    @Test
     public void testPositions_2() {
         runNegativeTest(new String[] {
             "One.groovy",
@@ -4788,6 +4993,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testJDTClassNode_633() {
         try {
             JDTResolver.recordInstances = true;
@@ -4835,6 +5041,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         }
     }
 
+    @Test
     public void testSecondaryTypeTagging() {
         runConformTest(new String[] {
             "Run.groovy",
@@ -4867,7 +5074,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     // FIXASC test varargs with default parameter values (methods/ctors)
 
-    // static imports
+    @Test // static imports
     public void testStaticImports_JtoG() {
         runConformTest(new String[] {
             "p/Run.java",
@@ -4887,6 +5094,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"RedGreenBlue");
     }
 
+    @Test
     public void testStaticImports_GtoJ() {
         runConformTest(new String[] {
             "p/Run.groovy",
@@ -4906,6 +5114,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"RedGreenBlue");
     }
 
+    @Test
     public void testStaticImports2_GtoJ() {
         runConformTest(new String[] {
             "p/Run.java",
@@ -4927,6 +5136,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         },"Red");
     }
 
+    @Test
     public void testStaticImportsAliasing_G() {
         runConformTest(new String[] {
             "p/Run.groovy",
@@ -4940,6 +5150,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Test 'import static a.B.FOO'
+    @Test
     public void testImportStatic1() {
         runConformTest(new String[] {
             "b/Run.groovy",
@@ -4957,6 +5168,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Test 'import static a.B.*'
+    @Test
     public void testImportStatic2() {
         runConformTest(new String[] {
             "b/Run.groovy",
@@ -4974,6 +5186,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Test 'import static a.B.FOO as Wibble'
+    @Test
     public void testImportStatic3() {
         runConformTest(new String[] {
             "b/Run.groovy",
@@ -4992,6 +5205,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("Wibble",new String(((AliasImportReference)irs[0]).getSimpleName()));
     }
 
+    @Test
     public void testImportStatic4() {
         runConformTest(new String[] {
             "a/B.groovy",
@@ -5018,6 +5232,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
          */
     }
 
+    @Test
     public void testParsingBlankImport_538() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
@@ -5053,6 +5268,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
 
+    @Test
     public void testParsingDotTerminatedImport_538() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5078,6 +5294,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
 
+    @Test
     public void testParsingBlankImportStatic_538() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5103,6 +5320,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
 
+    @Test
     public void testParsingDotTerminatedImportStatic_538() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5133,6 +5351,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("A", cn.getName());
     }
 
+    @Test
     public void testParsingDotTerminatedImportFollowedByClassDeclaration_538() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5160,6 +5379,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("Wibble", cn.getName());
     }
 
+    @Test
     public void testParsingDotTerminatedImportFollowedByModifierAndClassDeclaration_538() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5187,6 +5407,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("Wibble", cn.getName());
     }
 
+    @Test
     public void testParsingBlankImportFollowedByClassDeclaration_538() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
@@ -5217,6 +5438,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("Wibble", cn.getName());
     }
 
+    @Test
     public void testParsingIncompleteClassDeclaration_495() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5252,6 +5474,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
         assertEquals("BBB", cn.getName());
     }
 
+    @Test
     public void testInnerClass1() throws Exception {
         runConformTest(new String[] {
                 "A.groovy",
@@ -5263,6 +5486,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "foo.run()"
         }, "hi!");
     }
+    @Test
     public void testInnerClass2() throws Exception {
         runConformTest(new String[] {
                 "A.groovy",
@@ -5279,6 +5503,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "foo.run()"
         }, "hi!");
     }
+    @Test
     public void testInnerClass3() throws Exception {
         runConformTest(new String[] {
                 "A.groovy",
@@ -5292,6 +5517,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "foo().run()"
         }, "hi!");
     }
+    @Test
     public void testInnerClass4() throws Exception {
         runConformTest(new String[] {
                 "A.groovy",
@@ -5305,6 +5531,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "new Foo().foo.run()"
         }, "hi!");
     }
+    @Test
     public void testInnerClass5() throws Exception {
         runNegativeTest(new String[] {
                 "A.groovy",
@@ -5321,6 +5548,7 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
                "----------\n");
     }
 
+    @Test
     public void testAbstractMethodWithinEnum_STS3803() {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
@@ -5338,50 +5566,43 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "}"});
     }
 
-//	public void testSts3930() {
-//		runConformTest(new String[] {
-//				"GroovyDemo.groovy",
-//				"package demo\n"+
-//				"class GroovyDemo {\n" +
-//				"    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
-//				"}",
-//				"JavaDemo.java",
-//				"package demo;\n"+
-//				"public class JavaDemo {\n" +
-//				"    public static void someMethod() {\n" +
-//				"        GroovyDemo.someMethod(JavaDemo.class);\n" +
-//				"    }\n" +
-//				"}\n",
-//				},
-//				"");
-//	}
+    @Test @Ignore
+    public void testSts3930() {
+        runConformTest(new String[] {
+            "GroovyDemo.groovy",
+            "package demo\n"+
+                "class GroovyDemo {\n" +
+                "    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
+                "}",
+                "JavaDemo.java",
+                "package demo;\n"+
+                    "public class JavaDemo {\n" +
+                    "    public static void someMethod() {\n" +
+                    "        GroovyDemo.someMethod(JavaDemo.class);\n" +
+                    "    }\n" +
+                    "}\n",
+        },
+            "");
+    }
 
-    // FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
-//  static Resource[] getPluginXmlMetadata(String pluginsDirPath) {
-//      return getPluginXmlMetadata(pluginsDirPath, DEFAULT_RESOURCE_RESOLVER)
-//  }
-//  static synchronized Resource[] getPluginXmlMetadata( String pluginsDirPath,
-//                                          Closure resourceResolver = DEFAULT_RESOURCE_RESOLVER) {
+    @Test @Ignore("FIXASC testcase for this. infinite loops (B extends B<String>")
+    public void testInfiniteLoop() {
+        runConformTest(new String[] {
+            "p/B.groovy",
+            "package p;\n" +
+                "class B extends B<String> {\n" +
+                "  public static void main(String[] argv) {\n"+
+                "    new B();\n"+
+                "    print \"success\"\n"+
+                "  }\n"+
+                "}\n",
 
-
-//	// FIXASC testcase for this. infinite loops (B extends B<String>
-//	public void testInfiniteLoop() {
-//		runConformTest(new String[] {
-//		"p/B.groovy",
-//		"package p;\n" +
-//		"class B extends B<String> {\n" +
-//		"  public static void main(String[] argv) {\n"+
-//		"    new B();\n"+
-//		"    print \"success\"\n"+
-//		"  }\n"+
-//		"}\n",
-////
-////		"p/A.java",
-////		"package p;\n" +
-////		"public class A<T> {}\n",
-//		},
-//		"");
-//	}
+                "p/A.java",
+                "package p;\n" +
+                    "public class A<T> {}\n"
+        },
+            "");
+    }
 
     //--------------------------------------------------------------------------
 

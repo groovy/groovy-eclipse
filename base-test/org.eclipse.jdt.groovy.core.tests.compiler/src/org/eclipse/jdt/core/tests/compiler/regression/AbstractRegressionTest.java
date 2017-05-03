@@ -250,7 +250,7 @@ static class JavaRuntime {
 		}
 	}
 }
-protected static class JavacTestOptions {
+public static class JavacTestOptions {
 	static final JavacTestOptions DEFAULT = new JavacTestOptions();
 	static final JavacTestOptions SKIP = new JavacTestOptions() {
 		boolean skip(JavacCompiler compiler) {
@@ -1109,7 +1109,7 @@ protected static class JavacTestOptions {
 
 // WORK replace null logs (no test) by empty string in most situations (more
 //      complete coverage) and see what happens
-	protected void runConformTest(String[] testFiles) {
+	public void runConformTest(String[] testFiles) {
 		runTest(
 			// test directory preparation
 			true /* flush output directory */,
@@ -1132,7 +1132,7 @@ protected static class JavacTestOptions {
 			JavacTestOptions.DEFAULT /* default javac test options */);
 	}
 
-	protected void runConformTest(String[] testFiles, String expectedOutputString) {
+	public void runConformTest(String[] testFiles, String expectedOutputString) {
 		runTest(
 			// test directory preparation
 			true /* flush output directory */,
@@ -1156,7 +1156,7 @@ protected static class JavacTestOptions {
 	}
 
 	// WORK good candidate for elimination (3 uses)
-	protected void runConformTest(
+	public void runConformTest(
 		String[] testFiles,
 		String expectedSuccessOutputString,
 		String[] vmArguments) {
@@ -1175,7 +1175,7 @@ protected static class JavacTestOptions {
 			JavacTestOptions.DEFAULT /* default javac test options */);
 	}
 
-	protected void runConformTest(
+	public void runConformTest(
 		String[] testFiles,
 		String expectedOutputString,
 		String[] classLibraries,
@@ -1203,7 +1203,7 @@ protected static class JavacTestOptions {
 			JavacTestOptions.DEFAULT /* default javac test options */);
 	}
 
-	protected void runConformTest(
+	public void runConformTest(
 		String[] testFiles,
 		String expectedOutputString,
 		String[] classLibraries,
@@ -1234,7 +1234,7 @@ protected static class JavacTestOptions {
 	}
 
 	// WORK good candidate for elimination (8 instances)
-	protected void runConformTest(
+	public void runConformTest(
 		String[] testFiles,
 		String expectedSuccessOutputString,
 		String[] classLib,
@@ -1742,7 +1742,7 @@ protected void runJavac(
 // 	},
 //	// compiler results
 //	"" /* expected compiler log */);
-protected void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
+public void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
 		runTest(
 			// test directory preparation
 			true /* flush output directory */,
@@ -1770,7 +1770,7 @@ protected void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
 			JavacTestOptions.DEFAULT /* default javac test options */);
 	}
 	// WORK potential elimination candidate (24 calls) - else clean up inline
-	protected void runNegativeTest(
+	public void runNegativeTest(
 		String[] testFiles,
 		String expectedProblemLog,
 		String[] classLib,
@@ -1798,7 +1798,7 @@ protected void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
 			null /* do not check error string */,
 			JavacTestOptions.DEFAULT /* javac test options */);
 	}
-	protected void runNegativeTest(
+	public void runNegativeTest(
 		String[] testFiles,
 		String expectedCompilerLog,
 		String[] classLibraries,
@@ -1830,7 +1830,7 @@ protected void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
 			// javac options
 			JavacTestOptions.DEFAULT /* default javac test options */);
 	}
-	protected void runNegativeTest(
+	public void runNegativeTest(
 		String[] testFiles,
 		String expectedProblemLog,
 		String[] classLibraries,
@@ -1870,7 +1870,7 @@ protected void runNegativeTest(String[] testFiles, String expectedCompilerLog) {
 	 * Log contains all problems (warnings+errors)
 	 */
 	// WORK potential candidate for elimination (19 calls)
-	protected void runNegativeTest(
+	public void runNegativeTest(
 		String[] testFiles,
 		String expectedCompilerLog,
 		String[] classLibraries,
@@ -2263,7 +2263,7 @@ runTest(
 //		JavacTestOptions.SKIP /* skip javac tests */);
 //		JavacTestOptions.DEFAULT /* default javac test options */);
 //		javacTestOptions /* javac test options */);
-protected void runConformTest(
+public void runConformTest(
 		// test directory preparation
 		boolean shouldFlushOutputDirectory,
 		String[] testFiles,
@@ -2330,7 +2330,7 @@ protected void runConformTest(
 //		JavacTestOptions.SKIP /* skip javac tests */);
 //		JavacTestOptions.DEFAULT /* default javac test options */);
 //		javacTestOptions /* javac test options */);
-protected void runConformTest(
+public void runConformTest(
 		// test directory preparation
 		boolean shouldFlushOutputDirectory,
 		String[] testFiles,
@@ -2376,7 +2376,7 @@ protected void runConformTest(
 //		JavacTestOptions.SKIP /* skip javac tests */);
 //		JavacTestOptions.DEFAULT /* default javac test options */);
 //		javacTestOptions /* javac test options */);
-protected void runNegativeTest(
+public void runNegativeTest(
 		// test directory preparation
 		String[] testFiles,
 		// compiler results
@@ -2431,7 +2431,7 @@ protected void runNegativeTest(
 //		JavacTestOptions.SKIP /* skip javac tests */);
 //		JavacTestOptions.DEFAULT /* default javac test options */);
 //		javacTestOptions /* javac test options */);
-protected void runNegativeTest(
+public void runNegativeTest(
 		// test directory preparation
 		boolean shouldFlushOutputDirectory,
 		String[] testFiles,
@@ -2463,7 +2463,7 @@ protected void runNegativeTest(
 		// javac options
 		javacTestOptions /* javac test options */);
 }
-void runNegativeTest(
+public void runNegativeTest(
 	// test directory preparation
 	boolean shouldFlushOutputDirectory,
 	String[] testFiles,

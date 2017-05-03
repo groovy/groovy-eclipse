@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,13 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import junit.framework.Test;
-
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import org.junit.Ignore;
+import org.junit.Test;
 
-public final class AnnotationsTests extends AbstractGroovyRegressionTest {
+public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
-    public static Test suite() {
-        return buildMinimalComplianceTestSuite(AnnotationsTests.class, F_1_5);
-    }
-
-    public AnnotationsTests(String name) {
-        super(name);
-    }
-
+    @Test
     public void testGroovyAnnotation() {
         String[] sources = {
             "Foo.groovy",
@@ -41,7 +34,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
-    // GRECLIPSE-697
+    @Test // GRECLIPSE-697
     public void testInlineDeclaration() {
         String[] sources = {
             "A.groovy",
@@ -57,6 +50,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "abc");
     }
 
+    @Test
     public void testLongLiteral() {
         // ArrayIndexOutOfBoundsException in LongLiteral.computeConstant
         String[] sources = {
@@ -77,6 +71,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testBigIntegerLiteral() {
         String[] sources = {
             "Min.java",
@@ -103,6 +98,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testBigDecimalLiteral() {
         String[] sources = {
             "Min.java",
@@ -129,6 +125,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testClassAnnotationValue() {
         String[] sources = {
             "Anno.java",
@@ -148,6 +145,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testClassAnnotationValue2() {
         String[] sources = {
             "Anno.java",
@@ -167,6 +165,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testClosureAnnotationValue() {
         String[] sources = {
             "Anno.java",
@@ -186,7 +185,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
-    // GRECLIPSE-629
+    @Test // GRECLIPSE-629
     public void testConstAnnotationValue() {
         String[] sources = {
             "Const.java",
@@ -210,7 +209,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "@Anno(value=abc)");
     }
 
-    // GRECLIPSE-830
+    @Test // GRECLIPSE-830
     public void testDoubleAttributeWithBigDecimalValue() {
         String[] sources = {
             "AnnotationDouble.groovy",
@@ -240,6 +239,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testLocalAnnotationConstant1() {
         // there was an error because the variable expression VALUE was not recognized as constant
         // see ResolveVisitor.transformInlineConstants(Expression)
@@ -256,6 +256,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testLocalAnnotationConstant2() {
         // there was an error because the variable expression VALUE was not recognized as constant
         // see ResolveVisitor.transformInlineConstants(Expression)
@@ -272,6 +273,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testLocalAnnotationConstant3() {
         String[] sources = {
             "Main.groovy",
@@ -284,6 +286,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testLocalAnnotationConstant3a() {
         String[] sources = {
             "Main.groovy",
@@ -301,6 +304,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testLocalAnnotationClassLiteral() {
         String[] sources = {
             "Anno.java",
@@ -320,6 +324,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testLocalAnnotationClassLiteral2() {
         String[] sources = {
             "Anno.java",
@@ -349,6 +354,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testImportedAnnotationConstant1() {
         String[] sources = {
             "p/I.java",
@@ -369,6 +375,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testImportedAnnotationConstant2() {
         String[] sources = {
             "p/I.java",
@@ -389,6 +396,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testAliasedAnnotationConstant1() {
         String[] sources = {
             "p/I.java",
@@ -409,6 +417,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testAliasedAnnotationConstant2() {
         String[] sources = {
             "p/I.java",
@@ -429,6 +438,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testAliasedAnnotationClassLiteral() {
         String[] sources = {
             "Anno.java",
@@ -448,6 +458,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testAliasedAnnotationClassLiteral2() {
         String[] sources = {
             "Anno.java",
@@ -468,6 +479,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testAliasedAnnotationClassLiteral3() {
         String[] sources = {
             "Anno.java",
@@ -476,7 +488,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "@interface Anno {\n" +
             "  Class<?> value();\n" +
             "}",
-            
+
             "p/Outer.java",
             "package p;\n" +
             "public class Outer { public static class Inner { } }",
@@ -491,6 +503,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testTargetMetaAnnotation() {
         String[] sources = {
             "Anno.java",
@@ -512,6 +525,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testTypeLevelAnnotations01() {
         String[] sources = {
             "p/X.groovy",
@@ -538,6 +552,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "public class p.X implements groovy.lang.GroovyObject {\n");
     }
 
+    @Test
     public void testMethodLevelAnnotations() {
         String[] sources = {
             "p/X.groovy",
@@ -569,6 +584,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
+    @Test
     public void testFieldLevelAnnotations01() {
         String[] sources = {
             "p/X.groovy",
@@ -600,6 +616,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
+    @Test
     public void testFieldLevelAnnotations_classRetention() {
         String[] sources = {
             "p/X.groovy",
@@ -628,6 +645,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
+    @Test
     public void testFieldLevelAnnotations_sourceRetention() {
         String[] sources = {
             "p/X.groovy",
@@ -656,6 +674,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
+    @Test
     public void testFieldLevelAnnotations_defaultRetention() {
         String[] sources = {
             "p/X.groovy",
@@ -682,6 +701,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
+    @Test
     public void testFieldLevelAnnotations_delegate() {
         String[] sources = {
             "Bar.groovy",
@@ -711,6 +731,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
+    @Test
     public void testConstructorLevelAnnotations01() {
         String[] sources = {
             "p/X.groovy",
@@ -745,6 +766,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
+    @Test
     public void testAnnotations04_defaultParamMethods() {
         String[] sources = {
             "p/X.groovy",
@@ -773,6 +795,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
+    @Test
     public void testTypeLevelAnnotations_SingleMember() {
         String[] sources = {
             "p/X.groovy",
@@ -802,6 +825,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
+    @Test
     public void testTypeLevelAnnotations_SingleMember02() {
         String[] sources = {
             "p/X.groovy",
@@ -831,6 +855,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
+    @Test
     public void testMethodLevelAnnotations_SingleMember() {
         String[] sources = {
             "p/X.groovy",
@@ -860,6 +885,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
+    @Test
     public void testMethodLevelAnnotations_SingleMember02() {
         String[] sources = {
             "p/X.groovy",
@@ -889,6 +915,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
+    @Test
     public void testFieldLevelAnnotations_SingleMember() {
         String[] sources = {
             "p/X.groovy",
@@ -918,6 +945,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
+    @Test
     public void testAnnotations_singleMemberAnnotationField() {
         String[] sources = {
             "p/X.groovy",
@@ -947,6 +975,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("X.groovy",expectedOutput);
     }
 
+    @Test
     public void testAnnotations_singleMemberAnnotationFailure() {
         String[] sources = {
             "p/X.groovy",
@@ -980,6 +1009,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testAnnotationCollector() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
@@ -1006,6 +1036,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
+    @Test
     public void testAnnotationCollector2() {
         if (GroovyUtils.GROOVY_LEVEL < 21) return;
 
@@ -1030,7 +1061,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Type(123)");
     }
 
-    // All types in groovy with TYPE specified for Target and obeyed
+    @Test // All types in groovy with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType() {
         String[] sources = {
             "p/X.groovy",
@@ -1058,7 +1089,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
-    // All groovy but annotation can only be put on METHOD - that is violated by class X
+    @Test // All groovy but annotation can only be put on METHOD - that is violated by class X
     public void testAnnotationsTargetType02() {
         String[] sources = {
             "p/X.groovy",
@@ -1092,7 +1123,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // All groovy but annotation can only be put on FIELD - that is violated by class X
+    @Test // All groovy but annotation can only be put on FIELD - that is violated by class X
     public void testAnnotationsTargetType03() {
         String[] sources = {
             "p/X.groovy",
@@ -1126,7 +1157,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // All groovy but annotation can only be put on FIELD or METHOD - that is violated by class X
+    @Test // All groovy but annotation can only be put on FIELD or METHOD - that is violated by class X
     public void testAnnotationsTargetType04() {
         String[] sources = {
             "p/X.groovy",
@@ -1160,7 +1191,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Two types in groovy, one in java with TYPE specified for Target and obeyed
+    @Test // Two types in groovy, one in java with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType05() {
         String[] sources = {
             "p/X.groovy",
@@ -1188,7 +1219,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
-    // 2 groovy, 1 java but annotation can only be put on METHOD - that is violated by class X
+    @Test // 2 groovy, 1 java but annotation can only be put on METHOD - that is violated by class X
     public void testAnnotationsTargetType06() {
         String[] sources = {
             "p/X.groovy",
@@ -1222,7 +1253,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // 2 groovy, 1 java but annotation can only be put on FIELD - that is violated by class X
+    @Test // 2 groovy, 1 java but annotation can only be put on FIELD - that is violated by class X
     public void testAnnotationsTargetType07() {
         String[] sources = {
             "p/X.groovy",
@@ -1256,7 +1287,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // 2 groovy, 1 java but annotation can only be put on FIELD or METHOD - that is violated by class X
+    @Test // 2 groovy, 1 java but annotation can only be put on FIELD or METHOD - that is violated by class X
     public void testAnnotationsTargetType08() {
         String[] sources = {
             "p/X.groovy",
@@ -1290,7 +1321,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // 1 groovy, 2 java with TYPE specified for Target and obeyed
+    @Test // 1 groovy, 2 java with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType09() {
         String[] sources = {
             "p/X.groovy",
@@ -1318,7 +1349,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
-    // 1 groovy, 2 java but annotation can only be put on METHOD - that is violated by class X
+    @Test // 1 groovy, 2 java but annotation can only be put on METHOD - that is violated by class X
     public void testAnnotationsTargetType10() {
         String[] sources = {
             "p/X.groovy",
@@ -1352,7 +1383,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // 1 groovy, 2 java but annotation can only be put on FIELD - that is violated by class X
+    @Test // 1 groovy, 2 java but annotation can only be put on FIELD - that is violated by class X
     public void testAnnotationsTargetType11() {
         String[] sources = {
             "p/X.groovy",
@@ -1386,7 +1417,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // 1 groovy, 2 java but annotation can only be put on FIELD or METHOD - that is violated by class X
+    @Test // 1 groovy, 2 java but annotation can only be put on FIELD or METHOD - that is violated by class X
     public void testAnnotationsTargetType12() {
         String[] sources = {
             "p/X.groovy",
@@ -1420,7 +1451,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // FIXASC groovy bug?  Why didn't it complain that String doesn't meet the bound - at the moment letting JDT complain...
+    @Test // FIXASC groovy bug?  Why didn't it complain that String doesn't meet the bound - at the moment letting JDT complain...
     public void testWildcards01() {
         String[] sources = {
             "p/X.groovy",
@@ -1449,6 +1480,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testWildcards02() {
         String[] sources = {
             "p/X.java",
@@ -1477,6 +1509,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testWildcards03() {
         String[] sources = {
             "p/X.java",
@@ -1505,6 +1538,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testWildcards04() {
         String[] sources = {
             "p/X.groovy",
@@ -1533,6 +1567,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testWildcards05() {
         String[] sources = {
             "p/X.java",
@@ -1555,6 +1590,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
+    @Test
     public void testWildcards06() {
         String[] sources = {
             "p/X.java",
@@ -1577,7 +1613,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "success");
     }
 
-    // bounds violation: String does not meet '? super Integer'
+    @Test // bounds violation: String does not meet '? super Integer'
     public void testWildcards07() {
         String[] sources = {
             "p/X.groovy",
@@ -1604,7 +1640,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // double upper bounds
+    @Test // double upper bounds
     public void testWildcards08() {
         String[] sources = {
             "p/X.java",
@@ -1633,7 +1669,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // double upper bounds
+    @Test // double upper bounds
     public void testWildcards09() {
         String[] sources = {
             "p/X.java",
@@ -1662,8 +1698,8 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // FIXASC groovy bug? Why does groovy not care about bounds violation?
-    public void _testWildcards10() {
+    @Test @Ignore("FIXASC groovy bug? Why does groovy not care about bounds violation?")
+    public void testWildcards10() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1691,6 +1727,7 @@ public final class AnnotationsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
+    @Test
     public void testWildcards11() {
         String[] sources = {
             "p/X.groovy",

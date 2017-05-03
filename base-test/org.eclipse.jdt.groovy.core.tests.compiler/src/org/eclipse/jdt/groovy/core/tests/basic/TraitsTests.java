@@ -15,22 +15,25 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import junit.framework.Test;
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
-import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
-public final class TraitsTests extends AbstractGroovyRegressionTest {
+public final class TraitsTests extends GroovyCompilerTestSuite {
 
-    public static Test suite() {
-        return buildMinimalComplianceTestSuite(TraitsTests.class, F_1_6);
+    @Before
+    public void setUp() {
+        assumeTrue(isAtLeastJava(JDK6));
+        assumeTrue(isAtLeastGroovy(23));
     }
 
-    public TraitsTests(String name) {
-        super(name);
-    }
-
+    @Test
     public void testTraits1() {
         String[] sources = {
             "Test.groovy",
@@ -57,6 +60,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         assertTrue(classNode.isInterface());
     }
 
+    @Test
     public void testTraits1a() {
         String[] sources = {
             "Test.groovy",
@@ -85,7 +89,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         assertTrue(classNode.isInterface());
     }
 
-    // Abstract Methods
+    @Test // Abstract Methods
     public void testTraits2() {
         String[] sources = {
             "A.groovy",
@@ -103,7 +107,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Hello, Bob!");
     }
 
-    // Private Methods - positive test
+    @Test // Private Methods - positive test
     public void testTraits3() {
         String[] sources = {
             "A.groovy",
@@ -125,7 +129,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Hello from a private method!");
     }
 
-    // Private Methods - negative test
+    @Test // Private Methods - negative test
     public void testTraits4() {
         String[] sources = {
             "A.groovy",
@@ -150,7 +154,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
-    // Meaning of this
+    @Test // Meaning of this
     public void testTraits5() {
         String[] sources = {
             "A.groovy",
@@ -165,7 +169,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "class Foo");
     }
 
-    // Interfaces
+    @Test // Interfaces
     public void testTraits6() {
         String[] sources = {
             "A.groovy",
@@ -192,7 +196,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         assertTrue(classNode.implementsInterface(type));
     }
 
-    // Properties
+    @Test // Properties
     public void testTraits7() {
         String[] sources = {
             "A.groovy",
@@ -208,7 +212,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "trueBob");
     }
 
-    // Private fields
+    @Test // Private fields
     public void testTraits8() {
         String[] sources = {
             "A.groovy",
@@ -224,7 +228,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "1");
     }
 
-    // Public fields
+    @Test // Public fields
     public void testTraits9() {
         String[] sources = {
             "A.groovy",
@@ -240,7 +244,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Bob");
     }
 
-    // Composition of Behaviors
+    @Test // Composition of Behaviors
     public void testTraits10() {
         String[] sources = {
             "A.groovy",
@@ -259,7 +263,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "I'm flying!I'm speaking!");
     }
 
-    // Overriding default methods
+    @Test // Overriding default methods
     public void testTraits11() {
         String[] sources = {
             "A.groovy",
@@ -282,7 +286,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "I'm flying!Quack!Quack!");
     }
 
-    // Simple Inheritance
+    @Test // Simple Inheritance
     public void testTraits12() {
         String[] sources = {
             "A.groovy",
@@ -300,7 +304,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Hello, I am Alice");
     }
 
-    // Multiple Inheritance
+    @Test // Multiple Inheritance
     public void testTraits13() {
         String[] sources = {
             "A.groovy",
@@ -317,7 +321,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources);
     }
 
-    // Dynamic code
+    @Test // Dynamic code
     public void testTraits14() {
         String[] sources = {
             "A.groovy",
@@ -336,7 +340,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Quack!");
     }
 
-    // Dynamic methods in trait
+    @Test // Dynamic methods in trait
     public void testTraits15() {
         String[] sources = {
             "A.groovy",
@@ -368,7 +372,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "oknullbarokSOMEMETHOD");
     }
 
-    // Multiple inheritance conflicts - Default conflict resolution
+    @Test // Multiple inheritance conflicts - Default conflict resolution
     public void testTraits16() {
         String[] sources = {
             "Sample.groovy",
@@ -386,7 +390,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "B");
     }
 
-    // Multiple inheritance conflicts - Default conflict resolution
+    @Test // Multiple inheritance conflicts - Default conflict resolution
     public void testTraits17() {
         String[] sources = {
             "Sample.groovy",
@@ -404,7 +408,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "A");
     }
 
-    // Multiple inheritance conflicts - User conflict resolution
+    @Test // Multiple inheritance conflicts - User conflict resolution
     public void testTraits18() {
         String[] sources = {
             "Sample.groovy",
@@ -424,7 +428,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "A");
     }
 
-    // Implementing a trait at runtime
+    @Test // Implementing a trait at runtime
     public void testTraits19() {
         String[] sources = {
             "Sample.groovy",
@@ -442,7 +446,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "ExtraSomething");
     }
 
-    // Implementing multiple traits at once - negative
+    @Test // Implementing multiple traits at once - negative
     public void testTraits20() {
         String[] sources = {
             "Sample.groovy",
@@ -454,19 +458,10 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "print c.methodFromB()"
         };
 
-        runConformTest(
-            // test directory preparation
-            true, /* flush output directory */
-            sources,
-            null /* no class libraries */,
-            getCompilerOptions() /* custom options */,
-            "" /* expected compiler log */,
-            "" /* expected output string */,
-            "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []",
-            new AbstractRegressionTest.JavacTestOptions());
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
     }
 
-    // Implementing multiple traits at once - positive
+    @Test // Implementing multiple traits at once - positive
     public void testTraits21() {
         String[] sources = {
             "Sample.groovy",
@@ -482,7 +477,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "AB");
     }
 
-    // Chaining behavior
+    @Test // Chaining behavior
     public void testTraits22() {
         String[] sources = {
             "Sample.groovy",
@@ -502,7 +497,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Received test logging with payload [:]");
     }
 
-    // Chaining behavior
+    @Test // Chaining behavior
     public void testTraits23() {
         String[] sources = {
             "Sample.groovy",
@@ -527,7 +522,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Seeing test logging with payload [:]\nReceived test logging with payload [:]");
     }
 
-    // Chaining behavior
+    @Test // Chaining behavior
     public void testTraits24() {
         String[] sources = {
             "Sample.groovy",
@@ -563,7 +558,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Seeing foo with payload [:]\nReceived foo with payload [:]\nSeeing sayHello with payload [:]\nI say Hello!");
     }
 
-    // Chaining behavior
+    @Test // Chaining behavior
     public void testTraits25() {
         String[] sources = {
             "Sample.groovy",
@@ -599,7 +594,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Seeing foo with payload [:]\nReceived foo with payload [:]\nI say Hello!");
     }
 
-    // Chaining behavior - Semantics of super inside a trait
+    @Test // Chaining behavior - Semantics of super inside a trait
     public void testTraits26() {
         String[] sources = {
             "Sample.groovy",
@@ -618,7 +613,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Grvy");
     }
 
-    // SAM type coercion
+    @Test // SAM type coercion
     public void testTraits27() {
         String[] sources = {
             "Sample.groovy",
@@ -633,7 +628,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Alice");
     }
 
-    // SAM type coercion
+    @Test // SAM type coercion
     public void testTraits28() {
         String[] sources = {
             "Sample.groovy",
@@ -648,7 +643,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "Hello Alice");
     }
 
-    // Differences with Java 8 default methods
+    @Test // Differences with Java 8 default methods
     public void testTraits29() {
         String[] sources = {
             "Sample.groovy",
@@ -667,7 +662,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "AliceBob");
     }
 
-    // Differences with mixins
+    @Test // Differences with mixins
     public void testTraits30() {
         String[] sources = {
             "Sample.groovy",
@@ -684,7 +679,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "ABtruefalse");
     }
 
-    // Static methods, properties and fields
+    @Test // Static methods, properties and fields
     public void testTraits31() {
         String[] sources = {
             "Sample.groovy",
@@ -702,7 +697,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "true");
     }
 
-    // Static methods, properties and fields
+    @Test // Static methods, properties and fields
     public void testTraits32() {
         String[] sources = {
             "Sample.groovy",
@@ -722,7 +717,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "truefalse");
     }
 
-    // Inheritance of state gotchas
+    @Test // Inheritance of state gotchas
     public void testTraits33() {
         String[] sources = {
             "Sample.groovy",
@@ -741,7 +736,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "3");
     }
 
-    // Inheritance of state gotchas
+    @Test // Inheritance of state gotchas
     public void testTraits34() {
         String[] sources = {
             "Sample.groovy",
@@ -762,7 +757,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "3");
     }
 
-    // Inheritance of state gotchas
+    @Test // Inheritance of state gotchas
     public void testTraits35() {
         String[] sources = {
             "Sample.groovy",
@@ -783,7 +778,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "7");
     }
 
-    // Limitations - Prefix and postfix operations
+    @Test // Limitations - Prefix and postfix operations
     public void testTraits36() {
         String[] sources = {
             "Sample.groovy",
@@ -815,7 +810,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Test @Trait annotation
+    @Test // Test @Trait annotation
     public void testTraits37() {
         String[] sources = {
             "Sample.groovy",
@@ -832,7 +827,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Test @Trait annotation
+    @Test // Test @Trait annotation
     public void testTraits38() {
         String[] sources = {
             "Sample.groovy",
@@ -850,7 +845,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Test @Trait annotation
+    @Test // Test @Trait annotation
     public void testTraits39() {
         String[] sources = {
             "Sample.groovy",
@@ -868,7 +863,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Negative test for @Trait annotation
+    @Test // Negative test for @Trait annotation
     public void testTraits40() {
         String[] sources = {
             "Sample.groovy",
@@ -897,7 +892,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Negative test for @Trait annotation
+    @Test // Negative test for @Trait annotation
     public void testTraits41() {
         String[] sources = {
             "Trait.groovy",
@@ -931,7 +926,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Negative test for @Trait annotation
+    @Test // Negative test for @Trait annotation
     public void testTraits42() {
         String[] sources = {
             "Trait.groovy",
@@ -964,7 +959,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Negative test for @Trait annotation
+    @Test // Negative test for @Trait annotation
     public void testTraits43() {
         String[] sources = {
             "Trait.groovy",
@@ -999,7 +994,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Test protected method of superclass overriding by trait method - default package
+    @Test // Test protected method of superclass overriding by trait method - default package
     public void testTraits44() {
         String[] sources = {
             "Sample.groovy",
@@ -1017,7 +1012,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Test protected method of superclass overriding by trait method - the same package
+    @Test // Test protected method of superclass overriding by trait method - the same package
     public void testTraits45() {
         String[] sources = {
             "Sample.groovy",
@@ -1038,7 +1033,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Test protected method of superclass overriding by trait method - different packages
+    @Test // Test protected method of superclass overriding by trait method - different packages
     public void testTraits46() {
         String[] sources = {
             "Sample.groovy",
@@ -1065,7 +1060,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Test protected method of superclass overriding by trait method - different packages
+    @Test // Test protected method of superclass overriding by trait method - different packages
     public void testTraits47() {
         String[] sources = {
             "Sample.groovy",
@@ -1094,7 +1089,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "a");
     }
 
-    // Test protected method of superclass and traits method overriding by class
+    @Test // Test protected method of superclass and traits method overriding by class
     public void testTraits48() {
         String[] sources = {
             "Sample.groovy",
@@ -1114,7 +1109,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "c");
     }
 
-    // Test protected method of superclass and traits method overriding by class - negative test
+    @Test // Test protected method of superclass and traits method overriding by class - negative test
     public void testTraits49() {
         String[] sources = {
             "Sample.groovy",
@@ -1138,7 +1133,7 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
             "----------\n");
     }
 
-    // Test protected method of superclass and traits method overriding by class - positive test
+    @Test // Test protected method of superclass and traits method overriding by class - positive test
     public void testTraits50() {
         String[] sources = {
             "Sample.groovy",
@@ -1158,8 +1153,8 @@ public final class TraitsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "c");
     }
 
-    // Java classes should be able to implement traits as well -- this doesn't work in groovyc either as of Groovy 2.4.8
-    public void _testTraitsInteroperability() {
+    @Test @Ignore("Java classes should be able to implement traits as well -- this doesn't work in groovyc either as of Groovy 2.4.8")
+    public void testTraitsInteroperability() {
         String[] sources = {
             "Sample.java",
             "public class Sample implements Valuable {\n" +

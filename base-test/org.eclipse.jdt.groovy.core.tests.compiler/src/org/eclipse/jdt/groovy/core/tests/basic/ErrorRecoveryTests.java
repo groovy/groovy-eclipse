@@ -15,30 +15,27 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import junit.framework.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Tests error recovery from the parser. All tests in this class are failing, so
  * do not add to build.  When a test starts passing, remove from this class.
  */
-public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
+public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
-    public static Test suite() {
-        return buildMinimalComplianceTestSuite(ErrorRecoveryTests.class, F_1_5);
-    }
-
-    public ErrorRecoveryTests(String name) {
-        super(name);
-    }
-
-    //
-
+    @Test
     public void testParsingIncompleteIfCondition_1046() throws Exception {
         this.runNegativeTest(new String[]{
                 "A.groovy",
@@ -60,6 +57,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
 
+    @Test
     public void testParsingDotTerminatingIncompleteIfCondition_1046() throws Exception {
         this.runNegativeTest(new String[]{
                 "A.groovy",
@@ -85,7 +83,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
 
-    public void testGRE941() throws Exception {
+    @Test
+    public void testGRE941() {
         this.runNegativeTest(new String[]{
                 "A.groovy",
                 "class Foo {\n" +
@@ -110,7 +109,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertEquals("Foo",cn.getName());
     }
 
-    public void testGRE644() throws Exception {
+    @Test
+    public void testGRE644() {
         this.runNegativeTest(new String[]{
                 "Other.groovy",
                 "class Test {\n" +
@@ -134,7 +134,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
 
-    public void testGRE1048() throws Exception {
+    @Test
+    public void testGRE1048() {
         this.runNegativeTest(new String[]{
                 "A.groovy",
                 "class TextCompletionTest { \n" +
@@ -163,6 +164,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertTrue(cn.getName().equals("TextCompletionTest"));
     }
 
+    @Test
     public void testParsingRecovery_GRE1085_1() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -191,6 +193,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1085_2() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -219,6 +222,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1085_3() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -246,6 +250,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1192_1() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -274,6 +279,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1046_1() {
         // this file is missing the 'then' block.  We should cope and still offer assists
         runNegativeTest(new String[] {
@@ -295,6 +301,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1046_2() {
         // trickier than above, this is also missing the closing paren
         runNegativeTest(new String[] {
@@ -311,6 +318,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1213_1() {
         // missing close paren
         runNegativeTest(new String[] {
@@ -333,6 +341,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1213_2() {
         // missing close paren
         runNegativeTest(new String[] {
@@ -355,6 +364,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         "----------\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1107_1() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -391,6 +401,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE1107_2() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -429,6 +440,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE468_1() {
         runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -457,6 +469,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
             "}\n");
     }
 
+    @Test
     public void testRecovery_GRE766() {
         runNegativeTest(new String[] {
             "A.groovy",
@@ -487,6 +500,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertNotNull(methodNode);
     }
 
+    @Test
     public void testParsingRecovery_GRE494() {
         this.runNegativeTest(new String[] {
             "Simple.groovy",
@@ -520,6 +534,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
+    @Test
     public void testParsingRecovery_GRE494_2() {
         this.runNegativeTest(new String[] {
             "MyDomainClass.groovy",
@@ -544,7 +559,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    public void _testParsingMissingCurlyRecovery1_GRE468() {
+    @Test @Ignore
+    public void testParsingMissingCurlyRecovery1_GRE468() {
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
                 "class F { int y() }\n"
@@ -565,7 +581,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    public void _testParsingMissingCurlyRecovery2_GRE468() {
+    @Test @Ignore
+    public void testParsingMissingCurlyRecovery2_GRE468() {
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
                 "class F { int y() { }\n"
@@ -586,9 +603,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    /**
-     * Simple case of a new reference missing () in a method body
-     */
+    @Test // new reference missing () in a method body
     public void testParsingNewRecovery1_GRE468() {
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
@@ -619,9 +634,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    /**
-     * Simple case of a new reference missing () followed by valid code
-     */
+    @Test // new reference missing () followed by valid code
     public void testParsingNewRecovery2_GRE468() {
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
@@ -654,6 +667,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
+    @Test
     public void testRecoveryParameterCompletion() {
         this.runNegativeTest(new String[]{
                 "XXX.groovy",
@@ -680,9 +694,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
         }
 
-    /**
-     * Missing type name for new call
-     */
+    @Test // missing type name for new call
     public void testParsingNewRecovery3_GRE468() {
         this.runNegativeTest(new String[] {
                 "Foo.groovy",
@@ -707,8 +719,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
+    @Test
     public void testParsingNewRecovery4_GRE468() {
-//      if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
                 "class C {\n"+
@@ -767,9 +779,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    /**
-     * Missing type name for new call
-     */
+    @Test // missing type name for new call
     public void testParsingNewRecovery5_GRE468() {
         this.runNegativeTest(new String[] {
                 "Foo.groovy",
@@ -794,8 +804,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
                 "}\n");
     }
 
-    // variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
-    public void _testParsingNewRecoveryImports1_GRE538() {
+    @Test @Ignore // variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
+    public void testParsingNewRecoveryImports1_GRE538() {
         this.runNegativeTest(new String[] {
             "XXX.groovy",
             "import\n"+
@@ -820,7 +830,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertNull(cn);
     }
 
-    public void _testParsingNewRecoveryImports2_GRE538() {
+    @Test @Ignore
+    public void testParsingNewRecoveryImports2_GRE538() {
         this.runNegativeTest(new String[] {
             "XXX.groovy",
             "import \n"+
@@ -845,7 +856,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertNull(cn);
     }
 
-    public void _testParsingNewRecoveryImports3_GRE538() {
+    @Test @Ignore
+    public void testParsingNewRecoveryImports3_GRE538() {
         this.runNegativeTest(new String[] {
             "XXX.groovy",
             "import static \n"+
@@ -870,7 +882,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertNull(cn);
     }
 
-    public void _testParsingNewRecoveryImports4_GRE538() {
+    @Test @Ignore
+    public void testParsingNewRecoveryImports4_GRE538() {
         this.runNegativeTest(new String[] {
             "XXX.groovy",
             "import com.\n"+
@@ -895,7 +908,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertNull(cn);
     }
 
-    public void _testParsingNewRecoveryImports5_GRE538() {
+    @Test @Ignore
+    public void testParsingNewRecoveryImports5_GRE538() {
         this.runNegativeTest(new String[] {
             "XXX.groovy",
             "import static com.\n"+
@@ -920,6 +934,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertNull(cn);
     }
 
+    @Test
     public void testParsingNewRecovery6_GRE468() {
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
@@ -947,6 +962,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         "}\n");
     }
 
+    @Test
     public void testParsingNewRecovery7_GRE468() {
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
@@ -969,8 +985,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         checkGCUDeclaration("XXX.groovy",null);
     }
 
+    @Test
     public void testParsingNewRecovery8_GRE468() {
-//      if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
         this.runNegativeTest(new String[] {
                 "XXX.groovy",
                 "import javax.swing.text.html.HTML\n"+
@@ -991,7 +1007,8 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         "}\n");
     }
 
-    public void _testUnrecoverableErrors_GRE949() {
+    @Test @Ignore
+    public void testUnrecoverableErrors_GRE949() {
         this.runNegativeTest(new String[] {
                 "Foo.groovy",
                 "package a\n" +
@@ -1035,6 +1052,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertTrue(mn.encounteredUnrecoverableError());
     }
 
+    @Test
     public void testUnrecoverableErrors_GRE755_2() {
         this.runNegativeTest(new String[] {
             "Bar.groovy",
@@ -1052,6 +1070,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         assertTrue(mn.encounteredUnrecoverableError());
     }
 
+    @Test
     public void testUnrecoverableErrors_GRE755_3() {
         this.runNegativeTest(new String[] {
             "Bar.groovy",
@@ -1074,8 +1093,7 @@ public final class ErrorRecoveryTests extends AbstractGroovyRegressionTest {
         }
     }
 
-    // Parser should correctly parse this code, but
-    // should return with an error
+    @Test // parser should correctly parse this code, but should return with an error
     public void testSafeDereferencingParserRecovery() {
         this.runNegativeTest(new String[] {
                 "Run.groovy",

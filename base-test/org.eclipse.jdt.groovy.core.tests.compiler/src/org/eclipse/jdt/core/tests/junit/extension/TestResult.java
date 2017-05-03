@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.junit.extension;
 
-import java.util.*;
 import junit.framework.*;
 
 public class TestResult extends junit.framework.TestResult {
@@ -36,14 +35,6 @@ public class TestResult extends junit.framework.TestResult {
 	public synchronized void addFailure(Test test, AssertionFailedError t) {
 		TestFailure testFailure= new TestFailure(test, t);
 		this.fFailures.add(testFailure);
-	}
-	/**
-	 * Returns a copy of the listeners.
-	 */
-	private synchronized List<junit.framework.TestListener> cloneListeners() {
-		List<junit.framework.TestListener> result = new ArrayList<junit.framework.TestListener>();
-		result.addAll(this.fListeners);
-		return result;
 	}
 	protected void run(final TestCase test) {
 		this.currentTest = test;
