@@ -27,6 +27,10 @@ import org.junit.Test;
 
 public final class TraitsTests extends GroovyCompilerTestSuite {
 
+    public TraitsTests(long level) {
+        super(level);
+    }
+
     @Before
     public void setUp() {
         assumeTrue(isAtLeastJava(JDK6));

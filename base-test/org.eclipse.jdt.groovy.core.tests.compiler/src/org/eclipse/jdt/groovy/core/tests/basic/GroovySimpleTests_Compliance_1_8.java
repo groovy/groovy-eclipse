@@ -23,6 +23,10 @@ import org.junit.Test;
 
 public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSuite {
 
+    public GroovySimpleTests_Compliance_1_8(long level) {
+        super(level);
+    }
+
     @Before
     public void setUp() {
         assumeTrue(isAtLeastJava(JDK8));

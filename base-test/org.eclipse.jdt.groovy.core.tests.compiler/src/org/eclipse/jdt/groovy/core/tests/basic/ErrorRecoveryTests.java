@@ -35,6 +35,10 @@ import org.junit.Test;
  */
 public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
+    public ErrorRecoveryTests(long level) {
+        super(level);
+    }
+
     @Test
     public void testParsingIncompleteIfCondition_1046() throws Exception {
         this.runNegativeTest(new String[]{

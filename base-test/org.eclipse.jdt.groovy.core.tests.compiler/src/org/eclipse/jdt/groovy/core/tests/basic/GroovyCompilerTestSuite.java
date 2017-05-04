@@ -80,8 +80,11 @@ public abstract class GroovyCompilerTestSuite {
         return params;
     }
 
-    @Parameterized.Parameter
-    public long compliance;
+    private final long compliance;
+    
+    public GroovyCompilerTestSuite(long compliance) {
+        this.compliance = compliance;
+    }
 
     @Rule
     public TestName test = new TestName();

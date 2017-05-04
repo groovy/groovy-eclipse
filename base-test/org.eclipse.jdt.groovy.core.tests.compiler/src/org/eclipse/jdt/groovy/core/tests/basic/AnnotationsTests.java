@@ -21,6 +21,10 @@ import org.junit.Test;
 
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
+    public AnnotationsTests(long level) {
+        super(level);
+    }
+
     @Test
     public void testGroovyAnnotation() {
         String[] sources = {

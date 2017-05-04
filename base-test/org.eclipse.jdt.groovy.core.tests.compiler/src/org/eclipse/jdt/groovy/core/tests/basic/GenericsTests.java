@@ -17,7 +17,6 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -28,6 +27,10 @@ import org.junit.Test;
 import org.osgi.framework.Version;
 
 public final class GenericsTests extends GroovyCompilerTestSuite {
+
+    public GenericsTests(long level) {
+        super(level);
+    }
 
     private void runWarningFreeTest(String[] sources) {
         runNegativeTest(sources, ""); // expect no compiler output (warnings or errors)
@@ -1135,7 +1138,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtendingGenerics_GroovyExtendsJava4() {
-        assumeFalse(isAtLeastJava(JDK8));
+        assumeTrue(!isAtLeastJava(JDK8));
 
         String[] sources = {
             "p/B.groovy",
@@ -1156,7 +1159,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtendingGenerics_GroovyExtendsJava5() {
-        assumeFalse(isAtLeastJava(JDK8));
+        assumeTrue(!isAtLeastJava(JDK8));
 
         String[] sources = {
             "p/B.groovy",
@@ -1174,7 +1177,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtendingGenerics_GroovyExtendsJava5a() {
-        assumeFalse(isAtLeastJava(JDK8));
+        assumeTrue(!isAtLeastJava(JDK8));
 
         String[] sources = {
             "p/B.groovy",
@@ -1787,7 +1790,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testJava7_2() {
-        assumeFalse(isAtLeastJava(JDK7));
+        assumeTrue(!isAtLeastJava(JDK7));
 
         String[] sources = {
             "A.java",
@@ -1821,7 +1824,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testJava7_3() {
-        assumeFalse(isAtLeastJava(JDK7));
+        assumeTrue(!isAtLeastJava(JDK7));
 
         String[] sources = {
             "A.java",

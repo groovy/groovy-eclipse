@@ -49,6 +49,10 @@ import org.junit.Test;
 
 public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
+    public GroovySimpleTests(long level) {
+        super(level);
+    }
+
     @Test
     public void testClosureSyntax() {
         runNegativeTest(new String[] {

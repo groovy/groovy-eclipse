@@ -39,6 +39,10 @@ import org.osgi.framework.Version;
 
 public final class TransformationsTests extends GroovyCompilerTestSuite {
 
+    public TransformationsTests(long level) {
+        super(level);
+    }
+
     private String getJarPath(String entry) throws Exception {
         URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
         return FileLocator.resolve(url).getFile();
