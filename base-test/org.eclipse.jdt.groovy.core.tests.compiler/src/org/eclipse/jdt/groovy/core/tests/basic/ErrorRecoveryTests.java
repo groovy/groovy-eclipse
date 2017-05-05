@@ -25,7 +25,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -1089,12 +1088,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "----------\n");
         ModuleNode mn = getModuleNode("Bar.groovy");
 
-
-        if (GroovyUtils.GROOVY_LEVEL<18) {
-            assertTrue(mn.encounteredUnrecoverableError());
-        } else {
-            assertFalse(mn.encounteredUnrecoverableError());
-        }
+        assertFalse(mn.encounteredUnrecoverableError());
     }
 
     @Test // parser should correctly parse this code, but should return with an error

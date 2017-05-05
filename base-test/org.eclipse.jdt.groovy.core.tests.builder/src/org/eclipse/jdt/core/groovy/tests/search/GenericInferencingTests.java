@@ -912,11 +912,10 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
 
-    // GRECLIPSE-1696
-    // Generic method type inference with @CompileStatic
-    @Test
+    @Test // GRECLIPSE-1696: Generic method type inference with @CompileStatic
     public void testMethod1() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         String contents =
             "import groovy.transform.CompileStatic\n" +
             "class A {\n" +

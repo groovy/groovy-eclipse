@@ -1101,8 +1101,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
-        env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
-        env.addJar(projectPath, "lib/junit4_4.5.0.jar");
         fullBuild(projectPath);
 
         // remove old package fragment root so that names don't collide
@@ -2108,8 +2106,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
+        env.addJar(projectPath, "lib/junit-4.12.jar");
         env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
-        env.addJar(projectPath, "lib/junit4_4.5.0.jar");
         fullBuild(projectPath);
 
         // remove old package fragment root so that names don't collide
@@ -2154,8 +2152,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
+        env.addJar(projectPath, "lib/junit-4.12.jar");
         env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
-        env.addJar(projectPath, "lib/junit4_4.5.0.jar");
         fullBuild(projectPath);
 
         // remove old package fragment root so that names don't collide
@@ -2209,8 +2207,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
+        env.addJar(projectPath, "lib/junit-4.12.jar");
         env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
-        env.addJar(projectPath, "lib/junit4_4.5.0.jar");
         fullBuild(projectPath);
 
         // remove old package fragment root so that names don't collide

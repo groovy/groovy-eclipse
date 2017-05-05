@@ -28,7 +28,6 @@ abstract class JUnitTestSuite extends GroovyEclipseTestSuite {
 
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Hello', String pack = 'p2') {
         GroovyCompilationUnit unit = super.addGroovySource(contents, name, pack)
-        buildProject()
         waitForIndex()
         return unit
     }

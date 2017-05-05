@@ -210,15 +210,15 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
         TestProject p2 = new TestProject('P2a')
         try {
             IPath runtimeJarPath = CompilerUtils.getExportedGroovyAllJar()
-            p1.addJarFileToClasspath(runtimeJarPath)
+            p1.addExternalLibrary(runtimeJarPath)
 
             IFile f1 = p1.project.getFile('empty.jar')
             f1.create(new ByteArrayInputStream(new byte[0]), false, null)
-            p1.addJarFileToClasspath(f1.getFullPath())
+            p1.addExternalLibrary(f1.getFullPath())
 
             IFile f2 = p2.project.getFile('empty2.jar')
             f2.create(new ByteArrayInputStream(new byte[0]), false, null)
-            p1.addJarFileToClasspath(f2.getFullPath())
+            p1.addExternalLibrary(f2.getFullPath())
 
             String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject())
 

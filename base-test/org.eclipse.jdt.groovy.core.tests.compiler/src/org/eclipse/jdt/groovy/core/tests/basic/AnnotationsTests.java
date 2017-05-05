@@ -15,7 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.junit.Assume.assumeTrue;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -97,7 +99,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
             "\t@Min(0G)\n" +
-            "\t     ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^" : "") + "\n" +
+            "\t     ^" + (isAtLeastGroovy(20) ? "^" : "") + "\n" +
             "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'java.math.BigInteger' in @Min\n" +
             "----------\n");
     }
@@ -124,7 +126,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
             "\t@Min(1.1G)\n" +
-            "\t     ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^^" : "") + "\n" +
+            "\t     ^" + (isAtLeastGroovy(20) ? "^^^" : "") + "\n" +
             "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @Min\n" +
             "----------\n");
     }
@@ -238,7 +240,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
             "\t@AnnotationDouble(value='test', width=1.0) double value\n" +
-            "\t                                      ^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^" : "") + "\n" +
+            "\t                                      ^" + (isAtLeastGroovy(20) ? "^^" : "") + "\n" +
             "Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble\n" +
             "----------\n");
     }
@@ -761,10 +763,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy", expectedOutput);
 
         expectedOutput =
-            //"  // Method descriptor #18 (Ljava/lang/String;)V\n" +
-            (GroovyUtils.GROOVY_LEVEL<18?
-            "  // Stack: 3, Locals: 3\n":
-            "  // Stack: 2, Locals: 4\n")+
+            "  // Stack: 2, Locals: 4\n" +
             "  @p.Anno\n" +
             "  public X(java.lang.String s);\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
@@ -1008,14 +1007,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "2. ERROR in p\\X.groovy (at line 3)\n" +
             "\t@Anno(IDontExist.class)\n" +
-            "\t      ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^":"")+"\n" +
+            "\t      ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^":"")+"\n" +
             "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
             "----------\n");
     }
 
     @Test
     public void testAnnotationCollector() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {
             "Type.groovy",
@@ -1042,7 +1041,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAnnotationCollector2() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) return;
+        assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {
             "Type.groovy",

@@ -22,8 +22,10 @@ import org.codehaus.jdt.groovy.model.GroovyNature
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.Platform
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaProject
@@ -95,6 +97,9 @@ abstract class GroovyEclipseTestSuite {
         }
 
         def entries = testProject.javaProject.rawClasspath.findAll {
+            if (it.entryKind == IClasspathEntry.CPE_LIBRARY) {
+                return false
+            }
             if (it.entryKind == IClasspathEntry.CPE_PROJECT) {
                 return false
             }
@@ -156,11 +161,14 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final void addClasspathContainer(IPath path) {
-        testProject.addEntry(testProject.project, JavaCore.newContainerEntry(path))
+        testProject.addClasspathEntry(JavaCore.newContainerEntry(path))
     }
 
     protected final void addJUnit4() {
-        addClasspathContainer(new Path('org.eclipse.jdt.junit.JUNIT_CONTAINER/4'))
+        //addClasspathContainer(new Path('org.eclipse.jdt.junit.JUNIT_CONTAINER/4'))
+        def bundle = Platform.getBundle('org.eclipse.jdt.groovy.core.tests.builder')
+        URL jarUrl = FileLocator.toFileURL(bundle.getEntry('lib/junit-4.12.jar'))
+        testProject.addExternalLibrary(new Path(jarUrl.file))
     }
 
     protected final void addNature(String... natures) {
@@ -184,7 +192,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final IPackageFragmentRoot getPackageFragmentRoot() {
-        testProject.getSourceFolder()
+        testProject.sourceFolder
     }
 
     protected final IPackageFragment getPackageFragment(String name) {

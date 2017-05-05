@@ -1317,10 +1317,6 @@ public class TestingEnvironment {
 		addExternalJar(projectPath, GroovyActivator.GROOVY_ALL_JAR_URL.getFile());
 	}
 
-	public void addJUnitJar(IPath projectPath) throws Exception {
-		addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib/junit4_4.5.0.jar")).getFile());
-	}
-
 	@SuppressWarnings("unchecked")
 	public <U extends ICompilationUnit> U getUnit(IPath path) {
 		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);

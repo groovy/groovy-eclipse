@@ -15,11 +15,13 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Iterator;
@@ -81,7 +83,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGreclipse1521_pre() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         runConformTest(new String[] {
             "Foo.groovy",
             "enum Color { R,G,B;}\n"
@@ -1139,10 +1142,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    // GROOVY-4219
-    @Test
+    @Test // GROOVY-4219
     public void testGRE637() {
-        if (GroovyUtils.GROOVY_LEVEL < 22) return;
+        assumeTrue(isAtLeastGroovy(22));
+
         runConformTest(new String[] {
             "de/brazzy/nikki/Texts.java",
             "package de.brazzy.nikki;\n"+
@@ -1281,7 +1284,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testEnumPositions_GRE1072() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) return;
+        assumeTrue(isAtLeastGroovy(20));
+
         runConformTest(new String[] {
             "X.groovy",
             "enum Color {\n" +
@@ -5238,9 +5242,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImport_538() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(21));
+
         runNegativeTest(new String[] {
                 "A.groovy",
                 "import "
@@ -5258,13 +5261,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         List<ImportNode> imports = mn.getImports();
         ImportNode brokenImportNode = imports.get(0);
-        if (GroovyUtils.GROOVY_LEVEL >= 21) {
-            assertEquals(0, brokenImportNode.getStart());
-            assertEquals(6, brokenImportNode.getEnd());
-        } else {
-            assertEquals(2, brokenImportNode.getStart());
-            assertEquals(0, brokenImportNode.getEnd());
-        }
+        assertEquals(0, brokenImportNode.getStart());
+        assertEquals(6, brokenImportNode.getEnd());
         assertEquals("java.lang.Object", brokenImportNode.getType().getName());
 
         ClassNode cn = mn.getClasses().get(0);
@@ -5413,9 +5411,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImportFollowedByClassDeclaration_538() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(21));
+
         runNegativeTest(new String[] {
                 "A.groovy",
                 "import\n"+
@@ -5554,9 +5551,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAbstractMethodWithinEnum_STS3803() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return;
-        }
+        assumeTrue(isAtLeastGroovy(21));
+
         runConformTest(new String[] {
             "Bad.groovy",
             "enum Bad {\n" +
