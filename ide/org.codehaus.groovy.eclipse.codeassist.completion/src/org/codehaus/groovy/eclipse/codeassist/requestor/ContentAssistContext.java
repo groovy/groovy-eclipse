@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -25,11 +29,8 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.ui.PreferenceConstants;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 9, 2009
- */
 public class ContentAssistContext {
 
     /**
@@ -97,6 +98,8 @@ public class ContentAssistContext {
      */
     public VariableScope currentScope;
 
+    private Set<String> favoriteStaticMembers;
+
     public ContentAssistContext(
             int completionLocation,
             String completionExpression,
@@ -138,6 +141,23 @@ public class ContentAssistContext {
         } else {
             return containingDeclaration.getDeclaringClass();
         }
+    }
+
+    /**
+     * @see org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposalComputer.getFavoriteStaticMembers()
+     */
+    public Set<String> getFavoriteStaticMembers() {
+        if (favoriteStaticMembers == null) {
+            String serializedFavorites = PreferenceConstants.getPreferenceStore().getString(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS);
+            if (serializedFavorites != null && serializedFavorites.length() > 0) {
+                favoriteStaticMembers = new TreeSet<String>();
+                Collections.addAll(favoriteStaticMembers,
+                    serializedFavorites.split(";"));
+            } else {
+                favoriteStaticMembers = Collections.emptySet();
+            }
+        }
+        return favoriteStaticMembers;
     }
 
     /**

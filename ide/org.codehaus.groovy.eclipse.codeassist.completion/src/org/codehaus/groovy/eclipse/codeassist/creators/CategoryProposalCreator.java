@@ -41,8 +41,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         Set<String> set = new HashSet<String>();
         getAllSupersAsStrings(candidate, set);
         set.add("java.lang.Object");
-        List<IGroovyProposal> groovyProposals = findAllProposals(set, categories, prefix, candidate);
-        return groovyProposals;
+        return findAllProposals(set, categories, prefix, candidate);
     }
 
     private List<IGroovyProposal> findAllProposals(Set<String> set, Set<ClassNode> categories, String prefix, ClassNode declaringClass) {
@@ -64,8 +63,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                 if (method.isStatic() && method.isPublic()) {
                     Parameter[] params = method.getParameters();
                     if (ProposalUtils.looselyMatches(prefix, methodName)) {
-                        if (params != null && params.length > 0 && set.contains(params[0].getType().getName())
-                                && !dupMethod(method, existingMethodProposals)) {
+                        if (params != null && params.length > 0 &&
+                                set.contains(params[0].getType().getName()) && !dupMethod(method, existingMethodProposals)) {
                             GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(method);
                             methodProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 101 : 1);
                             groovyProposals.add(methodProposal);
@@ -76,16 +75,15 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                             }
                             methodList.add(method);
                         }
-                    } else if (params.length == 1
-                            && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true)
-                            && !existingFieldProposals.contains(methodName) && hasNoField(declaringClass, methodName)) {
+                    } else if (params.length == 1 &&
+                            findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
+                            !existingFieldProposals.contains(methodName) && hasNoField(declaringClass, methodName)) {
                         // add property variant of accessor name
                         GroovyFieldProposal fieldProposal = new GroovyFieldProposal(createMockField(method));
                         fieldProposal.setRelevanceMultiplier(1);
                         groovyProposals.add(fieldProposal);
                         existingFieldProposals.add(methodName);
                     }
-
                 }
             }
         }

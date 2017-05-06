@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,25 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import groovyjarjarasm.asm.Opcodes;
-
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.ICompilationUnit;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- */
 public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
 
     public GroovyCategoryMethodProposal(MethodNode method) {
         super(method, "Category: " + method.getDeclaringClass().getNameWithoutPackage());
     }
 
-    public GroovyCategoryMethodProposal(MethodNode method, String contributor) {
-        super(method, contributor);
-    }
-
-    public GroovyCategoryMethodProposal(MethodNode method, String contributor, ProposalFormattingOptions options) {
-        super(method, contributor, options);
-    }
-
     @Override
     protected int getModifiers() {
-        return method.getModifiers()  & ~Opcodes.ACC_STATIC;  // category methods are defined as static, but should not appear as such when a proposal
+        return getMethod().getModifiers()  & ~Opcodes.ACC_STATIC;  // category methods are defined as static, but should not appear as such when a proposal
     }
 
     @Override
     protected char[] createMethodSignature() {
-        return ProposalUtils.createMethodSignature(method, 1);
+        return ProposalUtils.createMethodSignature(getMethod(), 1);
     }
 
     @Override

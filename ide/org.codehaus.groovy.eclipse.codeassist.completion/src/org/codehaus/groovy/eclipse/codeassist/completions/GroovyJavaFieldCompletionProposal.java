@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.FieldProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
+import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.viewers.StyledString;
-import org.eclipse.swt.graphics.Image;
 
-/**
- *
- * @author Andrew Eisenberg
- * @created Dec 8, 2009
- */
 public class GroovyJavaFieldCompletionProposal extends JavaCompletionProposal {
 
     private final CompletionProposal proposal;
-    public GroovyJavaFieldCompletionProposal(CompletionProposal proposal, Image image, StyledString displayString) {
-        super(String.valueOf(proposal.getName()), proposal.getReplaceStart(),
-                proposal.getReplaceEnd()-proposal.getReplaceStart(),
-                image, displayString, proposal.getRelevance());
-        this.proposal = proposal;
-        this.setRelevance(proposal.getRelevance());
+
+    public GroovyJavaFieldCompletionProposal(CompletionProposal proposal, StyledString displayString, JavaContentAssistInvocationContext javaContext) {
+        super(String.valueOf(proposal.getName()), proposal.getReplaceStart(), proposal.getReplaceEnd() - proposal.getReplaceStart(),
+            ProposalUtils.getImage(proposal), displayString, proposal.getRelevance(), false, javaContext);
+        this.setProposalInfo(new FieldProposalInfo(javaContext.getProject(), (this.proposal = proposal)));
         this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 

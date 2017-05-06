@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaFieldCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -45,16 +46,13 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         this.contributor = contributor;
     }
 
-    public IJavaCompletionProposal createJavaProposal(
-            ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext) {
+    public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             return null;
         }
 
         CompletionProposal proposal = createProposal(context);
-        return new GroovyJavaFieldCompletionProposal(proposal,
-                ProposalUtils.getImage(proposal), createDisplayString(property));
+        return new GroovyJavaFieldCompletionProposal(proposal, createDisplayString(property), javaContext);
     }
 
     protected StyledString createDisplayString(PropertyNode property) {

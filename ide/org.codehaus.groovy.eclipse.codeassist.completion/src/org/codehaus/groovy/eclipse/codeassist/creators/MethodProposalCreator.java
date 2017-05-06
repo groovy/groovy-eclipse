@@ -16,14 +16,9 @@
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -31,6 +26,8 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
@@ -41,18 +38,19 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * Generates all of the method proposals for a given location.
- * Also will add the non-getter form of getter methods if appropriate.
+ * Also will add the property form of accessor methods if appropriate.
  */
 public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
-    ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
+    private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
 
-    private Set<ClassNode> alreadySeen = Collections.emptySet();
+    private Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
 
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
+        List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
+
         boolean firstTime = alreadySeen.isEmpty();
-        List<MethodNode> allMethods = getAllMethods(type);
-        List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
+        List<MethodNode> allMethods = getAllMethods(type, alreadySeen);
         Set<String> alreadySeenFields = new HashSet<String>();
         if (isStatic) {
             // "class" is added by FieldProposalCreator
@@ -69,95 +67,111 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     isInterestingType = isInterestingType(method.getReturnType());
                 }
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
-                    GroovyMethodProposal methodProposal = new GroovyMethodProposal(method, "Groovy", options);
+                    GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                    proposal.setProposalFormattingOptions(options);
                     float relevanceMultiplier = isInterestingType ? 101f : 1f;
                     relevanceMultiplier *= method.isStatic() ? 0.1f : 1f;
                     // de-emphasize 'this' references inside closure
                     relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1f : 1f;
-                    methodProposal.setRelevanceMultiplier(relevanceMultiplier);
-                    groovyProposals.add(methodProposal);
+                    proposal.setRelevanceMultiplier(relevanceMultiplier);
+                    proposals.add(proposal);
                 }
 
                 AccessorSupport accessor = findLooselyMatchedAccessorKind(prefix, methodName, false);
                 if (accessor.isAccessorKind(method, false)) {
-                    // if there is a getter or setter, then add a field proposal
-                    // with the name being gotten
+                    // if there is a getter or setter, then add a field proposal as well
                     String mockFieldName = ProposalUtils.createMockFieldName(methodName);
                     if (!alreadySeenFields.contains(mockFieldName)) {
                         // be careful not to add fields twice
                         alreadySeenFields.add(mockFieldName);
                         if (hasNoField(method.getDeclaringClass(), methodName)) {
-                            GroovyFieldProposal fieldProposal = new GroovyFieldProposal(createMockField(method));
-                            fieldProposal.setRelevanceMultiplier(isInterestingType ? 11 : 1);
-                            groovyProposals.add(fieldProposal);
+                            GroovyFieldProposal proposal = new GroovyFieldProposal(createMockField(method));
+                            proposal.setRelevanceMultiplier(isInterestingType ? 11 : 1);
+                            proposals.add(proposal);
                         }
                     }
                 }
             }
         }
 
-        // now do methods from static imports
         if (currentScope != null) {
             ClassNode enclosingTypeDeclaration = currentScope.getEnclosingTypeDeclaration();
             if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
-                groovyProposals.addAll(getStaticImportProposals(prefix, type.getModule()));
+                findStaticImportProposals(proposals, prefix, type.getModule());
+                findStaticFavoriteProposals(proposals, prefix, type.getModule());
             }
         }
 
-        return groovyProposals;
+        return proposals;
     }
 
-    protected List<MethodNode> getAllMethods(ClassNode type) {
-        List<MethodNode> allMethods = type.getAllDeclaredMethods();
-        if (!alreadySeen.isEmpty()) {
-            // remove all methods from classes that we have already visited
-            for (Iterator<MethodNode> methodIter = allMethods.iterator(); methodIter.hasNext();) {
-                if (alreadySeen.contains(methodIter.next().getDeclaringClass())) {
-                    methodIter.remove();
-                }
-            }
-        }
-
-        // keep track of the already seen types so that next time, we won't include them
-        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
-        getAllSupers(type, types, alreadySeen);
-        if (alreadySeen.isEmpty()) {
-            alreadySeen = types;
-        } else {
-            alreadySeen.addAll(types);
-        }
-
-        return allMethods;
-    }
-
-    private List<IGroovyProposal> getStaticImportProposals(String prefix, ModuleNode module) {
-        List<IGroovyProposal> staticProposals = new ArrayList<IGroovyProposal>();
-
-        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper.getStaticImports(module);
-        for (Entry<String, ImportNode> entry : staticImports.entrySet()) {
+    private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
+        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticImports(module).entrySet()) {
             String fieldName = entry.getValue().getFieldName();
-            if (fieldName != null && ProposalUtils.looselyMatches(prefix, fieldName)) {
+            if (ProposalUtils.looselyMatches(prefix, fieldName)) {
                 List<MethodNode> methods = entry.getValue().getType().getDeclaredMethods(fieldName);
                 if (methods != null) {
                     for (MethodNode method : methods) {
-                        staticProposals.add(new GroovyMethodProposal(method, "Groovy", options));
+                        if (method.isStatic()) {
+                            GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                            proposal.setProposalFormattingOptions(options);
+                            proposals.add(proposal);
+                        }
                     }
                 }
             }
         }
-
-        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper.getStaticStarImports(module);
-        for (Entry<String, ImportNode> entry : staticStarImports.entrySet()) {
+        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticStarImports(module).entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (MethodNode method : (Iterable<MethodNode>) type.getMethods()) {
                     if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
-                        staticProposals.add(new GroovyMethodProposal(method, "Groovy", options));
+                        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                        proposal.setProposalFormattingOptions(options);
+                        proposals.add(proposal);
                     }
                 }
             }
         }
+    }
 
-        return staticProposals;
+    private void findStaticFavoriteProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
+        for (String favoriteStaticMember : favoriteStaticMembers) {
+            int pos = favoriteStaticMember.lastIndexOf('.');
+            String typeName = favoriteStaticMember.substring(0, pos);
+            String fieldName = favoriteStaticMember.substring(pos + 1);
+            ClassNode typeNode = tryResolveClassNode(typeName, module);
+
+            if (typeNode == null) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Cannot resolve favorite type " + typeName);
+                }
+                continue;
+            }
+
+            if ("*".equals(fieldName)) {
+                for (MethodNode method : (Iterable<MethodNode>) typeNode.getMethods()) {
+                    if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
+                        proposals.add(newFavoriteMethodProposal(method, typeName + '.' + method.getName()));
+                    }
+                }
+            } else {
+                if (ProposalUtils.looselyMatches(prefix, fieldName)) {
+                    List<MethodNode> methods = typeNode.getDeclaredMethods(fieldName);
+                    for (MethodNode method : methods) {
+                        if (method.isStatic()) {
+                            proposals.add(newFavoriteMethodProposal(method, favoriteStaticMember));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private IGroovyProposal newFavoriteMethodProposal(MethodNode method, String favorite) {
+        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+        proposal.setProposalFormattingOptions(options);
+        proposal.setRequiredStaticImport(favorite);
+        return proposal;
     }
 }

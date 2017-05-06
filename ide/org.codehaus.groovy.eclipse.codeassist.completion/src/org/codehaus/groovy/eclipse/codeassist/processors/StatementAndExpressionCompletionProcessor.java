@@ -68,29 +68,22 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 11, 2009
- */
 public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
-    class ExpressionCompletionRequestor implements ITypeRequestor {
+    private class ExpressionCompletionRequestor implements ITypeRequestor {
 
-        boolean visitSuccessful = false;
-        boolean isStatic = false;
-        ClassNode resultingType;
-
-        ClassNode lhsType;
-        Set<ClassNode> categories;
-
-        VariableScope currentScope;
-
+        // tracks the number of array accesses that must be dereferenced
+        private int derefCount;
+        private boolean isStatic;
+        private ClassNode lhsType;
+        private ClassNode resultingType;
+        private Set<ClassNode> categories;
         private Expression arrayAccessLHS;
+        private VariableScope currentScope;
 
-        // keep track of the number of array accesses that must be dereferenced
-        private int derefCount = 0;
+        private boolean visitSuccessful;
 
-        public ExpressionCompletionRequestor() {
+        private ExpressionCompletionRequestor() {
             // remember the rightmost part of the LHS of a binary expression
             ASTNode maybeLHS = getContext().getPerceivedCompletionNode();
             while (maybeLHS != null) {
@@ -112,9 +105,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
         }
 
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
-                IJavaElement enclosingElement) {
-
+        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             // check to see if the enclosing element does not enclose the nodeToLookFor
             if (!interestingElement(enclosingElement)) {
                 return VisitStatus.CANCEL_MEMBER;
@@ -128,8 +119,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             } else if (node instanceof MethodNode) {
                 MethodNode run = (MethodNode) node;
                 if (run.getName().equals("run") &&
-                        run.getDeclaringClass().isScript() &&
-                        (run.getParameters() == null || run.getParameters().length == 0)) {
+                    run.getDeclaringClass().isScript() &&
+                    (run.getParameters() == null || run.getParameters().length == 0)) {
                     return VisitStatus.CONTINUE;
                 }
             }
@@ -142,9 +133,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
             if (success) {
                 maybeRememberLHSType(result);
-                resultingType = findResultingType(result, derefList);
-
                 categories = result.scope.getCategoryNames();
+                resultingType = findResultingType(result, derefList);
                 visitSuccessful = true;
                 isStatic = node instanceof StaticMethodCallExpression ||
                     // if we are completing on '.class' then never static context
@@ -209,7 +199,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         private void maybeRememberLHSType(TypeLookupResult result) {
-            if (isAssignmentOfLhs(result.enclosingAssignment)) {
+            if (isAssignmentOfLHS(result.enclosingAssignment)) {
                 // check to see if this is the rhs of an assignment.
                 // if so, then attempt to use the type of the lhs for
                 // ordering of the proposals
@@ -230,11 +220,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
         }
 
-        private boolean isAssignmentOfLhs(BinaryExpression node) {
+        private boolean isAssignmentOfLHS(BinaryExpression node) {
             if (node != null && lhsNode != null) {
                 Expression expression = node.getLeftExpression();
-                return expression.getClass() == lhsNode.getClass() && expression.getStart() == lhsNode.getStart()
-                        && expression.getEnd() == lhsNode.getEnd();
+                return expression.getClass() == lhsNode.getClass() &&
+                    expression.getStart() == lhsNode.getStart() &&
+                    expression.getEnd() == lhsNode.getEnd();
             }
             return false;
         }
@@ -260,8 +251,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         /**
-         * @param enclosingElement
-         * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor}
+         * @return {@code true} iff enclosingElement's source location contains the source location of {@link #nodeToLookFor}
          */
         private boolean interestingElement(IJavaElement enclosingElement) {
             // the clinit is always interesting since the clinit contains static initializers
@@ -290,29 +280,18 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 return true;
             }
         }
-
-        public ClassNode getResultingType() {
-            return resultingType;
-        }
-        public Set<ClassNode> getCategories() {
-            return categories;
-        }
-
-        public boolean isVisitSuccessful() {
-            return visitSuccessful;
-        }
     }
 
     /**
      * the ASTNode being completed.
      */
-    final ASTNode completionNode;
+    private final ASTNode completionNode;
 
     /**
      * the LHS of the assignment statement associated with this content assist
      * invocation, or null if there is none.
      */
-    final Expression lhsNode;
+    private final Expression lhsNode;
 
     public StatementAndExpressionCompletionProcessor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
@@ -334,7 +313,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         ClassNode completionType;
         boolean isStatic;
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-        if (requestor.isVisitSuccessful()) {
+        if (requestor.visitSuccessful) {
             isStatic = isStatic() || requestor.isStatic;
             completionType = getCompletionType(requestor);
             if (completionType == null) {
@@ -450,8 +429,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
     }
 
     private void proposalCreatorLoop(ContentAssistContext context, ExpressionCompletionRequestor requestor,
-            ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators,
-            boolean isClosureThis) {
+            ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators, boolean isClosureThis) {
         for (IProposalCreator creator : creators) {
             if (isClosureThis && !creator.redoForLoopClosure()) {
                 // avoid duplicate DGMs by not proposing category proposals twice
@@ -460,9 +438,14 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             if (creator instanceof AbstractProposalCreator) {
                 ((AbstractProposalCreator) creator).setLhsType(requestor.lhsType);
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
+                ((AbstractProposalCreator) creator).setFavoriteStaticMembers(context.getFavoriteStaticMembers());
             }
-            groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
-                    context.getPerceivedCompletionExpression(), isStatic, ContentAssistLocation.STATEMENT == context.location));
+            groovyProposals.addAll(creator.findAllProposals(
+                completionType,
+                requestor.categories,
+                context.getPerceivedCompletionExpression(),
+                isStatic,
+                ContentAssistLocation.STATEMENT == context.location));
         }
     }
 

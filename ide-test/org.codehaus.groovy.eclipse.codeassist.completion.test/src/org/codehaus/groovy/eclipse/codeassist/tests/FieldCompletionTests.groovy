@@ -17,13 +17,18 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.After
 import org.junit.Test
 
-/**
- * Tests that Field completions are working properly.
- */
 final class FieldCompletionTests extends CompletionTestSuite {
+
+    @After
+    void tearDown() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
+    }
 
     @Test
     void testSafeDeferencing() {
@@ -360,5 +365,59 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompilationUnit unit = addGroovySource(contents, "File", "")
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer)
         proposalExists(proposals, "forName", 2) // two public and one private
+    }
+
+    @Test
+    void testImportStaticField() {
+        String contents = '''\
+            import static java.util.regex.Pattern.DOTALL
+            DOT
+            '''.stripIndent()
+        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'DOT'), GroovyCompletionProposalComputer)
+        proposalExists(proposals, 'DOTALL', 1)
+    }
+
+    @Test
+    void testImportStaticStarField() {
+        String contents = '''\
+            import static java.util.regex.Pattern.*
+            DOT
+            '''.stripIndent()
+        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'DOT'), GroovyCompletionProposalComputer)
+        proposalExists(proposals, 'DOTALL', 1)
+    }
+
+    @Test
+    void testFavoriteStaticField() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
+
+        String contents = '''\
+            DOT
+            '''.stripIndent()
+        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'DOT'), GroovyCompletionProposalComputer)
+        proposalExists(proposals, 'DOTALL', 1)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL', false), '''\
+            |import static java.util.regex.Pattern.DOTALL
+            |
+            |DOTALL
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testFavoriteStaticStarField() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.*')
+
+        String contents = '''\
+            DOT
+            '''.stripIndent()
+        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'DOT'), GroovyCompletionProposalComputer)
+        proposalExists(proposals, 'DOTALL', 1)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL', false), '''\
+            |import static java.util.regex.Pattern.DOTALL
+            |
+            |DOTALL
+            |'''.stripMargin())
     }
 }

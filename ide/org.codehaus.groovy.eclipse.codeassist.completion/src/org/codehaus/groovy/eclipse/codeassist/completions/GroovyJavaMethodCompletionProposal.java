@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,13 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.MethodProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.ProposalContextInformation;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.link.LinkedModeModel;
@@ -38,15 +39,9 @@ import org.eclipse.jface.text.link.LinkedPosition;
 import org.eclipse.jface.text.link.LinkedPositionGroup;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 11, 2009
- *
- */
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
     private static final String CLOSURE_TEXT = "{  }";
 
@@ -60,25 +55,18 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     // if true, shows the context only and does not
     private boolean contextOnly;
 
-    public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal,
-            JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs) {
+    public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options) {
         super(proposal, context);
-        this.proposalOptions = groovyFormatterPrefs;
-        this.contributor = "Groovy";
+        this.proposalOptions = options;
+        this.setProposalInfo(new MethodProposalInfo(context.getProject(), proposal));
         this.setRelevance(proposal.getRelevance());
-        if (proposal.hasParameters()) {
-            this.setTriggerCharacters(ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
-        } else {
-            this.setTriggerCharacters(ProposalUtils.METHOD_TRIGGERS);
-        }
+        this.setTriggerCharacters(!proposal.hasParameters() ? ProposalUtils.METHOD_TRIGGERS : ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
     }
 
-    public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal,
-            JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs, String contributor) {
-        this(proposal, context, groovyFormatterPrefs);
+    public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options, String contributor) {
+        this(proposal, context, options);
         this.contributor = contributor;
     }
-
 
     public void contextOnly() {
         contextOnly = true;
@@ -86,7 +74,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     protected StyledString computeDisplayString() {
-        return super.computeDisplayString().append(getStyledGroovy());
+        StyledString displayString = super.computeDisplayString();
+        if (contributor != null && contributor.trim().length() > 0) {
+            displayString.append(new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER));
+        }
+        return displayString;
     }
 
     @Override
@@ -101,53 +93,48 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return super.computeContextInformation();
     }
 
-
-    private StyledString getStyledGroovy() {
-        return new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
-    }
-
     /*
      * @see ICompletionProposalExtension#apply(IDocument, char)
      */
     @Override
     public void apply(IDocument document, char trigger, int offset) {
         super.apply(document, trigger, offset);
-        int baseOffset= getReplacementOffset();
-        String replacement= getReplacementString();
+        int baseOffset = getReplacementOffset();
+        String replacement = getReplacementString();
         fSelectedRegion = new Region(baseOffset + replacement.length(), 0);
     }
 
     @Override
     protected void setUpLinkedMode(IDocument document, char closingCharacter) {
-        if (fArgumentOffsets != null && getTextViewer() != null) {
+        ITextViewer textViewer = getTextViewer();
+        if (textViewer != null && fArgumentOffsets != null) {
             int baseOffset = getReplacementOffset();
             String replacement = getReplacementString();
             try {
-                LinkedModeModel model= new LinkedModeModel();
-                for (int i= 0; i != fArgumentOffsets.length; i++) {
-                    LinkedPositionGroup group= new LinkedPositionGroup();
+                LinkedModeModel model = new LinkedModeModel();
+                for (int i = 0, n = fArgumentOffsets.length; i < n; i += 1) {
+                    LinkedPositionGroup group = new LinkedPositionGroup();
                     group.addPosition(new LinkedPosition(document, baseOffset + fArgumentOffsets[i], fArgumentLengths[i], LinkedPositionGroup.NO_STOP));
                     model.addGroup(group);
                 }
-
                 model.forceInstall();
-                JavaEditor editor= getJavaEditor();
+
+                JavaEditor editor = getJavaEditor();
                 if (editor != null) {
                     model.addLinkingListener(new EditorHighlightingSynchronizer(editor));
                 }
 
-                LinkedModeUI ui= new EditorLinkedModeUI(model, getTextViewer());
-                ui.setExitPosition(getTextViewer(), baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
-                ui.setExitPolicy(new ExitPolicy(')', document));
+                LinkedModeUI ui = new EditorLinkedModeUI(model, textViewer);
+                ui.setExitPosition(textViewer, baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
+                ui.setExitPolicy(new ExitPolicy(closingCharacter, document));
                 ui.setDoContextInfo(true);
                 ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT);
                 ui.enter();
 
-                fSelectedRegion= ui.getSelectedRegion();
+                fSelectedRegion = ui.getSelectedRegion();
 
             } catch (BadLocationException e) {
                 JavaPlugin.log(e);
-                openErrorDialog(e);
             }
         }
     }
@@ -340,10 +327,4 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
         return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
     }
-
-    private void openErrorDialog(BadLocationException e) {
-        Shell shell= getTextViewer().getTextWidget().getShell();
-        MessageDialog.openError(shell, "Error inserting parameters", e.getMessage());
-    }
-
 }

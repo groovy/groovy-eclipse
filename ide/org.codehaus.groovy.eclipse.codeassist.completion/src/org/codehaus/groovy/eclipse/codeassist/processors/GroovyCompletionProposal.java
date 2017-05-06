@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,6 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
      */
     private char[][] regularParameterTypeNames = CharOperation.NO_CHAR_CHAR;
 
-
     private boolean useExtraParameters = false;
 
     public GroovyCompletionProposal(int kind, int completionLocation) {
@@ -67,15 +66,19 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     public char[][] getNamedParameterNames() {
         return namedParameterNames;
     }
+
     public char[][] getNamedParameterTypeNames() {
         return namedParameterTypeNames;
     }
+
     public char[][] getOptionalParameterNames() {
         return optionalParameterNames;
     }
+
     public char[][] getOptionalParameterTypeNames() {
         return optionalParameterTypeNames;
     }
+
     public char[][] getRegularParameterNames() {
         if (useExtraParameters) {
             return regularParameterNames;
@@ -155,7 +158,7 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     }
 
     @Override
-    protected void setDeclarationPackageName(char[] declarationPackageName) {
+    public void setDeclarationPackageName(char[] declarationPackageName) {
         super.setDeclarationPackageName(declarationPackageName);
     }
 

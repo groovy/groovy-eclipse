@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,41 +15,42 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
-import groovyjarjarasm.asm.Opcodes;
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
-import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.JavaPluginImages;
-import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
-import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
-import org.eclipse.swt.graphics.Image;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- */
 public abstract class AbstractGroovyProposal implements IGroovyProposal {
 
-    private final static ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
+    /**
+     * @return the AST node associated with this proposal, or null if there is none
+     */
+    public AnnotatedNode getAssociatedNode() {
+        return null;
+    }
+
+    protected int computeRelevance() {
+        return Relevance.calculateRelevance(this, relevanceMultiplier);
+    }
 
     private float relevanceMultiplier = 1;
 
-    protected Image getImage(CompletionProposal proposal, CompletionProposalLabelProvider labelProvider) {
-        return registry.get(labelProvider.createImageDescriptor(proposal));
+    public void setRelevanceMultiplier(float relevanceMultiplier) {
+        this.relevanceMultiplier = relevanceMultiplier;
     }
 
+    protected String requiredStaticImport;
+
+    public void setRequiredStaticImport(String requiredStaticImport) {
+        this.requiredStaticImport = requiredStaticImport;
+    }
+
+    /*protected Image getImage(CompletionProposal proposal, CompletionProposalLabelProvider labelProvider) {
+        return JavaPlugin.getImageDescriptorRegistry().get(labelProvider.createImageDescriptor(proposal));
+    }*/
+
     /**
-     * Use {@link ProposalUtils#getImage(CompletionProposal)} instead
-     *
-     * @param node
-     * @return
+     * Use {@link ProposalUtils#getImage(CompletionProposal)} instead.
      */
-    @Deprecated
+    /*@Deprecated
     protected Image getImageFor(ASTNode node) {
         if (node instanceof FieldNode) {
             int mods = ((FieldNode) node).getModifiers();
@@ -74,16 +75,16 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
             return JavaPluginImages.get(JavaPluginImages.IMG_FIELD_DEFAULT);
         }
         return null;
-    }
-    private boolean test(int flags, int mask) {
+    }*/
+
+    /*private boolean test(int flags, int mask) {
         return (flags & mask) != 0;
-    }
+    }*/
 
     /**
-     * Very simple way to calculate relevance based on name. Now deprecated. Use
-     * {@link #computeRelevance()} or {@link #computeRelevance(float)} instead
+     * Use {@link #computeRelevance()} or {@link #computeRelevance(float)} instead.
      */
-    @Deprecated
+    /*@Deprecated
     protected int getRelevance(char[] name) {
         switch(name[0]) {
             case '$':
@@ -93,22 +94,5 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
             default:
                 return 1000;
         }
-    }
-
-    /**
-     * @return the AST node associated with this proposal, or null if there is
-     *         none.
-     */
-    public AnnotatedNode getAssociatedNode() {
-        return null;
-    }
-
-    protected int computeRelevance() {
-        return Relevance.calculateRelevance(this, relevanceMultiplier);
-    }
-
-    public void setRelevanceMultiplier(float relevanceMultiplier) {
-        this.relevanceMultiplier = relevanceMultiplier;
-    }
-
+    }*/
 }

@@ -106,11 +106,12 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
-        GroovyMethodProposal groovyMethodProposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider, options);
-        groovyMethodProposal.setUseNamedArguments(useNamedArgs);
-        groovyMethodProposal.setNoParens(noParens);
-        groovyMethodProposal.setRelevanceMultiplier(relevanceMultiplier);
-        return groovyMethodProposal;
+        GroovyMethodProposal proposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider);
+        proposal.setRelevanceMultiplier(relevanceMultiplier);
+        proposal.setProposalFormattingOptions(options);
+        proposal.setUseNamedArguments(useNamedArgs);
+        proposal.setNoParens(noParens);
+        return proposal;
     }
 
     public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression expression) {

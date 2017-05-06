@@ -17,12 +17,9 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import groovyjarjarasm.asm.Opcodes;
@@ -36,6 +33,8 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
@@ -50,7 +49,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
 
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
-    private Set<ClassNode> alreadySeen = Collections.emptySet();
+    private Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
 
     private static GroovyFieldProposal createClassProposal() {
         FieldNode field = new FieldNode("class", Opcodes.ACC_PUBLIC & Opcodes.ACC_STATIC & Opcodes.ACC_FINAL, VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
@@ -59,9 +58,11 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
     }
 
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
+        List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
+
         boolean isFirstTime = alreadySeen.isEmpty();
-        Collection<FieldNode> allFields = getAllFields(type);
-        List<IGroovyProposal> groovyProposals = new ArrayList<IGroovyProposal>();
+        Collection<FieldNode> allFields = getAllFields(type, alreadySeen);
+
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) && ProposalUtils.looselyMatches(prefix, field.getName())) {
@@ -70,29 +71,30 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                 // de-emphasize 'this' references inside closure
                 if (!isFirstTime) relevanceMultiplier *= 0.1f;
 
-                GroovyFieldProposal fieldProposal = new GroovyFieldProposal(field);
-                fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
-                groovyProposals.add(fieldProposal);
+                GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+                proposal.setRelevanceMultiplier(relevanceMultiplier);
+                proposals.add(proposal);
 
                 if (field.getInitialExpression() instanceof ClosureExpression) {
                     // also add a method-like proposal
-                    groovyProposals.add(new GroovyMethodProposal(convertToMethodProposal(field)));
+                    proposals.add(new GroovyMethodProposal(convertToMethodProposal(field)));
                 }
             }
         }
 
         if (isStatic && "class".startsWith(prefix)) {
-            groovyProposals.add(CLASS_PROPOSAL);
+            proposals.add(CLASS_PROPOSAL);
         }
 
-        // add all proposals coming from static imports
         if (currentScope != null) {
             ClassNode enclosingTypeDeclaration = currentScope.getEnclosingTypeDeclaration();
             if (enclosingTypeDeclaration != null && isFirstTime && isPrimary && type.getModule() != null) {
-                groovyProposals.addAll(getStaticImportProposals(prefix, type.getModule()));
+                findStaticImportProposals(proposals, prefix, type.getModule());
+                findStaticFavoriteProposals(proposals, prefix, type.getModule());
             }
         }
-        return groovyProposals;
+
+        return proposals;
     }
 
     @Override
@@ -102,7 +104,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
 
     private MethodNode convertToMethodProposal(FieldNode field) {
         MethodNode method = new MethodNode(field.getName(), field.getModifiers(), field.getType(),
-                extractParameters(field.getInitialExpression()), ClassNode.EMPTY_ARRAY, new BlockStatement());
+            extractParameters(field.getInitialExpression()), ClassNode.EMPTY_ARRAY, new BlockStatement());
         method.setDeclaringClass(field.getDeclaringClass());
         return method;
     }
@@ -114,96 +116,62 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         return Parameter.EMPTY_ARRAY;
     }
 
-    private List<IGroovyProposal> getStaticImportProposals(String prefix, ModuleNode module) {
-        List<IGroovyProposal> staticProposals = new ArrayList<IGroovyProposal>();
-        Map<String, ImportNode> staticImports = ImportNodeCompatibilityWrapper.getStaticImports(module);
-        for (Entry<String, ImportNode> entry : staticImports.entrySet()) {
+    private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
+        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticImports(module).entrySet()) {
             String fieldName = entry.getValue().getFieldName();
             if (fieldName != null && ProposalUtils.looselyMatches(prefix, fieldName)) {
                 FieldNode field = entry.getValue().getType().getField(fieldName);
-                if (field != null) {
-                    staticProposals.add(new GroovyFieldProposal(field));
+                if (field != null && field.isStatic()) {
+                    proposals.add(new GroovyFieldProposal(field));
                 }
             }
         }
-        Map<String, ImportNode> staticStarImports = ImportNodeCompatibilityWrapper.getStaticStarImports(module);
-        for (Entry<String, ImportNode> entry : staticStarImports.entrySet()) {
+        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticStarImports(module).entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (FieldNode field : (Iterable<FieldNode>) type.getFields()) {
                     if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
-                        staticProposals.add(new GroovyFieldProposal(field));
+                        proposals.add(new GroovyFieldProposal(field));
                     }
                 }
             }
         }
-
-        return staticProposals;
     }
 
-    /**
-     * returns all fields, even those that are converted into properties
-     */
-    private Collection<FieldNode> getAllFields(ClassNode thisType) {
-        // use a LinkedHashSet to preserve order
-        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
-        getAllSupers(thisType, types, alreadySeen);
-        Map<String, FieldNode> nameFieldMap = new HashMap<String, FieldNode>();
-        for (ClassNode type : types) {
-            for (FieldNode field : type.getFields()) {
-                if (checkName(field.getName())) {
-                    // only add new field if the new field is more accessible than the existing one
-                    FieldNode existing = nameFieldMap.get(field.getName());
-                    if (existing == null || leftIsMoreAccessible(field, existing)) {
-                        nameFieldMap.put(field.getName(), field);
+    private void findStaticFavoriteProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
+        for (String favoriteStaticMember : favoriteStaticMembers) {
+            int pos = favoriteStaticMember.lastIndexOf('.');
+            String typeName = favoriteStaticMember.substring(0, pos);
+            String fieldName = favoriteStaticMember.substring(pos + 1);
+            ClassNode typeNode = tryResolveClassNode(typeName, module);
+
+            if (typeNode == null) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "FieldProposalCreator: Cannot resolve favorite type " + typeName);
+                }
+                continue;
+            }
+
+            if ("*".equals(fieldName)) {
+                for (FieldNode field : (Iterable<FieldNode>) typeNode.getFields()) {
+                    if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
+                        proposals.add(newFavoriteFieldProposal(field, typeName + '.' + field.getName()));
+                    }
+                }
+            } else {
+                if (ProposalUtils.looselyMatches(prefix, fieldName)) {
+                    FieldNode field = typeNode.getField(fieldName);
+                    if (field != null && field.isStatic()) {
+                        proposals.add(newFavoriteFieldProposal(field, favoriteStaticMember));
                     }
                 }
             }
         }
-        // don't do anything with these types next time
-        if (alreadySeen.isEmpty()) {
-            alreadySeen = types;
-        } else {
-            alreadySeen.addAll(types);
-        }
-        return nameFieldMap.values();
     }
 
-    /**
-     * find the most accessible element
-     */
-    private boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
-        int leftAcc;
-        switch (field.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
-            case Opcodes.ACC_PUBLIC:
-                leftAcc = 0;
-                break;
-            case Opcodes.ACC_PROTECTED:
-                leftAcc = 1;
-                break;
-            case Opcodes.ACC_PRIVATE:
-                leftAcc = 3;
-                break;
-            default: // package default
-                leftAcc = 2;
-                break;
-        }
-
-        int rightAcc;
-        switch (existing.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
-            case Opcodes.ACC_PUBLIC:
-                rightAcc = 0;
-                break;
-            case Opcodes.ACC_PROTECTED:
-                rightAcc = 1;
-                break;
-            case Opcodes.ACC_PRIVATE:
-                rightAcc = 3;
-                break;
-            default: // package default
-                rightAcc = 2;
-                break;
-        }
-        return leftAcc < rightAcc;
+    private IGroovyProposal newFavoriteFieldProposal(FieldNode field, String favorite) {
+        GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+        proposal.setRequiredStaticImport(favorite);
+        return proposal;
     }
 }
