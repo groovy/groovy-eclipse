@@ -50,6 +50,10 @@ class JDTClassNodeBuilder {
 
     private JDTResolver resolver;
 
+    JDTClassNodeBuilder(JDTResolver resolver) {
+        this.resolver = resolver;
+    }
+
     public static ClassNode build(JDTResolver resolver, TypeBinding typeBinding) {
         JDTClassNodeBuilder builder = new JDTClassNodeBuilder(resolver);
         return builder.configureType(typeBinding);
@@ -81,10 +85,6 @@ class JDTClassNodeBuilder {
             return configureSourceType((SourceTypeBinding) type);
         }
         throw new IllegalStateException("'type' was null or an unhandled type: " + (type == null ? "null" : type.getClass().getName()));
-    }
-
-    JDTClassNodeBuilder(JDTResolver resolver) {
-        this.resolver = resolver;
     }
 
     /**
@@ -133,12 +133,10 @@ class JDTClassNodeBuilder {
             // the environment on the ptb seems safe. Other occurrences of getScope in this file could feasibly
             // be changed in the same way if NPEs become problems there too
             return ptb.environment().convertToRawType(ptb.genericType(), false);
-            // return resolver.getScope().environment.convertToRawType(ptb.genericType(), false);
         } else if (tb instanceof TypeVariableBinding) {
             TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
             if (fb == null) {
                 return tb.erasure(); // Should be JLObject
-                // return resolver.getScope().getJavaLangObject();
             }
             return fb;
         } else if (tb instanceof BinaryTypeBinding) {
@@ -257,7 +255,7 @@ class JDTClassNodeBuilder {
         ClassNode base = configureTypeVariableReference(tv);
         ClassNode redirect = base.redirect();
         base.setRedirect(null);
-        TypeBinding[] tBounds = getBounds(tv); // tv.getBounds()
+        TypeBinding[] tBounds = getBounds(tv);
         GenericsType gt;
         if (tBounds.length == 0) {
             gt = new GenericsType(base);
@@ -279,8 +277,6 @@ class JDTClassNodeBuilder {
                 erasure = resolver.getScope().getJavaLangObject();
             }
             return new TypeBinding[] { erasure }; // Should be JLObject
-            // return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
-            // return null;
         }
         bounds.add(tv.firstBound);
         TypeBinding[] obs = tv.otherUpperBounds();
@@ -334,13 +330,12 @@ class JDTClassNodeBuilder {
     }
 
     private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
-        if (parameterizedType instanceof RawTypeBinding) { // TODO correct?
+        if (parameterizedType instanceof RawTypeBinding) {
             TypeBinding rt = toRawType(parameterizedType);
             if (!(rt instanceof RawTypeBinding)) {
                 System.out.println("yikes");
             }
             return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
-            // return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
         }
         TypeBinding rt = toRawType(parameterizedType);
         if ((rt instanceof ParameterizedTypeBinding) && !(rt instanceof RawTypeBinding)) {
@@ -354,10 +349,8 @@ class JDTClassNodeBuilder {
             // the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
             // that code when called for Iterable will set the redirect to point to the generics. That is what
             // we are trying to achieve here.
-            if (/* (parameterizedType instanceof ParameterizedTypeBinding) && */
-            !(parameterizedType instanceof RawTypeBinding)) {
+            if (!(parameterizedType instanceof RawTypeBinding)) {
                 ClassNode cn = configureType(parameterizedType.genericType());
-                // ClassNode cn = resolver.createClassNode(parameterizedType.genericType());
                 ((JDTClassNode) base).setRedirect(cn);
             }
         }
@@ -369,18 +362,16 @@ class JDTClassNodeBuilder {
     private ClassNode configureClass(BinaryTypeBinding type) {
         if (type.id == TypeIds.T_JavaLangObject) {
             return ClassHelper.OBJECT_TYPE;
-            // next two clauses - see GRECLIPSE-1521
         } else if (type.id == TypeIds.T_JavaLangString) {
             return ClassHelper.STRING_TYPE;
-        } else if (type.id == TypeIds.T_JavaLangClass) {
+        }/* else if (type.id == TypeIds.T_JavaLangClass) {
             return ClassHelper.CLASS_Type;
-        }
-        JDTClassNode jcn = new JDTClassNode(type, resolver);
-        return jcn;
+        }*/
+        return new JDTClassNode(type, resolver);
     }
 
     private ClassNode configureSourceType(SourceTypeBinding type) {
-        JDTClassNode jcn = new JDTClassNode(type, resolver); // TODO not being cached - should we cache it?
-        return jcn;
+        // TODO: Not being cached -- should it be?
+        return new JDTClassNode(type, resolver);
     }
 }
