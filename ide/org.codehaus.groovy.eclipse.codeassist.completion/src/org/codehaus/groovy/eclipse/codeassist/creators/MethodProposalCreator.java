@@ -57,19 +57,9 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) && checkName(methodName)) {
-                boolean isInterestingType = false;
-                if (isStatic && method.isStatic()) {
-                    isInterestingType = true;
-                } else {
-                    isInterestingType = isInterestingType(method.getReturnType());
-                }
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                    float relevanceMultiplier = isInterestingType ? 101f : 1f;
-                    relevanceMultiplier *= method.isStatic() ? 0.1f : 1f;
-                    // de-emphasize 'this' references inside closure
-                    relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1f : 1f;
-                    proposal.setRelevanceMultiplier(relevanceMultiplier);
+                    setRelevanceMultiplier(proposal, firstTime, isStatic);
                     proposals.add(proposal);
                 }
 
@@ -82,7 +72,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                         alreadySeenFields.add(mockFieldName);
                         if (hasNoField(method.getDeclaringClass(), methodName)) {
                             GroovyFieldProposal proposal = new GroovyFieldProposal(createMockField(method));
-                            proposal.setRelevanceMultiplier(isInterestingType ? 11 : 1);
+                            proposal.setRelevanceMultiplier(/*isInterestingType ? 11 :*/ 1);
                             proposals.add(proposal);
                         }
                     }
@@ -162,5 +152,29 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 }
             }
         }
+    }
+
+    private void setRelevanceMultiplier(GroovyMethodProposal proposal, boolean firstTime, boolean isStatic) {
+        MethodNode method = proposal.getMethod();
+
+        float relevanceMultiplier;
+        if (isStatic && method.isStatic()) {
+            relevanceMultiplier = 10.0f;
+        } else if (!method.isStatic()) {
+            relevanceMultiplier = 1.00f;
+        } else {
+            relevanceMultiplier = 0.77f;
+        }
+
+        // de-emphasize 'this' references inside closure
+        if (!firstTime) {
+            relevanceMultiplier *= 0.1f;
+        }
+
+        if (isInterestingType(method.getReturnType())) {
+            relevanceMultiplier *= 10.01f; // must beat out uninteresting-typed fields, which have a very high relevance
+        }
+
+        proposal.setRelevanceMultiplier(relevanceMultiplier);
     }
 }

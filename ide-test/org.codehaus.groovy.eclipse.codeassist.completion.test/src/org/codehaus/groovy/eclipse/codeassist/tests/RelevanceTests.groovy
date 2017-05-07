@@ -23,107 +23,242 @@ import org.junit.Test
  */
 final class RelevanceTests extends CompletionTestSuite {
 
-    private static String NEWLINE = "\n  "
-    private static String THIS_TO = "this.to"
-    private static String PU = "pu"
-
     @Test
     void testParamThenFieldThenMethodThenDGM() {
-        String contents = "class Outer {\n def f\n def m(p) {\nnull\n  \n}\n}"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, NEWLINE)))
-        assertProposalOrdering(proposals, "p", "f", "getF", "m", "find")
+        String contents = '''\
+            class Outer {
+              def f
+              def m(p) {
+                null
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'null\n')))
+        assertProposalOrdering(proposals, 'p', 'f', 'getF', 'm', 'find')
     }
 
     @Test
     void testLocalVarThenFieldThenMethodThenDGM() {
-        String contents = "class Outer {\n def f\n def m() {\ndef p\n  \n}\n}"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, NEWLINE)))
-        assertProposalOrdering(proposals, "p", "f", "getF", "m", "find")
+        String contents = '''\
+            class Outer {
+              def f
+              def m() {
+                def p
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'def p\n')))
+        assertProposalOrdering(proposals, 'p', 'f', 'getF', 'm', 'find')
     }
 
     @Test
     void testObjectMethods() {
-        String contents = "class Outer {\n def toZZZ(p) {\n this.to \n}\n}"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, THIS_TO)))
-        assertProposalOrdering(proposals, "toZZZ", "toString")
+        String contents = '''\
+            class Outer {
+              def toZZZ(p) {
+                this.to
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'this.to')))
+        assertProposalOrdering(proposals, 'toZZZ', 'toString')
     }
 
     @Test
     void testOverriddenObjectMethods() {
-        String contents = "class Outer {\n def toZZZ(p) {\n this.to } \n String toString() { \n}\n}"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, THIS_TO)))
-        assertProposalOrdering(proposals, "toString", "toZZZ")
+        String contents = '''\
+            class Outer {
+              def toZZZ(p) {
+                this.to
+              }
+              String toString() {
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'this.to')))
+        assertProposalOrdering(proposals, 'toString', 'toZZZ')
     }
 
     @Test
     void testNewMethodThenModifier() {
-        String contents = "class Other extends Outer { \n pu\n def x() { } }\n class Outer {\n def pub() { \n}\n}"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)))
-        assertProposalOrdering(proposals, "pub", "public")
+        String contents = '''\
+            class Other extends Outer {
+              pu
+              def x() { }
+            }
+            class Outer {
+              def pub() {
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'pu')))
+        assertProposalOrdering(proposals, 'pub', 'public')
     }
-
-    // now test that fields and methods of the assigned type are above other methods
 
     @Test // this one should do alphabetical ordering
     void testFieldOfAssignedType1() {
-        String contents = "class Other {\ndef x() { def f = a }\n String az\n int aa }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "aa", "az")
+        String contents = '''\
+            class Other {
+              def x() {
+                def f = a
+              }
+              String az
+              int aa
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'aa', 'az')
     }
 
     @Test // this one should do the string first
     void testFieldOfAssignedType2() {
-        String contents = "class Other {\ndef x() { String f = a }\n String az\n int aa }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "az", "aa")
+        String contents = '''\
+            class Other {
+              def x() {
+                String f = a
+              }
+              String az
+              int aa
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
     }
 
     @Test // this one should do the int first
     void testFieldOfAssignedType3() {
-        String contents = "class Other {\ndef x() { int f = a }\n String aa\n int az }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "az", "aa")
+        String contents = '''\
+            class Other {
+              def x() {
+                int f = a
+              }
+              String aa
+              int az
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
     }
 
     @Test // this one should do alphabetical ordering
     void testMethodOfAssignedType1() {
-        String contents = "class Other {\ndef x() { def f = a }\n String az() { }\n int aa() { } }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "aa", "az")
+        String contents = '''\
+            class Other {
+              def x() {
+                def f = a
+              }
+              String az() { }
+              int aa() { }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'aa', 'az')
     }
 
     @Test // this one should do the string first
     void testMethodOfAssignedType2() {
-        String contents = "class Other {\ndef x() { String f = a }\n String az() { }\n int aa() { } }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "az", "aa")
+        String contents = '''\
+            class Other {
+              def x() {
+                String f = a
+              }
+              int aa() { }
+              String az() { }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
+    }
+
+    @Test // this one should do the string first
+    void testMethodOfAssignedType2a() {
+        String contents = '''\
+            class Other {
+              private String f
+              def x() {
+                this.f = a  // property expression
+              }
+              int aa() { }
+              String az() { }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
+    }
+
+    @Test // this one should do the string first
+    void testMethodOfAssignedType2b() {
+        String contents = '''\
+            class Other {
+              String f
+              def x() {
+                this.f = a  // property expression
+              }
+              int aa() { }
+              String az() { }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
     }
 
     @Test // this one should do the int first
     void testMethodOfAssignedType3() {
-        String contents = "class Other {\ndef x() { int f = a }\n String aa() { }\n int az() { } }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "az", "aa")
+        String contents = '''\
+            class Other {
+              def x() {
+                int f = a
+              }
+              String aa() { }
+              int az() { }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
     }
 
     @Test // this one should do alphabetical ordering
     void testMethodAndFieldOfAssignedType1() {
-        String contents = "class Other {\ndef x() { def f = a }\n String az() { }\n int aa }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "aa", "az")
+        String contents = '''\
+            class Other {
+              def x() {
+                def f = a
+              }
+              String az() { }
+              int aa
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'aa', 'az')
     }
 
     @Test // this one should do the string first
     void testMethodAndFieldOfAssignedType2() {
-        String contents = "class Other {\ndef x() { String f = a }\n String az() { }\n int aa }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "az", "aa")
+        String contents = '''\
+            class Other {
+              def x() {
+                String f = a
+              }
+              String az() { }
+              int aa
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
     }
 
     @Test // this one should do the int first
     void testMethodAndFieldOfAssignedType3() {
-        String contents = "class Other {\ndef x() { int f = a }\n String aa() { }\n int az }"
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")))
-        assertProposalOrdering(proposals, "az", "aa")
+        String contents = '''\
+            class Other {
+              def x() {
+                int f = a
+              }
+              String aa() { }
+              int az
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
+        assertProposalOrdering(proposals, 'az', 'aa')
     }
 }

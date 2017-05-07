@@ -66,7 +66,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) && ProposalUtils.looselyMatches(prefix, field.getName())) {
-                float relevanceMultiplier = isInterestingType(field.getType()) ? 101 : 1;
+                float relevanceMultiplier = isInterestingType(field.getType()) ? 1.1f : 1.0f;
                 if (field.isStatic()) relevanceMultiplier *= 0.1f;
                 // de-emphasize 'this' references inside closure
                 if (!isFirstTime) relevanceMultiplier *= 0.1f;

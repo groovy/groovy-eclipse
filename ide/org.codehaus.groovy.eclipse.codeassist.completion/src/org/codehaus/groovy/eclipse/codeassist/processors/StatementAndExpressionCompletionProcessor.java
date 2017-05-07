@@ -205,17 +205,18 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 // ordering of the proposals
                 if (lhsNode instanceof Variable) {
                     Variable variable = (Variable) lhsNode;
-                    VariableInfo info = result.scope
-                            .lookupName(variable.getName());
-                    ClassNode maybeType;
-                    if (info != null) {
-                        maybeType = info.type;
-                    } else {
-                        maybeType = variable.getType();
-                    }
-                    if (maybeType != null && !maybeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+                    VariableInfo info = result.scope.lookupName(variable.getName());
+                    ClassNode maybeType = info != null ? info.type : variable.getType();
+                    if (maybeType != null) {
                         lhsType = ClassHelper.getUnwrapper(maybeType);
                     }
+                }/* else if (lhsNode instanceof FieldExpression) {
+                    lhsType = lhsNode.getType();
+                }*/ else if (lhsNode instanceof PropertyExpression) {
+                    lhsType = ((PropertyExpression) lhsNode).getProperty().getType();
+                }
+                if (VariableScope.OBJECT_CLASS_NODE.equals(lhsType)) {
+                    lhsType = null;
                 }
             }
         }
@@ -223,9 +224,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         private boolean isAssignmentOfLHS(BinaryExpression node) {
             if (node != null && lhsNode != null) {
                 Expression expression = node.getLeftExpression();
-                return expression.getClass() == lhsNode.getClass() &&
-                    expression.getStart() == lhsNode.getStart() &&
-                    expression.getEnd() == lhsNode.getEnd();
+                return expression == lhsNode || (expression.getClass() == lhsNode.getClass() &&
+                    expression.getStart() == lhsNode.getStart() && expression.getEnd() == lhsNode.getEnd());
             }
             return false;
         }

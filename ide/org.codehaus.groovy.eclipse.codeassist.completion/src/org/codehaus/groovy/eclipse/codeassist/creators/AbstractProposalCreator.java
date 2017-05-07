@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -125,7 +126,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected boolean isInterestingType(ClassNode type) {
-        return lhsType != null && ClassHelper.getUnwrapper(type).equals(lhsType);
+        return lhsType != null && GroovyUtils.isAssignable(type, lhsType);
     }
 
     /**
