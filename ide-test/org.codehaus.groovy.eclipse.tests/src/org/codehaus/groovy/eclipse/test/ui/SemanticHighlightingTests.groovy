@@ -743,6 +743,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testInnerClassCtorCalls() {
+        String contents = '''\
+            class X {
+              class Y {
+                String foo
+                Integer bar
+              }
+              def baz() {
+                def y = new Y()
+                def why = new Y(foo: '1', bar: 2) // non-static inner class causes an AST variation
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('y ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Y()'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('why'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('Y'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('2'), 1, NUMBER))
+    }
+
+    @Test
     void testEnumDefs() {
         String contents = '''\
             enum X {

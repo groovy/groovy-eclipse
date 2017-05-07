@@ -1083,14 +1083,14 @@ assert primaryExprType != null && dependentExprType != null;
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
             visitClassReference(node.getType());
-            if (node.getArguments() instanceof TupleExpression
-                    && ((TupleExpression) node.getArguments()).getExpressions().size() == 1) {
-                Expression arg = ((TupleExpression) node.getArguments()).getExpressions().get(0);
-                if (arg instanceof MapExpression) {
-                    // this is a constructor call that is instantiated by a map.
-                    // remember this, so that when visiting the map, we can
-                    // infer field names
-                    enclosingConstructorCall = node;
+            if (node.getArguments() instanceof TupleExpression) {
+                TupleExpression tuple = (TupleExpression) node.getArguments();
+                if (isNotEmpty(tuple.getExpressions())) {
+                    if ((tuple.getExpressions().size() == 1 && tuple.getExpressions().get(0) instanceof MapExpression) ||
+                            tuple.getExpression(tuple.getExpressions().size() - 1) instanceof NamedArgumentListExpression) {
+                        // remember this is a map ctor call, so that field names can be inferred when visiting the map
+                        enclosingConstructorCall = node;
+                    }
                 }
             }
             super.visitConstructorCallExpression(node);
@@ -1671,8 +1671,7 @@ assert primaryExprType != null && dependentExprType != null;
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue && isNotEmpty(node.getExpressions())) {
             // prevent revisit of statically-compiled chained assignment nodes
-            if (node instanceof ArgumentListExpression ||
-                    node.getExpression(0) instanceof NamedArgumentListExpression) {
+            if (node instanceof ArgumentListExpression || node.getExpression(node.getExpressions().size() - 1) instanceof NamedArgumentListExpression) {
                 super.visitTupleExpression(node);
             }
         }
