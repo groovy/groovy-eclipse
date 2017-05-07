@@ -23,91 +23,90 @@ import org.junit.Test
  */
 final class InnerTypeCompletionTests extends CompletionTestSuite {
 
-    private static final String XXX = "xxx"
-    private static final String HTML = "HTML"
-    private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html"
+    private static final String HTML = 'HTML'
+    private static final String HTML_PROPOSAL = 'HTML - javax.swing.text.html'
 
     @Test
-    void testCompletionInInnerClass1() {
-        String contents = "class Outer { class Inner { \nHTML\n } }"
+    void testInInnerClass1() {
+        String contents = 'class Outer { class Inner { \nHTML\n } }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
         proposalExists(proposals, HTML_PROPOSAL, 1)
     }
 
     @Test
-    void testCompletionInInnerClass2() {
-        String contents = "class Outer { class Inner { def x(HTML) { } } }"
+    void testInInnerClass2() {
+        String contents = 'class Outer { class Inner { def x(HTML) { } } }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
         proposalExists(proposals, HTML_PROPOSAL, 1)
     }
 
     @Test
-    void testCompletionInInnerClass3() {
-        String contents = "class Outer { class Inner extends HTML { } }"
+    void testInInnerClass3() {
+        String contents = 'class Outer { class Inner extends HTML { } }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
         proposalExists(proposals, HTML_PROPOSAL, 1)
     }
 
     @Test
-    void testCompletionInInnerClass4() {
-        String contents = "class Outer { class Inner { def x() {  HTML } } }"
+    void testInInnerClass4() {
+        String contents = 'class Outer { class Inner { def x() {  HTML } } }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
         proposalExists(proposals, HTML_PROPOSAL, 1)
     }
 
     @Test
-    void testCompletionOfInnerClass1() {
-        String contents = "class Outer { class Inner { Inner f } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "Inner"))
-        proposalExists(proposals, "Inner", 1)
+    void testInnerClass1() {
+        String contents = 'class Outer { class Inner { Inner f } } '
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inner'))
+        proposalExists(proposals, 'Inner', 1)
     }
 
     @Test
-    void testCompletionOfInnerClass2() {
-        String contents = "class Outer { class Inner { Inner f } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "Inner"))
-        proposalExists(proposals, "Inner", 1)
+    void testInnerClass2() {
+        String contents = 'class Outer { class Inner { Inner f } } '
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inner'))
+        proposalExists(proposals, 'Inner', 1)
     }
 
     @Test
-    void testCompletionOFInnerMember1() {
-        String contents = "class Outer { class Inner { \n def y() { xxx } \n def xxx } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX))
-        proposalExists(proposals, XXX, 1)
+    void testInnerMember1() {
+        String contents = 'class Outer { class Inner { \n def y() { xxx } \n def xxx } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'xxx'))
+        proposalExists(proposals, 'xxx', 1)
     }
 
     @Test
     void testCompletionOFInnerMember2() {
-        String contents = "class Outer { Inner i\ndef y() { i.xxx } \nclass Inner { \n  def xxx } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX))
-        proposalExists(proposals, XXX, 1)
+        String contents = 'class Outer { Inner i\ndef y() { i.xxx } \nclass Inner { \n  def xxx } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'xxx'))
+        proposalExists(proposals, 'xxx', 1)
     }
 
     @Test
-    void testCompletionOFInnerMember3() {
-        String contents = "def y(Outer.Inner i) { i.xxx } \nclass Outer { class Inner { \n  def xxx } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX))
-        proposalExists(proposals, XXX, 1)
+    void testInnerMember3() {
+        String contents = 'def y(Outer.Inner i) { i.xxx } \nclass Outer { class Inner { \n  def xxx } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'xxx'))
+        proposalExists(proposals, 'xxx', 1)
     }
 
     @Test
-    void testCompletionOFInnerMember4() {
-        String contents = "def y(Outer.Inner i) { i.xxx } \nclass Outer { class Inner { \n  def getXxx() {} } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX))
-        proposalExists(proposals, XXX, 1)
+    void testInnerMember4() {
+        String contents = 'def y(Outer.Inner i) { i.xxx } \nclass Outer { class Inner { \n  def getXxx() {} } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'xxx'))
+        proposalExists(proposals, 'xxx', 1)
     }
 
     @Test
-    void testCompletionOFInnerMember5() {
-        String contents = "Outer.Inner i\ni.xxx\nclass Outer { class Inner { \n  def xxx } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX))
-        proposalExists(proposals, XXX, 1)
+    void testInnerMember5() {
+        String contents = 'Outer.Inner i\ni.xxx\nclass Outer { class Inner { \n  def xxx } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'xxx'))
+        proposalExists(proposals, 'xxx', 1)
     }
 
     @Test
-    void testCompletionOFInnerMember6() {
-        String contents = "Outer.Inner i\ni.xxx\nclass Outer { class Inner { \n  def getXxx() {} } } "
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, XXX))
-        proposalExists(proposals, XXX, 1)
+    void testInnerMember6() {
+        String contents = 'Outer.Inner i\ni.xxx\nclass Outer { class Inner { \n  def getXxx() {} } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'xxx'))
+        proposalExists(proposals, 'xxx', 1)
     }
 }

@@ -32,7 +32,6 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
-import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -40,9 +39,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * Generates all of the method proposals for a given location.
  * Also will add the property form of accessor methods if appropriate.
  */
-public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
-
-    private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
+public class MethodProposalCreator extends AbstractProposalCreator {
 
     private Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
 
@@ -68,7 +65,6 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                 }
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                    proposal.setProposalFormattingOptions(options);
                     float relevanceMultiplier = isInterestingType ? 101f : 1f;
                     relevanceMultiplier *= method.isStatic() ? 0.1f : 1f;
                     // de-emphasize 'this' references inside closure
@@ -113,9 +109,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                 if (methods != null) {
                     for (MethodNode method : methods) {
                         if (method.isStatic()) {
-                            GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                            proposal.setProposalFormattingOptions(options);
-                            proposals.add(proposal);
+                            proposals.add(new GroovyMethodProposal(method));
                         }
                     }
                 }
@@ -126,9 +120,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
             if (type != null) {
                 for (MethodNode method : (Iterable<MethodNode>) type.getMethods()) {
                     if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
-                        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                        proposal.setProposalFormattingOptions(options);
-                        proposals.add(proposal);
+                        proposals.add(new GroovyMethodProposal(method));
                     }
                 }
             }
@@ -152,7 +144,9 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
             if ("*".equals(fieldName)) {
                 for (MethodNode method : (Iterable<MethodNode>) typeNode.getMethods()) {
                     if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
-                        proposals.add(newFavoriteMethodProposal(method, typeName + '.' + method.getName()));
+                        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                        proposal.setRequiredStaticImport(typeName + '.' + method.getName());
+                        proposals.add(proposal);
                     }
                 }
             } else {
@@ -160,18 +154,13 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     List<MethodNode> methods = typeNode.getDeclaredMethods(fieldName);
                     for (MethodNode method : methods) {
                         if (method.isStatic()) {
-                            proposals.add(newFavoriteMethodProposal(method, favoriteStaticMember));
+                            GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                            proposal.setRequiredStaticImport(favoriteStaticMember);
+                            proposals.add(proposal);
                         }
                     }
                 }
             }
         }
-    }
-
-    private IGroovyProposal newFavoriteMethodProposal(MethodNode method, String favorite) {
-        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-        proposal.setProposalFormattingOptions(options);
-        proposal.setRequiredStaticImport(favorite);
-        return proposal;
     }
 }

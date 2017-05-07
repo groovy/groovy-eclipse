@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
  * Creates proposals in a given completion context.
  */
 public interface IProposalCreator {
+
     List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary);
 
     /**

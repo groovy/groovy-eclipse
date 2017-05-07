@@ -43,17 +43,24 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal
 import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.After
 
 /**
  * Includes utilities to help with all Content assist tests.
  */
 abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
+
+    @After
+    final void tearDownCompletionTestCase() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
+    }
 
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
         waitForIndex()
@@ -242,7 +249,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     protected ICompletionProposal[] createProposalsAtOffset(String contents, String javaContents, int completionOffset) {
         if (javaContents != null) {
-            addJavaSource("public class JavaClass { }\n" + javaContents, "JavaClass", "")
+            addJavaSource("public class JavaClass { }\n" + javaContents, "JavaClass")
         }
         def gunit = addGroovySource(contents, nextUnitName())
         return createProposalsAtOffset(gunit, completionOffset)

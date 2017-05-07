@@ -25,21 +25,14 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.junit.After
 import org.junit.Test
 
 final class MethodCompletionTests extends CompletionTestSuite {
-
-    @After
-    void tearDown() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
-    }
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
         waitForIndex()
@@ -87,7 +80,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             HttpRetryException f() { null }
             f().
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'f().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
 
@@ -97,7 +90,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             HttpRetryException f() { null }
             this.f().
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'f().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
 
@@ -107,7 +100,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             class Super { HttpRetryException f() { null } }
             new Super().f().
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'f().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
 
@@ -118,7 +111,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             class Sub extends Super { }
             new Sub().f().
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'f().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
 
@@ -129,7 +122,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             def s = new Super()
             s.f(null).
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'f(null).'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f(null).'))
         proposalExists(proposals, 'cause', 1)
     }
 
@@ -140,7 +133,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             def s = new Super()
             s.f().
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'f().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'f().'))
         proposalExists(proposals, 'cause', 1)
     }
 
@@ -228,7 +221,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             (1).
             def u
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '(1).'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '(1).'))
         proposalExists(proposals, 'abs', 1)
     }
 
@@ -238,21 +231,21 @@ final class MethodCompletionTests extends CompletionTestSuite {
             (((1))).
             def u
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '(((1))).'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '(((1))).'))
         proposalExists(proposals, 'abs', 1)
     }
 
     @Test // GRECLIPSE-1374
     void testParensExprs3() {
         String contents = '(((1))).abs()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '(((1))).a'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '(((1))).a'))
         proposalExists(proposals, 'abs', 1)
     }
 
     @Test // GRECLIPSE-1528
     void testGetterSetter1() {
         String contents = 'class A { private int value\n}'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '\n'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'getValue', 1)
         proposalExists(proposals, 'setValue', 1)
     }
@@ -260,7 +253,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testGetterSetter2() {
         String contents = 'class A { private final int value\n}'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '\n'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'getValue', 1)
         proposalExists(proposals, 'setValue', 0)
     }
@@ -268,7 +261,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testGetterSetter3() {
         String contents = 'class A { private boolean value\n}'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '\n'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'isValue', 1)
         proposalExists(proposals, 'setValue', 1)
     }
@@ -283,7 +276,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'A.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.'))
         proposalExists(proposals, 'util', 1)
     }
 
@@ -300,7 +293,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
                 }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'A.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.'))
         proposalExists(proposals, 'util', 1)
     }
 
@@ -314,7 +307,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'A.class.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.class.'))
         proposalExists(proposals, 'util', 1)
     }
 
@@ -330,7 +323,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
                 A.class.
               }
             }'''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'A.class.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.class.'))
         proposalExists(proposals, 'util', 1)
     }
 
@@ -340,7 +333,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             import static java.util.regex.Pattern.compile
             comp
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'comp'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
     }
 
@@ -350,7 +343,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             import static java.util.regex.Pattern.*
             comp
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'comp'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
     }
 
@@ -361,7 +354,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         String contents = '''\
             comp
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'comp'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
         applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile', false), '''\
@@ -378,7 +371,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         String contents = '''\
             comp
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'comp'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
         applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile', false), '''\

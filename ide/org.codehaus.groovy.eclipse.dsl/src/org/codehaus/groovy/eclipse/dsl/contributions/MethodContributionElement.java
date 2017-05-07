@@ -62,13 +62,11 @@ public class MethodContributionElement implements IContributionElement {
     private final String provider;
     private final String doc;
 
-
     private ClassNode cachedDeclaringType;
     private ClassNode cachedReturnType;
     private Parameter[] cachedRegularParameters;
     private Parameter[] cachedNamedParameters;
     private Parameter[] cachedOptionalParameters;
-    private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
     private final int relevanceMultiplier;
     private final boolean isDeprecated;
     private final boolean noParens;
@@ -107,10 +105,8 @@ public class MethodContributionElement implements IContributionElement {
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         GroovyMethodProposal proposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider);
+        proposal.setProposalFormattingOptions(ProposalFormattingOptions.newFromOptions().newFromExisting(useNamedArgs, noParens, proposal.getMethod()));
         proposal.setRelevanceMultiplier(relevanceMultiplier);
-        proposal.setProposalFormattingOptions(options);
-        proposal.setUseNamedArguments(useNamedArgs);
-        proposal.setNoParens(noParens);
         return proposal;
     }
 
@@ -157,10 +153,6 @@ public class MethodContributionElement implements IContributionElement {
         }
     }
 
-    /**
-     * @param resolver
-     * @return
-     */
     private Map<String, ClassNode> findAvailableParameters(ResolverCache resolver) {
         Map<String, ClassNode> available = new HashMap<String, ClassNode>(params.length);
         if (useNamedArgs) {

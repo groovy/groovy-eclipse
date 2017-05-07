@@ -45,7 +45,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * GRECLIPSE-512: most fields have properties created for them, so we want to avoid duplicate proposals.
  * Constants are an exception, so return them here. I may have missed something, so be prepared to add more kinds of fields here.
  */
-public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
+public class FieldProposalCreator extends AbstractProposalCreator {
 
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
@@ -155,23 +155,21 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
             if ("*".equals(fieldName)) {
                 for (FieldNode field : (Iterable<FieldNode>) typeNode.getFields()) {
                     if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
-                        proposals.add(newFavoriteFieldProposal(field, typeName + '.' + field.getName()));
+                        GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+                        proposal.setRequiredStaticImport(typeName + '.' + field.getName());
+                        proposals.add(proposal);
                     }
                 }
             } else {
                 if (ProposalUtils.looselyMatches(prefix, fieldName)) {
                     FieldNode field = typeNode.getField(fieldName);
                     if (field != null && field.isStatic()) {
-                        proposals.add(newFavoriteFieldProposal(field, favoriteStaticMember));
+                        GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+                        proposal.setRequiredStaticImport(favoriteStaticMember);
+                        proposals.add(proposal);
                     }
                 }
             }
         }
-    }
-
-    private IGroovyProposal newFavoriteFieldProposal(FieldNode field, String favorite) {
-        GroovyFieldProposal proposal = new GroovyFieldProposal(field);
-        proposal.setRequiredStaticImport(favorite);
-        return proposal;
     }
 }

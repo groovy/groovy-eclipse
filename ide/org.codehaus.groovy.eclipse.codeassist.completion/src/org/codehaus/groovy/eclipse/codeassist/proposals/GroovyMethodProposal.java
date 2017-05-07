@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSignature;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
@@ -30,7 +29,6 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -43,59 +41,44 @@ import org.eclipse.jdt.internal.ui.text.java.AnnotationAtttributeProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 
 public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     private final MethodNode method;
 
-    private String contributor;
-
-    /**
-     * allow individual method proposal contributors to override
-     * the setting in the preferences. If set to true, then *all*
-     * arguments are inserted as named.
-     */
-    private boolean useNamedArguments;
+    private final String contributor;
 
     private ProposalFormattingOptions options;
 
-    private IType cachedDeclaringType;
-
-    private boolean noParens;
-
     public GroovyMethodProposal(MethodNode method) {
-        super();
-        this.method = method;
-        this.noParens = false;
-        this.useNamedArguments = false;
+        this(method, null);
     }
 
     public GroovyMethodProposal(MethodNode method, String contributor) {
-        this(method);
+        super();
+        this.method = method;
         this.contributor = contributor;
+    }
+
+    @Override
+    public AnnotatedNode getAssociatedNode() {
+        return method;
     }
 
     public MethodNode getMethod() {
         return method;
     }
 
+    public ProposalFormattingOptions getProposalFormattingOptions() {
+        if (options == null) {
+            options = ProposalFormattingOptions.newFromOptions();
+        }
+        return options;
+    }
+
     public void setProposalFormattingOptions(ProposalFormattingOptions options) {
         this.options = options;
-    }
-
-    public void setUseNamedArguments(boolean useNamedArguments) {
-        this.useNamedArguments = useNamedArguments;
-    }
-
-    public void setNoParens(boolean noParens) {
-        this.noParens = noParens;
-    }
-
-    @Override
-    public AnnotatedNode getAssociatedNode() {
-        return method;
     }
 
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
@@ -164,12 +147,11 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             lazyProposal = new LazyJavaCompletionProposal(proposal, javaContext);
             lazyProposal.setProposalInfo(new AnnotationAtttributeProposalInfo(javaContext.getProject(), proposal));
         } else {
-            ProposalFormattingOptions groovyProposalOptions = getGroovyProposalOptions();
-            if (groovyProposalOptions.doParameterGuessing) {
-                lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor, groovyProposalOptions);
+            if (getProposalFormattingOptions().doParameterGuessing) {
+                lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor, getProposalFormattingOptions());
             }
             if (lazyProposal == null) {
-                lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, groovyProposalOptions, contributor);
+                lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, getProposalFormattingOptions(), contributor);
                 // if location is METHOD_CONTEXT, then the type must be MethodInfoContentAssistContext
                 // ...but there are other times when the type is MethodInfoContentAssistContext as well
                 if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
@@ -198,13 +180,6 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setOptionalParameterTypeNames(getParameterTypeNames(namedArgsMethod.getOptionalParams()));
     }
 
-    private ProposalFormattingOptions getGroovyProposalOptions() {
-        if (options == null) {
-            options = ProposalFormattingOptions.newFromOptions();
-        }
-        return options.newFromExisting(useNamedArguments, noParens, method);
-    }
-
     private boolean isParens(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         if (javaContext.getDocument().getLength() > context.completionEnd) {
             try {
@@ -214,10 +189,6 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             }
         }
         return false;
-    }
-
-    protected boolean shouldUseNamedArguments(IPreferenceStore prefs) {
-        return (prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS) && method instanceof ConstructorNode) || useNamedArguments;
     }
 
     protected char[] createMethodSignature() {
@@ -242,8 +213,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             name = "\"" + name + "\"";
         }
 
-        // don't include parens if the char after the completionEnd is a paren (don't want to double
-        // insert)
+        // don't include parens if the char after the completionEnd is a paren (don't want to double insert)
         if (includeParens) {
             return (name + "()").toCharArray();
         } else {
@@ -263,8 +233,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
         char[][] paramNames = null;
         // if the MethodNode has param names filled in, then use that
-        if (params[0].getName().equals("arg0")
-                || params[0].getName().equals("param0")) {
+        if (params[0].getName().equals("arg0") || params[0].getName().equals("param0")) {
             paramNames = calculateAllParameterNames(unit, method);
         }
 
@@ -401,4 +370,5 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         return cachedDeclaringType;
     }
+    private IType cachedDeclaringType;
 }

@@ -43,29 +43,30 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
-    private static final String CLOSURE_TEXT = "{  }";
+
+    private final ProposalFormattingOptions options;
+
+    private final String contributor;
+
+    // if true, shows the context only and does not perform completion
+    private boolean contextOnly;
 
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
 
-    private final ProposalFormattingOptions proposalOptions;
-    private String contributor;
-
-    // if true, shows the context only and does not
-    private boolean contextOnly;
-
     public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options) {
-        super(proposal, context);
-        this.proposalOptions = options;
-        this.setProposalInfo(new MethodProposalInfo(context.getProject(), proposal));
-        this.setRelevance(proposal.getRelevance());
-        this.setTriggerCharacters(!proposal.hasParameters() ? ProposalUtils.METHOD_TRIGGERS : ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
+        this(proposal, context, options, null);
     }
 
     public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options, String contributor) {
-        this(proposal, context, options);
+        super(proposal, context);
+
+        this.options = options;
         this.contributor = contributor;
+        this.setRelevance(proposal.getRelevance());
+        this.setProposalInfo(new MethodProposalInfo(context.getProject(), proposal));
+        this.setTriggerCharacters(!proposal.hasParameters() ? ProposalUtils.METHOD_TRIGGERS : ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
     }
 
     public void contextOnly() {
@@ -83,9 +84,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     protected IContextInformation computeContextInformation() {
-        if ((fProposal.getKind() == CompletionProposal.METHOD_REF ||
-                fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION) && hasParameters()) {
-            ProposalContextInformation contextInformation= new ProposalContextInformation(fProposal);
+        if (hasParameters() && (fProposal.getKind() == CompletionProposal.METHOD_REF ||
+                                fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION)) {
+            ProposalContextInformation contextInformation = new ProposalContextInformation(fProposal);
             if (fContextInformationPosition != 0 && fProposal.getCompletion().length == 0)
                 contextInformation.setContextInformationPosition(fContextInformationPosition);
             return contextInformation;
@@ -93,15 +94,18 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return super.computeContextInformation();
     }
 
-    /*
+    /**
      * @see ICompletionProposalExtension#apply(IDocument, char)
      */
     @Override
     public void apply(IDocument document, char trigger, int offset) {
         super.apply(document, trigger, offset);
-        int baseOffset = getReplacementOffset();
-        String replacement = getReplacementString();
-        fSelectedRegion = new Region(baseOffset + replacement.length(), 0);
+
+        if (fArgumentOffsets != null && fArgumentOffsets.length > 0 && fArgumentLengths != null && fArgumentLengths.length > 0) {
+            fSelectedRegion = new Region(getReplacementOffset() + fArgumentOffsets[0], fArgumentLengths[0]);
+        } else {
+            fSelectedRegion = new Region(getReplacementOffset() + getReplacementString().length(), 0);
+        }
     }
 
     @Override
@@ -185,7 +189,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             int indexOfLastClosure = -1;
             char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
             char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
-            if (proposalOptions.noParensAroundClosures) {
+            if (options.noParensAroundClosures) {
                 // need to check both regular and named parameters for closure
                 if (lastArgIsClosure(regularParameterTypes, namedParameterTypes)) {
                     indexOfLastClosure = regularParameterTypes.length + namedParameterTypes.length - 1;
@@ -232,20 +236,19 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     nextName = regularParameterNames[i - namedCount];
                 }
 
-                if (proposalOptions.useNamedArguments || i < namedCount) {
+                if (options.useNamedArguments || i < namedCount) {
                     buffer.append(nextName).append(":");
                 }
-				fArgumentOffsets[i] = buffer.length();
+                fArgumentOffsets[i] = buffer.length();
                 if (i == 0) {
                     setCursorPosition(buffer.length());
                 }
                 // handle the argument name
-                if (proposalOptions.useBracketsForClosures && CharOperation.equals("Closure".toCharArray(), nextTypeName)) {
+                if (options.useBracketsForClosures && CharOperation.equals("Closure".toCharArray(), nextTypeName)) {
                     // closure
                     fArgumentOffsets[i] = buffer.length() + 2;
                     fArgumentLengths[i] = 0;
-                    buffer.append(CLOSURE_TEXT);
-
+                    buffer.append("{  }");
                 } else {
                     // regular argument
                     fArgumentOffsets[i] = buffer.length();
