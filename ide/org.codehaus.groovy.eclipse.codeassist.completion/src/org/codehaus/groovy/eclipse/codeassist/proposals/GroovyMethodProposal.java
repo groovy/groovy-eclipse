@@ -263,9 +263,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     /**
-     * FIXADE I am concerned that this takes a long time since we are doing a lookup for each method
-     * any way to cache?
-     * @throws JavaModelException
+     * FIXADE I am concerned that this takes a long time since we are doing a lookup for each method any way to cache?
      */
     protected char[][] calculateAllParameterNames(ICompilationUnit unit, MethodNode method) {
         try {
@@ -342,7 +340,6 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     /**
-     * @param maybeMethodParameterName
      * @return parameter signature without generics signature
      */
     private String removeGenerics(String maybeMethodParameterName) {

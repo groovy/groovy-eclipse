@@ -63,7 +63,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  def meth(int a, int b) { }\n" +
             "  def method(int a, int b) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other().meth()", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other().meth()")
 
         runTest(unit, "meth(", "meth", 2)
     }
@@ -80,7 +80,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  def meth(String d) { }\n" +
             "  def method(String d) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other().meth()", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other().meth()")
 
         runTest(unit, "meth(", "meth", 3)
     }
@@ -97,7 +97,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  def meth(String d) { }\n" +
             "  def method(String d) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other().meth(a)", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other().meth(a)")
 
         runTest(unit, "meth(", "meth", 3)
     }
@@ -114,7 +114,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  def meth(String d) { }\n" +
             "  def method(String d) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other().meth(a,b)", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other().meth(a,b)")
 
         runTest(unit, "meth(a,", "meth", 3)
     }
@@ -126,7 +126,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other()", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other()")
 
         runTest(unit, "Other(", "Other", 2)
     }
@@ -138,7 +138,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
             "}", "Other", "p")
-        ICompilationUnit unit = addGroovySource("new p.Other()", "File", "")
+        ICompilationUnit unit = addGroovySource("new p.Other()")
 
         runTest(unit, "Other(", "Other", 2)
     }
@@ -150,7 +150,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
             "}", "Other", "p")
-        ICompilationUnit unit = addGroovySource("import p.Other\nnew Other()", "File", "")
+        ICompilationUnit unit = addGroovySource("import p.Other\nnew Other()")
 
         runTest(unit, "Other(", "Other", 2)
     }
@@ -162,7 +162,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other(a)", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other(a)")
 
         runTest(unit, "Other(", "Other", 2)
     }
@@ -174,7 +174,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Other(a,b)", "File", "")
+        ICompilationUnit unit = addGroovySource("new Other(a,b)")
 
         runTest(unit, "Other(a,", "Other", 2)
     }
@@ -190,7 +190,7 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  Super(String d) { }\n" +
             "  Super(String d, String e) { }\n" +
             "}", "Other", "")
-        ICompilationUnit unit = addGroovySource("new Super()", "File", "")
+        ICompilationUnit unit = addGroovySource("new Super()")
 
         runTest(unit, "Super(", "Super", 2)
     }

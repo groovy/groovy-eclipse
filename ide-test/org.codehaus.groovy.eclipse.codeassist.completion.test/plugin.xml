@@ -4,14 +4,14 @@
    <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
       <proposalFilter
             name="Mock Filter 1"
-            proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter1">
+            proposalFilter="org.codehaus.groovy.eclipse.codeassist.mock.MockProposalFilter1">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
          </appliesTo>
       </proposalFilter>
       <proposalFilter
             name="Mock Filter 2"
-            proposalFilter="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter2">
+            proposalFilter="org.codehaus.groovy.eclipse.codeassist.mock.MockProposalFilter2">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
          </appliesTo>
@@ -22,13 +22,13 @@
    </extension>
    <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
       <proposalProvider
-            proposalProvider="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1">
+            proposalProvider="org.codehaus.groovy.eclipse.codeassist.mock.MockProposalProvider1">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
          </appliesTo>
       </proposalProvider>
       <proposalProvider
-            proposalProvider="org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider2">
+            proposalProvider="org.codehaus.groovy.eclipse.codeassist.mock.MockProposalProvider2">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
          </appliesTo>

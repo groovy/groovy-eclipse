@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assert.fail
 import static org.junit.Assume.assumeTrue
@@ -24,15 +25,22 @@ import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.Before
 import org.junit.Test
 
 final class MethodCompletionTests extends CompletionTestSuite {
+
+    @Before
+    void setUp() {
+        GroovyPlugin.default.preferenceStore.setValue(GROOVY_CONTENT_PARAMETER_GUESSING, false)
+    }
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
         waitForIndex()
@@ -360,7 +368,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile', false), '''\
             |import static java.util.regex.Pattern.compile
             |
-            |compile("")
+            |compile(regex)
             |'''.stripMargin())
     }
 
@@ -377,7 +385,36 @@ final class MethodCompletionTests extends CompletionTestSuite {
         applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile', false), '''\
             |import static java.util.regex.Pattern.compile
             |
-            |compile("")
+            |compile(regex)
             |'''.stripMargin())
+    }
+
+    @Test
+    void testMethodPointer1() {
+        String contents = 'String.&isE'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
+        proposalExists(proposals, 'isEmpty', 1)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty', false), 'String.&isEmpty')
+    }
+
+    @Test
+    void testMethodPointer1a() {
+        GroovyPlugin.default.preferenceStore.setValue(GROOVY_CONTENT_PARAMETER_GUESSING, true)
+
+        String contents = 'String.&isE'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
+        proposalExists(proposals, 'isEmpty', 1)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty', false), 'String.&isEmpty')
+    }
+
+    @Test
+    void testMethodPointer2() {
+        String contents = 'String.&  isE'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
+        proposalExists(proposals, 'isEmpty', 1)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty', false), 'String.&  isEmpty')
     }
 }

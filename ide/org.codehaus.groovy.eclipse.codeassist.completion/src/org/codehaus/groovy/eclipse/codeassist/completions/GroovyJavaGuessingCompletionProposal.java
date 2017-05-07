@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IJavaElement;
@@ -55,10 +54,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 /**
- * An adaptation of {@link ParameterGuessingProposal} for Groovy code
- *
- * @author andrew
- * @created May 4, 2011
+ * An adaptation of {@link ParameterGuessingProposal} for Groovy code.
  */
 public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionProposal {
 
@@ -76,19 +72,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             JavaContentAssistInvocationContext context, boolean fillBestGuess, String contributor, ProposalFormattingOptions options) {
         CompletionContext coreContext = context.getCoreContext();
         if (coreContext != null && coreContext.isExtended()) {
-            return new GroovyJavaGuessingCompletionProposal(proposal, context, coreContext, fillBestGuess, contributor,
-                    options);
+            return new GroovyJavaGuessingCompletionProposal(proposal, context, coreContext, fillBestGuess, contributor, options);
         }
         return null;
     }
 
-    /** Tells whether this class is in debug mode. */
-    private static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("org.eclipse.jdt.ui/debug/ResultCollector")); //$NON-NLS-1$//$NON-NLS-2$
-
-    private static final String LAST_CLOSURE_TEXT = "{";
-
-    private ICompletionProposal[][] fChoices; // initialized by
-                                              // guessParameters()
+    private ICompletionProposal[][] fChoices; // initialized by guessParameters()
 
     private Position[] fPositions; // initialized by guessParameters()
 
@@ -100,9 +89,11 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
     private final CompletionContext fCoreContext;
 
-    private final ProposalFormattingOptions proposalOptions;
+    private final ProposalFormattingOptions options;
 
     private final String contributor;
+
+    private boolean methodPointer;
 
     private GroovyJavaGuessingCompletionProposal(CompletionProposal proposal, JavaContentAssistInvocationContext context,
             CompletionContext coreContext, boolean fillBestGuess, String contributor, ProposalFormattingOptions proposalOptions) {
@@ -110,7 +101,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         fCoreContext = coreContext;
         fFillBestGuess = fillBestGuess;
         this.contributor = contributor;
-        this.proposalOptions = proposalOptions;
+        this.options = proposalOptions;
     }
 
     @Override
@@ -159,6 +150,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
      */
     @Override
     public void apply(IDocument document, char trigger, int offset) {
+        methodPointer = GroovyJavaMethodCompletionProposal.isMethodPointerCompletion(document, getReplacementOffset());
         try {
             super.apply(document, trigger, offset);
 
@@ -214,9 +206,8 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
     }
 
-    /*
-     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#
-     * needsLinkedMode()
+    /**
+     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#needsLinkedMode()
      */
     @Override
     protected boolean needsLinkedMode() {
@@ -232,33 +223,31 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
     }
 
-    /*
-     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#
-     * computeReplacementString()
+    /**
+     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#computeReplacementString()
      */
     @Override
     protected String computeReplacementString() {
+        char[] proposalName = fProposal.getName();
+
+        boolean hasWhitespace = false;
+        for (char c : proposalName) {
+            if (CharOperation.isWhitespace(c)) {
+                hasWhitespace = true;
+                break;
+            }
+        }
+
+        if (methodPointer) {
+            // complete the name only for a method pointer expression
+            return String.valueOf(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
+        }
+
         if (!hasParameters() || !hasArgumentList()) {
-            if (proposalOptions.noParens) {
-                // command chain expression with no known arguments
-                char[] proposalName = fProposal.getName();
-                boolean hasWhitespace = false;
-                for (int i = 0; i < proposalName.length; i++) {
-                    if (CharOperation.isWhitespace(proposalName[i])) {
-                        hasWhitespace = true;
-                    }
-                }
-                String newProposalName;
-                if (hasWhitespace) {
-                    newProposalName = "\"" + String.valueOf(proposalName) + "\"";
-                } else {
-                    newProposalName = String.valueOf(proposalName);
-                }
-                return newProposalName;
+            if (options.noParens) {
+                return String.valueOf(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
             } else {
                 String replacementString = super.computeReplacementString();
-                // JDT now seems to add the trailing ';' automatically if
-                // calling a method that returns void
                 if (replacementString.endsWith(");")) {
                     replacementString = replacementString.substring(0, replacementString.length() - 1);
                 }
@@ -266,21 +255,16 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             }
         }
 
-        long millis = DEBUG ? System.currentTimeMillis() : 0;
-        String replacement;
         try {
-            replacement = computeGuessingCompletion();
-        } catch (JavaModelException x) {
+            return computeGuessingCompletion();
+        } catch (JavaModelException e) {
             fPositions = null;
             fChoices = null;
-            JavaPlugin.log(x);
-            openErrorDialog(x);
-            return super.computeReplacementString();
+            JavaPlugin.log(e);
+            openErrorDialog(e);
         }
-        if (DEBUG)
-            System.err.println("Parameter Guessing: " + (System.currentTimeMillis() - millis)); //$NON-NLS-1$
 
-        return replacement;
+        return super.computeReplacementString();
     }
 
     /**
@@ -311,7 +295,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         fProposal.setName(proposalName);
 
         FormatterPrefs prefs = getFormatterPrefs();
-        if (proposalOptions.noParens) {
+        if (options.noParens) {
             // eat the opening paren replace with a space if there isn't one
             // already
             buffer.replace(buffer.length() - 1, buffer.length(), prefs.beforeOpeningParen ? "" : " ");
@@ -336,7 +320,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         int argCount = regularParameterNames.length;
         int allCount = argCount + namedCount;
 
-        if (proposalOptions.noParensAroundClosures) {
+        if (options.noParensAroundClosures) {
 
             // remove the opening paren only if there is a single closure
             // parameter
@@ -376,7 +360,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 } else {
                     nextName = namedParameterNames[i - argCount];
                 }
-                if (i >= argCount || proposalOptions.useNamedArguments) {
+                if (i >= argCount || options.useNamedArguments) {
                     buffer.append(nextName).append(":");
                 }
 
@@ -396,10 +380,10 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
                 // check what to add after argument
                 if (i == allCount - 1 || (i == allCount - 2 && i == indexOfLastClosure - 1)) {
-                    if (prefs.beforeClosingParen || proposalOptions.noParens) {
+                    if (prefs.beforeClosingParen || options.noParens) {
                         buffer.append(SPACE);
                     }
-                    if (!proposalOptions.noParens) {
+                    if (!options.noParens) {
                         buffer.append(RPAREN);
                     }
                 } else if (i < allCount - 1) {
@@ -414,17 +398,17 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             // closures at the end are added in an idiomatic groovy way
             if (indexOfLastClosure >= 0) {
                 if (allCount > 1) {
-                    if (!proposalOptions.noParensAroundClosures) {
+                    if (!options.noParensAroundClosures) {
                         buffer.append(COMMA);
                     }
                     buffer.append(SPACE);
                 }
                 Position position = fPositions[indexOfLastClosure];
                 position.setOffset(replacementOffset + buffer.length());
-                position.setLength(LAST_CLOSURE_TEXT.length());
-                buffer.append(LAST_CLOSURE_TEXT);
+                position.setLength(1);
+                buffer.append("{");
 
-                if (!proposalOptions.noParensAroundClosures) {
+                if (!options.noParensAroundClosures) {
                     buffer.append(" }");
                     buffer.append(RPAREN);
                 }
@@ -444,7 +428,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             // no args
             return false;
         }
-
     }
 
     /**
@@ -511,7 +494,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return fChoices;
     }
 
-    /*
+    /**
      * @see ICompletionProposal#getSelection(IDocument)
      */
     @Override

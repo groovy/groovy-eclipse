@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -80,66 +79,60 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         "    }\n" +
         "}"
 
+    private final IPreferenceStore groovyPrefs = GroovyPlugin.default.preferenceStore
+
     @Before
     void setUp() {
-        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore()
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true)
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true)
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false)
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false)
-    }
-
-    @After
-    void tearDown() {
-        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore()
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true)
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true)
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false)
-        prefs.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false)
     }
 
     @Test
     void testMethodWithClosure() {
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "any {  }", 1)
     }
 
     @Test
     void testMethodWithNoArgs() {
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "clone()", 1)
     }
 
     @Test
     void testMethodWith2Args() {
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer)
         checkReplacementRegexp(proposals, "findIndexOf\\(\\w+\\) \\{  \\}", 1)
     }
 
     @Test
     void testMethodWithClosureNotGroovyLike() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer)
         checkReplacementRegexp(proposals, "any\\(\\w+\\)", 1)
     }
 
     @Test
     void testMethodWith2ArgsNotGroovyLike() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer)
         checkReplacementRegexp(proposals, "findIndexOf\\(\\w+, \\w+\\)", 1)
     }
 
     @Test
     void testClosureApplication1a() {
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
         String expected = "new Foo().method1(arg)"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
@@ -147,8 +140,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1b() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
         String expected = "new Foo().method1(arg)"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
@@ -156,8 +150,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1c() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
         String expected = "new Foo().method1(arg)"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
@@ -165,9 +160,10 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1d() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
         String expected = "new Foo().method1(arg)"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
@@ -175,7 +171,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2a() {
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
         String expected = "new Foo().method2(arg) {  }"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
@@ -183,8 +179,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2b() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
         String expected = "new Foo().method2(arg, {  })"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
@@ -192,8 +189,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2c() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
         String expected = "new Foo().method2(arg) c1"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
@@ -201,9 +199,10 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2d() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
         String expected = "new Foo().method2(arg, c1)"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
@@ -211,7 +210,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3a() {
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
         String expected = "new Foo().method3(arg, {  }) {  }"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
@@ -219,8 +218,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3b() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
         String expected = "new Foo().method3(arg, {  }, {  })"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
@@ -228,8 +228,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3c() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
         String expected = "new Foo().method3(arg, c1) c2"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
@@ -237,9 +238,10 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3d() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+
+        addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
         String expected = "new Foo().method3(arg, c1, c2)"
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
@@ -247,122 +249,125 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test // accessing members of super types in closures
     void testClosureCompletion1() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " substring"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "substring(beginIndex)", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion2() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " first"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "first", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion3() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " second2"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "second2()", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion4() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "substring(beginIndex)", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion5() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "first", 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion6() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "second2", 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion7() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "substring", 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion8() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.first"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "first", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion9() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "second2()", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion10() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "wait"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "wait()", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion11() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS2, "File", "")
+        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS2)
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS2, "first"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "first", 1)
     }
 
     @Test
     void testNamedArguments0() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
+
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "clone()", 1)
     }
 
     @Ignore @Test
     void testNamedArguments1() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
+
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "(first:first, second:second)", 1)
     }
 
     @Ignore @Test
     void testNamedArguments2() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS, "GroovyLikeCompletions", "")
+        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
+
+        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "(third:third)", 1)
     }
 
     @Ignore @Test // GRECLIPSE-268
     void testGString1() {
-        ICompilationUnit unit = addGroovySource('""""""', "File", "")
+        ICompilationUnit unit = addGroovySource('""""""')
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer)
         assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString2() {
-        ICompilationUnit unit = addGroovySource('"""${this}"""', "File", "")
+        ICompilationUnit unit = addGroovySource('"""${this}"""')
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer)
         assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString3() {
-        ICompilationUnit unit = addGroovySource('"""this"""', "File", "")
+        ICompilationUnit unit = addGroovySource('"""this"""')
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"this".length(), GroovyCompletionProposalComputer)
         assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
     }
@@ -370,7 +375,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-268
     void testGString4() {
         String contents = 'def flarb;\n"""${flarb}"""'
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
+        ICompilationUnit unit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, '${flarb'), GroovyCompletionProposalComputer)
         checkReplacementString(proposals, "flarb", 1)
     }

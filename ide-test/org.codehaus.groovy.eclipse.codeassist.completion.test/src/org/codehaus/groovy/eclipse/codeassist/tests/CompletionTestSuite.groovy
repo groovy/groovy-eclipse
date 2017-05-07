@@ -100,7 +100,8 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     /**
-     * Finds the next proposal that matches the passed in name
+     * Finds the next proposal that matches the passed in name.
+     *
      * @param proposals all proposals
      * @param name name to match
      * @param isType true if looking for a type proposal
@@ -132,7 +133,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     /**
-     * Returns the first proposal that matches the criteria passed in
+     * Returns the first proposal that matches the criteria passed in.
      */
     protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType) {
         for (ICompletionProposal proposal : proposals) {

@@ -32,7 +32,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
     }
 
     @Test

@@ -15,9 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import org.codehaus.groovy.eclipse.GroovyPlugin
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
+import org.junit.Before
 import org.junit.Test
 
 final class GuessingCompletionTests extends CompletionTestSuite {
+
+    @Before
+    void setUp() {
+        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true)
+    }
 
     @Test
     void testParamGuessing1() throws Exception {

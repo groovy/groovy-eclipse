@@ -36,23 +36,19 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     private ICompilationUnit createJava() {
-        return addJavaSource(CONTENTS, "Class", "")
+        return addJavaSource(CONTENTS, "Class")
     }
 
     private ICompilationUnit createGroovy() {
-        return addGroovySource(CONTENTS, "Class", "")
+        return addGroovySource(CONTENTS, "Class")
     }
 
     private ICompilationUnit createGroovyForScript() {
-        return addGroovySource(SCRIPTCONTENTS, "Script", "")
+        return addGroovySource(SCRIPTCONTENTS, "Script")
     }
 
     private ICompilationUnit createGroovyForClosure() {
-        return addGroovySource(CLOSURECONTENTS, "Closure", "")
-    }
-
-    private ICompilationUnit createGroovyWithContents(String name, String contents) {
-        return addGroovySource(contents, name, "")
+        return addGroovySource(CLOSURECONTENTS, "Closure")
     }
 
     //--------------------------------------------------------------------------
@@ -144,7 +140,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-1013
     void testPopertyVariantOfDGM() {
         String contents = "''.toURL().text"
-        ICompilationUnit unit = createGroovyWithContents("Script", contents)
+        ICompilationUnit unit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "toURL().t"), GroovyCompletionProposalComputer)
         proposalExists(proposals, "text", 1)
     }
@@ -152,7 +148,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-1158
     void testDateGM() {
         String contents = "new Date().toCal"
-        ICompilationUnit unit = createGroovyWithContents("Script", contents)
+        ICompilationUnit unit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "toCal"), GroovyCompletionProposalComputer)
         proposalExists(proposals, "toCalendar", 1)
     }
@@ -161,7 +157,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testProcessGM() {
         String contents = "Process p\n" +
                 "p.get"
-        ICompilationUnit unit = createGroovyWithContents("Script", contents)
+        ICompilationUnit unit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "get"), GroovyCompletionProposalComputer)
         proposalExists(proposals, "getIn", 1)
     }
@@ -170,7 +166,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testEncodingGM() {
         String contents = "byte[] p\n" +
                 "p.encodeBase64"
-        ICompilationUnit unit = createGroovyWithContents("Script", contents)
+        ICompilationUnit unit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "encodeBase64"), GroovyCompletionProposalComputer)
         proposalExists(proposals, "encodeBase64", 2)
     }
@@ -179,7 +175,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testXmlGM() {
         String contents = "org.w3c.dom.NodeList p\n" +
                 "p.iterator"
-        ICompilationUnit unit = createGroovyWithContents("Script", contents)
+        ICompilationUnit unit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "iterator"), GroovyCompletionProposalComputer)
         proposalExists(proposals, "iterator", 1)
     }
@@ -189,7 +185,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         try {
             setDGMFilter("inspect")
             String contents = "this.insp"
-            ICompilationUnit unit = createGroovyWithContents("Script", contents)
+            ICompilationUnit unit = addGroovySource(contents)
             ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "insp"), GroovyCompletionProposalComputer)
             proposalExists(proposals, "inspect", 0)
             setDGMFilter()
@@ -205,7 +201,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         try {
             setDGMFilter("inspect", "each", "fsafd fdafsd fafds")
             String contents = "this.insp"
-            ICompilationUnit unit = createGroovyWithContents("Script", contents)
+            ICompilationUnit unit = addGroovySource(contents)
             ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "insp"), GroovyCompletionProposalComputer)
             proposalExists(proposals, "inspect", 0)
             setDGMFilter()
@@ -218,7 +214,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1422
     void testNoDups() {
-        ICompilationUnit unit = createGroovyWithContents("Script", LISTCONTENTS)
+        ICompilationUnit unit = addGroovySource(LISTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(LISTCONTENTS, "findA"), GroovyCompletionProposalComputer)
         // should find 2, not 4.  dups removed
         proposalExists(proposals, "findAll", 2)

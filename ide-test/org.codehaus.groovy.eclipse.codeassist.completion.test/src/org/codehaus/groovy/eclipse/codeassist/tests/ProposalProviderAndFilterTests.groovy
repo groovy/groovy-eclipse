@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter1
-import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter2
-import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1
-import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider2
+import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalFilter1
+import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalFilter2
+import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalProvider1
+import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalProvider2
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.codehaus.groovy.eclipse.test.ui.Extender1
 import org.codehaus.groovy.eclipse.test.ui.Extender2

@@ -51,6 +51,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     // if true, shows the context only and does not perform completion
     private boolean contextOnly;
 
+    private boolean methodPointer;
+
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
@@ -99,6 +101,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
      */
     @Override
     public void apply(IDocument document, char trigger, int offset) {
+        methodPointer = isMethodPointerCompletion(document, getReplacementOffset());
+
         super.apply(document, trigger, offset);
 
         if (fArgumentOffsets != null && fArgumentOffsets.length > 0 && fArgumentLengths != null && fArgumentLengths.length > 0) {
@@ -155,13 +159,21 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
 
         char[] proposalName = fProposal.getName();
+
         boolean hasWhitespace = false;
-        for (int i = 0; i < proposalName.length; i++) {
-            if (CharOperation.isWhitespace(proposalName[i])) {
+        for (char c : proposalName) {
+            if (CharOperation.isWhitespace(c)) {
                 hasWhitespace = true;
+                break;
             }
         }
-        // with no arguments, there is nothing groovy to do.
+
+        if (methodPointer) {
+            // complete the name only for a method pointer expression
+            return String.valueOf(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
+        }
+
+        // with no arguments there is nothing groovy to do
         if ((!hasParameters() || !hasArgumentList()) && !hasWhitespace) {
             String replacementString = super.computeReplacementString();
             if (replacementString.endsWith(");")) {
@@ -170,22 +182,24 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             return replacementString;
         }
 
-        // we're inserting a method plus the argument list - respect formatter
-        // preferences
+        // we're inserting a method plus the argument list - respect formatter preferences
         StringBuffer buffer = new StringBuffer();
         char[] newProposalName;
         if (hasWhitespace) {
-            newProposalName = CharOperation.concat(new char[] {'"'}, CharOperation.append(proposalName, '"'));
+            newProposalName = CharOperation.concat('"', proposalName, '"');
         } else {
             newProposalName = proposalName;
         }
         fProposal.setName(newProposalName);
         appendMethodNameReplacement(buffer);
         fProposal.setName(proposalName);
-        FormatterPrefs prefs= getFormatterPrefs();
 
-        if (hasParameters()) {
-
+        if (!hasParameters()) {
+            if (getFormatterPrefs().inEmptyList) {
+                buffer.append(SPACE);
+            }
+            buffer.append(RPAREN);
+        } else {
             int indexOfLastClosure = -1;
             char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
             char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
@@ -195,20 +209,17 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     indexOfLastClosure = regularParameterTypes.length + namedParameterTypes.length - 1;
                 }
 
-                // remove the opening paren only if there is a single closure
-                // parameter
+                // remove the opening paren only if there is a single closure parameter
                 if (indexOfLastClosure == 0) {
                     buffer.replace(buffer.length() - 1, buffer.length(), "");
 
-                    // add space if not already there
-                    // would be added by call to appendMethodNameReplacement
-                    if (!prefs.beforeOpeningParen) {
+                    // add space if not already there would be added by call to appendMethodNameReplacement
+                    if (!getFormatterPrefs().beforeOpeningParen) {
                         buffer.append(SPACE);
                     }
                 }
-            } else {
-                if (prefs.afterOpeningParen)
-                    buffer.append(SPACE);
+            } else if (getFormatterPrefs().afterOpeningParen) {
+                buffer.append(SPACE);
             }
 
             // now add the parameters
@@ -222,7 +233,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             fArgumentOffsets = new int[allCount];
             fArgumentLengths = new int[allCount];
 
-            for (int i = 0; i < allCount; i++) {
+            for (int i = 0; i < allCount; i += 1) {
                 // check for named args (either all of them, or the explicitly
                 // named ones)
                 char[] nextName;
@@ -257,7 +268,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
 
                 if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == allCount - 1)) {
-                    if (prefs.beforeClosingParen) {
+                    if (getFormatterPrefs().beforeClosingParen) {
                         buffer.append(SPACE);
                     }
                     buffer.append(RPAREN);
@@ -265,21 +276,37 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                         buffer.append(SPACE);
                     }
                 } else if (i < allCount - 1) {
-                    if (prefs.beforeComma)
+                    if (getFormatterPrefs().beforeComma)
                         buffer.append(SPACE);
                     buffer.append(COMMA);
-                    if (prefs.afterComma)
+                    if (getFormatterPrefs().afterComma)
                         buffer.append(SPACE);
                 }
             }
-        } else {
-            if (prefs.inEmptyList) {
-                buffer.append(SPACE);
-            }
-            buffer.append(RPAREN);
         }
 
         return buffer.toString();
+    }
+
+    /** Checks '.&' operator before replacement offset. */
+    protected static boolean isMethodPointerCompletion(IDocument document, int replacementOffset) {
+        try {
+            boolean seenAmpersand = false;
+            while (--replacementOffset > 0) {
+                char c = document.getChar(replacementOffset);
+                if (Character.isJavaIdentifierPart(c) || (!Character.isWhitespace(c) && c != '&' && c != '.')) break;
+                if (c == '&') {
+                    if (seenAmpersand) break;
+                    seenAmpersand = true;
+                } else if (c == '.') {
+                    if (seenAmpersand)
+                        return true;
+                    break;
+                }
+            }
+        } catch (BadLocationException e) {
+        }
+        return false;
     }
 
     private boolean lastArgIsClosure(char[][] regularparameterTypes, char[][] namedParameterTypes) {
@@ -293,8 +320,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             return false;
         }
 
-        // we should be comparing against a fully qualified type name, but it is not always available
-        // so a simple name is close enough
+        // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
         return CharOperation.equals("Closure".toCharArray(), lastArgType);
     }
 
@@ -320,7 +346,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             return null;
     }
 
-    /*
+    /**
      * @see ICompletionProposal#getSelection(IDocument)
      */
     @Override

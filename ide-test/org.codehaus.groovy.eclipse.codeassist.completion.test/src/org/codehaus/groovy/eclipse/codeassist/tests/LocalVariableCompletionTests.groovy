@@ -141,22 +141,22 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     }
 
     private ICompilationUnit createJava() {
-        return addJavaSource(CONTENTS, "LocalsClass", "")
+        return addJavaSource(CONTENTS, "LocalsClass")
     }
 
     private ICompilationUnit createGroovy() {
-        return addGroovySource(CONTENTS, "LocalsClass", "")
+        return addGroovySource(CONTENTS, "LocalsClass")
     }
 
     private ICompilationUnit createGroovyForScript() {
-        return addGroovySource(SCRIPTCONTENTS, "LocalsScript", "")
+        return addGroovySource(SCRIPTCONTENTS, "LocalsScript")
     }
 
     private ICompilationUnit createGroovyForScript2() {
-        return addGroovySource(SCRIPTCONTENTS2, "LocalsScript2", "")
+        return addGroovySource(SCRIPTCONTENTS2, "LocalsScript2")
     }
 
     private ICompilationUnit createGroovyForSelfReferencingScript() {
-        return addGroovySource(SELFREFERENCINGSCRIPT, "SelfRefScripr", "")
+        return addGroovySource(SELFREFERENCINGSCRIPT, "SelfRefScripr")
     }
 }
