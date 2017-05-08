@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,16 +41,15 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- */
 public class ProposalUtils {
+
+    private ProposalUtils() {}
 
     // Taken from org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
@@ -82,12 +81,11 @@ public class ProposalUtils {
             registry = null;
         }
     }
-    private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
-
 
     public static char[] createTypeSignature(ClassNode node) {
         return createTypeSignatureStr(node).toCharArray();
     }
+
     public static String createTypeSignatureStr(ClassNode node) {
         if (node == null) {
             node = VariableScope.OBJECT_CLASS_NODE;
@@ -109,84 +107,57 @@ public class ProposalUtils {
         }
     }
 
-	/**
-	 * Can be null if access restriction cannot be resolved for given type
-	 *
-	 * @param type
-	 * @param project
-	 * @return
-	 */
-	public static AccessRestriction getTypeAccessibility(IType type) {
-
-		PackageFragmentRoot root = (PackageFragmentRoot) type
-				.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
-
-		try {
-			IClasspathEntry entry = root.getResolvedClasspathEntry();
-			// Alternative:
-			// entry = ((JavaProject) typeProject).getClasspathEntryFor(root
-			// .getPath());
-			if (entry instanceof ClasspathEntry) {
-				AccessRuleSet accessRuleSet = ((ClasspathEntry) entry)
-						.getAccessRuleSet();
-				if (accessRuleSet != null) {
-					char[] packageName = type.getPackageFragment()
-							.getElementName().toCharArray();
-					char[][] packageChars = CharOperation.splitOn('.',
-							packageName);
-					char[] fileWithoutExtension = type.getElementName()
-							.toCharArray();
-
-					return accessRuleSet
-							.getViolatedRestriction(CharOperation.concatWith(
-									packageChars, fileWithoutExtension, '/'));
-
-				}
-			}
-		} catch (JavaModelException e) {
-			// nothing
-		}
-
-		return null;
-	}
+    /**
+     * Can be null if access restriction cannot be resolved for given type.
+     */
+    public static AccessRestriction getTypeAccessibility(IType type) {
+        PackageFragmentRoot root = (PackageFragmentRoot) type.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+        try {
+            IClasspathEntry entry = root.getResolvedClasspathEntry();
+            // Alternative:
+            // entry = ((JavaProject) typeProject).getClasspathEntryFor(root
+            // .getPath());
+            if (entry instanceof ClasspathEntry) {
+                AccessRuleSet accessRuleSet = ((ClasspathEntry) entry).getAccessRuleSet();
+                if (accessRuleSet != null) {
+                    char[] packageName = type.getPackageFragment().getElementName().toCharArray();
+                    char[][] packageChars = CharOperation.splitOn('.', packageName);
+                    char[] fileWithoutExtension = type.getElementName().toCharArray();
+                    return accessRuleSet.getViolatedRestriction(CharOperation.concatWith(packageChars, fileWithoutExtension, '/'));
+                }
+            }
+        } catch (JavaModelException e) {
+        }
+        return null;
+    }
 
     /**
-     * Includes named params. but not optional params
-     *
-     * @param node
-     * @return
+     * Includes named params but not optional params.
      */
     public static char[] createMethodSignature(MethodNode node) {
         return createMethodSignatureStr(node, 0).toCharArray();
     }
 
     /**
-     * Includes named params. but not optional params
-     *
-     * @param node
-     * @return
+     * Includes named params but not optional params.
      */
     public static String createMethodSignatureStr(MethodNode node) {
         return createMethodSignatureStr(node, 0);
     }
 
     /**
-     * Includes named params. but not optional params
+     * Includes named params but not optional params.
      *
-     * @param node
      * @param ignoreParameters number of parameters to ignore at the start
-     * @return
      */
     public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
         return createMethodSignatureStr(node, ignoreParameters).toCharArray();
     }
 
     /**
-     * Includes named params. but not optional params
+     * Includes named params but not optional params.
      *
-     * @param node
      * @param ignoreParameters number of parameters to ignore at the start
-     * @return
      */
     public static String createMethodSignatureStr(MethodNode node, int ignoreParameters) {
         String returnType = createTypeSignatureStr(node.getReturnType());
@@ -196,9 +167,9 @@ public class ProposalUtils {
         } else {
             parameters = node.getParameters();
         }
-        String[] parameterTypes = new String[parameters.length-ignoreParameters];
+        String[] parameterTypes = new String[parameters.length - ignoreParameters];
         for (int i = 0; i < parameterTypes.length; i++) {
-            parameterTypes[i] = createTypeSignatureStr(parameters[i+ignoreParameters].getType());
+            parameterTypes[i] = createTypeSignatureStr(parameters[i + ignoreParameters].getType());
         }
         return Signature.createMethodSignature(parameterTypes, returnType);
     }
@@ -220,6 +191,8 @@ public class ProposalUtils {
         }
     }
 
+    private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
+
     public static Image getImage(CompletionProposal proposal) {
         return registry.get(labelProvider.createImageDescriptor(proposal));
     }
@@ -227,15 +200,13 @@ public class ProposalUtils {
     public static Image getParameterImage() {
         return registry.get(JavaPluginImages.DESC_OBJS_LOCAL_VARIABLE);
     }
+
     public static StyledString createDisplayString(CompletionProposal proposal) {
         return labelProvider.createStyledLabel(proposal);
     }
 
     /**
      * Match ignoring case and checking camel case.
-     * @param prefix
-     * @param target
-     * @return
      */
     public static boolean looselyMatches(String prefix, String target) {
         if (target == null || prefix == null) {
@@ -283,11 +254,9 @@ public class ProposalUtils {
     }
 
     /**
-     * Convert an input string into parts delimited by upper case characters. Used for camel case matches.
+     * Converts an input string into parts delimited by upper case characters. Used for camel case matches.
      * e.g. GroClaL = ['Gro','Cla','L'] to match say 'GroovyClassLoader'.
      * e.g. mA = ['m','A']
-     * @param str
-     * @return
      */
     private static String[] toCamelCaseParts(String str) {
         List<String> parts = newEmptyList();
@@ -303,10 +272,9 @@ public class ProposalUtils {
         Collections.reverse(parts);
         return parts.toArray(new String[parts.size()]);
     }
+
     /**
-     * Create a name for a field if this is a getter or a setter method name
-     * @param methodName
-     * @return
+     * Creates a name for a field if this is a getter or a setter method name.
      */
     public static String createMockFieldName(String methodName) {
         int prefix = methodName.startsWith("is") ? 2 : 3;
@@ -326,13 +294,42 @@ public class ProposalUtils {
             return "$$$$$";
         }
     }
+
     /**
-     * Create a name for a field if this is a getter or a setter method name The resulting name is
-     * capitalized
-     * @param methodName
-     * @return
+     * Creates a name for a field if this is a getter or a setter method name.
+     * The resulting name is capitalized.
      */
     public static String createCapitalMockFieldName(String methodName) {
         return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
+    }
+
+    public static boolean hasWhitespace(char[] chars) {
+        for (char c : chars) {
+            if (CharOperation.isWhitespace(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Checks '.&' operator before replacement offset. */
+    public static boolean isMethodPointerCompletion(IDocument document, int replacementOffset) {
+        try {
+            boolean seenAmpersand = false;
+            while (--replacementOffset > 0) {
+                char c = document.getChar(replacementOffset);
+                if (Character.isJavaIdentifierPart(c) || (!Character.isWhitespace(c) && c != '&' && c != '.')) break;
+                if (c == '&') {
+                    if (seenAmpersand) break;
+                    seenAmpersand = true;
+                } else if (c == '.') {
+                    if (seenAmpersand)
+                        return true;
+                    break;
+                }
+            }
+        } catch (BadLocationException e) {
+        }
+        return false;
     }
 }

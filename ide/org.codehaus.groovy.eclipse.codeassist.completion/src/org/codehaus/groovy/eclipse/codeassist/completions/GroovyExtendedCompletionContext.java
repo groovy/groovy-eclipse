@@ -72,8 +72,6 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         return ProposalUtils.createMockFieldName(method.getElementName());
     }
 
-    private static final IJavaElement[] NO_ELEMENTS = new IJavaElement[0];
-
     private final ContentAssistContext context;
 
     private final VariableScope currentScope;
@@ -180,7 +178,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                 nameElementMap.put(name, targetIType.getField(name));
             }
         }
-        return nameElementMap.values().toArray(NO_ELEMENTS);
+        return nameElementMap.values().toArray(new IJavaElement[0]);
     }
 
     public void addFields(ClassNode targetType, Map<String, IJavaElement> nameElementMap, IType type)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,14 @@ public class ProposalFormattingOptions {
 
     public static ProposalFormattingOptions newFromOptions() {
         IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
-        return new ProposalFormattingOptions(prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING), false);
+
+        final boolean noParensAroundClosures = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
+        final boolean useBracketsForClosures = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS);
+        final boolean doParameterGuessing = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING);
+        final boolean useNamedArguments = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS);
+        final boolean noParensInChains = false;
+
+        return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, useNamedArguments, doParameterGuessing, noParensInChains);
     }
 
     public final boolean noParensAroundClosures;
@@ -42,9 +46,12 @@ public class ProposalFormattingOptions {
     // used for DSL command expressions
     public final boolean noParens;
 
-    public ProposalFormattingOptions(boolean noParensAroundArgs,
- boolean useBracketsForClosures, boolean useNamedArguments,
-            boolean doParameterGuessing, boolean noParens) {
+    public ProposalFormattingOptions(
+            boolean noParensAroundArgs,
+            boolean useBracketsForClosures,
+            boolean useNamedArguments,
+            boolean doParameterGuessing,
+            boolean noParens) {
         this.noParensAroundClosures = noParensAroundArgs;
         this.useBracketsForClosures = useBracketsForClosures;
         this.useNamedArguments = useNamedArguments;
@@ -56,12 +63,9 @@ public class ProposalFormattingOptions {
         // For named args if overridden, always use named args
         // if not a constructor and not overridden, never use named args
         if (overrideUseNamedArgs || overrideNoParens) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs,
-                    doParameterGuessing,
-                    overrideNoParens);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs, doParameterGuessing, overrideNoParens);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing,
-                    overrideNoParens);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing, overrideNoParens);
         } else {
             return this;
         }

@@ -20,6 +20,7 @@ import static org.junit.Assert.*
 import java.util.regex.Pattern
 
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal
@@ -51,6 +52,7 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.After
+import org.junit.Before
 
 /**
  * Includes utilities to help with all Content assist tests.

@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.core.CompletionContext;
@@ -150,7 +151,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
      */
     @Override
     public void apply(IDocument document, char trigger, int offset) {
-        methodPointer = GroovyJavaMethodCompletionProposal.isMethodPointerCompletion(document, getReplacementOffset());
+        methodPointer = ProposalUtils.isMethodPointerCompletion(document, getReplacementOffset());
         try {
             super.apply(document, trigger, offset);
 
@@ -229,14 +230,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     @Override
     protected String computeReplacementString() {
         char[] proposalName = fProposal.getName();
-
-        boolean hasWhitespace = false;
-        for (char c : proposalName) {
-            if (CharOperation.isWhitespace(c)) {
-                hasWhitespace = true;
-                break;
-            }
-        }
+        boolean hasWhitespace = ProposalUtils.hasWhitespace(proposalName);
 
         if (methodPointer) {
             // complete the name only for a method pointer expression
@@ -266,7 +260,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
         return super.computeReplacementString();
     }
-
     /**
      * Creates the completion string. Offsets and Lengths are set to the offsets
      * and lengths of the
@@ -278,34 +271,22 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     private String computeGuessingCompletion() throws JavaModelException {
         StringBuffer buffer = new StringBuffer();
         char[] proposalName = fProposal.getName();
-        boolean hasWhitespace = false;
-        for (int i = 0; i < proposalName.length; i++) {
-            if (CharOperation.isWhitespace(proposalName[i])) {
-                hasWhitespace = true;
-            }
-        }
-        char[] newProposalName;
-        if (hasWhitespace) {
-            newProposalName = CharOperation.concat(new char[] { '"' }, CharOperation.append(proposalName, '"'));
-        } else {
-            newProposalName = proposalName;
-        }
+        boolean hasWhitespace = ProposalUtils.hasWhitespace(proposalName);
+        char[] newProposalName = !hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"');
+
         fProposal.setName(newProposalName);
         appendMethodNameReplacement(buffer);
         fProposal.setName(proposalName);
 
         FormatterPrefs prefs = getFormatterPrefs();
         if (options.noParens) {
-            // eat the opening paren replace with a space if there isn't one
-            // already
+            // eat the opening paren replace with a space if there isn't one already
             buffer.replace(buffer.length() - 1, buffer.length(), prefs.beforeOpeningParen ? "" : " ");
         }
 
-
         setCursorPosition(buffer.length());
 
-        // groovy doesn't require parens around closures if it is the last
-        // argument
+        // groovy doesn't require parens around closures if it is the last argument
         // If the option is set, then we follow that heuristic
         char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
 
@@ -321,12 +302,9 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         int allCount = argCount + namedCount;
 
         if (options.noParensAroundClosures) {
-
-            // remove the opening paren only if there is a single closure
-            // parameter
+            // remove the opening paren only if there is a single closure parameter
             if (indexOfLastClosure == 0 && namedCount == 0) {
                 buffer.replace(buffer.length() - 1, buffer.length(), "");
-
                 // add space if not already there
                 // would be added by call to appendMethodNameReplacement
                 if (!prefs.beforeOpeningParen) {

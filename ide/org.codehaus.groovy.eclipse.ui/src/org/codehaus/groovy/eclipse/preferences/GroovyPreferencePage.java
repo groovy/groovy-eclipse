@@ -99,29 +99,25 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         monospaceEditor.setEnabled(true, getFieldEditorParent());
         addField(monospaceEditor);
         Label monoLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-        monoLabel.setText(
-                "This option is particularly useful for testing frameworks\n" +
-                "that use a formatted output such as Spock\n\n");
+        monoLabel.setText("  This is particularly useful for testing with the assert keyword");
 
         Label contentAssistLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-        contentAssistLabel.setText("\n\nGroovy Content assist options to make your content assist Groovier.");
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS,
-                "Do not use parens around methods with arguments", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS,
-                "Use brackets for closure arguments", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS,
-                "Use named arguments for method calls", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING,
-                "Try to guess the most likely parameters to use for method invocations", getFieldEditorParent()));
+        contentAssistLabel.setText("\nContent Assist options to make your content assist Groovier");
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, "Place trailing closure arguments after closing parenthesis", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, "Use closure literals for closure arguments", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, "Use named arguments for method calls", getFieldEditorParent()));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, "Guess the most likely parameters for method calls", getFieldEditorParent()));
 
         // default launch location for scripts
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
-                "\nDefault working directory for running Groovy scripts \n(will not change the working directory of existing scripts," +
-                        "\nonly new ones).", 1,
-                        new String[][] {{ "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME },
+            "\nDefault working directory for running Groovy scripts\n  (will not change the working directory of existing scripts)",
+            1,
+            new String[][] {
+                { "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME  },
                 { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC },
-                { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } },
-                getFieldEditorParent()));
+                { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME  }
+            },
+            getFieldEditorParent()));
 
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();
