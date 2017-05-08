@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,10 +39,6 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-/**
- * @author Andrew Eisenberg
- * @created Dec 10, 2009
- */
 public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
     private JDTResolver resolver;
@@ -117,16 +113,13 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
     }
 
     /**
-     * removes whitespace and the 'new ' prefix and does a fail-fast if a
-     * non-java identifier is found
-     *
-     * @param fullCompletionExpression
-     * @return
+     * Removes whitespace and the 'new ' prefix and does a fail-fast if a
+     * non-java identifier is found.
      */
     private char[] getCompletionText(String fullCompletionExpression) {
         List<Character> chars = new LinkedList<Character>();
         if (fullCompletionExpression == null) {
-            return new char[0];
+            return CharOperation.NO_CHAR;
         }
         char[] fullArray = fullCompletionExpression.toCharArray();
         int newIndex = CharOperation.indexOf("new ".toCharArray(), fullArray,

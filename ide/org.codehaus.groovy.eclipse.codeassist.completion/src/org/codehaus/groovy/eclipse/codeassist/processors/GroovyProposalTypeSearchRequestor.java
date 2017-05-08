@@ -641,7 +641,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             try {
                 // try not to insert an extra set of parenthesis when completing the constructor name
                 if (this.javaContext.getDocument().getChar(this.actualCompletionPosition) == '(') {
-                    completion = new char[0];
+                    completion = CharOperation.NO_CHAR;
                 }
             } catch (BadLocationException ignored) {
             }

@@ -106,7 +106,7 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
     private char[] getPackageCompletionText(String fullCompletionExpression) {
         List<Character> chars = new LinkedList<Character>();
         if (fullCompletionExpression == null) {
-            return new char[0];
+            return CharOperation.NO_CHAR;
         }
         char[] fullArray = fullCompletionExpression.toCharArray();
         for (int i = 0; i < fullArray.length; i++) {

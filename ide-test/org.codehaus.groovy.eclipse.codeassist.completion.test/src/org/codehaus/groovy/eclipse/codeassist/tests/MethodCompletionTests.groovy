@@ -365,7 +365,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile', false), '''\
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
             |import static java.util.regex.Pattern.compile
             |
             |compile(regex)
@@ -382,11 +382,23 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile', false), '''\
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
             |import static java.util.regex.Pattern.compile
             |
             |compile(regex)
             |'''.stripMargin())
+    }
+
+    @Test // these should not produce redundant proposals
+    void testFavoriteStaticStarAndImportStaticStarMethod() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.*')
+
+        String contents = '''\
+            import static java.util.regex.Pattern.*
+            comp
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
+        proposalExists(proposals, 'compile', 2)
     }
 
     @Test
@@ -395,7 +407,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
         proposalExists(proposals, 'isEmpty', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty', false), 'String.&isEmpty')
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&isEmpty')
     }
 
     @Test
@@ -406,7 +418,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
         proposalExists(proposals, 'isEmpty', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty', false), 'String.&isEmpty')
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&isEmpty')
     }
 
     @Test
@@ -415,6 +427,6 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
         proposalExists(proposals, 'isEmpty', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty', false), 'String.&  isEmpty')
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&  isEmpty')
     }
 }

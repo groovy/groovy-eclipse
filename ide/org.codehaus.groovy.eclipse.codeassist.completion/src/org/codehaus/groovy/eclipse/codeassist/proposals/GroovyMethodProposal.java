@@ -202,33 +202,22 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     protected char[] completionName(boolean includeParens) {
         String name = method.getName();
         char[] nameArr = name.toCharArray();
-        boolean hasWhitespace = false;
-        for (int i = 0; i < nameArr.length; i++) {
-            if (Character.isWhitespace(nameArr[i])) {
-                hasWhitespace = true;
-                break;
-            }
+        if (ProposalUtils.hasWhitespace(nameArr)) {
+            name = '"' + name + '"';
         }
-        if (hasWhitespace) {
-            name = "\"" + name + "\"";
-        }
-
-        // don't include parens if the char after the completionEnd is a paren (don't want to double insert)
         if (includeParens) {
-            return (name + "()").toCharArray();
-        } else {
-            return name.toCharArray();
+            name += "()";
         }
+        return name.toCharArray();
     }
 
     protected char[][] createAllParameterNames(ICompilationUnit unit) {
-
         Parameter[] params = method.getParameters();
-        int numParams = params == null ? 0 : params.length;
+        final int n = params == null ? 0 : params.length;
 
         // short circuit
-        if (numParams == 0) {
-            return new char[0][];
+        if (n == 0) {
+            return CharOperation.NO_CHAR_CHAR;
         }
 
         char[][] paramNames = null;
@@ -238,8 +227,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
 
         if (paramNames == null) {
-            paramNames = new char[params.length][];
-            for (int i = 0; i < params.length; i++) {
+            paramNames = new char[n][];
+            for (int i = 0; i < n; i += 1) {
                 String name = params[i].getName();
                 if (name != null) {
                     paramNames[i] = name.toCharArray();
@@ -270,29 +259,27 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             IType declaringType = findDeclaringType(unit, method);
             if (declaringType != null && declaringType.exists()) {
                 Parameter[] params = method.getParameters();
-                int numParams = params == null ? 0 : params.length;
+                final int n = params == null ? 0 : params.length;
 
-                if (numParams == 0) {
-                    return new char[0][];
+                if (n == 0) {
+                    return CharOperation.NO_CHAR_CHAR;
                 }
 
-                String[] parameterTypeSignatures = new String[numParams];
-                boolean doResolved = declaringType.isBinary();
-                for (int i = 0; i < parameterTypeSignatures.length; i++) {
-                    if (doResolved) {
+                String[] parameterTypeSignatures = new String[n];
+                for (int i = 0; i < n; i += 1) {
+                    if (declaringType.isBinary()) {
                         parameterTypeSignatures[i] = ProposalUtils.createTypeSignatureStr(params[i].getType());
                     } else {
                         parameterTypeSignatures[i] = ProposalUtils.createUnresolvedTypeSignatureStr(params[i].getType());
                     }
                 }
-             // try to find the precise method
+                // try to find the precise method
                 IMethod jdtMethod = findPreciseMethod(declaringType, parameterTypeSignatures);
-
-                // method was found somehow...use it.
+                // method was found somehow...use it
                 if (jdtMethod != null) {
                     String[] paramNames = jdtMethod.getParameterNames();
                     char[][] paramNamesChar = new char[paramNames.length][];
-                    for (int i = 0; i < paramNames.length; i++) {
+                    for (int i = 0; i < paramNames.length; i += 1) {
                         paramNamesChar[i] = paramNames[i].toCharArray();
                     }
                     return paramNamesChar;

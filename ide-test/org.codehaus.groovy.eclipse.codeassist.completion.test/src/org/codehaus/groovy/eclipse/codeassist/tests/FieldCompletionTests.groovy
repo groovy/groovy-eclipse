@@ -362,7 +362,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'DOT'))
         proposalExists(proposals, 'DOTALL', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL', false), '''\
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL'), '''\
             |import static java.util.regex.Pattern.DOTALL
             |
             |DOTALL
@@ -379,7 +379,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'DOT'))
         proposalExists(proposals, 'DOTALL', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL', false), '''\
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL'), '''\
             |import static java.util.regex.Pattern.DOTALL
             |
             |DOTALL

@@ -20,7 +20,6 @@ import static org.junit.Assert.*
 import java.util.regex.Pattern
 
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal
@@ -52,7 +51,6 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.After
-import org.junit.Before
 
 /**
  * Includes utilities to help with all Content assist tests.
@@ -137,7 +135,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     /**
      * Returns the first proposal that matches the criteria passed in.
      */
-    protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType) {
+    protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType = false) {
         for (ICompletionProposal proposal : proposals) {
             // if a field
             String propName = proposal.getDisplayString()
@@ -322,7 +320,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkProposalApplication(String contents, int proposalLocation, String[] expecteds, String[] proposalNames) {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, proposalLocation)
         for (int i = 0; i < expecteds.length; i += 1) {
-            ICompletionProposal firstProposal = findFirstProposal(proposals, proposalNames[i], false)
+            ICompletionProposal firstProposal = findFirstProposal(proposals, proposalNames[i])
             applyProposalAndCheck(new Document(contents), firstProposal, expecteds[i])
         }
     }
@@ -404,7 +402,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkProposalChoices(String contents, String toFind, String lookFor, String replacementString, String[] expectedChoices) {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, toFind))
         checkReplacementString(proposals, replacementString, 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false)
+        ICompletionProposal proposal = findFirstProposal(proposals, lookFor)
         NamedParameterProposal guessingProposal = (NamedParameterProposal) proposal
         ICompletionProposal[] choices = guessingProposal.getChoices()
         assertEquals(expectedChoices.length, choices.length)
@@ -416,7 +414,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkProposalChoices(String contents, String lookFor, String replacementString, String[][] expectedChoices) {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, lookFor))
         checkReplacementString(proposals, replacementString, 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false)
+        ICompletionProposal proposal = findFirstProposal(proposals, lookFor)
         GroovyJavaGuessingCompletionProposal guessingProposal = (GroovyJavaGuessingCompletionProposal) proposal
         guessingProposal.getReplacementString();  // instantiate the guesses.
         ICompletionProposal[][] choices = guessingProposal.getChoices()
