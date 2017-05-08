@@ -74,7 +74,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
         def gunit = addGroovySource(contents)
         ICompletionProposal[] proposals = performContentAssist(gunit, getIndexOf(contents, 'foo.ba'), GroovyCompletionProposalComputer)
         proposalExists(proposals, 'bar', 1)
-        assert proposals[0].displayString == 'bar() : String - StringExtension (Category: StringExtension)'
+        assert proposals[0].displayString == 'bar() : String - StringExtension (Groovy)'
 
         proposals = performContentAssist(gunit, getIndexOf(contents, 'this.collect'), GroovyCompletionProposalComputer)
         Arrays.sort(proposals, { ICompletionProposal o1, ICompletionProposal o2 ->
