@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,6 @@ import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
  * <li>thing[10].value</li>
  * <li>[1, 2, 3].collect { it.toString() }. // Note the '.'</li>
  * </ul>
- *
- * @author empovazan
  */
 public class ExpressionFinder {
     /**
@@ -112,8 +110,7 @@ public class ExpressionFinder {
      *
      * @param buffer the document to search
      * @param initialOffset the initial offset
-     * @return the offset of the first non-word character starting at
-     *         initialOffset
+     * @return the offset of the first non-word character starting at initialOffset
      */
     public int findTokenEnd(ISourceBuffer buffer, int initialOffset) {
         int candidate = initialOffset;
@@ -130,9 +127,7 @@ public class ExpressionFinder {
      * Splits the given expression into two parts: the type evaluation part, and
      * the code completion part.
      *
-     * @param expression
-     *            The expression returned by the
-     *            {@link #findForCompletions(ISourceBuffer, int)} method.
+     * @param expression returned by the {@link #findForCompletions(ISourceBuffer, int)} method
      * @return A string pair, the expression to complete, and the prefix to be
      *         completed.<br>
      *         { "", null } if no completion expression could be found
@@ -201,7 +196,7 @@ public class ExpressionFinder {
         return ret;
     }
 
-    public class NameAndLocation {
+    public static class NameAndLocation {
         public final String name;
 
         public final int location;
@@ -233,13 +228,11 @@ public class ExpressionFinder {
     }
 
     public NameAndLocation findPreviousTypeNameToken(ISourceBuffer buffer, int start) {
-        int current = start;
-        current--;
-        while (current >= 0 && !Character.isWhitespace(buffer.charAt(current))
-                && Character.isJavaIdentifierPart(buffer.charAt(current))) {
-            current--;
+        int current = Math.min(start, buffer.length()) - 1;
+        while (current >= 0 && !Character.isWhitespace(buffer.charAt(current)) &&
+                Character.isJavaIdentifierPart(buffer.charAt(current))) {
+            current -= 1;
         }
-
         if (current < 0 || !Character.isWhitespace(buffer.charAt(current))) {
             return null;
         }

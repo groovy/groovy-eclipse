@@ -294,13 +294,17 @@ public class CodeSelectRequestor implements ITypeRequestor {
             int typeStart = startOffset(type), typeEnd = endOffset(type);
             type = GroovyUtils.getBaseType(type); // unpack type now that position is known
 
-            if (typeEnd > 0) {
-                String source = gunit.getSource().substring(typeStart, typeEnd);
+            if (typeStart >= 0 && typeEnd > typeStart) {
+                String gunitSource = gunit.getSource();
+                if (typeEnd == gunitSource.length() + 1)
+                    typeEnd = gunitSource.length(); // off by one?
+                else if (typeEnd > gunitSource.length()) return null;
+                String source = gunitSource.substring(typeStart, typeEnd);
                 int nameStart = typeStart + source.indexOf(GroovyUtils.splitName(type)[1]);
 
                 // check for code selection on the type name's qualifier string
                 if (nameStart > typeStart && nameStart > selectRegion.getEnd() && selectRegion.getEnd() > typeStart) {
-                    String selected = gunit.getSource().substring(typeStart, selectRegion.getEnd());
+                    String selected = gunitSource.substring(typeStart, selectRegion.getEnd());
                     selected = selected.replaceAll("\\.$", ""); // remove any trailing dot
                     String qualifier = GroovyUtils.splitName(type)[0].replace('$', '.');
 
