@@ -24,7 +24,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
 
     public GroovyCategoryMethodProposal(MethodNode method) {
-        super(method, "Category: " + method.getDeclaringClass().getNameWithoutPackage());
+        super(method, "Groovy");
     }
 
     @Override
