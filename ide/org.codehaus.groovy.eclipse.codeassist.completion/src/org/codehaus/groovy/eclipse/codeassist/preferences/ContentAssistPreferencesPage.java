@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.preferences;
 
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS;
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS;
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS;
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING;
+
 import java.util.Arrays;
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
@@ -25,21 +30,25 @@ import org.eclipse.jdt.internal.corext.util.JavaConventionsUtil;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ListEditor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 public class ContentAssistPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
-    private class DGMValidator implements IInputValidator {
+    private static class DGMValidator implements IInputValidator {
         public String isValid(String newText) {
             if (newText.trim().length() == 0) {
                 return "";
@@ -53,7 +62,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         }
     }
 
-    private class MultiDGMValidator extends DGMValidator {
+    private static class MultiDGMValidator extends DGMValidator {
         @Override
         public String isValid(String newText) {
             String[] splits = newText.split("\\n");
@@ -68,12 +77,14 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         }
     }
 
-    private class CompletionFilterListEditor extends ListEditor {
+    private static class CompletionFilterListEditor extends ListEditor {
 
         private Button addMultipleButton;
+        private final Shell shell;
 
         public CompletionFilterListEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
+            this.shell = parent.getShell();
             setPreferenceName(GroovyContentAssistActivator.FILTERED_DGMS);
         }
 
@@ -88,8 +99,8 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
         @Override
         protected String getNewInputObject() {
-            InputDialog dialog = new InputDialog(getFieldEditorParent().getShell(), "Add new DGM to filter",
-                    "Select the name of a DefaultGroovyMethod to filter from content assist", "", new DGMValidator());
+            InputDialog dialog = new InputDialog(shell, "Add new DGM to filter",
+                    "Select the name of a Default Groovy Method to filter from content assist", "", new DGMValidator());
             int res = dialog.open();
             if (res == Window.OK) {
                 return dialog.getValue();
@@ -115,7 +126,6 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
          *
          * @param parent the parent control
          * @param key the resource name used to supply the button's label text
-         * @return Button
          */
         private Button createAddMultipleButton(Composite parent, String name) {
             Button button = new Button(parent, SWT.PUSH);
@@ -141,7 +151,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
                 sb.append(item + "\n");
             }
             InputDialog input = new InputDialog(getShell(), "Add multiple",
-                    "Add/remove multiple entrie.  Enter one DGM name per line.", sb.toString(), new MultiDGMValidator()) {
+                    "Add/remove multiple entries.  Enter one Default Groovy Method name per line.", sb.toString(), new MultiDGMValidator()) {
                 @Override
                 protected int getInputTextStyle() {
                     return SWT.MULTI | SWT.BORDER;
@@ -150,8 +160,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
                 @Override
                 protected Control createDialogArea(Composite parent) {
                     Control child = super.createDialogArea(parent);
-                    getText().setLayoutData(new GridData(GridData.GRAB_HORIZONTAL
-                            | GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_VERTICAL | GridData.VERTICAL_ALIGN_FILL));
+                    getText().setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL | GridData.GRAB_VERTICAL | GridData.VERTICAL_ALIGN_FILL));
                     return child;
                 }
             };
@@ -165,7 +174,6 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
                 getList().deselectAll();
                 selectionChanged();
             }
-
         }
 
         @Override
@@ -176,9 +184,14 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         }
     }
 
+    //--------------------------------------------------------------------------
+
     public ContentAssistPreferencesPage() {
-        super(FLAT);
+        super(GRID);
         setPreferenceStore(GroovyContentAssistActivator.getDefault().getPreferenceStore());
+    }
+
+    public void init(IWorkbench workbench) {
     }
 
     @Override
@@ -188,9 +201,36 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
     @Override
     protected void createFieldEditors() {
+        //
+        Composite fieldGroup = createFieldGroup("Insertion");
+
+        addField(new BooleanFieldEditor(GROOVY_CONTENT_NAMED_ARGUMENTS,
+            "Use named arguments for method calls", fieldGroup));
+        addField(new BooleanFieldEditor(GROOVY_CONTENT_PARAMETER_GUESSING,
+            "Use guessed arguments for method calls", fieldGroup));
+        addField(new BooleanFieldEditor(GROOVY_CONTENT_ASSIST_BRACKETS,
+            "Use closure literals for closure arguments", fieldGroup));
+        addField(new BooleanFieldEditor(GROOVY_CONTENT_ASSIST_NOPARENS,
+            "Place trailing closure arguments after closing parenthesis", fieldGroup));
+
+        //
+        fieldGroup = createFieldGroup("Filtering");
+
         addField(new CompletionFilterListEditor("Filtered DGMs",
-                "Configure which DefaultGroovyMethods will be filtered from content asist.", getFieldEditorParent()));
+            "Default Groovy Methods that will be filtered from content assist", fieldGroup));
     }
 
-    public void init(IWorkbench workbench) {}
+    private Composite createFieldGroup(String label) {
+        Group group = new Group(getFieldEditorParent(), SWT.SHADOW_NONE);
+        group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+        ((GridData) group.getLayoutData()).horizontalSpan = 2;
+        group.setFont(group.getParent().getFont());
+        group.setLayout(new GridLayout());
+        group.setText(label);
+
+        // internal panel for field editors to modify
+        Composite panel = new Composite(group, SWT.NONE);
+        panel.setLayoutData(new GridData(GridData.FILL_BOTH));
+        return panel;
+    }
 }

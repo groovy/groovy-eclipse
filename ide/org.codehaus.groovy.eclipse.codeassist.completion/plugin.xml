@@ -46,7 +46,7 @@
    </extension>
    <extension point="org.eclipse.ui.preferencePages">
       <page
-            category="org.codehaus.groovy.eclipse.preferences"
+            category="org.codehaus.groovy.eclipse.preferences.editor"
             class="org.codehaus.groovy.eclipse.codeassist.preferences.ContentAssistPreferencesPage"
             id="org.codehaus.groovy.eclipse.codeassist.completion.preferences"
             name="Content Assist">

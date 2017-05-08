@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,17 +67,16 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
         super(title, style);
     }
 
-    public FieldEditorOverlayPage(final String title,
-            final ImageDescriptor image, final int style) {
+    public FieldEditorOverlayPage(final String title, final ImageDescriptor image, final int style) {
         super(title, image, style);
         this.image = image;
     }
 
     /**
-     * Returns the id of the current preference page as defined in plugin.xml
+     * Returns the id of the current preference page as defined in plugin.xml.
      * Subclasses must implement.
      *
-     * @return - the qualifier
+     * @return the qualifier
      */
     protected abstract String getPageId();
 
@@ -100,9 +99,9 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     }
 
     /**
-     * Returns true if this instance represents a property page
+     * Returns true if this instance represents a property page.
      *
-     * @return - true for property pages, false for preference pages
+     * @return true for property pages, false for preference pages
      */
     public boolean isPropertyPage() {
         return getElement() != null;
@@ -147,8 +146,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     }
 
     protected IPersistentPreferenceStore preferenceStore(IProject proj) {
-        return new ScopedPreferenceStore(new ProjectScope(proj),
-                "org.codehaus.groovy.eclipse.preferences");
+        return new ScopedPreferenceStore(new ProjectScope(proj), "org.codehaus.groovy.eclipse.preferences");
     }
 
     /**
@@ -168,8 +166,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
      * Creates and initializes a selection group with two choice buttons and one
      * push button.
      *
-     * @param parent
-     *            - the parent composite
+     * @param parent the parent composite
      */
     private void createSelectionGroup(final Composite parent) {
         final Composite comp = new Composite(parent, SWT.NONE);
@@ -185,7 +182,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
 
     /**
      * Returns in case of property pages the overlay store, in case of
-     * preference pages the standard preference store
+     * preference pages the standard preference store.
      *
      * @see org.eclipse.jface.preference.PreferencePage#getPreferenceStore()
      */
@@ -196,9 +193,8 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
         return super.getPreferenceStore();
     }
 
-
     /**
-     * Creates a new preferences page and opens it
+     * Creates a new preferences page and opens it.
      *
      * @see com.bdaum.SpellChecker.preferences.SpellCheckerPreferencePage#configureWorkspaceSettings()
      */
@@ -220,18 +216,14 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     /**
      * Show a single preference pages
      *
-     * @param id
-     *            - the preference page identification
-     * @param page
-     *            - the preference page
+     * @param id the preference page identification
+     * @param page the preference page
      */
-    private void showPreferencePage(final String id,
-            final IPreferencePage page) {
+    private void showPreferencePage(final String id, final IPreferencePage page) {
         final IPreferenceNode targetNode = new PreferenceNode(id, page);
         final PreferenceManager manager = new PreferenceManager();
         manager.addToRoot(targetNode);
-        final PreferenceDialog dialog = new PreferenceDialog(getControl()
-                .getShell(), manager);
+        final PreferenceDialog dialog = new PreferenceDialog(getControl().getShell(), manager);
         BusyIndicator.showWhile(getControl().getDisplay(), new Runnable() {
             public void run() {
                 dialog.create();

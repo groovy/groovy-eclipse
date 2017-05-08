@@ -580,24 +580,6 @@
       </page>
       <page
             category="org.codehaus.groovy.eclipse.preferences"
-            class="org.codehaus.groovy.eclipse.preferences.GroovyEditorPreferencesPage"
-            id="org.codehaus.groovy.eclipse.preferences.editor"
-            name="Editor">
-         <keywordReference
-               id="org.codehaus.groovy.eclipse.ui.keyword.editor">
-         </keywordReference>
-      </page>
-      <page
-            category="org.codehaus.groovy.eclipse.preferences"
-            class="org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage"
-            id="org.codehaus.groovy.eclipse.preferences.formatter"
-            name="Formatter">
-         <keywordReference
-               id="org.codehaus.groovy.eclipse.ui.keyword.formatter">
-         </keywordReference>
-      </page>
-      <page
-            category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage"
             id="org.codehaus.groovy.eclipse.preferences.compiler"
             name="Compiler">
@@ -616,6 +598,24 @@
       </page>
       <page
             category="org.codehaus.groovy.eclipse.preferences"
+            class="org.codehaus.groovy.eclipse.preferences.GroovyEditorPreferencesPage"
+            id="org.codehaus.groovy.eclipse.preferences.editor"
+            name="Editor">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.editor">
+         </keywordReference>
+      </page>
+      <page
+            category="org.codehaus.groovy.eclipse.preferences.editor"
+            class="org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage"
+            id="org.codehaus.groovy.eclipse.preferences.formatter"
+            name="Formatter">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.formatter">
+         </keywordReference>
+      </page>
+      <page
+            category="org.codehaus.groovy.eclipse.preferences.editor"
             class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferencePage"
             id="org.codehaus.groovy.eclipse.ui.preferences.SaveActionsPreferencePage"
             name="Save Actions">

@@ -38,18 +38,15 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 20, 2009
- */
 public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
     private final class MonospaceFieldEditor extends BooleanFieldEditor {
         Label myLabel;
 
         private MonospaceFieldEditor() {
-            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit (deprecated)",
-                    getFieldEditorParent());
+            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit (deprecated)", getFieldEditorParent());
+            setEnabled(true, getFieldEditorParent());
+            setPreferenceStore(getPreferenceStore());
         }
 
         // override so we can set line wrap
@@ -84,7 +81,8 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
     }
 
-    public void init(IWorkbench workbench) {}
+    public void init(IWorkbench workbench) {
+    }
 
     @Override
     protected String getPageId() {
@@ -94,19 +92,9 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
     @Override
     protected void createFieldEditors() {
         // JUnit Monospace
-        final BooleanFieldEditor monospaceEditor = new MonospaceFieldEditor();
-        monospaceEditor.setPreferenceStore(getPreferenceStore());
-        monospaceEditor.setEnabled(true, getFieldEditorParent());
-        addField(monospaceEditor);
-        Label monoLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-        monoLabel.setText("  This is particularly useful for testing with the assert keyword");
-
-        Label contentAssistLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-        contentAssistLabel.setText("\nContent Assist options to make your content assist Groovier");
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, "Place trailing closure arguments after closing parenthesis", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, "Use closure literals for closure arguments", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, "Use named arguments for method calls", getFieldEditorParent()));
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, "Guess the most likely parameters for method calls", getFieldEditorParent()));
+        addField(new MonospaceFieldEditor());
+        new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP).setText(
+            "  This is particularly useful for testing with the assert keyword");
 
         // default launch location for scripts
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
@@ -132,8 +120,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             l.setText("Select the projects to convert.");
 
             Button convertButton = new Button(getFieldEditorParent(), SWT.PUSH);
-            convertButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-                    false));
+            convertButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
             convertButton.setText("Convert");
             convertButton.addSelectionListener(new SelectionAdapter() {
                 @Override
@@ -145,6 +132,8 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         }
     }
 
+    //--------------------------------------------------------------------------
+
     private void populateProjectsList(final List oldProjectsList, final IProject[] oldProjects) {
         final String[] projNames = new String[oldProjects.length];
         for (int i = 0; i < oldProjects.length; i++) {
@@ -153,7 +142,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         oldProjectsList.setItems(projNames);
     }
 
-    protected void convertSelectedProjects(String[] selection) {
+    private void convertSelectedProjects(String[] selection) {
         if (selection.length == 0) {
             return;
         }
@@ -175,11 +164,5 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             GroovyCore.logException("Failure when converting legacy projects", e);
             MessageDialog.openError(getShell(), "Error converting projects", "There has been an error converting the projects.  See the error log.");
         }
-    }
-
-    @Override
-    protected void performDefaults() {
-        super.performDefaults();
-        new PreferenceInitializer().reset();
     }
 }

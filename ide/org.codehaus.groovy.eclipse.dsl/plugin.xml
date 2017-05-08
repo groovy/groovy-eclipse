@@ -109,7 +109,7 @@
                id="org.codehaus.groovy.eclipse.dsl.keywords"/>
       </page>
       <page
-            category="org.codehaus.groovy.eclipse.preferences"
+            category="org.codehaus.groovy.eclipse.preferences.editor"
             class="org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage.InferencingPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.inferencing.preferences"
             name="Inferencing Suggestions">
