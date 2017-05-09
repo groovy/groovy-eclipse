@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,18 +71,6 @@ public interface PreferenceConstants {
     public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
 
     public static final String GROOVY_SEMANTIC_HIGHLIGHTING = "groovy.semantic.highlighting";
-
-    // if true do not use parens around methods
-    public static final String GROOVY_CONTENT_ASSIST_NOPARENS = "groovy.contentassist.noparens.around.closures";
-
-    // if true use brackets for closure args
-    public static final String GROOVY_CONTENT_ASSIST_BRACKETS = "groovy.contentassist.brackets";
-
-    // if true use named arguments for method calls
-    public static final String GROOVY_CONTENT_NAMED_ARGUMENTS = "groovy.contentassist.namedarguments";
-
-    // if true use parameter guessing proposals
-    public static final String GROOVY_CONTENT_PARAMETER_GUESSING = "groovy.contentassist.parameterguessing";
 
     // if true, then groovy internal stack frames are de-emphasized
     public static final String GROOVY_DEBUG_FILTER_STACK = "groovy.debug.filter.stack";

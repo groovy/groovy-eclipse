@@ -17,19 +17,18 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 public class ProposalFormattingOptions {
 
     public static ProposalFormattingOptions newFromOptions() {
-        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore prefs = GroovyContentAssist.getDefault().getPreferenceStore();
 
-        final boolean noParensAroundClosures = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
-        final boolean useBracketsForClosures = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS);
-        final boolean doParameterGuessing = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING);
-        final boolean useNamedArguments = prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS);
+        final boolean noParensAroundClosures = prefs.getBoolean(GroovyContentAssist.CLOSURE_NOPARENS);
+        final boolean useBracketsForClosures = prefs.getBoolean(GroovyContentAssist.CLOSURE_BRACKETS);
+        final boolean doParameterGuessing = prefs.getBoolean(GroovyContentAssist.PARAMETER_GUESSING);
+        final boolean useNamedArguments = prefs.getBoolean(GroovyContentAssist.NAMED_ARGUMENTS);
         final boolean noParensInChains = false;
 
         return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, useNamedArguments, doParameterGuessing, noParensInChains);

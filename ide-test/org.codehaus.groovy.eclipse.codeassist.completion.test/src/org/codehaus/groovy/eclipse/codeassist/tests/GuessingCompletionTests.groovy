@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.junit.Before
 import org.junit.Test
 
@@ -24,11 +23,13 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
     }
 
     @Test
-    void testParamGuessing1() throws Exception {
+    void testParamGuessing1() {
         String contents = "String yyy\n" +
             "def xxx(String x) { }\n" +
             "xxx"
@@ -66,10 +67,12 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         checkProposalChoices(contents, "xxx", "xxx(yyy, zzz, aaa)", expectedChoices)
     }
 
-    @Test // GRECLIPSE-1268  This test may fail in some environments since the ordering of
-    // guessed parameters is not based on actual source location.  Need a way to map
-    // from variable name to local variable declaration in GroovyExtendedCompletionContext.computeVisibleElements(String)
+    @Test // GRECLIPSE-1268
     void testParamGuessing4() {
+        // This test may fail in some environments since the ordering of guessed
+        // parameters is not based on actual source location.  Need a way to map
+        // from variable name to local variable declaration in
+        // GroovyExtendedCompletionContext.computeVisibleElements(String)
         String contents =
             "Closure yyy\n" +
             "def zzz = { }\n" +

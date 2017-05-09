@@ -20,6 +20,7 @@ import static org.junit.Assert.*
 import java.util.regex.Pattern
 
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal
@@ -51,11 +52,24 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.After
+import org.junit.AfterClass
 
 /**
  * Includes utilities to help with all Content assist tests.
  */
 abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
+
+    @AfterClass
+    static final void tearDownCompletionTestSuite() {
+        GroovyContentAssist.default.preferenceStore.with {
+            storePreferences.@properties.keys().each { k ->
+                if (!isDefault(k)) {
+                    println "Resetting '$k' to its default"
+                    setToDefault(k)
+                }
+            }
+        }
+    }
 
     @After
     final void tearDownCompletionTestCase() {

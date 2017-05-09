@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,12 +77,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         // Semantic highlighting
         store.setDefault(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
 
-        // Groovier Content assist
-        store.setDefault(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
-        store.setDefault(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
-        store.setDefault(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
-        store.setDefault(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);
-
         store.setDefault(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME);
 
         // Debug
@@ -137,12 +131,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         // Semantic highlighting
         store.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
-
-        // Groovier Content assist
-        store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
-        store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
-        store.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
-        store.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);
 
         store.setValue(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, "proj_home");
 

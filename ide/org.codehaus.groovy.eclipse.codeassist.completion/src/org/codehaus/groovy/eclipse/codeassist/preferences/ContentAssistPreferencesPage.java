@@ -15,14 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.preferences;
 
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING;
-
 import java.util.Arrays;
 
-import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.preferences.FieldEditorOverlayPage;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.JavaConventions;
@@ -85,7 +80,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         public CompletionFilterListEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
             this.shell = parent.getShell();
-            setPreferenceName(GroovyContentAssistActivator.FILTERED_DGMS);
+            setPreferenceName(GroovyContentAssist.FILTERED_DGMS);
         }
 
         @Override
@@ -188,7 +183,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
     public ContentAssistPreferencesPage() {
         super(GRID);
-        setPreferenceStore(GroovyContentAssistActivator.getDefault().getPreferenceStore());
+        setPreferenceStore(GroovyContentAssist.getDefault().getPreferenceStore());
     }
 
     public void init(IWorkbench workbench) {
@@ -204,13 +199,13 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         //
         Composite fieldGroup = createFieldGroup("Insertion");
 
-        addField(new BooleanFieldEditor(GROOVY_CONTENT_NAMED_ARGUMENTS,
+        addField(new BooleanFieldEditor(GroovyContentAssist.NAMED_ARGUMENTS,
             "Use named arguments for method calls", fieldGroup));
-        addField(new BooleanFieldEditor(GROOVY_CONTENT_PARAMETER_GUESSING,
+        addField(new BooleanFieldEditor(GroovyContentAssist.PARAMETER_GUESSING,
             "Use guessed arguments for method calls", fieldGroup));
-        addField(new BooleanFieldEditor(GROOVY_CONTENT_ASSIST_BRACKETS,
+        addField(new BooleanFieldEditor(GroovyContentAssist.CLOSURE_BRACKETS,
             "Use closure literals for closure arguments", fieldGroup));
-        addField(new BooleanFieldEditor(GROOVY_CONTENT_ASSIST_NOPARENS,
+        addField(new BooleanFieldEditor(GroovyContentAssist.CLOSURE_NOPARENS,
             "Place trailing closure arguments after closing parenthesis", fieldGroup));
 
         //

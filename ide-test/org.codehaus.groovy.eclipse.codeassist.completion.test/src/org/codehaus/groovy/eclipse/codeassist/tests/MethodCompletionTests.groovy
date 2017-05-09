@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assert.fail
 import static org.junit.Assume.assumeTrue
@@ -25,7 +24,7 @@ import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.compiler.CharOperation
@@ -39,7 +38,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        GroovyPlugin.default.preferenceStore.setValue(GROOVY_CONTENT_PARAMETER_GUESSING, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, false)
     }
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
@@ -412,7 +411,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testMethodPointer1a() {
-        GroovyPlugin.default.preferenceStore.setValue(GROOVY_CONTENT_PARAMETER_GUESSING, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
 
         String contents = 'String.&isE'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))

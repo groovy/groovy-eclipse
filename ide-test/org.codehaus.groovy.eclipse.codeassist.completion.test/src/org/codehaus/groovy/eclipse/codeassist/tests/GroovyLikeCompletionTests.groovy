@@ -15,9 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -79,14 +78,14 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         "    }\n" +
         "}"
 
-    private final IPreferenceStore groovyPrefs = GroovyPlugin.default.preferenceStore
+    private final IPreferenceStore groovyPrefs = GroovyContentAssist.default.preferenceStore
 
     @Before
     void setUp() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+        groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, false)
+        groovyPrefs.setValue(GroovyContentAssist.PARAMETER_GUESSING, false)
     }
 
     @Test
@@ -112,8 +111,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testMethodWithClosureNotGroovyLike() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer)
@@ -122,8 +121,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testMethodWith2ArgsNotGroovyLike() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer)
@@ -140,7 +139,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1b() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
@@ -150,7 +149,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1c() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
@@ -160,8 +159,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1d() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method1"
@@ -179,7 +178,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2b() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
@@ -189,7 +188,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2c() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
@@ -199,8 +198,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2d() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method2"
@@ -218,7 +217,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3b() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
@@ -228,7 +227,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3c() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
@@ -238,8 +237,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3d() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false)
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
         String contents = "new Foo().method3"
@@ -326,7 +325,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testNamedArguments0() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
+        groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer)
@@ -335,7 +334,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Ignore @Test
     void testNamedArguments1() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
+        groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer)
@@ -344,7 +343,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Ignore @Test
     void testNamedArguments2() {
-        groovyPrefs.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true)
+        groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
         ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer)

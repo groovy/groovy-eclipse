@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,11 @@ package org.codehaus.groovy.eclipse.codeassist.preferences;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 
 /**
  * Filter for DGM completion proposals. Users specify proposals they want
- * filtered from the preferences page
- * and they no longer show up.
- *
- * @author andrew
- * @created Nov 30, 2011
+ * filtered from the preferences page and they no longer show up.
  */
 public class DGMProposalFilter {
 
@@ -41,6 +37,6 @@ public class DGMProposalFilter {
     }
 
     public void refreshFilter() {
-        filteredDGMs = GroovyContentAssistActivator.getDefault().getFilteredDGMs();
+        filteredDGMs = GroovyContentAssist.getDefault().getFilteredDGMs();
     }
 }

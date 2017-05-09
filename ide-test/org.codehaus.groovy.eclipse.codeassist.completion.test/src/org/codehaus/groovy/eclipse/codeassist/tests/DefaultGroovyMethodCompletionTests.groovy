@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -32,7 +32,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     private static final String LISTCONTENTS = "[].findA"
 
     private void setDGMFilter(String... filter) {
-        GroovyContentAssistActivator.getDefault().setFilteredDGMs(filter as Set)
+        GroovyContentAssist.default.setFilteredDGMs(filter as Set)
     }
 
     private ICompilationUnit createJava() {

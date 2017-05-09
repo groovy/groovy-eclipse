@@ -15,9 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.GroovyPlugin
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
@@ -29,8 +28,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false)
-        GroovyPlugin.default.preferenceStore.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, false)
     }
 
     @Test // GRECLIPSE-414
