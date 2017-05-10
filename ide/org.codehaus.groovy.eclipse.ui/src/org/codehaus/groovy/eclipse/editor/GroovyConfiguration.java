@@ -20,6 +20,7 @@ import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.G
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -117,32 +118,28 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         };
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
+    @Override @SuppressWarnings("unchecked")
     public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
         ContentAssistant assistant = (ContentAssistant) super.getContentAssistant(sourceViewer);
+
         ContentAssistProcessor stringProcessor = new JavaCompletionProcessor(getEditor(), assistant, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
         assistant.setContentAssistProcessor(stringProcessor, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
         // remove Java content assist processor category
         // do a list copy so as not to disturb globally shared list
         IContentAssistProcessor processor = assistant.getContentAssistProcessor(IDocument.DEFAULT_CONTENT_TYPE);
         List<CompletionProposalCategory> categories = (List<CompletionProposalCategory>) ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
-        List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>(categories.size()-1);
+        List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>(categories.size() - 1);
         for (CompletionProposalCategory category : categories) {
-            if (!category.getId().equals("org.eclipse.jdt.ui.javaTypeProposalCategory") &&
-                !category.getId().equals("org.eclipse.jdt.ui.templateProposalCategory") &&
-                !category.getId().equals("org.eclipse.ajdt.ui.templateCategory") &&
-                !category.getId().equals("org.eclipse.jdt.ui.swtProposalCategory") &&
-                !category.getId().equals("org.eclipse.jdt.ui.javaNoTypeProposalCategory") &&
-                !category.getId().equals("org.eclipse.jdt.ui.javaAllProposalCategory") &&
-                !category.getId().equals("org.eclipse.mylyn.java.ui.javaAllProposalCategory")) {
-
+            if (!JAVA_CONTENT_ASSIST.matcher(category.getId()).matches()) {
                 newCategories.add(category);
             }
         }
         ReflectionUtils.setPrivateField(ContentAssistProcessor.class, "fCategories", processor, newCategories);
+
         return assistant;
     }
+    private static final Pattern JAVA_CONTENT_ASSIST = Pattern.compile("org.eclipse.jdt.ui.(java(All|(No)?Type)|swt|template)ProposalCategory|" +
+        "org.eclipse.mylyn.java.ui.javaAllProposalCategory|org.eclipse.ajdt.ui.templateCategory|org\\.eclipse\\.recommenders\\..+"); //org.eclipse.pde.api.tools.ui.apitools_proposal_category?
 
     /*
      * Type parameters have changed between 3.7 and 4.2.  So just remove them
