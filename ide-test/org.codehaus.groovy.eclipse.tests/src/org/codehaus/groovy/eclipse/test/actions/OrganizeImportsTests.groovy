@@ -593,7 +593,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doAddImportTest(contents, ['java.text.DateFormat'])
     }
 
-    @Test// GRECLISPE-823
+    @Test // GRECLISPE-823
     void testThrownExceptions() {
         String originalContents = '''
             import java.util.zip.ZipException
@@ -616,7 +616,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-895
+    @Test // GRECLIPSE-895
     void testCatchClausesExceptions() {
         String originalContents = '''
             import java.util.zip.ZipException
@@ -641,7 +641,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-600
+    @Test // GRECLIPSE-600
     void testNestedAnnotations1() {
         createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
@@ -660,7 +660,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doAddImportTest(contents, ['anns.NamedQueries', 'anns.NamedQuery'])
     }
 
-    @Test// GRECLIPSE-600
+    @Test // GRECLIPSE-600
     void testNestedAnnotations2() {
         createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
@@ -681,7 +681,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-600
+    @Test // GRECLIPSE-600
     void testNestedAnnotations3() {
         createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
@@ -700,7 +700,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doAddImportTest(contents, ['anns.NamedQueries', 'anns.NamedQuery'])
     }
 
-    @Test// GRECLIPSE-600
+    @Test // GRECLIPSE-600
     void testNestedAnnotations4() {
         createGroovyType 'anns', 'Annotations', '''
             @interface NamedQueries {
@@ -983,7 +983,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-929
+    @Test // GRECLIPSE-929
     void testStarImport() {
         String contents = '''\
             import javax.swing.text.html.*
@@ -992,7 +992,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-929
+    @Test // GRECLIPSE-929
     void testStarImport2() {
         // never remove star imports
         String contents = '''\
@@ -1015,7 +1015,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-929
+    @Test // GRECLIPSE-929
     void testStaticStarImport() {
         // never remove static star imports
         String contents = '''\
@@ -1025,7 +1025,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-929
+    @Test // GRECLIPSE-929
     void testStaticStarImport2() {
         // never remove static star imports
         String contents = '''\
@@ -1048,7 +1048,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1219
+    @Test // GRECLIPSE-1219
     void testAnnotationsOnImports1() {
         String contents = '''\
             @Deprecated
@@ -1057,7 +1057,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-1692
+    @Test // GRECLIPSE-1692
     void testFieldAnnotationImport() {
         String contents = '''\
             import groovy.transform.Field
@@ -1078,7 +1078,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doAddImportTest(contents, ['groovy.transform.CompileDynamic'])
     }
 
-    @Test// GRECLIPSE-1794
+    @Test // GRECLIPSE-1794
     void testCompileDynamicImport2() {
         assumeTrue(isAtLeastGroovy(21))
         String contents = '''\
@@ -1090,7 +1090,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-1794
+    @Test // GRECLIPSE-1794
     void testCompileDynamicImport3() {
         assumeTrue(isAtLeastGroovy(21))
         String originalContents = '''\
@@ -1109,7 +1109,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1219
+    @Test // GRECLIPSE-1219
     void testAnnotationsOnImports2() {
         String originalContents = '''\
             @Deprecated
@@ -1119,7 +1119,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1219
+    @Test // GRECLIPSE-1219
     void testAnnotationsOnImports3() {
         String contents = '''\
             @Deprecated
@@ -1138,7 +1138,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-1392
+    @Test // GRECLIPSE-1392
     void testDefaultImport1() {
         // test a simple default import is removed
         String originalContents = '''\
@@ -1154,7 +1154,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1392
+    @Test // GRECLIPSE-1392
     void testDefaultImport2() {
         // test that star default imports are removed
         String originalContents = '''\
@@ -1170,7 +1170,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1392
+    @Test // GRECLIPSE-1392
     void testDefaultImport3() {
         // test that BigInteger and BigDecimal are removed
         String originalContents = '''\
@@ -1186,7 +1186,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1392
+    @Test // GRECLIPSE-1392
     void testDefaultImport4() {
         // test that aliased default import not removed
         String originalContents = '''\
@@ -1205,7 +1205,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test// GRECLIPSE-1392
+    @Test // GRECLIPSE-1392
     void testDefaultImport5() {
         // test that static import whose container is default is not removed
         String contents = '''\
@@ -1215,7 +1215,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents, contents)
     }
 
-    @Test// GRECLIPSE-1553
+    @Test // GRECLIPSE-1553
     void testCompileStaticAndMapStyleConstructor() {
         assumeTrue(isAtLeastGroovy(20))
 
@@ -1283,6 +1283,38 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             '''
 
         doContentsCompareTest(contents, contents)
+    }
+
+    @Ignore @Test
+    void testOrganizeWithInterleavedComments() {
+        String originalContents = '''\
+            import java.util.regex.Pattern
+            // blah blah blah blah blah...
+            import java.util.regex.Matcher
+
+            class C {
+              Pattern pattern = ~/123/
+              Matcher matcher(String string) {
+                def x = pattern.matcher(string)
+                return x
+              }
+            }
+            '''
+        String expectedContents = '''\
+            // blah blah blah blah blah...
+            import java.util.regex.Matcher
+            import java.util.regex.Pattern
+
+            class C {
+              Pattern pattern = ~/123/
+              Matcher matcher(String string) {
+                def x = pattern.matcher(string)
+                return x
+              }
+            }
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     // TODO: Ensure imports come below header comment for class in the default package.

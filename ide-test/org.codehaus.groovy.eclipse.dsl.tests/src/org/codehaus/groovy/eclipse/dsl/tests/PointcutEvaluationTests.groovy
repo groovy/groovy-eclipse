@@ -90,7 +90,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         }
     }
 
-    @TupleConstructor @ToString(includeNames=true, includePackage=false)
+    @TupleConstructor @ToString(includeNames=true)
     private static class BindingResult {
         final String bindingName
         final String bindingToString

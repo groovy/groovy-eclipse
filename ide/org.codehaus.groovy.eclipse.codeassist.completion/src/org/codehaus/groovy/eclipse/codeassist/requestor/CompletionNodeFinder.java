@@ -38,7 +38,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -153,8 +152,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(null, packageNode, ContentAssistLocation.PACKAGE);
         }
 
-        ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(node);
-        for (ImportNode importNode : wrapper.getAllImportNodes()) {
+        for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {
             visitAnnotations(importNode);
             if (importNode.getType() != null && doTest(importNode.getType())) {
                 currentDeclaration = importNode;

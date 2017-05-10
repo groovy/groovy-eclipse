@@ -26,7 +26,6 @@ import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -117,7 +116,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
     }
 
     private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
-        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticImports(module).entrySet()) {
+        for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
             String fieldName = entry.getValue().getFieldName();
             if (fieldName != null && ProposalUtils.looselyMatches(prefix, fieldName)) {
                 FieldNode field = entry.getValue().getType().getField(fieldName);
@@ -126,7 +125,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
                 }
             }
         }
-        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticStarImports(module).entrySet()) {
+        for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (FieldNode field : (Iterable<FieldNode>) type.getFields()) {

@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -93,7 +92,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
     }
 
     private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
-        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticImports(module).entrySet()) {
+        for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
             String fieldName = entry.getValue().getFieldName();
             if (ProposalUtils.looselyMatches(prefix, fieldName)) {
                 List<MethodNode> methods = entry.getValue().getType().getDeclaredMethods(fieldName);
@@ -106,7 +105,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 }
             }
         }
-        for (Map.Entry<String, ImportNode> entry : ImportNodeCompatibilityWrapper.getStaticStarImports(module).entrySet()) {
+        for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (MethodNode method : (Iterable<MethodNode>) type.getMethods()) {

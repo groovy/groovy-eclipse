@@ -38,7 +38,6 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
@@ -71,6 +70,7 @@ import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
@@ -474,7 +474,7 @@ public class OrganizeGroovyImports {
             // Configure the import rewriter to keep all existing imports. This is different from how
             // JDT does organize imports, but this prevents annotations on imports from being removed.
             // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
-            Iterable<ImportNode> allImports = new ImportNodeCompatibilityWrapper(info.module).getAllImportNodes();
+            Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
 
             for (ImportNode imp : allImports) {

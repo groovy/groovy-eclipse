@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -27,7 +28,9 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.SourceUnit;
@@ -247,6 +250,24 @@ public abstract class GroovyUtils {
             return ClassHelper.getWrapper(type);
         }
         return type;
+    }
+
+    public static List<ImportNode> getAllImportNodes(ModuleNode moduleNode) {
+        List<ImportNode> importNodes = new ArrayList<ImportNode>();
+
+        importNodes.addAll(moduleNode.getImports());
+        importNodes.addAll(moduleNode.getStarImports());
+        importNodes.addAll(moduleNode.getStaticImports().values());
+        importNodes.addAll(moduleNode.getStaticStarImports().values());
+
+        // order imports by source position
+        Collections.sort(importNodes, new Comparator<ImportNode>() {
+            public int compare(ImportNode in1, ImportNode in2) {
+                return in1.getEnd() - in2.getEnd();
+            }
+        });
+
+        return importNodes;
     }
 
     /**

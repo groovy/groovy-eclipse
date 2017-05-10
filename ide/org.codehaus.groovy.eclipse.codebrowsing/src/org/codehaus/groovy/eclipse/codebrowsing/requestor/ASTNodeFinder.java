@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -95,7 +94,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitImports(ModuleNode node) {
-        for (ImportNode importNode : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
+        for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {
             visitImport(importNode);
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -38,6 +37,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.groovy.core.Activator;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -80,12 +80,12 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
     public void visitImports(ModuleNode node) {
         if (node != null) {
-            for (ImportNode importNode : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
+            for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {
                 visitAnnotations(importNode);
                 if (importNode.getType() != null) {
                     handleType(importNode.getType(), false, true);
                 }
-                String importFieldName = ImportNodeCompatibilityWrapper.getFieldName(importNode);
+                String importFieldName = importNode.getFieldName();
                 if (importFieldName != null) {
                     requestor.acceptUnknownReference(importFieldName.toCharArray(), 0);
                 }

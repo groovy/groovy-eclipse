@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
@@ -40,6 +39,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -106,7 +106,7 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
     private static class ImportStatementSLocTester extends AbstractSLocTester {
         @Override
         public void visitImports(ModuleNode module) {
-            for (ImportNode node : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
+            for (ImportNode node : GroovyUtils.getAllImportNodes(module)) {
                 allCollectedNodes.add(node);
             }
         }
