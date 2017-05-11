@@ -48,7 +48,7 @@ public enum AccessorSupport {
                 !returnType.equals(VariableScope.VOID_CLASS_NODE);
         case SETTER:
             return node.getParameters() != null && node.getParameters().length == args + 1 &&
-            (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
+                (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
         case ISSER:
             return !isCategory && (node.getParameters() == null || node.getParameters().length == args) &&
                 (returnType.equals(VariableScope.OBJECT_CLASS_NODE) || returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType.equals(ClassHelper.boolean_TYPE));

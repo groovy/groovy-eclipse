@@ -261,4 +261,64 @@ final class RelevanceTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ' = a')))
         assertProposalOrdering(proposals, 'az', 'aa')
     }
+
+    @Test
+    void testNamedArgumentAssignedType1() {
+        String contents = '''\
+            class B {
+              String aa() { }
+              int    ab() { }
+              Long   ac() { }
+              String ay
+              Number az
+            }
+            class X {
+              void setF(Number f) {}
+            }
+
+            B b; X x = new X(f: b.a)
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'b.a')))
+        assertProposalOrdering(proposals, 'az', 'ab', 'ac', 'ay', 'aa')
+    }
+
+    @Test
+    void testNamedArgumentAssignedType2() {
+        String contents = '''\
+            class B {
+              String aa() { }
+              int    ab() { }
+              Long   ac() { }
+              String ay
+              Number az
+            }
+            class X {
+              void setF(String f) {}
+            }
+
+            B b; X x = new X(f: b.a)
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'b.a')))
+        assertProposalOrdering(proposals, 'ay', 'aa', 'az', 'ab', 'ac')
+    }
+
+    @Test
+    void testNamedArgumentAssignedType3() {
+        String contents = '''\
+            class B {
+              String aa() { }
+              int    ab() { }
+              Long   ac() { }
+              String ay
+              Number az
+            }
+            class X {
+              int f // property instead of setter
+            }
+
+            B b; X x = new X(f: b.a)
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'b.a')))
+        assertProposalOrdering(proposals, 'ab', 'ay', 'az', 'aa', 'ac')
+    }
 }

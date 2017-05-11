@@ -55,6 +55,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
@@ -591,6 +592,15 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 // do method context
             }
         }
+    }
+
+    @Override
+    public void visitMapEntryExpression(MapEntryExpression expression) {
+        // Is the completion located within the RHS of a named argument pair?
+        if (doTest(expression.getValueExpression()) && isArgument(expression)) {
+            lhsNode = expression.getKeyExpression();
+        }
+        super.visitMapEntryExpression(expression);
     }
 
     @Override

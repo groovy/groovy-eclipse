@@ -55,10 +55,12 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
@@ -109,6 +111,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             if (!interestingElement(enclosingElement)) {
                 return VisitStatus.CANCEL_MEMBER;
             }
+
             if (node instanceof ClassNode) {
                 ClassNode clazz = (ClassNode) node;
                 if (clazz.redirect() == clazz && clazz.isScript()) {
@@ -117,16 +120,32 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             } else if (node instanceof MethodNode) {
                 MethodNode run = (MethodNode) node;
                 if (run.getName().equals("run") &&
-                    run.getDeclaringClass().isScript() &&
-                    (run.getParameters() == null || run.getParameters().length == 0)) {
+                        run.getDeclaringClass().isScript() &&
+                        (run.getParameters() == null || run.getParameters().length == 0)) {
                     return VisitStatus.CONTINUE;
+                }
+            } else if (node == lhsNode) {
+                // NOTE: this should be mutually exclusive to maybeRememberTypeOfLHS()
+                // save the inferred type of the LHS node for ranking of the proposals
+                if (result.confidence != TypeConfidence.UNKNOWN) {
+                    if (result.declaration instanceof MethodNode) {
+                        MethodNode meth = (MethodNode) result.declaration;
+                        if (AccessorSupport.SETTER.isAccessorKind(meth, false)) {
+                            lhsType = meth.getParameters()[0].getType();
+                        }
+                    } else {
+                        lhsType = result.type;
+                    }
+                    if (VariableScope.OBJECT_CLASS_NODE.equals(lhsType)) {
+                        lhsType = null;
+                    }
                 }
             }
 
-            boolean success = doTest(node);
             boolean derefList = false; // if true use the parameterized type of the list
+            boolean success = doTest(node);
             if (!success) {
-                // maybe this is content assist after array access, ie- foo[0].<_>
+                // maybe this is content assist after array access, i.e. foo[0]._
                 derefList = success = doTestForAfterArrayAccess(node);
             }
             if (success) {
@@ -190,7 +209,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         /**
-         * Determines if this is the lhs of an array access, eg the 'foo' of 'foo[0]'.
+         * Determines if this is the lhs of an array access -- the 'foo' of 'foo[0]'.
          */
         private boolean doTestForAfterArrayAccess(ASTNode node) {
             return node == arrayAccessLHS;
@@ -204,10 +223,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 if (lhsNode instanceof Variable) {
                     Variable variable = (Variable) lhsNode;
                     VariableInfo info = result.scope.lookupName(variable.getName());
-                    ClassNode maybeType = info != null ? info.type : variable.getType();
-                    if (maybeType != null) {
-                        lhsType = ClassHelper.getUnwrapper(maybeType);
-                    }
+                    lhsType = (info != null ? info.type : variable.getType());
                 }/* else if (lhsNode instanceof FieldExpression) {
                     lhsType = lhsNode.getType();
                 }*/ else if (lhsNode instanceof PropertyExpression) {
