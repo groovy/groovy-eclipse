@@ -26,7 +26,6 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner;
 import org.eclipse.jdt.internal.ui.text.SingleTokenJavaScanner;
@@ -51,7 +50,6 @@ import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.ITextEditor;
 
@@ -68,11 +66,11 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         try {
             IProject project = null;
             if (editor != null && editor instanceof GroovyEditor) {
-                IEditorInput input = ((GroovyEditor) editor).internalInput;
-                if (input instanceof FileEditorInput) {
-                    project = ((FileEditorInput) input).getFile().getProject();
+                if (editor.getEditorInput() instanceof FileEditorInput) {
+                    project = ((FileEditorInput) editor.getEditorInput()).getFile().getProject();
                 }
             }
+
             HighlightingExtenderRegistry registry = GroovyPlugin.getDefault().getTextTools().getHighlightingExtenderRegistry();
 
             AbstractJavaScanner codeScanner = new GroovyTagScanner(colorManager,
@@ -81,8 +79,9 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 registry.getExtraGroovyKeywordsForProject(project),
                 registry.getExtraGJDKKeywordsForProject(project));
             ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this, codeScanner);
-        } catch (CoreException e) {
-            GroovyCore.logException("Error creating tag scanner", e);
+
+        } catch (Exception e) {
+            GroovyCore.logException("Error creating and registering GroovyTagScanner", e);
         }
     }
 

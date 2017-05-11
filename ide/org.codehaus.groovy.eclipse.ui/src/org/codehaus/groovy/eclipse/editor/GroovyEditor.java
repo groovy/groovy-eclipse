@@ -658,12 +658,11 @@ public class GroovyEditor extends CompilationUnitEditor {
         try {
             fSemanticManager.uninstall();
             semanticReconciler = new GroovySemanticReconciler();
-            semanticReconciler.install(this, (JavaSourceViewer) this.getSourceViewer());
+            semanticReconciler.install(this, (JavaSourceViewer) getSourceViewer());
             ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener",
-                    new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
-
-        } catch (SecurityException e) {
-            GroovyPlugin.getDefault().logError("Unable to install semantic reconciler for groovy editor", e);
+                new Class[] {IJavaReconcilingListener.class}, this, new Object[] {semanticReconciler});
+        } catch (Throwable t) {
+            GroovyPlugin.getDefault().logError("GroovyEditor: failed to install semantic reconciler", t);
         }
     }
 
@@ -672,10 +671,10 @@ public class GroovyEditor extends CompilationUnitEditor {
             try {
                 semanticReconciler.uninstall();
                 ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener",
-                        new Class[] { IJavaReconcilingListener.class }, this, new Object[] { semanticReconciler });
+                    new Class[] {IJavaReconcilingListener.class}, this, new Object[] {semanticReconciler});
                 semanticReconciler = null;
-            } catch (SecurityException e) {
-                GroovyPlugin.getDefault().logError("Unable to uninstall semantic reconciler for groovy editor", e);
+            } catch (Throwable t) {
+                GroovyPlugin.getDefault().logError("GroovyEditor: failed to uninstall semantic reconciler", t);
             }
         }
     }
@@ -824,25 +823,17 @@ public class GroovyEditor extends CompilationUnitEditor {
         installGroovySemanticHighlighting();
 
         IPreferenceStore preferenceStore = getPreferenceStore();
+        groovyBracketInserter.setCloseBracesEnabled(preferenceStore.getBoolean(CLOSE_BRACES));
+        groovyBracketInserter.setCloseBracketsEnabled(preferenceStore.getBoolean(CLOSE_BRACKETS));
+        groovyBracketInserter.setCloseStringsEnabled(preferenceStore.getBoolean(CLOSE_STRINGS));
+        groovyBracketInserter.setCloseAngularBracketsEnabled(preferenceStore.getString(JavaCore.COMPILER_SOURCE).compareTo(JavaCore.VERSION_1_5) >= 0);
 
-        // ensure that the bracket inserter from the superclass is disabled
-
-        boolean closeBrackets= preferenceStore.getBoolean(CLOSE_BRACKETS);
-        boolean closeStrings= preferenceStore.getBoolean(CLOSE_STRINGS);
-        boolean closeBraces = preferenceStore.getBoolean(CLOSE_BRACES);
-        boolean closeAngularBrackets= JavaCore.VERSION_1_5.compareTo(preferenceStore.getString(JavaCore.COMPILER_SOURCE)) <= 0;
-
-        groovyBracketInserter.setCloseBracketsEnabled(closeBrackets);
-        groovyBracketInserter.setCloseStringsEnabled(closeStrings);
-        groovyBracketInserter.setCloseAngularBracketsEnabled(closeAngularBrackets);
-        groovyBracketInserter.setCloseBracesEnabled(closeBraces);
-
-
-        ISourceViewer sourceViewer= getSourceViewer();
+        ISourceViewer sourceViewer = getSourceViewer();
         if (sourceViewer instanceof ITextViewerExtension) {
             ((ITextViewerExtension) sourceViewer).prependVerifyKeyListener(groovyBracketInserter);
         }
 
+        // ensure the bracket inserter from the superclass is disabled
         disableBracketInserter();
     }
 
@@ -857,28 +848,19 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseAngularBracketsEnabled", bool, fBracketInserterField, disabled);
     }
 
-    // temporary storage for editor input so that GroovyConiguration can use it
-    IEditorInput internalInput;
-    /**
-     * Override this method so that we can get access to the newly initialized
-     * annotation model
-     */
     @Override
     protected void doSetInput(IEditorInput input) throws CoreException {
-        try {
-            internalInput = input;
+        final boolean installed = semanticHighlightingInstalled();
+        if (installed) {
+            uninstallGroovySemanticHighlighting();
+        }
 
-            boolean wasInstalled = semanticHighlightingInstalled();
-            if (wasInstalled) {
-                uninstallGroovySemanticHighlighting();
-            }
-            super.doSetInput(input);
-            unsetJavaBreakpointUpdater();
-            if (wasInstalled) {
-                installGroovySemanticHighlighting();
-            }
-        } finally {
-            internalInput = null;
+        super.doSetInput(input);
+
+        unsetJavaBreakpointUpdater();
+
+        if (installed) {
+            installGroovySemanticHighlighting();
         }
     }
 
@@ -913,8 +895,8 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
 
     /**
-     * Ensure that the Java breakpoint updater is removed because we need to use
-     * Groovy's breakpoint updater instead
+     * Ensures that the Java breakpoint updater is removed because we need to use
+     * Groovy's breakpoint updater instead.
      */
     private void unsetJavaBreakpointUpdater() {
         try {
@@ -922,12 +904,13 @@ public class GroovyEditor extends CompilationUnitEditor {
             if (viewer != null) {
                 IAnnotationModel model = viewer.getAnnotationModel();
                 if (model instanceof AbstractMarkerAnnotationModel) {
-                    // force instantiation of the extension points
-                    ReflectionUtils.executePrivateMethod(AbstractMarkerAnnotationModel.class,
-                        "installMarkerUpdaters", new Class[] {}, model, new Object[] {});
+                    if (ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model) == null) {
+                        // force instantiation of the extension points
+                        ReflectionUtils.executeNoArgPrivateMethod(AbstractMarkerAnnotationModel.class, "installMarkerUpdaters", model);
+                    }
                     @SuppressWarnings("unchecked")
-                    List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>) ReflectionUtils.
-                        getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model);
+                    List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>)
+                        ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model);
                     // remove the marker updater for Java breakpoints; the Groovy one will be used instead
                     for (Iterator<IConfigurationElement> specIter = updaterSpecs.iterator(); specIter.hasNext();) {
                         IConfigurationElement spec = specIter.next();
@@ -938,8 +921,8 @@ public class GroovyEditor extends CompilationUnitEditor {
                     }
                 }
             }
-        } catch (Exception e) {
-            GroovyPlugin.getDefault().logError("Failed to unset Java breakpoint updater", e);
+        } catch (Throwable t) {
+            GroovyPlugin.getDefault().logError("GroovyEditor: failed to remove Java breakpoint updater", t);
         }
     }
 
@@ -953,9 +936,9 @@ public class GroovyEditor extends CompilationUnitEditor {
     @Override
     protected void handlePreferenceStoreChanged(PropertyChangeEvent event) {
         super.handlePreferenceStoreChanged(event);
-        ISourceViewer sv= getSourceViewer();
+        ISourceViewer sv = getSourceViewer();
         if (sv != null) {
-            String p= event.getProperty();
+            String p = event.getProperty();
 
             if (CLOSE_BRACKETS.equals(p)) {
                 groovyBracketInserter.setCloseBracketsEnabled(getPreferenceStore().getBoolean(p));
@@ -1069,7 +1052,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             try {
                 page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(unit.getJavaProject().getProject(), fOutlinerContextMenuId, this);
             } catch (CoreException e) {
-                GroovyPlugin.getDefault().logError("Error creating Groovy Outline page", e);
+                GroovyPlugin.getDefault().logError("GroovyEditor: failed to create Outline page", e);
             }
             if (page != null) {
                 // don't call this since it will grab the GroovyCompilationUnit
