@@ -122,15 +122,16 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
         ContentAssistant assistant = (ContentAssistant) super.getContentAssistant(sourceViewer);
 
-        ContentAssistProcessor stringProcessor = new JavaCompletionProcessor(getEditor(), assistant, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
-        assistant.setContentAssistProcessor(stringProcessor, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
-        // remove Java content assist processor category
-        // do a list copy so as not to disturb globally shared list
+        String contentType = GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS;
+        assistant.setContentAssistProcessor(new JavaCompletionProcessor(getEditor(), assistant, contentType), contentType);
+
+        // retain only Groovy-approved completion proposal categories
         IContentAssistProcessor processor = assistant.getContentAssistProcessor(IDocument.DEFAULT_CONTENT_TYPE);
-        List<CompletionProposalCategory> categories = (List<CompletionProposalCategory>) ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
-        List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>(categories.size() - 1);
+        List<CompletionProposalCategory> categories = (List<CompletionProposalCategory>)
+            ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
+        List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>();
         for (CompletionProposalCategory category : categories) {
-            if (!JAVA_CONTENT_ASSIST.matcher(category.getId()).matches()) {
+            if (GROOVY_CONTENT_ASSIST.matcher(category.getId()).matches()) {
                 newCategories.add(category);
             }
         }
@@ -138,8 +139,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
         return assistant;
     }
-    private static final Pattern JAVA_CONTENT_ASSIST = Pattern.compile("org.eclipse.jdt.ui.(java(All|(No)?Type)|swt|template)ProposalCategory|" +
-        "org.eclipse.mylyn.java.ui.javaAllProposalCategory|org.eclipse.ajdt.ui.templateCategory|org\\.eclipse\\.recommenders\\..+"); //org.eclipse.pde.api.tools.ui.apitools_proposal_category?
+    private static final Pattern GROOVY_CONTENT_ASSIST = Pattern.compile("org.codehaus.groovy.+|org.eclipse.jdt.ui.(default|text)ProposalCategory");
 
     /*
      * Type parameters have changed between 3.7 and 4.2.  So just remove them
