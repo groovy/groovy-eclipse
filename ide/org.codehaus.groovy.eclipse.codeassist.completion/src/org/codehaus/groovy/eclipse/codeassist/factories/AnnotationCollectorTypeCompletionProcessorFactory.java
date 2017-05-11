@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.TypeCompletionProcessor;
@@ -89,7 +89,7 @@ public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroov
                             }
                         }
                     } catch (JavaModelException e) {
-                        GroovyPlugin.getDefault().logError("Failed to check for @AnnotationCollector in: " + p.getQualifiedTypeName(), e);
+                        GroovyContentAssist.logError("Failed to check for @AnnotationCollector in: " + p.getQualifiedTypeName(), e);
                     }
                 }
                 return false;

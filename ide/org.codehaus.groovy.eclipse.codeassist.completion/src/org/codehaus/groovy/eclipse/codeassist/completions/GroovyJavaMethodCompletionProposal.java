@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
@@ -144,7 +145,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 fSelectedRegion = ui.getSelectedRegion();
 
             } catch (BadLocationException e) {
-                JavaPlugin.log(e);
+                GroovyContentAssist.logError(e);
             }
         }
     }

@@ -23,9 +23,9 @@ import java.util.Map;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.SimplifiedExtendedCompletionContext;
 import org.eclipse.jdt.core.IField;
@@ -94,7 +94,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
             try {
                 enclosingElement = context.unit.getElementAt(context.completionLocation);
             } catch (JavaModelException e) {
-                GroovyCore.logException("Exception computing content assist proposals", e);
+                GroovyContentAssist.logError("Exception computing content assist proposals", e);
             }
             if (enclosingElement == null) {
                 enclosingElement = context.unit;
@@ -159,7 +159,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                     addFields(targetType, nameElementMap, superType);
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("", e);
+                GroovyContentAssist.logError(e);
             }
         }
 

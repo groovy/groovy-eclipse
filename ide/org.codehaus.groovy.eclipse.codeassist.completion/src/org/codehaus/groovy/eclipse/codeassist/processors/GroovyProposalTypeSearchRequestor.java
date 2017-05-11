@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentProposal;
@@ -35,7 +36,6 @@ import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -149,7 +149,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         try {
             allTypesInUnit = unit.getAllTypes();
         } catch (JavaModelException e) {
-            GroovyCore.logException("Problem with type completion", e);
+            GroovyContentAssist.logError("Problem with type completion", e);
             allTypesInUnit = new IType[0];
         }
     }

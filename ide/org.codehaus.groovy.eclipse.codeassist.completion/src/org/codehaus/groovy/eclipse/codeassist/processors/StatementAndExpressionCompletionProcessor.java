@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.creators.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
@@ -46,7 +47,6 @@ import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionContext;
@@ -63,7 +63,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
-import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -72,7 +71,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
     private class ExpressionCompletionRequestor implements ITypeRequestor {
 
-        // tracks the number of array accesses that must be dereferenced
+        /** number of array accesses that must be dereferenced */
         private int derefCount;
         private boolean isStatic;
         private ClassNode lhsType;
@@ -110,7 +109,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             if (!interestingElement(enclosingElement)) {
                 return VisitStatus.CANCEL_MEMBER;
             }
-
             if (node instanceof ClassNode) {
                 ClassNode clazz = (ClassNode) node;
                 if (clazz.redirect() == clazz && clazz.isScript()) {
@@ -132,7 +130,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 derefList = success = doTestForAfterArrayAccess(node);
             }
             if (success) {
-                maybeRememberLHSType(result);
+                maybeRememberTypeOfLHS(result);
                 categories = result.scope.getCategoryNames();
                 resultingType = findResultingType(result, derefList);
                 visitSuccessful = true;
@@ -192,13 +190,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         /**
-         * see if this is the lhs of an array access, eg the 'foo' of 'foo[0]'
+         * Determines if this is the lhs of an array access, eg the 'foo' of 'foo[0]'.
          */
         private boolean doTestForAfterArrayAccess(ASTNode node) {
             return node == arrayAccessLHS;
         }
 
-        private void maybeRememberLHSType(TypeLookupResult result) {
+        private void maybeRememberTypeOfLHS(TypeLookupResult result) {
             if (isAssignmentOfLHS(result.enclosingAssignment)) {
                 // check to see if this is the rhs of an assignment.
                 // if so, then attempt to use the type of the lhs for
@@ -265,7 +263,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     return range.getOffset() <= completionNode.getStart() &&
                         range.getOffset() + range.getLength() >= completionNode.getEnd();
                 } catch (JavaModelException e) {
-                    Util.log(e);
+                    GroovyContentAssist.logError(e);
                 }
             }
             return false;
@@ -283,13 +281,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
     }
 
     /**
-     * the ASTNode being completed.
+     * The ASTNode being completed.
      */
     private final ASTNode completionNode;
 
     /**
-     * the LHS of the assignment statement associated with this content assist
-     * invocation, or null if there is none.
+     * The LHS of the assignment associated with this content assist invocation, or {@code null} if there is none.
      */
     private final Expression lhsNode;
 
@@ -388,11 +385,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                         groovyProposals.addAll(otherProposals);
                     }
                 } catch (Exception e) {
-                    GroovyCore.logException("Exception when using third party proposal provider: " + provider.getClass().getCanonicalName(), e);
+                    GroovyContentAssist.logError("Exception when using third party proposal provider: " + provider.getClass().getCanonicalName(), e);
                 }
             }
         } catch (CoreException e) {
-            GroovyCore.logException("Exception accessing proposal provider registry", e);
+            GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
         }
 
         fillInExtendedContext(requestor);
@@ -405,11 +402,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     List<IGroovyProposal> newProposals = filter.filterProposals(groovyProposals, context, getJavaContext());
                     groovyProposals = newProposals == null ? groovyProposals : newProposals;
                 } catch (Exception e) {
-                    GroovyCore.logException("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
+                    GroovyContentAssist.logError("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
                 }
             }
         } catch (CoreException e) {
-            GroovyCore.logException("Exception accessing proposal provider registry", e);
+            GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
         }
 
         List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
@@ -421,7 +418,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     javaProposals.add(javaProposal);
                 }
             } catch (Exception e) {
-                GroovyCore.logException("Exception when creating groovy completion proposal", e);
+                GroovyContentAssist.logError("Exception when creating groovy completion proposal", e);
             }
         }
 

@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
@@ -198,11 +199,11 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
         } catch (BadLocationException e) {
             ensurePositionCategoryRemoved(document);
-            JavaPlugin.log(e);
+            GroovyContentAssist.logError(e);
             openErrorDialog(e);
         } catch (BadPositionCategoryException e) {
             ensurePositionCategoryRemoved(document);
-            JavaPlugin.log(e);
+            GroovyContentAssist.logError(e);
             openErrorDialog(e);
         }
     }
@@ -254,7 +255,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         } catch (JavaModelException e) {
             fPositions = null;
             fChoices = null;
-            JavaPlugin.log(e);
+            GroovyContentAssist.logError(e);
             openErrorDialog(e);
         }
 

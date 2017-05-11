@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.factories.AnnotationCollectorTypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.AnnotationMemberValueCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ConstructorCompletionProcessorFactory;
@@ -42,7 +43,6 @@ import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProces
 import org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilter;
 import org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilterExtension;
 import org.codehaus.groovy.eclipse.codeassist.processors.ProposalProviderRegistry;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
@@ -227,11 +227,11 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                             proposals = newProposals == null ? proposals : newProposals;
                         }
                     } catch (Exception e) {
-                        GroovyCore.logException("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
+                        GroovyContentAssist.logError("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
                     }
                 }
             } catch (CoreException e) {
-                GroovyCore.logException("Exception accessing proposal provider registry", e);
+                GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
             }
         }
 
@@ -271,7 +271,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         try {
             return ((JavaProject) javaContext.getProject()).newSearchableNameEnvironment(javaContext.getCompilationUnit().getOwner());
         } catch (JavaModelException e) {
-            GroovyCore.logException("Exception creating searchable environment for " + javaContext.getCompilationUnit(), e);
+            GroovyContentAssist.logError("Exception creating searchable environment for " + javaContext.getCompilationUnit(), e);
             return null;
         }
     }
@@ -287,8 +287,10 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                 return new ExpressionFinder().findForCompletions(buffer, offset - 1);
             }
         } catch (ParseException e) {
-            // can ignore.  probably just invalid code that is being completed at
-            GroovyCore.trace("Cannot complete code:" + e.getMessage());
+            // can ignore; probably just invalid code that is being completed at
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Cannot complete code: " + e.getMessage());
+            }
         }
         return "";
     }

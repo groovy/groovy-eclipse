@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
@@ -34,11 +34,6 @@ import org.eclipse.jdt.internal.ui.text.java.GetterSetterCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-/**
- *
- * @author denis_murashev
- * @created 22 April 2014
- */
 public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
     public GetSetMethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext,
@@ -56,7 +51,7 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
                     proposals.addAll(createProposal(field, context));
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("Exception looking for proposal providers in " + context.unit.getElementName(), e);
+                GroovyContentAssist.logError("Exception looking for proposal providers in " + context.unit.getElementName(), e);
             }
         }
         return proposals;

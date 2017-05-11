@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -27,13 +28,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 23, 2009
- *
- */
 public class ProposalProviderRegistry {
 
     private static final String APPLIES_TO = "appliesTo"; //$NON-NLS-1$
@@ -42,11 +37,11 @@ public class ProposalProviderRegistry {
 
     private static final String PROVIDER = "proposalProvider"; //$NON-NLS-1$
 
-	private static final String FILTER = "proposalFilter"; //$NON-NLS-1$
+    private static final String FILTER = "proposalFilter"; //$NON-NLS-1$
 
     private static final String PROPOSAL_PROVIDER_EXTENSION = "org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider"; //$NON-NLS-1$
 
-	private static final String PROPOSAL_FILTER_EXTENSION = "org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter"; //$NON-NLS-1$
+    private static final String PROPOSAL_FILTER_EXTENSION = "org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter"; //$NON-NLS-1$
 
     private final static ProposalProviderRegistry DEFAULT = new ProposalProviderRegistry();
 
@@ -74,7 +69,7 @@ public class ProposalProviderRegistry {
                     try {
                         lookups.add((IProposalProvider) config.createExecutableExtension(PROVIDER));
                     } catch (CoreException e) {
-                        Util.log(e, "Problem creating completion provider for type " + config.getAttribute(PROVIDER));
+                        GroovyContentAssist.logError("Problem creating completion provider for type " + config.getAttribute(PROVIDER), e);
                     }
                 }
             }
@@ -95,12 +90,9 @@ public class ProposalProviderRegistry {
             if (configs != null) {
                 for (IConfigurationElement config : configs) {
                     try {
-                        filters.add((IProposalFilter) config
-                                .createExecutableExtension(FILTER));
+                        filters.add((IProposalFilter) config.createExecutableExtension(FILTER));
                     } catch (CoreException e) {
-                        Util.log(e,
-                                "Problem creating completion provider for type "
-                                        + config.getAttribute(PROVIDER));
+                        GroovyContentAssist.logError("Problem creating completion provider for type " + config.getAttribute(PROVIDER), e);
                     }
                 }
             }
@@ -130,13 +122,13 @@ public class ProposalProviderRegistry {
 
         // proposal filter
         extPoint = Platform.getExtensionRegistry().getExtensionPoint(PROPOSAL_FILTER_EXTENSION);
-		exts = extPoint.getExtensions();
-		for (IExtension ext : exts) {
-			IConfigurationElement[] configs = ext.getConfigurationElements();
-			for (IConfigurationElement config : configs) {
+        exts = extPoint.getExtensions();
+        for (IExtension ext : exts) {
+            IConfigurationElement[] configs = ext.getConfigurationElements();
+            for (IConfigurationElement config : configs) {
                 createFilter(config);
-			}
-		}
+            }
+        }
     }
 
     private void createLookup(IConfigurationElement config) {
@@ -156,11 +148,11 @@ public class ProposalProviderRegistry {
                         elts.add(config);
                     }
                 } else {
-                    Util.log(new RuntimeException(), "Type lookup registry extension found with no type lookup class.");
+                    GroovyContentAssist.logError("Type lookup registry extension found with no type lookup class.", new RuntimeException());
                 }
             }
         } catch (Exception e) {
-            Util.log(e, "Problem registering type lookups");
+            GroovyContentAssist.logError("Problem registering type lookups", e);
         }
     }
 
@@ -182,12 +174,11 @@ public class ProposalProviderRegistry {
                         elts.add(config);
                     }
                 } else {
-                    Util.log(new RuntimeException(),
-                            "Filter lookup registry extension found with no type lookup class.");
+                    GroovyContentAssist.logError("Filter lookup registry extension found with no type lookup class.", new RuntimeException());
                 }
             }
         } catch (Exception e) {
-            Util.log(e, "Problem registering type lookups");
+            GroovyContentAssist.logError("Problem registering type lookups", e);
         }
     }
 }

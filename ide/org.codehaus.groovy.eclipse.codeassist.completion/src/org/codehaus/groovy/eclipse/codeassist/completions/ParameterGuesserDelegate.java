@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import java.lang.reflect.Method;
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -33,9 +33,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * use different variants of {@link ParameterGuesser}. This class wraps calls
  * to the other class and does some extra work to make the parameter guesses
  * slightly more groovy.
- *
- * @author andrew
- * @created Nov 24, 2011
  */
 public class ParameterGuesserDelegate {
     private static final String CLOSURE_TEXT = "{  }";
@@ -53,8 +50,7 @@ public class ParameterGuesserDelegate {
     // unfortunately, the parameterProposals method has a different signature in
     // 3.6 and 3.7.
     // so must call using reflection
-    public ICompletionProposal[] parameterProposals(String parameterType, String paramName,
-            Position position, IJavaElement[] assignable, boolean fillBestGuess) {
+    public ICompletionProposal[] parameterProposals(String parameterType, String paramName, Position position, IJavaElement[] assignable, boolean fillBestGuess) {
         parameterType = convertToPrimitive(parameterType);
 
         Method method = findParameterProposalsMethod();
@@ -62,12 +58,10 @@ public class ParameterGuesserDelegate {
             ICompletionProposal[] allCompletions;
             if (method.getParameterTypes().length == 5) {
                 // 3.6
-                allCompletions = (ICompletionProposal[]) method
-                        .invoke(guesser, parameterType, paramName, position, assignable, fillBestGuess);
+                allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable, fillBestGuess);
             } else {
                 // 3.7 and later
-                allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
-                        fillBestGuess, false);
+                allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable, fillBestGuess, false);
             }
 
             // ensure enum proposals insert the declaring type as part of the
@@ -96,7 +90,7 @@ public class ParameterGuesserDelegate {
             }
             return addExtras(allCompletions, parameterType, position);
         } catch (Exception e) {
-            GroovyCore.logException("Exception trying to reflectively invoke 'parameterProposals' method.", e);
+            GroovyContentAssist.logError("Exception trying to reflectively invoke 'parameterProposals' method.", e);
             return ProposalUtils.NO_COMPLETIONS;
         }
 
@@ -139,16 +133,16 @@ public class ParameterGuesserDelegate {
                 parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
                         Position.class, IJavaElement[].class, boolean.class);
             } catch (SecurityException e) {
-                GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e);
+                GroovyContentAssist.logError("Exception trying to reflectively find 'parameterProposals' method.", e);
             } catch (NoSuchMethodException e) {
                 // 3.7 RC4 or later
                 try {
                     parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
                             Position.class, IJavaElement[].class, boolean.class, boolean.class);
                 } catch (SecurityException e1) {
-                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
+                    GroovyContentAssist.logError("Exception trying to reflectively find 'parameterProposals' method.", e1);
                 } catch (NoSuchMethodException e1) {
-                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
+                    GroovyContentAssist.logError("Exception trying to reflectively find 'parameterProposals' method.", e1);
                 }
             }
         }
@@ -156,11 +150,8 @@ public class ParameterGuesserDelegate {
     }
 
     /**
-     * Add extra parameter proposals that are groovy specific, eg- Empty strings
-     * and empty closures
-     *
-     * @param parameterProposals
-     * @return
+     * Adds extra parameter proposals that are groovy specific, eg- Empty strings
+     * and empty closures.
      */
     private ICompletionProposal[] addExtras(ICompletionProposal[] parameterProposals, String expectedType, Position position) {
         ICompletionProposal proposal = null;
@@ -184,5 +175,4 @@ public class ParameterGuesserDelegate {
         }
         return parameterProposals;
     }
-
 }

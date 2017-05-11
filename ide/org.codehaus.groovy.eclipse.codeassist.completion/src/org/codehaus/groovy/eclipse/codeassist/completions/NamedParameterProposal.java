@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
@@ -51,9 +52,6 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 /**
  * A content assist proposal for named parameters.
- *
- * @author andrew
- * @created Sep 9, 2011
  */
 public class NamedParameterProposal extends JavaCompletionProposal {
 
@@ -96,7 +94,7 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             } catch (JavaModelException e) {
                 paramNamePosition = null;
                 choices = null;
-                JavaPlugin.log(e);
+                GroovyContentAssist.logError(e);
                 openErrorDialog(e);
             }
         }
@@ -200,11 +198,11 @@ public class NamedParameterProposal extends JavaCompletionProposal {
 
             } catch (BadLocationException e) {
                 ensurePositionCategoryRemoved(document);
-                JavaPlugin.log(e);
+                GroovyContentAssist.logError(e);
                 openErrorDialog(e);
             } catch (BadPositionCategoryException e) {
                 ensurePositionCategoryRemoved(document);
-                JavaPlugin.log(e);
+                GroovyContentAssist.logError(e);
                 openErrorDialog(e);
             }
         }

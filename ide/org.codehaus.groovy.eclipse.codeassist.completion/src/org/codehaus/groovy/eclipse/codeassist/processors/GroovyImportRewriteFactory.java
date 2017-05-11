@@ -19,7 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -30,11 +30,6 @@ import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
 
-/**
- * @author Andrew Eisenberg
- * @author Nieraj Singh
- * @created Oct 27, 2009
- */
 public class GroovyImportRewriteFactory {
 
     private static final Pattern IMPORTS_PATTERN = Pattern.compile("(\\A|[\\n\\r])import\\s");
@@ -112,7 +107,7 @@ public class GroovyImportRewriteFactory {
             try {
                 result = parser.createAST(monitor);
             } catch (IllegalStateException e) {
-                GroovyCore.logException("Can't create ImportRewrite for:\n" + imports, e);
+                GroovyContentAssist.logError("Can't create ImportRewrite for:\n" + imports, e);
             }
             if (result instanceof CompilationUnit) {
                 rewrite = CodeStyleConfiguration.createImportRewrite((CompilationUnit) result, true);

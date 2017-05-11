@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createDisplay
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createMethodSignatureStr;
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSignature;
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
-import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +26,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -49,9 +49,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * Completion processor that determines methods to be overridden or implemented.
- *
- * @author Andrew Eisenberg
- * @created Nov 10, 2009
  */
 public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
@@ -81,7 +78,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
                 }
             }
         } catch (CoreException e) {
-            GroovyCore.logException("Exception looking for proposal providers in " + context.unit.getElementName(), e);
+            GroovyContentAssist.logError("Exception looking for proposal providers in " + context.unit.getElementName(), e);
         }
 
         return proposals;
@@ -364,11 +361,6 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 //        }
 //    }
 
-    /**
-     * @param classNode
-     * @param completion
-     * this ignores type variables
-     */
     private void createType(ClassNode type, StringBuffer completion, boolean isParameter) {
         int arrayCount = 0;
         while (type.getComponentType() != null) {

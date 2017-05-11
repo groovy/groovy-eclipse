@@ -23,7 +23,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
@@ -130,7 +130,7 @@ public class ContentAssistContext {
                 return (IType) element.getAncestor(IJavaElement.TYPE);
             }
         } catch (JavaModelException e) {
-            GroovyCore.logException("Exception finding completion for " + unit, e);
+            GroovyContentAssist.logError("Exception finding completion for " + unit, e);
         }
         return null;
     }

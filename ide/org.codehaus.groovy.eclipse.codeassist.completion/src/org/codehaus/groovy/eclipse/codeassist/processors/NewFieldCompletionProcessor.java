@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder.NameAndLocation;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -44,11 +44,7 @@ import org.eclipse.swt.graphics.Image;
 
 /**
  * Adds a list of new field proposals. All field proposals are dynamically typed static or
- * non-static fields with an initializer of a closure. Contributors should extend the
- *
- *
- * @author Andrew Eisenberg
- * @created Nov 10, 2009
+ * non-static fields with an initializer of a closure.
  */
 public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcessor {
     public static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
@@ -165,19 +161,11 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     /**
      * works backward from the current location to see if there is something
      * that looks like a type name as the previous token
-     *
-     * @param unit
-     * @param completionLocation
-     * @return
      */
     private NameAndLocation findCompletionTypeName(GroovyCompilationUnit unit, int completionLocation) {
         return new ExpressionFinder().findPreviousTypeNameToken(new CharArraySourceBuffer(unit.getContents()), completionLocation);
     }
 
-    /**
-     * @param context
-     * @return
-     */
     private List<String> getAllSuggestedFieldNames(ContentAssistContext context) {
         List<String> allNewFieldNames = new LinkedList<String>();
         try {
@@ -189,7 +177,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
                 }
             }
         } catch (CoreException e) {
-            GroovyCore.logException("Exception looking for proposal providers in " + context.unit.getElementName(), e);
+            GroovyContentAssist.logError("Exception looking for proposal providers in " + context.unit.getElementName(), e);
         }
 
         return allNewFieldNames;
@@ -233,15 +221,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
 
     private ICompletionProposal createProposal(String fieldName, String typeName, ContentAssistContext context,
             IType enclosingType, boolean isStatic, boolean useKeywordBeforeReplacement, int replaceStart, int replaceLength) {
-
         int relevance = Relevance.VERY_HIGH.getRelavance();
-
-
-
-        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart,
-                replaceLength,
- relevance, isStatic,
-                useKeywordBeforeReplacement, typeName);
+        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart, replaceLength, relevance, isStatic, useKeywordBeforeReplacement, typeName);
     }
-
 }

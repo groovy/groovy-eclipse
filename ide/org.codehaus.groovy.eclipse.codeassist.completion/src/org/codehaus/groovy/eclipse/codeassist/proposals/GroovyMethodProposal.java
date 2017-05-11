@@ -20,6 +20,7 @@ import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSig
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
@@ -28,7 +29,6 @@ import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposa
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -185,7 +185,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             try {
                 return javaContext.getDocument().getChar(context.completionEnd) == '(';
             } catch (BadLocationException e) {
-                GroovyCore.logException("Exception during content assist", e);
+                GroovyContentAssist.logError("Exception during content assist", e);
             }
         }
         return false;
@@ -286,7 +286,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                 }
             }
         } catch (JavaModelException e) {
-            GroovyCore.logException("Exception while looking for parameter types of " + method.getName(), e);
+            GroovyContentAssist.logError("Exception while looking for parameter types of " + method.getName(), e);
         }
         return null;
     }
