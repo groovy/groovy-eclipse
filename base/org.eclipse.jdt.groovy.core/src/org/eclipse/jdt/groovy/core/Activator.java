@@ -39,10 +39,10 @@ public class Activator extends Plugin {
     public static final String GROOVY_COMPILER_LEVEL = "groovy.compiler.level";
 
     public static final String GROOVY_SCRIPT_FILTERS = "groovy.script.filters";
-    public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "**/*.dsld,y,scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
+    public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "**/*.dsld,y,**/*.gradle,y,scripts/**/*.groovy,n,src/main/resources/**/*.groovy,n,src/test/resources/**/*.groovy,n";
 
     public static final String GROOVY_SCRIPT_FILTERS_ENABLED = "groovy.script.filters.enabled";
-    public static final boolean DEFAULT_SCRIPT_FILTERS_ENABLED = false;
+    public static final boolean DEFAULT_SCRIPT_FILTERS_ENABLED = true;
 
     //--------------------------------------------------------------------------
 
