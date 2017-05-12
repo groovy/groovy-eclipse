@@ -114,9 +114,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticCompile1() throws Exception {
-        boolean origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-        String origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-
+        Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
+        Activator.getInstancePreferences().get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         try {
             // the type checking script
             IPath robotPath = env.addPackage(project.getFolder("src").getFullPath(), "robot");
@@ -144,8 +143,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "}");
 
             // set the script folders
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Boolean.TRUE.toString());
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src/robot/*Move.groovy,y");
+            Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+            Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/robot/*Move.groovy,y");
 
             String contents =
                 "import groovy.transform.TypeChecked\n" +
@@ -169,8 +168,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             Problem[] problems = env.getProblemsFor(project.getFullPath());
             assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
         } finally {
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
+            Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
+            Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         }
     }
 }

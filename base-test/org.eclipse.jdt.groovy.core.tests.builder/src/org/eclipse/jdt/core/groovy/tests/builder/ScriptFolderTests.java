@@ -26,7 +26,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IWorkspaceRunnable;
-import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -35,7 +34,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.MockScriptFolderSelector;
@@ -47,7 +45,6 @@ import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector.FileKind;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -55,19 +52,10 @@ import org.junit.Test;
  */
 public final class ScriptFolderTests extends BuilderTestSuite {
 
-    private boolean origEnabled;
-    private String origPatterns;
-
-    @Before
-    public void setUp() throws Exception {
-        origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-        origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-    }
-
     @After
     public void tearDown() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
     @Test
@@ -136,8 +124,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     @Test // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "def x", true);
         assertNoExists("Project/bin/Script.class");
         assertExists("Project/bin/Script.groovy");
@@ -145,8 +133,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     @Test
     public void testScriptInProjectNoCopy() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
         createScriptInGroovyProject("Script", "def x", true);
         assertNoExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
@@ -154,8 +142,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     @Test
     public void testScriptInProjectDisabled() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "def x", true);
         assertExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
@@ -163,8 +151,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     @Test
     public void testSourceInProjectCompiled() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "class Script { }", false);  // creates a java file
         assertExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
@@ -173,8 +161,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     @Test // This is the big test.
     public void testComplexScriptFolderProject() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
         createPredefinedProject("ScriptFoldersProject");
         env.cleanBuild();
         env.fullBuild();
@@ -206,8 +194,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     @Test // as above, but don't copy
     public void testComplexScriptFolderProjectNoCopy() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
         createPredefinedProject("ScriptFoldersProject");
         env.fullBuild();
 
@@ -241,12 +229,10 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         IProject project = createPredefinedProject("ScriptFoldersProject");
         createPredefinedProject("ScriptFoldersProject2");
 
-        IScopeContext projectScope = new ProjectScope(project);
-        IEclipsePreferences preferences = projectScope.getNode(Activator.PLUGIN_ID);
-        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "true");
-
-        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        IEclipsePreferences preferences = Activator.getProjectPreferences(project);
+        preferences.putBoolean(Activator.USING_PROJECT_PROPERTIES, true);
+        preferences.putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        preferences.put(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
         env.fullBuild();
 
         // project root is a source folder, but it is not a script folder
@@ -295,7 +281,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         assertExists("ScriptFoldersProject2/src3/p/Script3.class");
 
         // now disable
-        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "false");
+        preferences.put(Activator.USING_PROJECT_PROPERTIES, "false");
         env.fullBuild();
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
@@ -341,10 +327,10 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
 
         // now enable the workspace settings, add back project settings, but disable filters on the project
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
-        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "true");
-        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        preferences.putBoolean(Activator.USING_PROJECT_PROPERTIES, true);
+        preferences.putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
         env.fullBuild();
 
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
@@ -393,7 +379,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         assertNoExists("ScriptFoldersProject2/src3/Script3.class");
         assertNoExists("ScriptFoldersProject2/src3/p/Script3.class");
 
-        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "false");
+        preferences.put(Activator.USING_PROJECT_PROPERTIES, "false");
     }
 
     //--------------------------------------------------------------------------

@@ -15,129 +15,49 @@
  */
 package org.codehaus.groovy.eclipse.preferences;
 
+import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.*;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
-import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.RGB;
 
-/**
- * Class used to initialize default preference values.
- */
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
-
-    /*
-     * (non-Javadoc)
-     *
-     * @seeorg.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#
-     * initializeDefaultPreferences()
-     */
     @Override
     public void initializeDefaultPreferences() {
-        IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
-
-        store.setDefault(PreferenceConstants.GROOVY_LOG_TRACE_MESSAGES_ENABLED, false);
-
-        // Syntax coloring
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, new RGB(102, 204, 255));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, new RGB(255, 0, 204));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, new RGB(70, 70, 70));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, new RGB(0, 0, 0));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR, new RGB(0, 0, 0));
-        PreferenceConverter.setDefault(store, PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR, new RGB(0, 0, 0));
-
-        // bold syntax
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-
-        // Dollar slashy string highlighting
-        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS, true);
-
-        // JUnit Monospace font
-        store.setDefault(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, false);
-
-        // Ask to convert Legacy Projects at startup
-        store.setDefault(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS, true);
-
-        // Semantic highlighting
-        store.setDefault(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
-
-        store.setDefault(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME);
+        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
 
         // Debug
-        store.setDefault(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK, true);
-        store.setDefault(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST, "org.codehaus.groovy,groovy.lang,java.lang.reflect,sun.reflect,groovy.ui,sun.misc");
+        prefs.setDefault(GROOVY_DEBUG_FILTER_STACK, true);
+        prefs.setDefault(GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, true);
+        prefs.setDefault(GROOVY_DEBUG_FILTER_LIST, "groovy.lang,groovy.ui,java.lang.reflect,org.codehaus.groovy,sun.misc,sun.reflect");
 
-        store.setDefault(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, true);
-
-        // Compile
-        store.setDefault(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        store.setDefault(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-        store.setDefault(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, true);
-    }
-
-    public void reset() {
-        IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
-
-        store.setValue(PreferenceConstants.GROOVY_LOG_TRACE_MESSAGES_ENABLED, false);
-
-        // Syntax coloring
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, new RGB(102, 204, 255));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, new RGB(255, 0, 204));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, new RGB(70, 70, 70));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, new RGB(151, 44, 120));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, new RGB(0, 0, 0));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR, new RGB(0, 0, 0));
-        PreferenceConverter.setValue(store, PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR, new RGB(0, 0, 0));
-
-        // bold syntax
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, true);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
-
-        // Dollar slashy string highlighting
-        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS, true);
-
-        // JUnit Monospace font
-        store.setValue(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, false);
-
-        // Ask to convert Legacy Projects at startup
-        store.setValue(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS, true);
+        // General
+        prefs.setDefault(GROOVY_JUNIT_MONOSPACE_FONT, false);
+        prefs.setDefault(GROOVY_LOG_TRACE_MESSAGES_ENABLED, false);
+        prefs.setDefault(GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS, true);
+        prefs.setDefault(GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, GROOVY_SCRIPT_PROJECT_HOME);
 
         // Semantic highlighting
-        store.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
+        prefs.setDefault(GROOVY_SEMANTIC_HIGHLIGHTING, true);
+        prefs.setDefault(GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS, true);
 
-        store.setValue(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, "proj_home");
+        // Syntax coloring
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, 127, 0, 85, true);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, 127, 0, 85, true);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, 127, 0, 85, true);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, 127, 0, 85, true); //keyword
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, 102, 204, 255, false); //method
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, 100, 100, 100, false);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, 255, 0, 204, false);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, 0, 0, 0, false);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR, 0, 0, 0, false);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_DEFAULT_COLOR, 0, 0, 0, false);
+    }
 
-        // Compile
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-
-        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+    private void setSyntaxElementDefault(IPreferenceStore prefs, String pref, int r, int g, int b, boolean bold) {
+        PreferenceConverter.setDefault(prefs, pref, new RGB(r, g, b));
+        prefs.setDefault(pref + GROOVY_EDITOR_BOLD_SUFFIX, bold);
     }
 }

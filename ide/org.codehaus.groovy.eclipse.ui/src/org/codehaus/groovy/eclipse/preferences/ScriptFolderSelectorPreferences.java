@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.preferences;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,46 +58,32 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 /**
  * Dialog for creating and editing script folders in the workspace.
- *
- * @author Andrew Eisenberg
- * @created Sep 14, 2010
  */
 public class ScriptFolderSelectorPreferences {
 
+    private static final int IDX_ADD = 0;
+    private static final int IDX_EDIT = 1;
+    private static final int IDX_REMOVE = 2;
+    private static final int IDX_CHECKALL = 3;
+    private static final int IDX_UNCHECKALL = 4;
+    private static final String[] BUTTON_LABELS = {"Add", "Edit", "Remove", "Check all", "Uncheck all"};
     private static final ImageDescriptor DESCRIPTOR = JavaPluginImages.DESC_OBJS_INCLUSION_FILTER_ATTRIB;
 
-    private static final int IDX_ADD = 0;
-
-    private static final int IDX_EDIT = 1;
-
-    private static final int IDX_REMOVE = 2;
-
-    private static final int IDX_CHECKALL = 3;
-
-    private static final int IDX_UNCHECKALL = 4;
-
-    private static final String[] buttonLabels = { "Add", "Edit", "Remove", "Check all", "Uncheck all" };
-
     private static class ScriptLabelProvider extends LabelProvider {
-
         private Image fElementImage;
-
         public ScriptLabelProvider(ImageDescriptor descriptor) {
             ImageDescriptorRegistry registry = JavaPlugin.getImageDescriptorRegistry();
             fElementImage = registry.get(descriptor);
         }
-
         @Override
         public Image getImage(Object element) {
             return fElementImage;
         }
-
-        @Override
+        @Override @SuppressWarnings("static-access")
         public String getText(Object element) {
             return BasicElementLabels.getFilePattern((String) element);
         }
@@ -107,16 +94,13 @@ public class ScriptFolderSelectorPreferences {
             doCustomButtonPressed(field, index);
             hasChanges = true;
         }
-
         public void selectionChanged(ListDialogField<String> field) {
             doSelectionChanged(field);
         }
-
         public void doubleClicked(ListDialogField<String> field) {
             doDoubleClicked(field);
             hasChanges = true;
         }
-
         public void dialogFieldChanged(DialogField field) {
             hasChanges = true;
         }
@@ -124,12 +108,10 @@ public class ScriptFolderSelectorPreferences {
 
     private static class BuildJob extends Job {
         private IProject[] projects;
-
         public BuildJob(IProject...projects) {
             super(getName(projects));
             this.projects = projects;
         }
-
         private static String getName(IProject...projects) {
             if (projects.length == 1) {
                 return "Building proiject " + projects[0].getName();
@@ -142,8 +124,6 @@ public class ScriptFolderSelectorPreferences {
                 return sb.toString();
             }
         }
-
-        @Override
         protected IStatus run(IProgressMonitor monitor) {
             try {
                 IProgressMonitor sub = SubMonitor.convert(monitor, projects.length);
@@ -161,19 +141,21 @@ public class ScriptFolderSelectorPreferences {
         }
     }
 
+    //--------------------------------------------------------------------------
+
     private final Composite parent;
-
-    private CheckedListDialogField<String> patternList;
-
-    private BooleanFieldEditor disableButton;
 
     private final IEclipsePreferences preferences;
 
     private final IPreferenceStore store;
 
-    private IProject project;
+    private final IProject project;
 
-    private boolean hasChanges = false;
+    private CheckedListDialogField<String> patternList;
+
+    private BooleanFieldEditor disableButton;
+
+    private boolean hasChanges;
 
     public ScriptFolderSelectorPreferences(Composite parent, IEclipsePreferences preferences, IPreferenceStore store, IProject project) {
         this.parent = parent;
@@ -198,7 +180,6 @@ public class ScriptFolderSelectorPreferences {
         inner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
         disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "Enable script folder support", BooleanFieldEditor.DEFAULT, inner);
-
         disableButton.setPreferenceStore(store);
         disableButton.load();
 
@@ -212,20 +193,14 @@ public class ScriptFolderSelectorPreferences {
         innerInner.setLayout(layout);
         innerInner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
         innerInner.setToolTipText("CHECKED boxes are COPIED to output folder.\nUNCHECKED boxes are NOT copied.");
-        boolean enabled = disableButton.getBooleanValue();
-        innerInner.setEnabled(enabled);
 
-        // enable/disable pattern list based
+        // enable/disable pattern list
         disableButton.setPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent event) {
                 if (event.getProperty() == FieldEditor.VALUE) {
                     Object o = event.getNewValue();
                     if (o instanceof Boolean) {
-                        boolean enabled = ((Boolean) o);
-                        innerInner.setEnabled(enabled);
-                        for (Control c : innerInner.getChildren()) {
-                            c.setEnabled(enabled);
-                        }
+                        enablePatternList((Boolean) o);
                     }
                 }
                 hasChanges = true;
@@ -234,13 +209,14 @@ public class ScriptFolderSelectorPreferences {
 
         ScriptPatternAdapter adapter = new ScriptPatternAdapter();
 
-        patternList = new CheckedListDialogField<String>(adapter, buttonLabels, new ScriptLabelProvider(DESCRIPTOR));
+        patternList = new CheckedListDialogField<String>(adapter, BUTTON_LABELS, new ScriptLabelProvider(DESCRIPTOR));
         patternList.setDialogFieldListener(adapter);
-        patternList.setLabelText("Groovy files that match these patterns are treated as scripts.  "
-                + "They will not be compiled and will be copied as-is to the output folder.\n\n"
-                + "CHECKED boxes will be COPIED to the output folder.  UNCHECKED boxes are NOT copied to the output folder.");
-        patternList.setRemoveButtonIndex(IDX_REMOVE);
+        patternList.setLabelText("Groovy files that match these patterns are treated as scripts.  " +
+            "They will not be compiled and will be copied as-is to the output folder.\n\n" +
+            "CHECKED boxes will be COPIED to the output folder.  UNCHECKED boxes are NOT copied to the output folder.");
+        patternList.enableButton(IDX_ADD, true);
         patternList.enableButton(IDX_EDIT, false);
+        patternList.setRemoveButtonIndex(IDX_REMOVE);
         patternList.setCheckAllButtonIndex(IDX_CHECKALL);
         patternList.setUncheckAllButtonIndex(IDX_UNCHECKALL);
 
@@ -250,23 +226,11 @@ public class ScriptFolderSelectorPreferences {
         gd.widthHint = 200;
         l.setLayoutData(gd);
 
-        resetElements();
-        patternList.enableButton(IDX_ADD, true);
+        populatePatternList(Activator.getDefault().getScriptFilters(preferences));
         patternList.setViewerComparator(new ViewerComparator());
-
-        // finally force greying out of tree if required
-        innerInner.setEnabled(enabled);
-        for (Control c : innerInner.getChildren()) {
-            c.setEnabled(enabled);
-        }
+        enablePatternList(disableButton.getBooleanValue());
 
         return patternList;
-    }
-
-    // returns the list of patterns alternating with their docopy state
-    private List<String> findPatterns() {
-        return Activator.getDefault().getListStringPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
-                Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
     protected void doCustomButtonPressed(ListDialogField<String> field, int index) {
@@ -333,7 +297,7 @@ public class ScriptFolderSelectorPreferences {
             result.add(elt);
             result.add(patternList.isChecked(elt) ? "y" : "n");
         }
-        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, result);
+        Activator.getDefault().setScriptFilters(preferences, result);
 
         boolean yesNo = MessageDialog.openQuestion(parent.getShell(), "Do full build?", "Script folder preferences have changed.\n" +
                 "Must do a full build before they come completely into effect.  Do you want to do a full build now?");
@@ -344,18 +308,22 @@ public class ScriptFolderSelectorPreferences {
                 new BuildJob(GroovyNature.getAllAccessibleGroovyProjects().toArray(new IProject[0])).schedule();
             }
         }
-
     }
 
     public void restoreDefaultsPressed() {
-        // must do the store before setting the preference to ensure that the store is flushed
         disableButton.loadDefault();
-        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        resetElements();
+        enablePatternList(disableButton.getBooleanValue());
+        populatePatternList(Arrays.asList(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.split(",")));
+
+        hasChanges = true;
     }
 
-    private void resetElements() {
-        List<String> elements = findPatterns();
+    private void enablePatternList(boolean enabled) {
+        patternList.getListControl(null).setEnabled(enabled);
+        patternList.getLabelControl(null).setEnabled(enabled);
+    }
+
+    private void populatePatternList(List<String> elements) {
         List<String> filteredElements = new ArrayList<String>(elements.size() / 2);
         List<String> checkedElements = new ArrayList<String>(elements.size() / 2);
         for (Iterator<String> eltIter = elements.iterator(); eltIter.hasNext();) {
@@ -368,9 +336,8 @@ public class ScriptFolderSelectorPreferences {
                 }
             }
         }
+
         patternList.setElements(filteredElements);
         patternList.setCheckedElements(checkedElements);
-        patternList.selectFirstElement();
-        hasChanges = false;
     }
 }

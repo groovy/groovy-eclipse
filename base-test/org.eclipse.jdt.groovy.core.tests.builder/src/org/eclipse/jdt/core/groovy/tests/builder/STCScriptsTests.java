@@ -34,20 +34,15 @@ import org.junit.Test;
  */
 public final class STCScriptsTests extends BuilderTestSuite {
 
-    private boolean origEnabled;
-    private String origPatterns;
-
     @Before
     public void setUp() throws Exception {
         assumeTrue(isAtLeastGroovy(21));
-        origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-        origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
     @After
     public void tearDown() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
     private IPath createGenericProject() throws Exception {
@@ -74,8 +69,8 @@ public final class STCScriptsTests extends BuilderTestSuite {
 
     @Test
     public void testStaticTypeCheckingDSL1() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Boolean.TRUE.toString());
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
         IPath projPath = createGenericProject();
         env.addGroovyClass(projPath.append("src"), "", "RobotMove",
@@ -101,8 +96,8 @@ public final class STCScriptsTests extends BuilderTestSuite {
 
     @Test
     public void testStaticTypeCheckingDSL2() throws Exception {
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Boolean.TRUE.toString());
-        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
         IPath projPath = createGenericProject();
         env.addGroovyClass(projPath.append("src"), "", "RobotMove",

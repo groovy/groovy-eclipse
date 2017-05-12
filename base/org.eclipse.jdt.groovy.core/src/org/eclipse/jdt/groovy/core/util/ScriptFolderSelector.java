@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,16 +29,15 @@ public class ScriptFolderSelector implements IEclipsePreferences.IPreferenceChan
     public static boolean isEnabled(IProject project) {
         IEclipsePreferences preferences = getGroovyPreferences(project);
         if (preferences != null) {
-            return preferences.getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+            return preferences.getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         }
         return false;
     }
 
     private static IEclipsePreferences getGroovyPreferences(IProject project) {
-        IEclipsePreferences preferences = null;
-        Activator activator = Activator.getDefault();
-        if (activator != null) {
-            preferences = activator.getProjectOrWorkspacePreferences(project);
+        IEclipsePreferences preferences = Activator.getProjectPreferences(project);
+        if (preferences == null || !preferences.getBoolean(Activator.USING_PROJECT_PROPERTIES, false)) {
+            preferences = Activator.getInstancePreferences();
         }
         return preferences;
     }
@@ -85,7 +84,7 @@ public class ScriptFolderSelector implements IEclipsePreferences.IPreferenceChan
     public void preferenceChange(IEclipsePreferences.PreferenceChangeEvent event) {
         doCopy = null;
         scriptPatterns = null;
-        enabled = preferences.getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        enabled = preferences.getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         if (enabled) {
             String filters = preferences.get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
             initFilters(Arrays.asList(filters.split(",")));
