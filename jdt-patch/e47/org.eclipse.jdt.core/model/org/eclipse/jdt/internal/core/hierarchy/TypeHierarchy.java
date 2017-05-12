@@ -1042,7 +1042,8 @@ protected boolean isAffectedByOpenable(IJavaElementDelta delta, IJavaElement ele
 	} else if (element instanceof ClassFile) {
 		switch (delta.getKind()) {
 			case IJavaElementDelta.REMOVED:
-				return this.files.get(element) != null;
+				IOpenable o = (IOpenable) element;
+				return this.files.get(o) != null;
 			case IJavaElementDelta.ADDED:
 				IType type = ((ClassFile)element).getType();
 				String typeName = type.getElementName();

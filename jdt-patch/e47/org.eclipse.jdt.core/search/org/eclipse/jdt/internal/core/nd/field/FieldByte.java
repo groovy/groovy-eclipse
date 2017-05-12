@@ -11,16 +11,20 @@
 package org.eclipse.jdt.internal.core.nd.field;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 
 /**
  * Declares a Nd field of type byte. Can be used in place of {@link Field}&lt{@link Byte}&gt in order to
  * avoid extra GC overhead.
  */
-public class FieldByte implements IField {
-	private int offset;
+public class FieldByte extends BaseField {
+	private final Tag tag;
 
-	public FieldByte() {
+	public FieldByte(String structName, int fieldNumber) {
+		setFieldName("field " + fieldNumber + ", a " + getClass().getSimpleName() + " in struct " + structName); //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+		this.tag = ModificationLog.createTag("Writing " + getFieldName()); //$NON-NLS-1$
 	}
 
 	public byte get(Nd nd, long address) {
@@ -29,12 +33,13 @@ public class FieldByte implements IField {
 	}
 
 	public void put(Nd nd, long address, byte newValue) {
-		nd.getDB().putByte(address + this.offset, newValue);
-	}
-
-	@Override
-	public void setOffset(int offset) {
-		this.offset = offset; 
+		Database db = nd.getDB();
+		db.getLog().start(this.tag);
+		try {
+			db.putByte(address + this.offset, newValue);
+		} finally {
+			db.getLog().end(this.tag);
+		}
 	}
 
 	@Override

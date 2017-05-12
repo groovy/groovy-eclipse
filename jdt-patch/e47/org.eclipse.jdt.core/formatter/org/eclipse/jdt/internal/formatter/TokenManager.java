@@ -15,7 +15,6 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameC
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameLBRACE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameNotAToken;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameStringLiteral;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameWHITESPACE;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +48,7 @@ public class TokenManager implements Iterable<Token> {
 	final CommentWrapExecutor commentWrapper;
 
 	private HashMap<Integer, Integer> tokenIndexToNLSAlign;
-	private List<Token[]> formatOffTagPairs;
+	private List<Token[]> formatOffTagPairs = new ArrayList<>();
 	private int headerEndIndex = 0;
 
 	public TokenManager(List<Token> tokens, String source, DefaultCodeFormatterOptions options) {
@@ -430,29 +429,10 @@ public class TokenManager implements Iterable<Token> {
 	}
 
 	public void addDisableFormatTokenPair(Token formatOffTag, Token formatOnTag) {
-		if (this.formatOffTagPairs == null)
-			this.formatOffTagPairs = new ArrayList<Token[]>();
 		this.formatOffTagPairs.add(new Token[] { formatOffTag, formatOnTag });
 	}
 
-	public void applyFormatOff() {
-		if (this.formatOffTagPairs == null)
-			return;
-		for (Token[] pair : this.formatOffTagPairs) {
-			int index1 = findIndex(pair[0].originalStart, -1, false);
-			int index2 = findIndex(pair[1].originalEnd, -1, false);
-			pair[0] = get(index1);
-			pair[1] = get(index2);
-			Token unformatted = new Token(pair[0].originalStart, pair[1].originalEnd, TokenNameWHITESPACE);
-			unformatted.setIndent(Math.min(pair[0].getIndent(), findSourcePositionInLine(pair[0].originalStart)));
-			unformatted.putLineBreaksBefore(pair[0].getLineBreaksBefore());
-			if (pair[0].isSpaceBefore())
-				unformatted.spaceBefore();
-			unformatted.putLineBreaksAfter(pair[1].getLineBreaksAfter());
-			if (pair[1].isSpaceAfter())
-				unformatted.spaceAfter();
-			this.tokens.set(index1, unformatted);
-			this.tokens.subList(index1 + 1, index2 + 1).clear();
-		}
+	public List<Token[]> getDisableFormatTokenPairs() {
+		return this.formatOffTagPairs;
 	}
 }

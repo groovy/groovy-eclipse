@@ -16,27 +16,20 @@ import org.eclipse.jdt.internal.core.nd.field.FieldShort;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
 /**
- * This is a basic node in the network database.
+ * This is a basic polymorphic node in the network database. Pointers to NdNode or any of their
+ * subclasses will be resolved to the correct subclass of NdNode such that the correct version of an
+ * overloaded method will be invoked.
  */
-public abstract class NdNode implements IDestructable {
+public abstract class NdNode extends NdStruct implements IDestructable {
 	public static final FieldShort NODE_TYPE;
 
+	@SuppressWarnings("hiding")
 	public static final StructDef<NdNode> type;
 
 	static {
-		type = StructDef.create(NdNode.class);
+		type = StructDef.create(NdNode.class, NdStruct.type);
 		NODE_TYPE = type.addShort();
 		type.done();
-	}
-
-	public final long address;
-	private Nd nd;
-
-	public static long addressOf(NdNode nullable) {
-		if (nullable == null) {
-			return 0;
-		}
-		return nullable.address;
 	}
 
 	/**
@@ -53,23 +46,40 @@ public abstract class NdNode implements IDestructable {
 			return null;
 		}
 
-		return nd.getNode(address, NODE_TYPE.get(nd, address));
+		try {
+			return nd.getNode(address, NODE_TYPE.get(nd, address));
+		} catch (IndexException e) {
+			// Add metadata to the exception describing where we obtained the node type from
+			nd.describeProblem().addProblemAddress(NODE_TYPE, address).attachTo(e);
+			throw e;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends NdNode> T load(Nd nd, long address, Class<T> clazz) {
+	public static <T extends INdStruct> T load(Nd nd, long address, StructDef<T> typeToLoad) {
 		if (address == 0) {
 			return null;
 		}
 
-		NdNode result = nd.getNode(address, NODE_TYPE.get(nd, address));
+		NdNode result;
+		try {
+			// Polymorphic types (that subclass NdNode) store a header with their type ID
+			result = nd.getNode(address, NODE_TYPE.get(nd, address));
+		} catch (IndexException e) {
+			// Add metadata to the exception describing where we obtained the node type from
+			nd.describeProblem().addProblemAddress(NODE_TYPE, address).attachTo(e);
+			throw e;
+		}
 
+		Class<T> clazz = typeToLoad.getStructClass();
 		if (!clazz.isAssignableFrom(result.getClass())) {
-			throw new IndexException("Found wrong data type at address " + address + ". Expected a subclass of " +  //$NON-NLS-1$//$NON-NLS-2$
+			throw nd.describeProblem()
+				.addProblemAddress(NODE_TYPE, address)
+				.build("Found wrong data type at address " + address + ". Expected a subclass of " +  //$NON-NLS-1$//$NON-NLS-2$
 					clazz + " but found " + result.getClass()); //$NON-NLS-1$
 		}
 
-		return (T)result;
+		return (T) result;
 	}
 
 	/**
@@ -80,13 +90,12 @@ public abstract class NdNode implements IDestructable {
 	}
 
 	protected NdNode(Nd nd, long address) {
-		this.nd = nd;
-		this.address = address;
+		super(nd, address);
 	}
 
 	protected NdNode(Nd nd) {
+		super(nd, 0);
 		Database db = nd.getDB();
-		this.nd = nd;
 
 		short nodeType = nd.getNodeType(getClass());
 		ITypeFactory<? extends NdNode> factory1 = nd.getTypeFactory(nodeType);
@@ -94,14 +103,6 @@ public abstract class NdNode implements IDestructable {
 		this.address = db.malloc(factory1.getRecordSize(), (short)(Database.POOL_FIRST_NODE_TYPE + nodeType));
 
 		NODE_TYPE.put(nd, this.address, nodeType);
-	}
-
-	protected Database getDB() {
-		return this.nd.getDB();
-	}
-
-	public final Nd getNd() {
-		return this.nd;
 	}
 
 	/**
@@ -136,10 +137,6 @@ public abstract class NdNode implements IDestructable {
 	@Override
 	public final int hashCode() {
 		return (int) (this.address >> Database.BLOCK_SIZE_DELTA_BITS);
-	}
-
-	public void accept(INdVisitor visitor) {
-		// No children here.
 	}
 
 	/**

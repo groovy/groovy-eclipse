@@ -292,28 +292,6 @@ public class CaptureBinding18 extends CaptureBinding {
 
 	int recursionLevel = 0; // used to give a hint at recursive types without going into infinity
 
-	public char[] genericTypeSignature() {
-		// since we have no wildcard, we combine the logic from CaptureBinding plus WildcardBinding here:
-		if (this.genericTypeSignature == null) {
-			char[] boundSignature;
-			try {
-				if (this.prototype.recursionLevel++ > 0 || this.firstBound == null) {
-					boundSignature = TypeConstants.WILDCARD_STAR;
-				} else if (this.upperBounds != null) {
-					boundSignature = CharOperation.concat(TypeConstants.WILDCARD_PLUS, this.firstBound.genericTypeSignature());
-				} else if (this.lowerBound != null) {
-					boundSignature = CharOperation.concat(TypeConstants.WILDCARD_MINUS, this.lowerBound.genericTypeSignature());
-				} else {
-					boundSignature = TypeConstants.WILDCARD_STAR;
-				}
-				this.genericTypeSignature = CharOperation.concat(TypeConstants.WILDCARD_CAPTURE, boundSignature);
-			} finally {
-				this.prototype.recursionLevel--;
-			}
-		}
-		return this.genericTypeSignature;
-	}
-	
 	public char[] readableName() {
 		if (this.lowerBound == null && this.firstBound != null) {
 			if (this.prototype.recursionLevel < 2) {

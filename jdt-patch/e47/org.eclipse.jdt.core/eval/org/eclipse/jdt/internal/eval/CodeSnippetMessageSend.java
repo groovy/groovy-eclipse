@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -61,7 +61,7 @@ public CodeSnippetMessageSend(EvaluationContext evaluationContext) {
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	MethodBinding codegenBinding = this.binding.original();
-	if (codegenBinding.canBeSeenBy(this.actualReceiverType, this, currentScope)) {
+	if (codegenBinding.canBeSeenBy(this.actualReceiverType.original(), this, currentScope)) {
 		// generate receiver/enclosing instance access
 		boolean isStatic = codegenBinding.isStatic();
 		// outer access ?

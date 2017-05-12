@@ -102,13 +102,14 @@ final class Chunk {
 		return wasCanceled;
 	}
 
-	private static int recPtrToIndex(final long offset) {
+	static int recPtrToIndex(final long offset) {
 		return (int) (offset & Database.OFFSET_IN_CHUNK_MASK);
 	}
 
 	public void putByte(final long offset, final byte value) {
 		makeDirty();
 		this.fBuffer[recPtrToIndex(offset)]= value;
+		recordWrite(offset, 1);
 	}
 
 	public byte getByte(final long offset) {
@@ -133,12 +134,14 @@ final class Chunk {
 	public void putBytes(final long offset, final byte[] bytes) {
 		makeDirty();
 		System.arraycopy(bytes, 0, this.fBuffer, recPtrToIndex(offset), bytes.length);
+		recordWrite(offset, bytes.length);
 	}
 
 	public void putInt(final long offset, final int value) {
 		makeDirty();
 		int idx= recPtrToIndex(offset);
 		putInt(value, this.fBuffer, idx);
+		recordWrite(offset, 4);
 	}
 
 	static final void putInt(final int value, final byte[] buffer, int idx) {
@@ -194,6 +197,7 @@ final class Chunk {
 		makeDirty();
 		int idx = recPtrToIndex(offset);
 		Database.putRecPtr(value, this.fBuffer, idx);
+		recordWrite(offset, 4);
 	}
 
 	/**
@@ -204,6 +208,7 @@ final class Chunk {
 		makeDirty();
 		int idx = recPtrToIndex(offset);
 		putInt(compressFreeRecPtr(value), this.fBuffer, idx);
+		recordWrite(offset, 4);
 	}
 
 	public long getRecPtr(final long offset) {
@@ -223,6 +228,7 @@ final class Chunk {
 		this.fBuffer[idx]= (byte) (value >> 16);
 		this.fBuffer[++idx]= (byte) (value >> 8);
 		this.fBuffer[++idx]= (byte) (value);
+		recordWrite(offset, 3);
 	}
 
 	public int get3ByteUnsignedInt(final long offset) {
@@ -237,6 +243,11 @@ final class Chunk {
 		int idx= recPtrToIndex(offset);
 		this.fBuffer[idx]= (byte) (value >> 8);
 		this.fBuffer[++idx]= (byte) (value);
+		recordWrite(offset, 2);
+	}
+
+	private void recordWrite(long offset, int size) {
+		this.fDatabase.getLog().recordWrite(offset, size);
 	}
 
 	public short getShort(final long offset) {
@@ -276,6 +287,7 @@ final class Chunk {
 		this.fBuffer[++idx]= (byte) (value >> 16);
 		this.fBuffer[++idx]= (byte) (value >> 8);
 		this.fBuffer[++idx]= (byte) (value);
+		recordWrite(offset, 8);
 	}
 
 	public void putChar(final long offset, final char value) {
@@ -283,6 +295,7 @@ final class Chunk {
 		int idx= recPtrToIndex(offset);
 		this.fBuffer[idx]= (byte) (value >> 8);
 		this.fBuffer[++idx]= (byte) (value);
+		recordWrite(offset, 2);
 	}
 
 	public void putChars(final long offset, char[] chars, int start, int len) {
@@ -294,6 +307,7 @@ final class Chunk {
 			this.fBuffer[++idx]= (byte) (value >> 8);
 			this.fBuffer[++idx]= (byte) (value);
 		}
+		recordWrite(offset, len * 2);
 	}
 
 	public void putCharsAsBytes(final long offset, char[] chars, int start, int len) {
@@ -304,6 +318,7 @@ final class Chunk {
 			char value= chars[i];
 			this.fBuffer[++idx]= (byte) (value);
 		}
+		recordWrite(offset, len);
 	}
 
 	public void putDouble(final long offset, double value) {
@@ -336,9 +351,14 @@ final class Chunk {
 		makeDirty();
 		int idx = recPtrToIndex(offset);
 		final int end = idx + length;
+		if (end > this.fBuffer.length) {
+			throw new IndexException("Attempting to clear beyond end of chunk. Chunk = " + this.fSequenceNumber //$NON-NLS-1$
+					+ ", offset = " + offset + ", length = " + length); //$NON-NLS-1$//$NON-NLS-2$
+		}
 		for (; idx < end; idx++) {
 			this.fBuffer[idx] = 0;
 		}
+		recordWrite(offset, length);
 	}
 
 	void put(final long offset, final byte[] data, final int len) {
@@ -349,6 +369,7 @@ final class Chunk {
 		makeDirty();
 		int idx = recPtrToIndex(offset);
 		System.arraycopy(data, dataPos, this.fBuffer, idx, len);
+		recordWrite(offset, len);
 	}
 
 	public void get(final long offset, byte[] data) {

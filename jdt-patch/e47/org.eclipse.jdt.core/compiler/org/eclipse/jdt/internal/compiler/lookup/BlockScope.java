@@ -1072,7 +1072,7 @@ public void checkUnclosedCloseables(FlowInfo flowInfo, FlowContext flowContext, 
 	if (!compilerOptions().analyseResourceLeaks) return;
 	if (this.trackingVariables == null) {
 		// at a method return we also consider enclosing scopes
-		if (location != null && this.parent instanceof BlockScope)
+		if (location != null && this.parent instanceof BlockScope && !isLambdaScope())
 			((BlockScope) this.parent).checkUnclosedCloseables(flowInfo, flowContext, location, locationScope);
 		return;
 	}

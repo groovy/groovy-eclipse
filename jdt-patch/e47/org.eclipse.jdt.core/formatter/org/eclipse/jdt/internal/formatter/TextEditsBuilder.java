@@ -35,7 +35,6 @@ import org.eclipse.text.edits.TextEdit;
 public class TextEditsBuilder extends TokenTraverser {
 
 	private final String source;
-	private List<IRegion> regions;
 	private TokenManager tm;
 	private final DefaultCodeFormatterOptions options;
 	private final StringBuilder buffer;
@@ -43,6 +42,7 @@ public class TextEditsBuilder extends TokenTraverser {
 	private final List<Token> stringLiteralsInLine = new ArrayList<Token>();
 	private final List<TextEdit> edits = new ArrayList<TextEdit>();
 
+	private final List<IRegion> regions;
 	private int currentRegion = 0;
 
 	private TextEditsBuilder childBuilder;
@@ -51,7 +51,7 @@ public class TextEditsBuilder extends TokenTraverser {
 	private int sourceLimit;
 	private int parentTokenIndex;
 
-	public TextEditsBuilder(String source, IRegion[] regions, TokenManager tokenManager,
+	public TextEditsBuilder(String source, List<IRegion> regions, TokenManager tokenManager,
 			DefaultCodeFormatterOptions options) {
 		this.source = source;
 		this.tm = tokenManager;
@@ -74,9 +74,7 @@ public class TextEditsBuilder extends TokenTraverser {
 		this.alignChar = DefaultCodeFormatterOptions.SPACE;
 	}
 
-	private List<IRegion> adaptRegions(IRegion[] givenRegions) {
-		if (givenRegions == null)
-			return null;
+	private List<IRegion> adaptRegions(List<IRegion> givenRegions) {
 		// make sure regions don't begin or end inside multiline comments
 		ArrayList<IRegion> result = new ArrayList<IRegion>();
 		IRegion previous = null;

@@ -11,21 +11,19 @@
 package org.eclipse.jdt.internal.core.nd.java;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
-import org.eclipse.jdt.internal.core.nd.NdNode;
+import org.eclipse.jdt.internal.core.nd.NdStruct;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
-public class NdMethodException extends NdNode {
+public class NdMethodException extends NdStruct {
 
-	public static final FieldManyToOne<NdMethod> PARENT;
 	public static final FieldManyToOne<NdTypeSignature> EXCEPTION_TYPE;
 
 	@SuppressWarnings("hiding")
 	public static StructDef<NdMethodException> type;
 
 	static {
-		type = StructDef.create(NdMethodException.class, NdNode.type);
-		PARENT = FieldManyToOne.createOwner(type, NdMethod.EXCEPTIONS);
+		type = StructDef.create(NdMethodException.class);
 		EXCEPTION_TYPE = FieldManyToOne.create(type, NdTypeSignature.USED_AS_EXCEPTION);
 		type.done();
 	}
@@ -34,19 +32,12 @@ public class NdMethodException extends NdNode {
 		super(nd, address);
 	}
 
-	public NdMethodException(NdMethod method, NdTypeSignature createTypeSignature) {
-		super(method.getNd());
-
-		PARENT.put(getNd(), this.address, method);
-		EXCEPTION_TYPE.put(getNd(), this.address, createTypeSignature);
+	public void setExceptionType(NdTypeSignature signature) {
+		EXCEPTION_TYPE.put(getNd(), this.address, signature);
 	}
 
 	public NdTypeSignature getExceptionType() {
 		return EXCEPTION_TYPE.get(getNd(), this.address);
-	}
-
-	public NdMethod getParent() {
-		return PARENT.get(getNd(), this.address);
 	}
 
 	public String toString() {

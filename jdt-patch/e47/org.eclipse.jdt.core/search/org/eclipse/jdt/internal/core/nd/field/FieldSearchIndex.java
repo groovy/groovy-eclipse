@@ -17,6 +17,9 @@ import org.eclipse.jdt.internal.core.nd.ITypeFactory;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.NdNode;
 import org.eclipse.jdt.internal.core.nd.db.BTree;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.Database;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.jdt.internal.core.nd.db.IBTreeComparator;
 import org.eclipse.jdt.internal.core.nd.db.IBTreeVisitor;
 import org.eclipse.jdt.internal.core.nd.db.IString;
@@ -25,10 +28,10 @@ import org.eclipse.jdt.internal.core.nd.db.IndexException;
 /**
  * Declares a field representing a case-insensitive search tree over elements which are a subtype of NdNode.
  */
-public class FieldSearchIndex<T extends NdNode> implements IField, IDestructableField {
-	private int offset;
+public class FieldSearchIndex<T extends NdNode> extends BaseField implements IDestructableField {
 	private final ITypeFactory<BTree> btreeFactory;
 	FieldSearchKey<?> searchKey;
+	private final Tag destructTag;
 	private static IResultRank anything = new IResultRank() {
 		@Override
 		public long getRank(Nd nd, long address) {
@@ -163,7 +166,7 @@ public class FieldSearchIndex<T extends NdNode> implements IField, IDestructable
 		protected abstract boolean acceptResult(long address);
 	}
 
-	private FieldSearchIndex(FieldSearchKey<?> searchKey) {
+	private FieldSearchIndex(FieldSearchKey<?> searchKey, String structName, int fieldNumber) {
 		this.btreeFactory = BTree.getFactory(new IBTreeComparator() {
 			@Override
 			public int compare(Nd nd, long record1, long record2) {
@@ -188,12 +191,15 @@ public class FieldSearchIndex<T extends NdNode> implements IField, IDestructable
 			searchKey.searchIndex = this;
 		}
 		this.searchKey = searchKey;
+		setFieldName("field " + fieldNumber + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+				+ " in struct " + structName); //$NON-NLS-1$
+		this.destructTag = ModificationLog.createTag("Destructing " + getFieldName()); //$NON-NLS-1$
 	}
 
 	public static <T extends NdNode, B> FieldSearchIndex<T> create(StructDef<B> builder,
 			final FieldSearchKey<B> searchKey) {
 
-		FieldSearchIndex<T> result = new FieldSearchIndex<T>(searchKey);
+		FieldSearchIndex<T> result = new FieldSearchIndex<T>(searchKey, builder.getStructName(), builder.getNumFields());
 
 		builder.add(result);
 		builder.addDestructableField(result);
@@ -207,12 +213,13 @@ public class FieldSearchIndex<T extends NdNode> implements IField, IDestructable
 
 	@Override
 	public void destruct(Nd nd, long address) {
-		this.btreeFactory.destruct(nd, address);
-	}
-
-	@Override
-	public void setOffset(int offset) {
-		this.offset = offset;
+		Database db = nd.getDB();
+		db.getLog().start(this.destructTag);
+		try {
+			this.btreeFactory.destruct(nd, address);
+		} finally {
+			db.getLog().end(this.destructTag);
+		}
 	}
 
 	@Override

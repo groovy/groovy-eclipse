@@ -11,6 +11,8 @@
 package org.eclipse.jdt.internal.core.nd.field;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 import org.eclipse.jdt.internal.core.nd.db.EmptyString;
 import org.eclipse.jdt.internal.core.nd.db.IString;
@@ -19,12 +21,18 @@ import org.eclipse.jdt.internal.core.nd.db.IString;
  * Declares a Nd field of type string. Can be used in place of  {@link Field}&lt{@link String}&gt in order to
  * avoid extra GC overhead.
  */
-public class FieldString implements IDestructableField, IField {
+public class FieldString extends BaseField implements IDestructableField {
 	public static final int RECORD_SIZE = Database.STRING_SIZE;
 	private static final char[] EMPTY_CHAR_ARRAY = new char[0];
-	private int offset;
+	private final Tag putTag;
+	private final Tag destructTag;
 
-	public FieldString() {
+	public FieldString(String structName, int fieldNumber) {
+		this.putTag = ModificationLog.createTag("Writing field " + fieldNumber + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+				+ " in struct " + structName); //$NON-NLS-1$
+		this.destructTag = ModificationLog
+				.createTag("Destructing field " + fieldNumber + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+						+ " in struct " + structName); //$NON-NLS-1$
 	}
 
 	public IString get(Nd nd, long address) {
@@ -38,18 +46,23 @@ public class FieldString implements IDestructableField, IField {
 	}
 
 	public void put(Nd nd, long address, char[] newString) {
-		if (newString == null) {
-			newString = EMPTY_CHAR_ARRAY;
-		}
-		final Database db= nd.getDB();
-		IString name= get(nd, address);
-		if (name.compare(newString, true) != 0) {
-			name.delete();
-			if (newString != null && newString.length > 0) {
-				db.putRecPtr(address + this.offset, db.newString(newString).getRecord());
-			} else {
-				db.putRecPtr(address + this.offset, 0);
+		Database db = nd.getDB();
+		db.getLog().start(this.putTag);
+		try {
+			if (newString == null) {
+				newString = EMPTY_CHAR_ARRAY;
 			}
+			IString name= get(nd, address);
+			if (name.compare(newString, true) != 0) {
+				name.delete();
+				if (newString != null && newString.length > 0) {
+					db.putRecPtr(address + this.offset, db.newString(newString).getRecord());
+				} else {
+					db.putRecPtr(address + this.offset, 0);
+				}
+			}
+		} finally {
+			db.getLog().end(this.putTag);
 		}
 	}
 
@@ -58,13 +71,14 @@ public class FieldString implements IDestructableField, IField {
 	}
 
 	public void destruct(Nd nd, long address) {
-		get(nd, address).delete();
-		nd.getDB().putRecPtr(address + this.offset, 0);
-	}
-
-	@Override
-	public void setOffset(int offset) {
-		this.offset = offset;
+		Database db = nd.getDB();
+		db.getLog().start(this.destructTag);
+		try {
+			get(nd, address).delete();
+			nd.getDB().putRecPtr(address + this.offset, 0);
+		} finally {
+			db.getLog().end(this.destructTag);
+		}
 	}
 
 	@Override

@@ -13,10 +13,9 @@ package org.eclipse.jdt.internal.core.nd.java;
 import java.util.List;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
-import org.eclipse.jdt.internal.core.nd.NdNode;
+import org.eclipse.jdt.internal.core.nd.NdStruct;
 import org.eclipse.jdt.internal.core.nd.field.FieldByte;
-import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
-import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
+import org.eclipse.jdt.internal.core.nd.field.FieldList;
 import org.eclipse.jdt.internal.core.nd.field.FieldString;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
@@ -24,10 +23,9 @@ import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
 /**
  * Represents a TypeParameter, as described in Section 4.7.9.1 of the java VM specification, Java SE 8 edititon.
  */
-public class NdTypeParameter extends NdNode {
-	public static final FieldManyToOne<NdBinding> PARENT;
+public class NdTypeParameter extends NdStruct {
 	public static final FieldString IDENTIFIER;
-	public static final FieldOneToMany<NdTypeBound> BOUNDS;
+	public static final FieldList<NdTypeBound> BOUNDS;
 	public static final FieldByte TYPE_PARAMETER_FLAGS;
 
 	public static final byte FLG_FIRST_BOUND_IS_A_CLASS = 0x01;
@@ -36,10 +34,9 @@ public class NdTypeParameter extends NdNode {
 	public static final StructDef<NdTypeParameter> type;
 
 	static {
-		type = StructDef.create(NdTypeParameter.class, NdNode.type);
-		PARENT = FieldManyToOne.createOwner(type, NdBinding.TYPE_PARAMETERS);
+		type = StructDef.create(NdTypeParameter.class, NdStruct.type);
 		IDENTIFIER = type.addString();
-		BOUNDS = FieldOneToMany.create(type, NdTypeBound.PARENT);
+		BOUNDS = FieldList.create(type, NdTypeBound.type);
 		TYPE_PARAMETER_FLAGS = type.addByte();
 
 		type.done();
@@ -49,10 +46,7 @@ public class NdTypeParameter extends NdNode {
 		super(nd, address);
 	}
 
-	public NdTypeParameter(NdBinding parent, char[] identifier) {
-		super(parent.getNd());
-
-		PARENT.put(getNd(), this.address, parent);
+	public void setIdentifier(char[] identifier) {
 		IDENTIFIER.put(getNd(), this.address, identifier);
 	}
 
@@ -107,5 +101,13 @@ public class NdTypeParameter extends NdNode {
 			}
 			buffer.append('>');
 		}
+	}
+
+	public void createBound(NdTypeSignature boundSignature) {
+		BOUNDS.append(getNd(), getAddress()).setType(boundSignature);
+	}
+
+	public void allocateBounds(int numBounds) {
+		BOUNDS.allocate(getNd(), getAddress(), numBounds);
 	}
 }

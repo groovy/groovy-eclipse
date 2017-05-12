@@ -48,8 +48,6 @@ public class Assignment extends Expression {
 	public Expression expression;
 
 public Assignment(Expression lhs, Expression expression, int sourceEnd) {
-	//lhs is always a reference by construction ,
-	//but is build as an expression ==> the checkcast cannot fail
 	this.lhs = lhs;
 	lhs.bits |= IsStrictlyAssigned; // tag lhs as assigned
 	this.expression = expression;

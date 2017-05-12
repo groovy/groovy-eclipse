@@ -45,4 +45,14 @@ public interface IJob {
 	 * Returns this job's family
 	 */
 	public String getJobFamily();
+
+	/**
+	 * Answers if we need some sleep after index write operations. Default implementation returns {@code false}.
+	 *
+	 * @return true if the job manager should sleep a bit after this job is done to avoid IO tasks overloading OS (which
+	 *         could cause UI freezes etc).
+	 */
+	public default boolean waitNeeded() {
+		return false;
+	}
 }

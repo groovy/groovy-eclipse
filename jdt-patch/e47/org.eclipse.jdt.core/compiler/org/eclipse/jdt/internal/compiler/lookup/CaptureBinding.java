@@ -60,8 +60,11 @@ public class CaptureBinding extends TypeVariableBinding {
 			super.setTypeAnnotations(wildcard.getTypeAnnotations(), wildcard.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled);
 			if (wildcard.hasNullTypeAnnotations())
 				this.tagBits |= TagBits.HasNullTypeAnnotation;
-		} else {			
+		} else {
 			computeId(this.environment);
+			if(wildcard.hasNullTypeAnnotations()) {
+				this.tagBits |= (wildcard.tagBits & TagBits.AnnotationNullMASK) | TagBits.HasNullTypeAnnotation;
+			}
 		}
 	}
 	
@@ -133,10 +136,18 @@ public class CaptureBinding extends TypeVariableBinding {
 	}
 
 	public char[] genericTypeSignature() {
-		if (this.genericTypeSignature == null) {
-			this.genericTypeSignature = CharOperation.concat(TypeConstants.WILDCARD_CAPTURE, this.wildcard.genericTypeSignature());
+		// captures have no signature per JVMS 4.7.9.1, approximate one by erasure:
+		if (this.inRecursiveFunction) {
+			// catch "capture#1 of X<capture#1 ...>":
+			// prefer answering "Ljava.lang.Object;" instead of throwing StackOverflowError:
+			return CharOperation.concat(new char[] {'L'}, CharOperation.concatWith(TypeConstants.JAVA_LANG_OBJECT, '.'), new char[] {';'});
 		}
-		return this.genericTypeSignature;
+		this.inRecursiveFunction = true;
+		try {
+			return erasure().genericTypeSignature();
+		} finally {
+			this.inRecursiveFunction = false;
+		}
 	}
 
 	/**

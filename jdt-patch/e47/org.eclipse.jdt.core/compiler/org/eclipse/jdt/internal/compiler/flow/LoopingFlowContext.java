@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -105,7 +105,7 @@ public class LoopingFlowContext extends SwitchFlowContext {
 		BranchLabel continueLabel,
 		Scope associatedScope,
 		boolean isPreTest) {
-		super(parent, associatedNode, breakLabel, isPreTest);
+		super(parent, associatedNode, breakLabel, isPreTest, false);
 		this.tagBits |= FlowContext.PREEMPT_NULL_DIAGNOSTIC;
 			// children will defer to this, which may defer to its own parent
 		this.continueLabel = continueLabel;

@@ -1640,7 +1640,8 @@ public class InferenceContext18 {
 	 * unless the given candidate is tolerable to be compatible with buggy javac.
 	 */
 	public MethodBinding getReturnProblemMethodIfNeeded(TypeBinding expectedType, MethodBinding method) {
-		if (InferenceContext18.SIMULATE_BUG_JDK_8026527 && expectedType != null && method.returnType instanceof ReferenceBinding) {
+		if (InferenceContext18.SIMULATE_BUG_JDK_8026527 && expectedType != null 
+				&& (method.returnType instanceof ReferenceBinding || method.returnType instanceof ArrayBinding)) {
 			if (method.returnType.erasure().isCompatibleWith(expectedType))
 				return method; // don't count as problem.
 		}

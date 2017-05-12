@@ -79,7 +79,7 @@ public class TypeSystem {
 			public int hashCode() {
 				int hashCode = this.type.hashCode() + 13 * (this.enclosingType != null ? this.enclosingType.hashCode() : 0);
 				for (int i = 0, length = this.arguments == null ? 0 : this.arguments.length; i < length; i++) {
-					hashCode += (i + 1) * this.arguments[i].id * this.arguments[i].hashCode();
+					hashCode += (i + 1) * this.arguments[i].hashCode();
 				}
 				return hashCode;
 			}

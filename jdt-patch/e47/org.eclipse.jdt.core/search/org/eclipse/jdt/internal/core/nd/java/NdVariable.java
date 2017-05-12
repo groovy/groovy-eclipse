@@ -16,9 +16,9 @@ import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.db.IString;
 import org.eclipse.jdt.internal.core.nd.field.FieldByte;
 import org.eclipse.jdt.internal.core.nd.field.FieldInt;
+import org.eclipse.jdt.internal.core.nd.field.FieldList;
 import org.eclipse.jdt.internal.core.nd.field.FieldLong;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
-import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldString;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
@@ -27,13 +27,12 @@ public class NdVariable extends NdBinding {
 	public static final FieldManyToOne<NdTypeSignature> TYPE;
 	public static final FieldInt VARIABLE_ID;
 	public static final FieldManyToOne<NdMethod> DECLARING_METHOD;
-	public static final FieldManyToOne<NdBinding> PARENT;
 	public static final FieldString NAME;
 	public static final FieldOneToOne<NdConstant> CONSTANT;
 	public static final FieldLong TAG_BITS;
 	public static final FieldByte VARIABLE_FLAGS;
-	public static final FieldOneToMany<NdAnnotationInVariable> ANNOTATIONS;
-	public static final FieldOneToMany<NdTypeAnnotationInVariable> TYPE_ANNOTATIONS;
+	public static final FieldList<NdAnnotation> ANNOTATIONS;
+	public static final FieldList<NdTypeAnnotation> TYPE_ANNOTATIONS;
 
 	@SuppressWarnings("hiding")
 	public static StructDef<NdVariable> type;
@@ -45,24 +44,17 @@ public class NdVariable extends NdBinding {
 		TYPE = FieldManyToOne.create(type, NdTypeSignature.VARIABLES_OF_TYPE);
 		VARIABLE_ID = type.addInt();
 		DECLARING_METHOD = FieldManyToOne.create(type, NdMethod.DECLARED_VARIABLES);
-		PARENT = FieldManyToOne.createOwner(type, NdBinding.VARIABLES);
 		NAME = type.addString();
-		CONSTANT = FieldOneToOne.create(type, NdConstant.class, NdConstant.PARENT_VARIABLE);
+		CONSTANT = FieldOneToOne.create(type, NdConstant.type, NdConstant.PARENT_VARIABLE);
 		TAG_BITS = type.addLong();
 		VARIABLE_FLAGS = type.addByte();
-		ANNOTATIONS = FieldOneToMany.create(type, NdAnnotationInVariable.OWNER);
-		TYPE_ANNOTATIONS = FieldOneToMany.create(type, NdTypeAnnotationInVariable.OWNER);
+		ANNOTATIONS = FieldList.create(type, NdAnnotation.type);
+		TYPE_ANNOTATIONS = FieldList.create(type, NdTypeAnnotation.type);
 		type.done();
 	}
 
 	public NdVariable(Nd nd, long bindingRecord) {
 		super(nd, bindingRecord);
-	}
-
-	public NdVariable(NdBinding parent) {
-		super(parent.getNd());
-
-		PARENT.put(getNd(), this.address, parent);
 	}
 
 	public boolean hasVariableFlag(int toTest) {
@@ -106,12 +98,20 @@ public class NdVariable extends NdBinding {
 		TAG_BITS.put(getNd(), this.address, tagBits);
 	}
 
-	public List<NdTypeAnnotationInVariable> getTypeAnnotations() {
+	public List<NdTypeAnnotation> getTypeAnnotations() {
 		return TYPE_ANNOTATIONS.asList(getNd(), this.address);
 	}
 
-	public List<NdAnnotationInVariable> getAnnotations() {
+	public List<NdAnnotation> getAnnotations() {
 		return ANNOTATIONS.asList(getNd(), this.address);
+	}
+
+	public NdAnnotation createAnnotation() {
+		return ANNOTATIONS.append(this.getNd(), this.getAddress());
+	}
+
+	public void allocateAnnotations(int length) {
+		ANNOTATIONS.allocate(getNd(), getAddress(), length);
 	}
 
 	public String toString() {
@@ -137,5 +137,13 @@ public class NdVariable extends NdBinding {
 			// if the code is buggy, the database is corrupt, or we don't have a read lock.
 			return super.toString();
 		}
+	}
+
+	public NdTypeAnnotation createTypeAnnotation() {
+		return TYPE_ANNOTATIONS.append(getNd(), getAddress());
+	}
+
+	public void allocateTypeAnnotations(int length) {
+		TYPE_ANNOTATIONS.allocate(getNd(), getAddress(), length);
 	}
 }

@@ -544,7 +544,7 @@ public TypeBinding convertToRawType(TypeBinding type, boolean forceRawEnclosingT
 			needToConvert = false;
 			break;
 	}
-	forceRawEnclosingType &= !type.isStatic();
+	forceRawEnclosingType &= !originalType.isStatic();
 	ReferenceBinding originalEnclosing = originalType.enclosingType();
 	TypeBinding convertedType;
 	if (originalEnclosing == null) {

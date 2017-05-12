@@ -54,12 +54,12 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 	}
 
 	@Override
-	protected MethodBinding[] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards) throws InvalidInputException {
+	protected MethodBinding[] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidInputException {
 		int typesLength = this.intersectingTypes.length;
 		MethodBinding[][] methods = new MethodBinding[typesLength][];
 		int contractsLength = 0;
 		for (int i = 0; i < typesLength; i++) {
-			methods[i] = this.intersectingTypes[i].getInterfaceAbstractContracts(scope, replaceWildcards);
+			methods[i] = this.intersectingTypes[i].getInterfaceAbstractContracts(scope, replaceWildcards, true);
 			contractsLength += methods[i].length;
 		}
 		MethodBinding[] contracts = new MethodBinding[contractsLength];

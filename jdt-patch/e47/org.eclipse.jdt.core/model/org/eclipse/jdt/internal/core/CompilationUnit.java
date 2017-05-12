@@ -1149,39 +1149,43 @@ protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelE
 
 	// synchronize to ensure that 2 threads are not putting 2 different buffers at the same time
 	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=146331
+	IBuffer existingBuffer;
 	synchronized(bufManager) {
-		IBuffer existingBuffer = bufManager.getBuffer(this);
-		if (existingBuffer != null)
-			return existingBuffer;
-
-		// set the buffer source
-		if (buffer.getCharacters() == null) {
-			if (isWorkingCopy) {
-				if (mustSetToOriginalContent) {
-					buffer.setContents(original.getSource());
+		existingBuffer = bufManager.getBuffer(this);
+		if (existingBuffer == null) {
+			// set the buffer source
+			if (buffer.getCharacters() == null) {
+				if (isWorkingCopy) {
+					if (mustSetToOriginalContent) {
+						buffer.setContents(original.getSource());
+					} else {
+						IFile file = (IFile)getResource();
+						if (file == null || !file.exists()) {
+							// initialize buffer with empty contents
+							buffer.setContents(CharOperation.NO_CHAR);
+						} else {
+							buffer.setContents(Util.getResourceContentsAsCharArray(file));
+						}
+					}
 				} else {
 					IFile file = (IFile)getResource();
-					if (file == null || !file.exists()) {
-						// initialize buffer with empty contents
-						buffer.setContents(CharOperation.NO_CHAR);
-					} else {
-						buffer.setContents(Util.getResourceContentsAsCharArray(file));
-					}
+					if (file == null || !file.exists()) throw newNotPresentException();
+					buffer.setContents(Util.getResourceContentsAsCharArray(file));
 				}
-			} else {
-				IFile file = (IFile)getResource();
-				if (file == null || !file.exists()) throw newNotPresentException();
-				buffer.setContents(Util.getResourceContentsAsCharArray(file));
 			}
+	
+			// add buffer to buffer cache
+			// note this may cause existing buffers to be removed from the buffer cache, but only primary compilation unit's buffer
+			// can be closed, thus no call to a client's IBuffer#close() can be done in this synchronized block.
+			bufManager.addBuffer(buffer);
+	
+			// listen to buffer changes
+			buffer.addBufferChangedListener(this);
 		}
-
-		// add buffer to buffer cache
-		// note this may cause existing buffers to be removed from the buffer cache, but only primary compilation unit's buffer
-		// can be closed, thus no call to a client's IBuffer#close() can be done in this synchronized block.
-		bufManager.addBuffer(buffer);
-
-		// listen to buffer changes
-		buffer.addBufferChangedListener(this);
+	}
+	if(existingBuffer != null) {
+		buffer.close();
+		return existingBuffer;
 	}
 	return buffer;
 }

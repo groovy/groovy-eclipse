@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2012 IBM Corporation and others.
+ * Copyright (c) 2004, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -91,8 +91,10 @@ public abstract class NamedMember extends Member {
 
 		// selector
 		key.append('.');
-		String selector = method.getElementName();
-		key.append(selector);
+		if (!method.isConstructor()) { // empty selector for ctors, cf. BindingKeyResolver.consumeMethod()
+			String selector = method.getElementName();
+			key.append(selector);
+		}
 
 		// type parameters
 		if (forceOpen) {

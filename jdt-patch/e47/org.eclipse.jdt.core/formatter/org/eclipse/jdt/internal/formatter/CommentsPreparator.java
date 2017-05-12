@@ -40,7 +40,6 @@ import org.eclipse.jdt.core.dom.MemberRef;
 import org.eclipse.jdt.core.dom.MethodRef;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.TagElement;
-import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
@@ -1061,8 +1060,7 @@ public class CommentsPreparator extends ASTVisitor {
 		// ^ index: original source position (minus startPosition), value: position in code string
 		getCodeToFormat(codeStartPosition, codeEndPosition, codeBuilder, positionMapping);
 
-		List<Token> formattedTokens = getCommentCodeFormatter().prepareFormattedCode(codeBuilder.toString(),
-				CodeFormatter.K_UNKNOWN);
+		List<Token> formattedTokens = getCommentCodeFormatter().prepareFormattedCode(codeBuilder.toString());
 
 		if (formattedTokens == null) {
 			disableFormattingExclusively(openingTagLastIndex, closingTagFirstIndex);

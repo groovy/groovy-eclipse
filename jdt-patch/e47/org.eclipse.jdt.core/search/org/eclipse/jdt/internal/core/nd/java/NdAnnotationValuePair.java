@@ -11,15 +11,13 @@
 package org.eclipse.jdt.internal.core.nd.java;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
-import org.eclipse.jdt.internal.core.nd.NdNode;
+import org.eclipse.jdt.internal.core.nd.NdStruct;
 import org.eclipse.jdt.internal.core.nd.db.IString;
-import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldString;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
-public class NdAnnotationValuePair extends NdNode {
-	public static final FieldManyToOne<NdAnnotation> APPLIES_TO;
+public class NdAnnotationValuePair extends NdStruct {
 	public static final FieldString NAME;
 	public static final FieldOneToOne<NdConstant> VALUE;
 
@@ -27,10 +25,9 @@ public class NdAnnotationValuePair extends NdNode {
 	public static final StructDef<NdAnnotationValuePair> type;
 
 	static {
-		type = StructDef.create(NdAnnotationValuePair.class, NdNode.type);
-		APPLIES_TO = FieldManyToOne.createOwner(type, NdAnnotation.ELEMENT_VALUE_PAIRS);
+		type = StructDef.create(NdAnnotationValuePair.class, NdStruct.type);
 		NAME = type.addString();
-		VALUE = FieldOneToOne.create(type, NdConstant.class, NdConstant.PARENT_ANNOTATION_VALUE);
+		VALUE = FieldOneToOne.create(type, NdConstant.type, NdConstant.PARENT_ANNOTATION_VALUE);
 		type.done();
 	}
 
@@ -38,22 +35,11 @@ public class NdAnnotationValuePair extends NdNode {
 		super(nd, address);
 	}
 
-	public NdAnnotationValuePair(NdAnnotation annotation, char[] name) {
-		super(annotation.getNd());
-		Nd nd = annotation.getNd();
-		APPLIES_TO.put(nd, this.address, annotation);
-		NAME.put(nd, this.address, name);
-	}
-
-	public NdAnnotation getAnnotation() {
-		return APPLIES_TO.get(getNd(), this.address);
-	}
-
 	public IString getName() {
 		return NAME.get(getNd(), this.address);
 	}
 
-	public void setName(String name) {
+	public void setName(char[] name) {
 		NAME.put(getNd(), this.address, name);
 	}
 

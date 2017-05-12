@@ -1049,6 +1049,10 @@ public void scheduleDocumentIndexing(final SearchDocument searchDocument, IPath 
 		public String toString() {
 			return "indexing " + searchDocument.getPath(); //$NON-NLS-1$
 		}
+		@Override
+		public boolean waitNeeded() {
+			return false;
+		}
 	});
 }
 

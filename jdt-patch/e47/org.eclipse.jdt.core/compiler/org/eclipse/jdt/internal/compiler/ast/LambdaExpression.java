@@ -944,7 +944,14 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		if (r1.isCompatibleWith(r2, skope))
 			return true;
 		
-		LambdaExpression copy = cachedResolvedCopy(s, true /* any resolved copy is good */, false, null); // we expect a cached copy - otherwise control won't reach here.
+		LambdaExpression copy;
+		try {
+			copy = cachedResolvedCopy(s, true /* any resolved copy is good */, false, null); // we expect a cached copy - otherwise control won't reach here.
+		} catch (CopyFailureException cfe) {
+			if (this.assistNode)
+				return false;
+			throw cfe;
+		}
 		Expression [] returnExpressions = copy.resultExpressions;
 		int returnExpressionsLength = returnExpressions == null ? 0 : returnExpressions.length;
 		if (returnExpressionsLength > 0) {

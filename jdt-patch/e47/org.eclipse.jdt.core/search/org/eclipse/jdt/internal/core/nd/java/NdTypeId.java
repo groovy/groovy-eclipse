@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Google, Inc and others.
+ * Copyright (c) 2016, 2017 Google, Inc and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -128,7 +128,7 @@ public class NdTypeId extends NdTypeSignature {
 		if (this.fName != null)
 			return this.fName.equals(name);
 
-		return getSimpleName().equals(name);
+		return getSimpleName().toString().equals(name);
 	}
 
 	public void setSimpleName(String name) {

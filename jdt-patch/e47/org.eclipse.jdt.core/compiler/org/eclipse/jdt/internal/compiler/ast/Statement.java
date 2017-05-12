@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -125,8 +125,8 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 			if (methodBinding.isVarargs()) {
 				varArgPos = numParamsToCheck-1;
 				// this if-block essentially copied from generateArguments(..):
+				varArgsType = methodBinding.parameters[varArgPos];
 				if (numParamsToCheck == arguments.length) {
-					varArgsType = methodBinding.parameters[varArgPos];
 					TypeBinding lastType = arguments[varArgPos].resolvedType;
 					if (lastType == TypeBinding.NULL
 							|| (varArgsType.dimensions() == lastType.dimensions()

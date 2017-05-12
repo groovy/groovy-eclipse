@@ -33,10 +33,10 @@ public abstract class NdConstant extends NdNode {
 	static {
 		type = StructDef.createAbstract(NdConstant.class, NdNode.type);
 		PARENT_ARRAY = FieldManyToOne.createOwner(type, NdConstantArray.ELEMENTS);
-		PARENT_ANNOTATION_VALUE = FieldOneToOne.createOwner(type, NdAnnotationValuePair.class,
+		PARENT_ANNOTATION_VALUE = FieldOneToOne.createOwner(type, NdAnnotationValuePair.type,
 				NdAnnotationValuePair.VALUE);
-		PARENT_VARIABLE = FieldOneToOne.createOwner(type, NdVariable.class, NdVariable.CONSTANT);
-		PARENT_METHOD = FieldOneToOne.createOwner(type, NdMethod.class, NdMethod.DEFAULT_VALUE);
+		PARENT_VARIABLE = FieldOneToOne.createOwner(type, NdVariable.type, NdVariable.CONSTANT);
+		PARENT_METHOD = FieldOneToOne.createOwner(type, NdMethod.type, NdMethod.DEFAULT_VALUE);
 		type.done();
 	}
 

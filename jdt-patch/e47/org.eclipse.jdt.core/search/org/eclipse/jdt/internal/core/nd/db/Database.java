@@ -31,11 +31,21 @@ import java.util.Set;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.internal.core.nd.IndexExceptionBuilder;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.osgi.util.NLS;
 
 /**
  * Database encapsulates access to a flat binary format file with a memory-manager-like API for
  * obtaining and releasing areas of storage (memory).
+ * <p>
+ * Some terminology is used throughout this class: A block is a variable-size piece of
+ * contiguous memory returned by malloc. A chunk is a fixed-size piece of contiguous memory
+ * that is the atomic unit for paging, caching, reads, and writes. A free block is contiguous
+ * variable-length piece of memory that is created by free and is potentially usable by malloc.
+ * Most chunks contain multiple blocks and free blocks, but it is possible for a single block
+ * to use multiple chunks. Such blocks are referred to as "large blocks". A free block is always
+ * smaller than a chunk.
  */
 /*
  * The file encapsulated is divided into Chunks of size CHUNK_SIZE, and a table of contents
@@ -157,7 +167,7 @@ public class Database {
 	/**
 	 * True iff large chunk self-diagnostics should be enabled.
 	 */
-	public static boolean DEBUG_LARGE_CHUNKS;
+	public static boolean DEBUG_FREE_SPACE;
 
 	public static boolean DEBUG_PAGE_CACHE;
 
@@ -196,7 +206,13 @@ public class Database {
 	private long totalFlushTime;
 	private long totalWriteTimeMs;
 	private long pageWritesBytes;
+	private long nextValidation;
+	private long validateCounter;
 	public static final double MIN_BYTES_PER_MILLISECOND = 20480.0;
+
+	private final ModificationLog log = new ModificationLog(0);
+	private final Tag mallocTag;
+	private final Tag freeTag;
 
 	/**
 	 * Construct a new Database object, creating a backing file if necessary.
@@ -207,6 +223,8 @@ public class Database {
 	 * @throws IndexException
 	 */
 	public Database(File location, ChunkCache cache, int version, boolean openReadOnly) throws IndexException {
+		this.mallocTag = ModificationLog.createTag("Calling Database.malloc"); //$NON-NLS-1$
+		this.freeTag = ModificationLog.createTag("Calling Database.free"); //$NON-NLS-1$
 		try {
 			this.fLocation = location;
 			this.fReadOnly= openReadOnly;
@@ -263,6 +281,10 @@ public class Database {
 				// Otherwise, retry
 			}
 		} while (true);
+	}
+
+	public ModificationLog getLog() {
+		return this.log;
 	}
 
 	/**
@@ -347,6 +369,7 @@ public class Database {
 		boolean wasCanceled = false;
 		removeChunksFromCache();
 
+		this.log.clear();
 		this.fVersion= version;
 		// Clear the first chunk.
 		this.fHeaderChunk.clear(0, CHUNK_SIZE);
@@ -502,65 +525,84 @@ public class Database {
 		assert this.fExclusiveLock;
 		assert datasize >= 0;
 		assert datasize <= MAX_MALLOC_SIZE;
-
+		
 		long result;
 		int usedSize;
-		if (datasize >= MAX_SINGLE_BLOCK_MALLOC_SIZE) {
-			int newChunkNum = createLargeBlock(datasize);
-			usedSize = Math.abs(getBlockHeaderForChunkNum(newChunkNum)) * CHUNK_SIZE;
-			result = (long) newChunkNum * CHUNK_SIZE + LargeBlock.HEADER_SIZE;
-			// Note that we identify large blocks by setting their block size to 0.
-			clearRange(result, usedSize - LargeBlock.HEADER_SIZE - LargeBlock.FOOTER_SIZE);
-			result = result + BLOCK_HEADER_SIZE;
-		} else {
-			long freeBlock = 0;
-			int needDeltas = divideRoundingUp(datasize + BLOCK_HEADER_SIZE, BLOCK_SIZE_DELTA);
-			if (needDeltas < MIN_BLOCK_DELTAS) {
-				needDeltas = MIN_BLOCK_DELTAS;
-			}
-
-			// Which block size.
-			int useDeltas;
-			for (useDeltas = needDeltas; useDeltas <= MAX_BLOCK_DELTAS; useDeltas++) {
-				freeBlock = getFirstBlock(useDeltas * BLOCK_SIZE_DELTA);
-				if (freeBlock != 0)
-					break;
-			}
-
-			// Get the block.
-			Chunk chunk;
-			if (freeBlock == 0) {
-				// Allocate a new chunk.
-				freeBlock = (long) (createLargeBlock(datasize)) * (long) CHUNK_SIZE + LargeBlock.HEADER_SIZE;
-				useDeltas = MAX_BLOCK_DELTAS;
-				chunk = getChunk(freeBlock);
+		this.log.start(this.mallocTag);
+		try {
+			if (datasize >= MAX_SINGLE_BLOCK_MALLOC_SIZE) {
+				int newChunkNum = createLargeBlock(datasize);
+				usedSize = Math.abs(getBlockHeaderForChunkNum(newChunkNum)) * CHUNK_SIZE;
+				result = (long) newChunkNum * CHUNK_SIZE + LargeBlock.HEADER_SIZE;
+				// Note that we identify large blocks by setting their block size to 0.
+				clearRange(result, usedSize - LargeBlock.HEADER_SIZE - LargeBlock.FOOTER_SIZE);
+				result = result + BLOCK_HEADER_SIZE;
 			} else {
-				chunk = getChunk(freeBlock);
-				chunk.makeDirty();
-				removeBlock(chunk, useDeltas * BLOCK_SIZE_DELTA, freeBlock);
+				long freeBlock = 0;
+				int needDeltas = divideRoundingUp(datasize + BLOCK_HEADER_SIZE, BLOCK_SIZE_DELTA);
+				if (needDeltas < MIN_BLOCK_DELTAS) {
+					needDeltas = MIN_BLOCK_DELTAS;
+				}
+	
+				// Which block size.
+				int useDeltas;
+				for (useDeltas = needDeltas; useDeltas <= MAX_BLOCK_DELTAS; useDeltas++) {
+					freeBlock = getFirstBlock(useDeltas * BLOCK_SIZE_DELTA);
+					if (freeBlock != 0)
+						break;
+				}
+	
+				// Get the block.
+				Chunk chunk;
+				if (freeBlock == 0) {
+					// Allocate a new chunk.
+					freeBlock = (long) (createLargeBlock(datasize)) * (long) CHUNK_SIZE + LargeBlock.HEADER_SIZE;
+					useDeltas = MAX_BLOCK_DELTAS;
+					chunk = getChunk(freeBlock);
+				} else {
+					chunk = getChunk(freeBlock);
+					chunk.makeDirty();
+					int blockReportedSize = chunk.getShort(freeBlock);
+					if (blockReportedSize != useDeltas * BLOCK_SIZE_DELTA) {
+						throw describeProblem()
+							.addProblemAddress("block size", freeBlock, SHORT_SIZE) //$NON-NLS-1$
+							.build(
+								"Heap corruption detected in free space list. Block " + freeBlock //$NON-NLS-1$
+								+ " reports a size of " + blockReportedSize + " but was in the list for blocks of size "  //$NON-NLS-1$//$NON-NLS-2$
+								+ useDeltas * BLOCK_SIZE_DELTA);
+					}
+					removeBlock(chunk, useDeltas * BLOCK_SIZE_DELTA, freeBlock);
+				}
+	
+				final int unusedDeltas = useDeltas - needDeltas;
+				if (unusedDeltas >= MIN_BLOCK_DELTAS) {
+					// Add in the unused part of our block.
+					addBlock(chunk, unusedDeltas * BLOCK_SIZE_DELTA, freeBlock + needDeltas * BLOCK_SIZE_DELTA);
+					useDeltas = needDeltas;
+				}
+	
+				// Make our size negative to show in use.
+				usedSize = useDeltas * BLOCK_SIZE_DELTA;
+				chunk.putShort(freeBlock, (short) -usedSize);
+	
+				// Clear out the block, lots of people are expecting this.
+				chunk.clear(freeBlock + BLOCK_HEADER_SIZE, usedSize - BLOCK_HEADER_SIZE);
+				result = freeBlock + BLOCK_HEADER_SIZE;
 			}
-
-			final int unusedDeltas = useDeltas - needDeltas;
-			if (unusedDeltas >= MIN_BLOCK_DELTAS) {
-				// Add in the unused part of our block.
-				addBlock(chunk, unusedDeltas * BLOCK_SIZE_DELTA, freeBlock + needDeltas * BLOCK_SIZE_DELTA);
-				useDeltas = needDeltas;
-			}
-
-			// Make our size negative to show in use.
-			usedSize = useDeltas * BLOCK_SIZE_DELTA;
-			chunk.putShort(freeBlock, (short) -usedSize);
-
-			// Clear out the block, lots of people are expecting this.
-			chunk.clear(freeBlock + BLOCK_HEADER_SIZE, usedSize - BLOCK_HEADER_SIZE);
-			result = freeBlock + BLOCK_HEADER_SIZE;
+		} finally {
+			this.log.end(this.mallocTag);
 		}
 
+		this.log.recordMalloc(result, usedSize - BLOCK_HEADER_SIZE);
 		this.malloced += usedSize;
 		this.memoryUsage.recordMalloc(poolId, usedSize);
 
-		if (DEBUG_LARGE_CHUNKS) {
-			validateFreeSpaceTries();
+		if (DEBUG_FREE_SPACE) {
+			boolean performedValidation = periodicValidateFreeSpace();
+
+			if (performedValidation) {
+				verifyNotInFreeSpaceList(result);
+			}
 		}
 
 		return result;
@@ -631,6 +673,22 @@ public class Database {
 		} else {
 			numChunks = getBlockHeaderForChunkNum(freeBlockChunkNum);
 
+			if (numChunks < neededChunks) {
+				throw describeProblem()
+					.addProblemAddress("chunk header", freeBlockChunkNum * CHUNK_SIZE, INT_SIZE) //$NON-NLS-1$
+					.build("A block in the free space trie was too small or wasn't actually free. Reported size = " //$NON-NLS-1$
+							+ numChunks + " chunks, requested size = " + neededChunks + " chunks");  //$NON-NLS-1$//$NON-NLS-2$
+			}
+
+			int footer = getBlockFooterForChunkBefore(freeBlockChunkNum + numChunks);
+			if (footer != numChunks) {
+				throw describeProblem()
+					.addProblemAddress("chunk header", freeBlockChunkNum * CHUNK_SIZE, INT_SIZE) //$NON-NLS-1$
+					.addProblemAddress("chunk footer", (freeBlockChunkNum + numChunks) * CHUNK_SIZE - INT_SIZE, INT_SIZE) //$NON-NLS-1$
+					.build("The header and footer didn't match for a block in the free space trie. Expected " //$NON-NLS-1$
+							+ numChunks + " but found " + footer); //$NON-NLS-1$
+			}
+
 			unlinkFreeBlock(freeBlockChunkNum);
 		}
 
@@ -653,7 +711,7 @@ public class Database {
 				linkFreeBlockToTrie(freeBlockChunkNum + neededChunks, unusedChunks);
 			} else {
 				// Use the end of the block
-				resultChunkNum = freeBlockChunkNum + neededChunks;
+				resultChunkNum = freeBlockChunkNum + unusedChunks;
 				// Return the first half of the block to the free block pool
 				linkFreeBlockToTrie(freeBlockChunkNum, unusedChunks);
 			}
@@ -687,9 +745,15 @@ public class Database {
 			putInt(prevBlockChunkNum * CHUNK_SIZE + LargeBlock.NEXT_BLOCK_OFFSET, nextBlockChunkNum);
 		}
 
+		/**
+		 * True iff this block was a block in the trie. False if it was attached to to the list of siblings but some
+		 * other node in the list is the one in the trie.
+		 */
+		boolean wasInTrie = false;
 		long root = getInt(FREE_BLOCK_OFFSET);
 		if (root == freeBlockChunkNum) {
 			putInt(FREE_BLOCK_OFFSET, 0);
+			wasInTrie = true;
 		}
 
 		int freeBlockSize = getBlockHeaderForChunkNum(freeBlockChunkNum);
@@ -701,18 +765,31 @@ public class Database {
 				int firstDifference = LargeBlock.SIZE_OF_SIZE_FIELD * 8 - Integer.numberOfLeadingZeros(difference) - 1;
 				long locationOfChildPointer = parentChunkNum * CHUNK_SIZE + LargeBlock.CHILD_TABLE_OFFSET
 						+ (firstDifference * INT_SIZE);
-				putInt(locationOfChildPointer, 0);
+				int childChunkNum = getInt(locationOfChildPointer);
+				if (childChunkNum == freeBlockChunkNum) {
+					wasInTrie = true;
+					putInt(locationOfChildPointer, 0);
+				}
 			}
 		}
 
-		if (anotherBlockOfSameSize != 0) {
+		// If the removed block was the head of the linked list, we need to reinsert the following entry as the
+		// new head.
+		if (wasInTrie && anotherBlockOfSameSize != 0) {
 			insertChild(parentChunkNum, anotherBlockOfSameSize);
 		}
 
 		int currentParent = parentChunkNum;
 		for (int childIdx = 0; childIdx < LargeBlock.ENTRIES_IN_CHILD_TABLE; childIdx++) {
-			int nextChildChunkNum = getInt(freeBlockAddress + LargeBlock.CHILD_TABLE_OFFSET + (childIdx * INT_SIZE));
+			long childAddress = freeBlockAddress + LargeBlock.CHILD_TABLE_OFFSET + (childIdx * INT_SIZE);
+			int nextChildChunkNum = getInt(childAddress);
 			if (nextChildChunkNum != 0) {
+				if (!wasInTrie) {
+					throw describeProblem()
+						.addProblemAddress("non-null child pointer", childAddress, INT_SIZE) //$NON-NLS-1$
+						.build("All child pointers should be null for a free chunk that is in the sibling list but" //$NON-NLS-1$
+								+ " not part of the trie. Problematic chunk number: " + freeBlockChunkNum); //$NON-NLS-1$
+				}
 				insertChild(currentParent, nextChildChunkNum);
 				// Parent all subsequent children under the child that was most similar to the old parent
 				if (currentParent == parentChunkNum) {
@@ -774,7 +851,7 @@ public class Database {
 		for (int testPosition = firstDifference; testPosition < LargeBlock.ENTRIES_IN_CHILD_TABLE; testPosition++) {
 			if (((currentSize & bitMask) != 0) == lookingForSmallerChild) {
 				int nextChildChunkNum = getInt(
-						(long) trieNodeChunkNum * CHUNK_SIZE + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * PTR_SIZE));
+						(long) trieNodeChunkNum * CHUNK_SIZE + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * INT_SIZE));
 				int childResultChunkNum = getSmallestChildNoSmallerThan(nextChildChunkNum, numChunks);
 				if (childResultChunkNum != 0) {
 					return childResultChunkNum;
@@ -807,6 +884,111 @@ public class Database {
 		insertChild(getInt(FREE_BLOCK_OFFSET), freeBlockChunkNum);
 	}
 
+	public void validateFreeSpace() {
+		validateFreeSpaceLists();
+		validateFreeSpaceTries();
+	}
+
+	/**
+	 * Performs a self-test on the free space lists used by malloc to check for corruption
+	 */
+	private void validateFreeSpaceLists() {
+		int useDeltas;
+		for (useDeltas = MIN_BLOCK_DELTAS; useDeltas <= MAX_BLOCK_DELTAS; useDeltas++) {
+			validateFreeBlocksFor(useDeltas);
+		}
+	}
+
+	private void verifyNotInFreeSpaceList(long result) {
+		int useDeltas;
+		for (useDeltas = MIN_BLOCK_DELTAS; useDeltas <= MAX_BLOCK_DELTAS; useDeltas++) {
+			int correctSize = useDeltas * BLOCK_SIZE_DELTA;
+			long block = getFirstBlock(correctSize);
+			long addressOfPrevBlockPointer = getAddressOfFirstBlockPointer(correctSize);
+			while (block != 0) {
+				if (block == result) {
+					throw describeProblem()
+						.addProblemAddress("incoming pointer", addressOfPrevBlockPointer, PTR_SIZE) //$NON-NLS-1$
+						.build("Block " + result  //$NON-NLS-1$
+							+ " was found in the free space list, even though it wasn't free"); //$NON-NLS-1$
+				}
+				addressOfPrevBlockPointer = block + BLOCK_NEXT_OFFSET;
+				long followingBlock = getFreeRecPtr(addressOfPrevBlockPointer);
+				block = followingBlock;
+			}
+		}
+
+		int currentChunkNum = getInt(FREE_BLOCK_OFFSET);
+
+		if (currentChunkNum == 0) {
+			return;
+		}
+		int targetChunkNum = (int) (result / CHUNK_SIZE);
+
+		if (currentChunkNum == targetChunkNum) {
+			throw describeProblem().build("Block " + result  //$NON-NLS-1$
+					+ " was not supposed to be in the free space list, but was linked as the root of the list"); //$NON-NLS-1$
+		}
+
+		verifyNotInLargeBlockFreeSpaceTrie(targetChunkNum, currentChunkNum, 0);
+	}
+
+	private void verifyNotInLargeBlockFreeSpaceTrie(int targetChunkNum, int chunkNum, int parent) {
+		long chunkStart = chunkNum * CHUNK_SIZE;
+
+		for (int testPosition = 0; testPosition < LargeBlock.ENTRIES_IN_CHILD_TABLE; testPosition++) {
+			long chunkAddress = chunkStart + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * INT_SIZE);
+			int nextChildChunkNum = getInt(chunkAddress);
+
+			if (nextChildChunkNum == 0) {
+				continue;
+			}
+
+			if (nextChildChunkNum == targetChunkNum) {
+				throw describeProblem()
+					.addProblemAddress("trie child address", chunkAddress, INT_SIZE) //$NON-NLS-1$
+					.build("Chunk number " + nextChildChunkNum  //$NON-NLS-1$
+						+ " was found in the free space trie even though it was in use"); //$NON-NLS-1$
+			}
+
+			verifyNotInLargeBlockFreeSpaceTrie(targetChunkNum, nextChildChunkNum, chunkNum);
+		}
+	}
+
+	private void validateFreeBlocksFor(int numberOfDeltas) {
+		int correctSize = numberOfDeltas * BLOCK_SIZE_DELTA;
+		long lastBlock = 0;
+		long block = getFirstBlock(correctSize);
+		long addressOfPrevBlockPointer = getAddressOfFirstBlockPointer(correctSize);
+		while (block != 0) {
+			long measuredLastBlock = getFreeRecPtr(block + BLOCK_PREV_OFFSET);
+			int blockReportedSize = getShort(block);
+			long followingBlock = getFreeRecPtr(block + BLOCK_NEXT_OFFSET);
+			if (measuredLastBlock != lastBlock) {
+				throw describeProblem()
+					.addProblemAddress("last block", block + BLOCK_PREV_OFFSET, PTR_SIZE) //$NON-NLS-1$
+					.addProblemAddress("incoming pointer", addressOfPrevBlockPointer, PTR_SIZE) //$NON-NLS-1$
+					.build("The free space block (" + block //$NON-NLS-1$
+						+ ") of size " + correctSize + " had an incorrect prev pointer to "  //$NON-NLS-1$//$NON-NLS-2$
+						+ measuredLastBlock + ", but it should have been pointing to " //$NON-NLS-1$
+						+ lastBlock);
+			}
+			if (blockReportedSize != correctSize) {
+				throw describeProblem()
+					.addProblemAddress("block size", block, SHORT_SIZE) //$NON-NLS-1$
+					.addProblemAddress("incoming pointer", addressOfPrevBlockPointer, PTR_SIZE) //$NON-NLS-1$
+					.build("A block (" + block + ") of size " + measuredLastBlock //$NON-NLS-1$ //$NON-NLS-2$
+						+ " was in the free space list for blocks of size " + correctSize); //$NON-NLS-1$
+			}
+			addressOfPrevBlockPointer = block + BLOCK_NEXT_OFFSET;
+			lastBlock = block;
+			block = followingBlock;
+		}
+	}
+
+	/**
+	 * Performs a self-test on the free space trie list (used by the large block allocator) to check for corruption
+	 */
 	private void validateFreeSpaceTries() {
 		int currentChunkNum = getInt(FREE_BLOCK_OFFSET);
 
@@ -820,22 +1002,24 @@ public class Database {
 
 	private void validateFreeSpaceNode(Set<Integer> visited, int chunkNum, int parent) {
 		if (visited.contains(chunkNum)) {
-			throw new IndexException("Chunk " + chunkNum + "(parent = " + parent //$NON-NLS-1$//$NON-NLS-2$
+			throw describeProblem().build("Chunk " + chunkNum + "(parent = " + parent //$NON-NLS-1$//$NON-NLS-2$
 					+ " appeared twice in the free space tree"); //$NON-NLS-1$
 		}
-		
+
 		long chunkStart = chunkNum * CHUNK_SIZE;
 		int parentChunk = getInt(chunkStart + LargeBlock.PARENT_OFFSET);
 		if (parentChunk != parent) {
-			throw new IndexException("Chunk " + chunkNum + " has the wrong parent. Expected " + parent  //$NON-NLS-1$//$NON-NLS-2$
+			throw describeProblem()
+				.addProblemAddress("parent pointer", chunkStart + LargeBlock.PARENT_OFFSET, Database.INT_SIZE) //$NON-NLS-1$
+				.build("Chunk " + chunkNum + " has the wrong parent. Expected " + parent  //$NON-NLS-1$//$NON-NLS-2$
 					+ " but found  " + parentChunk); //$NON-NLS-1$
 		}
-		
+
 		visited.add(chunkNum);
 		int numChunks = getBlockHeaderForChunkNum(chunkNum);
 		for (int testPosition = 0; testPosition < LargeBlock.ENTRIES_IN_CHILD_TABLE; testPosition++) {
-			int nextChildChunkNum = getInt(
-					chunkStart + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * PTR_SIZE));
+			long nextChildChunkNumAddress = chunkStart + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * INT_SIZE);
+			int nextChildChunkNum = getInt(nextChildChunkNumAddress);
 
 			if (nextChildChunkNum == 0) {
 				continue;
@@ -845,14 +1029,25 @@ public class Database {
 			int sizeDifference = nextSize ^ numChunks;
 			int firstDifference = LargeBlock.SIZE_OF_SIZE_FIELD * 8 - Integer.numberOfLeadingZeros(
 					Integer.highestOneBit(sizeDifference)) - 1;
-			
+
 			if (firstDifference != testPosition) {
-				throw new IndexException("Chunk " + nextChildChunkNum + " contained an incorrect size of "  //$NON-NLS-1$//$NON-NLS-2$
+				IndexExceptionBuilder descriptor = describeProblem();
+				attachBlockHeaderForChunkNum(descriptor, chunkNum);
+				attachBlockHeaderForChunkNum(descriptor, nextChildChunkNum);
+				throw descriptor.build("Chunk " + nextChildChunkNum + " contained an incorrect size of "  //$NON-NLS-1$//$NON-NLS-2$
 						+ nextSize + ". It was at position " + testPosition + " in parent " + chunkNum //$NON-NLS-1$ //$NON-NLS-2$
 						+ " which had size " + numChunks); //$NON-NLS-1$
 			}
 
-			validateFreeSpaceNode(visited, nextChildChunkNum, chunkNum);
+			try {
+				validateFreeSpaceNode(visited, nextChildChunkNum, chunkNum);
+			} catch (IndexException e) {
+				describeProblem()
+					.addProblemAddress("child pointer from parent " + chunkNum, nextChildChunkNumAddress,  //$NON-NLS-1$
+							Database.INT_SIZE)
+					.attachTo(e);
+				throw e;
+			}
 		}
 	}
 	
@@ -956,6 +1151,14 @@ public class Database {
 		return getInt((long) firstChunkNum * CHUNK_SIZE);
 	}
 
+	private void attachBlockHeaderForChunkNum(IndexExceptionBuilder builder, int firstChunkNum) {
+		if (firstChunkNum >= this.fChunksUsed) {
+			return;
+		}
+		builder.addProblemAddress("block header for chunk " + firstChunkNum, ((long) firstChunkNum * CHUNK_SIZE), //$NON-NLS-1$
+				Database.INT_SIZE);
+	}
+
 	/**
 	 * Returns the size of the block (in number of chunks), given the (non-inclusive) address that the block ends at.
 	 * The return value is positive if the block is free and negative if the block is allocated.
@@ -1013,21 +1216,26 @@ public class Database {
 		}
 	}
 
-	/**
-	 * @param blocksize (must be a multiple of BLOCK_SIZE_DELTA)
-	 */
-	private long getFirstBlock(int blocksize) throws IndexException {
-		assert this.fLocked;
-		return this.fHeaderChunk.getFreeRecPtr(MALLOC_TABLE_OFFSET + (blocksize / BLOCK_SIZE_DELTA - MIN_BLOCK_DELTAS) * INT_SIZE);
+	private long getAddressOfFirstBlockPointer(int blockSize) {
+		return MALLOC_TABLE_OFFSET + (blockSize / BLOCK_SIZE_DELTA - MIN_BLOCK_DELTAS) * INT_SIZE;
 	}
 
-	private void setFirstBlock(int blocksize, long block) throws IndexException {
+	/**
+	 * @param blockSize (must be a multiple of BLOCK_SIZE_DELTA)
+	 */
+	private long getFirstBlock(int blockSize) throws IndexException {
+		assert this.fLocked;
+		return this.fHeaderChunk.getFreeRecPtr(getAddressOfFirstBlockPointer(blockSize));
+	}
+
+	private void setFirstBlock(int blockSize, long block) throws IndexException {
 		assert this.fExclusiveLock;
-		this.fHeaderChunk.putFreeRecPtr(MALLOC_TABLE_OFFSET + (blocksize / BLOCK_SIZE_DELTA - MIN_BLOCK_DELTAS) * INT_SIZE, block);
+		this.fHeaderChunk.putFreeRecPtr(getAddressOfFirstBlockPointer(blockSize), block);
 	}
 
 	private void removeBlock(Chunk chunk, int blocksize, long block) throws IndexException {
 		assert this.fExclusiveLock;
+
 		long prevblock = chunk.getFreeRecPtr(block + BLOCK_PREV_OFFSET);
 		long nextblock = chunk.getFreeRecPtr(block + BLOCK_NEXT_OFFSET);
 		if (prevblock != 0) {
@@ -1063,45 +1271,79 @@ public class Database {
 	 *            the same ID that was previously passed into malloc when allocating this memory address
 	 */
 	public void free(long address, short poolId) throws IndexException {
-		assert this.fExclusiveLock;
-		if (address == 0) {
-			return;
+		getLog().start(this.freeTag);
+		try {
+			assert this.fExclusiveLock;
+			if (address == 0) {
+				return;
+			}
+			long blockSize;
+			long block = address - BLOCK_HEADER_SIZE;
+			Chunk chunk = getChunk(block);
+			blockSize = -chunk.getShort(block);
+			// We use a block size of 0 to indicate a large block that fills a range of chunks
+			if (blockSize == 0) {
+				int offsetIntoChunk = (int) (address % CHUNK_SIZE);
+				assert offsetIntoChunk == LargeBlock.HEADER_SIZE + BLOCK_HEADER_SIZE;
+				// Deallocating a large block
+				// This was a large block. It uses a sequence of full chunks.
+				int chunkNum = (int) (address / CHUNK_SIZE);
+				int numChunks = -getBlockHeaderForChunkNum(chunkNum);
+				if (numChunks < 0) {
+					IndexExceptionBuilder builder = describeProblem();
+					if (chunkNum < this.fChunksUsed) {
+						builder.addProblemAddress("block header", (long) chunkNum * CHUNK_SIZE, INT_SIZE); //$NON-NLS-1$
+					}
+					throw builder.build("Already freed large block " + address); //$NON-NLS-1$
+				}
+				blockSize = (long) numChunks * CHUNK_SIZE;
+				this.log.recordFree(address, (int)(blockSize - BLOCK_HEADER_SIZE));
+				freeLargeChunk(chunkNum, numChunks);
+			} else {
+				// Deallocating a normal block
+				// TODO Look for opportunities to merge small blocks
+				if (blockSize < 0) {
+					throw describeProblem()
+						.addProblemAddress("block size", block, SHORT_SIZE) //$NON-NLS-1$
+						.build("Already freed record " + address); //$NON-NLS-1$
+				}
+				this.log.recordFree(address, (int)(blockSize - BLOCK_HEADER_SIZE));
+				int offset = Chunk.recPtrToIndex(address);
+				if (offset + blockSize > CHUNK_SIZE) {
+					throw describeProblem()
+						.addProblemAddress("block size", block, SHORT_SIZE) //$NON-NLS-1$
+						.build("Attempting to free chunk of impossible size. The block at address " //$NON-NLS-1$
+								+ address + " in chunk " + chunk.fSequenceNumber + " offset " + offset //$NON-NLS-1$//$NON-NLS-2$
+								+ " can't be as large as " //$NON-NLS-1$
+								+ blockSize + " bytes since that would make it extend beyond the end of the chunk"); //$NON-NLS-1$
+				}
+				addBlock(chunk, (int) blockSize, block);
+			}
+	
+			if (DEBUG_FREE_SPACE) {
+				periodicValidateFreeSpace();
+			}
+	
+			this.freed += blockSize;
+			this.memoryUsage.recordFree(poolId, blockSize);
+		} finally {
+			getLog().end(this.freeTag);
 		}
-		long blockSize;
-		long block = address - BLOCK_HEADER_SIZE;
-		Chunk chunk = getChunk(block);
-		blockSize = -chunk.getShort(block);
-		// We use a block size of 0 to indicate a large block that fills a range of chunks
-		if (blockSize == 0) {
-			int offsetIntoChunk = (int) (address % CHUNK_SIZE);
-			assert offsetIntoChunk == LargeBlock.HEADER_SIZE + BLOCK_HEADER_SIZE;
-			// Deallocating a large block
-			// This was a large block. It uses a sequence of full chunks.
-			int chunkNum = (int) (address / CHUNK_SIZE);
-			int numChunks = -getBlockHeaderForChunkNum(chunkNum);
-			if (numChunks < 0) {
-				// Already freed.
-				throw new IndexException(new Status(IStatus.ERROR, Package.PLUGIN_ID, 0,
-						"Already freed large block " + address, new Exception())); //$NON-NLS-1$
-			}
-			blockSize = (long) numChunks * CHUNK_SIZE;
-			freeLargeChunk(chunkNum, numChunks);
-			if (DEBUG_LARGE_CHUNKS) {
-				validateFreeSpaceTries();
-			}
-		} else {
-			// Deallocating a normal block
-			// TODO Look for opportunities to merge small blocks
-			if (blockSize < 0) {
-				// Already freed.
-				throw new IndexException(new Status(IStatus.ERROR, Package.PLUGIN_ID, 0,
-						"Already freed record " + address, new Exception())); //$NON-NLS-1$
-			}
-			addBlock(chunk, (int) blockSize, block);
-		}
+	}
 
-		this.freed += blockSize;
-		this.memoryUsage.recordFree(poolId, blockSize);
+	/**
+	 * Periodically performs validation of the free space in the database. Validation is very expensive, so the
+	 * validation period uses exponential falloff so validations happen less and less frequently over
+	 * time. Returns true iff validation happened on this iteration.
+	 */
+	private boolean periodicValidateFreeSpace() {
+		this.validateCounter++;
+		if (this.validateCounter > this.nextValidation) {
+			validateFreeSpace();
+			this.nextValidation = this.validateCounter * 2;
+			return true;
+		}
+		return false;
 	}
 
 	private void freeLargeChunk(int chunkNum, int numChunks) {
@@ -1320,6 +1562,7 @@ public class Database {
 		flush();
 		removeChunksFromCache();
 
+		this.log.clear();
 		// Chunks have been removed from the cache, so we are fine.
 		this.fHeaderChunk.clear(0, CHUNK_SIZE);
 		this.memoryUsage.refresh();
@@ -1628,5 +1871,9 @@ public class Database {
 			}
 			return new ChunkStats(this.fChunks.length, count, dirtyChunks, nonDirtyChunksNotInCache);
 		}
+	}
+
+	public IndexExceptionBuilder describeProblem() {
+		return new IndexExceptionBuilder(this);
 	}
 }

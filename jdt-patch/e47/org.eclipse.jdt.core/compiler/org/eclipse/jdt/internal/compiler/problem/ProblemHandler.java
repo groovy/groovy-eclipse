@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -141,9 +142,10 @@ public void handle(
 		 return;
 	 }
 
-	if ((severity & ProblemSeverities.Optional) != 0 && problemId != IProblem.Task  && !this.options.ignoreSourceFolderWarningOption) {
+	// GROOVY edit -- added null check
+	if ((severity & ProblemSeverities.Optional) != 0 && problemId != IProblem.Task && !this.options.ignoreSourceFolderWarningOption && unitResult != null) {
 		ICompilationUnit cu = unitResult.getCompilationUnit();
-		try{
+		try {
 			if (cu != null && cu.ignoreOptionalProblems())
 				return;
 		// workaround for illegal implementation of ICompilationUnit, see https://bugs.eclipse.org/372351

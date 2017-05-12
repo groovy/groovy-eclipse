@@ -1070,7 +1070,7 @@ public class DefaultCodeFormatterConstants {
 	 * FORMATTER / Option to control whether comments' line length will be counted from their starting position
 	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.count_line_length_from_starting_position"
 	 *     - possible values:   { TRUE, FALSE }
-	 *     - default:           FALSE
+	 *     - default:           TRUE
 	 * </pre>
 	 * @since 3.13
 	 */
@@ -4389,6 +4389,7 @@ public class DefaultCodeFormatterConstants {
 	public static Map getEclipse21Settings() {
 		DefaultCodeFormatterOptions options = DefaultCodeFormatterOptions.getDefaultSettings();
 		options.page_width = 80; // changed with bug 356841
+		options.comment_count_line_length_from_starting_position = false;
 		return options.getMap();
 	}
 

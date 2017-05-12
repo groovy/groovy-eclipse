@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2043,6 +2043,7 @@ public void completionIdentifierCheck(){
 	// if not in a method in non diet mode and if not inside a field initializer, only record references attached to types
 	if (!(isInsideMethod() && !this.diet)
 		&& !isIndirectlyInsideFieldInitialization()
+		&& !isIndirectlyInsideEnumConstantnitialization()
 		&& !isInsideAttributeValue()) return;
 
 	/*
@@ -3568,7 +3569,7 @@ protected void consumeToken(int token) {
 			&& this.identifierStack[this.identifierPtr] == assistIdentifier()
 			&& this.currentElement == null
 			&& (!isIndirectlyInsideLambdaExpression() || isIndirectlyInsideLambdaBlock())
-			&& isIndirectlyInsideFieldInitialization()) {
+			&& (isIndirectlyInsideFieldInitialization() || isIndirectlyInsideEnumConstantnitialization())) {
 		this.scanner.eofPosition = this.cursorLocation < Integer.MAX_VALUE ? this.cursorLocation+1 : this.cursorLocation;
 	}
 	if (token == TokenNameimport) {
@@ -4840,7 +4841,7 @@ public ReferenceExpression newReferenceExpression() {
 	if (selector != assistIdentifier()){
 		return super.newReferenceExpression();
 	}
-	ReferenceExpression referenceExpression = new CompletionOnReferenceExpressionName();
+	ReferenceExpression referenceExpression = new CompletionOnReferenceExpressionName(this.scanner);
 	this.assistNode = referenceExpression;
 	return referenceExpression;
 }

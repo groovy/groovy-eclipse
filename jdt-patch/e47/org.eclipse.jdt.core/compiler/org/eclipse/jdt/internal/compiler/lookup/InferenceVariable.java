@@ -87,10 +87,16 @@ public class InferenceVariable extends TypeVariableBinding {
 	int varId; // this is used for constructing a source name like T#0.
 	
 	private InferenceVariable(TypeBinding typeParameter, int parameterRank, int iVarId, InvocationSite site, LookupEnvironment environment, ReferenceBinding object) {
-		this(typeParameter, parameterRank, site,
-				CharOperation.concat(typeParameter.shortReadableName(), Integer.toString(iVarId).toCharArray(), '#'),
-				environment, object);
+		this(typeParameter, parameterRank, site, makeName(typeParameter, iVarId), environment, object);
 		this.varId = iVarId;
+	}
+	private static char[] makeName(TypeBinding typeParameter, int iVarId) {
+		if (typeParameter.getClass() == TypeVariableBinding.class) {
+			return CharOperation.concat(typeParameter.shortReadableName(), Integer.toString(iVarId).toCharArray(), '#');
+		}
+		return CharOperation.concat(
+					CharOperation.concat('(', typeParameter.shortReadableName(), ')'),
+					Integer.toString(iVarId).toCharArray(), '#');
 	}
 	private InferenceVariable(TypeBinding typeParameter, int parameterRank, InvocationSite site, char[] sourceName, LookupEnvironment environment, ReferenceBinding object) {
 		super(sourceName, null/*declaringElement*/, parameterRank, environment);

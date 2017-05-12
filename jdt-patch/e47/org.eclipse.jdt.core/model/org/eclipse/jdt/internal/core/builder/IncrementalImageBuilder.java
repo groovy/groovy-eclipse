@@ -592,7 +592,7 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 			if (isExcluded) return true;
 
 			String resourceName = resource.getName();
-			// GROOVY start
+			// GROOVY add
 			// determine if this is a Groovy project
 			final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
 			// GROOVY end

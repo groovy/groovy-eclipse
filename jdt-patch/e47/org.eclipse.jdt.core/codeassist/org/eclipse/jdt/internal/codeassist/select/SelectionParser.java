@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -789,7 +789,7 @@ protected void consumeReferenceExpression(ReferenceExpression referenceExpressio
 	this.colonColonStart = -1;
 	if (this.selectionStart == kolonKolonStart || this.selectionStart == kolonKolonEnd) {
 		if (this.selectionEnd == kolonKolonStart || this.selectionEnd == kolonKolonEnd) {
-			referenceExpression = new SelectionOnReferenceExpression(referenceExpression);
+			referenceExpression = new SelectionOnReferenceExpression(referenceExpression, this.scanner);
 		}
 	}
 	super.consumeReferenceExpression(referenceExpression);
@@ -1417,7 +1417,7 @@ public ReferenceExpression newReferenceExpression() {
 	if (selector != assistIdentifier()){
 		return super.newReferenceExpression();
 	}
-	ReferenceExpression referenceExpression = new SelectionOnReferenceExpressionName();
+	ReferenceExpression referenceExpression = new SelectionOnReferenceExpressionName(this.scanner);
 	this.assistNode = referenceExpression;
 	return referenceExpression;
 }

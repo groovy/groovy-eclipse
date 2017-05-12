@@ -15,11 +15,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.internal.core.nd.IDestructable;
 import org.eclipse.jdt.internal.core.nd.ITypeFactory;
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.NdNode;
+import org.eclipse.jdt.internal.core.nd.db.Database;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
+import org.eclipse.jdt.internal.core.nd.util.MathUtils;
 
 /**
  * Defines a data structure that will appear in the database.
@@ -43,10 +50,11 @@ import org.eclipse.jdt.internal.core.nd.Nd;
 public final class StructDef<T> {
 	Class<T> clazz;
 	private StructDef<? super T> superClass;
+	private Set<StructDef<?>> dependencies = new HashSet<>();
 	private List<IField> fields = new ArrayList<>();
 	private boolean doneCalled;
 	private boolean offsetsComputed;
-	private List<StructDef<? extends T>> subClasses = new ArrayList<>();
+	private List<StructDef<? extends T>> dependents = new ArrayList<>();
 	private int size;
 	List<IDestructableField> destructableFields = new ArrayList<>();
 	boolean refCounted;
@@ -56,6 +64,8 @@ public final class StructDef<T> {
 	private ITypeFactory<T> factory;
 	protected boolean hasUserDestructor;
 	private DeletionSemantics deletionSemantics;
+	final Tag destructTag;
+	private boolean isNdNode;
 
 	public static enum DeletionSemantics {
 		EXPLICIT, OWNED, REFCOUNTED
@@ -70,10 +80,12 @@ public final class StructDef<T> {
 	}
 
 	private StructDef(Class<T> clazz, StructDef<? super T> superClass, boolean isAbstract) {
+		this.destructTag = ModificationLog.createTag("Destructing struct " + clazz.getSimpleName()); //$NON-NLS-1$
 		this.clazz = clazz;
+		this.isNdNode = NdNode.class.isAssignableFrom(clazz);
 		this.superClass = superClass;
 		if (this.superClass != null) {
-			this.superClass.subClasses.add(this);
+			addDependency(this.superClass);
 		}
 		this.isAbstract = isAbstract;
 		final String fullyQualifiedClassName = clazz.getName();
@@ -128,11 +140,17 @@ public final class StructDef<T> {
 
 			public void destruct(Nd nd, long address) {
 				checkNotMutable();
-				if (StructDef.this.hasUserDestructor) {
-					IDestructable destructable = (IDestructable)create(nd, address);
-					destructable.destruct();
+				Database db = nd.getDB();
+				db.getLog().start(StructDef.this.destructTag);
+				try {
+					if (StructDef.this.hasUserDestructor) {
+						IDestructable destructable = (IDestructable)create(nd, address);
+						destructable.destruct();
+					}
+					destructFields(nd, address);
+				} finally {
+					db.getLog().end(StructDef.this.destructTag);
 				}
-				destructFields(nd, address);
 			}
 
 			public void destructFields(Nd dom, long address) {
@@ -149,6 +167,32 @@ public final class StructDef<T> {
 				return StructDef.this.getDeletionSemantics();
 			}
 		};
+	}
+
+	public void addDependency(StructDef<?> newDependency) {
+		if (newDependency.hasIndirectDependent(new HashSet<>(), this)) {
+			throw new IllegalArgumentException("Circular dependency detected. Struct " //$NON-NLS-1$
+					+ getStructName() + " and struct " + newDependency.getStructName()  //$NON-NLS-1$
+					+ " both depend on one another"); //$NON-NLS-1$
+		}
+		if (this.dependencies.add(newDependency)) {
+			this.superClass.dependents.add(this);
+		}
+	}
+
+	private boolean hasIndirectDependent(Set<StructDef<?>> visited, StructDef<?> structDef) {
+		for (StructDef<?> next : this.dependents) {
+			if (!visited.add(next)) {
+				continue;
+			}
+			if (next.equals(structDef)) {
+				return true;
+			}
+			if (next.hasIndirectDependent(visited, structDef)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public Class<T> getStructClass() {
@@ -206,6 +250,15 @@ public final class StructDef<T> {
 		return this.deletionSemantics;
 	}
 
+	private boolean areAllDependenciesResolved() {
+		for (StructDef<?> next : this.dependencies) {
+			if (!next.areOffsetsComputed()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * Call this once all the fields have been added to the struct definition and it is
 	 * ready to use.
@@ -216,7 +269,7 @@ public final class StructDef<T> {
 		}
 		this.doneCalled = true;
 
-		if (this.superClass == null || this.superClass.areOffsetsComputed()) {
+		if (areAllDependenciesResolved()) {
 			computeOffsets();
 		}
 	}
@@ -275,12 +328,13 @@ public final class StructDef<T> {
 
 	/**
 	 * Invoked on all StructDef after both {@link #done()} has been called on the struct and
-	 * {@link #computeOffsets()} has been called on their base class.
+	 * {@link #computeOffsets()} has been called on every dependency of this struct.
 	 */
 	private void computeOffsets() {
 		int offset = this.superClass == null ? 0 : this.superClass.size();
 
 		for (IField next : this.fields) {
+			offset = MathUtils.roundUpToNearestMultiple(offset, next.getAlignment());
 			next.setOffset(offset);
 			offset += next.getRecordSize();
 		}
@@ -309,7 +363,7 @@ public final class StructDef<T> {
 		
 		this.offsetsComputed = true;
 
-		for (StructDef<? extends T> next : this.subClasses) {
+		for (StructDef<? extends T> next : this.dependents) {
 			if (next.doneCalled) {
 				next.computeOffsets();
 			}
@@ -317,62 +371,66 @@ public final class StructDef<T> {
 	}
 
 	public FieldPointer addPointer() {
-		FieldPointer result = new FieldPointer();
+		FieldPointer result = new FieldPointer(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public FieldShort addShort() {
-		FieldShort result = new FieldShort();
+		FieldShort result = new FieldShort(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public FieldInt addInt() {
-		FieldInt result = new FieldInt();
+		FieldInt result = new FieldInt(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public FieldLong addLong() {
-		FieldLong result = new FieldLong();
+		FieldLong result = new FieldLong(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public FieldString addString() {
-		FieldString result = new FieldString();
+		FieldString result = new FieldString(getStructName(), this.fields.size());
 		add(result);
 		addDestructableField(result);
 		return result;
 	}
 
 	public FieldDouble addDouble() {
-		FieldDouble result = new FieldDouble();
+		FieldDouble result = new FieldDouble(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public FieldFloat addFloat() {
-		FieldFloat result = new FieldFloat();
+		FieldFloat result = new FieldFloat(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
+	public String getStructName() {
+		return this.clazz.getSimpleName();
+	}
+
 	public FieldByte addByte() {
-		FieldByte result = new FieldByte();
+		FieldByte result = new FieldByte(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public FieldChar addChar() {
-		FieldChar result = new FieldChar();
+		FieldChar result = new FieldChar(getStructName(), this.fields.size());
 		add(result);
 		return result;
 	}
 
 	public <F> Field<F> add(ITypeFactory<F> factory1) {
-		Field<F> result = new Field<>(factory1);
+		Field<F> result = new Field<>(factory1, getStructName(), this.fields.size());
 		add(result);
 		if (result.factory.hasDestructor()) {
 			this.destructableFields.add(result);
@@ -394,5 +452,11 @@ public final class StructDef<T> {
 		}
 	}
 
-	
+	public boolean isNdNode() {
+		return this.isNdNode;
+	}
+
+	public int getNumFields() {
+		return this.fields.size();
+	}
 }

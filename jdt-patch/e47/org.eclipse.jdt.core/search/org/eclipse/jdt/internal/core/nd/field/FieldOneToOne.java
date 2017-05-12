@@ -10,24 +10,28 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.nd.field;
 
+import org.eclipse.jdt.internal.core.nd.INdStruct;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.NdNode;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 
 /**
  * Represents a 1-to-0..1 relationship in a Nd database.
  */
-public class FieldOneToOne<T extends NdNode> implements IField, IDestructableField, IRefCountedField {
-	private int offset;
-	public final Class<T> nodeType; 
+public class FieldOneToOne<T extends INdStruct> extends BaseField implements IDestructableField, IRefCountedField {
+	public final StructDef<T> nodeType; 
 	FieldOneToOne<?> backPointer;
 	private boolean pointsToOwner;
+	private final Tag putTag;
+	private final Tag destructTag;
 
 	/**
 	 * @param nodeType
 	 * @param backPointer
 	 */
-	private FieldOneToOne(Class<T> nodeType, FieldOneToOne<?> backPointer, boolean pointsToOwner) {
+	private FieldOneToOne(StructDef<T> nodeType, FieldOneToOne<?> backPointer, boolean pointsToOwner) {
 		this.nodeType = nodeType;
 
 		if (backPointer != null) {
@@ -40,10 +44,14 @@ public class FieldOneToOne<T extends NdNode> implements IField, IDestructableFie
 		}
 		this.backPointer = backPointer;
 		this.pointsToOwner = pointsToOwner;
+		setFieldName("field " + nodeType.getNumFields() + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+				+ " in struct " + nodeType.getStructName()); //$NON-NLS-1$
+		this.putTag = ModificationLog.createTag("Writing " + getFieldName()); //$NON-NLS-1$
+		this.destructTag = ModificationLog.createTag("Destructing " + getFieldName()); //$NON-NLS-1$
 	}
 
-	public static <T extends NdNode, B extends NdNode> FieldOneToOne<T> create(StructDef<B> builder,
-			Class<T> nodeType, FieldOneToOne<B> forwardPointer) {
+	public static <T extends INdStruct, B extends INdStruct> FieldOneToOne<T> create(StructDef<B> builder,
+			StructDef<T> nodeType, FieldOneToOne<B> forwardPointer) {
 
 		FieldOneToOne<T> result = new FieldOneToOne<T>(nodeType, forwardPointer, false);
 		builder.add(result);
@@ -51,8 +59,8 @@ public class FieldOneToOne<T extends NdNode> implements IField, IDestructableFie
 		return result;
 	}
 
-	public static <T extends NdNode, B extends NdNode> FieldOneToOne<T> createOwner(StructDef<B> builder,
-			Class<T> nodeType, FieldOneToOne<B> forwardPointer) {
+	public static <T extends INdStruct, B extends INdStruct> FieldOneToOne<T> createOwner(StructDef<B> builder,
+			StructDef<T> nodeType, FieldOneToOne<B> forwardPointer) {
 
 		FieldOneToOne<T> result = new FieldOneToOne<T>(nodeType, forwardPointer, true);
 		builder.add(result);
@@ -68,21 +76,32 @@ public class FieldOneToOne<T extends NdNode> implements IField, IDestructableFie
 
 	public void put(Nd nd, long address, T target) {
 		Database db = nd.getDB();
-		cleanup(nd, address);
-		if (target == null) {
-			db.putRecPtr(address + this.offset, 0);
-			if (this.pointsToOwner) {
-				nd.scheduleDeletion(address);
+		db.getLog().start(this.putTag);
+		try {
+			cleanup(nd, address);
+			if (target == null) {
+				db.putRecPtr(address + this.offset, 0);
+				if (this.pointsToOwner) {
+					nd.scheduleDeletion(address);
+				}
+			} else {
+				db.putRecPtr(address + this.offset, target.getAddress());
+				db.putRecPtr(target.getAddress() + this.backPointer.offset, address);
 			}
-		} else {
-			db.putRecPtr(address + this.offset, target.address);
-			db.putRecPtr(target.address + this.backPointer.offset, address);
+		} finally {
+			db.getLog().end(this.putTag);
 		}
 	}
 
 	@Override
 	public void destruct(Nd nd, long address) {
-		cleanup(nd, address);
+		Database db = nd.getDB();
+		db.getLog().start(this.destructTag);
+		try {
+			cleanup(nd, address);
+		} finally {
+			db.getLog().end(this.destructTag);
+		}
 	}
 
 	private void cleanup(Nd nd, long address) {
@@ -95,11 +114,6 @@ public class FieldOneToOne<T extends NdNode> implements IField, IDestructableFie
 				nd.scheduleDeletion(ptr);
 			}
 		}
-	}
-
-	@Override
-	public void setOffset(int offset) {
-		this.offset = offset;
 	}
 
 	@Override

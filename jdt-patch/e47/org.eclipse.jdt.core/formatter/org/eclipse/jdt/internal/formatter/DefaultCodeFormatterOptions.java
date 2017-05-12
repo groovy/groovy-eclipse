@@ -2484,7 +2484,7 @@ public class DefaultCodeFormatterOptions {
 		this.comment_new_lines_at_block_boundaries = true;
 		this.comment_new_lines_at_javadoc_boundaries = true;
 		this.comment_line_length = 80;
-		this.comment_count_line_length_from_starting_position = false;
+		this.comment_count_line_length_from_starting_position = true;
 		this.comment_preserve_white_space_between_code_and_line_comments= false; 
 		this.continuation_indentation = 2;
 		this.continuation_indentation_for_array_initializer = 2;
@@ -2794,7 +2794,7 @@ public class DefaultCodeFormatterOptions {
 		this.comment_new_lines_at_block_boundaries = true;
 		this.comment_new_lines_at_javadoc_boundaries = true;
 		this.comment_line_length = 80;
-		this.comment_count_line_length_from_starting_position = false;
+		this.comment_count_line_length_from_starting_position = true;
 		this.comment_preserve_white_space_between_code_and_line_comments= false; 
 		this.continuation_indentation = 2;
 		this.continuation_indentation_for_array_initializer = 2;

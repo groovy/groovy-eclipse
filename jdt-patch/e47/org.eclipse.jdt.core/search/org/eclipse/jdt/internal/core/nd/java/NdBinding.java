@@ -17,7 +17,7 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.NdNode;
 import org.eclipse.jdt.internal.core.nd.field.FieldInt;
-import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
+import org.eclipse.jdt.internal.core.nd.field.FieldList;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
 
@@ -26,8 +26,7 @@ import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
  */
 public abstract class NdBinding extends NdNode implements IAdaptable {
 	public static final FieldInt MODIFIERS;
-	public static final FieldOneToMany<NdTypeParameter> TYPE_PARAMETERS;
-	public static final FieldOneToMany<NdVariable> VARIABLES;
+	public static final FieldList<NdTypeParameter> TYPE_PARAMETERS;
 
 	@SuppressWarnings("hiding")
 	public static final StructDef<NdBinding> type;
@@ -35,8 +34,7 @@ public abstract class NdBinding extends NdNode implements IAdaptable {
 	static {
 		type = StructDef.create(NdBinding.class, NdNode.type);
 		MODIFIERS = type.addInt();
-		TYPE_PARAMETERS = FieldOneToMany.create(type, NdTypeParameter.PARENT);
-		VARIABLES = FieldOneToMany.create(type, NdVariable.PARENT);
+		TYPE_PARAMETERS = FieldList.create(type, NdTypeParameter.type);
 		type.done();
 	}
 
@@ -46,10 +44,6 @@ public abstract class NdBinding extends NdNode implements IAdaptable {
 
 	public NdBinding(Nd nd) {
 		super(nd);
-	}
-
-	public List<NdVariable> getVariables() {
-		return VARIABLES.asList(getNd(), this.address);
 	}
 
 	/**
@@ -105,5 +99,13 @@ public abstract class NdBinding extends NdNode implements IAdaptable {
 
 	public List<NdTypeParameter> getTypeParameters() {
 		return TYPE_PARAMETERS.asList(getNd(), this.address);
+	}
+
+	public NdTypeParameter createTypeParameter() {
+		return TYPE_PARAMETERS.append(getNd(), getAddress());
+	}
+
+	public void allocateTypeParameters(int elements) {
+		TYPE_PARAMETERS.allocate(getNd(), getAddress(), elements);
 	}
 }

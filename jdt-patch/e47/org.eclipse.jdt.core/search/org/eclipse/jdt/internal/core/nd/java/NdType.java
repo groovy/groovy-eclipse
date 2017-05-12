@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.nd.java;
 
+import java.util.Arrays;
 import java.util.List;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.internal.core.nd.INdVisitor;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.db.IString;
 import org.eclipse.jdt.internal.core.nd.field.FieldByte;
+import org.eclipse.jdt.internal.core.nd.field.FieldList;
 import org.eclipse.jdt.internal.core.nd.field.FieldLong;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
@@ -30,15 +30,16 @@ public class NdType extends NdBinding {
 	public static final FieldManyToOne<NdTypeSignature> SUPERCLASS;
 	public static final FieldOneToMany<NdTypeInterface> INTERFACES;
 	public static final FieldManyToOne<NdTypeId> DECLARING_TYPE;
-	public static final FieldManyToOne<NdMethodId> DECLARING_METHOD;
-	public static final FieldOneToMany<NdMethod> METHODS;
-	public static final FieldOneToMany<NdTypeAnnotationInType> TYPE_ANNOTATIONS;
-	public static final FieldOneToMany<NdAnnotationInType> ANNOTATIONS;
+	public static final FieldList<NdMethod> METHODS;
+	public static final FieldList<NdTypeAnnotation> TYPE_ANNOTATIONS;
+	public static final FieldList<NdAnnotation> ANNOTATIONS;
+	public static final FieldList<NdVariable> VARIABLES;
 	public static final FieldString MISSING_TYPE_NAMES;
 	public static final FieldString SOURCE_FILE_NAME;
 	public static final FieldString INNER_CLASS_SOURCE_NAME;
 	public static final FieldByte FLAGS;
 	public static final FieldLong TAG_BITS;
+	public static final FieldString ENCLOSING_METHOD;
 	/**
 	 * Binary name that was recorded in the .class file if different from the binary
 	 * name that was determined by the .class's name and location. This is only set for
@@ -56,16 +57,17 @@ public class NdType extends NdBinding {
 		DECLARING_TYPE = FieldManyToOne.create(type, NdTypeId.DECLARED_TYPES);
 		INTERFACES = FieldOneToMany.create(type, NdTypeInterface.APPLIES_TO);
 		SUPERCLASS = FieldManyToOne.create(type, NdTypeSignature.SUBCLASSES);
-		DECLARING_METHOD = FieldManyToOne.create(type, NdMethodId.DECLARED_TYPES);
-		METHODS = FieldOneToMany.create(type, NdMethod.PARENT, 6);
-		TYPE_ANNOTATIONS = FieldOneToMany.create(type, NdTypeAnnotationInType.OWNER);
-		ANNOTATIONS = FieldOneToMany.create(type, NdAnnotationInType.OWNER);
+		METHODS = FieldList.create(type, NdMethod.type);
+		TYPE_ANNOTATIONS = FieldList.create(type, NdTypeAnnotation.type);
+		ANNOTATIONS = FieldList.create(type, NdAnnotation.type);
+		VARIABLES = FieldList.create(type, NdVariable.type);
 		MISSING_TYPE_NAMES = type.addString();
 		SOURCE_FILE_NAME = type.addString();
 		INNER_CLASS_SOURCE_NAME = type.addString();
 		FLAGS = type.addByte();
 		TAG_BITS = type.addLong();
 		FIELD_DESCRIPTOR_FROM_CLASS = type.addString();
+		ENCLOSING_METHOD = type.addString();
 		type.done();
 	}
 
@@ -82,13 +84,6 @@ public class NdType extends NdBinding {
 		super(nd);
 
 		FILE.put(nd, this.address, resource);
-	}
-
-	/**
-	 * Called to populate the cache for the bindings in the class scope.
-	 */
-	public void acceptUncached(INdVisitor visitor) throws CoreException {
-		super.accept(visitor);
 	}
 
 	public NdTypeId getTypeId() {
@@ -139,10 +134,6 @@ public class NdType extends NdBinding {
 
 	public NdResourceFile getResourceFile() {
 		return FILE.get(getNd(), this.address);
-	}
-
-	public void setDeclaringMethod(NdMethodId createMethodId) {
-		DECLARING_METHOD.put(getNd(), this.address, createMethodId);
 	}
 
 	/**
@@ -221,8 +212,8 @@ public class NdType extends NdBinding {
 		return JavaNames.simpleNameToSourceName(simpleName);
 	}
 
-	public NdMethodId getDeclaringMethod() {
-		return DECLARING_METHOD.get(getNd(), this.address);
+	public List<NdVariable> getVariables() {
+		return VARIABLES.asList(getNd(), this.address);
 	}
 
 	@Override
@@ -230,16 +221,57 @@ public class NdType extends NdBinding {
 		return TYPE_PARAMETERS.asList(getNd(), this.address);
 	}
 
-	public List<NdTypeAnnotationInType> getTypeAnnotations() {
+	public List<NdTypeAnnotation> getTypeAnnotations() {
 		return TYPE_ANNOTATIONS.asList(getNd(), this.address);
 	}
 
-	public List<NdAnnotationInType> getAnnotations() {
+	public List<NdAnnotation> getAnnotations() {
 		return ANNOTATIONS.asList(getNd(), this.address);
 	}
 
+	public NdAnnotation createAnnotation() {
+		return ANNOTATIONS.append(getNd(), getAddress());
+	}
+
+	public void allocateAnnotations(int length) {
+		ANNOTATIONS.allocate(getNd(), getAddress(), length);
+	}
+
+	/**
+	 * Returns the list of methods, sorted by ascending method name (selector + descriptor).
+	 */
 	public List<NdMethod> getMethods() {
 		return METHODS.asList(getNd(), this.address);
+	}
+
+	/**
+	 * Returns the list of methods, in declaration order.
+	 */
+	public List<NdMethod> getMethodsInDeclarationOrder() {
+		List<NdMethod> unsorted = getMethods();
+		NdMethod[] sorted = new NdMethod[unsorted.size()];
+		for (NdMethod next : unsorted) {
+			int pos = next.getDeclarationPosition();
+
+			if (pos < 0 || pos >= sorted.length) {
+				throw getNd().describeProblem()
+					.addProblemAddress(NdMethod.DECLARATION_POSITION, next.getAddress())
+					.build("Method " + next.getMethodName().getString() + " reports invalid position of " + pos); //$NON-NLS-1$//$NON-NLS-2$
+			}
+
+			NdMethod oldMethodAtThisPosition = sorted[pos];
+			if (oldMethodAtThisPosition != null) {
+				throw getNd().describeProblem()
+					.addProblemAddress(NdMethod.DECLARATION_POSITION, next.getAddress())
+					.addProblemAddress(NdMethod.DECLARATION_POSITION, oldMethodAtThisPosition.getAddress())
+					.build("Method " + oldMethodAtThisPosition.getMethodName().getString()  //$NON-NLS-1$
+							+ " and method " + next.getMethodName().getString() + " both claim to be at position "  //$NON-NLS-1$//$NON-NLS-2$
+							+ pos);
+			}
+			sorted[pos] = next;
+		}
+
+		return Arrays.asList(sorted);
 	}
 
 	@Override
@@ -274,5 +306,37 @@ public class NdType extends NdBinding {
 			return getTypeId().getFieldDescriptor();
 		}
 		return descriptorFromClass;
+	}
+
+	public NdTypeAnnotation createTypeAnnotation() {
+		return TYPE_ANNOTATIONS.append(getNd(), getAddress());
+	}
+
+	public void allocateTypeAnnotations(int length) {
+		TYPE_ANNOTATIONS.allocate(getNd(), getAddress(), length);
+	}
+
+	public NdVariable createVariable() {
+		return VARIABLES.append(getNd(), getAddress());
+	}
+
+	public void allocateVariables(int length) {
+		VARIABLES.allocate(getNd(), getAddress(), length);
+	}
+
+	public void allocateMethods(int length) {
+		METHODS.allocate(getNd(), getAddress(), length);
+	}
+
+	public NdMethod createMethod() {
+		return METHODS.append(getNd(), getAddress());
+	}
+
+	public void setDeclaringMethod(char[] enclosingMethod) {
+		ENCLOSING_METHOD.put(getNd(), getAddress(), enclosingMethod);
+	}
+
+	public IString getDeclaringMethod() {
+		return ENCLOSING_METHOD.get(getNd(), getAddress());
 	}
 }

@@ -1954,7 +1954,7 @@ protected int applyCloseableInterfaceWhitelists() {
 	return 0;
 }
 
-protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards) throws InvalidInputException {
+protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean replaceWildcards, boolean filterDefaultMethods) throws InvalidInputException {
 	
 	if (!isInterface() || !isValidBinding()) {
 		throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
@@ -1967,7 +1967,8 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean re
 	
 	ReferenceBinding [] superInterfaces = superInterfaces();
 	for (int i = 0, length = superInterfaces.length; i < length; i++) {
-		MethodBinding [] superInterfaceContracts = superInterfaces[i].getInterfaceAbstractContracts(scope, replaceWildcards);
+		// filterDefaultMethods=false => keep default methods needed to filter out any abstract methods they may override:
+		MethodBinding [] superInterfaceContracts = superInterfaces[i].getInterfaceAbstractContracts(scope, replaceWildcards, false);
 		final int superInterfaceContractsLength = superInterfaceContracts == null  ? 0 : superInterfaceContracts.length;
 		if (superInterfaceContractsLength == 0) continue;
 		if (contractsLength < contractsCount + superInterfaceContractsLength) {
@@ -1977,6 +1978,7 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean re
 		contractsCount += superInterfaceContractsLength;
 	}
 
+	LookupEnvironment environment = scope.environment();
 	for (int i = 0, length = methods == null ? 0 : methods.length; i < length; i++) {
 		final MethodBinding method = methods[i];
 		if (method == null || method.isStatic() || method.redeclaresPublicObjectMethod(scope)) 
@@ -1984,7 +1986,7 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean re
 		if (!method.isValidBinding()) 
 			throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
 		for (int j = 0; j < contractsCount;) {
-			if ( contracts[j] != null && MethodVerifier.doesMethodOverride(method, contracts[j], scope.environment())) {
+			if ( contracts[j] != null && MethodVerifier.doesMethodOverride(method, contracts[j], environment)) {
 				contractsCount--;
 				// abstract method from super type overridden by present interface ==> contracts[j] = null;
 				if (j < contractsCount) {
@@ -1994,12 +1996,45 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean re
 			}
 			j++;
 		}
-		if (method.isDefaultMethod())
+		if (filterDefaultMethods && method.isDefaultMethod())
 			continue; // skip default method itself
 		if (contractsCount == contractsLength) {
 			System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength += 16], 0, contractsCount);
 		}
+		if(environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+			ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(method, scope);
+		}
 		contracts[contractsCount++] = method;
+	}
+	// check mutual overriding of inherited methods (i.e., not from current type):
+	for (int i = 0; i < contractsCount; i++) {
+		MethodBinding contractI = contracts[i];
+		if (TypeBinding.equalsEquals(contractI.declaringClass, this))
+			continue;
+		for (int j = 0; j < contractsCount; j++) {
+			MethodBinding contractJ = contracts[j];
+			if (i == j || TypeBinding.equalsEquals(contractJ.declaringClass, this))
+				continue;
+			if (contractI == contractJ || MethodVerifier.doesMethodOverride(contractI, contractJ, environment)) {
+				contractsCount--;
+				// abstract method from one super type overridden by other super interface ==> contracts[j] = null;
+				if (j < contractsCount) {
+					System.arraycopy(contracts, j+1, contracts, j, contractsCount - j);
+				}				
+				j--;
+				if (j < i)
+					i--;
+				continue;
+			}
+		}
+		if (filterDefaultMethods && contractI.isDefaultMethod()) {
+			contractsCount--;
+			// remove default method after it has eliminated any matching abstract methods from contracts
+			if (i < contractsCount) {
+				System.arraycopy(contracts, i+1, contracts, i, contractsCount - i);
+			}				
+			i--;				
+		}
 	}
 	if (contractsCount < contractsLength) {
 		System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsCount], 0, contractsCount);
@@ -2020,7 +2055,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 		scope.compilationUnitScope().recordQualifiedReference(this.compoundName);
 	MethodBinding[] methods = null;
 	try {
-		methods = getInterfaceAbstractContracts(scope, replaceWildcards);
+		methods = getInterfaceAbstractContracts(scope, replaceWildcards, true);
 		if (methods == null || methods.length == 0)
 			return this.singleAbstractMethod[index] = samProblemBinding;
 		int contractParameterLength = 0;

@@ -13,31 +13,27 @@ package org.eclipse.jdt.internal.core.nd.java;
 import java.util.List;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
-import org.eclipse.jdt.internal.core.nd.NdNode;
+import org.eclipse.jdt.internal.core.nd.NdStruct;
+import org.eclipse.jdt.internal.core.nd.field.FieldList;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
-import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
-public class NdAnnotation extends NdNode {
+public class NdAnnotation extends NdStruct {
 	public static final FieldManyToOne<NdTypeSignature> ANNOTATION_TYPE;
-	public static final FieldOneToMany<NdAnnotationValuePair> ELEMENT_VALUE_PAIRS;
+	public static final FieldList<NdAnnotationValuePair> ELEMENT_VALUE_PAIRS;
 
 	@SuppressWarnings("hiding")
 	public static final StructDef<NdAnnotation> type;
 
 	static {
-		type = StructDef.create(NdAnnotation.class, NdNode.type);
+		type = StructDef.create(NdAnnotation.class, NdStruct.type);
 		ANNOTATION_TYPE = FieldManyToOne.create(type, NdTypeSignature.ANNOTATIONS_OF_THIS_TYPE);
-		ELEMENT_VALUE_PAIRS = FieldOneToMany.create(type, NdAnnotationValuePair.APPLIES_TO);
+		ELEMENT_VALUE_PAIRS = FieldList.create(type, NdAnnotationValuePair.type);
 		type.done();
 	}
 
 	public NdAnnotation(Nd nd, long address) {
 		super(nd, address);
-	}
-
-	public NdAnnotation(Nd nd) {
-		super(nd);
 	}
 
 	public NdTypeSignature getType() {
@@ -50,5 +46,15 @@ public class NdAnnotation extends NdNode {
 
 	public List<NdAnnotationValuePair> getElementValuePairs() {
 		return ELEMENT_VALUE_PAIRS.asList(getNd(), this.address);
+	}
+
+	public NdAnnotationValuePair createValuePair(char[] name) {
+		NdAnnotationValuePair result = ELEMENT_VALUE_PAIRS.append(getNd(), getAddress());
+		result.setName(name);
+		return result;
+	}
+
+	public void allocateValuePairs(int length) {
+		ELEMENT_VALUE_PAIRS.allocate(getNd(), getAddress(), length);
 	}
 }

@@ -35,7 +35,6 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
-import org.eclipse.jdt.internal.compiler.lookup.ImplicitNullAnnotationVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.IntersectionTypeBinding18;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -202,7 +201,6 @@ public abstract class FunctionalExpression extends Expression {
 			}
 			LookupEnvironment environment = blockScope.environment();
 			if (environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-				ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(sam, blockScope);
 				NullAnnotationMatching.checkForContradictions(sam, this, blockScope);
 			}
 			return this.resolvedType = this.expectedType;		

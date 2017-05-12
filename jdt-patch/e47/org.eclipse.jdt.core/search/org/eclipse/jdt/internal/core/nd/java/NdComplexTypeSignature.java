@@ -16,7 +16,6 @@ import java.util.List;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.db.IString;
-import org.eclipse.jdt.internal.core.nd.db.IndexException;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
 import org.eclipse.jdt.internal.core.nd.field.FieldString;
@@ -107,7 +106,9 @@ public class NdComplexTypeSignature extends NdTypeSignature {
 			long size = TYPE_ARGUMENTS.size(getNd(), this.address);
 
 			if (size != 1) {
-				throw new IndexException("Array types should have exactly one argument"); //$NON-NLS-1$
+				throw getNd().describeProblem()
+					.addProblemAddress(TYPE_ARGUMENTS, this.address)
+					.build("Array types should have exactly one argument"); //$NON-NLS-1$
 			}
 
 			return TYPE_ARGUMENTS.get(getNd(), this.address, 0).getType();

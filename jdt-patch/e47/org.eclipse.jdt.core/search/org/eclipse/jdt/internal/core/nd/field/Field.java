@@ -12,6 +12,7 @@ package org.eclipse.jdt.internal.core.nd.field;
 
 import org.eclipse.jdt.internal.core.nd.ITypeFactory;
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.db.Database;
 
 /**
  * Used to represent a single field of an object stored in the database. Objects 
@@ -28,11 +29,12 @@ import org.eclipse.jdt.internal.core.nd.Nd;
  * 
  * @param <T>
  */
-public final class Field<T> implements IField, IDestructableField {
-	private int offset;
+public final class Field<T> extends BaseField implements IDestructableField {
 	public final ITypeFactory<T> factory;
 
-	public Field(ITypeFactory<T> objectFactory) {
+	public Field(ITypeFactory<T> objectFactory, String structName, int fieldNumber) {
+		setFieldName("field " + fieldNumber + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+				+ " in struct " + structName); //$NON-NLS-1$
 		this.factory = objectFactory;
 	}
 
@@ -50,12 +52,34 @@ public final class Field<T> implements IField, IDestructableField {
 	}
 
 	@Override
-	public void setOffset(int offset) {
-		this.offset = offset;
+	public int getRecordSize() {
+		return this.factory.getRecordSize();
 	}
 
 	@Override
-	public int getRecordSize() {
-		return this.factory.getRecordSize();
+	public int getAlignment() {
+		// This sort of field is almost always used for embedding NdStructs within
+		// other data types. Since most NdStructs allow incoming record pointers, they need to
+		// be properly aligned. If we ever want to use this sort of field for other data types
+		// that don't require alignment, we may want to replace this with something smarter
+		// that can figure out the correct alignment based on the requirements of the actual
+		// data type.
+		return Database.BLOCK_SIZE_DELTA;
+	}
+
+	/**
+	 * Creates a new {@link Field} in the given struct with the given type.
+	 *
+	 * @param struct the struct that will contain the newly-created field (must not have had
+	 * {@link StructDef#done()} called on it yet).
+	 * @param fieldType the data type for the contents of the newly created field
+	 * @return the newly-constructed field
+	 */
+	public static <T> Field<T> create(StructDef<?> struct, StructDef<T> fieldType) {
+		Field<T> result = new Field<>(fieldType.getFactory(), struct.getStructName(), struct.getNumFields());
+		struct.add(result);
+		struct.addDestructableField(result);
+		fieldType.addDependency(struct);
+		return result;
 	}
 }

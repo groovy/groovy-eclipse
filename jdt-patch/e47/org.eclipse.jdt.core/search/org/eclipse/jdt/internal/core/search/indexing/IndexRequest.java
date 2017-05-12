@@ -42,4 +42,8 @@ public abstract class IndexRequest implements IJob {
 	protected Integer updatedIndexState() {
 		return IndexManager.UPDATING_STATE;
 	}
+	@Override
+	public boolean waitNeeded() {
+		return true;
+	}
 }

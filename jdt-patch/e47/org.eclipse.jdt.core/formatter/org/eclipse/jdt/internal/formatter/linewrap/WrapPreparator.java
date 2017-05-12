@@ -906,6 +906,12 @@ public class WrapPreparator extends ASTVisitor {
 				Token previous = this.tm.get(i);
 				if (!previous.isComment())
 					break;
+				if (this.options.never_indent_line_comments_on_first_column
+						&& previous.tokenType == TokenNameCOMMENT_LINE && previous.getIndent() == 0)
+					break;
+				if (this.options.never_indent_block_comments_on_first_column
+						&& previous.tokenType == TokenNameCOMMENT_BLOCK && previous.getIndent() == 0)
+					break;
 				if (previous.getLineBreaksAfter() == 0 && i == index - 1)
 					index = i;
 				if (previous.getLineBreaksBefore() > 0)
@@ -988,10 +994,9 @@ public class WrapPreparator extends ASTVisitor {
 				penaltyMultiplier, isFirst, indentOnColumn);
 	}
 
-	public void finishUp(ASTNode astRoot, IRegion[] regions) {
+	public void finishUp(ASTNode astRoot, List<IRegion> regions) {
 		preserveExistingLineBreaks();
-		if (regions != null)
-			applyBreaksOutsideRegions(regions);
+		applyBreaksOutsideRegions(regions);
 		new WrapExecutor(this.tm, this.options).executeWraps();
 		this.fieldAligner.alignComments();
 		wrapComments();
@@ -1052,7 +1057,7 @@ public class WrapPreparator extends ASTVisitor {
 		return Math.min(lineBreaks, toPreserve);
 	}
 
-	private void applyBreaksOutsideRegions(IRegion[] regions) {
+	private void applyBreaksOutsideRegions(List<IRegion> regions) {
 		String source = this.tm.getSource();
 		int previousRegionEnd = 0;
 		for (IRegion region : regions) {

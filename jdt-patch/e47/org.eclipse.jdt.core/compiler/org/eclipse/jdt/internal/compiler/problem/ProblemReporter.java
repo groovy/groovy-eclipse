@@ -744,7 +744,8 @@ public static int getProblemCategory(int severity, int problemID) {
 		case IProblem.IsClassPathCorrect :
 		case IProblem.CorruptedSignature :
 			return CategorizedProblem.CAT_BUILDPATH;
-
+		case IProblem.ProblemNotAnalysed :
+			return CategorizedProblem.CAT_UNNECESSARY_CODE;
 		default :
 			if ((problemID & IProblem.Syntax) != 0)
 				return CategorizedProblem.CAT_SYNTAX;
@@ -4319,7 +4320,6 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method, Scope s
 			return;
 		case ProblemReasons.InferredApplicableMethodInapplicable:
 		case ProblemReasons.InvocationTypeInferenceFailure:
-			// FIXME(stephan): construct suitable message (https://bugs.eclipse.org/404675)
 			problemMethod = (ProblemMethodBinding) method;
 			shownMethod = problemMethod.closestMatch;
 			if (problemMethod.returnType == shownMethod.returnType) { //$IDENTITY-COMPARISON$
@@ -4331,8 +4331,15 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method, Scope s
 							new String[] { typeArguments, String.valueOf(shownMethod.original().shortReadableName()) },
 							messageSend.sourceStart,
 							messageSend.sourceEnd);
+				} else {
+					// FIXME(stephan): turn into an exception once we are sure about this 
+					this.handle(IProblem.GenericInferenceError,
+						new String[] { "Unknown error at invocation of "+String.valueOf(shownMethod.readableName())}, //$NON-NLS-1$
+						new String[] { "Unknown error at invocation of "+String.valueOf(shownMethod.shortReadableName())}, //$NON-NLS-1$
+						messageSend.sourceStart,
+						messageSend.sourceEnd);
 				}
-				return; // funnily this can happen in a deeply nested call, because the inner lies by stealing its closest match and the outer does not know so. See GRT1_8.testBug430296
+				return;
 			}
 			TypeBinding shownMethodReturnType = shownMethod.returnType.capture(scope, messageSend.sourceStart, messageSend.sourceEnd);
 			this.handle(
@@ -9631,11 +9638,11 @@ public void referenceExpressionArgumentNullityMismatch(ReferenceExpression locat
 		.append(descriptorMethod.shortReadableName());
 	this.handle(
 			status.isUnchecked() ? IProblem.ReferenceExpressionParameterNullityUnchecked : IProblem.ReferenceExpressionParameterNullityMismatch,
-			new String[] { String.valueOf(idx+1), 
+			new String[] { idx == -1 ? "'this'" : String.valueOf(idx + 1), //$NON-NLS-1$
 							String.valueOf(requiredType.nullAnnotatedReadableName(this.options, false)),
 							String.valueOf(providedType.nullAnnotatedReadableName(this.options, false)),
 							methodSignature.toString() },
-			new String[] { String.valueOf(idx+1), 
+			new String[] { idx == -1 ? "'this'" : String.valueOf(idx + 1), //$NON-NLS-1$
 							String.valueOf(requiredType.nullAnnotatedReadableName(this.options, true)),
 							String.valueOf(providedType.nullAnnotatedReadableName(this.options, true)),
 							shortSignature.toString() },

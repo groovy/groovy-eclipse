@@ -47,6 +47,10 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobGroup;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaElementDelta;
@@ -65,6 +69,7 @@ import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.nd.IReader;
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.db.ChunkCache;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 import org.eclipse.jdt.internal.core.nd.db.IndexException;
 import org.eclipse.jdt.internal.core.nd.java.FileFingerprint;
@@ -75,7 +80,6 @@ import org.eclipse.jdt.internal.core.nd.java.NdResourceFile;
 import org.eclipse.jdt.internal.core.nd.java.NdType;
 import org.eclipse.jdt.internal.core.nd.java.NdTypeId;
 import org.eclipse.jdt.internal.core.nd.java.NdWorkspaceLocation;
-import org.eclipse.jdt.internal.core.nd.java.NdZipEntry;
 import org.eclipse.jdt.internal.core.nd.java.TypeRef;
 import org.eclipse.jdt.internal.core.nd.java.model.BinaryTypeDescriptor;
 import org.eclipse.jdt.internal.core.nd.java.model.BinaryTypeFactory;
@@ -90,8 +94,22 @@ public final class Indexer {
 	public static boolean DEBUG;
 	public static boolean DEBUG_ALLOCATIONS;
 	public static boolean DEBUG_TIMING;
+	public static boolean DEBUG_SCHEDULING;
 	public static boolean DEBUG_INSERTIONS;
 	public static boolean DEBUG_SELFTEST;
+	public static int DEBUG_LOG_SIZE_MB;
+	private static IPreferenceChangeListener listener = new IPreferenceChangeListener() {
+		@Override
+		public void preferenceChange(PreferenceChangeEvent event) {
+			if (JavaIndex.ENABLE_NEW_JAVA_INDEX.equals(event.getKey())) {
+				if (JavaIndex.isEnabled()) {
+					getInstance().rescanAll();
+				} else {
+					ChunkCache.getSharedInstance().clear();
+				}
+			}
+		}
+	};
 
 	// This is an arbitrary constant that is larger than the maximum number of ticks
 	// reported by SubMonitor and small enough that it won't overflow a long when multiplied by a large
@@ -144,6 +162,8 @@ public final class Indexer {
 		synchronized (mutex) {
 			if (indexer == null) {
 				indexer = new Indexer(JavaIndex.getGlobalNd(), ResourcesPlugin.getWorkspace().getRoot());
+				IEclipsePreferences preferences = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
+				preferences.addPreferenceChangeListener(listener);
 			}
 			return indexer;
 		}
@@ -173,18 +193,20 @@ public final class Indexer {
 			}
 		}
 
-		if (runRescan) {
-			// Force a rescan when re-enabling automatic indexing since we may have missed an update
-			this.rescanJob.schedule();
-		}
-
-		if (!enabled) {
-			// Wait for any existing indexing operations to finish when disabling automatic indexing since
-			// we only want explicitly-triggered indexing operations to run after the method returns
-			try {
-				this.rescanJob.join(0, null);
-			} catch (OperationCanceledException | InterruptedException e) {
-				// Don't care
+		if (JavaIndex.isEnabled()) {
+			if (runRescan) {
+				// Force a rescan when re-enabling automatic indexing since we may have missed an update
+				this.rescanJob.schedule();
+			}
+	
+			if (!enabled) {
+				// Wait for any existing indexing operations to finish when disabling automatic indexing since
+				// we only want explicitly-triggered indexing operations to run after the method returns
+				try {
+					this.rescanJob.join(0, null);
+				} catch (OperationCanceledException | InterruptedException e) {
+					// Don't care
+				}
 			}
 		}
 	}
@@ -216,6 +238,7 @@ public final class Indexer {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, 100);
 		Database db = this.nd.getDB();
 		db.resetCacheCounters();
+		db.getLog().setBufferSize(DEBUG_LOG_SIZE_MB);
 
 		synchronized (this.automaticIndexingMutex) {
 			this.indexerDirtiedWhileDisabled = false;
@@ -701,6 +724,13 @@ public final class Indexer {
 				}
 				subMonitor.setWorkRemaining(zipFile.size());
 
+				// Preallocate memory for the zipfile entries
+				this.nd.acquireWriteLock(subMonitor.split(5));
+				try {
+					resourceFile.allocateZipEntries(zipFile.size());
+				} finally {
+					this.nd.releaseWriteLock();
+				}
 				for (Enumeration<? extends ZipEntry> e = zipFile.entries(); e.hasMoreElements();) {
 					SubMonitor nextEntry = subMonitor.split(1).setWorkRemaining(2);
 					ZipEntry member = e.nextElement();
@@ -714,7 +744,7 @@ public final class Indexer {
 									Package.logInfo("Inserting non-class file " + fileName + " into " //$NON-NLS-1$//$NON-NLS-2$
 											+ resourceFile.getLocation().getString() + " " + resourceFile.address); //$NON-NLS-1$
 								}
-								new NdZipEntry(resourceFile, fileName);
+								resourceFile.addZipEntry(fileName);
 
 								if (fileName.equals("META-INF/MANIFEST.MF")) { //$NON-NLS-1$
 									try (InputStream inputStream = zipFile.getInputStream(member)) {
@@ -924,7 +954,7 @@ public final class Indexer {
 	}
 
 	public void rescanAll() {
-		if (DEBUG) {
+		if (DEBUG_SCHEDULING) {
 			Package.logInfo("Scheduling rescanAll now"); //$NON-NLS-1$
 		}
 		synchronized (this.automaticIndexingMutex) {
@@ -934,6 +964,9 @@ public final class Indexer {
 				}
 				return;
 			}
+		}
+		if (!JavaIndex.isEnabled()) {
+			return;
 		}
 		this.rescanJob.schedule();
 	}
@@ -992,6 +1025,9 @@ public final class Indexer {
 	}
 
 	public void waitForIndex(int waitingPolicy, IProgressMonitor monitor) {
+		if (!JavaIndex.isEnabled()) {
+			return;
+		}
 		switch (waitingPolicy) {
 			case IJob.ForceImmediate: {
 				break;
@@ -1012,13 +1048,22 @@ public final class Indexer {
 	public void rebuildIndex(IProgressMonitor monitor) throws CoreException {
 		SubMonitor subMonitor = SubMonitor.convert(monitor, 100);
 
+		this.rescanJob.cancel();
+		try {
+			this.rescanJob.join(0, subMonitor.split(1));
+		} catch (InterruptedException e) {
+			// Nothing to do.
+		}
 		this.nd.acquireWriteLock(subMonitor.split(1));
 		try {
 			this.nd.clear(subMonitor.split(2));
 		} finally {
 			this.nd.releaseWriteLock();
 		}
-		rescan(subMonitor.split(98));
+		if (!JavaIndex.isEnabled()) {
+			return;
+		}
+		rescan(subMonitor.split(97));
 	}
 
 	public void requestRebuildIndex() {

@@ -1789,7 +1789,7 @@ public final class CompletionEngine
 				if (expression.body().sourceStart <= astNode.sourceStart &&
 						astNode.sourceEnd <= expression.body().sourceEnd) {
 					// completion is inside a method body
-					if (astNodeParent == null &&
+					if ((astNodeParent == null || astNodeParent == expression) &&
 							astNode instanceof CompletionOnSingleNameReference &&
 							!((CompletionOnSingleNameReference)astNode).isPrecededByModifiers) {
 						context.setTokenLocation(CompletionContext.TL_STATEMENT_START);

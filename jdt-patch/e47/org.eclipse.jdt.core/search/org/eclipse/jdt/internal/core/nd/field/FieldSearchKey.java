@@ -13,6 +13,8 @@ package org.eclipse.jdt.internal.core.nd.field;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.NdNode;
 import org.eclipse.jdt.internal.core.nd.db.BTree;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 import org.eclipse.jdt.internal.core.nd.db.EmptyString;
 import org.eclipse.jdt.internal.core.nd.db.IString;
@@ -20,11 +22,12 @@ import org.eclipse.jdt.internal.core.nd.db.IString;
 /**
  * Represents a search key into a global search index.
  */
-public class FieldSearchKey<T> implements IField, IDestructableField {
-	private int offset;
+public class FieldSearchKey<T> extends BaseField implements IDestructableField {
 	FieldSearchIndex<?> searchIndex;
+	private final Tag destructTag;
+	private final Tag putTag;
 
-	private FieldSearchKey(FieldSearchIndex<?> searchIndex) {
+	private FieldSearchKey(FieldSearchIndex<?> searchIndex, String structName, int fieldNumber) {
 		if (searchIndex != null) {
 			if (searchIndex.searchKey != null && searchIndex.searchKey != this) {
 				throw new IllegalArgumentException(
@@ -34,6 +37,10 @@ public class FieldSearchKey<T> implements IField, IDestructableField {
 			searchIndex.searchKey = this;
 		}
 		this.searchIndex = searchIndex;
+		setFieldName("field " + fieldNumber + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+				+ " in struct " + structName); //$NON-NLS-1$
+		this.putTag = ModificationLog.createTag("Writing " + getFieldName()); //$NON-NLS-1$
+		this.destructTag = ModificationLog.createTag("Destructing " + getFieldName()); //$NON-NLS-1$
 	}
 
 	/**
@@ -41,7 +48,7 @@ public class FieldSearchKey<T> implements IField, IDestructableField {
 	 */
 	public static <T, B extends NdNode> FieldSearchKey<T> create(StructDef<B> builder,
 			FieldSearchIndex<B> searchIndex) {
-		FieldSearchKey<T> result = new FieldSearchKey<T>(searchIndex);
+		FieldSearchKey<T> result = new FieldSearchKey<T>(searchIndex, builder.getStructName(), builder.getNumFields());
 
 		builder.add(result);
 		builder.addDestructableField(result);
@@ -57,12 +64,17 @@ public class FieldSearchKey<T> implements IField, IDestructableField {
 	 * Sets the value of the key and inserts it into the index if it is not already present
 	 */
 	public void put(Nd nd, long address, char[] newString) {
-		cleanup(nd, address);
-
 		Database db = nd.getDB();
-		BTree btree = this.searchIndex.get(nd, Database.DATA_AREA_OFFSET);
-		db.putRecPtr(address + this.offset, db.newString(newString).getRecord());
-		btree.insert(address);
+		db.getLog().start(this.putTag);
+		try {
+			cleanup(nd, address);
+
+			BTree btree = this.searchIndex.get(nd, Database.DATA_AREA_OFFSET);
+			db.putRecPtr(address + this.offset, db.newString(newString).getRecord());
+			btree.insert(address);
+		} finally {
+			db.getLog().end(this.putTag);
+		}
 	}
 
 	public IString get(Nd nd, long address) {
@@ -77,7 +89,13 @@ public class FieldSearchKey<T> implements IField, IDestructableField {
 
 	@Override
 	public void destruct(Nd nd, long address) {
-		cleanup(nd, address);
+		Database db = nd.getDB();
+		db.getLog().start(this.destructTag);
+		try {
+			cleanup(nd, address);
+		} finally {
+			db.getLog().end(this.destructTag);
+		}
 	}
 
 	private void cleanup(Nd nd, long address) {
@@ -109,11 +127,6 @@ public class FieldSearchKey<T> implements IField, IDestructableField {
 
 		boolean isInIndex = namerec != 0;
 		return isInIndex;
-	}
-
-	@Override
-	public void setOffset(int offset) {
-		this.offset = offset;
 	}
 
 	@Override

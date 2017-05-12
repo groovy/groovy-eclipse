@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,6 +37,7 @@ import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
@@ -322,10 +323,29 @@ private static void checkAlternateBinding(BlockScope scope, Expression receiver,
 			for (int i = 0; i < argumentLength; i++) {
 				if (TypeBinding.notEquals(originalArgumentTypes[i], alternateArgumentTypes[i])
                        /*&& !originalArgumentTypes[i].needsUncheckedConversion(alternateArgumentTypes[i])*/) {
-					scope.problemReporter().unnecessaryCast((CastExpression)arguments[i]);
+					if (!preventsUnlikelyTypeWarning(originalArgumentTypes[i], alternateArgumentTypes[i], receiverType, binding, scope))
+						scope.problemReporter().unnecessaryCast((CastExpression)arguments[i]);
 				}
 			}
 		}
+}
+
+private static boolean preventsUnlikelyTypeWarning(TypeBinding castedType, TypeBinding uncastedType, TypeBinding receiverType, MethodBinding binding, BlockScope scope) {
+	if (!scope.compilerOptions().isAnyEnabled(IrritantSet.UNLIKELY_ARGUMENT_TYPE))
+		return false;
+	if (binding.isStatic() || binding.parameters.length != 1)
+		return false;
+	// would using the uncastedType be considered as dangerous?
+	UnlikelyArgumentCheck argumentChecks = UnlikelyArgumentCheck.determineCheckForNonStaticSingleArgumentMethod(
+			uncastedType, scope, binding.selector, receiverType, binding.parameters);
+	if (argumentChecks != null && argumentChecks.isDangerous(scope)) {
+		// does the cast help?
+		argumentChecks = UnlikelyArgumentCheck.determineCheckForNonStaticSingleArgumentMethod(
+				castedType, scope, binding.selector, receiverType, binding.parameters);
+		if (argumentChecks == null || !argumentChecks.isDangerous(scope))
+			return true;
+	}
+	return false;
 }
 
 public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding expressionType, TypeBinding match, boolean isNarrowing) {

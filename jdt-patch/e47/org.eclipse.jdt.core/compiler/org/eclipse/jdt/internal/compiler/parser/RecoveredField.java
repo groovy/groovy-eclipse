@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
@@ -89,9 +90,16 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 		if (statement.sourceEnd > 0)
 				this.alreadyCompletedFieldInitialization = true;
 		// else we may still be inside the initialization, having parsed only a part of it yet
-		this.fieldDeclaration.initialization = (Expression)statement;
-		this.fieldDeclaration.declarationSourceEnd = statement.sourceEnd;
-		this.fieldDeclaration.declarationEnd = statement.sourceEnd;
+		if (!(statement instanceof AllocationExpression) && 
+				this.fieldDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT) {
+			AllocationExpression alloc = new AllocationExpression();
+			alloc.arguments = new Expression[] {(Expression) statement};
+			this.fieldDeclaration.initialization = alloc;
+		} else {
+			this.fieldDeclaration.initialization = (Expression) statement;
+			this.fieldDeclaration.declarationSourceEnd = statement.sourceEnd;
+			this.fieldDeclaration.declarationEnd = statement.sourceEnd;
+		}
 		return this;
 	}
 }
@@ -242,7 +250,8 @@ public FieldDeclaration updatedFieldDeclaration(int depth, Set<TypeDeclaration> 
 				}
 			}
 			if (this.anonymousTypeCount > 0) this.fieldDeclaration.bits |= ASTNode.HasLocalType;
-		} else if(this.fieldDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT) {
+		}
+		else if(this.fieldDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT) {
 			// fieldDeclaration is an enum constant
 			for (int i = 0; i < this.anonymousTypeCount; i++){
 				RecoveredType recoveredType = this.anonymousTypes[i];

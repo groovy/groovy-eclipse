@@ -192,31 +192,37 @@ public MethodBinding asRawMethod(LookupEnvironment env) {
 	int length = this.typeVariables.length;
 	TypeBinding[] arguments = new TypeBinding[length];
 	for (int i = 0; i < length; i++) {
-		TypeVariableBinding var = this.typeVariables[i];
-		if (var.boundsCount() <= 1) {
-			arguments[i] = env.convertToRawType(var.upperBound(), false /*do not force conversion of enclosing types*/);
-		} else {
-			// use an intersection type to retain full bound information if more than 1 bound
-			TypeBinding[] itsSuperinterfaces = var.superInterfaces();
-			int superLength = itsSuperinterfaces.length;
-			TypeBinding rawFirstBound = null;
-			TypeBinding[] rawOtherBounds = null;
-			if (var.boundsCount() == superLength) {
-				rawFirstBound = env.convertToRawType(itsSuperinterfaces[0], false);
-				rawOtherBounds = new TypeBinding[superLength - 1];
-				for (int s = 1; s < superLength; s++)
-					rawOtherBounds[s - 1] = env.convertToRawType(itsSuperinterfaces[s], false);
-			} else {
-				rawFirstBound = env.convertToRawType(var.superclass(), false);
-				rawOtherBounds = new TypeBinding[superLength];
-				for (int s = 0; s < superLength; s++)
-					rawOtherBounds[s] = env.convertToRawType(itsSuperinterfaces[s], false);
-			}
-			arguments[i] = env.createWildcard(null, 0, rawFirstBound, rawOtherBounds, org.eclipse.jdt.internal.compiler.ast.Wildcard.EXTENDS);
-		}
+		arguments[i] = makeRawArgument(env, this.typeVariables[i]);
 	}
 	return env.createParameterizedGenericMethod(this, arguments);
 }
+private TypeBinding makeRawArgument(LookupEnvironment env, TypeVariableBinding var) {
+	if (var.boundsCount() <= 1) {
+		TypeBinding upperBound = var.upperBound();
+		if (upperBound.isTypeVariable())
+			return makeRawArgument(env, (TypeVariableBinding) upperBound);
+		return env.convertToRawType(upperBound, false /*do not force conversion of enclosing types*/);
+	} else {
+		// use an intersection type to retain full bound information if more than 1 bound
+		TypeBinding[] itsSuperinterfaces = var.superInterfaces();
+		int superLength = itsSuperinterfaces.length;
+		TypeBinding rawFirstBound = null;
+		TypeBinding[] rawOtherBounds = null;
+		if (var.boundsCount() == superLength) {
+			rawFirstBound = env.convertToRawType(itsSuperinterfaces[0], false);
+			rawOtherBounds = new TypeBinding[superLength - 1];
+			for (int s = 1; s < superLength; s++)
+				rawOtherBounds[s - 1] = env.convertToRawType(itsSuperinterfaces[s], false);
+		} else {
+			rawFirstBound = env.convertToRawType(var.superclass(), false);
+			rawOtherBounds = new TypeBinding[superLength];
+			for (int s = 0; s < superLength; s++)
+				rawOtherBounds[s] = env.convertToRawType(itsSuperinterfaces[s], false);
+		}
+		return env.createWildcard(null, 0, rawFirstBound, rawOtherBounds, org.eclipse.jdt.internal.compiler.ast.Wildcard.EXTENDS);
+	}
+}
+
 /* Answer true if the receiver is visible to the type provided by the scope.
 * InvocationSite implements isSuperAccess() to provide additional information
 * if the receiver is protected.

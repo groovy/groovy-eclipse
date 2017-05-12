@@ -1460,6 +1460,8 @@ public final class ImportRewrite {
 
 	private void annotateList(List annotations, IAnnotationBinding [] annotationBindings, AST ast,
 						ImportRewriteContext context, TypeLocation location, ITypeBinding type) {
+		if (context == null)
+			context= this.defaultContext;
 		annotationBindings = context.removeRedundantTypeAnnotations(annotationBindings, location, type);
 		for (int i = 0; i< annotationBindings.length; i++) {
 			Annotation annotation = addAnnotation(annotationBindings[i], ast, context);

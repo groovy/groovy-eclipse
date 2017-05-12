@@ -4691,10 +4691,10 @@ public final class JavaCore extends Plugin {
 		} else if (containerPath.segmentCount() < 1) {
 			throw new ClasspathEntry.AssertionFailedException("Illegal classpath container path: \'" + containerPath.makeRelative().toString() + "\', must have at least one segment (containerID+hints)"); //$NON-NLS-1$//$NON-NLS-2$
 		}
-		if (accessRules == null) {
+		if (accessRules == null || accessRules.length == 0) {
 			accessRules = ClasspathEntry.NO_ACCESS_RULES;
 		}
-		if (extraAttributes == null) {
+		if (extraAttributes == null || extraAttributes.length == 0) {
 			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
 		}
 		return new ClasspathEntry(
@@ -4890,10 +4890,10 @@ public final class JavaCore extends Plugin {
 			boolean isExported) {
 
 		if (path == null) throw new ClasspathEntry.AssertionFailedException("Library path cannot be null"); //$NON-NLS-1$
-		if (accessRules == null) {
+		if (accessRules == null || accessRules.length==0) {
 			accessRules = ClasspathEntry.NO_ACCESS_RULES;
 		}
-		if (extraAttributes == null) {
+		if (extraAttributes == null || extraAttributes.length==0) {
 			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
 		}
 		boolean hasDotDot = ClasspathEntry.hasDotDot(path);
@@ -5021,10 +5021,10 @@ public final class JavaCore extends Plugin {
 			boolean isExported) {
 
 		if (!path.isAbsolute()) throw new ClasspathEntry.AssertionFailedException("Path for IClasspathEntry must be absolute"); //$NON-NLS-1$
-		if (accessRules == null) {
+		if (accessRules == null || accessRules.length == 0) {
 			accessRules = ClasspathEntry.NO_ACCESS_RULES;
 		}
-		if (extraAttributes == null) {
+		if (extraAttributes == null || extraAttributes.length == 0) {
 			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
 		}
 		return new ClasspathEntry(
@@ -5385,10 +5385,10 @@ public final class JavaCore extends Plugin {
 		if (variablePath.segmentCount() < 1) {
 			throw new ClasspathEntry.AssertionFailedException("Illegal classpath variable path: \'" + variablePath.makeRelative().toString() + "\', must have at least one segment"); //$NON-NLS-1$//$NON-NLS-2$
 		}
-		if (accessRules == null) {
+		if (accessRules == null || accessRules.length == 0) {
 			accessRules = ClasspathEntry.NO_ACCESS_RULES;
 		}
-		if (extraAttributes == null) {
+		if (extraAttributes == null || extraAttributes.length == 0) {
 			extraAttributes = ClasspathEntry.NO_EXTRA_ATTRIBUTES;
 		}
 
@@ -5517,7 +5517,8 @@ public final class JavaCore extends Plugin {
 	}
 
 	/**
-	 * Deletes and rebuilds the java index.
+	 * Deletes the index, then rebuilds any portions of the index that are
+	 * currently needed by the workspace.
 	 * 
 	 * @param monitor a progress monitor, or <code>null</code> if progress
 	 *    reporting and cancellation are not desired

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -61,7 +61,7 @@ import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 public class FlowContext implements TypeConstants {
 
 	// preempt marks looping contexts
-	public final static FlowContext NotContinuableContext = new FlowContext(null, null);
+	public final static FlowContext NotContinuableContext = new FlowContext(null, null, true);
 	public ASTNode associatedNode;
 	public FlowContext parent;
 	public FlowInfo initsOnFinally;
@@ -121,7 +121,7 @@ public static final int IN_INSTANCEOF = 0x0400;
 // check happened in an instanceof expression
 public static final int CONTEXT_MASK = ~CHECK_MASK & ~HIDE_NULL_COMPARISON_WARNING_MASK;
 
-public FlowContext(FlowContext parent, ASTNode associatedNode) {
+public FlowContext(FlowContext parent, ASTNode associatedNode, boolean inheritNullFieldChecks) {
 	this.parent = parent;
 	this.associatedNode = associatedNode;
 	if (parent != null) {
@@ -130,8 +130,16 @@ public FlowContext(FlowContext parent, ASTNode associatedNode) {
 		}
 		this.initsOnFinally = parent.initsOnFinally;
 		this.conditionalLevel = parent.conditionalLevel;
-		this.nullCheckedFieldReferences = parent.nullCheckedFieldReferences; // re-use list if there is one
-		this.timesToLiveForNullCheckInfo = parent.timesToLiveForNullCheckInfo;
+		if (inheritNullFieldChecks)
+			copyNullCheckedFieldsFrom(parent); // re-use list if there is one
+	}
+}
+
+public void copyNullCheckedFieldsFrom(FlowContext other) {
+	Reference[] fieldReferences = other.nullCheckedFieldReferences;
+	if (fieldReferences != null && fieldReferences.length > 0 && fieldReferences[0] != null) {
+		this.nullCheckedFieldReferences = other.nullCheckedFieldReferences;
+		this.timesToLiveForNullCheckInfo = other.timesToLiveForNullCheckInfo;
 	}
 }
 

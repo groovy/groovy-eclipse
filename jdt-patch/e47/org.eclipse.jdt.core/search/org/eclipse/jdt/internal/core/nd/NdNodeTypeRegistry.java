@@ -36,7 +36,7 @@ public class NdNodeTypeRegistry<R> {
 		short shortTypeId = (short)typeId;
 		String fullyQualifiedClassName = toRegister.getElementClass().getName();
 
-		if (this.types.containsKey(typeId) || this.reserved.get(typeId)) {
+		if (this.types.containsKey(shortTypeId) || this.reserved.get(typeId)) {
 			throw new IllegalArgumentException(
 					"The type id " + typeId + " for class " + fullyQualifiedClassName + " is already in use."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
@@ -75,7 +75,11 @@ public class NdNodeTypeRegistry<R> {
 		return typeFactory.create(nd, address);
 	}
 
-	public short getTypeForClass(Class<? extends R> toQuery) {
+	public boolean isRegisteredClass(Class<?> toQuery) {
+		return this.registeredClasses.containsKey(toQuery);
+	}
+
+	public short getTypeForClass(Class<?> toQuery) {
 		Short classId = this.registeredClasses.get(toQuery);
 
 		if (classId == null) {

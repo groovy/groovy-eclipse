@@ -11,13 +11,14 @@
 package org.eclipse.jdt.internal.core.nd.java;
 
 import org.eclipse.jdt.internal.compiler.codegen.AnnotationTargetTypeConstants;
+import org.eclipse.jdt.internal.core.nd.IDestructable;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 import org.eclipse.jdt.internal.core.nd.field.FieldByte;
 import org.eclipse.jdt.internal.core.nd.field.FieldPointer;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 
-public class NdTypeAnnotation extends NdAnnotation {
+public class NdTypeAnnotation extends NdAnnotation implements IDestructable {
 	public static final FieldByte TARGET_TYPE;
 	public static final FieldByte TARGET_ARG0;
 	public static final FieldByte TARGET_ARG1;
@@ -43,18 +44,13 @@ public class NdTypeAnnotation extends NdAnnotation {
 		super(nd, address);
 	}
 
-	public NdTypeAnnotation(Nd nd) {
-		super(nd);
-	}
-
 	public void setPath(byte[] path) {
 		freePath();
-		Nd nd = getNd();
-		PATH_LENGTH.put(nd, this.address, (byte)path.length);
+		PATH_LENGTH.put(this.nd, this.address, (byte) path.length);
 		if (path.length > 0) {
-			long pathArray = nd.getDB().malloc(path.length, Database.POOL_MISC);
-			PATH.put(nd, this.address, pathArray);
-			nd.getDB().putBytes(pathArray, path, path.length);
+			long pathArray = this.nd.getDB().malloc(path.length, Database.POOL_MISC);
+			PATH.put(this.nd, this.address, pathArray);
+			this.nd.getDB().putBytes(pathArray, path, path.length);
 		}
 	}
 
@@ -111,12 +107,10 @@ public class NdTypeAnnotation extends NdAnnotation {
 	@Override
 	public void destruct() {
 		freePath();
-		super.destruct();
 	}
 
 	private void freePath() {
-		Nd nd = getNd();
-		long pathPointer = PATH.get(nd, this.address);
-		nd.getDB().free(pathPointer, Database.POOL_MISC);
+		long pathPointer = PATH.get(this.nd, this.address);
+		this.nd.getDB().free(pathPointer, Database.POOL_MISC);
 	}
 }

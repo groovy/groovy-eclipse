@@ -24,8 +24,8 @@ public final class ChunkCache {
 	public static final String CHUNK_CACHE_SIZE_MB = "chunkCacheSizeMb"; //$NON-NLS-1$
 	public static final String CHUNK_CACHE_SIZE_PERCENT = "chunkCacheSizePercent"; //$NON-NLS-1$
 
-	public static final double CHUNK_CACHE_SIZE_MB_DEFAULT = 256.0;
-	public static final double CHUNK_CACHE_SIZE_PERCENT_DEFAULT = 10.0;
+	public static final double CHUNK_CACHE_SIZE_MB_DEFAULT = 128.0;
+	public static final double CHUNK_CACHE_SIZE_PERCENT_DEFAULT = 5.0;
 
 	static {
 		IEclipsePreferences node = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
@@ -99,10 +99,10 @@ public final class ChunkCache {
 		while (true) {
 			Chunk chunk = this.fPageTable[this.fPointer];
 			if (chunk.fCacheHitFlag) {
-				chunk.fCacheHitFlag= false;
-				this.fPointer= (this.fPointer + 1) % this.fPageTable.length;
+				chunk.fCacheHitFlag = false;
+				this.fPointer = (this.fPointer + 1) % this.fPageTable.length;
 			} else {
-				chunk.fCacheIndex= -1;
+				chunk.fCacheIndex = -1;
 				chunk.fDatabase.checkIfChunkReleased(chunk);
 				this.fPageTable[this.fPointer] = null;
 				return;
@@ -149,10 +149,10 @@ public final class ChunkCache {
 			this.fPointer= oldLength;
 			this.fPageTable= newTable;
 		} else {
-			for (int i= newLength; i < oldLength; i++) {
-				final Chunk chunk= this.fPageTable[i];
+			for (int i = newLength; i < oldLength; i++) {
+				Chunk chunk = this.fPageTable[i];
+				chunk.fCacheIndex = -1;
 				chunk.fDatabase.checkIfChunkReleased(chunk);
-				chunk.fCacheIndex= -1;
 			}
 			Chunk[] newTable= new Chunk[newLength];
 			System.arraycopy(this.fPageTable, 0, newTable, 0, newLength);
@@ -165,5 +165,19 @@ public final class ChunkCache {
 	private int computeLength(long maxSize) {
 		long maxLength= Math.min(maxSize / Database.CHUNK_SIZE, Integer.MAX_VALUE);
 		return Math.max(1, (int) maxLength);
+	}
+
+	public synchronized void clear() {
+		for (int i = 0; i < this.fPageTable.length; i++) {
+			Chunk chunk = this.fPageTable[i];
+			if (chunk == null) {
+				continue;
+			}
+			chunk.fCacheIndex = -1;
+			chunk.fDatabase.checkIfChunkReleased(chunk);
+			this.fPageTable[i] = null;
+		}
+		this.fTableIsFull = false;
+		this.fPointer = 0;
 	}
 }

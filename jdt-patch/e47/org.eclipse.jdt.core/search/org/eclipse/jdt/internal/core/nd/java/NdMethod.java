@@ -14,39 +14,43 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.db.IString;
+import org.eclipse.jdt.internal.core.nd.field.FieldInt;
+import org.eclipse.jdt.internal.core.nd.field.FieldList;
 import org.eclipse.jdt.internal.core.nd.field.FieldManyToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToMany;
 import org.eclipse.jdt.internal.core.nd.field.FieldOneToOne;
 import org.eclipse.jdt.internal.core.nd.field.FieldShort;
+import org.eclipse.jdt.internal.core.nd.field.FieldString;
 import org.eclipse.jdt.internal.core.nd.field.StructDef;
 import org.eclipse.jdt.internal.core.nd.util.CharArrayUtils;
 import org.eclipse.jdt.internal.core.util.CharArrayBuffer;
 
 public class NdMethod extends NdBinding {
-	public static final FieldManyToOne<NdMethodId> METHOD_ID;
+	public static final FieldString METHOD_NAME;
 	public static final FieldShort METHOD_FLAGS;
-	public static final FieldManyToOne<NdType> PARENT;
 	public static final FieldOneToMany<NdVariable> DECLARED_VARIABLES;
-	public static final FieldOneToMany<NdMethodParameter> PARAMETERS;
+	public static final FieldList<NdMethodParameter> PARAMETERS;
 	public static final FieldOneToOne<NdConstant> DEFAULT_VALUE;
-	public static final FieldOneToMany<NdMethodException> EXCEPTIONS;
+	public static final FieldList<NdMethodException> EXCEPTIONS;
 	public static final FieldManyToOne<NdTypeSignature> RETURN_TYPE;
 	public static final FieldOneToOne<NdMethodAnnotationData> ANNOTATION_DATA;
+	public static final FieldInt DECLARATION_POSITION;
 
 	@SuppressWarnings("hiding")
 	public static final StructDef<NdMethod> type;
 
 	static {
 		type = StructDef.create(NdMethod.class, NdBinding.type);
-		METHOD_ID = FieldManyToOne.create(type, NdMethodId.METHODS);
+		METHOD_NAME = type.addString();
 		METHOD_FLAGS = type.addShort();
-		PARENT = FieldManyToOne.createOwner(type, NdType.METHODS);
-		PARAMETERS = FieldOneToMany.create(type, NdMethodParameter.PARENT);
+		PARAMETERS = FieldList.create(type, NdMethodParameter.type);
 		DECLARED_VARIABLES = FieldOneToMany.create(type, NdVariable.DECLARING_METHOD);
-		DEFAULT_VALUE = FieldOneToOne.create(type, NdConstant.class, NdConstant.PARENT_METHOD);
-		EXCEPTIONS = FieldOneToMany.create(type, NdMethodException.PARENT);
+		DEFAULT_VALUE = FieldOneToOne.create(type, NdConstant.type, NdConstant.PARENT_METHOD);
+		EXCEPTIONS = FieldList.create(type, NdMethodException.type);
 		RETURN_TYPE = FieldManyToOne.create(type, NdTypeSignature.USED_AS_RETURN_TYPE);
-		ANNOTATION_DATA = FieldOneToOne.create(type, NdMethodAnnotationData.class, NdMethodAnnotationData.METHOD);
+		ANNOTATION_DATA = FieldOneToOne.create(type, NdMethodAnnotationData.type, NdMethodAnnotationData.METHOD);
+		DECLARATION_POSITION = type.addInt();
 		type.done();
 	}
 
@@ -57,14 +61,20 @@ public class NdMethod extends NdBinding {
 		super(nd, address);
 	}
 
-	public NdMethod(NdType parent) {
-		super(parent.getNd());
-
-		PARENT.put(getNd(), this.address, parent);
+	public NdMethodParameter createNewParameter() {
+		return PARAMETERS.append(getNd(), getAddress());
 	}
 
-	public NdMethodId getMethodId() {
-		return METHOD_ID.get(getNd(), this.address);
+	public void allocateParameters(int numParameters) {
+		PARAMETERS.allocate(this.nd, this.address, numParameters);
+	}
+
+	public IString getMethodName() {
+		return METHOD_NAME.get(getNd(), this.address);
+	}
+
+	public void setMethodName(char[] selectorAndDescriptor) {
+		METHOD_NAME.put(getNd(), getAddress(), selectorAndDescriptor);
 	}
 
 	/**
@@ -90,7 +100,7 @@ public class NdMethod extends NdBinding {
 		return PARAMETERS.asList(getNd(), this.address);
 	}
 
-	public List<NdAnnotationInMethod> getAnnotations() {
+	public List<NdAnnotation> getAnnotations() {
 		NdMethodAnnotationData annotationData = getAnnotationData();
 		if (annotationData != null) {
 			return annotationData.getAnnotations();
@@ -110,11 +120,7 @@ public class NdMethod extends NdBinding {
 		RETURN_TYPE.put(getNd(), this.address, createTypeSignature);
 	}
 
-	public void setMethodId(NdMethodId methodId) {
-		METHOD_ID.put(getNd(), this.address, methodId);
-	}
-
-	public List<NdTypeAnnotationInMethod> getTypeAnnotations() {
+	public List<NdTypeAnnotation> getTypeAnnotations() {
 		NdMethodAnnotationData annotationData = getAnnotationData();
 		if (annotationData != null) {
 			return annotationData.getTypeAnnotations();
@@ -169,7 +175,7 @@ public class NdMethod extends NdBinding {
 	public String toString() {
 		try {
 			CharArrayBuffer arrayBuffer = new CharArrayBuffer();
-			arrayBuffer.append(getMethodId().getSelector());
+			arrayBuffer.append(getSelector());
 			getGenericSignature(arrayBuffer, true);
 			return arrayBuffer.toString();
 		} catch (RuntimeException e) {
@@ -177,6 +183,24 @@ public class NdMethod extends NdBinding {
 			// if the code is buggy, the database is corrupt, or we don't have a read lock.
 			return super.toString();
 		}
+	}
+
+	public char[] getSelector() {
+		IString methodName = METHOD_NAME.get(getNd(), getAddress());
+		char[] methodNameString = methodName.getChars();
+		int bracketIndex = CharArrayUtils.indexOf('(', methodNameString);
+		if (bracketIndex == -1) {
+			bracketIndex = methodNameString.length;
+		}
+		return CharArrayUtils.subarray(methodNameString, 0, bracketIndex);
+	}
+
+	public boolean isConstructor() {
+		return org.eclipse.jdt.internal.compiler.classfmt.JavaBinaryNames.isConstructor(getSelector());
+	}
+
+	public boolean isClInit() {
+		return org.eclipse.jdt.internal.compiler.classfmt.JavaBinaryNames.isClinit(getSelector());
 	}
 
 	public void getGenericSignature(CharArrayBuffer result, boolean includeExceptions) {
@@ -219,5 +243,53 @@ public class NdMethod extends NdBinding {
 
 	private NdMethodAnnotationData getAnnotationData() {
 		return ANNOTATION_DATA.get(getNd(), getAddress());
+	}
+
+	public NdMethodException createException(NdTypeSignature createTypeSignature) {
+		NdMethodException result = EXCEPTIONS.append(getNd(), getAddress());
+		result.setExceptionType(createTypeSignature);
+		return result;
+	}
+
+	public void allocateExceptions(int length) {
+		EXCEPTIONS.allocate(this.nd, this.address, length);
+	}
+
+	public NdAnnotation createAnnotation() {
+		return createAnnotationData().createAnnotation();
+	}
+
+	public NdTypeAnnotation createTypeAnnotation() {
+		return createAnnotationData().createTypeAnnotation();
+	}
+
+	public void allocateAnnotations(int length) {
+		if (length > 0) {
+			createAnnotationData().allocateAnnotations(length);
+		}
+	}
+
+	public void allocateTypeAnnotations(int length) {
+		if (length > 0) {
+			createAnnotationData().allocateTypeAnnotations(length);
+		}
+	}
+
+	public void setDeclarationPosition(int position) {
+		DECLARATION_POSITION.put(getNd(), getAddress(), position);
+	}
+
+	/**
+	 * Returns the unique 0-based position of the method within the class it was
+	 * declared in.
+	 */
+	public int getDeclarationPosition() {
+		return DECLARATION_POSITION.get(getNd(), getAddress());
+	}
+
+	public char[] getMethodDescriptor() {
+		char[] name = getMethodName().getChars();
+		int descriptorStart = CharArrayUtils.indexOf('(', name, 0, name.length);
+		return CharArrayUtils.subarray(name, descriptorStart, name.length);
 	}
 }

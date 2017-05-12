@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 GK Software AG and others.
+ * Copyright (c) 2013, 2017 GK Software AG and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ public abstract class TryFlowContext extends FlowContext {
 	public FlowContext outerTryContext;
 
 	public TryFlowContext(FlowContext parent, ASTNode associatedNode) {
-		super(parent, associatedNode);
+		super(parent, associatedNode, true);
 	}
 	
 	public void markFinallyNullStatus(LocalVariableBinding local, int nullStatus) {

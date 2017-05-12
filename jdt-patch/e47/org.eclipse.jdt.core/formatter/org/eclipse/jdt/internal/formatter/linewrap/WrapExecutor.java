@@ -641,13 +641,6 @@ public class WrapExecutor {
 		if (policy == null)
 			return token.getIndent();
 
-		if (this.options.never_indent_line_comments_on_first_column && token.tokenType == TokenNameCOMMENT_LINE
-				&& token.getIndent() == 0)
-			return 0;
-		if (this.options.never_indent_block_comments_on_first_column && token.tokenType == TokenNameCOMMENT_BLOCK
-				&& token.getIndent() == 0)
-			return 0;
-
 		Token wrapParent = this.tm.get(policy.wrapParentIndex);
 		int wrapIndent = wrapParent.getIndent();
 		if (policy.indentOnColumn) {

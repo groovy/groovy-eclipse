@@ -11,12 +11,17 @@
 package org.eclipse.jdt.internal.core.nd.field;
 
 import org.eclipse.jdt.internal.core.nd.Nd;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog;
+import org.eclipse.jdt.internal.core.nd.db.ModificationLog.Tag;
 import org.eclipse.jdt.internal.core.nd.db.Database;
 
-public class FieldPointer implements IField {
-	private int offset;
+public class FieldPointer extends BaseField {
+	private final Tag putTag;
 
-	public FieldPointer() {
+	public FieldPointer(String structName, int fieldNumber) {
+		setFieldName("field " + fieldNumber + ", a " + getClass().getSimpleName() //$NON-NLS-1$//$NON-NLS-2$
+				+ " in struct " + structName); //$NON-NLS-1$
+		this.putTag = ModificationLog.createTag("Writing " + getFieldName()); //$NON-NLS-1$
 	}
 
 	public long get(Nd nd, long address) {
@@ -25,12 +30,13 @@ public class FieldPointer implements IField {
 	}
 
 	public void put(Nd nd, long address, long newValue) {
-		nd.getDB().putRecPtr(address + this.offset, newValue);
-	}
-
-	@Override
-	public void setOffset(int offset) {
-		this.offset = offset;
+		Database db = nd.getDB();
+		db.getLog().start(this.putTag);
+		try {
+			nd.getDB().putRecPtr(address + this.offset, newValue);
+		} finally {
+			db.getLog().end(this.putTag);
+		}
 	}
 
 	@Override

@@ -400,8 +400,12 @@ public abstract class JobManager implements Runnable {
 						if (VERBOSE)
 							Util.verbose("FINISHED background job - " + job); //$NON-NLS-1$
 						moveToNextJob();
-						if (this.awaitingClients == 0)
-							Thread.sleep(50);
+						if (this.awaitingClients == 0 && job.waitNeeded()) {
+							if (VERBOSE) {
+								Util.verbose("WAITING after job - " + job); //$NON-NLS-1$
+							}
+							Thread.sleep(5);
+						}
 					}
 				} catch (InterruptedException e) { // background indexing was interrupted
 				}

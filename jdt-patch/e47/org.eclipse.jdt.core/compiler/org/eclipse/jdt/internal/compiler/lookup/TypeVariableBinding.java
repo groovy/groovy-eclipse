@@ -141,7 +141,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 			return BoundCheckStatus.OK;
 
 		BoundCheckStatus nullStatus = BoundCheckStatus.OK;
-		boolean checkNullAnnotations = scope.environment().usesNullTypeAnnotations();
+		boolean checkNullAnnotations = scope.environment().usesNullTypeAnnotations() && (location == null || (location.bits & ASTNode.InsideJavadoc) == 0);
 
 		if (argumentType.kind() == Binding.WILDCARD_TYPE) {
 			WildcardBinding wildcard = (WildcardBinding) argumentType;
