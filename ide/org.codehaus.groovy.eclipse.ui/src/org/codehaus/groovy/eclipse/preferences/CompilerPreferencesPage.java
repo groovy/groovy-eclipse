@@ -223,6 +223,12 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
     }
 
     @Override
+    protected void enablePreferenceContent(boolean enable) {
+        super.enablePreferenceContent(enable);
+        if (enable) scriptFolderSelector.enableControls();
+    }
+
+    @Override
     protected void performDefaults() {
         if (compilerCombo != null) {
             compilerCombo.setSelection(new StructuredSelection(SpecifiedVersion.DONT_CARE), true);
@@ -236,9 +242,12 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
             groovyLibCheckbox.setSelection(true);
         }
 
-        scriptFolderSelector.restoreDefaultsPressed();
+        scriptFolderSelector.restoreDefaults();
 
         super.performDefaults(); // allow controls to update before project-specific settings callbacks
+
+        if (!isProjectPreferencePage())
+            enablePreferenceContent(true);
     }
 
     @Override

@@ -211,8 +211,8 @@ public class ScriptFolderSelectorPreferences {
 
         patternList = new CheckedListDialogField<String>(adapter, BUTTON_LABELS, new ScriptLabelProvider(DESCRIPTOR));
         patternList.setDialogFieldListener(adapter);
-        patternList.setLabelText("Groovy files that match these patterns are treated as scripts.  " +
-            "They will not be compiled and will be copied as-is to the output folder.\n\n" +
+        patternList.setLabelText("Groovy files that match these patterns are treated as scripts, i.e. compiled at run-time.  " +
+            "Any script that matches a checked pattern and is in a source folder will be copied as-is to the output folder.\n\n" +
             "CHECKED boxes will be COPIED to the output folder.  UNCHECKED boxes are NOT copied to the output folder.");
         patternList.enableButton(IDX_ADD, true);
         patternList.enableButton(IDX_EDIT, false);
@@ -310,11 +310,13 @@ public class ScriptFolderSelectorPreferences {
         }
     }
 
-    public void restoreDefaultsPressed() {
-        disableButton.loadDefault();
+    public void enableControls() {
         enablePatternList(disableButton.getBooleanValue());
-        populatePatternList(Arrays.asList(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.split(",")));
+    }
 
+    public void restoreDefaults() {
+        populatePatternList(Arrays.asList(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.split(",")));
+        disableButton.loadDefault();
         hasChanges = true;
     }
 
