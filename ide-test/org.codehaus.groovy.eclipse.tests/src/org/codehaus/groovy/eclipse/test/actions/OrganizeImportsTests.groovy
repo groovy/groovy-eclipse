@@ -158,7 +158,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               def x(Outer.Inner i) { }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -187,7 +187,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import javax.util.concurrent.TimeUnit
             [value: TimeUnit.SECONDS]
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -382,7 +382,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import javax.swing.text.html.HTML
             HTML.class
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -392,7 +392,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             for (Method m : Object.class.getDeclaredMethods()) {
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -402,7 +402,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             for (Method m in Object.class.getDeclaredMethods()) {
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -414,7 +414,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               List<Object> call() { }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -424,7 +424,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.util.concurrent.ConcurrentMap
             ConcurrentMap<java.util.regex.Pattern, String> m
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -435,7 +435,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               @Lazy Pattern p = ~/123/
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -446,7 +446,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               @Lazy def p = Pattern.compile('123')
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -457,7 +457,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               @Lazy def p = compile('123')
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -471,7 +471,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -486,7 +486,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             public @interface Custom {
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -503,7 +503,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             public @interface Custom {
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -519,7 +519,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -536,7 +536,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.text.DateFormat
             new String(DateFormat.getDateInstance())
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-546
@@ -547,7 +547,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               Foo(DateFormat arg) { }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE 546
@@ -567,7 +567,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               ONE_VALUE, ANOTHER_VALUE
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
     @Test @Ignore('Currently not possible due to heuristic in FindUnresolvedReferencesVisitor.handleVariable()')
     void testDynamicVariable() {
@@ -582,7 +582,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             nothing.HTML.NULL_ATTRIBUTE_VALUE
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -678,7 +678,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             )
             class MyEntity {  }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-600
@@ -718,7 +718,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             )
             class MyEntity {  }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -745,7 +745,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import inner.HasInner.InnerInner
             InnerInner f
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -772,7 +772,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import inner.HasInner
             HasInner.InnerInner f
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -784,7 +784,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E
             E x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -796,7 +796,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F
             F x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -808,7 +808,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F.G
             G x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -820,7 +820,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static a.b.c.d.E.F.G.H
             def x = H
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -829,7 +829,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.String.format
             format
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -850,7 +850,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.String.format
             format('Some %d', 1)
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -859,7 +859,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.String.format
             def formatter = { format 'blah', 42 }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -868,7 +868,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.PI
             def area = n * PI
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -877,7 +877,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.PI
             def nan = PI.isNaN()
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -886,7 +886,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.PI
             def area = compute(n, PI)
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -908,7 +908,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             @SuppressWarnings(value=EMPTY_STRING_ARRAY)
             def area = compute(n, PI)
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -921,7 +921,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -935,7 +935,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -949,7 +949,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -966,7 +966,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               def two() {}
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -989,7 +989,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import javax.swing.text.html.*
             HTML
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-929
@@ -998,7 +998,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             import javax.swing.text.html.*
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -1022,7 +1022,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.String.*
             format
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-929
@@ -1031,7 +1031,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         String contents = '''\
             import static java.lang.String.*
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -1054,7 +1054,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             @Deprecated
             import javax.swing.text.html.*
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-1692
@@ -1064,7 +1064,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             @Field
             def x = 0
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -1087,7 +1087,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             public void x() {
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-1794
@@ -1126,7 +1126,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import javax.swing.text.html.*
             HTML
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -1135,7 +1135,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         interface Pattern {} // this should shadow java.util.regex.Pattern, et al.
         Pattern p = null
         '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-1392
@@ -1212,7 +1212,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.util.Collections.swap
             swap
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-1553
@@ -1236,7 +1236,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }'''
 
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -1282,7 +1282,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             }
             '''
 
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Ignore @Test

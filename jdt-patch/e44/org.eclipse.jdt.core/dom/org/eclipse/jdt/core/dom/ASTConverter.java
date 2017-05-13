@@ -3124,6 +3124,12 @@ class ASTConverter {
 		final char[][] tokens = importReference.tokens;
 		int length = importReference.tokens.length;
 		final long[] positions = importReference.sourcePositions;
+		// GROOVY add
+		if (!CharOperation.equals(tokens[length - 1], importReference.getSimpleName())) {
+			tokens[length - 1] = CharOperation.concat(tokens[length - 1], ' ', new char[] {'a','s'}, ' ', importReference.getSimpleName());
+		}
+		if (positions.length > 0 && (int)(positions[0]>>>32) > 0)
+		// GROOVY end
 		if (length > 1) {
 			importDeclaration.setName(setQualifiedNameNameAndSourceRanges(tokens, positions, importReference));
 		} else {

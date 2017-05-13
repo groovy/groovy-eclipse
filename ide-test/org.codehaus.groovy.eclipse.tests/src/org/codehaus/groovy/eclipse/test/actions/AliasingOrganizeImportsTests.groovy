@@ -23,12 +23,21 @@ import org.junit.Test
 final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
+    void testNoSpuriousEdits() {
+        String contents = '''\
+            import org.w3c.dom.Node as N
+            N x
+            '''
+        doAddImportTest(contents)
+    }
+
+    @Test
     void testRetainTypeAlias() {
         String contents = '''\
             import org.w3c.dom.Node as N
             N x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -37,7 +46,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import org.w3c.dom.Node as N
             N[] x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -47,7 +56,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.util.List as L
             L list = []
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -56,7 +65,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.util.LinkedList as LL
             def list = [] as LL
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -65,7 +74,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.util.LinkedList as LL
             def list = (LL) []
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -77,7 +86,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E as X
             X x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -89,7 +98,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E as X
             X.F x = null
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -101,7 +110,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E as X
             X.F.G x = null
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -113,7 +122,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E as X
             def x = X.F.G.H
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -125,7 +134,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F as X
             X x = null
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -137,7 +146,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F as X
             X.G x = null
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -149,7 +158,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F as X
             def x = X.G.H
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -161,7 +170,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F.G as X
             X x = null
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -173,7 +182,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import a.b.c.d.E.F.G as X
             def x = X.H
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -206,7 +215,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.util.Map.Entry as E
             E x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -215,7 +224,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import java.util.Map.Entry as E
             E[] x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -236,7 +245,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.PI as Pie
             def x = Pie
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -245,7 +254,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.pow as f
             f(2,Math.PI)
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -258,7 +267,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -267,7 +276,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.math.RoundingMode.CEILING as ceiling
             BigDecimal one = 1.0, two = one.divide(0.5, ceiling)
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -276,7 +285,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.util.concurrent.TimeUnit.MILLISECONDS as msec
             msec.toNanos(1234)
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -297,7 +306,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
               print f
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -309,7 +318,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static a.b.c.d.E.F.G.H as X
             def x = X
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -355,7 +364,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.PI as P
             P x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -367,7 +376,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             import static java.lang.Math.PI as P
             P x
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test // STS-3314
@@ -382,7 +391,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
               SoapNode s
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test
@@ -398,7 +407,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
               FourthClass3 f3
             }
             '''
-        doContentsCompareTest(contents, contents)
+        doContentsCompareTest(contents)
     }
 
     @Test

@@ -62,11 +62,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         '''
 
     protected void doAddImportTest(CharSequence contents, List<String> expectedImports = []) {
-        doAddImportTest('main', 'Main', contents, expectedImports)
-    }
-
-    protected void doAddImportTest(String pkgName, String resourceName, CharSequence contents, List<String> expectedImports) {
-        def unit = addGroovySource(contents, resourceName, pkgName)
+        def unit = addGroovySource(contents)
         waitForIndex()
         IChooseImportQuery query = new NoChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
@@ -115,7 +111,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         }
     }
 
-    protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
+    protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents = originalContents) {
         def unit = createGroovyType('main', 'Main', originalContents)
         buildProject()
         waitForIndex()
