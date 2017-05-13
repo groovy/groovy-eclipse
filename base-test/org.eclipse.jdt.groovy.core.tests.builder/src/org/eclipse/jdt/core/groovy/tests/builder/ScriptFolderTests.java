@@ -61,33 +61,21 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     @Test
     public void testScriptFolderDefaultSettings() throws Exception {
         ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER, true);
-        assertScript("scripts/f/g/Foo.groovy", selector);
-        assertScript("src/main/resources/f/g/Foo.groovy", selector);
-        assertScript("src/test/resources/f/g/Foo.groovy", selector);
+        assertScript("some.dsld", selector);
+        assertScriptNoCopy("build.gradle", selector);
+
+        assertSource("scripts/Foo.java", selector);
+        assertSource("scripts/Foo.groovy", selector);
+        assertSource("src/main/resources/Foo.java", selector);
+        assertSource("src/main/resources/Foo.groovy", selector);
+        assertSource("src/test/resources/Foo.java", selector);
+        assertSource("src/test/resources/Foo.groovy", selector);
+        assertSource("src/main/resources/f/g/Foo.groovy", selector);
+        assertSource("src/test/resources/f/g/Foo.groovy", selector);
 
         assertSource("h/scripts/Foo.groovy", selector);
         assertSource("h/src/main/resources/Foo.groovy", selector);
         assertSource("h/src/test/resources/Foo.groovy", selector);
-
-        assertSource("scripts/Foo.java", selector);
-        assertSource("src/main/resources/Foo.java", selector);
-        assertSource("src/test/resources/Foo.java", selector);
-    }
-
-    @Test
-    public void testScriptFolderDefaultSettingsNoCopy() throws Exception {
-        ScriptFolderSelector selector = new MockScriptFolderSelector(Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"), true);
-        assertScriptNoCopy("scripts/f/g/Foo.groovy", selector);
-        assertScriptNoCopy("src/main/resources/f/g/Foo.groovy", selector);
-        assertScriptNoCopy("src/test/resources/f/g/Foo.groovy", selector);
-
-        assertSource("h/scripts/Foo.groovy", selector);
-        assertSource("h/src/main/resources/Foo.groovy", selector);
-        assertSource("h/src/test/resources/Foo.groovy", selector);
-
-        assertSource("scripts/Foo.java", selector);
-        assertSource("src/main/resources/Foo.java", selector);
-        assertSource("src/test/resources/Foo.java", selector);
     }
 
     @Test
@@ -125,7 +113,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     @Test // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
-        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/**/*.groovy,y");
         createScriptInGroovyProject("Script", "def x", true);
         assertNoExists("Project/bin/Script.class");
         assertExists("Project/bin/Script.groovy");
@@ -134,7 +122,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     @Test
     public void testScriptInProjectNoCopy() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
-        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/**/*.groovy,n");
         createScriptInGroovyProject("Script", "def x", true);
         assertNoExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
