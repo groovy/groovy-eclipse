@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.dsl.tests
 import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.doVisit
 import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.printTypeName
 import static org.junit.Assert.fail
-import static org.junit.Assume.assumeFalse
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.GroovyLogManager
 import org.codehaus.groovy.eclipse.IGroovyLogger
@@ -58,7 +58,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     @Before
     final void setUpDslTestCase() {
-        assumeFalse(GroovyDSLCoreActivator.default.isDSLDDisabled())
+        assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
 
         GroovyLogManager.manager.addLogger(logger)
         if (doRemoveClasspathContainer) {

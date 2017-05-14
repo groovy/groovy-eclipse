@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.junit.Assume.assumeFalse
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
@@ -28,7 +28,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
-        assumeFalse(GroovyDSLCoreActivator.default.isDSLDDisabled())
+        assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
 
         addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
         DSLInferencingTestSuite.refreshExternalFoldersProject()
