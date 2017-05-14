@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -31,14 +32,9 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 4, 2009
- */
 public class CodeSelectHelper implements ICodeSelectHelper {
 
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
-
         // GRECLIPSE-1330: check for possible reference in GString
         char[] contents = unit.getContents();
         if (length > 1 && start + length < contents.length && contents[start] == '$' && contents[start + 1] != '{') {
@@ -59,11 +55,10 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Object[] result = findNodeForRegion(module, select);
                 ASTNode node = (ASTNode) result[0];
                 Region region = (Region) result[1];
-                if (node != null && !(node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) &&
-                        !(node == ClassHelper.DYNAMIC_TYPE && length == 3 && String.valueOf(contents, start, length).equals("def"))) {
+                if (node != null && !isKeywordSelection(node, contents, start, length)) {
                     // shortcut: check to see if we are looking for this type itself
-                    if (isTypeDeclaration(module, node)) {
-                        return returnThisNode(unit, node);
+                    if (isTypeDeclaration(node, module)) {
+                        return returnThisNode(node, unit);
                     }
 
                     CodeSelectRequestor requestor = createRequestor(node, region, select, unit);
@@ -105,7 +100,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Region region = (Region) result[1];
                 if (node != null) {
                     // shortcut: check to see if we are looking for this type itself
-                    if (isTypeDeclaration(module, node)) {
+                    if (isTypeDeclaration(node, module)) {
                         return ((ClassNode) node).redirect();
                     }
 
@@ -134,9 +129,55 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return new CodeSelectRequestor(node, nodeRegion, selectRegion, unit);
     }
 
-    protected static IJavaElement[] returnThisNode(GroovyCompilationUnit unit, ASTNode nodeToLookFor) {
+    /**
+     * @return array of {@link ASTNode} and {@link Region}
+     */
+    protected Object[] findNodeForRegion(ModuleNode module, Region r) {
+        ASTNodeFinder finder = new ASTNodeFinder(r);
+        finder.doVisit(module);
+
+        return new Object[] {finder.result, finder.sloc};
+    }
+
+    protected static boolean isKeywordSelection(ASTNode node, char[] contents, int start, int length) {
+        boolean keyword = false;
+        // "this." something
+        if (node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) {
+            keyword = true;
+        }
+        // "def " something
+        else if (node == ClassHelper.DYNAMIC_TYPE && length == 3) {
+            keyword = String.valueOf(contents, start, length).equals("def");
+        }
+        // "import " or "import static " something
+        else if (node instanceof ImportNode && length == 6 && (start == node.getStart() ||
+                ((ImportNode) node).isStatic() && start < node.getStart() + 14/*"import static ".length()*/)) {
+            keyword = true;
+        }
+        else if (node instanceof ImportNode && ((ImportNode) node).getAliasExpr() != null && length == 2) {
+            keyword = String.valueOf(contents, start, length).equals("as");
+        }
+        else if (node instanceof ImportNode && ((ImportNode) node).isStar() && length == 1 && start == node.getEnd() - 1) {
+            keyword = true;
+        }
+        return keyword;
+    }
+
+    protected static boolean isTypeDeclaration(ASTNode node, ModuleNode module) {
+        // don't use inner class nodes since they really should resolve to the super type
+        if (node instanceof ClassNode &&  !(node instanceof InnerClassNode)) {
+            for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
+                if (clazz == node) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected static IJavaElement[] returnThisNode(ASTNode node, GroovyCompilationUnit unit) {
         // GRECLIPSE-803: ensure inner classes are handled correctly
-        String rawName = ((ClassNode) nodeToLookFor).getNameWithoutPackage();
+        String rawName = ((ClassNode) node).getNameWithoutPackage();
         String[] enclosingTypes = rawName.split("\\$");
         IType candidate = null;
         for (int i = 0, n = enclosingTypes.length; i < n; i += 1) {
@@ -153,27 +194,5 @@ public class CodeSelectHelper implements ICodeSelectHelper {
             result = candidate;
         }
         return new IJavaElement[] {result};
-    }
-
-    protected static boolean isTypeDeclaration(ModuleNode module, ASTNode nodeToLookFor) {
-        // don't use inner class nodes since they really should resolve to the super type
-        if (nodeToLookFor instanceof ClassNode &&  !(nodeToLookFor instanceof InnerClassNode)) {
-            for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
-                if (clazz == nodeToLookFor) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @return array of {@link ASTNode} and {@link Region}.
-     */
-    protected Object[] findNodeForRegion(ModuleNode module, Region r) {
-        ASTNodeFinder finder = new ASTNodeFinder(r);
-        finder.doVisit(module);
-
-        return new Object[] {finder.result, finder.sloc};
     }
 }
