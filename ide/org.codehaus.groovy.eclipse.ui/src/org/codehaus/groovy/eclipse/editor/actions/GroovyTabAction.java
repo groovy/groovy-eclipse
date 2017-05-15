@@ -20,7 +20,7 @@ import static org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentatio
 
 import java.util.ResourceBundle;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Assert;
@@ -88,12 +88,11 @@ public class GroovyTabAction extends TextEditorAction {
                     d.replace(offset, 0, editText);
                     selectAndReveal(offset + editText.length(), 0);
                 }
-            } catch (Throwable e) {
-                GroovyCore.logException("something went wrong in smart tab", e);
+            } catch (Exception e) {
+                GroovyPlugin.getDefault().logError("something went wrong in smart tab", e);
             }
         }
     }
-
 
     /**
      * Determine whether a given offset is in a region of text containing

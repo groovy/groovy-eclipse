@@ -98,8 +98,8 @@ public class GroovyBreakpointRulerAction extends Action {
             }
         } catch (CoreException e) {
             JDIDebugUIPlugin.statusDialog("Failed to add breakpoint", e.getStatus());
-        } catch (Throwable t) {
-            JDIDebugUIPlugin.errorDialog("Failed to add breakpoint", t);
+        } catch (RuntimeException e) {
+            JDIDebugUIPlugin.errorDialog("Failed to add breakpoint", e);
         }
     }
 
@@ -135,8 +135,8 @@ public class GroovyBreakpointRulerAction extends Action {
             }
         } catch (CoreException e) {
             JDIDebugUIPlugin.log(e.getStatus());
-        } catch (Throwable t) {
-            JDIDebugUIPlugin.log(t);
+        } catch (RuntimeException e) {
+            JDIDebugUIPlugin.log(e);
         }
         return breakpoints;
     }
@@ -156,7 +156,7 @@ public class GroovyBreakpointRulerAction extends Action {
                 if (line == markerLine) {
                     return true;
                 }
-            } catch (BadLocationException x) {
+            } catch (BadLocationException e) {
             }
         }
         return false;

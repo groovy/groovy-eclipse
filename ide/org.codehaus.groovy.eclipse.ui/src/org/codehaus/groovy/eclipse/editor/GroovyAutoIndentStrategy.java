@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -30,9 +30,6 @@ import org.eclipse.jface.text.IRegion;
  * This a wrapper around a JavaAutoIndentStrategy, to which it delegates most
  * requests. However, whenever the Java strategy doesn't quite do what we want
  * it do for Groovy code, we can intercept the request and handle it ourselves.
- *
- * @author kdvolder
- * @created 2010-05-19
  */
 public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
 
@@ -131,8 +128,8 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
                 c.caretOffset = c.offset + c.text.length();
                 c.shiftsCaret = false;
             }
-        } catch (Throwable e) {
-            GroovyCore.logException("Something went wrong in GroovyAutoIndentStrategy.smartPaste", e);
+        } catch (Exception e) {
+            GroovyPlugin.getDefault().logError("Something went wrong in GroovyAutoIndentStrategy.smartPaste", e);
         }
     }
 
@@ -160,11 +157,11 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
                     c.shiftsCaret = false;
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // This is a fail safe, in case anything goes wrong. We should
             // return normally. This way the edit should still be able to
             // proceed, but without any "smart" auto edits being applied.
-            GroovyCore.logException("Something went wrong in GroovyAutoIndentStrategy.autoEditAfterNewline", e);
+            GroovyPlugin.getDefault().logError("Something went wrong in GroovyAutoIndentStrategy.autoEditAfterNewline", e);
         }
     }
 
@@ -172,26 +169,22 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
      * Determines whether an offset in a document would be a good one
      * to insert an automatic closing brace for on the next line.
      */
-    private boolean shouldInsertBrace(IDocument d, int enterPos, boolean nextTokenIsCloseBrace) {
+    private boolean shouldInsertBrace(IDocument d, int enterPos, boolean nextTokenIsCloseBrace) throws BadLocationException {
         if (indentService.moreOpenThanCloseBefore(d, enterPos) &&
                 (nextTokenIsCloseBrace || indentService.isEndOfLine(d, enterPos))) {
-            try {
-                int lineNum = d.getLineOfOffset(enterPos);
-                int indentLevel = indentService.getLineIndentLevel(d, lineNum);
-                String line;
-                do {
-                    line = GroovyIndentationService.getLine(d, ++lineNum);
-                    line = line.trim();
-                } while (line.equals("") && lineNum < d.getNumberOfLines());
-                int nextIndentLevel = indentService.getLineIndentLevel(d, lineNum);
-                if (nextIndentLevel > indentLevel)
-                    return false;
-                if (nextIndentLevel < indentLevel)
-                    return true;
-                return !line.startsWith("}");
-            } catch (BadLocationException e) {
-                GroovyCore.logException("Something went wrong in GroovyAutoIndentStrategy.shouldInsertBrace", e);
-            }
+            int lineNum = d.getLineOfOffset(enterPos);
+            int indentLevel = indentService.getLineIndentLevel(d, lineNum);
+            String line;
+            do {
+                line = GroovyIndentationService.getLine(d, ++lineNum);
+                line = line.trim();
+            } while (line.equals("") && lineNum < d.getNumberOfLines());
+            int nextIndentLevel = indentService.getLineIndentLevel(d, lineNum);
+            if (nextIndentLevel > indentLevel)
+                return false;
+            if (nextIndentLevel < indentLevel)
+                return true;
+            return !line.startsWith("}");
         }
         return false;
     }

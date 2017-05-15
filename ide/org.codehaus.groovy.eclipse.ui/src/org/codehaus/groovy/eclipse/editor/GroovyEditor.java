@@ -661,8 +661,8 @@ public class GroovyEditor extends CompilationUnitEditor {
             semanticReconciler.install(this, (JavaSourceViewer) getSourceViewer());
             ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener",
                 new Class[] {IJavaReconcilingListener.class}, this, new Object[] {semanticReconciler});
-        } catch (Throwable t) {
-            GroovyPlugin.getDefault().logError("GroovyEditor: failed to install semantic reconciler", t);
+        } catch (RuntimeException e) {
+            GroovyPlugin.getDefault().logError("GroovyEditor: failed to install semantic reconciler", e);
         }
     }
 
@@ -673,8 +673,8 @@ public class GroovyEditor extends CompilationUnitEditor {
                 ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener",
                     new Class[] {IJavaReconcilingListener.class}, this, new Object[] {semanticReconciler});
                 semanticReconciler = null;
-            } catch (Throwable t) {
-                GroovyPlugin.getDefault().logError("GroovyEditor: failed to uninstall semantic reconciler", t);
+            } catch (RuntimeException e) {
+                GroovyPlugin.getDefault().logError("GroovyEditor: failed to uninstall semantic reconciler", e);
             }
         }
     }
@@ -921,8 +921,8 @@ public class GroovyEditor extends CompilationUnitEditor {
                     }
                 }
             }
-        } catch (Throwable t) {
-            GroovyPlugin.getDefault().logError("GroovyEditor: failed to remove Java breakpoint updater", t);
+        } catch (RuntimeException e) {
+            GroovyPlugin.getDefault().logError("GroovyEditor: failed to remove Java breakpoint updater", e);
         }
     }
 
@@ -1189,8 +1189,8 @@ public class GroovyEditor extends CompilationUnitEditor {
                             }
                         }
                     }
-                } catch (Throwable t) {
-                    GroovyPlugin.getDefault().logError("Failure in convert to property", t);
+                } catch (Exception e) {
+                    GroovyPlugin.getDefault().logError("Failure in convert to property", e);
                 }
             }
         };
@@ -1423,8 +1423,8 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         fOccurrencesFinderJob_new(document, locations, selection);
 
-        } catch (Throwable t) {
-            GroovyPlugin.getDefault().logError("Failure in GroovyEditor.updateOccurrenceAnnotations", t);
+        } catch (Exception e) {
+            GroovyPlugin.getDefault().logError("Failure in GroovyEditor.updateOccurrenceAnnotations", e);
         }
     }
 
@@ -1441,40 +1441,40 @@ public class GroovyEditor extends CompilationUnitEditor {
         return word;
     }
 
-    protected Job fOccurrencesFinderJob_get() throws Throwable {
+    protected Job fOccurrencesFinderJob_get() throws Exception {
         return (Job) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fOccurrencesFinderJob", this);
     }
 
-    protected boolean fMarkOccurrenceAnnotations_get() throws Throwable {
+    protected boolean fMarkOccurrenceAnnotations_get() throws Exception {
         return (Boolean) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fMarkOccurrenceAnnotations", this);
     }
 
-    protected IRegion fMarkOccurrenceTargetRegion_get() throws Throwable {
+    protected IRegion fMarkOccurrenceTargetRegion_get() throws Exception {
         return (IRegion) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fMarkOccurrenceTargetRegion", this);
     }
 
-    protected void fMarkOccurrenceTargetRegion_set(IRegion r) throws Throwable {
+    protected void fMarkOccurrenceTargetRegion_set(IRegion r) throws Exception {
         ReflectionUtils.setPrivateField(JavaEditor.class, "fMarkOccurrenceTargetRegion", this, r);
     }
 
-    protected long fMarkOccurrenceModificationStamp_get() throws Throwable {
+    protected long fMarkOccurrenceModificationStamp_get() throws Exception {
         return (Long) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fMarkOccurrenceModificationStamp", this);
     }
 
-    protected void fMarkOccurrenceModificationStamp_set(long s) throws Throwable {
+    protected void fMarkOccurrenceModificationStamp_set(long s) throws Exception {
         ReflectionUtils.setPrivateField(JavaEditor.class, "fMarkOccurrenceModificationStamp", this, s);
     }
 
-    protected boolean fStickyOccurrenceAnnotations_get() throws Throwable {
+    protected boolean fStickyOccurrenceAnnotations_get() throws Exception {
         return (Boolean) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fStickyOccurrenceAnnotations", this);
     }
 
-    protected void removeOccurrenceAnnotations_call() throws Throwable {
+    protected void removeOccurrenceAnnotations_call() throws Exception {
         ReflectionUtils.throwableExecutePrivateMethod(JavaEditor.class, "removeOccurrenceAnnotations", new Class[0], this, new Object[0]);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected void fOccurrencesFinderJob_new(IDocument document, Object locations, ISelection selection) throws Throwable {
+    protected void fOccurrencesFinderJob_new(IDocument document, Object locations, ISelection selection) throws Exception {
         //OccurrencesFinderJob ofj = new OccurrencesFinderJob(document, locations, selection);
         java.lang.reflect.Constructor ctor = ReflectionUtils.getConstructor(
             Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaEditor$OccurrencesFinderJob"),

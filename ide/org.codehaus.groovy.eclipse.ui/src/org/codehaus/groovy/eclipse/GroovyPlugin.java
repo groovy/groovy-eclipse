@@ -157,7 +157,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
                 IWorkbenchPage page = workbench.getActiveWorkbenchWindow().getActivePage();
                 page.removePartListener(junitMono);
             }
-        } catch (Throwable t) {
+        } catch (RuntimeException e) {
             // best-effort removal
         } finally {
             PrefUtil.getInternalPreferenceStore().removePropertyChangeListener(junitMono);
