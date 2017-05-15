@@ -103,14 +103,14 @@ final class OtherCompletionTests extends CompletionTestSuite {
     void testGString1() {
         String contents = '"${new String().c}"'
         ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '.c'), GroovyCompletionProposalComputer)
-        proposalExists(proposals, 'center', 2)
+        proposalExists(proposals, 'center', 3)
     }
 
     @Test
     void testGString2() {
         String contents = '"""${new String().c}"""'
         ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '.c'), GroovyCompletionProposalComputer)
-        proposalExists(proposals, 'center', 2)
+        proposalExists(proposals, 'center', 3)
     }
 
     @Test // GRECLIPSE-706

@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,15 +37,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 
 public class CategoryProposalCreator extends AbstractProposalCreator {
 
-    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
-        ClassNode candidate = GroovyUtils.getWrapperTypeIfPrimitive(type);
-        Set<String> set = new HashSet<String>();
-        getAllSupersAsStrings(candidate, set);
-        set.add("java.lang.Object");
-        return findAllProposals(set, categories, prefix, candidate);
-    }
-
-    private List<IGroovyProposal> findAllProposals(Set<String> set, Set<ClassNode> categories, String prefix, ClassNode declaringClass) {
+    public List<IGroovyProposal> findAllProposals(ClassNode selfType, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         DGMProposalFilter filter = new DGMProposalFilter();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> existingFieldProposals = new HashSet<String>();
@@ -57,14 +50,12 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                 if (isDGMCategory && filter.isFiltered(method)) {
                     continue;
                 }
-                // need to check if the method is being accessed directly
-                // or as a property (eg- getText() --> text)
                 String methodName = method.getName();
                 if (method.isStatic() && method.isPublic()) {
                     Parameter[] params = method.getParameters();
+                    // need to check if the method is being accessed directly or as a property (eg- getText() --> text)
                     if (ProposalUtils.looselyMatches(prefix, methodName)) {
-                        if (params != null && params.length > 0 &&
-                                set.contains(params[0].getType().getName()) && !dupMethod(method, existingMethodProposals)) {
+                        if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType()) && !isDuplicate(method, existingMethodProposals)) {
                             GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(method);
                             methodProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 101 : 1);
                             groovyProposals.add(methodProposal);
@@ -75,9 +66,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                             }
                             methodList.add(method);
                         }
-                    } else if (params.length == 1 &&
-                            findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
-                            !existingFieldProposals.contains(methodName) && hasNoField(declaringClass, methodName)) {
+                    } else if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) && !existingFieldProposals.contains(methodName) && hasNoField(selfType, methodName)) {
                         // add property variant of accessor name
                         GroovyFieldProposal fieldProposal = new GroovyFieldProposal(createMockField(method));
                         fieldProposal.setRelevanceMultiplier(1);
@@ -91,29 +80,30 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
     }
 
     /**
-     * Check thatthe new method hasn't already been added
-     * We SHOULD be checking if this new method is more specific than the old
-     * method
-     * and replacing if it is, but we are not doing that.
+     * Checks that the new method hasn't already been added.
      */
-    private boolean dupMethod(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
+    private boolean isDuplicate(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
         List<MethodNode> otherMethods = existingMethodProposals.get(newMethod.getName());
         if (otherMethods != null) {
             Parameter[] newParameters = newMethod.getParameters();
-            for (MethodNode otherMethod : otherMethods) {
+            iterator: for (Iterator<MethodNode> it = otherMethods.iterator(); it.hasNext();) {
+                MethodNode otherMethod = it.next();
                 Parameter[] otherParameters = otherMethod.getParameters();
                 if (otherParameters.length == newParameters.length) {
-                    // already know that the first parameter has a matching
-                    // type, so
-                    // start with remaining parameters
-                    for (int i = 1; i < otherParameters.length; i++) {
+                    for (int i = 1, n = otherParameters.length; i < n; i += 1) {
                         if (!otherParameters[i].getType().getName().equals(newParameters[i].getType().getName())) {
                             // there is a mismatched parameter
-                            continue;
+                            continue iterator;
                         }
                     }
+
                     // all parameters match
-                    return true;
+                    /*if (GroovyUtils.isAssignable(otherParameters[0].getType(), newParameters[0].getType())) {
+                        it.remove();
+                        break;
+                    } else {*/
+                        return true;
+                    /*}*/
                 }
             }
         }
