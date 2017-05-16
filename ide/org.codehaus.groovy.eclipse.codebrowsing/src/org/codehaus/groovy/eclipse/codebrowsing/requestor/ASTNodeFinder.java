@@ -266,7 +266,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitCastExpression(CastExpression expression) {
-        check(expression.getType());
+        if (expression.getEnd() > 0) {
+            check(expression.getType());
+        }
         super.visitCastExpression(expression);
     }
 

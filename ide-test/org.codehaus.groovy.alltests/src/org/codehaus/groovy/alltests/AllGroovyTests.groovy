@@ -57,6 +57,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectFieldsTests,
     org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectGenericsTests,
     org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectImportsTests,
+    org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectKeywordsTests,
     org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectLocalTests,
     org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectMethodsTests,
     org.codehaus.groovy.eclipse.codebrowsing.tests.CodeSelectPackageTests,

@@ -385,51 +385,6 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'String')
     }
 
-    @Test @Ignore('Is this just shorthand for getClass()?')
-    void testSelectClass() {
-        // Java Editor doesn't code select on 'class' literal expression
-        String contents = 'String.class'
-        assertCodeSelect([contents], 'class', null)
-    }
-
-    @Test
-    void testSelectDef1() {
-        String contents = 'class C { def x() { } }'
-        assertCodeSelect([contents], 'def', null)
-    }
-
-    @Test
-    void testSelectDef2() {
-        String contents = 'class C { Object x() { def y } }'
-        assertCodeSelect([contents], 'def', null)
-    }
-
-    @Test
-    void testSelectThis1() {
-        // Java Editor doesn't code select on 'this' variable expression
-        String contents = 'class C { def x() { this } }'
-        assertCodeSelect([contents], 'this', null)
-    }
-
-    @Test
-    void testSelectThis2() {
-        // Java Editor doesn't code select on 'this' variable expression
-        String contents = 'class C { def x() { this.toString() } }'
-        assertCodeSelect([contents], 'this', null)
-    }
-
-    @Test // GRECLIPSE-548
-    void testSelectSuper1() {
-        String contents = 'class Super { } \n class C extends Super { def x() { super } }'
-        assertCodeSelect([contents], 'super', 'Super')
-    }
-
-    @Test // GRECLIPSE-548
-    void testSelectSuper2() {
-        String contents = 'class Super { } \n class AClass extends Super { def x() { super.toString() } }'
-        assertCodeSelect([contents], 'super', 'Super')
-    }
-
     @Test // GRECLIPSE-800
     void testSelectInnerType() {
         String contents = 'class Outer { \n def m() { Inner x = new Inner() } \n class Inner { } }'

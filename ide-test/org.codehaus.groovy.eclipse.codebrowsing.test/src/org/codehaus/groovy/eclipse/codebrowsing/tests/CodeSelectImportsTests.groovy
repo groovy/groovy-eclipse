@@ -144,34 +144,4 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
 
         assertCodeSelect([source], '*', null)
     }
-
-    @Test
-    void testCodeSelectOnImportKeyword1() {
-        String source = '''\
-            import java.util.regex.Pattern
-            Pattern p = ~/123/
-            '''.stripIndent()
-
-        assertCodeSelect([source], 'import', null)
-    }
-
-    @Test
-    void testCodeSelectOnImportKeyword2() {
-        String source = '''\
-            import static java.util.regex.Pattern.compile
-            def p = compile('123')
-            '''.stripIndent()
-
-        assertCodeSelect([source], 'static', null)
-    }
-
-    @Test
-    void testCodeSelectOnImportKeyword3() {
-        String source = '''\
-            import static java.util.regex.Pattern.compile as build
-            def p = build('123')
-            '''.stripIndent()
-
-        assertCodeSelect([source], 'as', null)
-    }
 }
