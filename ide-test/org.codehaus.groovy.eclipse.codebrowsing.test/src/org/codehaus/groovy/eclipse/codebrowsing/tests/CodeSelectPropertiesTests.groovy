@@ -15,128 +15,218 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
+
 import org.junit.Test
 
 final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
     @Test
+    void testGetProperty1() {
+        String contents = '''\
+            class C {
+              String string = ""
+              def meth() {
+                def str = string
+              }
+            }
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'string')
+    }
+
+    @Test
+    void testGetProperty2() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            @groovy.transform.TypeChecked
+            class C {
+              String string = ""
+              def meth() {
+                def str = string
+              }
+            }
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'string')
+    }
+
+    @Test
+    void testGetProperty3() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class C {
+              String string = ""
+              def meth() {
+                def str = string
+              }
+            }
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'string')
+    }
+
+    @Test
+    void testSetProperty1() {
+        String contents = '''\
+            class C {
+              String string
+              def meth() {
+                string = ""
+              }
+            }
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'string')
+    }
+
+    @Test
+    void testSetProperty2() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            @groovy.transform.TypeChecked
+            class C {
+              String string
+              def meth() {
+                string = ""
+              }
+            }
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'string')
+    }
+
+    @Test
+    void testSetProperty3() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class C {
+              String string
+              def meth() {
+                string = ""
+              }
+            }
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'string')
+    }
+
+    @Test
     void testGettersAndField1() {
-        addGroovySource(
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  public getXxx() { xxx }\n" +
-            "}",
-        "Other")
+        String contents = '''\
+            class C {
+              String xxx
+              def getXxx() { xxx }
+            }
+            new C().xxx
+            '''.stripIndent()
 
-        String contents = "new Other().xxx"
-        String toFind = "xxx"
-        String elementName = "getXxx"
-        assertCodeSelect([contents], toFind, elementName)
-
+        assertCodeSelect([contents], 'xxx', 'getXxx')
     }
 
     @Test
     void testGettersAndField2() {
-        addGroovySource(
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  public getXxx() { xxx }\n" +
-            "}",
-        "Other")
+        String contents = '''\
+            class C {
+              String xxx
+              def getXxx() { xxx }
+            }
+            new C().getXxx()
+            '''.stripIndent()
 
-        String contents = "new Other().getXxx()"
-        String toFind = "getXxx"
-        String elementName = toFind
-        assertCodeSelect([contents], toFind, elementName)
+        assertCodeSelect([contents], 'getXxx')
     }
 
     @Test
     void testGettersAndField3() {
-        addGroovySource(
-            "class Other {\n" +
-            "  String xxx\n" +
-            "}",
-        "Other")
+        String contents = '''\
+            class C {
+              String xxx
+            }
+            new C().getXxx()
+            '''.stripIndent()
 
-        String contents = "new Other().getXxx()"
-        String toFind = "getXxx"
-        String elementName = "xxx"
-        assertCodeSelect([contents], toFind, elementName)
+        assertCodeSelect([contents], 'getXxx', 'xxx')
     }
 
     @Test
     void testGettersAndField4() {
-        addGroovySource(
-            "class Other {\n" +
-            "  public getXxx() { xxx }\n" +
-            "}",
-        "Other")
+        String contents = '''\
+            class C {
+              def getXxx() { xxx }
+            }
+            new C().xxx
+            '''.stripIndent()
 
-        String contents = "new Other().xxx"
-        String toFind = "xxx"
-        String elementName = "getXxx"
-        assertCodeSelect([contents], toFind, elementName)
+        assertCodeSelect([contents], 'xxx', 'getXxx')
     }
 
     @Test
     void testGettersAndField5() {
-        String contents =
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  public getXxx() { xxx }\n" +
-            "}\n" +
-            "new Other().xxx"
-        String toFind = "xxx"
-        String elementName = "getXxx"
-        assertCodeSelect([contents], toFind, elementName)
+        String contents = '''\
+            class C {
+              String xxx
+              def getXxx() { xxx }
+            }
+            new C().xxx
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'xxx', 'getXxx')
     }
 
     @Test
     void testGettersAndField6() {
-        String contents =
-            "class Other {\n" +
-            "  String xxx\n" +
-            "  public getXxx() { xxx }\n" +
-            "}\n" +
-            "new Other().getXxx"
-        String toFind = "getXxx"
-        String elementName = toFind
-        assertCodeSelect([contents], toFind, elementName)
+        String contents = '''\
+            class C {
+              String xxx
+              def getXxx() { xxx }
+            }
+            new C().getXxx
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'getXxx')
     }
 
     @Test
     void testGettersAndField7() {
-        String contents =
-            "class Other {\n" +
-            "  public getXxx() { xxx }\n" +
-            "}\n" +
-            "new Other().xxx"
-        String toFind = "xxx"
-        String elementName = "getXxx"
-        assertCodeSelect([contents], toFind, elementName)
+        String contents = '''\
+            class C {
+              public getXxx() { xxx }
+            }
+            new C().xxx
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'xxx', 'getXxx')
     }
 
     @Test
     void testGettersAndField8() {
-        String contents =
-            "class Other {\n" +
-            "  String xxx\n" +
-            "}\n" +
-            "new Other().getXxx"
-        String toFind = "getXxx"
-        String elementName = "xxx"
-        assertCodeSelect([contents], toFind, elementName)
+        String contents = '''\
+            class C {
+              String xxx
+            }
+            new C().getXxx
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'getXxx', 'xxx')
     }
 
     @Test // GRECLIPSE-1162
     void testIsGetter1() {
-        String contents =
-            "class Other {\n" +
-            "  boolean xxx\n" +
-            "}\n" +
-            "new Other().isXxx"
-        String toFind = "isXxx"
-        String elementName = "xxx"
-        assertCodeSelect([contents], toFind, elementName)
+        String contents = '''\
+            class C {
+              boolean xxx
+            }
+            new C().isXxx
+            '''.stripIndent()
+
+        assertCodeSelect([contents], 'isXxx', 'xxx')
     }
 }

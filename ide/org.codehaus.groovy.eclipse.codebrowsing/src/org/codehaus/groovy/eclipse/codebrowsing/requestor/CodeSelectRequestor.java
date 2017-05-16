@@ -419,13 +419,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
                             }
                         }
                     }
-                    // check for an @Trait field
-                    @SuppressWarnings("unchecked")
-                    List<FieldNode> traitFields = (List<FieldNode>) result.declaringType.getNodeMetaData("trait.fields");
-                    if (traitFields != null) {
-                        for (FieldNode field : traitFields) {
-                            if (field == declaration) {
-                                return type.getField(name);
+                    if (result.declaringType != null) {
+                        // check for an @Trait field
+                        @SuppressWarnings("unchecked")
+                        List<FieldNode> traitFields = (List<FieldNode>) result.declaringType.getNodeMetaData("trait.fields");
+                        if (traitFields != null) {
+                            for (FieldNode field : traitFields) {
+                                if (field == declaration) {
+                                    return type.getField(name);
+                                }
                             }
                         }
                     }
