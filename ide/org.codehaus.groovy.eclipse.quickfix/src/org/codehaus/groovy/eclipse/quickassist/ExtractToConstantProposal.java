@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 SpringSource, a division of Pivotal Software, Inc
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,40 +23,35 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
- * Quick Assist for extracting expression to a constant. Delegates the logic to {@link ExtractGroovyConstantRefactoring}
- *
- * @author Alex Boyko
+ * Quick Assist for extracting expression to a constant. Delegates the logic to {@link ExtractGroovyConstantRefactoring}.
  */
 public class ExtractToConstantProposal extends TextRefactoringProposal {
 
-	public ExtractToConstantProposal(IInvocationContext context) {
-		super(context, new ExtractGroovyConstantRefactoring(
-				(GroovyCompilationUnit) context.getCompilationUnit(),
-				context.getSelectionOffset(), context.getSelectionLength()));
-		ExtractGroovyConstantRefactoring extractToConstantRefactoring = (ExtractGroovyConstantRefactoring) refactoring;
-		extractToConstantRefactoring.setConstantName(extractToConstantRefactoring.guessConstantName());
-		extractToConstantRefactoring.setVisibility(JdtFlags.VISIBILITY_STRING_PACKAGE);
-		extractToConstantRefactoring.setReplaceAllOccurrences(false);
-	}
+    public ExtractToConstantProposal(IInvocationContext context) {
+        super(context, new ExtractGroovyConstantRefactoring((GroovyCompilationUnit) context.getCompilationUnit(), context.getSelectionOffset(), context.getSelectionLength()));
+        ExtractGroovyConstantRefactoring extractToConstantRefactoring = (ExtractGroovyConstantRefactoring) refactoring;
+        extractToConstantRefactoring.setConstantName(extractToConstantRefactoring.guessConstantName());
+        extractToConstantRefactoring.setVisibility(JdtFlags.VISIBILITY_STRING_PACKAGE);
+        extractToConstantRefactoring.setReplaceAllOccurrences(false);
+    }
 
-	public ExtractToConstantProposal(IInvocationContext context, boolean all) {
-		this(context);
-		ExtractGroovyConstantRefactoring extractToConstantRefactoring = (ExtractGroovyConstantRefactoring) refactoring;
-		extractToConstantRefactoring.setReplaceAllOccurrences(all);
-	}
+    public ExtractToConstantProposal(IInvocationContext context, boolean all) {
+        this(context);
+        ExtractGroovyConstantRefactoring extractToConstantRefactoring = (ExtractGroovyConstantRefactoring) refactoring;
+        extractToConstantRefactoring.setReplaceAllOccurrences(all);
+    }
 
-	@Override
-	public String getAdditionalProposalInfo() {
-		try {
-			return ((ExtractGroovyConstantRefactoring)refactoring).getConstantSignaturePreview();
-		} catch (JavaModelException e) {
-			return getDisplayString();
-		}
-	}
+    @Override
+    public String getAdditionalProposalInfo() {
+        try {
+            return ((ExtractGroovyConstantRefactoring) refactoring).getConstantSignaturePreview();
+        } catch (JavaModelException e) {
+            return getDisplayString();
+        }
+    }
 
-	@Override
-	protected String getImageBundleLocation() {
-		return JavaPluginImages.IMG_CORRECTION_LOCAL;
-	}
-
+    @Override
+    protected String getImageBundleLocation() {
+        return JavaPluginImages.IMG_CORRECTION_LOCAL;
+    }
 }

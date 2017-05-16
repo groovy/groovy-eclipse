@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 SpringSource, a division of Pivotal Software, Inc
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,41 +22,33 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
- * Quick Assist for extracting expression to a local variable. Delegates the logic to {@link ExtractGroovyLocalRefactoring}
- *
- * @author Alex Boyko
+ * Quick Assist for extracting expression to a local variable. Delegates the logic to {@link ExtractGroovyLocalRefactoring}.
  */
-public class ExtractToLocalProposal
-		extends
-			TextRefactoringProposal {
+public class ExtractToLocalProposal extends TextRefactoringProposal {
 
-	public ExtractToLocalProposal(IInvocationContext context) {
-		super(context, new ExtractGroovyLocalRefactoring(
-				(GroovyCompilationUnit) context.getCompilationUnit(), context
-				.getSelectionOffset(), context
-				.getSelectionLength()));
-		ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
-		extractRefactoring.setLocalName(extractRefactoring.guessLocalNames()[0]);
-	}
+    public ExtractToLocalProposal(IInvocationContext context) {
+        super(context, new ExtractGroovyLocalRefactoring((GroovyCompilationUnit) context.getCompilationUnit(), context.getSelectionOffset(), context.getSelectionLength()));
+        ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
+        extractRefactoring.setLocalName(extractRefactoring.guessLocalNames()[0]);
+    }
 
-	public ExtractToLocalProposal(IInvocationContext context, boolean all) {
-		this(context);
-		ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
-		extractRefactoring.setReplaceAllOccurrences(all);
-	}
+    public ExtractToLocalProposal(IInvocationContext context, boolean all) {
+        this(context);
+        ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
+        extractRefactoring.setReplaceAllOccurrences(all);
+    }
 
-	@Override
-	public String getAdditionalProposalInfo() {
-		try {
-			return ((ExtractGroovyLocalRefactoring)refactoring).getSignaturePreview();
-		} catch (JavaModelException e) {
-			return getDisplayString();
-		}
-	}
+    @Override
+    public String getAdditionalProposalInfo() {
+        try {
+            return ((ExtractGroovyLocalRefactoring) refactoring).getSignaturePreview();
+        } catch (JavaModelException e) {
+            return getDisplayString();
+        }
+    }
 
-	@Override
-	protected String getImageBundleLocation() {
-		return JavaPluginImages.IMG_CORRECTION_LOCAL;
-	}
-
+    @Override
+    protected String getImageBundleLocation() {
+        return JavaPluginImages.IMG_CORRECTION_LOCAL;
+    }
 }

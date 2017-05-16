@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 SpringSource, a division of Pivotal Software, Inc
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,16 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
- * Quick Assist for extracting a local variable to a field. Delegates the logic to {@link ConvertGroovyLocalToFieldRefactoring}
- *
- * @author Alex Boyko
+ * Quick Assist for extracting a local variable to a field. Delegates the logic to {@link ConvertGroovyLocalToFieldRefactoring}.
  */
 public class ConvertLocalToFieldProposal extends TextRefactoringProposal {
 
-	public ConvertLocalToFieldProposal(IInvocationContext context) {
-		super(context, new ConvertGroovyLocalToFieldRefactoring(
-				(GroovyCompilationUnit) context.getCompilationUnit(), context
-				.getSelectionOffset(), context
-				.getSelectionLength()));
-	}
+    public ConvertLocalToFieldProposal(IInvocationContext context) {
+        super(context, new ConvertGroovyLocalToFieldRefactoring((GroovyCompilationUnit) context.getCompilationUnit(), context.getSelectionOffset(), context.getSelectionLength()));
+    }
 
-	@Override
-	protected String getImageBundleLocation() {
-		return JavaPluginImages.IMG_CORRECTION_CHANGE;
-	}
-
+    @Override
+    protected String getImageBundleLocation() {
+        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+    }
 }

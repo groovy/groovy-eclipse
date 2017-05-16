@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,131 +46,127 @@ import org.eclipse.jface.text.templates.persistence.TemplateStore;
 public class GroovyQuickAssist implements IQuickAssistProcessor {
     private static final String $_LINE_SELECTION= "${" + GlobalTemplateVariables.LineSelection.NAME + "}"; //$NON-NLS-1$ //$NON-NLS-2$
 
-	public boolean hasAssists(IInvocationContext context) throws CoreException {
-		if (context != null
-				&& isContentInGroovyProject(context.getCompilationUnit())) {
-			return new AddSuggestionsQuickAssistProposal(context).hasProposals() || 
-			        new ConvertToClosureCompletionProposal(context).hasProposals() ||
-			        new ConvertToMethodCompletionProposal(context).hasProposals() ||
-                    new ConvertToMultiLineStringCompletionProposal(context).hasProposals() ||
-                    new ConvertToSingleLineStringCompletionProposal(context).hasProposals() ||
-                    new RemoveUnnecessarySemicolonsCompletionProposal(context).hasProposals() ||
-                    new SwapOperandsCompletionProposal(context).hasProposals() ||
-                    new SplitAssigmentCompletionProposal(context).hasProposals() ||
-                    new AssignStatementToNewLocalProposal(context).hasProposals() ||
+    public boolean hasAssists(IInvocationContext context) throws CoreException {
+        if (context != null && isContentInGroovyProject(context.getCompilationUnit())) {
+            return new AddSuggestionsQuickAssistProposal(context).hasProposals() ||
+                new ConvertToClosureCompletionProposal(context).hasProposals() ||
+                new ConvertToMethodCompletionProposal(context).hasProposals() ||
+                new ConvertToMultiLineStringCompletionProposal(context).hasProposals() ||
+                new ConvertToSingleLineStringCompletionProposal(context).hasProposals() ||
+                new RemoveUnnecessarySemicolonsCompletionProposal(context).hasProposals() ||
+                new SwapOperandsCompletionProposal(context).hasProposals() ||
+                new SplitAssigmentCompletionProposal(context).hasProposals() ||
+                new AssignStatementToNewLocalProposal(context).hasProposals() ||
+                (context.getCompilationUnit() instanceof GroovyCompilationUnit && (
                     new ExtractToLocalProposal(context).hasProposals() ||
                     new ExtractToConstantProposal(context).hasProposals() ||
-                    new ConvertLocalToFieldProposal(context).hasProposals();
-		}
-		return false;
-	}
+                    new ConvertLocalToFieldProposal(context).hasProposals()));
+        }
+        return false;
+    }
 
-	public IJavaCompletionProposal[] getAssists(IInvocationContext context,
-			IProblemLocation[] locations) throws CoreException {
-	    if (!(context.getCompilationUnit() instanceof GroovyCompilationUnit)) {
-	        return new IJavaCompletionProposal[0];
-	    }
-	    
-		List<IJavaCompletionProposal> proposalList;
+    public IJavaCompletionProposal[] getAssists(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
+        if (!(context.getCompilationUnit() instanceof GroovyCompilationUnit)) {
+            return new IJavaCompletionProposal[0];
+        }
+
+        List<IJavaCompletionProposal> proposalList;
         if (context instanceof IQuickAssistInvocationContext) {
-            proposalList = getTemplateAssists(
-                    (IQuickAssistInvocationContext) context,
-                    (GroovyCompilationUnit) context.getCompilationUnit());
+            proposalList = getTemplateAssists((IQuickAssistInvocationContext) context, (GroovyCompilationUnit) context.getCompilationUnit());
         } else {
             proposalList = new ArrayList<IJavaCompletionProposal>();
         }
-		
-		AddSuggestionsQuickAssistProposal javaProposal = new AddSuggestionsQuickAssistProposal(
-				context);
-		if (javaProposal.hasProposals()) {
-		    proposalList.add(javaProposal);
-		}
-		
-		ConvertToClosureCompletionProposal convertToClosure = new ConvertToClosureCompletionProposal(context);
-		if (convertToClosure.hasProposals()) {
+
+        AddSuggestionsQuickAssistProposal javaProposal = new AddSuggestionsQuickAssistProposal(
+                context);
+        if (javaProposal.hasProposals()) {
+            proposalList.add(javaProposal);
+        }
+
+        ConvertToClosureCompletionProposal convertToClosure = new ConvertToClosureCompletionProposal(context);
+        if (convertToClosure.hasProposals()) {
             proposalList.add(convertToClosure);
         }
-        
-		ConvertToMethodCompletionProposal convertToMethod = new ConvertToMethodCompletionProposal(context);
-		if (convertToMethod.hasProposals()) {
-		    proposalList.add(convertToMethod);
-		}
-		
-		ConvertToMultiLineStringCompletionProposal convertToMultiLineString = new ConvertToMultiLineStringCompletionProposal(context);
-		if (convertToMultiLineString.hasProposals()) {
-		    proposalList.add(convertToMultiLineString);
-		}
-		
-		ConvertToSingleLineStringCompletionProposal convertToSingleLineString = new ConvertToSingleLineStringCompletionProposal(context);
-		if (convertToSingleLineString.hasProposals()) {
-		    proposalList.add(convertToSingleLineString);
-		}
-		
-		RemoveUnnecessarySemicolonsCompletionProposal unnecessarySemicolons = new RemoveUnnecessarySemicolonsCompletionProposal(context);
-		if (unnecessarySemicolons.hasProposals()) {
+
+        ConvertToMethodCompletionProposal convertToMethod = new ConvertToMethodCompletionProposal(context);
+        if (convertToMethod.hasProposals()) {
+            proposalList.add(convertToMethod);
+        }
+
+        ConvertToMultiLineStringCompletionProposal convertToMultiLineString = new ConvertToMultiLineStringCompletionProposal(context);
+        if (convertToMultiLineString.hasProposals()) {
+            proposalList.add(convertToMultiLineString);
+        }
+
+        ConvertToSingleLineStringCompletionProposal convertToSingleLineString = new ConvertToSingleLineStringCompletionProposal(context);
+        if (convertToSingleLineString.hasProposals()) {
+            proposalList.add(convertToSingleLineString);
+        }
+
+        RemoveUnnecessarySemicolonsCompletionProposal unnecessarySemicolons = new RemoveUnnecessarySemicolonsCompletionProposal(context);
+        if (unnecessarySemicolons.hasProposals()) {
             proposalList.add(unnecessarySemicolons);
         }
-		
-		SplitAssigmentCompletionProposal splitAssignment = new SplitAssigmentCompletionProposal(context);
-		if (splitAssignment.hasProposals()) {
-		    proposalList.add(splitAssignment);
-		}
-		
-		SwapOperandsCompletionProposal swapOperands = new SwapOperandsCompletionProposal(context);
-		if (swapOperands.hasProposals()) {
-		    proposalList.add(swapOperands);
-		}
-		
-		AssignStatementToNewLocalProposal assignStatement = new AssignStatementToNewLocalProposal(context);
-		if (assignStatement.hasProposals()) {
-		    proposalList.add(assignStatement);
-		}
-		
-		ExtractToLocalProposal extractToLocal = new ExtractToLocalProposal(context, false);
-		if (extractToLocal.hasProposals()) {
-		    proposalList.add(extractToLocal);
-		}
-		
-		ExtractToLocalProposal extractToLocalAllOccurences = new ExtractToLocalProposal(context, true);
-		if (extractToLocalAllOccurences.hasProposals()) {
-		    proposalList.add(extractToLocalAllOccurences);
-		}
-		
-		ExtractToConstantProposal extractToConstant = new ExtractToConstantProposal(context, false);
-		if (extractToConstant.hasProposals()) {
-			proposalList.add(extractToConstant);
-		}
-		
-		ExtractToConstantProposal extractToConstantAllOccurrences = new ExtractToConstantProposal(context, true);
-		if (extractToConstantAllOccurrences.hasProposals()) {
-			proposalList.add(extractToConstantAllOccurrences);
-		}
-		
-		ConvertLocalToFieldProposal convertToField = new ConvertLocalToFieldProposal(context);
-		if (convertToField.hasProposals()) {
-			proposalList.add(convertToField);
-		}
-		
-		return proposalList.toArray(new IJavaCompletionProposal[0]);
-	}
-	
-	public List<IJavaCompletionProposal> getTemplateAssists(IQuickAssistInvocationContext assistContext, GroovyCompilationUnit unit) {
+
+        SplitAssigmentCompletionProposal splitAssignment = new SplitAssigmentCompletionProposal(context);
+        if (splitAssignment.hasProposals()) {
+            proposalList.add(splitAssignment);
+        }
+
+        SwapOperandsCompletionProposal swapOperands = new SwapOperandsCompletionProposal(context);
+        if (swapOperands.hasProposals()) {
+            proposalList.add(swapOperands);
+        }
+
+        AssignStatementToNewLocalProposal assignStatement = new AssignStatementToNewLocalProposal(context);
+        if (assignStatement.hasProposals()) {
+            proposalList.add(assignStatement);
+        }
+
+        ExtractToLocalProposal extractToLocal = new ExtractToLocalProposal(context, false);
+        if (extractToLocal.hasProposals()) {
+            proposalList.add(extractToLocal);
+        }
+
+        ExtractToLocalProposal extractToLocalAllOccurences = new ExtractToLocalProposal(context, true);
+        if (extractToLocalAllOccurences.hasProposals()) {
+            proposalList.add(extractToLocalAllOccurences);
+        }
+
+        ExtractToConstantProposal extractToConstant = new ExtractToConstantProposal(context, false);
+        if (extractToConstant.hasProposals()) {
+            proposalList.add(extractToConstant);
+        }
+
+        ExtractToConstantProposal extractToConstantAllOccurrences = new ExtractToConstantProposal(context, true);
+        if (extractToConstantAllOccurrences.hasProposals()) {
+            proposalList.add(extractToConstantAllOccurrences);
+        }
+
+        ConvertLocalToFieldProposal convertToField = new ConvertLocalToFieldProposal(context);
+        if (convertToField.hasProposals()) {
+            proposalList.add(convertToField);
+        }
+
+        return proposalList.toArray(new IJavaCompletionProposal[0]);
+    }
+
+    public List<IJavaCompletionProposal> getTemplateAssists(IQuickAssistInvocationContext assistContext,
+        GroovyCompilationUnit unit) {
         try {
             TemplateStore codeTemplates = GroovyQuickFixPlugin.getDefault().getTemplateStore();
             List<IJavaCompletionProposal> templates = new ArrayList<IJavaCompletionProposal>();
             Region region = new Region(assistContext.getOffset(), assistContext.getLength());
-            ContextTypeRegistry templateContextRegistry= GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
-            TemplateContextType contextType= templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+            ContextTypeRegistry templateContextRegistry = GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
+            TemplateContextType contextType =
+                templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
             IDocument document = assistContext.getSourceViewer().getDocument();
-            JavaContext templateContext = new GroovyContext(contextType, document, 
-                    region.getOffset(), region.getLength(), unit);
-            
+            JavaContext templateContext = new GroovyContext(contextType, document, region.getOffset(), region.getLength(), unit);
             templateContext.setForceEvaluation(true);
             templateContext.setVariable("selection", document.get(region.getOffset(), region.getLength()));
             for (Template template : codeTemplates.getTemplates()) {
                 if (isSurroundWith(template, templateContext)) {
-                    templates.add(new TemplateProposal(template,
-                            templateContext, region, null));
+                    templates.add(new TemplateProposal(template, templateContext, region, null));
                 }
             }
             return templates;
@@ -178,21 +174,19 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
             GroovyQuickFixPlugin.log(e);
             return Collections.emptyList();
         }
-	}
-	
-	private boolean isSurroundWith(Template template, JavaContext templateContext) {
-        String contextId= templateContext.getContextType().getId();
+    }
+
+    private boolean isSurroundWith(Template template, JavaContext templateContext) {
+        String contextId = templateContext.getContextType().getId();
         return GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE.equals(contextId) && template.getPattern().indexOf($_LINE_SELECTION) != -1;
-	}
-	
-	/**
-     * True if the problem is contained in an accessible (open and existing)
-     * Groovy project in the workspace. False otherwise.
-     * 
-     * @param unit
-     *            compilation unit containing the resource with the problem
-     * @return true if and only if the problem is contained in an accessible
-     *         Groovy project. False otherwise
+    }
+
+    /**
+     * Determines if the problem is contained in an accessible (open and existing)
+     * Groovy project in the workspace.
+     *
+     * @param unit compilation unit containing the resource with the problem
+     * @return {@code true} iff the problem is contained in an accessible Groovy project
      */
     protected boolean isProblemInGroovyProject(IInvocationContext context) {
         if (context == null) {
@@ -200,32 +194,24 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
         }
         return isContentInGroovyProject(context.getCompilationUnit());
     }
-    
-    
 
     /**
-     * True if the problem is contained in an accessible (open and existing)
-     * Groovy project in the workspace. False otherwise.
-     * 
-     * @param unit
-     *            compilation unit containing the resource with the problem
-     * @return true if and only if the problem is contained in an accessible
-     *         Groovy project. False otherwise
+     * Determines if the problem is contained in an accessible (open and existing)
+     * Groovy project in the workspace.
+     *
+     * @param unit compilation unit containing the resource with the problem
+     * @return {@code true} iff the problem is contained in an accessible Groovy project
      */
     protected boolean isContentInGroovyProject(ICompilationUnit unit) {
-
         if (unit != null) {
             IResource resource = unit.getResource();
             if (resource != null) {
                 IProject project = resource.getProject();
-                if (project != null && project.isAccessible()
-                        && GroovyNature.hasGroovyNature(project)) {
+                if (project != null && project.isAccessible() && GroovyNature.hasGroovyNature(project)) {
                     return true;
                 }
             }
         }
         return false;
     }
-
-
 }
