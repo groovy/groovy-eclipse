@@ -21,18 +21,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -268,6 +273,25 @@ public abstract class GroovyUtils {
         });
 
         return importNodes;
+    }
+
+    public static Expression getTraitFieldExpression(MethodCallExpression call) {
+        if (call.getObjectExpression().getType().getName().endsWith("$Trait$FieldHelper")) {
+            Matcher m = Pattern.compile(".+__(\\w+)\\$[gs]et").matcher(call.getMethodAsString());
+            if (m.matches()) {
+                String fieldName = m.group(1);
+                @SuppressWarnings("unchecked")
+                List<FieldNode> traitFields = (List<FieldNode>) call.getObjectExpression().getType().getOuterClass().getNodeMetaData("trait.fields");
+                for (FieldNode field : traitFields) {
+                    if (field.getName().equals(fieldName)) {
+                        VariableExpression expr = new VariableExpression(field);
+                        expr.setSourcePosition(call);
+                        return expr;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**

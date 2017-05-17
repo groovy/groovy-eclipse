@@ -142,9 +142,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             vce = e;
         }
 
-        node.visitContents(this);
-
-        // visit trait fields
+        // visit trait members
         @SuppressWarnings("unchecked")
         List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
         if (traitFields != null) {
@@ -152,6 +150,15 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 visitField(field);
             }
         }
+        @SuppressWarnings("unchecked")
+        List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
+        if (traitMethods != null) {
+            for (MethodNode method : traitMethods) {
+                visitMethod(method);
+            }
+        }
+
+        node.visitContents(this);
 
         // visit inner classes
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
@@ -241,7 +248,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             String name = pair.getKey(); Expression expr = pair.getValue();
             check(node.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY),
                 start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
-//            expr.visit(this);
+            /*expr.visit(this);*/
             start = expr.getEnd() + 1;
         }
         super.visitAnnotation(node);
@@ -376,7 +383,14 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (call.isUsingGenerics()) {
             checkGenerics(call.getGenericsTypes(), null);
         }
+
         super.visitMethodCallExpression(call);
+
+        // check for trait field re-written as call to helper method
+        Expression expr = GroovyUtils.getTraitFieldExpression(call);
+        if (expr != null) {
+            check(expr);
+        }
     }
 
     @Override

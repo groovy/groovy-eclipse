@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,15 +41,10 @@ import org.eclipse.ui.IEditorPart;
 /**
  * Overrides the JavadocHover to allow Groovy elements to contribute custom
  * pieces to the doc hovers. The hover is non-null only if the element being
- * hovered
- * over is an {@link IGroovyResolvedElement} and has a non-empty extraDoc.
- *
+ * hovered over is an {@link IGroovyResolvedElement} and has a non-empty extraDoc.
+ * <p>
  * If this hover is used, then due to ordering problems with content assist
- * hovers,
- * this hover will override the variable info hover.
- *
- * @author andrew
- * @created Dec 1, 2010
+ * hovers, this hover will override the variable info hover.
  */
 public class GroovyExtraInformationHover extends JavadocHover {
 
@@ -99,7 +94,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
             }
         }
 
-        IJavaElement[] elements= getJavaElementsAt(textViewer, hoverRegion);
+        IJavaElement[] elements = getJavaElementsAt(textViewer, hoverRegion);
         if (shouldComputeHover(elements)) {
             // might be null and if so, punt to the JavadocHover
             return computeHover(hoverRegion, elements);
@@ -111,9 +106,6 @@ public class GroovyExtraInformationHover extends JavadocHover {
     /**
      * Only compute hover if thie is an {@link IGroovyResolvedElement} that has
      * an extraDoc.
-     *
-     * @param elements
-     * @return
      */
     private boolean shouldComputeHover(IJavaElement[] elements) {
         if (elements != null && elements.length == 1) {
@@ -131,30 +123,20 @@ public class GroovyExtraInformationHover extends JavadocHover {
     }
 
     /**
-     * Possibly compute the hover. Might return null
-     *
-     * @param hoverRegion
-     * @param elements
-     * @return
+     * Possibly compute the hover. Might return null.
      */
     private Object computeHover(IRegion hoverRegion, IJavaElement[] elements) {
         Object hover;
-        hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", new Class[] { IJavaElement[].class,
-            ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class }, this, new Object[] { elements,
-            getEditorInputJavaElement(), hoverRegion, null });
+        hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", new Class[] {IJavaElement[].class, ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class }, this, new Object[] {elements, getEditorInputJavaElement(), hoverRegion, null});
         if (hover instanceof JavadocBrowserInformationControlInput && elements[0] instanceof IGroovyResolvedElement) {
             JavadocBrowserInformationControlInput input = (JavadocBrowserInformationControlInput) hover;
-            hover = new JavadocBrowserInformationControlInput((JavadocBrowserInformationControlInput) input.getPrevious(),
-                    input.getElement(), wrapHTML(input, (IGroovyResolvedElement) elements[0]),
-                    input.getLeadingImageWidth());
+            hover = new JavadocBrowserInformationControlInput((JavadocBrowserInformationControlInput) input.getPrevious(), input.getElement(), wrapHTML(input, (IGroovyResolvedElement) elements[0]), input.getLeadingImageWidth());
         }
         return hover;
     }
 
-
     protected String wrapHTML(JavadocBrowserInformationControlInput input, IGroovyResolvedElement elt) {
-        // only use a preamble if the name of the inferred element is not the
-        // same as the resolved element.
+        // only use a preamble if the name of the inferred element is not the same as the resolved element
         String preamble;
         if (!elt.getElementName().equals(elt.getInferredElementName())) {
             preamble = createLabel(elt.getInferredElement());
@@ -164,7 +146,6 @@ public class GroovyExtraInformationHover extends JavadocHover {
         if (elt.getExtraDoc() != null) {
 
             String wrapped = preamble + extraDocAsHtml(elt) + "\n<br/><hr/><br/>\n" + input.getHtml();
-            //            System.out.println(wrapped);
             return wrapped;
         } else {
             return preamble + input.getHtml();
@@ -180,16 +161,9 @@ public class GroovyExtraInformationHover extends JavadocHover {
             extraDoc = extraDoc + "*/";
         }
 
-        return (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {
-            IMember.class, String.class }, null, new Object[] { elt, extraDoc });
+        return (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, String.class}, null, new Object[] {elt, extraDoc});
     }
 
-
-
-    /**
-     * @param inferredElement
-     * @return
-     */
     private String createLabel(ASTNode inferredElement) {
         if (inferredElement instanceof PropertyNode) {
             inferredElement = ((PropertyNode) inferredElement).getField();
@@ -260,5 +234,4 @@ public class GroovyExtraInformationHover extends JavadocHover {
         }
         return sb.toString();
     }
-
 }

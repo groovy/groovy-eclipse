@@ -401,7 +401,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                 if (!type.isEnum()) {
                     if (node.isScript()) {
-                        // visit fields that were created by @Field
+                        // visit fields created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
                                 if (field.getNameEnd() <= 0) {
@@ -411,12 +411,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             }
                         }
                     } else {
-                        // visit fields that were relocated by @Trait
+                        // visit fields and methods relocated by @Trait
                         @SuppressWarnings("unchecked")
                         List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
                         if (traitFields != null) {
                             for (FieldNode field : traitFields) {
                                 visitField(field);
+                            }
+                        }
+                        @SuppressWarnings("unchecked")
+                        List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
+                        if (traitMethods != null) {
+                            for (MethodNode method : traitMethods) {
+                                visitConstructorOrMethod(method, false);
                             }
                         }
                     }
@@ -1443,13 +1450,19 @@ assert primaryExprType != null && dependentExprType != null;
         node.getArguments().visit(this);
         scope.forgetEnclosingMethodCall();
 
-        // if this method call is the primary of a larger expression,
-        // then pass the inferred type onwards
+        // if this method call is the primary of a larger expression, then pass the inferred type onwards
         if (node.isSpreadSafe()) {
             returnType = createParameterizedList(returnType);
         }
 
-        handleCompleteExpression(node, returnType, t.declaringType);
+        // check for trait field re-written as call to helper method
+        Expression expr = GroovyUtils.getTraitFieldExpression(node);
+        if (expr != null) {
+            handleSimpleExpression(expr);
+            postVisit(node, returnType, t.declaringType, node);
+        } else {
+            handleCompleteExpression(node, returnType, t.declaringType);
+        }
         scopes.getLast().forgetCurrentNode();
     }
 

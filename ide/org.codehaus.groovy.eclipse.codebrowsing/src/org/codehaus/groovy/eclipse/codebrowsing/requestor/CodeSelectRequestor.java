@@ -237,7 +237,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     if (type != null) {
                         if (qualifier == null) {
                             // find the requested java element
-                            IJavaElement maybeRequested = findRequestedElement(result, type);
+                            IJavaElement maybeRequested = findRequestedElement(result.declaration, effectiveDeclaringType, type);
                             // try to resolve the type of the requested element; this will add the proper metadata to the hover
                             requestedElement = resolveRequestedElement(result, maybeRequested);
                         } else {
@@ -390,12 +390,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return typeParam;
     }
 
-    private IJavaElement findRequestedElement(TypeLookupResult result, IType type) throws JavaModelException {
+    private IJavaElement findRequestedElement(ASTNode declaration, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
         IJavaElement maybeRequested = null;
-        ASTNode declaration = result.declaration;
         if (declaration instanceof ClassNode) {
-            maybeRequested = type;
-        } else if (type.getTypeRoot() != null) {
+            maybeRequested = jdtDeclaringType;
+        } else if (jdtDeclaringType.getTypeRoot() != null) {
             if (declaration.getEnd() > 0) {
                 // GRECLIPSE-1233 can't use getEltAt because of default parameters.
                 // instead, just iterate through children.  Method variants
@@ -406,11 +405,21 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (declaration instanceof MethodNode) {
                     name = ((MethodNode) declaration).getName();
                     if (name.equals("<init>")) {
-                        name = type.getElementName();
+                        name = jdtDeclaringType.getElementName();
+                    }
+                    // check for @Trait method
+                    @SuppressWarnings("unchecked")
+                    List<MethodNode> traitMethods = (List<MethodNode>) declaringType.getNodeMetaData("trait.methods");
+                    if (traitMethods != null) {
+                        for (MethodNode method : traitMethods) {
+                            if (method == declaration) {
+                                return jdtDeclaringType.getMethod(name, null);
+                            }
+                        }
                     }
                 } else if (declaration instanceof FieldNode) {
                     name = ((FieldNode) declaration).getName();
-                    // check for an @Lazy field
+                    // check for @Lazy field
                     Iterable<AnnotationNode> annos = ((FieldNode) declaration).getAnnotations();
                     if (annos != null) {
                         for (AnnotationNode anno : annos) {
@@ -419,15 +428,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
                             }
                         }
                     }
-                    if (result.declaringType != null) {
-                        // check for an @Trait field
-                        @SuppressWarnings("unchecked")
-                        List<FieldNode> traitFields = (List<FieldNode>) result.declaringType.getNodeMetaData("trait.fields");
-                        if (traitFields != null) {
-                            for (FieldNode field : traitFields) {
-                                if (field == declaration) {
-                                    return type.getField(name);
-                                }
+                    // check for @Trait field
+                    @SuppressWarnings("unchecked")
+                    List<FieldNode> traitFields = (List<FieldNode>) declaringType.getNodeMetaData("trait.fields");
+                    if (traitFields != null) {
+                        for (FieldNode field : traitFields) {
+                            if (field == declaration) {
+                                return jdtDeclaringType.getField(name);
                             }
                         }
                     }
@@ -437,7 +444,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     name = declaration.getText();
                 }
 
-                for (IJavaElement child : type.getChildren()) {
+                for (IJavaElement child : jdtDeclaringType.getChildren()) {
                     ISourceRange range = ((ISourceReference) child).getSourceRange();
                     if (range.getOffset() <= start && range.getOffset() + range.getLength() >= end && child.getElementName().equals(name)) {
                         maybeRequested = child;
@@ -460,11 +467,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     name = ((FieldNode) declaration).getName();
                 }
                 if (name != null) {
-                    maybeRequested = findElement(type, name, parameters);
+                    maybeRequested = findElement(jdtDeclaringType, name, parameters);
                 }
                 if (maybeRequested == null) {
                     // still couldn't find anything
-                    maybeRequested = type;
+                    maybeRequested = jdtDeclaringType;
                 }
             }
         }

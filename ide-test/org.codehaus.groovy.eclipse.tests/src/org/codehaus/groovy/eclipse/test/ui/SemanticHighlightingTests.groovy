@@ -1577,13 +1577,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits() {
+    void testTraits1() {
         assumeTrue(isAtLeastGroovy(23))
 
         String contents = '''\
             trait Whatever {
-              String property
               private String field
+              String property
               def method() {
                 field + property + getProperty() + Math.PI
               }
@@ -1591,13 +1591,37 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD)/*,
+            new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('getProperty'), 11, METHOD_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE)*/)
+            new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
+    }
+
+    @Test
+    void testTraits2() {
+        assumeTrue(isAtLeastGroovy(23))
+
+        String contents = '''\
+            trait Whatever {
+              private String field; String property
+              private String method(String param) {
+                "$field $param $property $unknown"
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('param'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('unknown'), 7, UNKNOWN))
     }
 
     //

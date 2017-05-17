@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,24 @@ import org.eclipse.jdt.core.ISourceReference;
 
 /**
  * Allows Groovy elements to provide customized Javadoc hovers.
- * @author Andrew Eisenberg
- * @created Nov 22, 2010
  */
 public interface IGroovyResolvedElement extends IJavaElement, ISourceReference {
-    String getExtraDoc();
     String getKey();
-    
-    String getInferredElementName();
+
+    String getExtraDoc();
+
     ASTNode getInferredElement();
+
+    String getInferredElementName();
+    /*default String getInferredElementName() {
+        ASTNode element = getInferredElement();
+        if (element instanceof Variable) {
+            return ((Variable) element).getName();
+        } else if (element instanceof MethodNode) {
+            return ((MethodNode) element).getName();
+        } else if (element instanceof ClassNode) {
+            return ((ClassNode) element).getName();
+        }
+        return element.getText();
+    }*/
 }

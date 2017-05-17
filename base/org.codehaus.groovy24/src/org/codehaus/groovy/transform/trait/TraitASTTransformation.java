@@ -223,6 +223,9 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         for (MethodNode privateMethod : nonPublicAPIMethods) {
             cNode.removeMethod(privateMethod);
         }
+        // GRECLIPSE add
+        cNode.putNodeMetaData("trait.methods", nonPublicAPIMethods);
+        // GRECLIPSE end
 
         // add fields
         for (FieldNode field : fields) {
@@ -537,7 +540,9 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         } else {
             methodNode.addAnnotation(new AnnotationNode(Traits.IMPLEMENTED_CLASSNODE));
         }
-        methodNode.setCode(null);
+        // GRECLIPSE edit
+        //methodNode.setCode(null);
+        // GRECLIPSE end
 
         if (!methodNode.isPrivate() && !methodNode.isStatic()) {
             methodNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT);
