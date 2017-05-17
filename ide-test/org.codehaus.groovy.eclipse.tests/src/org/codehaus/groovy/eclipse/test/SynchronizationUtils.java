@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
@@ -121,6 +122,14 @@ public class SynchronizationUtils {
         while (System.currentTimeMillis() < nextCheck) {
             runEventQueue();
             sleep(1);
+        }
+    }
+
+    public static IViewPart showView(String id) throws Exception {
+        try {
+            return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(id);
+        } finally {
+            runEventQueue();
         }
     }
 

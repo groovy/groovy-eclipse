@@ -20,16 +20,13 @@ import static org.junit.Assume.assumeTrue
 
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.ui.IViewPart
-import org.eclipse.ui.internal.Workbench
 import org.eclipse.ui.internal.views.log.AbstractEntry
-import org.eclipse.ui.internal.views.log.LogEntry
 import org.eclipse.ui.internal.views.log.LogView
 import org.junit.Test
 import org.osgi.framework.Version
 
 /**
- * Test that we don't get any spurious errors or warnings in the log on startup.
+ * Verifies that there are no spurious errors or warnings in the log on startup.
  */
 final class ErrorLogTest {
 
@@ -46,61 +43,31 @@ final class ErrorLogTest {
         'Test.groovy'
     ].asImmutable()
 
-    private boolean canIgnoreMessage(String msg) {
-        for (String ignore : KNOWN_MSGS) {
-            if (msg.contains(ignore)) {
-                return true
-            }
-        }
-        return false
-    }
-
     @Test
     void testNoWarningsOnStartup() {
         assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion('3.8')) >= 0)
 
-        IViewPart view = Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().getActivePart().getSite().getPage().showView('org.eclipse.pde.runtime.LogView')
-        if (view instanceof LogView) {
-            LogView logView = (LogView) view
-            AbstractEntry[] logs = logView.getElements()
-            // Ignore information entries in the log
-            List<AbstractEntry> errorsAndWarnings = new ArrayList<AbstractEntry>()
-            for (int i = 0; i < logs.length; i++) {
-                LogEntry entry = (LogEntry) logs[i]
-                if (entry.getSeverity() == IStatus.ERROR
-                        || entry.getSeverity() == IStatus.WARNING) {
-                    String msg = entry.getMessage()
-                    if (!canIgnoreMessage(msg)) {
-                        errorsAndWarnings.add(logs[i])
-                    }
-                }
-            }
-            if (errorsAndWarnings) {
-                StringBuilder errors = new StringBuilder()
-                boolean ignore = false
-                int count = 1
-                for (AbstractEntry element : errorsAndWarnings) {
-                    LogEntry log = (LogEntry) element
-                    errors.append('=================== Log entry '+(count++)+' ===================\n')
-                    errors.append(log.getMessage())
-                    errors.append(' (' + log.getPluginId() + ')\n')
-                    if (element.hasChildren()) {
-                        element.getChildren(null).grep(LogEntry).each { LogEntry s ->
-                            String msg = s.getMessage()
-                            errors.append('    ' + msg)
-                            errors.append(' (' + s.getPluginId() + ')\n')
-                            errors.append('Stack trace: ' + s.getStack() + '\n\n\n')
-                            ignore = false
+        LogView view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
+        Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { AbstractEntry e ->
+            (e.severity == IStatus.ERROR || e.severity == IStatus.WARNING) && !(e.message in KNOWN_MSGS)
+        }
+
+        if (errorsAndWarnings) {
+            StringBuilder report = new StringBuilder()
+            errorsAndWarnings.eachWithIndex { e, i ->
+                report.append("=================== Log entry $i ===================\n")
+                report.append("$e.message ($e.pluginId)\n")
+                if (e.hasChildren()) {
+                    e.getChildren(null).each { c ->
+                        if (c.class.simpleName == 'LogEntry') {
+                            report.append("    $c.message ($c.pluginId)\n    Stack trace: $c.stack\n")
                         }
                     }
-                    errors.append('===================\n')
                 }
-                if (!ignore) {
-                    fail('There should be no unexpected entries in the error log. Found:\n' + errors.toString())
-                }
+                report.append("===================\n")
             }
-        } else {
-            fail('Could not find the Error log.')
+
+            fail('There should be no unexpected entries in the error log. Found:\n' + report)
         }
     }
 }
