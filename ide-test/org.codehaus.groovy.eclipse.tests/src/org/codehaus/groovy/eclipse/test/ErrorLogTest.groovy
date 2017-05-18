@@ -32,15 +32,12 @@ final class ErrorLogTest {
 
     private static final List<String> KNOWN_MSGS = [
         'Could not locate the running profile instance.',
-        'The following is a complete list',
-        'One or more bundles',
-        'Monitor UI start failed',
-        'was not resolved',
-        'org.eclipse.test.performance.win32.translated_host_properties',
         'Listener failed',
+        'Monitor UI start failed',
+        'One or more bundles are not resolved',
         'org.eclipse.mylyn.tasks.core',
-        'Unable to run embedded server',
-        'Test.groovy'
+        'org.eclipse.test.performance.win32.translated_host_properties',
+        'Unable to run embedded server'
     ].asImmutable()
 
     @Test
@@ -49,18 +46,19 @@ final class ErrorLogTest {
 
         LogView view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
         Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { AbstractEntry e ->
-            (e.severity == IStatus.ERROR || e.severity == IStatus.WARNING) && !(e.message in KNOWN_MSGS)
+            (e.severity == IStatus.ERROR || e.severity == IStatus.WARNING) && !(KNOWN_MSGS.any { e.message =~ it })
         }
 
         if (errorsAndWarnings) {
             StringBuilder report = new StringBuilder()
             errorsAndWarnings.eachWithIndex { e, i ->
-                report.append("=================== Log entry $i ===================\n")
+                report.append("=================== Log entry ${i + 1} ===================\n")
                 report.append("$e.message ($e.pluginId)\n")
                 if (e.hasChildren()) {
                     e.getChildren(null).each { c ->
                         if (c.class.simpleName == 'LogEntry') {
-                            report.append("    $c.message ($c.pluginId)\n    Stack trace: $c.stack\n")
+                            report.append("\t$c.message ($c.pluginId)\n")
+                            if (c.stack) report.append("\tStack trace: $c.stack\n")
                         }
                     }
                 }
