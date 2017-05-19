@@ -57,12 +57,11 @@ final class ErrorLogTest {
                 if (e.hasChildren()) {
                     e.getChildren(null).each { c ->
                         if (c.class.simpleName == 'LogEntry') {
-                            report.append("\t$c.message ($c.pluginId)\n")
-                            if (c.stack) report.append("\tStack trace: $c.stack\n")
+                            report.append("    $c.message ($c.pluginId)\n")
+                            if (c.stack) report.append("    Stack trace: $c.stack\n")
                         }
                     }
                 }
-                report.append("===================\n")
             }
 
             fail('There should be no unexpected entries in the error log. Found:\n' + report)
