@@ -37,6 +37,7 @@ final class ErrorLogTest {
         'One or more bundles are not resolved',
         'org.eclipse.mylyn.tasks.core',
         'org.eclipse.test.performance.win32.translated_host_properties',
+        'The following is a complete list of bundles which are not resolved',
         'Unable to run embedded server'
     ].asImmutable()
 
