@@ -57,10 +57,7 @@ public class VariableExpressionTransformer {
         pexp.copyNodeMetaData(expr);
         pexp.setImplicitThis(true);
         // GRECLIPSE add
-        pexp.getProperty().setStart(expr.getStart());
-        pexp.getProperty().setEnd(expr.getEnd());
-        pexp.setStart(expr.getStart());
-        pexp.setEnd(expr.getEnd());
+        pexp.getProperty().setSourcePosition(expr);
         // GRECLIPSE end
         ClassNode owner = expr.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
         if (owner != null) {
@@ -84,6 +81,9 @@ public class VariableExpressionTransformer {
                     expr.getName()
             );
             pexp.setImplicitThis(true);
+            // GRECLIPSE add
+            pexp.getProperty().setSourcePosition(expr);
+            // GRECLIPSE end
             // put the receiver inferred type so that the class writer knows that it will have to call a bridge method
             receiver.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, field.getDeclaringClass());
             // add inferred type information

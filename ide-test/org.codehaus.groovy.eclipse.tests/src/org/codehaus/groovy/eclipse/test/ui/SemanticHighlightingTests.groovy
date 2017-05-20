@@ -1246,6 +1246,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock3() {
+        assumeTrue(isAtLeastGroovy(20))
+
         String contents = '''\
             @groovy.transform.TypeChecked
             class X { static {
@@ -1273,6 +1275,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock4() {
+        assumeTrue(isAtLeastGroovy(20))
+
         String contents = '''\
             @groovy.transform.CompileStatic
             class X { static {
@@ -1300,6 +1304,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock5() {
+        assumeTrue(isAtLeastGroovy(20))
+
         String contents = '''\
             @groovy.transform.CompileStatic
             class X {
@@ -1325,6 +1331,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock6() {
+        assumeTrue(isAtLeastGroovy(20))
+
         String contents = '''\
             @groovy.transform.CompileStatic
             class X {
@@ -1350,7 +1358,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testLazyInitExpr() {
+    void testLazyInitExpr1() {
         String contents = '''\
             class X {
               String x
@@ -1362,6 +1370,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('x'), 1, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD))
+    }
+
+    @Test
+    void testLazyInitExpr2() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        addGroovySource '''\
+            class Directory {
+              static Object lookup(String id) {
+                null
+              }
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class X {
+              String id
+              @Lazy Object thing = { ->
+                Directory.lookup(id)
+              }()
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('id'), 2, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('thing'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('lookup'), 6, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('id'), 2, FIELD))
     }
 
     @Test

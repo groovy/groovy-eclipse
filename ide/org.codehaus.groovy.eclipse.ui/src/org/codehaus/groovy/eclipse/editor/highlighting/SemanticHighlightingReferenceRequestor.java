@@ -164,10 +164,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 System.err.println("found: " + type);
         }
 
-        if (pos != null && ((pos.getOffset() > 0 || pos.getLength() > 1) ||
-                // expression nodes can still be valid and have an offset of 0 and
-                // a length of 1, whereas for field/method nodes this is not allowed
-                node instanceof Expression)) {
+        //                                        expression nodes can still be valid and have an offset of 0 and a length of 1
+        if (pos != null && pos.getLength() > 0 && (node instanceof Expression || pos.getOffset() > 0 || pos.getLength() > 1)) {
             typedPosition.add(pos);
         }
 
