@@ -1021,7 +1021,7 @@ protected void consumeToken(int token) {
 	}
 	// register message send selector only if inside a method or if looking at a field initializer
 	// and if the current token is an open parenthesis
-	if (isInsideMethod() || isInsideFieldInitialization() || isInsideAttributeValue()) {
+	if (isInsideMethod() || isInsideFieldInitialization() || isInsideAttributeValue() || isInsideEnumConstantnitialization()) {
 		switch (token) {
 			case TokenNameLPAREN :
 				this.bracketDepth++;
@@ -1516,6 +1516,18 @@ protected boolean isInsideFieldInitialization(){
 			case K_TYPE_DELIMITER : return false;
 			case K_METHOD_DELIMITER : return false;
 			case K_FIELD_INITIALIZER_DELIMITER : 
+				return true;
+		}
+		i--;
+	}
+	return false;
+}
+protected boolean isInsideEnumConstantnitialization(){
+	int i = this.elementPtr;
+	while(i > -1) {
+		switch (this.elementKindStack[i]) {
+			case K_TYPE_DELIMITER : return false;
+			case K_METHOD_DELIMITER : return false;
 			case K_ENUM_CONSTANT_DELIMITER :
 				return true;
 		}

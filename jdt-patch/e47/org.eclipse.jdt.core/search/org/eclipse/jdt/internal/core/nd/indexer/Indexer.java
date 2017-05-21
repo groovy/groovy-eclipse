@@ -1057,6 +1057,7 @@ public final class Indexer {
 		this.nd.acquireWriteLock(subMonitor.split(1));
 		try {
 			this.nd.clear(subMonitor.split(2));
+			this.nd.getDB().flush();
 		} finally {
 			this.nd.releaseWriteLock();
 		}

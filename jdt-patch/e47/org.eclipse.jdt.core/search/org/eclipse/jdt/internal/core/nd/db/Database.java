@@ -403,6 +403,7 @@ public class Database {
 			wasCanceled = flush() || wasCanceled;
 		}
 		this.memoryUsage.refresh();
+		this.fHeaderChunk.makeDirty();
 		return wasCanceled;
 	}
 
