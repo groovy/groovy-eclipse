@@ -43,143 +43,55 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         super(level);
     }
 
-    private String getJarPath(String entry) throws Exception {
-        URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
-        return FileLocator.resolve(url).getFile();
+    private String getJarPath(String entry) {
+        try {
+            URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
+            return FileLocator.resolve(url).getFile();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
+    // TODO: @Lazy, @Field, @Canonical, @EqualsAndHashCode, @ToString, @Newify, @Bindable, @Vetoable, @Memoized, @TailRecursive (2.3+)
+    //       @IndexedProperty, @TupleConstructor, @MapConstructor (2.5+), @AutoClone, @AutoExternalize, @AutoImplement (2.5+)
+    //       @Synchronized, @WithReadLock, @WithWriteLock, @ConditionalInterrupt, @ThreadInterrupt, @TimedInterrupt
 
     @Test
-    public void testAnnotationCollector() {
-        assumeTrue(isAtLeastGroovy(21));
-
-        String[] sources = {
-            "Book.groovy",
-            "import java.lang.reflect.*;\n" +
-            "class Book {\n" +
-            "  @ISBN String isbn;\n" +
-            "  public static void main(String []argv) {\n" +
-            "    Field f = Book.class.getDeclaredField('isbn');\n" +
-            "    Object[] os = f.getDeclaredAnnotations();\n" +
-            "    for (Object o: os) {\n" +
-            "      System.out.print(o);\n" +
-            "    }\n" +
-            "  }\n" +
-            "}",
-
-            "NotNull.java",
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME) public @interface NotNull {\n" +
-            "}",
-
-            "Length.java",
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME) public @interface Length {\n" +
-            "  int value() default 0;\n" +
-            "}",
-
-            "ISBN.groovy",
-            "@NotNull @Length @groovy.transform.AnnotationCollector\n" +
-            "public @interface ISBN {\n" +
-            "}"
-        };
-
-        runConformTest(sources, "@NotNull()@Length(value=0)");
-    }
-
-    @Test
-    public void testBuiltInTransforms_Singleton() {
-        String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    Run.main(argv)\n" +
-            "  }\n" +
-            "}",
-
-            "Run.groovy",
-            "public class Run {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    System.out.println(Wibble.getInstance().field)\n" +
-            "  }\n" +
-            "}",
-
-            "Wibble.groovy",
-            "@Singleton class Wibble {\n" +
-            "  public String field = 'abcd'\n" +
-            "}"
-        };
-
-        runConformTest(sources, "abcd");
-    }
-
-    @Test // lazy option set in Singleton
-    public void testBuiltInTransforms_Singleton2() {
-        //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        assumeTrue(isAtLeastGroovy(22));
-
+    public void testPackageScope() {
+        // http://groovy.codehaus.org/PackageScope+transformation
+        // Adjust the visibility of a property so instead of private it is package default
         String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
             "  public static void main(String[] argv) {\n"+
-            "    Run.main(argv);\n"+
+            "    q.Run.main(argv);\n"+
             "  }\n"+
             "}\n",
 
-            "Run.groovy",
+            "q/Run.groovy",
+            "package q;\n"+
+            "import q.Wibble;\n"+
             "public class Run {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Wibble.run();\n"+
-            "    System.out.print(\"running \");\n"+
-            "    System.out.print(Wibble.getInstance().field);\n"+
+            "  public static void main(String[] argv) throws Exception {\n"+
+            "    Wibble w = new Wibble();\n"+
+            "    System.out.print(Wibble.class.getDeclaredField(\"field\").getModifiers());\n"+
+            "    System.out.print(Wibble.class.getDeclaredField(\"field2\").getModifiers());\n"+
             "  }\n"+
             "}\n",
 
-            "Wibble.groovy",
-            "@Singleton(lazy=false, strict=false) class Wibble {" +
-            "  public String field = 'abcd';\n"+
-            "  private Wibble() { print \"ctor \";}\n"+
-            "  static void run() {}\n"+
+            "q/Wibble.groovy",
+            "package q\n"+
+            "class Wibble {" +
+            "  String field = 'abcd';\n"+
+            "  @groovy.transform.PackageScope String field2 = 'abcd';\n"+
             "}\n"
         };
 
-        runConformTest(sources, "ctor running abcd");
+        runConformTest(sources, "20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation);
     }
 
     @Test
-    public void testBuiltInTransforms_Singleton3() {
-        //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        assumeTrue(isAtLeastGroovy(22));
-
-        String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Run.main(argv);\n"+
-            "  }\n"+
-            "}\n",
-
-            "Run.groovy",
-            "public class Run {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Wibble.run();\n"+
-            "    System.out.print(\"running \");\n"+
-            "    System.out.print(Wibble.getInstance().field);\n"+
-            "  }\n"+
-            "}\n",
-
-            "Wibble.groovy",
-            "@Singleton(lazy=true, strict=false) class Wibble {" +
-            "  public String field = 'abcd';\n"+
-            "  private Wibble() { print \"ctor \";}\n"+
-            "  static void run() {}\n"+
-            "}\n"
-        };
-
-        runConformTest(sources, "running ctor abcd");
-    }
-
-    @Test
-    public void testBuiltInTransforms_Category1() {
+    public void testCategory1() {
         String[] sources = {
             "Demo.groovy",
             "   use(NumberCategory) {\n"+
@@ -208,7 +120,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testBuiltInTransforms_Category2() {
+    public void testCategory2() {
         String[] sources = {
             "Demo.groovy",
             "   use(NumberCategory) {\n"+
@@ -238,7 +150,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testBuiltInTransforms_Category3() {
+    public void testCategory3() {
         String[] sources = {
             "Foo.groovy",
             "assert new Plane().fly() ==\n"+
@@ -289,43 +201,9 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "I'm the James Bond's vehicle and I dive!");
     }
 
-    @Test
-    public void testBuiltInTransforms_PackageScope() {
-        // http://groovy.codehaus.org/PackageScope+transformation
-        // Adjust the visibility of a property so instead of private it is package default
-        String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    q.Run.main(argv);\n"+
-            "  }\n"+
-            "}\n",
-
-            "q/Run.groovy",
-            "package q;\n"+
-            "import q.Wibble;\n"+
-            "public class Run {\n"+
-            "  public static void main(String[] argv) throws Exception {\n"+
-            "    Wibble w = new Wibble();\n"+
-            "    System.out.print(Wibble.class.getDeclaredField(\"field\").getModifiers());\n"+
-            "    System.out.print(Wibble.class.getDeclaredField(\"field2\").getModifiers());\n"+
-            "  }\n"+
-            "}\n",
-
-            "q/Wibble.groovy",
-            "package q\n"+
-            "class Wibble {" +
-            "  String field = 'abcd';\n"+
-            "  @groovy.transform.PackageScope String field2 = 'abcd';\n"+
-            "}\n"
-        };
-
-        runConformTest(sources, "20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation);
-    }
-
     @Test // not a great test, needs work
     public void testCategory_STS3822() {
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
+        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) >= 0);
 
         String[] sources = {
             "bad.groovy",
@@ -428,6 +306,98 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         assertEquals(1, annotations.size());
     }
 
+    @Test
+    public void testSingleton() {
+        String[] sources = {
+            "Goo.groovy",
+            "class Goo {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    Run.main(argv)\n" +
+            "  }\n" +
+            "}",
+
+            "Run.groovy",
+            "public class Run {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println(Wibble.getInstance().field)\n" +
+            "  }\n" +
+            "}",
+
+            "Wibble.groovy",
+            "@Singleton class Wibble {\n" +
+            "  public String field = 'abcd'\n" +
+            "}"
+        };
+
+        runConformTest(sources, "abcd");
+    }
+
+    @Test // lazy option set in Singleton
+    public void testSingleton2() {
+        //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
+        assumeTrue(isAtLeastGroovy(22));
+
+        String[] sources = {
+            "Goo.groovy",
+            "class Goo {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    Run.main(argv);\n"+
+            "  }\n"+
+            "}\n",
+
+            "Run.groovy",
+            "public class Run {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    Wibble.run();\n"+
+            "    System.out.print(\"running \");\n"+
+            "    System.out.print(Wibble.getInstance().field);\n"+
+            "  }\n"+
+            "}\n",
+
+            "Wibble.groovy",
+            "@Singleton(lazy=false, strict=false) class Wibble {" +
+            "  public String field = 'abcd';\n"+
+            "  private Wibble() { print \"ctor \";}\n"+
+            "  static void run() {}\n"+
+            "}\n"
+        };
+
+        runConformTest(sources, "ctor running abcd");
+    }
+
+    @Test
+    public void testSingleton3() {
+        //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
+        assumeTrue(isAtLeastGroovy(22));
+
+        String[] sources = {
+            "Goo.groovy",
+            "class Goo {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    Run.main(argv);\n"+
+            "  }\n"+
+            "}\n",
+
+            "Run.groovy",
+            "public class Run {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    Wibble.run();\n"+
+            "    System.out.print(\"running \");\n"+
+            "    System.out.print(Wibble.getInstance().field);\n"+
+            "  }\n"+
+            "}\n",
+
+            "Wibble.groovy",
+            "@Singleton(lazy=true, strict=false) class Wibble {" +
+            "  public String field = 'abcd';\n"+
+            "  private Wibble() { print \"ctor \";}\n"+
+            "  static void run() {}\n"+
+            "}\n"
+        };
+
+        runConformTest(sources, "running ctor abcd");
+    }
+
     /**
      * COOL!!!  The getInstance() method is added by a late AST Transformation made due to the Singleton annotation - and yet
      * still it is referencable from Java.  This is not possible with normal joint compilation.
@@ -457,6 +427,184 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         };
 
         runConformTest(sources, "abc");
+    }
+
+    @Test
+    public void testAtLog() {
+        // https://jira.codehaus.org/browse/GRECLIPSE-1503
+        // https://jira.codehaus.org/browse/GROOVY-5736
+        String[] sources = {
+            "examples/local/Log4jExample.groovy",
+            "package examples.local\n" +
+            "import groovy.util.logging.*\n" +
+            "@Log4j\n" +
+            "class Log4jExample {\n" +
+            "  def meth() {\n" +
+            "    logger.info('yay!')\n" +
+            "  }\n" +
+            "}",
+
+            "examples/local/Slf4JExample.groovy",
+            "package examples.local\n" +
+            "import groovy.util.logging.*\n" +
+            "@Slf4j\n" +
+            "class Slf4jExample {\n" +
+            "  def meth() {\n" +
+            "    logger.info('yay!')\n" +
+            "  }\n" +
+            "}",
+
+            "examples/local/LoggingExample.groovy",
+            "package examples.local\n" +
+            "import groovy.util.logging.*\n" +
+            "@Log\n" +
+            "class LoggingExample {\n" +
+            "  def meth() {\n" +
+            "    logger.info('yay!')\n" +
+            "  }\n" +
+            "}",
+
+            "examples/local/CommonsExample.groovy",
+            "package examples.local\n" +
+            "import groovy.util.logging.*\n" +
+            "@Commons\n" +
+            "class CommonsExample {\n" +
+            "  def meth() {\n" +
+            "    logger.info('yay!')\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testWithLogging() {
+        Map<String, String> options = getCompilerOptions();
+        // Taken from http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, getJarPath("astTransformations/transforms.jar"));
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+
+        String[] sources = {
+            "examples/local/LoggingExample.groovy",
+            "package examples.local\n"+
+            "\n"+
+            "/**\n"+
+            " * Demonstrates how a local transformation works. \n"+
+            " * \n"+
+            " * @author Hamlet D'Arcy\n"+
+            " */ \n"+
+            "\n"+
+            "def greet() {\n"+
+            "  println \"Hello World\"\n"+
+            "}\n"+
+            "\n"+
+            "@WithLogging //this should trigger extra logging\n"+
+            "def greetWithLogging() {\n"+
+            "  println \"Hello World\"\n"+
+            "}\n"+
+            "\n"+
+            "// this prints out a simple Hello World\n"+
+            "greet()\n"+
+            "\n"+
+            "// this prints out Hello World along with the extra compile time logging\n"+
+            "greetWithLogging()\n"+
+            "\n"+
+            "//\n"+
+            "// The rest of this script is asserting that this all works correctly. \n"+
+            "//\n"+
+            "\n"+
+            "def oldOut = System.out\n"+
+            "// redirect standard out so we can make assertions on it\n"+
+            "def standardOut = new ByteArrayOutputStream();\n"+
+            "System.setOut(new PrintStream(standardOut)); \n"+
+            "\n"+
+            "greet()\n"+
+            "assert \"Hello World\" == standardOut.toString(\"ISO-8859-1\").trim()\n"+
+            "\n"+
+            "// reset standard out and redirect it again\n"+
+            "standardOut.close()\n"+
+            "standardOut = new ByteArrayOutputStream();\n"+
+            "System.setOut(new PrintStream(standardOut)); \n"+
+            "\n"+
+            "greetWithLogging()\n"+
+            "def result = standardOut.toString(\"ISO-8859-1\").split('\\n')\n"+
+            "assert \"Starting greetWithLogging\"  == result[0].trim()\n"+
+            "assert \"Hello World\"                == result[1].trim()\n"+
+            "assert \"Ending greetWithLogging\"    == result[2].trim()\n"+
+            "\n"+
+            "System.setOut(oldOut);\n"+
+            "print 'done'\n"+
+            "\n"
+        };
+
+        runConformTest(sources,
+            "Hello World\n" +
+            "Starting greetWithLogging\n" +
+            "Hello World\n" +
+            "Ending greetWithLogging\n" +
+            "done",
+            options);
+    }
+
+    @Test
+    public void testAnnotationCollector() {
+        assumeTrue(isAtLeastGroovy(21));
+
+        String[] sources = {
+            "Book.groovy",
+            "import java.lang.reflect.*;\n" +
+            "class Book {\n" +
+            "  @ISBN String isbn;\n" +
+            "  public static void main(String []argv) {\n" +
+            "    Field f = Book.class.getDeclaredField('isbn');\n" +
+            "    Object[] os = f.getDeclaredAnnotations();\n" +
+            "    for (Object o: os) {\n" +
+            "      System.out.print(o);\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
+
+            "NotNull.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME) public @interface NotNull {\n" +
+            "}",
+
+            "Length.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME) public @interface Length {\n" +
+            "  int value() default 0;\n" +
+            "}",
+
+            "ISBN.groovy",
+            "@NotNull @Length @groovy.transform.AnnotationCollector\n" +
+            "public @interface ISBN {\n" +
+            "}"
+        };
+
+        runConformTest(sources, "@NotNull()@Length(value=0)");
+    }
+
+    @Test
+    public void testInheritConstructors() {
+        String[] sources = {
+            "Main.groovy",
+            "new Two('foo')",
+
+            "One.groovy",
+            "class One {\n" +
+            "  One(String s) {\n" +
+            "    print s\n" +
+            "  }\n" +
+            "}",
+
+            "Two.groovy",
+            "@groovy.transform.InheritConstructors\n" +
+            "class Two extends One {\n" +
+            "}"
+        };
+
+        runConformTest(sources, "foo");
     }
 
     @Test
@@ -531,7 +679,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8033")
+    @Test
     public void testTypeChecked4() {
         assumeTrue(isAtLeastGroovy(21));
 
@@ -543,6 +691,26 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "    Set<java.beans.BeanInfo> defs = []\n" +
             "    defs*.additionalBeanInfo\n" +
             "  }\n" +
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testTypeChecked1506() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "LoggerTest.groovy",
+            "import groovy.transform.*\n"+
+            "import groovy.util.logging.*\n"+
+            "@TypeChecked @Log\n"+
+            "class LoggerTest {\n"+
+            "  static void main(String... args) {\n"+
+            "    LoggerTest.log.info('one')\n"+
+            "    log.info('two')\n"+
+            "  }\n"+
             "}"
         };
 
@@ -634,7 +802,75 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic_1511() {
+    public void testCompileStatic4() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
+        String[] sources = {
+            "A.groovy",
+            "class A {\n"+
+            "  public void profile(String name, groovy.lang.Closure<?> callable) { }\n"+
+            "}",
+
+            "B.groovy",
+            "@groovy.transform.CompileStatic\n"+
+            "class B extends A {\n"+
+            "  def foo() {\n"+
+            "    profile('creating plugin manager with classes') {\n"+
+            "      println 'abc'\n"+
+            "    }\n"+
+            "  }\n"+
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic1505() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "DynamicQuery.groovy",
+            "import groovy.transform.TypeChecked\n"+
+            "@TypeChecked\n"+
+            "class DynamicQuery {\n"+
+            "  public static void main(String[]argv) {\n"+
+            "    new DynamicQuery().foo(null);\n"+
+            "  }\n"+
+            "  private foo(Map sumpin) {\n"+
+            "    Map foo\n"+
+            "    foo.collect{ Map.Entry it -> it.key }\n"+
+            "    print 'abc';\n"+
+            "  }\n"+
+            "}\n"
+        };
+
+        runConformTest(sources, "abc");
+    }
+
+    @Test
+    public void testCompileStatic1506() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "LoggerTest.groovy",
+            "import groovy.transform.*\n"+
+            "import groovy.util.logging.*\n"+
+            "@CompileStatic @Log\n"+
+            "class LoggerTest {\n"+
+            "  static void main(String... args) {\n"+
+            "    LoggerTest.log.info('one')\n"+
+            "    log.info('two')\n"+
+            "  }\n"+
+            "}"
+        };
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic1511() {
         assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
@@ -653,72 +889,56 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic_1505() {
+    public void testCompileStatic1514() {
         assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
-            "DynamicQuery.groovy",
-            "import groovy.transform.TypeChecked\n"+
-            "@TypeChecked\n"+
-            "class DynamicQuery {\n"+
-            "   public static void main(String[]argv) {\n"+
-            "     new DynamicQuery().foo(null);\n"+
-            "   }\n"+
-            "   private foo(Map sumpin){\n"+
-            "       Map foo\n"+
-            "       foo.collect{ Map.Entry it ->it.key}\n"+
-            "       print 'abc';\n"+
-            "   }\n"+
-            "}\n"
-        };
-
-        runConformTest(sources, "abc");
-    }
-
-    @Test @Ignore
-    public void testCompileStatic_1506() {
-        assumeTrue(isAtLeastGroovy(20));
-
-        String[] sources = {
-            "LoggerTest.groovy",
-            "import groovy.transform.TypeChecked\n"+
-            "import groovy.util.logging.*\n"+
-            "@Slf4j\n"+
-            "@TypeChecked\n"+
-            "   public class LoggerTest {\n"+
-            "       public static void main(String... args) {\n"+
-            "           println \"println\"\n"+
-            "           LoggerTest.log.info(\"Logged\");\n"+
-            "           log.info(\"foo\")\n"+
-            "       }\n"+
-            "   }\n"
+            "C.groovy",
+            "@SuppressWarnings('rawtypes')\n"+
+            "@groovy.transform.CompileStatic\n"+
+            "class C {\n"+
+            "  def xxx(List list) {\n"+
+            "    list.unique().each { }\n"+
+            "  }\n"+
+            "}"
         };
 
         runConformTest(sources);
     }
 
     @Test
-    public void testCompileStatic4() {
+    public void testCompileStatic1515() {
         assumeTrue(isAtLeastGroovy(20));
 
-        // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = {
-            "A.groovy",
-            "class A {\n"+
-            "   public void profile(String name, groovy.lang.Closure<?> callable) { }\n"+
-            "}\n",
+            "C.groovy",
+            "import groovy.transform.CompileStatic;\n" +
+            "import java.util.regex.Pattern\n" +
+            "@CompileStatic\n" +
+            "class C {\n" +
+            "  void validate() {\n" +
+            "    for (String validationKey : [:].keySet()) {\n" +
+            "      String regex\n" +
+            "      Pattern pattern = ~regex\n" + // NPE on this bitwise negation
+            "    }\n" +
+            "  }\n" +
+            "}"
+        };
 
-            "B.groovy",
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic1521() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "Foo.groovy",
+            "\n"+
             "@groovy.transform.CompileStatic\n"+
-            "class B extends A {\n"+
-            "\n"+
-            "   def foo() {\n"+
-            "       profile(\"creating plugin manager with classes\") {\n"+
-            "           System.out.println('abc');\n"+
-            "       }\n"+
-            "   }\n"+
-            "\n"+
-            "}\n"
+            "class Foo {\n"+
+            "  enum Status { ON, OFF }\n"+
+            "}"
         };
 
         runConformTest(sources);
@@ -732,222 +952,18 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "A.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
-            "    int prop\n" +
-            "    int computeStatic(int input) {\n" +
-            "        prop + input\n" +
-            "    }\n" +
-            "    @groovy.transform.CompileDynamic\n" +
-            "    int computeDynamic(int input) {\n" +
-            "        missing(prop, input)\n" +
-            "    }\n" +
-            "}"
-        };
-
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testTransforms_BasicLogging() throws Exception {
-        Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, getJarPath("astTransformations/transforms.jar"));
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-
-        // From: http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-        String[] sources = {
-            "examples/local/LoggingExample.groovy",
-            "package examples.local\n"+
-            "\n"+
-            "/**\n"+
-            "* Demonstrates how a local transformation works. \n"+
-            "* \n"+
-            "* @author Hamlet D'Arcy\n"+
-            "*/ \n"+
-            "\n"+
-            "def greet() {\n"+
-            "    println \"Hello World\"\n"+
-            "}\n"+
-            "    \n"+
-            "@WithLogging    //this should trigger extra logging\n"+
-            "def greetWithLogging() {\n"+
-            "    println \"Hello World\"\n"+
-            "}\n"+
-            "    \n"+
-            "// this prints out a simple Hello World\n"+
-            "greet()\n"+
-            "\n"+
-            "// this prints out Hello World along with the extra compile time logging\n"+
-            "greetWithLogging()\n"+
-            "\n"+
-            "\n"+
-            "//\n"+
-            "// The rest of this script is asserting that this all works correctly. \n"+
-            "//\n"+
-            "\n"+
-            "def oldOut = System.out\n"+
-            "// redirect standard out so we can make assertions on it\n"+
-            "def standardOut = new ByteArrayOutputStream();\n"+
-            "System.setOut(new PrintStream(standardOut)); \n"+
-            "  \n"+
-            "greet()\n"+
-            "assert \"Hello World\" == standardOut.toString(\"ISO-8859-1\").trim()\n"+
-            "\n"+
-            "// reset standard out and redirect it again\n"+
-            "standardOut.close()\n"+
-            "standardOut = new ByteArrayOutputStream();\n"+
-            "System.setOut(new PrintStream(standardOut)); \n"+
-            "\n"+
-            "greetWithLogging()\n"+
-            "def result = standardOut.toString(\"ISO-8859-1\").split('\\n')\n"+
-            "assert \"Starting greetWithLogging\"  == result[0].trim()\n"+
-            "assert \"Hello World\"                == result[1].trim()\n"+
-            "assert \"Ending greetWithLogging\"    == result[2].trim()\n"+
-            "\n"+
-            "System.setOut(oldOut);\n"+
-            "print 'done'\n"+
-            "\n",
-
-//          "examples/local/WithLogging.groovy",
-//          "package examples.local\n"+
-//          "import java.lang.annotation.Retention\n"+
-//          "import java.lang.annotation.Target\n"+
-//          "import org.codehaus.groovy.transform.GroovyASTTransformationClass\n"+
-//          "import java.lang.annotation.ElementType\n"+
-//          "import java.lang.annotation.RetentionPolicy\n"+
-//          "\n"+
-//          "/**\n"+
-//          "* This is just a marker interface that will trigger a local transformation. \n"+
-//          "* The 3rd Annotation down is the important one: @GroovyASTTransformationClass\n"+
-//          "* The parameter is the String form of a fully qualified class name. \n"+
-//          "*\n"+
-//          "* @author Hamlet D'Arcy\n"+
-//          "*/ \n"+
-//          "@Retention(RetentionPolicy.SOURCE)\n"+
-//          "@Target([ElementType.METHOD])\n"+
-//          "@GroovyASTTransformationClass([\"examples.local.LoggingASTTransformation\"])\n"+
-//          "public @interface WithLogging {\n"+
-//          "}\n"
-        };
-
-        runConformTest(sources,
-            "Hello World\n" +
-            "Starting greetWithLogging\n" +
-            "Hello World\n" +
-            "Ending greetWithLogging\n" +
-            "done",
-            options);
-    }
-
-    @Test
-    public void testTransforms_AtLog() {
-        // See
-        // https://jira.codehaus.org/browse/GRECLIPSE-1503
-        // https://jira.codehaus.org/browse/GROOVY-5736
-        String[] sources = {
-            "examples/local/Log4jExample.groovy",
-            "package examples.local\n" +
-            "import groovy.util.logging.*\n" +
-            "@Log4j\n" +
-            "class Log4jExample {\n" +
-            "  def meth() {\n" +
-            "    logger.info('yay!')\n" +
+            "  int prop\n" +
+            "  int computeStatic(int input) {\n" +
+            "    prop + input\n" +
             "  }\n" +
-            "}",
-
-            "examples/local/Slf4JExample.groovy",
-            "package examples.local\n" +
-            "import groovy.util.logging.*\n" +
-            "@Slf4j\n" +
-            "class Slf4jExample {\n" +
-            "  def meth() {\n" +
-            "    logger.info('yay!')\n" +
-            "  }\n" +
-            "}",
-
-            "examples/local/LoggingExample.groovy",
-            "package examples.local\n" +
-            "import groovy.util.logging.*\n" +
-            "@Log\n" +
-            "class LoggingExample {\n" +
-            "  def meth() {\n" +
-            "    logger.info('yay!')\n" +
-            "  }\n" +
-            "}",
-
-            "examples/local/CommonsExample.groovy",
-            "package examples.local\n" +
-            "import groovy.util.logging.*\n" +
-            "@Commons\n" +
-            "class CommonsExample {\n" +
-            "  def meth() {\n" +
-            "    logger.info('yay!')\n" +
+            "  @groovy.transform.CompileDynamic\n" +
+            "  int computeDynamic(int input) {\n" +
+            "    missing(prop, input)\n" +
             "  }\n" +
             "}"
         };
 
         runConformTest(sources);
-    }
-
-    @Test
-    public void testJDTClassNode_1731() {
-        assumeTrue(isAtLeastGroovy(21));
-
-        // Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
-        // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
-        // the described constructs across the Java/Groovy divide.
-
-        String[] sources = {
-            "c/Main.java",
-            "package c;\n" +
-            "import java.lang.reflect.Method;\n" +
-            "import a.SampleAnnotation;\n" +
-            "import b.Sample;\n" +
-            "public class Main {\n" +
-            "    public static void main(String[] args) throws Exception {" +
-            "        Method method = Sample.class.getMethod(\"doSomething\");\n" +
-            "        SampleAnnotation annotation = method.getAnnotation(SampleAnnotation.class);\n" +
-            "        System.out.print(annotation);\n" +
-            "    }\n" +
-            "}\n",
-
-            "a/SampleAnnotation.java",
-            "package a;\n" +
-            "import java.lang.annotation.ElementType;\n" +
-            "import java.lang.annotation.Retention;\n" +
-            "import java.lang.annotation.RetentionPolicy;\n" +
-            "import java.lang.annotation.Target;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@Target({ElementType.METHOD})\n" +
-            "public @interface SampleAnnotation {}\n",
-
-            "a/DelegateInOtherProject.java",
-            "package a;\n" +
-            "public class DelegateInOtherProject {\n" +
-            "    @SampleAnnotation\n" +
-            "    public void doSomething() {}\n" +
-            "}\n",
-
-            "b/Sample.groovy",
-            "package b\n" +
-            "import groovy.transform.CompileStatic\n" +
-            "import a.DelegateInOtherProject;\n" +
-            "@CompileStatic\n" +
-            "class Sample {\n" +
-            "    @Delegate(methodAnnotations = true)\n" +
-            "    DelegateInOtherProject delegate\n" +
-            "}\n",
-
-            "b/Delegated.groovy",
-            "package b\n" +
-            "import groovy.transform.CompileStatic\n" +
-            "import a.SampleAnnotation;\n" +
-            "@CompileStatic\n" +
-            "class Delegated {\n" +
-            "    @SampleAnnotation\n" +
-            "    def something() {}\n" +
-            "}\n"
-        };
-
-        runConformTest(sources, "@a.SampleAnnotation()");
     }
 
     @Test @Ignore("Grab is failing on CI server")
@@ -1023,80 +1039,65 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testGreclipse1506() {
-        assumeTrue(isAtLeastGroovy(20));
+    public void testJDTClassNode_1731() {
+        assumeTrue(isAtLeastGroovy(21));
+
+        // Test code based on article: http://www.infoq.com/articles/groovy-1.5-new
+        // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
+        // the described constructs across the Java/Groovy divide.
 
         String[] sources = {
-            "Foo.groovy",
-            "import groovy.transform.TypeChecked;\n"+
-            "import groovy.util.logging.Log;\n"+
-            "\n"+
-            "@TypeChecked @Log\n"+
-            "public class LoggerTest {\n"+
-            "  public static void main(String... args) {\n"+
-            "    println 'println'\n"+
-            "    log.info('foo')\n"+
-            "  }\n"+
-            "}"
-        };
+            "c/Main.java",
+            "package c;\n" +
+            "import java.lang.reflect.Method;\n" +
+            "import a.SampleAnnotation;\n" +
+            "import b.Sample;\n" +
+            "public class Main {\n" +
+            "    public static void main(String[] args) throws Exception {" +
+            "        Method method = Sample.class.getMethod(\"doSomething\");\n" +
+            "        SampleAnnotation annotation = method.getAnnotation(SampleAnnotation.class);\n" +
+            "        System.out.print(annotation);\n" +
+            "    }\n" +
+            "}\n",
 
-        runConformTest(sources);
-    }
+            "a/SampleAnnotation.java",
+            "package a;\n" +
+            "import java.lang.annotation.ElementType;\n" +
+            "import java.lang.annotation.Retention;\n" +
+            "import java.lang.annotation.RetentionPolicy;\n" +
+            "import java.lang.annotation.Target;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target({ElementType.METHOD})\n" +
+            "public @interface SampleAnnotation {}\n",
 
-    @Test
-    public void testGreclipse1514() {
-        assumeTrue(isAtLeastGroovy(20));
+            "a/DelegateInOtherProject.java",
+            "package a;\n" +
+            "public class DelegateInOtherProject {\n" +
+            "    @SampleAnnotation\n" +
+            "    public void doSomething() {}\n" +
+            "}\n",
 
-        String[] sources = {
-            "C.groovy",
-            "@SuppressWarnings(\"rawtypes\")\n"+
-            "@groovy.transform.CompileStatic\n"+
-            "class C {\n"+
-            "  def xxx(List list) {\n"+
-            "    list.unique().each { }\n"+
-            "  }\n"+
+            "b/Sample.groovy",
+            "package b\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "import a.DelegateInOtherProject;\n" +
+            "@CompileStatic\n" +
+            "class Sample {\n" +
+            "    @Delegate(methodAnnotations = true)\n" +
+            "    DelegateInOtherProject delegate\n" +
+            "}\n",
+
+            "b/Delegated.groovy",
+            "package b\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "import a.SampleAnnotation;\n" +
+            "@CompileStatic\n" +
+            "class Delegated {\n" +
+            "    @SampleAnnotation\n" +
+            "    def something() {}\n" +
             "}\n"
         };
 
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testGreclipse1515() {
-        assumeTrue(isAtLeastGroovy(20));
-
-        String[] sources = {
-            "C.groovy",
-            "import groovy.transform.CompileStatic;\n" +
-            "import java.util.regex.Pattern\n" +
-            "\n" +
-            "@CompileStatic\n" +
-            "class C {\n" +
-            "  void validate() {\n" +
-            "    for (String validationKey : [:].keySet()) {\n" +
-            "      String regex\n" +
-            "      Pattern pattern = ~regex\n" + // NPE on this bitwise negation
-            "    }\n" +
-            "  }\n" +
-            "}"
-        };
-
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testGreclipse1521() {
-        assumeTrue(isAtLeastGroovy(20));
-
-        String[] sources = {
-            "Foo.groovy",
-            "\n"+
-            "@groovy.transform.CompileStatic\n"+
-            "class Foo {\n"+
-            "  enum Status { ON, OFF }\n"+
-            "}"
-        };
-
-        runConformTest(sources);
+        runConformTest(sources, "@a.SampleAnnotation()");
     }
 }

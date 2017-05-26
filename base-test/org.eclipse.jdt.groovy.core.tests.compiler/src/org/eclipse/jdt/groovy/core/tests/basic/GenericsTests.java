@@ -19,9 +19,12 @@ import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import java.util.Map;
+
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -257,10 +260,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", stringify(grabField(decl, "setthree").type));
     }
 
-    @Test @Ignore
+    @Test @Ignore("support for A<X>.B<Y> has not been implemented")
     public void testGenericsPositions_6_GRE267() {
-        // FIXASC check tests after porting to recent 1.7 compiler
-        // Multiple generified components in a reference
+        // multiple generified components in a reference
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -633,168 +635,18 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
     }
 
-    @Test @Ignore("when GROOVY-5861 is fixed we can enable this test")
+    @Test
     public void testGenericsAndGroovyJava_GRE278_3() {
         String[] sources = {
-            "p/Field.java",
-            "package test;\n" +
+            "Field.java",
             "public interface Field<T extends java.io.Serializable> extends Comparable<T> {\n" +
             "}",
 
-            "p/StructureBase.groovy",
-            "package test;\n" +
-            "public class StructureBase {\n" +
-            "  public Field<?> get(Object arg0) {\n" +
-            "    return str.get(arg0);\n" +
+            "Other.groovy",
+            "class Other {\n" +
+            "  Field<?> get(Object obj) {\n" +
+            "    null\n" +
             "  }\n" +
-            "}"
-        };
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test @Ignore("when GROOVY-5861 is fixed we can enable this test")
-    public void testGenericsAndGroovyJava_GRE278_3a() {
-        String[] sources = {
-            "Main.java",
-            "public class Main {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    test.StructureBaseTest.main(argv);\n" +
-            "  }\n" +
-            "}",
-
-            "p/Field.java",
-            "package test;\n" +
-            "public interface Field<T extends java.io.Serializable> extends Comparable<T> {\n" +
-            "  public String getFieldTypeName();\n" +
-            "  public String getName();\n" +
-            "  public T getValue();\n" +
-            "  public void setValue(T o);\n" +
-            "}",
-
-            "p/Structure.java",
-            "package test;\n" +
-            "import java.util.Map;\n" +
-            "import java.nio.ByteBuffer;\n" +
-            "public interface Structure extends Map<String, Field<?>> {\n" +
-            "  public void reset();\n" +
-            "  public void setup(ByteBuffer clientBuff);\n" +
-            "}",
-
-            "p/StructureBase.groovy",
-            "package test;\n" +
-            "import java.nio.ByteBuffer;\n" +
-            "@SuppressWarnings(\"unchecked\")\n" +
-            "public class StructureBase implements Structure {\n" +
-            "   protected final Structure str = null;\n" +
-            "   StructureBase(Structure struct) {\n" +
-            "       this.str = struct;\n" +
-            "   }\n" +
-            "   public void clear() {\n" +
-            "       str.clear()\n" +
-            "   }\n" +
-            "   public boolean containsKey(Object arg0) {\n" +
-            "       return str.containsKey(arg0);\n"+
-            "   }\n" +
-            "   public boolean containsValue(Object arg0) {\n" +
-            "       return str.containsValue(arg0);\n" +
-            "   }\n" +
-            "   public Set<java.util.Map.Entry<String, Field<?>>> entrySet() {\n" +
-            "       return Collections.unmodifiableSet(str.entrySet());\n" +
-            "   }\n" +
-            "   public Field<?> get(Object arg0) {\n" +
-            "       return str.get(arg0);\n" +
-            "   }\n" +
-            "   public boolean isEmpty() {\n" +
-            "       return str.isEmpty();\n" +
-            "   }\n" +
-            "   public Set<String> keySet() {\n" +
-            "       return Collections.unmodifiableSet(str.keySet());\n" +
-            "   }\n" +
-            "   public Field<?> put(String arg0, Field<?> arg1) {\n" +
-            "       return str.put(arg0, arg1);\n" +
-            "   }\n" +
-            "   public Object put(Object key, Object value) {\n" +
-            "       return str.put(key, value)\n" +
-            "   }\n" +
-            "   public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
-            "       str.putAll(arg0);\n" +
-            "   }\n" +
-            "   public Field<?> remove(Object key) {\n" +
-            "       return str.remove(key);\n" +
-            "   }\n" +
-            "   public int size() {\n" +
-            "       return str.size();\n" +
-            "   }\n" +
-            "   public Collection<Field<?>> values() {\n" +
-            "       return Collections.unmodifiableCollection(str.values());\n" +
-            "   }\n" +
-            "   public void reset(){\n" +
-            "       str.reset();\n" +
-            "   }\n" +
-            "   public void setup(ByteBuffer buff) {\n" +
-            "       str.setup(buff);\n" +
-            "   }\n" +
-            "}",
-
-            "p/StructureBaseTest.groovy",
-            "package test;\n" +
-            "public class StructureBaseTest {\n" +
-            "   public static void main(String[] args) {\n" +
-            "        Structure str = new StructureBase(new TestStructure());\n" +
-            "        str.put('test', new TestField());\n" +
-            "           def content = str.get('test');\n" +
-            "           if (!TestField.FIELD_NAME.equals(str.get('test').name)) {\n" +
-            "               System.out.println('Failed');\n" +
-            "           } else {\n" +
-            "               System.out.println('Success');\n" +
-            "           }\n" +
-            "   }\n" +
-            "}",
-
-            "p/TestField.java",
-            "package test;\n" +
-            "public class TestField implements Field<String> {\n" +
-            "   public static final String FIELD_NAME = \"Test\";\n" +
-            "   private StringBuilder buffer = new StringBuilder();\n" +
-            "   private String value = null;\n" +
-            "   public String getFieldTypeName() {\n" +
-            "       return String.class.getSimpleName();\n" +
-            "   }\n" +
-            "   public String getName() {\n" +
-            "       return FIELD_NAME;\n" +
-            "   }\n" +
-            "   public String getValue() {\n" +
-            "       if (null == value)\n" +
-            "           value = buffer.toString();\n" +
-            "       return value;\n" +
-            "   }\n" +
-            "   public void setValue(String o) {\n" +
-            "       value = o;\n" +
-            "       buffer.replace(0, buffer.length(), o);\n" +
-            "   }\n" +
-            "   public int compareTo(String arg0) {\n" +
-            "       return getValue().compareTo(arg0);\n" +
-            "   }\n" +
-            "}",
-
-            "p/TestStructure.java",
-            "package test;\n" +
-            "import java.nio.ByteBuffer;\n" +
-            "import java.util.HashMap;\n" +
-            "import java.util.Map;\n" +
-            "@SuppressWarnings(\"serial\")\n" +
-            "public class TestStructure extends HashMap<String, Field<?>> implements Structure {\n" +
-            "   public void reset() {\n" +
-            "   }\n" +
-            "   public void setup(ByteBuffer clientBuff) {\n" +
-            "   }\n" +
-            "   public Field<?> put(String arg0, Field<?> arg1) {\n" +
-            "       return super.put(arg0, arg1);\n" +
-            "   }\n" +
-            "   public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
-            "       super.putAll(arg0);\n" +
-            "   }\n" +
             "}"
         };
 
@@ -803,6 +655,144 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGenericsAndGroovyJava_GRE278_4() {
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    StructureBaseTest.main(args);\n" +
+            "  }\n" +
+            "}",
+
+            "Field.java",
+            "public interface Field<T extends java.io.Serializable> extends Comparable<T> {\n" +
+            "  public String getFieldTypeName();\n" +
+            "  public String getName();\n" +
+            "  public T getValue();\n" +
+            "  public void setValue(T o);\n" +
+            "}",
+
+            "Structure.java",
+            "import java.util.Map;\n" +
+            "import java.nio.ByteBuffer;\n" +
+            "public interface Structure extends Map<String, Field<?>> {\n" +
+            "  public void reset();\n" +
+            "  public void setup(ByteBuffer clientBuff);\n" +
+            "}",
+
+            "StructureBase.groovy",
+            "import java.nio.ByteBuffer;\n" +
+            "class StructureBase implements Structure {\n" +
+            "  protected final Structure str = null\n" +
+            "  StructureBase(Structure struct) {\n" +
+            "    this.str = struct\n" +
+            "  }\n" +
+            "  void clear() {\n" +
+            "    str.clear()\n" +
+            "  }\n" +
+            "  boolean containsKey(Object arg0) {\n" +
+            "    str.containsKey(arg0)\n"+
+            "  }\n" +
+            "  boolean containsValue(Object arg0) {\n" +
+            "    str.containsValue(arg0)\n" +
+            "  }\n" +
+            "  Set<java.util.Map.Entry<String, Field<?>>> entrySet() {\n" +
+            "    Collections.unmodifiableSet(str.entrySet())\n" +
+            "  }\n" +
+            "  Field<?> get(Object arg0) {\n" +
+            "    str.get(arg0)\n" +
+            "  }\n" +
+            "  boolean isEmpty() {\n" +
+            "    str.isEmpty()\n" +
+            "  }\n" +
+            "  Set<String> keySet() {\n" +
+            "    Collections.unmodifiableSet(str.keySet())\n" +
+            "  }\n" +
+            "  Field<?> put(String key, Field<?> val) {\n" +
+            "    str.put(key, val)\n" +
+            "  }\n" +
+            "  void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
+            "    str.putAll(arg0)\n" +
+            "  }\n" +
+            "  Field<?> remove(Object key) {\n" +
+            "    str.remove(key)\n" +
+            "  }\n" +
+            "  int size() {\n" +
+            "    str.size();\n" +
+            "  }\n" +
+            "  Collection<Field<?>> values() {\n" +
+            "    Collections.unmodifiableCollection(str.values())\n" +
+            "  }\n" +
+            "  void reset() {\n" +
+            "    str.reset()\n" +
+            "  }\n" +
+            "  void setup(ByteBuffer buff) {\n" +
+            "    str.setup(buff)\n" +
+            "  }\n" +
+            "}",
+
+            "StructureBaseTest.groovy",
+            "class StructureBaseTest {\n" +
+            "  static void main(String[] args) {\n" +
+            "    Structure str = new StructureBase(new TestStructure())\n" +
+            "    str.put('test', new TestField())\n" +
+            "    def content = str.get('test')\n" +
+            "    if (!TestField.FIELD_NAME == str.get('test').name) {\n" +
+            "      println 'Failed'\n" +
+            "    } else {\n" +
+            "      println 'Success'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
+
+            "TestField.java",
+            "public class TestField implements Field<String> {\n" +
+            "  public static final String FIELD_NAME = \"Test\";\n" +
+            "  private StringBuilder buffer = new StringBuilder();\n" +
+            "  private String value = null;\n" +
+            "  public String getFieldTypeName() {\n" +
+            "    return String.class.getSimpleName();\n" +
+            "  }\n" +
+            "  public String getName() {\n" +
+            "    return FIELD_NAME;\n" +
+            "  }\n" +
+            "  public String getValue() {\n" +
+            "    if (null == value)\n" +
+            "      value = buffer.toString();\n" +
+            "    return value;\n" +
+            "  }\n" +
+            "  public void setValue(String o) {\n" +
+            "    value = o;\n" +
+            "    buffer.replace(0, buffer.length(), o);\n" +
+            "  }\n" +
+            "  public int compareTo(String arg0) {\n" +
+            "    return getValue().compareTo(arg0);\n" +
+            "  }\n" +
+            "}",
+
+            "TestStructure.java",
+            "import java.nio.ByteBuffer;\n" +
+            "import java.util.HashMap;\n" +
+            "import java.util.Map;\n" +
+            "@SuppressWarnings(\"serial\")\n" +
+            "public class TestStructure extends HashMap<String, Field<?>> implements Structure {\n" +
+            "  public void reset() {\n" +
+            "  }\n" +
+            "  public void setup(ByteBuffer clientBuff) {\n" +
+            "  }\n" +
+            "  public Field<?> put(String arg0, Field<?> arg1) {\n" +
+            "    return super.put(arg0, arg1);\n" +
+            "  }\n" +
+            "  public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
+            "    super.putAll(arg0);\n" +
+            "  }\n" +
+            "}"
+        };
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testGenericsAndGroovyJava_GRE278_5() {
         String[] sources = {
             "Main.groovy",
             "public class Main {\n"+
@@ -1316,7 +1306,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava11() {
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) return;
+        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) >= 0);
 
         String[] sources = {
             "Groovy.groovy",
@@ -1410,7 +1400,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
      */
-    @Test @Ignore
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava14() {
         assumeTrue(isAtLeastGroovy(20));
 
@@ -1852,57 +1842,37 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
-    public void testTurningOffGenericsWarnings() {
-//        Map<String, String> options = getCompilerOptions();
-//        options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
-//
-//      runConformTest(new String[] {
-//              "Assertions.groovy",
-//              "import spock.lang.*\n"+
-//              "@Speck\n"+
-//              "class Assertions {\n"+
-////                "  public static void main(String[] argv) { new Assertions().comparingXandY();}\n"+
-//              "  def comparingXandY() {\n"+
-//              "    def x = 1\n"+
-//              "    def y = 2\n"+
-//              "    \n"+
-////                " print 'a'\n"+
-//              "    expect:\n"+
-//              "    x < y    // OK\n"+
-//              "    x == y   // BOOM!\n"+
-//              " }\n"+
-//              "}"},
-//              "----------\n" +
-//              "1. ERROR in Assertions.groovy (at line 4)\n" +
-//              "   public static void main(String[] argv) {\n" +
-//              "   ^^\n" +
-//              "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
-//              "----------\n",
-//              null,
-//              true,
-//              null,
-//              options,
-//              null)
-//      this.runNegativeTest(new String[] {
-//          "p/X.groovy",
-//          "package p;\n" +
-//          "public class X {\n" +
-//          "  List l = new ArrayList();\n" +
-//          "  public static void main(String[] argv) {\n"+
-//          "    print 'success'\n"+
-//          "  }\n"+
-//          "}\n"},
-//          "----------\n" +
-//          "1. ERROR in Assertions.groovy (at line 4)\n" +
-//          "   public static void main(String[] argv) {\n" +
-//          "   ^^\n" +
-//          "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
-//          "----------\n",
-//          null,
-//          true,
-//          null,
-//          options,
-//          null)
+    @Test @Ignore("Spock not loaded to classpath")
+    public void testDisablingGenericsWarnings() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
+
+        String[] sources = {
+            "Assertions.groovy",
+            "import spock.lang.*\n" +
+            "@Speck\n" +
+            "class Assertions {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    new Assertions().comparingXandY();\n" +
+            "  }\n"+
+            "  def comparingXandY() {\n" +
+            "    def x = 1\n" +
+            "    def y = 2\n" +
+            "    \n" +
+            "    expect:\n" +
+            "    x < y    // OK\n" +
+            "    x == y   // BOOM!\n" +
+            " }\n" +
+            "}"
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Assertions.groovy (at line 4)\n" +
+            "   public static void main(String[] argv) {\n" +
+            "   ^^\n" +
+            "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
+            "----------\n",
+            options);
     }
 }
