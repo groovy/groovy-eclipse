@@ -57,7 +57,9 @@ final class SanityTests {
         // JDT 3.9 test against Groovy 2.2
         // JDT 3.10 test against Groovy 2.3
 
-        assert "${groovyVersion.major}.${groovyVersion.minor}" == '2.5'
+        int major = groovyVersion.major,
+            minor = groovyVersion.minor
+        assert "${major}.${minor}" == '2.5'
     }
 
     @Test
