@@ -115,9 +115,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         super(arguments, status);
     }
 
-
-    public ExtractGroovyConstantRefactoring(
-            GroovyCompilationUnit unit, int offset, int length) {
+    public ExtractGroovyConstantRefactoring(GroovyCompilationUnit unit, int offset, int length) {
         super(unit, offset, length);
         this.unit = unit;
         this.start = offset;
@@ -407,7 +405,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     @Override
     public String getName() {
-        return super.getName() + (getReplaceAllOccurrences() ? " (all occurrences)" : "");
+        return "Extract to constant" + (getReplaceAllOccurrences() ? " (replace all occurrences)" : "");
     }
 
     private void computeConstantDeclarationLocation() {
@@ -558,10 +556,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     // !! similar to ExtractTempRefactoring equivalent
     @Override
     public String getConstantSignaturePreview() throws JavaModelException {
-        String space= " ";
-        return getVisibility() + space + MODIFIER + space + getConstantTypeName() + space + constantName;
+        return getVisibility() + ' ' + MODIFIER + ' ' + getConstantTypeName() + ' ' + constantName;
     }
-
 
     @Override
     public RefactoringStatus checkConstantNameOnChange()

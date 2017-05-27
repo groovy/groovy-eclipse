@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.quickassist;
 
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -23,79 +26,53 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 
-/**
- * All {@link AbstractGroovyCompletionProposal}s must have a constructor that takes
- * an {@link IInvocationContext} and nothing else.
- * 
- * @author Andrew Eisenberg
- * @created Oct 28, 2011
- */
 public abstract class AbstractGroovyCompletionProposal implements IJavaCompletionProposal {
-    
-    private final IInvocationContext context;
+
+    protected final IInvocationContext context;
 
     public AbstractGroovyCompletionProposal(IInvocationContext context) {
         this.context = context;
     }
 
-    protected IInvocationContext getContext() {
-        return context;
-    }
-    
-	public Image getImage() {
-		String imageLocation = getImageBundleLocation();
-		if (imageLocation != null) {
-			return JavaPluginImages.get(imageLocation);
-		}
-		return null;
-	}
-
-	abstract protected String getImageBundleLocation();
-	
-	/**
-	 * @return true iff this completion proposal is valid in the current context
-	 */
-	abstract public boolean hasProposals();
-	
-	   /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection
-     * (org.eclipse.jface.text.IDocument)
-     */
-    public Point getSelection(IDocument document) {
-        return new Point(context.getSelectionOffset(), context.getSelectionLength());
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.eclipse.jface.text.contentassist.ICompletionProposal#
-     * getAdditionalProposalInfo()
-     */
     public String getAdditionalProposalInfo() {
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.eclipse.jface.text.contentassist.ICompletionProposal#
-     * getContextInformation()
-     */
     public IContextInformation getContextInformation() {
+        return null; //new ContextInformation(getImage(), getDisplayString(), getDisplayString());
+    }
+
+    public Image getImage() {
+        String imageLocation = getImageBundleLocation();
+        if (imageLocation != null) {
+            return JavaPluginImages.get(imageLocation);
+        }
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.codehaus.groovy.eclipse.quickfix.proposals.IGroovyCompletionProposal
-     * #getRelevance()
-     */
     public int getRelevance() {
-        return 0;
+        return 10;
+    }
+
+    public Point getSelection(IDocument document) {
+        return null;
+    }
+
+    //--------------------------------------------------------------------------
+
+    /**
+     * @return (@code true} iff this completion proposal is valid in the current context
+     */
+    abstract public boolean hasProposals();
+
+    abstract protected String getImageBundleLocation();
+
+    protected final GroovyCompilationUnit getGroovyCompilationUnit() {
+        return (GroovyCompilationUnit) context.getCompilationUnit();
+    }
+
+    protected final IProject getProject() {
+        IResource resource = context.getCompilationUnit().getResource();
+        return resource != null ? resource.getProject() : null;
     }
 }

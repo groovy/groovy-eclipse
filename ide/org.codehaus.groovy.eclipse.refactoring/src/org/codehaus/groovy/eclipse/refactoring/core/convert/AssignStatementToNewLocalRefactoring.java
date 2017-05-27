@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,12 +49,8 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Common class to process the assign to new local variable refactoring.
  * Used by both the completion proposal and the refactor menu option.
- *
- * @author Stephanie Van Dyk sevandyk@gmail.com
- * @created April 15, 2012
  */
-// FIXGWD: This class should be converted into a proper refactoring class which
-// extends Refactoring.
+// FIXGWD: This class should be converted into a proper refactoring class which extends Refactoring.
 public class AssignStatementToNewLocalRefactoring {
 
     private final GroovyCompilationUnit unit;
@@ -74,7 +70,6 @@ public class AssignStatementToNewLocalRefactoring {
     private Expression expression;
 
     public AssignStatementToNewLocalRefactoring(GroovyCompilationUnit unit, int offset) {
-
         this.unit = unit;
         length = 0;
         this.offset = offset;
@@ -82,7 +77,7 @@ public class AssignStatementToNewLocalRefactoring {
 
     public void applyRefactoring(IDocument document) {
         if (atExpressionStatement) {
-            TextEdit thisEdit = findReplacement(document);
+            TextEdit thisEdit = createEdit(document);
             try {
                 if (thisEdit != null) {
                     thisEdit.apply(document);
@@ -97,7 +92,6 @@ public class AssignStatementToNewLocalRefactoring {
         if (unit == null) {
             return false;
         }
-
         return this.atExpressionStatement();
     }
 
@@ -160,16 +154,7 @@ public class AssignStatementToNewLocalRefactoring {
         return atExpressionStatement;
     }
 
-    private TextEdit findReplacement(IDocument doc) {
-        try {
-            return createEdit(doc, expression);
-        } catch (Exception e) {
-            GroovyCore.logException("Exception during assign statement to local variable.", e);
-            return null;
-        }
-    }
-
-    private TextEdit createEdit(IDocument doc, Expression expression) {
+    public TextEdit createEdit(IDocument doc) {
         TextEdit edit = new MultiTextEdit();
 
         String candidate;
@@ -199,8 +184,8 @@ public class AssignStatementToNewLocalRefactoring {
             i++;
         }
 
-        String[] names = NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, candidate,
-                null, 0, variableNames, true);
+        String[] names = NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME,
+            candidate, null, 0, variableNames, true);
 
         edit.addChild(new InsertEdit(expression.getStart(), "def " + names[0] + " = "));
         // add 4 for "def ".

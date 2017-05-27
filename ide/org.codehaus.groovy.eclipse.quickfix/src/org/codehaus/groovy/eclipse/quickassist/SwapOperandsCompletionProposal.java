@@ -1,7 +1,5 @@
 /*
- * Copyright 2012 SpringSource, a division of VMware, Inc
- * 
- * Daniel and Stephanie - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,158 +16,92 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.syntax.Token;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.compiler.CharOperation;
+import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ContextInformation;
-import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
 /**
- * Exchanges left and right binary infix operands. eg. (a && b) becomes (b && a)
- * 
- * @author Daniel Phan d3phan@uwaterloo.ca
- * @author Stephanie Van Dyk sevandyk@gmail.com
- * @created Jan 20, 2012
+ * Exchanges the left and right operands of an infix expression.
+ * <p>
+ * Ex: "(a && b)" becomes "(b && a)"
  */
-public class SwapOperandsCompletionProposal extends
-		AbstractGroovyCompletionProposal {
+public class SwapOperandsCompletionProposal extends AbstractGroovyTextCompletionProposal {
 
-	private final GroovyCompilationUnit unit;
-	private final int length;
-	private final int offset;
+    private BinaryExpression binaryExpression;
 
-	private BinaryExpression binaryExpression;
+    public SwapOperandsCompletionProposal(IInvocationContext context) {
+        super(context);
+    }
 
-	public SwapOperandsCompletionProposal(IInvocationContext context) {
-		super(context);
-		ICompilationUnit compUnit = context.getCompilationUnit();
-		if (compUnit instanceof GroovyCompilationUnit) {
-			this.unit = (GroovyCompilationUnit) compUnit;
-		} else {
-			this.unit = null;
-		}
-		length = context.getSelectionLength();
-		offset = context.getSelectionOffset();
-	}
+    public String getDisplayString() {
+        return "Exchange left and right operands for infix expression";
+    }
 
-	public int getRelevance() {
-		return 0;
-	}
+    protected String getImageBundleLocation() {
+        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+    }
 
-	public void apply(IDocument document) {
-		TextEdit thisEdit = findReplacement(document);
-		try {
-			if (thisEdit != null) {
-				thisEdit.apply(document);
-			}
-		} catch (Exception e) {
-			GroovyCore.logException("Oops.", e);
-		}
-	}
+    public boolean hasProposals() {
+        Region region = new Region(context.getSelectionOffset(), context.getSelectionLength());
+        ASTNode node = new ASTNodeFinder(region).doVisit(getGroovyCompilationUnit().getModuleNode());
+        if (node instanceof BinaryExpression) {
+            BinaryExpression expr = (BinaryExpression) node;
+            if (isApplicableOperator(expr.getOperation().getType())) {
+                binaryExpression = expr;
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public Point getSelection(IDocument document) {
-		return new Point(offset, 0);
-	}
+    @Override
+    protected TextEdit getTextEdit(IDocument document) throws BadLocationException {
+        Expression left = binaryExpression.getLeftExpression();
+        Expression right = binaryExpression.getRightExpression();
+        String leftText = document.get(left.getStart(), left.getLength()).trim();
+        String rightText = document.get(right.getStart(), right.getLength()).trim();
 
-	public String getAdditionalProposalInfo() {
-		return getDisplayString();
-	}
+        TextEdit edit = new MultiTextEdit();
+        edit.addChild(new ReplaceEdit(right.getStart(), rightText.length(), leftText));
+        edit.addChild(new ReplaceEdit(left.getStart(), leftText.length(), rightText));
+        return edit;
+    }
 
-	public String getDisplayString() {
-		return "Swap infix operands.";
-	}
-
-	public IContextInformation getContextInformation() {
-		return new ContextInformation(getImage(), getDisplayString(),
-				getDisplayString());
-	}
-
-	@Override
-	protected String getImageBundleLocation() {
-		return JavaPluginImages.IMG_CORRECTION_CHANGE;
-	}
-
-	@Override
-	public boolean hasProposals() {
-		if (unit == null) {
-			return false;
-		}
-		boolean result = false;
-
-		Region region = new Region(offset, length);
-		ASTNodeFinder finder = new ASTNodeFinder(region);
-		ModuleNode moduleNode = unit.getModuleNode();
-
-		ASTNode node = finder.doVisit(moduleNode);
-
-		if (node instanceof BinaryExpression) {
-			BinaryExpression expr = (BinaryExpression) node;
-			Token operation = expr.getOperation();
-
-			if (isApplicableInfixOperator(operation.getText())) {
-				binaryExpression = expr;
-				result = true;
-			}
-		}
-
-		return result;
-	}
-
-	private TextEdit findReplacement(IDocument doc) {
-		try {
-			return createEdit(doc, binaryExpression.getLeftExpression(),
-					binaryExpression.getRightExpression());
-		} catch (Exception e) {
-			GroovyCore.logException(
-					"Exception during swapping infix operands.", e);
-			return null;
-		}
-	}
-
-	private TextEdit createEdit(IDocument doc, Expression left, Expression right)
-			throws BadLocationException {
-		TextEdit edit = new MultiTextEdit();
-
-		int leftStart = left.getStart();
-		int rightStart = right.getStart();
-
-		char[] contents = unit.getContents();
-		char[] leftChars = CharOperation.subarray(contents, leftStart,
-				left.getEnd());
-		char[] rightChars = CharOperation.subarray(contents, rightStart,
-				right.getEnd());
-
-		String leftText = new String(leftChars).trim();
-		String rightText = new String(rightChars).trim();
-
-		edit.addChild(new ReplaceEdit(rightStart, rightText.length(), leftText));
-		edit.addChild(new ReplaceEdit(leftStart, leftText.length(), rightText));
-
-		return edit;
-	}
-
-	private boolean isApplicableInfixOperator(String test) {
-		return test.equals("*") || test.equals("/") || test.equals("%")
-				|| test.equals("+") || test.equals("-") || test.equals("<<")
-				|| test.equals(">>") || test.equals(">>>") || test.equals("<")
-				|| test.equals(">") || test.equals("<=") || test.equals(">=")
-				|| test.equals("==") || test.equals("!=") || test.equals("&")
-				|| test.equals("^") || test.equals("|") || test.equals("&&")
-				|| test.equals("||");
-	}
+    private static boolean isApplicableOperator(int op) {
+        switch (op) {
+        case Types.PLUS:
+        case Types.MINUS:
+        case Types.MULTIPLY:
+        case Types.DIVIDE:
+        case Types.MOD:
+        case Types.POWER:
+        case Types.LOGICAL_AND:
+        case Types.LOGICAL_OR:
+        case Types.BITWISE_AND:
+        case Types.BITWISE_OR:
+        case Types.BITWISE_XOR:
+        case Types.COMPARE_TO:
+        case Types.COMPARE_EQUAL:
+        case Types.COMPARE_NOT_EQUAL:
+        case Types.COMPARE_LESS_THAN:
+        case Types.COMPARE_LESS_THAN_EQUAL:
+        case Types.COMPARE_GREATER_THAN:
+        case Types.COMPARE_GREATER_THAN_EQUAL:
+        case Types.LEFT_SHIFT:
+        case Types.RIGHT_SHIFT:
+        case Types.RIGHT_SHIFT_UNSIGNED:
+            return true;
+        default:
+            return false;
+        }
+    }
 }

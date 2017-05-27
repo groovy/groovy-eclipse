@@ -623,7 +623,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return null;
     }
 
-
     private IASTFragment getSelectedFragment() {
         if(selectedExpression != null) {
             return selectedExpression;
@@ -636,11 +635,9 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return selectedExpression;
     }
 
-
     // !! similar to ExtractTempRefactoring equivalent
     public String getSignaturePreview() throws JavaModelException {
-        String space= " ";
-        return "def" + space + localName;
+        return "def" + ' ' + localName;
     }
 
     public void setReplaceAllOccurrences(boolean replaceAllOccurrences) {
@@ -663,8 +660,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     public String[] guessLocalNames() {
         String text = getBaseNameFromExpression(getSelectedFragment());
         String[] excludedNames = getExcludedVariableNames().toArray(new String[0]);
-        return NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, text,
-                unit.getJavaProject(), 0, excludedNames, true);
+        return NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, text, unit.getJavaProject(), 0, excludedNames, true);
     }
 
     class GuessBaseNameVisitor extends FragmentVisitor {
@@ -766,7 +762,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             }
             return name;
         }
-
     }
 
     private String getBaseNameFromExpression(IASTFragment assignedFragment) {
@@ -778,7 +773,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return visitor.getGuessedName();
     }
 
-
     public void setLocalName(String newName) {
         Assert.isNotNull(newName);
         localName = newName;
@@ -788,17 +782,15 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return localName;
     }
 
-
     @Override
     public String getName() {
-        return "Extract to local variable" + (isReplaceAllOccurrences() ? " (all occurrences)" : "");
+        return "Extract to local variable" + (isReplaceAllOccurrences() ? " (replace all occurrences)" : "");
     }
 
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
         try {
             pm.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
-
             ExtractLocalDescriptor descriptor = createRefactoringDescriptor();
             change.setDescriptor(new RefactoringChangeDescriptor(descriptor));
             return change;
@@ -807,29 +799,23 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         }
     }
 
-    /**
-     * @return
-     */
     private ExtractLocalDescriptor createRefactoringDescriptor() {
         final Map<String, String> arguments = new HashMap<String, String>();
         String project = null;
         IJavaProject javaProject = unit.getJavaProject();
         if (javaProject != null)
             project = javaProject.getElementName();
-        final String description = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description_short,
-                BasicElementLabels.getJavaElementName(localName));
+        final String description = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(localName));
         final String expression = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
         final String header = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description, new String[] {
-                BasicElementLabels.getJavaElementName(localName), BasicElementLabels.getJavaCodeString(expression) });
+            BasicElementLabels.getJavaElementName(localName), BasicElementLabels.getJavaCodeString(expression)
+        });
         final JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_name_pattern, BasicElementLabels
-                .getJavaElementName(localName)));
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_expression_pattern, BasicElementLabels
-                .getJavaCodeString(expression)));
+        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_name_pattern, BasicElementLabels.getJavaElementName(localName)));
+        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
         if (replaceAllOccurrences)
             comment.addSetting(RefactoringCoreMessages.ExtractTempRefactoring_replace_occurrences);
-        final ExtractLocalDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project,
-                description, comment.asString(), arguments, RefactoringDescriptor.NONE);
+        final ExtractLocalDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project, description, comment.asString(), arguments, RefactoringDescriptor.NONE);
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, unit));
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, localName);
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, start + " " + length);

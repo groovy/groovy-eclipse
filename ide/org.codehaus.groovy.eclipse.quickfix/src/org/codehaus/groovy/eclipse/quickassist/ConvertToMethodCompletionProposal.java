@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,76 +16,49 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import org.codehaus.groovy.eclipse.refactoring.core.convert.ConvertToMethodRefactoring;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ContextInformation;
-import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.text.edits.TextEdit;
 
 /**
- * Converts a field declaration assigned to a closure to a method
- * 
- * @author Andrew Eisenberg
- * @created Oct 24, 2011
+ * Converts a field declaration initialized by a closure to a method.
  */
-public class ConvertToMethodCompletionProposal extends
-        AbstractGroovyCompletionProposal {
-    
-    private final GroovyCompilationUnit unit;
-    private final int length;
-    private final int offset;
-    private ConvertToMethodRefactoring convertToMethodRefactoring;
-    
+public class ConvertToMethodCompletionProposal extends AbstractGroovyTextCompletionProposal {
+
+    private final ConvertToMethodRefactoring delegate;
+
     public ConvertToMethodCompletionProposal(IInvocationContext context) {
         super(context);
-        ICompilationUnit compUnit = context.getCompilationUnit();
-        if (compUnit instanceof GroovyCompilationUnit) {
-            this.unit = (GroovyCompilationUnit) compUnit;
-        } else {
-            this.unit = null;
-        }
-        length = context.getSelectionLength();
-        offset = context.getSelectionOffset();
-    }
 
-    public int getRelevance() {
-        return 0;
-    }
-    public void apply(IDocument document) {
-    	convertToMethodRefactoring.applyRefactoring(document);
-    }
-
-    public Point getSelection(IDocument document) {
-        // this is not right.  We should be updating the position based on the text changes
-        return new Point(offset, length+offset);
-    }
-
-    public String getAdditionalProposalInfo() {
-        return getDisplayString();
+        delegate = new ConvertToMethodRefactoring(getGroovyCompilationUnit(), context.getSelectionOffset());
     }
 
     public String getDisplayString() {
         return "Convert closure declaration to method";
     }
 
-    public IContextInformation getContextInformation() {
-        return new ContextInformation(getImage(), getDisplayString(), getDisplayString());
-    }
-
-    @Override
     protected String getImageBundleLocation() {
         return JavaPluginImages.IMG_CORRECTION_CHANGE;
     }
 
-    @Override
     public boolean hasProposals() {
-        if (unit == null) {
-            return false;
-        }
-        convertToMethodRefactoring = new ConvertToMethodRefactoring(unit, offset);
-        return convertToMethodRefactoring.isApplicable();
+        return delegate.isApplicable();
+    }
+
+    @Override
+    public int getRelevance() {
+        return 5;
+    }
+
+    @Override
+    protected TextEdit getTextEdit(IDocument document) throws BadLocationException {
+        return delegate.createEdit(document);
+    }
+
+    @Override
+    public void apply(IDocument document) {
+        delegate.applyRefactoring(document);
     }
 }

@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +24,12 @@ class StringConstantFinder extends ASTNodeFinder {
     public StringConstantFinder(Region r) {
         super(r);
     }
-    
+
     @Override
     public void visitGStringExpression(GStringExpression node) {
-    	// if the selection is inside of a GString, then we don't
-    	// want to check contained elements.  Either the entire 
-    	// node matches or it doesn't
-    	check(node);
+        // if the selection is inside of a GString, then we don't
+        // want to check contained elements.  Either the entire
+        // node matches or it doesn't
+        check(node);
     }
 }

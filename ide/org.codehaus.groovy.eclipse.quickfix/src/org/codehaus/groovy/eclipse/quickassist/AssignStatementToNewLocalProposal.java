@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,76 +16,56 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import org.codehaus.groovy.eclipse.refactoring.core.convert.AssignStatementToNewLocalRefactoring;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ContextInformation;
-import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.text.edits.TextEdit;
 
 /**
- * Assigns a statement to a new local variable. eg. "new Point(2,3)" becomes "def temp = new Point(2,3)"
- *
- * @author Stephanie Van Dyk
- * @created April 12, 2012
+ * Assigns a statement to a new local variable.
+ * <p>
+ * Ex: "new Point(2,3)" becomes "def temp = new Point(2,3)"
  */
-public class AssignStatementToNewLocalProposal extends AbstractGroovyCompletionProposal {
+public class AssignStatementToNewLocalProposal extends AbstractGroovyTextCompletionProposal {
 
-    protected final GroovyCompilationUnit unit;
-    protected final int offset;
-    protected final int length;
-
-    private AssignStatementToNewLocalRefactoring assignStatementRefactoring;
+    private final AssignStatementToNewLocalRefactoring delegate;
 
     public AssignStatementToNewLocalProposal(IInvocationContext context) {
         super(context);
-        ICompilationUnit compUnit = context.getCompilationUnit();
-        if (compUnit instanceof GroovyCompilationUnit) {
-            this.unit = (GroovyCompilationUnit) compUnit;
-        } else {
-            this.unit = null;
-        }
-        offset = context.getSelectionOffset();
-        length = context.getSelectionLength();
-    }
 
-    public int getRelevance() {
-        return 0;
-    }
-
-    public void apply(IDocument document) {
-        assignStatementRefactoring.applyRefactoring(document);
-    }
-
-    public Point getSelection(IDocument document) {
-        return assignStatementRefactoring.getNewSelection();
-    }
-
-    public String getAdditionalProposalInfo() {
-        return getDisplayString();
+        delegate = new AssignStatementToNewLocalRefactoring(getGroovyCompilationUnit(), context.getSelectionOffset());
     }
 
     public String getDisplayString() {
-        return "Assign statement to new local variable.";
+        return "Assign statement to new local variable";
     }
 
-    public IContextInformation getContextInformation() {
-        return new ContextInformation(getImage(), getDisplayString(), getDisplayString());
-    }
-
-    @Override
     protected String getImageBundleLocation() {
-        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+        return JavaPluginImages.IMG_CORRECTION_LOCAL;
+    }
+
+    public boolean hasProposals() {
+        return delegate.isApplicable();
     }
 
     @Override
-    public boolean hasProposals() {
-        if (unit == null) {
-            return false;
-        }
-        assignStatementRefactoring = new AssignStatementToNewLocalRefactoring(unit, offset);
-        return assignStatementRefactoring.isApplicable();
+    public int getRelevance() {
+        return new ExtractToConstantProposal(context).getRelevance() - 1;
+    }
+
+    @Override
+    public Point getSelection(IDocument document) {
+        return delegate.getNewSelection();
+    }
+
+    @Override
+    protected TextEdit getTextEdit(IDocument document) {
+        return delegate.createEdit(document);
+    }
+
+    @Override
+    public void apply(IDocument document) {
+        delegate.applyRefactoring(document);
     }
 }

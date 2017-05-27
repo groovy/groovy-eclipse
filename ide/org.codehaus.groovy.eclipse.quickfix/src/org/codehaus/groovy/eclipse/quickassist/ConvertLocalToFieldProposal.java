@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
- * Quick Assist for extracting a local variable to a field. Delegates the logic to {@link ConvertGroovyLocalToFieldRefactoring}.
+ * Extracts a local variable to a field. Delegates to {@link ConvertGroovyLocalToFieldRefactoring}.
  */
 public class ConvertLocalToFieldProposal extends TextRefactoringProposal {
 
@@ -29,7 +29,6 @@ public class ConvertLocalToFieldProposal extends TextRefactoringProposal {
         super(context, new ConvertGroovyLocalToFieldRefactoring((GroovyCompilationUnit) context.getCompilationUnit(), context.getSelectionOffset(), context.getSelectionLength()));
     }
 
-    @Override
     protected String getImageBundleLocation() {
         return JavaPluginImages.IMG_CORRECTION_CHANGE;
     }

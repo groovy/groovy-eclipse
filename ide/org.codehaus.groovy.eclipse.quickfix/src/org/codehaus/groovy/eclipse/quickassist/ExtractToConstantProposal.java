@@ -17,41 +17,36 @@ package org.codehaus.groovy.eclipse.quickassist;
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyConstantRefactoring;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.corext.util.JdtFlags;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
- * Quick Assist for extracting expression to a constant. Delegates the logic to {@link ExtractGroovyConstantRefactoring}.
+ * Extracts an expression to a constant. Delegates to {@link ExtractGroovyConstantRefactoring}.
  */
 public class ExtractToConstantProposal extends TextRefactoringProposal {
 
     public ExtractToConstantProposal(IInvocationContext context) {
         super(context, new ExtractGroovyConstantRefactoring((GroovyCompilationUnit) context.getCompilationUnit(), context.getSelectionOffset(), context.getSelectionLength()));
-        ExtractGroovyConstantRefactoring extractToConstantRefactoring = (ExtractGroovyConstantRefactoring) refactoring;
-        extractToConstantRefactoring.setConstantName(extractToConstantRefactoring.guessConstantName());
-        extractToConstantRefactoring.setVisibility(JdtFlags.VISIBILITY_STRING_PACKAGE);
-        extractToConstantRefactoring.setReplaceAllOccurrences(false);
+        getDelegate().setConstantName(getDelegate().guessConstantName());
+        getDelegate().setVisibility(JdtFlags.VISIBILITY_STRING_PACKAGE);
+        getDelegate().setReplaceAllOccurrences(false);
     }
 
     public ExtractToConstantProposal(IInvocationContext context, boolean all) {
         this(context);
-        ExtractGroovyConstantRefactoring extractToConstantRefactoring = (ExtractGroovyConstantRefactoring) refactoring;
-        extractToConstantRefactoring.setReplaceAllOccurrences(all);
+        getDelegate().setReplaceAllOccurrences(all);
     }
 
-    @Override
-    public String getAdditionalProposalInfo() {
-        try {
-            return ((ExtractGroovyConstantRefactoring) refactoring).getConstantSignaturePreview();
-        } catch (JavaModelException e) {
-            return getDisplayString();
-        }
+    protected ExtractGroovyConstantRefactoring getDelegate() {
+        return (ExtractGroovyConstantRefactoring) delegate;
     }
 
-    @Override
     protected String getImageBundleLocation() {
         return JavaPluginImages.IMG_CORRECTION_LOCAL;
+    }
+
+    public int getRelevance() {
+        return (new ExtractToLocalProposal(context).getRelevance() - 1) - (getDelegate().replaceAllOccurrences() ? 0 : 1);
     }
 }

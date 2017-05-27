@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,9 +72,6 @@ import org.eclipse.text.edits.TextEditGroup;
 
 /**
  * See GRECLIPSE-1436 for areas where this refactoring can be improved.
- *
- * @author Daniel Phan
- * @created 2012-01-26
  */
 public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefactoring {
 
@@ -101,6 +98,11 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         this.unit = unit;
         this.selectionStart = selectionStart;
         this.selectionLength = selectionLength;
+    }
+
+    @Override
+    public String getName() {
+        return RefactoringCoreMessages.PromoteTempToFieldRefactoring_editName;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 SpringSource, a division of Pivotal Software, Inc
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,59 +17,38 @@ package org.codehaus.groovy.eclipse.quickassist;
 
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.Refactoring;
-import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextChange;
-import org.eclipse.text.edits.MalformedTreeException;
 
 /**
- * Quick Assist for a refactoring. Delegates the logic to {@link Refactoring} that generates a {@link TextChange}
- *   
- * @author Alex Boyko
- *
+ * Quick Assist for a refactoring. Delegates to a {@link Refactoring} that generates a {@link TextChange}.
  */
-public abstract class TextRefactoringProposal extends AbstractGroovyCompletionProposal {
-	
-	protected Refactoring refactoring;
-	
-	public TextRefactoringProposal(IInvocationContext context, Refactoring refactoring) {
-		super(context);
-		this.refactoring = refactoring;
-	}
+public abstract class TextRefactoringProposal extends AbstractGroovyTextCompletionProposal {
 
-	public void apply(IDocument document) {
-		try {
-			TextChange change = (TextChange) refactoring.createChange(new NullProgressMonitor());
-			change.getEdit().apply(document);
-		} catch (CoreException e) {
-			GroovyQuickFixPlugin.log(e);
-		} catch (MalformedTreeException e) {
-			GroovyQuickFixPlugin.log(e);
-		} catch (BadLocationException e) {
-			GroovyQuickFixPlugin.log(e);
-		}
-	}
+    protected final Refactoring delegate;
 
-	public String getDisplayString() {
-		return refactoring.getName();
-	}
-	
-	@Override
-	public boolean hasProposals() {
-		try {
-			RefactoringStatus status = refactoring.checkAllConditions(new NullProgressMonitor());
-			return status.isOK();
-		} catch (OperationCanceledException e) {
-			GroovyQuickFixPlugin.log(e);
-		} catch (CoreException e) {
-			GroovyQuickFixPlugin.log(e);
-		}
-		return false;
-	}
+    public TextRefactoringProposal(IInvocationContext context, Refactoring delegate) {
+        super(context);
+        this.delegate = delegate;
+    }
 
+    public String getDisplayString() {
+        return delegate.getName();
+    }
+
+    public boolean hasProposals() {
+        try {
+            return delegate.checkAllConditions(new NullProgressMonitor()).isOK();
+        } catch (CoreException e) {
+            GroovyQuickFixPlugin.log(e);
+        }
+        return false;
+    }
+
+    protected TextChange getTextChange(IProgressMonitor monitor) throws CoreException {
+        return (TextChange) delegate.createChange(monitor);
+    }
 }

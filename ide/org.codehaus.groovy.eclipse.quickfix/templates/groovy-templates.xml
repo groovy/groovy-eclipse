@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-   Copyright 2009-2016 the original author or authors.
+   Copyright 2009-2017 the original author or authors.
    
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@
 >assert ${actual:var(java.lang.Object)} != null</template>
 
 <template name="closure"
-	description="Surround with Closure"
+	description="closure block (Groovy)"
 	id="org.codehaus.groovy.eclipse.templates.closure"
 	autoinsert="false"
 	context="groovy"
@@ -44,7 +44,7 @@
 }</template>
 
 <template name="for_in"
-	description="For..in loop (Groovy)"
+	description="for..in loop (Groovy)"
 	id="org.codehaus.groovy.eclipse.templates.for_in"
 	autoinsert="false"
 	context="groovy"
@@ -102,7 +102,7 @@
 }</template>
 
 <template name="use"
-	description="use block"
+	description="use block (Groovy)"
 	id="org.codehaus.groovy.eclipse.templates.use"
 	autoinsert="false"
 	context="groovy"
@@ -112,7 +112,7 @@
 }</template>
 
 <template name="while"
-	description="While loop (Groovy)"
+	description="while loop (Groovy)"
 	id="org.codehaus.groovy.eclipse.templates.while_condition"
 	autoinsert="false"
 	context="groovy"

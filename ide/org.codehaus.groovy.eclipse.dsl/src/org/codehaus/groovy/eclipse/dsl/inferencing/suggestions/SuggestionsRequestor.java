@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.NamedMember;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * 
- * 
- * @author Nieraj Singh
- * @created 2011-09-13
- */
 public class SuggestionsRequestor implements ITypeRequestor {
 
     private final ASTNode nodeToLookFor;
@@ -52,29 +46,23 @@ public class SuggestionsRequestor implements ITypeRequestor {
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-
-        // check to see if the enclosing element does not enclose the
-        // nodeToLookFor
+        // check to see if the enclosing element does not enclose the nodeToLookFor
         if (!interestingElement(enclosingElement)) {
             return VisitStatus.CANCEL_MEMBER;
         }
-
         if (node instanceof ImportNode) {
             node = ((ImportNode) node).getType();
             if (node == null) {
                 return VisitStatus.CONTINUE;
             }
-
         }
-
         if (isValidNode(node) && doTest(node)) {
-            Expression expression = (Expression) node;
-
-            descriptor = createDescriptor(expression, result);
+            if (result.declaringType != null) {
+                Expression expression = (Expression) node;
+                descriptor = createDescriptor(expression, result);
+            }
             return VisitStatus.STOP_VISIT;
-
         }
-
         return VisitStatus.CONTINUE;
     }
 
@@ -83,7 +71,6 @@ public class SuggestionsRequestor implements ITypeRequestor {
     }
 
     protected SuggestionDescriptor createDescriptor(Expression suggestionNode, TypeLookupResult result) {
-
         // get the declaring type and type of the member
         ClassNode declaringTypeNode = result.declaringType;
         ClassNode suggestionTypeNode = result.type;
@@ -91,23 +78,19 @@ public class SuggestionsRequestor implements ITypeRequestor {
 
         String declaringTypeName = declaringTypeNode.getName();
         String suggestionType = suggestionTypeNode.getName();
-        Object suggestionName = suggestionNode instanceof ConstantExpression ? ((ConstantExpression) suggestionNode).getValue()
-                : suggestionNode.getText();
+        Object suggestionName = suggestionNode instanceof ConstantExpression ? ((ConstantExpression) suggestionNode).getValue() : suggestionNode.getText();
         String name = suggestionName instanceof String ? (String) suggestionName : null;
-        // TODO: must figure out a way to determine if this is static. For now,
-        // user has to remember
-        // to set this correctly in the UI
+        // TODO: Must figure out a way to determine if this is static. For now, user has to remember to set this correctly in the UI.
         boolean isStatic = false;
         String javaDoc = null;
         boolean useNamedArguments = false;
         List<MethodParameter> parameters = null;
+        boolean isActive = true;
         boolean isMethod = isMethod(scope);
 
-        boolean isActive = true;
-
-        return isMethod ? new SuggestionDescriptor(declaringTypeName, isStatic, name, javaDoc, suggestionType, useNamedArguments,
-                parameters, isActive) : new SuggestionDescriptor(declaringTypeName, isStatic, name, javaDoc, suggestionType,
-                isActive);
+        return isMethod
+            ? new SuggestionDescriptor(declaringTypeName, isStatic, name, javaDoc, suggestionType, useNamedArguments, parameters, isActive)
+            : new SuggestionDescriptor(declaringTypeName, isStatic, name, javaDoc, suggestionType, isActive);
     }
 
     protected boolean isMethod(VariableScope scope) {
@@ -118,17 +101,15 @@ public class SuggestionsRequestor implements ITypeRequestor {
     }
 
     protected boolean interestingElement(IJavaElement enclosingElement) {
-        // the clinit is always interesting since the clinit contains static
-        // initializers
+        // the clinit is always interesting since the clinit contains static initializers
         if (enclosingElement.getElementName().equals("<clinit>")) {
             return true;
         }
-
         if (enclosingElement instanceof NamedMember) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
-                return range.getOffset() <= nodeToLookFor.getStart()
-                        && range.getOffset() + range.getLength() >= nodeToLookFor.getEnd();
+                return range.getOffset() <= nodeToLookFor.getStart() &&
+                    range.getOffset() + range.getLength() >= nodeToLookFor.getEnd();
             } catch (JavaModelException e) {
                 Util.log(e);
             }
@@ -137,12 +118,15 @@ public class SuggestionsRequestor implements ITypeRequestor {
     }
 
     private boolean doTest(ASTNode node) {
-        return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart()
-                && nodeToLookFor.getEnd() == node.getEnd();
+        return node.getClass() == nodeToLookFor.getClass() &&
+            nodeToLookFor.getStart() == node.getStart() &&
+            nodeToLookFor.getEnd() == node.getEnd();
     }
 
     public static boolean isValidNode(ASTNode node) {
-        return node instanceof VariableExpression || node instanceof StaticMethodCallExpression || node instanceof FieldExpression
-                || node instanceof ConstantExpression;
+        return node instanceof VariableExpression ||
+            node instanceof StaticMethodCallExpression ||
+            node instanceof FieldExpression ||
+            node instanceof ConstantExpression;
     }
 }

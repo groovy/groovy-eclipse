@@ -17,38 +17,33 @@ package org.codehaus.groovy.eclipse.quickassist;
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyLocalRefactoring;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
- * Quick Assist for extracting expression to a local variable. Delegates the logic to {@link ExtractGroovyLocalRefactoring}.
+ * Extracts an expression to a local variable. Delegates to {@link ExtractGroovyLocalRefactoring}.
  */
 public class ExtractToLocalProposal extends TextRefactoringProposal {
 
     public ExtractToLocalProposal(IInvocationContext context) {
         super(context, new ExtractGroovyLocalRefactoring((GroovyCompilationUnit) context.getCompilationUnit(), context.getSelectionOffset(), context.getSelectionLength()));
-        ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
-        extractRefactoring.setLocalName(extractRefactoring.guessLocalNames()[0]);
+        getDelegate().setLocalName(getDelegate().guessLocalNames()[0]);
     }
 
     public ExtractToLocalProposal(IInvocationContext context, boolean all) {
         this(context);
-        ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
-        extractRefactoring.setReplaceAllOccurrences(all);
+        getDelegate().setReplaceAllOccurrences(all);
     }
 
-    @Override
-    public String getAdditionalProposalInfo() {
-        try {
-            return ((ExtractGroovyLocalRefactoring) refactoring).getSignaturePreview();
-        } catch (JavaModelException e) {
-            return getDisplayString();
-        }
+    protected ExtractGroovyLocalRefactoring getDelegate() {
+        return (ExtractGroovyLocalRefactoring) delegate;
     }
 
-    @Override
     protected String getImageBundleLocation() {
         return JavaPluginImages.IMG_CORRECTION_LOCAL;
+    }
+
+    public int getRelevance() {
+        return super.getRelevance() - (getDelegate().isReplaceAllOccurrences() ? 0 : 1);
     }
 }
