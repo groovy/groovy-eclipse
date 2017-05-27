@@ -16,48 +16,32 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import static java.lang.reflect.Array.getLength;
-import static java.util.regex.Pattern.compile;
-
-import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR;
-import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
-import java.util.regex.Matcher;
 
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
-import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
-import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
-import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.editor.actions.ExpandSelectionAction;
-import org.codehaus.groovy.eclipse.editor.actions.GroovyConvertLocalToFieldAction;
-import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractConstantAction;
-import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractLocalAction;
-import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractMethodAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyTabAction;
-import org.codehaus.groovy.eclipse.editor.actions.IGroovyEditorActionDefinitionIds;
 import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage;
 import org.codehaus.groovy.eclipse.editor.outline.OutlineExtenderRegistry;
 import org.codehaus.groovy.eclipse.refactoring.actions.AddImportOnSelectionAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.ConvertToPropertyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatAllGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatGroovyAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.FormatKind;
+import org.codehaus.groovy.eclipse.refactoring.actions.GroovyConvertLocalToFieldAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.GroovyExtractConstantAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.GroovyExtractLocalAction;
+import org.codehaus.groovy.eclipse.refactoring.actions.GroovyExtractMethodAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.StringUtils;
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -78,7 +62,6 @@ import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.actions.CompositeActionGroup;
 import org.eclipse.jdt.internal.ui.actions.SurroundWithActionGroup;
@@ -92,7 +75,6 @@ import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
-import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
@@ -136,9 +118,6 @@ import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.text.edits.DeleteEdit;
-import org.eclipse.text.edits.MultiTextEdit;
-import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionGroup;
@@ -1127,74 +1106,9 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
 
         // to property action
-        toPropertyAction = new Action("Replace Accessor call with Property read/write") {{
-                setActionDefinitionId("org.codehaus.groovy.eclipse.ui.convertToProperty");
-            }
-            @Override
-            public void run() {
-                if (!ActionUtil.isEditable(GroovyEditor.this))
-                    return;
-                ISelection selection = getSelectionProvider().getSelection();
-                if (!(selection instanceof ITextSelection))
-                    return;
-                GroovyCompilationUnit gcu = getGroovyCompilationUnit();
-                if (!ElementValidator.checkValidateEdit(gcu, getSite().getShell(), "Convert to Property"))
-                    return;
-                try {
-                    ModuleNodeInfo info = gcu.getModuleInfo(true);
-                    if (info.isEmpty())
-                        return;
-
-                    org.codehaus.groovy.eclipse.codebrowsing.requestor.Region selectRegion =
-                        new org.codehaus.groovy.eclipse.codebrowsing.requestor.Region(((ITextSelection) selection).getOffset(), ((ITextSelection) selection).getLength());
-                    ASTNodeFinder nodeFinder = new ASTNodeFinder(selectRegion);
-                    ASTNode node = nodeFinder.doVisit(info.module);
-                    if (node instanceof ConstantExpression) {
-                        IASTFragment fragment = new FindSurroundingNode(new org.codehaus.groovy.eclipse.codebrowsing.requestor.Region(node)).doVisitSurroundingNode(info.module);
-                        if (fragment.kind() == ASTFragmentKind.METHOD_CALL) {
-                            MethodCallExpression call = (MethodCallExpression) fragment.getAssociatedNode();
-                            if (call != null && !call.isUsingGenerics() && call.getArguments() instanceof ArgumentListExpression) {
-                                ArgumentListExpression args = (ArgumentListExpression) call.getArguments();
-
-                                Matcher match; // check for accessor or mutator
-                                if (args.getExpressions().isEmpty() && (match = compile("(?:get|is)(\\w+)").matcher(call.getMethodAsString())).matches()) {
-                                    int offset = node.getStart(),
-                                        length = (args.getEnd() + 1) - offset;
-                                    String propertyName = match.group(1);
-
-                                    // replace "getPropertyName()" with "propertyName"
-                                    gcu.applyTextEdit(new ReplaceEdit(offset, length, StringUtils.uncapitalize(propertyName)), null);
-
-                                } else if (args.getExpressions().size() == 1 && (match = compile("set(\\w+)").matcher(call.getMethodAsString())).matches()) {
-                                    int offset = node.getStart(),
-                                        length = args.getStart() - offset;
-                                    String propertyName = match.group(1);
-
-                                    // replace "setPropertyName(value_expression)" or "setPropertyName value_expression"
-                                    // with "propertyName = value_expression" (check prefs for spaces around assignment)
-                                    MultiTextEdit edits = new MultiTextEdit();
-                                    Map<String, String> options = gcu.getJavaProject().getOptions(true);
-                                    StringBuilder replacement = new StringBuilder(StringUtils.uncapitalize(propertyName));
-                                    if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR)))
-                                        replacement.append(' ');
-                                    replacement.append('=');
-                                    if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR)))
-                                        replacement.append(' ');
-
-                                    edits.addChild(new ReplaceEdit(offset, length, replacement.toString()));
-                                    if (gcu.getContents()[args.getEnd()] == ')') edits.addChild(new DeleteEdit(args.getEnd(), 1));
-
-                                    gcu.applyTextEdit(edits, null);
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    GroovyPlugin.getDefault().logError("Failure in convert to property", e);
-                }
-            }
-        };
+        toPropertyAction = new ConvertToPropertyAction(this);
         setAction(toPropertyAction.getActionDefinitionId(), toPropertyAction);
+        // injected into Source context menu in editorContextMenuAboutToShow()
     }
 
     /** Modifies, replaces, or disables actions managed by the {@link GenerateActionGroup}. */
@@ -1318,7 +1232,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         // use our Rename action instead
         GroovyRenameAction renameAction = new GroovyRenameAction(this);
-        renameAction.setActionDefinitionId(IGroovyEditorActionDefinitionIds.GROOVY_RENAME_ACTION);
+        renameAction.setActionDefinitionId("org.codehaus.groovy.eclipse.refactoring.command.rename");
         setAction("RenameElement", renameAction);
         replaceRefactoringAction("fRenameAction", renameAction);
 

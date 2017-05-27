@@ -71,6 +71,18 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
             proposals.add(assignStatement);
         }
 
+        // check for 'Convert local variable to field'
+        ConvertLocalToFieldProposal convertToField = new ConvertLocalToFieldProposal(context);
+        if (convertToField.hasProposals()) {
+            proposals.add(convertToField);
+        }
+
+        // check for 'Replace method call with property expression'
+        ConvertMethodToPropertyProposal convertToProperty = new ConvertMethodToPropertyProposal(context);
+        if (convertToProperty.hasProposals()) {
+            proposals.add(convertToProperty);
+        }
+
         // check for 'Convert method declaration to closure'
         ConvertToClosureCompletionProposal convertToClosure = new ConvertToClosureCompletionProposal(context);
         if (convertToClosure.hasProposals()) {
@@ -81,12 +93,6 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
         ConvertToMethodCompletionProposal convertToMethod = new ConvertToMethodCompletionProposal(context);
         if (convertToMethod.hasProposals()) {
             proposals.add(convertToMethod);
-        }
-
-        // check for 'Convert local variable to field'
-        ConvertLocalToFieldProposal convertToField = new ConvertLocalToFieldProposal(context);
-        if (convertToField.hasProposals()) {
-            proposals.add(convertToField);
         }
 
         // check for 'Convert to multi-line string'

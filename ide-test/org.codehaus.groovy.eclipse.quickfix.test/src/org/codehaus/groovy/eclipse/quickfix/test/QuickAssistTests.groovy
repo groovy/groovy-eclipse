@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test
 
+import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertTrue
 import org.codehaus.groovy.eclipse.quickassist.AbstractGroovyCompletionProposal
 import org.codehaus.groovy.eclipse.quickassist.AssignStatementToNewLocalProposal
 import org.codehaus.groovy.eclipse.quickassist.ConvertLocalToFieldProposal
+import org.codehaus.groovy.eclipse.quickassist.ConvertMethodToPropertyProposal
 import org.codehaus.groovy.eclipse.quickassist.ConvertToClosureCompletionProposal
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMethodCompletionProposal
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMultiLineStringCompletionProposal
@@ -35,6 +37,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.extract.ConvertLocalToFieldT
 import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTestsData
 import org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractLocalTestsData
 import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.text.correction.AssistContext
 import org.eclipse.jdt.ui.text.java.IInvocationContext
 import org.eclipse.jface.text.Document
@@ -216,6 +219,64 @@ final class QuickAssistTests extends QuickFixTestSuite {
             'class X { \ndef xxxx = {int a, int b ->\n  fdsafds } }',
             'class X { \ndef xxxx(int a, int b) {\n  fdsafds } }',
             'x', ConvertToMethodCompletionProposal)
+    }
+
+    @Test
+    void testConvertToProperty1() {
+        assertConversion(
+            '"".isEmpty()',
+            '"".empty',
+            4, 0, ConvertMethodToPropertyProposal)
+    }
+
+    @Test
+    void testConvertToProperty2() {
+        assertConversion(
+            '"".getBytes()',
+            '"".bytes',
+            4, 0, ConvertMethodToPropertyProposal)
+    }
+
+    @Test
+    void testConvertToProperty3() {
+        assertProposalNotOffered(
+            '"".getBytes("UTF-8")',
+            4, 0, ConvertMethodToPropertyProposal)
+    }
+
+    @Test
+    void testConvertToProperty4() {
+        assertConversion(
+            'new Date().setTime(1L);',
+            'new Date().time = 1L;',
+            'set', ConvertMethodToPropertyProposal)
+    }
+
+    @Test
+    void testConvertToProperty4a() {
+        setJavaPreference(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR, JavaCore.DO_NOT_INSERT)
+        try {
+            assertConversion(
+                'new Date().setTime(1L);',
+                'new Date().time= 1L;',
+                'set', ConvertMethodToPropertyProposal)
+        } finally {
+            setJavaPreference(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR, JavaCore.INSERT)
+        }
+    }
+
+    @Test
+    void testConvertToProperty5() {
+        assertProposalNotOffered(
+            '[].set(1, null)',
+            4, 0, ConvertMethodToPropertyProposal)
+    }
+
+    @Test
+    void testConvertToProperty6() {
+        assertProposalNotOffered(
+            '"".length()',
+            4, 0, ConvertMethodToPropertyProposal)
     }
 
     @Test
