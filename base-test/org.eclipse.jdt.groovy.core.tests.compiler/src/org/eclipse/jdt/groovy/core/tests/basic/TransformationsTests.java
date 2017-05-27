@@ -681,7 +681,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked4() {
-        assumeTrue(isAtLeastGroovy(21));
+        assumeTrue(isAtLeastGroovy(24)); // GROOVY-8033 fixed in Groovy 2.4.9
 
         String[] sources = {
             "Foo.groovy",
