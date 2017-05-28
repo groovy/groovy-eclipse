@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.quickassist;
+package org.codehaus.groovy.eclipse.quickassist.proposals;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
-import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
-import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
-import org.eclipse.jdt.ui.text.java.IInvocationContext;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
+import org.eclipse.ltk.core.refactoring.TextChange;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -33,65 +31,53 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Converts a multi-line string to a single-line string.
  */
-public class ConvertToSingleLineStringCompletionProposal extends AbstractGroovyTextCompletionProposal {
+public class ConvertToSingleLineStringProposal extends GroovyQuickAssistProposal2 {
 
-    private Expression literal;
-
-    public ConvertToSingleLineStringCompletionProposal(IInvocationContext context) {
-        super(context);
-    }
-
+    @Override
     public String getDisplayString() {
         return "Convert to single-line string";
     }
 
-    protected String getImageBundleLocation() {
-        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+    @Override
+    public Image getImage() {
+        return JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
     }
 
-    public boolean hasProposals() {
-        Region region = new Region(context.getSelectionOffset(), context.getSelectionLength());
-        GroovyCompilationUnit unit = getGroovyCompilationUnit();
-        ASTNodeFinder finder = new StringConstantFinder(region);
-        ASTNode node = finder.doVisit(unit.getModuleNode());
+    private Expression string;
 
-        if (node != null && node.getEnd() > node.getStart() && (node instanceof GStringExpression ||
-                (node instanceof ConstantExpression && ((ConstantExpression) node).getValue() instanceof String))) {
-            String nodeText = String.valueOf(unit.getContents(), node.getStart(), node.getLength());
-            if (isMultiLineString(String.valueOf(nodeText))) {
-                literal = (Expression) node;
-                return true;
+    @Override
+    public int getRelevance() {
+        if (string == null) {
+            ASTNode node = context.getCoveredNode();
+            if ((node instanceof GStringExpression || (node instanceof ConstantExpression &&
+                    ((ConstantExpression) node).getValue() instanceof String)) && node.getEnd() > node.getStart()) {
+                String nodeText = context.getNodeText(node);
+                if (isMultiLineString(nodeText)) {
+                    string = (Expression) node;
+                }
             }
         }
-
-        return false;
+        return (string != null ? 10 : 0);
     }
 
     @Override
-    protected TextEdit getTextEdit(IDocument doc) throws BadLocationException {
-        int startQuote = literal.getStart();
-        int endQuote = literal.getEnd() - 3;
-        if (startQuote < 0 || startQuote + 3 >= doc.getLength() || endQuote < 0 || endQuote + 3 > doc.getLength()) {
+    protected TextChange getTextChange(IProgressMonitor monitor) {
+        char[] contents = context.getCompilationUnit().getContents();
+        int startQuote = string.getStart();
+        int endQuote = string.getEnd() - 3;
+        if (startQuote < 0 || startQuote + 3 >= contents.length || endQuote < 0 || endQuote + 3 > contents.length) {
             return null;
         }
-        String startText = doc.get(startQuote, 3);
-        String endText = doc.get(endQuote, 3);
-        if (!(startText.equals("\"\"\"") || startText.equals("'''"))) {
-            return null;
-        }
-        if (!(endText.equals("\"\"\"") || endText.equals("'''"))) {
-            return null;
-        }
-        String replaceQuote = String.valueOf(startText.charAt(0));
+        boolean isSingle = contents[startQuote] == '\'';
+        String replaceQuote = String.valueOf(contents[startQuote]);
+
         TextEdit edit = new MultiTextEdit();
         edit.addChild(new ReplaceEdit(startQuote, 3, replaceQuote));
         edit.addChild(new ReplaceEdit(endQuote, 3, replaceQuote));
 
-        boolean isSingle = replaceQuote.startsWith("'");
-
         // iterate through rest of list to unescape characters
         for (int i = startQuote + 3; i < endQuote - 3; i += 1) {
-            char toEscape = doc.getChar(i);
+            char toEscape = contents[i];
             String escaped = null;
             switch (toEscape) {
             case '\t':
@@ -126,7 +112,7 @@ public class ConvertToSingleLineStringCompletionProposal extends AbstractGroovyT
             }
         }
 
-        return edit;
+        return toTextChange(edit);
     }
 
     // TODO: What about dollar slashy strings?

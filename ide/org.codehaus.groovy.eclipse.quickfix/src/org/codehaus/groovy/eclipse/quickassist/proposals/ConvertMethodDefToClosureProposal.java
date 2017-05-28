@@ -13,49 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.quickassist;
+package org.codehaus.groovy.eclipse.quickassist.proposals;
 
+import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
 import org.codehaus.groovy.eclipse.refactoring.core.convert.ConvertToClosureRefactoring;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
-import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.text.edits.TextEdit;
+import org.eclipse.ltk.core.refactoring.TextChange;
+import org.eclipse.swt.graphics.Image;
 
 /**
  * Converts a method declaration to a closure assigned to a field.
  */
-public class ConvertToClosureCompletionProposal extends AbstractGroovyTextCompletionProposal {
+public class ConvertMethodDefToClosureProposal extends GroovyQuickAssistProposal2 {
 
-    private final ConvertToClosureRefactoring delegate;
-
-    public ConvertToClosureCompletionProposal(IInvocationContext context) {
-        super(context);
-
-        delegate = new ConvertToClosureRefactoring(getGroovyCompilationUnit(), context.getSelectionOffset());
-    }
-
+    @Override
     public String getDisplayString() {
         return "Convert method declaration to closure";
     }
 
-    protected String getImageBundleLocation() {
-        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+    @Override
+    public Image getImage() {
+        return JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
     }
 
-    public boolean hasProposals() {
-        return delegate.isApplicable();
-    }
+    private ConvertToClosureRefactoring delegate;
 
     @Override
     public int getRelevance() {
-        return 5;
+        if (delegate == null) {
+            delegate = new ConvertToClosureRefactoring(context.getCompilationUnit(), context.getSelectionOffset());
+        }
+        return (delegate.isApplicable() ? 5 : 0);
     }
 
     @Override
-    protected TextEdit getTextEdit(IDocument document) throws BadLocationException, JavaModelException {
-        return delegate.createEdit(document);
+    protected TextChange getTextChange(IProgressMonitor monitor) throws BadLocationException, JavaModelException {
+        return toTextChange(delegate.createEdit(context.newTempDocument()));
     }
 
     @Override

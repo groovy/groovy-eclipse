@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.quickassist;
+package org.codehaus.groovy.eclipse.quickassist.proposals;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
-import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
-import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
-import org.eclipse.jdt.ui.text.java.IInvocationContext;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
+import org.eclipse.ltk.core.refactoring.TextChange;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -33,71 +31,67 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Converts a single-line string to a multi-line string.
  */
-public class ConvertToMultiLineStringCompletionProposal extends AbstractGroovyTextCompletionProposal {
+public class ConvertToMultiLineStringProposal extends GroovyQuickAssistProposal2 {
 
-    private Expression literal;
-
-    public ConvertToMultiLineStringCompletionProposal(IInvocationContext context) {
-        super(context);
-    }
-
+    @Override
     public String getDisplayString() {
         return "Convert to multi-line string";
     }
 
-    protected String getImageBundleLocation() {
-        return JavaPluginImages.IMG_CORRECTION_CHANGE;
+    @Override
+    public Image getImage() {
+        return JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_CHANGE);
     }
 
-    public boolean hasProposals() {
-        Region region = new Region(context.getSelectionOffset(), context.getSelectionLength());
-        GroovyCompilationUnit unit = getGroovyCompilationUnit();
-        ASTNodeFinder finder = new StringConstantFinder(region);
-        ASTNode node = finder.doVisit(unit.getModuleNode());
+    private Expression string;
 
-        if (node != null && node.getEnd() > node.getStart() && (node instanceof GStringExpression ||
-                (node instanceof ConstantExpression && ((ConstantExpression) node).getValue() instanceof String))) {
-            String nodeText = String.valueOf(unit.getContents(), node.getStart(), node.getLength());
-            if (isStringLiteral(nodeText) && !isMultiLineString(String.valueOf(nodeText))) {
-                literal = (Expression) node;
-                return true;
+    @Override
+    public int getRelevance() {
+        if (string == null) {
+            ASTNode node = context.getCoveredNode();
+            if ((node instanceof GStringExpression || (node instanceof ConstantExpression &&
+                    ((ConstantExpression) node).getValue() instanceof String)) && node.getEnd() > node.getStart()) {
+                String nodeText = context.getNodeText(node);
+                if (isStringLiteral(nodeText) && !isMultiLineString(nodeText)) {
+                    string = (Expression) node;
+                }
             }
         }
-
-        return false;
+        return (string != null ? 10 : 0);
     }
 
     @Override
-    protected TextEdit getTextEdit(IDocument doc) throws BadLocationException {
-        int startQuote = literal.getStart();
-        int endQuote = literal.getEnd() - 1;
-        if (startQuote < 0 || startQuote >= doc.getLength() || endQuote <= startQuote || endQuote >= doc.getLength()) {
+    protected TextChange getTextChange(IProgressMonitor monitor) {
+        char[] contents = context.getCompilationUnit().getContents();
+        int startQuote = string.getStart();
+        int endQuote = string.getEnd() - 1;
+        if (startQuote < 0 || startQuote >= contents.length || endQuote <= startQuote || endQuote >= contents.length) {
             return null;
         }
-        if (!(doc.getChar(startQuote) == '\'' || doc.getChar(startQuote) == '"')) {
+        if (!(contents[startQuote] == '\'' || contents[startQuote] == '"')) {
             return null;
         }
-        if (!(doc.getChar(endQuote) == '\'' || doc.getChar(endQuote) == '"')) {
+        if (!(contents[endQuote] == '\'' || contents[endQuote] == '"')) {
             return null;
         }
-        char quoteChar = doc.getChar(startQuote);
+        char quoteChar = contents[startQuote];
         char skipChar = '\0';
-        String replaceQuotes = new String(new char[] { quoteChar, quoteChar, quoteChar });
+        String replaceQuotes = new String(new char[] {quoteChar, quoteChar, quoteChar});
         TextEdit edit = new MultiTextEdit();
         edit.addChild(new ReplaceEdit(startQuote, 1, replaceQuotes));
         edit.addChild(new ReplaceEdit(endQuote, 1, replaceQuotes));
 
         // iterate through rest of list to unescape characters
         for (int i = startQuote + 1; i < endQuote - 1; i += 1) {
-            if (doc.getChar(i) == '\\') {
+            if (contents[i] == '\\') {
                 i++;
-                if (doc.getChar(i) != skipChar) {
-                    edit.addChild(new ReplaceEdit(i - 1, 2, unescaped(doc.getChar(i))));
+                if (contents[i] != skipChar) {
+                    edit.addChild(new ReplaceEdit(i - 1, 2, unescaped(contents[i])));
                 }
             }
         }
 
-        return edit;
+        return toTextChange(edit);
     }
 
     // TODO: What about slashy strings?
@@ -118,26 +112,25 @@ public class ConvertToMultiLineStringCompletionProposal extends AbstractGroovyTe
 
     private String unescaped(char escaped) {
         switch (escaped) {
-        case 'u':
-            // don't try to convert unicode characters
-            return "u";
-        case 't':
-            return "\t";
-        case 'b':
-            return "\b";
-        case 'n':
-            return "\n";
-        case 'r':
-            return "\r";
-        case 'f':
-            // the \f character seems to cause errors in the editor
-            return "\n";
         case '\'':
             return "'";
         case '"':
             return "\"";
         case '\\':
             return "\\";
+        case 'n':
+            return "\n";
+        case 'r':
+            return "\r";
+        case 't':
+            return "\t";
+        case 'f':
+            // the \f character seems to cause errors in the editor
+            return "\n";
+        case 'b':
+            return "\b";
+        case 'u':
+            // don't try to convert unicode characters
         }
         // shouldn't get here
         return String.valueOf(escaped);

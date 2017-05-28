@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
 import static org.junit.Assert.*
 
-import org.codehaus.groovy.eclipse.quickfix.processors.GroovyQuickFixProcessor
+import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry
