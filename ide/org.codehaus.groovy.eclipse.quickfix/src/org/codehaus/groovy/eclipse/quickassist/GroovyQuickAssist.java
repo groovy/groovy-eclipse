@@ -23,13 +23,14 @@ import org.codehaus.groovy.eclipse.quickassist.proposals.AddInferencingSuggestio
 import org.codehaus.groovy.eclipse.quickassist.proposals.AssignStatementToNewLocalProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertAccessorToPropertyProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertClosureDefToMethodProposal;
-import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertVariableToFieldProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertMethodDefToClosureProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertToMultiLineStringProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertToSingleLineStringProposal;
+import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertVariableToFieldProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToConstantProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToLocalProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.RemoveSpuriousSemicolonsProposal;
+import org.codehaus.groovy.eclipse.quickassist.proposals.ReplaceDefWithStaticTypeProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.SplitVariableDeclAndInitProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.SwapLeftAndRightOperandsProposal;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
@@ -89,6 +90,7 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
             new ExtractToLocalProposal(true),
             new ExtractToLocalProposal(false),
             new RemoveSpuriousSemicolonsProposal(),
+            new ReplaceDefWithStaticTypeProposal(),
             new SplitVariableDeclAndInitProposal(),
             new SwapLeftAndRightOperandsProposal(),
         }) {

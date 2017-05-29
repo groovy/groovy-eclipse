@@ -32,6 +32,7 @@ import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertVariableToFieldP
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToConstantProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToLocalProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.RemoveSpuriousSemicolonsProposal
+import org.codehaus.groovy.eclipse.quickassist.proposals.ReplaceDefWithStaticTypeProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.SplitVariableDeclAndInitProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.SwapLeftAndRightOperandsProposal
 import org.codehaus.groovy.eclipse.refactoring.test.extract.ConvertLocalToFieldTestsData
@@ -331,6 +332,44 @@ final class QuickAssistTests extends QuickFixTestSuite {
             'def z = 1;def a = 1;',
             'def z = 1;def a = 1',
             null, new RemoveSpuriousSemicolonsProposal())
+    }
+
+    @Test
+    void testReplaceDef1() {
+        assertConversion(
+            'int bar = 1; def foo = bar',
+            'int bar = 1; int foo = bar',
+            13, 0, new ReplaceDefWithStaticTypeProposal())
+    }
+
+    @Test
+    void testReplaceDef2() {
+        assertConversion(
+            'int bar = 1; def foo = bar',
+            'int bar = 1; int foo = bar',
+            16, 0, new ReplaceDefWithStaticTypeProposal())
+    }
+
+    @Test
+    void testReplaceDef3() {
+        assertConversion(
+            'def bar = 1g; def foo = bar',
+            'def bar = 1g; BigInteger foo = bar',
+            14, 3, new ReplaceDefWithStaticTypeProposal())
+    }
+
+    @Test
+    void testReplaceDef4() {
+        assertProposalNotOffered(
+            'int bar = 1; def foo = bar',
+            17, 0, new ReplaceDefWithStaticTypeProposal())
+    }
+
+    @Test
+    void testReplaceDef5() {
+        assertProposalNotOffered(
+            'def method() { return null }',
+            0, 3, new ReplaceDefWithStaticTypeProposal())
     }
 
     @Test
