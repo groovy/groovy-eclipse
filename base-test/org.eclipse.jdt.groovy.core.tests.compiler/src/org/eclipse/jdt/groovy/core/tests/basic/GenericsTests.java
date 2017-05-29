@@ -1400,7 +1400,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
      */
-    @Test
+    @Test @Ignore
     public void testExtendingGenerics_GroovyExtendsJava14() {
         assumeTrue(isAtLeastGroovy(20));
 
@@ -1433,7 +1433,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "}"
         };
 
-        runWarningFreeTest(sources);
+        runConformTest(sources, "no error");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/221

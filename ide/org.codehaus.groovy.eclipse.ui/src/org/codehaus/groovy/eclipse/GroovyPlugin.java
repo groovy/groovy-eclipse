@@ -67,6 +67,12 @@ public class GroovyPlugin extends AbstractUIPlugin {
         }
     }
 
+    public static IWorkbenchPage getActiveWorkbenchPage() {
+        IWorkbenchWindow window = getActiveWorkbenchWindow();
+        if (window != null) return window.getActivePage();
+        return null;
+    }
+
     public static Shell getActiveWorkbenchShell() {
         IWorkbenchWindow window = getActiveWorkbenchWindow();
         if (window == null) {
@@ -79,11 +85,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
         return shell;
     }
 
-    /**
-     * Returns the active workbench window
-     *
-     * @return the active workbench window
-     */
     public static IWorkbenchWindow getActiveWorkbenchWindow() {
         if (plugin == null) {
             return null;
@@ -137,11 +138,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private void addMonospaceFontListener() {
         junitMono = new EnsureJUnitFont();
         try {
-            if (PlatformUI.isWorkbenchRunning()) {
-                IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-                if (window != null) {
-                    window.getActivePage().addPartListener(junitMono);
-                }
+            if (PlatformUI.isWorkbenchRunning() && getActiveWorkbenchPage() != null) {
+                getActiveWorkbenchPage().addPartListener(junitMono);
             }
             getPreferenceStore().addPropertyChangeListener(junitMono);
             PrefUtil.getInternalPreferenceStore().addPropertyChangeListener(junitMono);
@@ -152,10 +150,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     private void removeMonospaceFontListener() {
         try {
-            IWorkbench workbench = getWorkbench();
-            if (!workbench.isClosing()) {
-                IWorkbenchPage page = workbench.getActiveWorkbenchWindow().getActivePage();
-                page.removePartListener(junitMono);
+            if (!getWorkbench().isClosing()) {
+                getActiveWorkbenchPage().removePartListener(junitMono);
             }
         } catch (RuntimeException e) {
             // best-effort removal

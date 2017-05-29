@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
@@ -160,7 +161,9 @@ public class TestProject {
     }
 
     public void addClasspathEntry(IClasspathEntry classpathEntry) throws Exception {
+        if (Arrays.asList(javaProject.getRawClasspath()).contains(classpathEntry)) return;
         IClasspathEntry[] entries = (IClasspathEntry[]) ArrayUtils.add(javaProject.getRawClasspath(), classpathEntry);
+
         SimpleProgressMonitor monitor = new SimpleProgressMonitor("Add " + classpathEntry);
         javaProject.setRawClasspath(entries, monitor);
         monitor.waitForCompletion();

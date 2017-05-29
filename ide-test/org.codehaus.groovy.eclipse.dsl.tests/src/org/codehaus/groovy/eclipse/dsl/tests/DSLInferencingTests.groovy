@@ -28,15 +28,15 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     private static final String SET_DELEGATE_TYPE_SCRIPT =
         'public interface Obj {\n' +
-        '    String getFoo();\n' +
-        '    int FOO1 = 9;\n' +
-        '    int FOO2 = 9;\n' +
-        '    int OTHER = 9;\n' +
-        '    int BAR = 9;\n' +
-        '    int BAZ1 = 9;\n' +
-        '    int BAZ2 = 9;\n' +
-        '    int BAZ3 = 9;\n' +
-        ' }\n' +
+        '  String getFoo();\n' +
+        '  int FOO1 = 9;\n' +
+        '  int FOO2 = 9;\n' +
+        '  int OTHER = 9;\n' +
+        '  int BAR = 9;\n' +
+        '  int BAZ1 = 9;\n' +
+        '  int BAZ2 = 9;\n' +
+        '  int BAZ3 = 9;\n' +
+        '}\n' +
         '"".l { delegate }\n' +
         '"".l { this }\n' +
         '"".l { getFoo() }\n' +
