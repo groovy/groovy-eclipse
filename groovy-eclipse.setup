@@ -21,14 +21,6 @@
         source="http://www.eclipse.org/oomph/setup/UserPreferences"/>
     <setupTask
         xsi:type="setup:CompoundTask"
-        name="org.codehaus.groovy.eclipse.compilerResolver">
-      <setupTask
-          xsi:type="setup:PreferenceTask"
-          key="/instance/org.codehaus.groovy.eclipse.compilerResolver/groovy.compiler.level"
-          value="21"/>
-    </setupTask>
-    <setupTask
-        xsi:type="setup:CompoundTask"
         name="org.codehaus.groovy.eclipse.dsl">
       <setupTask
           xsi:type="setup:PreferenceTask"
@@ -325,6 +317,12 @@
       </predicate>
     </workingSet>
   </setupTask>
+  <setupTask
+      xsi:type="setup:ResourceCreationTask"
+      excludedTriggers="STARTUP MANUAL"
+      content="eclipse.preferences.version=1&#xA;groovy.compiler.level=21&#xA;"
+      targetURL="${workspace.location|uri}/.metadata/.plugins/org.eclipse.core.runtime/.settings/org.codehaus.groovy.eclipse.compilerResolver.prefs"
+      encoding="UTF-8"/>
   <stream name="master"
       label="Master">
     <setupTask
