@@ -569,6 +569,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             '''
         doContentsCompareTest(contents)
     }
+
     @Test @Ignore('Currently not possible due to heuristic in FindUnresolvedReferencesVisitor.handleVariable()')
     void testDynamicVariable() {
         String contents = '''

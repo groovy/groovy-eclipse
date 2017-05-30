@@ -119,12 +119,12 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         // TODO: Must match TestProject.createGroovyType()!
         String prefix = "package main;\n\n"
 
-        Document doc = new Document(prefix + normalizeLineEndings(originalContents))
+        Document doc = new Document(prefix + originalContents.stripIndent())
         if (edit != null) edit.apply(doc)
 
         // deal with some variance in JDT Core handling of package only
-        String expect = prefix + normalizeLineEndings(expectedContents)
-        String actual = normalizeLineEndings(doc.get())
+        String expect = prefix + expectedContents.stripIndent()
+        String actual = doc.get()
         if (expectedContents.toString().isEmpty()) {
             expect = expect.trim()
             actual = actual.trim()
@@ -147,11 +147,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
-        addGroovySource(normalizeLineEndings(contents), name, pack)
-    }
-
-    protected String normalizeLineEndings(CharSequence contents) {
-        contents.stripIndent().replaceAll('\r?\n', LINE_SEPARATOR)
+        addGroovySource(contents.stripIndent(), name, pack)
     }
 }
 
