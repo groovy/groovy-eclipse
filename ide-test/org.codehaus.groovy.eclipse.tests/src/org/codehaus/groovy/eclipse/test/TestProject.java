@@ -189,9 +189,7 @@ public class TestProject {
         if (!p.isDefaultPackage() && (source.length() < 8 || !source.subSequence(0, 7).toString().equals("package"))) {
             b.append("package ");
             b.append(p.getElementName());
-            b.append(";");
-            b.append(System.getProperty("line.separator"));
-            b.append(System.getProperty("line.separator"));
+            b.append(";\n\n");
         }
     }
 

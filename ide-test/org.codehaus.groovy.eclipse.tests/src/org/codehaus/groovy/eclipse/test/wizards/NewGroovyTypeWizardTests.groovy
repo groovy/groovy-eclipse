@@ -65,13 +65,6 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         StubUtility.setCodeTemplate(CodeTemplateContextType.ANNOTATIONBODY_ID, '/* annotation body */\n', null)
     }
 
-    /**
-     * Helper method to compare two strings for equality, while avoiding newline issues on different platforms.
-     */
-    private void assertEqualLines(String expected, String actual) {
-        assertEquals(expected.replace('\n', System.getProperty('line.separator')), actual)
-    }
-
     /** Helper method to check an IStatus */
     protected void assertStatus(int severity, String msgFragment, IStatus status) {
         assert status.getSeverity() == severity
@@ -135,7 +128,7 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             |}
             |'''.stripMargin()
 
-        assertEqualLines(expected, wizardPage.createdType.compilationUnit.source)
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
     }
 
     @Test @Ignore('this test fails/crashes in Groovy. cause: problems resolving generic types?')
@@ -169,7 +162,7 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             |}
             |'''.stripMargin()
 
-        assertEqualLines(expected, wizardPage.createdType.compilationUnit.source)
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
     }
 
     @Test
@@ -203,6 +196,6 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             |}
             |'''.stripMargin()
 
-        assertEqualLines(expected, wizardPage.createdType.compilationUnit.source)
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
     }
 }

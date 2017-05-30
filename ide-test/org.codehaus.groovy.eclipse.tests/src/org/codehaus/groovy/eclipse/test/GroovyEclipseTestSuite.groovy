@@ -22,6 +22,7 @@ import org.codehaus.jdt.groovy.model.GroovyNature
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
@@ -53,6 +54,8 @@ abstract class GroovyEclipseTestSuite {
     static final void setUpTestSuite() {
         testProject = new TestProject()
         testProject.autoBuilding = false
+
+        new ProjectScope(testProject.project).getNode(Platform.PI_RUNTIME).put(Platform.PREF_LINE_SEPARATOR, '\n')
     }
 
     @AfterClass

@@ -31,8 +31,6 @@ import org.junit.Before
 
 abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
 
-    protected static final String LINE_SEPARATOR = System.getProperty('line.separator')
-
     @Before
     final void setUpImportsTestCase() {
         addJavaSource(CONTENTS_JAVA_SUPPORTING, 'Outer', 'other')
@@ -119,7 +117,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
         // TODO: Must match TestProject.createGroovyType()!
-        String prefix = "package main;$LINE_SEPARATOR$LINE_SEPARATOR"
+        String prefix = "package main;\n\n"
 
         Document doc = new Document(prefix + normalizeLineEndings(originalContents))
         if (edit != null) edit.apply(doc)
