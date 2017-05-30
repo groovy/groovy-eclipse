@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public class SimpleExpressionASTFragment implements IASTFragment {
 
     public int getTrimmedEnd(GroovyCompilationUnit unit) {
         char[] contents = unit.getContents();
-        int end = getEnd();
+        int end = Math.min(getEnd(), contents.length - 1);
         while (end > actualStartPosition && Character.isWhitespace(contents[end])) {
             end--;
         }

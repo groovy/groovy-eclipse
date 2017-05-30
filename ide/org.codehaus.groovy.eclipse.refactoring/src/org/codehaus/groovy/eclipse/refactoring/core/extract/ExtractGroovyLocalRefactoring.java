@@ -158,12 +158,10 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             // the selected length must be somewhere >= the trimmed (no
             // whitespace) length and <= the non-trimeed (w/ whitespace) length
             if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
-                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit,
-                        new SourceRange(start, length)));
+                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit, new SourceRange(start, length)));
             }
 
-            RefactoringStatus result = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] { unit }),
-                    getValidationContext());
+            RefactoringStatus result = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext());
             if (result.hasFatalError()) {
                 return result;
             }
