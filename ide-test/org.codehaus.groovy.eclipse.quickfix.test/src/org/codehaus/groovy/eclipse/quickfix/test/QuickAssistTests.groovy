@@ -279,11 +279,35 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
+    void testConvertToMultiLine0() {
+        assertProposalNotOffered('""', 0, 0, new ConvertToMultiLineStringProposal())
+        assertProposalNotOffered('""', 1, 0, new ConvertToMultiLineStringProposal())
+        assertProposalNotOffered('""', 2, 0, new ConvertToMultiLineStringProposal())
+        assertProposalNotOffered("''", 0, 0, new ConvertToMultiLineStringProposal())
+        assertProposalNotOffered("''", 1, 0, new ConvertToMultiLineStringProposal())
+        assertProposalNotOffered("''", 2, 0, new ConvertToMultiLineStringProposal())
+    }
+
+    @Test
     void testConvertToMultiLine1() {
-        assertConversion(
-            '"fadfsad\\n\\t\' \\"\\nggggg"',
-            '"""fadfsad\n\t\' "\nggggg"""',
-            'f', new ConvertToMultiLineStringProposal())
+        def assertConversion = { String pre, String post ->
+            assertConversion("'" + pre + "'", "'''" + post + "'''", 0, 0, new ConvertToMultiLineStringProposal())
+        }
+        assertConversion('a', 'a')
+        assertConversion('.', '.')
+        assertConversion('$', '$')
+        assertConversion('\\"', '"')
+        assertConversion(" \\' ", " \' ")
+      //assertConversion("\\'", "\\'") // trailing single-quote is special case
+      //assertConversion(" ''' ", " \\'\\'\\' ") // triple-quote is special case
+        assertConversion('\\t', '\t')
+        assertConversion('\\n', '\n')
+        assertConversion('\\r', '\\r')
+        assertConversion('\\f', '\\f')
+        assertConversion('\\b', '\\b')
+        assertConversion('\\\\', '\\')
+        assertConversion('\u00A7', '\u00A7')
+      //assertConversion('\\u00A7', '\\u00A7')
     }
 
     @Test
@@ -297,9 +321,46 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testConvertToMultiLine3() {
         assertConversion(
-            'int a,b,c; def eq= "$a is\\n$b + ${c}"',
-            'int a,b,c; def eq= """$a is\n$b + ${c}"""',
-            'is', new ConvertToMultiLineStringProposal())
+            'int a,b,c; def eq = "$a is $b plus ${c}";',
+            'int a,b,c; def eq = """$a is $b plus ${c}""";',
+            20, 20, new ConvertToMultiLineStringProposal())
+    }
+
+    @Test
+    void testConvertToMultiLine4() {
+        assertConversion(
+            '\'$1\' + " $i \\n"',
+            '"""\\$1 $i \n"""',
+            0, 15, new ConvertToMultiLineStringProposal())
+    }
+
+    @Test
+    void testConvertToMultiLine5() {
+        assertConversion(
+            '\'one \' + { -> 2 } + " $three"',
+            '"""one ${ -> 2 } $three"""',
+            0, 29, new ConvertToMultiLineStringProposal())
+    }
+
+    @Test
+    void testConvertToMultiLine6() {
+        String original = $/
+            'A\n' +
+            "B\n" +
+            """C\n""" +
+            D
+            /$.substring(1).stripIndent()
+
+        String expected = $/
+            """A
+            B
+            C
+            $${D}"""
+            /$.substring(1).stripIndent()
+
+        assertConversion(
+            original, expected,
+            0, 29, new ConvertToMultiLineStringProposal())
     }
 
     @Test

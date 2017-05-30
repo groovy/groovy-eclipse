@@ -23,11 +23,11 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
 abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
 
-    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'QuickFix', String pack = '') {
+    protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = "QuickFix${nextUnitName()}", String pack = '') {
         super.addGroovySource(contents, name, pack)
     }
 
-    protected CompilationUnit addJavaSource(CharSequence contents, String name = 'QuickFix', String pack = '') {
+    protected CompilationUnit addJavaSource(CharSequence contents, String name = "QuickFix${nextUnitName()}", String pack = '') {
         super.addJavaSource(contents, name, pack)
     }
 }

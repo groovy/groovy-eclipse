@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.quickassist;
 
+import static org.eclipse.jdt.internal.corext.codemanipulation.StubUtility.getLineDelimiterPreference;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
@@ -22,10 +24,13 @@ import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.widgets.Display;
@@ -70,6 +75,24 @@ public class GroovyQuickAssistContext {
         return coveredNode;
     }
 
+    /**
+     * Returns the line delimiter of the specified line or a sensible default if
+     * the line is not closed with a line delimiter.
+     *
+     * @param document can be {@code null}
+     */
+    public String getLineDelimiter(IDocument document, int line) {
+        if (document == null) document = newTempDocument();
+        String ending = null;
+        try {
+            while ((ending = document.getLineDelimiter(line)) == null && line > 1) {
+                line -= 1;
+            }
+        } catch (BadLocationException ignore) {
+        }
+        return ending != null ? ending : getLineDelimiterPreference(getProject());
+    }
+
     public String getNodeText(ASTNode node) {
         int offset = node.getStart(),
             length = node.getLength();
@@ -80,6 +103,23 @@ public class GroovyQuickAssistContext {
             }
         }
         return null;
+    }
+
+    public TypeLookupResult getNodeType(final ASTNode node) {
+        final TypeLookupResult[] ref = new TypeLookupResult[1];
+        visitCompilationUnit(new ITypeRequestor() {
+            public ITypeRequestor.VisitStatus acceptASTNode(ASTNode n, TypeLookupResult r, IJavaElement e) {
+                if (n == node) {
+                    ref[0] = r;
+                    return ITypeRequestor.VisitStatus.STOP_VISIT;
+                }
+                return ITypeRequestor.VisitStatus.CONTINUE;
+            }
+        });
+        if (ref[0] != null) {
+            return ref[0];
+        }
+        return new TypeLookupResult(null, null, node, TypeLookupResult.TypeConfidence.UNKNOWN, null);
     }
 
     public int getSelectionOffset() {

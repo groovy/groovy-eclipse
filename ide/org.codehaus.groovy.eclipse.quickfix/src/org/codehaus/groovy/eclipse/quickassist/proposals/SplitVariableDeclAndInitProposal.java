@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.quickassist.proposals;
 
 import static org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService.getLineLeadingWhiteSpace;
-import static org.eclipse.jdt.internal.corext.codemanipulation.StubUtility.getLineDelimiterPreference;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -80,24 +79,13 @@ public class SplitVariableDeclAndInitProposal extends GroovyQuickAssistProposal2
         return (c == '=');
     }
 
-    protected String getLineDelimiter(IDocument document, int line) throws BadLocationException {
-        String nl;
-        while ((nl = document.getLineDelimiter(line)) == null && line > 1) {
-            line -= 1;
-        }
-        if (nl == null) {
-            nl = getLineDelimiterPreference(context.getProject());
-        }
-        return nl;
-    }
-
     @Override
     protected TextChange getTextChange(IProgressMonitor monitor) throws BadLocationException {
         IDocument document = context.newTempDocument();
 
         int offset = var.getEnd(),
             lineNo = document.getLineOfOffset(offset);
-        String insertion = getLineDelimiter(document, lineNo) + getLineLeadingWhiteSpace(document, lineNo) + var.getText();
+        String insertion = context.getLineDelimiter(document, lineNo) + getLineLeadingWhiteSpace(document, lineNo) + var.getText();
 
         return toTextChange(new InsertEdit(offset, insertion));
     }
