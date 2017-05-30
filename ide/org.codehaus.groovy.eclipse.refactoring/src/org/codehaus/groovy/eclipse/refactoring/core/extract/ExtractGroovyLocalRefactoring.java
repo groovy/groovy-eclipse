@@ -69,7 +69,6 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.NamingConventions;
 import org.eclipse.jdt.core.SourceRange;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.core.refactoring.descriptors.ExtractLocalDescriptor;
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
@@ -369,19 +368,16 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         newChange.addEdit(edit);
     }
 
-
     private String getTextAt(int start, int end) {
-        return String.valueOf(CharOperation.subarray(unit.getContents(), start, end));
+        char[] contents = unit.getContents();
+        if (start >= 0 && end > start && end < contents.length)
+            return String.valueOf(contents, start, end - start);
+        return "";
     }
 
     /**
      * Based on all of the matching expressions, determine where to insert the
      * declaration.
-     *
-     * @param matchingExpressions
-     * @param decl
-     * @param status
-     * @return
      */
     private int insertAt(List<IASTFragment> matchingExpressions, RefactoringStatus status) {
         // find the first matching expression.
@@ -454,7 +450,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private int findLineStart(int insertLoc) {
         char[] contents = unit.getContents();
-        while (insertLoc >= 0 && contents[insertLoc] != '\n' && contents[insertLoc] != '\r') {
+        while (insertLoc > 0 && contents[insertLoc] != '\n' && contents[insertLoc] != '\r') {
             insertLoc--;
         }
         return insertLoc;
