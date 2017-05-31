@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -142,26 +143,37 @@ public class ConvertToMultiLineStringProposal extends GroovyQuickAssistProposal2
             else if (expr instanceof ClosureExpression) length += 1;
             edit.addChild(new ReplaceEdit(offset, length, replacement));
 
-            if (isLiteralString) {
-                int max = expr.getEnd() - (hasTripleQuotes ? 3 : 1),
+            if (isLiteralString) { // deal with escaping
+                List<ConstantExpression> strings = getStrings(expr);
+                int min = offset + length, // after opening quote(s)
+                    max = expr.getEnd() - (hasTripleQuotes ? 3 : 1),
                     end = max;
-                for (ConstantExpression str : getStrings(expr)) {
-                    // deal with some escaping
+                for (ConstantExpression str : strings) {
                     end = Math.min(str.getEnd(), max);
-                    for (int pos = offset + length; pos < end; pos += 1) {
-                        if (source[pos] == '\\' && (replacement = unescaped(source[pos + 1])) != null) {
+                    for (int pos = Math.max(str.getStart(), min); pos < end; pos += 1) {
+                        // handle leading/trailing quotes
+                        if (last == null && pos == min) {
+                            if (escapeLeadingQuote(pos, end, quote, source, edit))
+                                continue;
+                        } else if (pos == (max - 1) && expr == expressions.get(expressions.size() - 1)) {
+                            if (escapeTrailingQuote(pos, quote, source, edit))
+                                continue;
+                        }
+                        // handle inline triple quotes and other escaping situations
+                        if (escapeTripleQuotes(pos, end - 1, quote, source, edit)) {
+                            pos += 2;
+                            continue;
+                        } else if (source[pos] == '\\' && (pos != max - 2 || source[pos + 1] != quote) &&
+                                // TODO: Don't unescape into triple quotes, which may span strings.
+                                (replacement = unescaped(source[pos + 1])) != null) {
                             edit.addChild(new ReplaceEdit(pos++, 2, replacement));
                         } else if (interpolated && source[pos] == '$' && !isGString(expr)) {
                             edit.addChild(new InsertEdit(pos++, "\\"));
-                        } else if (pos + 2 < end && source[pos] == quote &&
-                                source[pos + 1] == quote && source[pos + 2] == quote) {
-                            // TODO: escape triple-quote
                         }
-                        // TODO: escape trailing quote chars to prevent early termination; ex: "'" -> '''\''''
                     }
                 }
 
-                // remove trailing quote(s)
+                // remove closing quote(s)
                 edit.addChild(new ReplaceEdit(end, hasTripleQuotes ? 3 : 1, ""));
             } else if (!(expr instanceof ClosureExpression)) {
                 edit.addChild(new InsertEdit(expr.getEnd(), "}"));
@@ -182,6 +194,57 @@ public class ConvertToMultiLineStringProposal extends GroovyQuickAssistProposal2
     }
 
     //--------------------------------------------------------------------------
+
+    private boolean escapeLeadingQuote(int pos, int max, char quote, char[] source, TextEdit textEdit) {
+        if (source[pos] == quote) {
+            textEdit.addChild(new InsertEdit(pos, "\\"));
+            return true;
+        } else if (pos + 1 < max && source[pos] == '\\' && source[pos + 1] == quote) {
+            return true; // reatain escaping
+        }
+        return false;
+    }
+
+    private boolean escapeTrailingQuote(int pos, /*int min,*/ char quote, char[] source, TextEdit textEdit) {
+        if (source[pos] == quote) {
+            if (source[pos - 1] != '\\') {
+                TextEdit e = textEdit.getChildren()[textEdit.getChildrenSize() - 1];
+                if (!(e.getOffset() == pos && e instanceof InsertEdit)) {
+                    textEdit.addChild(new InsertEdit(pos, "\\"));
+                }
+            } else {
+                // should not be possible to have an edit that removes escaping
+                TextEdit e = textEdit.getChildren()[textEdit.getChildrenSize() - 1];
+                Assert.isLegal(!(e.getOffset() == (pos - 1) && e instanceof ReplaceEdit));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean escapeTripleQuotes(int pos, int max, char quote, char[] source, TextEdit textEdit) {
+        if (pos + 2 < max && source[pos] == quote && source[pos - 1] != '\\') {
+            if (source[pos + 1] == quote) {
+                if (source[pos + 2] == quote) {
+                    // """ -- typical case; escape all three quotes
+                    textEdit.addChild(new ReplaceEdit(pos, 3, String.valueOf(new char[] {'\\', quote, '\\', quote, '\\', quote})));
+                    return true;
+                } else if (pos + 3 < max && source[pos + 2] == '\\' && source[pos + 3] == quote) {
+                    // ""\"
+                    return true;
+                }
+            } else if (pos + 3 < max && source[pos + 1] == '\\' && source[pos + 2] == quote) {
+                if (source[pos + 3] == quote) {
+                    // "\""
+                    return true;
+                } else if (pos + 4 < max && source[pos + 3] == '\\' && source[pos + 4] == quote) {
+                    // "\"\"
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private List<ConstantExpression> getStrings(Expression expr) {
         if (isGString(expr)) {

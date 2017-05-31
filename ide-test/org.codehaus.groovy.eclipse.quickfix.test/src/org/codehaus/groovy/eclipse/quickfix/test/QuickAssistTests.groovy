@@ -337,13 +337,29 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testConvertToMultiLine5() {
         assertConversion(
+            '\'"\' + i + \'"\'', // '"' + i + '"'
+            '"""\\"${i}\\""""', // """\"${i}\""""
+            0, 13, new ConvertToMultiLineStringProposal())
+    }
+
+    @Test
+    void testConvertToMultiLine6() {
+        assertConversion(
+            '"\' \'\'\' \'"', // "' ''' '"
+            $/'''\' \'\'\' \''''/$,
+            0, 9, new ConvertToMultiLineStringProposal())
+    }
+
+    @Test
+    void testConvertToMultiLine7() {
+        assertConversion(
             '\'one \' + { -> 2 } + " $three"',
             '"""one ${ -> 2 } $three"""',
             0, 29, new ConvertToMultiLineStringProposal())
     }
 
     @Test
-    void testConvertToMultiLine6() {
+    void testConvertToMultiLine8() {
         String original = $/
             'A\n' +
             "B\n" +
