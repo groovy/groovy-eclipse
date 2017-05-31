@@ -3,7 +3,6 @@ Getting Started with Groovy-Eclipse Source Code
 
 1. [Communication](#communication)
 1. [Development Environment Setup](#development-environment-setup)
-1. [Get Source Code](#get-source-code)
 1. [Eclipse Project Descriptions](#eclipse-project-descriptions)
 1. [Build with Eclipse](#build-with-eclipse)
 1. [Test with Eclipse](#test-with-eclipse)
@@ -19,53 +18,48 @@ Additional questions and answers might be found by searching for [the groovy-ecl
 
 ## Development Environment Setup
 
-### Get the Java Development Kit
+Download and run the *Eclipse Installer* [here](https://wiki.eclipse.org/Eclipse_Installer), then switch the installer to *Advanced Mode*:
 
-Download JDK 7 from http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html, and install it. This is the minimum version Groovy-Eclipse supports.
+![Switch to Advanced Mode](images/oomph/switch_to_advanced_mode.png)
 
-Download JDK 8 from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html, and install it. This is the version required to run Eclipse Neon, and should be set as your default system Java run-time.
+Pick a suitable base package on the product page, *Eclipse IDE for Eclipse Committers* is a good choice:
 
-### Get the Base Eclipse Package
+![Advanced Mode](images/oomph/advanced_mode_committers_package.png)
 
-Groovy-Eclipse is intended to be developed using Eclipse. Download and install [the "Eclipse IDE for Eclipse Committers" package (4.6 Neon)](http://www.eclipse.org/downloads/packages/eclipse-ide-eclipse-committers/neonr) for your operating system.
+Select *Next*, then locate and check the Groovy-Eclipse project under Github Projects:
 
-### Install Groovy-Eclipse
+![Catalog](images/oomph/groovy_eclipse_in_catalog.png)
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `http://dist.springsource.org/snapshot/GRECLIPSE/e4.6/` into the *Work with:* field and press enter. Check the boxes next to "Groovy-Eclipse" and "Extra Groovy compilers", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+The installer will now ask you to make a few choices:
+* Where do you want to install the IDE?
+* Where do you want the workspace?
+* How do you access the Groovy-Eclipse git repository on github? **Unless you have write access to the Groovy-Eclipse repository on github, select 'HTTPS (Read-only, Anonymous)' from the dropdown.** 
+* Where do you want to clone the git repository?
+* Which target platform do you want? Use Neon or Oxygen. Older targets are supported, but I don't see a good reason why you'd want that.
 
-### Setup Groovy-Eclipse Compiler
+Select *Next* when you have set all values to your likings.
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.1.9* button, and let Eclipse restart.
+![Variables](images/oomph/variables.png)
 
-### Install Execution Environment Descriptions
+The next screen shows the required bootstrap steps for the installation of the IDE. Click *Finish* to start with the bootstrap process:
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, select `Neon - http://download.eclipse.org/releases/neon` from the *Work with:* field and enter "exeuction" in the filter. Check the boxes next to "API Tools Execution Environment Descriptions", and click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+![Bootstrap](images/oomph/bootstrap_tasks.png)
 
-![API Baseline](images/eclipse-api-tools-execution-environment.png)
+The installer will now download the required eclipse bundles and once done, start up the new IDE to continue with the installation. You can close the installer window once this happened:
 
-### Setup Execution Environment Descriptions
+![Bootstrap finished](images/oomph/bootstrap_finished.png)
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Java -> Installed JREs* and add JDK 7. Then go to *Java -> Installed JREs -> Execution Environments*, select JavaSE-1.7, and check the box next to JDK 7 in the list of compatible JREs.
+By the time you switch to the IDE, the installer is probably already cloning the Groovy-Eclipse repository. Click the small circling arrows on the status bar to see what's going on in the background:
 
-![API Baseline](images/eclipse-execution-environment.png)
+![Cloning](images/oomph/clone_project.png)
 
-### Disable Missing API Baseline Errors
+The installer then downloads the required target platform bundles, imports the Groovy-Eclipse projects into the workspace and organizes them into working sets. Eventually the setup is done and a build is triggered. After the build completes, your package explorer should look like this.
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Plug-in Development -> API Baselines*. Select either *Ignore* or *Warning* instead of *Error* in the *Missing API Baseline:* drop-down list.
+![Done](images/oomph/done.png)
 
-![API Baseline](images/eclipse-api-baseline.png)
+Close all org.codehaus.groovyXX projects except org.codehaus.groovy25. Only one groovyXXX project should be open at all times.
+Now try to run the GroovyJDTTests/AllGroovyTests suites.
 
-## Get Source Code
-
-The source code can be obtained by cloning the repository:
-
-```
-https://github.com/groovy/groovy-eclipse.git
-```
-
-Import the projects that you want to work with into your workspace.  If you do not know how to clone a repository or import projects from a repository, refer to the [EGit User Guide](https://wiki.eclipse.org/EGit/User_Guide).
-
-Typically not all projects need to be imported as some of them are optional parts of Groovy support for Eclipse.  See the [Build with Eclipse section](#build-with-eclipse) for a list of projects to start with.
 
 ## Eclipse Project Descriptions
 
