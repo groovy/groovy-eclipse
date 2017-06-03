@@ -198,7 +198,13 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectStaticInScript() {
+    void testCodeSelectStaticInScript1() {
+        String contents = 'static void doSomething() { }\ndoSomething()'
+        assertCodeSelect([contents], 'doSomething')
+    }
+
+    @Test
+    void testCodeSelectStaticInScript2() {
         String contents = 'doSomething()\nstatic void doSomething() { }'
         assertCodeSelect([contents], 'doSomething')
     }

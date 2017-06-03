@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
@@ -36,29 +36,26 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.CatchStatement;
-import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.GeneratedClosure;
+import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
-public class ASTNodeFinder extends ClassCodeVisitorSupport {
+public class ASTNodeFinder extends DepthFirstVisitor {
 
     protected ModuleNode module;
     protected ASTNode result;
@@ -73,12 +70,9 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      */
     public ASTNode doVisit(ModuleNode node) {
         module = node;
+        result = null;
         try {
-            visitPackage(node.getPackage());
-            visitImports(node);
-            for (ClassNode clazz : node.getClasses()) {
-                visitClass(clazz);
-            }
+            visitModule(node);
         } catch (VisitCompleteException done) {
         }
         return result;
@@ -86,44 +80,30 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitPackage(PackageNode node) {
-        if (node != null) {
-            visitAnnotations(node);
-            check(node);
-        }
+        super.visitPackage(node);
+        check(node);
     }
 
     @Override
-    public void visitImports(ModuleNode node) {
-        for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {
-            visitImport(importNode);
-        }
-    }
-
-    protected void visitImport(ImportNode node) {
+    public void visitImport(ImportNode node) {
         if (node.getType() != null) {
-            visitAnnotations(node);
             check(node.getType());
-            if (node.getFieldNameExpr() != null) {
-                check(node.getFieldNameExpr());
-            }
-            if (node.getAliasExpr() != null) {
-                check(node.getAliasExpr());
-            }
         }
-        check(node); // for package qualifier
+        super.visitImport(node);
+        check(node);
     }
 
     @Override
     public void visitClass(ClassNode node) {
-        visitAnnotations(node);
+        visitAnnotations(node.getAnnotations());
         if (node.getNameEnd() > 0) {
             checkNameRange(node); // also checks generics
             checkSupers(node); // extends and implements
         }
 
         if (node.getObjectInitializerStatements() != null) {
-            for (Statement statement : node.getObjectInitializerStatements()) {
-                statement.visit(this);
+            for (Statement stmt : node.getObjectInitializerStatements()) {
+                stmt.visit(this);
             }
         }
 
@@ -134,8 +114,8 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         try {
             MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
             if (clinit != null && clinit.getCode() instanceof BlockStatement) {
-                for (Statement statement : ((BlockStatement) clinit.getCode()).getStatements()) {
-                    statement.visit(this);
+                for (Statement stmt : ((BlockStatement) clinit.getCode()).getStatements()) {
+                    stmt.visit(this);
                 }
             }
         } catch (VisitCompleteException e) {
@@ -167,7 +147,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             // looks like ParentClass$_name_closure#, where
             // ParentClass is the name of the containing class.
             // name is a name for the closure, and # is a number
-            if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
+            if (!inner.isSynthetic() && !(inner instanceof GeneratedClosure)) {
                 visitClass(inner);
             }
         }
@@ -198,9 +178,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     }
 
     @Override
-    protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
+    public void visitMethod(MethodNode node) {
+        if (node == runMethod) return;
+
         if (node.getEnd() > 0) {
-            if (!isConstructor && node.getGenericsTypes() != null) {
+            if (!(node instanceof ConstructorNode) && isNotEmpty(node.getGenericsTypes())) {
                 checkGenerics(node.getGenericsTypes(), null);
             }
 
@@ -233,26 +215,14 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 checkNameRange(node);
             }
 
-            checkParameters(node.getParameters());
             checkTypes(node.getExceptions());
         }
-        // visit annotations, param annotations, and statements
-        super.visitConstructorOrMethod(node, isConstructor);
+
+        // visit annotations, parameters, and statements
+        super.visitMethod(node);
     }
 
-    @Override
-    protected void visitAnnotation(AnnotationNode node) {
-        check(node.getClassNode());
-        int start = node.getEnd() + 2;
-        for (Map.Entry<String, Expression> pair : node.getMembers().entrySet()) {
-            String name = pair.getKey(); Expression expr = pair.getValue();
-            check(node.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY),
-                start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
-            /*expr.visit(this);*/
-            start = expr.getEnd() + 1;
-        }
-        super.visitAnnotation(node);
-    }
+    //
 
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
@@ -263,12 +233,6 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             // synthetic ArrayExpression for referencing enum fields or collected annotations
         }
         super.visitArrayExpression(expression);
-    }
-
-    @Override
-    public void visitBinaryExpression(BinaryExpression expression) {
-        super.visitBinaryExpression(expression);
-        check(expression);
     }
 
     @Override
@@ -285,54 +249,30 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (expression.getEnd() > 0 && expression.getStart() == expression.getType().getStart()) {
             check(expression.getType());
         }
-        check(expression);
-    }
-
-    @Override
-    public void visitClosureExpression(ClosureExpression expression) {
-        checkParameters(expression.getParameters());
-        super.visitClosureExpression(expression);
-    }
-
-    @Override
-    public void visitFieldExpression(FieldExpression expression) {
-        check(expression);
-        super.visitFieldExpression(expression);
+        super.visitClassExpression(expression);
     }
 
     @Override
     public void visitVariableExpression(VariableExpression expression) {
         // check the annotations, generics, and type of variable declarations -- including @Lazy fields
         if (expression == expression.getAccessedVariable() || expression.getName().charAt(0) == '$') {
-            visitAnnotations(expression);
-
             // expression start and end bound the variable name; guestimate the type positions
             int until = expression.getStart() - 1, // assume at least one space on either side
                 start = Math.max(0, until - expression.getOriginType().getName().length() - 1);
 
             check(expression.getOriginType(), start, until);
         }
-        check(expression);
+        super.visitVariableExpression(expression);
     }
 
     @Override
     public void visitConstantExpression(ConstantExpression expression) {
-        if (expression == ConstantExpression.NULL) {
-            // the sloc of this global variable is inexplicably set to something
-            // so, we may erroneously find matches here
-            return;
-        }
-        if (expression.getText().length() == 0 && expression.getLength() != 0) {
-            // GRECLIPSE-1330 This is probably an empty expression in a gstring...can ignore.
-            return;
-        }
         if (expression instanceof AnnotationConstantExpression) {
             // example: @interface X { Y default @Y(...) }; expression is "@Y(...)"
             // example: @X(@Y(...)); expression is "@Y(...)"
             check(expression.getType());
             // values have been visited
         }
-        check(expression);
         super.visitConstantExpression(expression);
     }
 
@@ -365,17 +305,10 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 result = call;
                 throw e;
             }
-
-            // check the new keyword
-            check(null, start, until);
         }
 
-        // visit argument list
+        // visit argument list and anonymous body
         super.visitConstructorCallExpression(call);
-        // visit anonymous body
-        if (call.isUsingAnonymousInnerClass()) {
-            call.getType().visitContents(this);
-        }
     }
 
     @Override
@@ -383,14 +316,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (call.isUsingGenerics()) {
             checkGenerics(call.getGenericsTypes(), null);
         }
-
         super.visitMethodCallExpression(call);
-
-        // check for trait field re-written as call to helper method
-        Expression expr = GroovyUtils.getTraitFieldExpression(call);
-        if (expr != null) {
-            check(expr);
-        }
     }
 
     @Override
@@ -401,24 +327,42 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (call.getOwnerType() != call.getOwnerType().redirect()) {
             check(call.getOwnerType());
         }
-
         super.visitStaticMethodCallExpression(call);
-
-        // the method itself is not an expression, but only a string
-        // so this check call will test for open declaration on the method
-        check(call);
     }
 
     @Override
-    public void visitCatchStatement(CatchStatement statement) {
-        checkParameter(statement.getVariable());
-        super.visitCatchStatement(statement);
+    protected void visitAnnotation(AnnotationNode annotation) {
+        check(annotation.getClassNode());
+        int start = annotation.getEnd() + 2;
+        for (Map.Entry<String, Expression> pair : annotation.getMembers().entrySet()) {
+            String name = pair.getKey(); Expression expr = pair.getValue();
+            check(annotation.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY),
+                start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
+            /*expr.visit(this);*/
+            start = expr.getEnd() + 1;
+        }
+        super.visitAnnotation(annotation);
     }
 
     @Override
-    public void visitForLoop(ForStatement statement) {
-        checkParameter(statement.getVariable());
-        super.visitForLoop(statement);
+    protected void visitExpression(Expression expression) {
+        super.visitExpression(expression);
+        check(expression);
+    }
+
+    @Override
+    protected void visitParameter(Parameter parameter) {
+        super.visitParameter(parameter);
+        checkParameter(parameter);
+    }
+
+    @Override
+    protected void visitStatement(Statement statement) {
+        super.visitStatement(statement);
+        if (!(statement instanceof BlockStatement) &&
+                !(statement instanceof ExpressionStatement)) {
+            check(statement);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -503,7 +447,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
 
         ClassNode[] superTypes = node.getUnresolvedInterfaces();
-        if (superTypes != null && superTypes.length > 0) {
+        if (isNotEmpty(superTypes)) {
             for (int i = 0, n = superTypes.length; i < n; i += 1) {
                 // only check types that appear in the source code
                 String name = GroovyUtils.splitName(superTypes[i])[1];
@@ -531,6 +475,14 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
                     check(superTypes[i], offset + a, offset + b);
                 }
+            }
+        }
+    }
+
+    private void checkTypes(ClassNode[] nodes) {
+        if (isNotEmpty(nodes)) {
+            for (ClassNode node : nodes) {
+                check(node);
             }
         }
     }
@@ -574,26 +526,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     private void checkParameter(Parameter param) {
         if (param != null && param.getEnd() > 0) {
             checkNameRange(param);
-            if (param.getInitialExpression() != null) {
-                param.getInitialExpression().visit(this);
-            }
             check(param.getOriginType(), param.getStart(), param.getNameStart() - 1);
-        }
-    }
-
-    private void checkParameters(Parameter[] params) {
-        if (params != null && params.length > 0) {
-           for (Parameter p : params) {
-               checkParameter(p);
-           }
-        }
-    }
-
-    private void checkTypes(ClassNode[] nodes) {
-        if (nodes != null && nodes.length > 0) {
-            for (ClassNode node : nodes) {
-                check(node);
-            }
         }
     }
 

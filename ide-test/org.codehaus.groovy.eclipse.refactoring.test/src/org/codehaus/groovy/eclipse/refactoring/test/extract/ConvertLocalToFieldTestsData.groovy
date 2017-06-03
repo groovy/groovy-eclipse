@@ -372,7 +372,7 @@ class Test {
 }
 			""",
 			"innerFieldConflict",
-			false
+			true
 		),
 		testFakeField:
 		new TestCase(

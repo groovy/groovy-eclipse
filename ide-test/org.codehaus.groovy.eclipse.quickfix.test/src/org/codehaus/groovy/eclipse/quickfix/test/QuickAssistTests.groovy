@@ -279,16 +279,6 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToMultiLine0() {
-        assertProposalNotOffered('""', 0, 0, new ConvertToMultiLineStringProposal())
-        assertProposalNotOffered('""', 1, 0, new ConvertToMultiLineStringProposal())
-        assertProposalNotOffered('""', 2, 0, new ConvertToMultiLineStringProposal())
-        assertProposalNotOffered("''", 0, 0, new ConvertToMultiLineStringProposal())
-        assertProposalNotOffered("''", 1, 0, new ConvertToMultiLineStringProposal())
-        assertProposalNotOffered("''", 2, 0, new ConvertToMultiLineStringProposal())
-    }
-
-    @Test
     void testConvertToMultiLine1() {
         def assertConversion = { String pre, String post ->
             assertConversion("'" + pre + "'", "'''" + post + "'''", 0, 0, new ConvertToMultiLineStringProposal())
@@ -297,9 +287,10 @@ final class QuickAssistTests extends QuickFixTestSuite {
         assertConversion('.', '.')
         assertConversion('$', '$')
         assertConversion('\\"', '"')
+        assertConversion("\\'", "\\'") // leading and trailing single-quote is special case
+        assertConversion("\\' ", "\\' ")
+        assertConversion(" \\'", " \\'")
         assertConversion(" \\' ", " \' ")
-      //assertConversion("\\'", "\\'") // trailing single-quote is special case
-      //assertConversion(" ''' ", " \\'\\'\\' ") // triple-quote is special case
         assertConversion('\\t', '\t')
         assertConversion('\\n', '\n')
         assertConversion('\\r', '\\r')
@@ -307,7 +298,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
         assertConversion('\\b', '\\b')
         assertConversion('\\\\', '\\')
         assertConversion('\u00A7', '\u00A7')
-      //assertConversion('\\u00A7', '\\u00A7')
+      //assertConversion('\\u00A7', '\\u00A7') -- bug in AntlrParserPlugin/UnicodeEscapingReader; start of literal is wrong
     }
 
     @Test

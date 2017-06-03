@@ -16,11 +16,16 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -55,7 +60,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 Object[] result = findNodeForRegion(module, select);
                 ASTNode node = (ASTNode) result[0];
                 Region region = (Region) result[1];
-                if (node != null && !isKeywordSelection(node, contents, start, length)) {
+                if (node instanceof AnnotatedNode && !isKeyword(node, contents, start, length) && !isStringLiteral(node, contents, start, length)) {
                     // shortcut: check to see if we are looking for this type itself
                     if (isTypeDeclaration(node, module)) {
                         return returnThisNode(node, unit);
@@ -139,19 +144,39 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return new Object[] {finder.result, finder.sloc};
     }
 
-    protected static boolean isKeywordSelection(ASTNode node, char[] contents, int start, int length) {
+    protected static boolean isKeyword(ASTNode node, char[] contents, int start, int length) {
         boolean keyword = false;
+        // "null"
+        if (node instanceof ConstantExpression && ((ConstantExpression) node).isNullExpression()) {
+            keyword = true;
+        }
+        // "true" or "false"
+        else if (node instanceof ConstantExpression && ClassHelper.boolean_TYPE.equals(((ConstantExpression) node).getType())) {
+            keyword = true;
+        }
         // "this." something
-        if (node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) {
+        else if (node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) {
             keyword = true;
         }
         // "def " something
         else if (node == ClassHelper.DYNAMIC_TYPE && length == 3) {
             keyword = String.valueOf(contents, start, length).equals("def");
         }
+        // "new " something
+        else if (node instanceof ConstructorCallExpression && length == 3) {
+            keyword = String.valueOf(contents, start, length).equals("new");
+        }
+        // something " as " something
+        else if (node instanceof CastExpression && ((CastExpression) node).isCoerce() && length == 2) {
+            keyword = String.valueOf(contents, start, length).equals("as");
+        }
+        // something " in " something
+        else if (node instanceof MethodCallExpression && ((MethodCallExpression) node).getMethodAsString().equals("isCase") && length == 2) {
+            keyword = String.valueOf(contents, start, length).equals("in");
+        }
         // "import " or "import static " something
         else if (node instanceof ImportNode && length == 6 && (start == node.getStart() ||
-                ((ImportNode) node).isStatic() && start < node.getStart() + 14/*"import static ".length()*/)) {
+                ((ImportNode) node).isStatic() && start < node.getStart() + 14 /*"import static ".length()*/)) {
             keyword = true;
         }
         else if (node instanceof ImportNode && ((ImportNode) node).getAliasExpr() != null && length == 2) {
@@ -161,6 +186,13 @@ public class CodeSelectHelper implements ICodeSelectHelper {
             keyword = true;
         }
         return keyword;
+    }
+
+    protected static boolean isStringLiteral(ASTNode node, char[] contents, int start, int length) {
+        if (node instanceof ConstantExpression && ClassHelper.STRING_TYPE.equals(((ConstantExpression) node).getType())) {
+            return (start > node.getStart() && length < node.getLength());
+        }
+        return false;
     }
 
     protected static boolean isTypeDeclaration(ASTNode node, ModuleNode module) {

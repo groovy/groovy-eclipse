@@ -66,7 +66,7 @@ public class GroovyQuickAssistContext {
             finder = new ASTNodeFinder(region) {
                 public void visitGStringExpression(GStringExpression expr) {
                     // skip GString fragments, i.e. expr.getStrings()
-                    visitListOfExpressions(expr.getValues());
+                    visitExpressions(expr.getValues());
                     check(expr);
                 }
             };

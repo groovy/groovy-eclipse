@@ -102,25 +102,20 @@ public class OutlineExtender2 extends OutlineExtender1 {
 
         @Override
         public void visitMethod(MethodNode method) {
-            if (method.getLineNumber() <= 1) {
-                super.visitMethod(method);
-                return;
+            if (method.getLineNumber() > 1) {
+                TType parentType = methodStack.peek();
+                parentType.addTestMethod(method.getName(), method.getReturnType().getNameWithoutPackage());
             }
-
-            TType parentType = methodStack.peek();
-            parentType.addTestMethod(method.getName(), method.getReturnType().getNameWithoutPackage());
+            runMethod = null; // visit normally
             super.visitMethod(method);
         }
 
         @Override
         public void visitVariableExpression(VariableExpression variable) {
-            if (variable.getLineNumber() < 0) {
-                super.visitVariableExpression(variable);
-                return;
+            if (variable.getLineNumber() >= 0) {
+                TType parentType = methodStack.peek();
+                parentType.addTestField(variable.getName(), GroovyUtils.getTypeSignature(variable.getType(), false, false));
             }
-
-            TType parentType = methodStack.peek();
-            parentType.addTestField(variable.getName(), GroovyUtils.getTypeSignature(variable.getType(), false, false));
             super.visitVariableExpression(variable);
         }
     }
