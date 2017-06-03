@@ -18,8 +18,9 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
+import groovy.transform.NotYetImplemented
+
 import org.eclipse.jdt.core.SourceRange
-import org.junit.Ignore
 import org.junit.Test
 
 final class CodeSelectTypesTests extends BrowsingTestSuite {
@@ -667,15 +668,28 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
         assertCodeSelect(contents, new SourceRange(contents.lastIndexOf('T'), 1), 'T')
     }
 
+    @Test
+    void testSelectMethodCallGenericType1() {
+        String contents = 'import java.util.regex.*; class Foo { def <T> T m() { null } }\n' +
+            'new Foo().<Matcher>m()'
+        assertCodeSelect([contents], 'Matcher')
+    }
+
+    @Test
+    void testSelectMethodCallGenericType2() {
+        String contents = 'import java.util.regex.*; Collections.<Matcher>emptyList()'
+        assertCodeSelect([contents], 'Matcher')
+    }
+
     // javadocs
 
-    @Test @Ignore('not yet implemented')
+    @Test @NotYetImplemented
     void testSelectTypeInJavadocLink() {
         String contents = '/** {@link java.util.regex.Pattern} */ class X { }'
         assertCodeSelect([contents], 'Pattern')
     }
 
-    @Test @Ignore('not yet implemented')
+    @Test @NotYetImplemented
     void testSelectTypeInJavadocLink2() {
         String contents = 'import java.util.regex.Pattern; /** {@link Pattern} */ class X { }'
         assertCodeSelect([contents], 'Pattern')

@@ -1123,30 +1123,13 @@ assert primaryExprType != null && dependentExprType != null;
 
         switch (status) {
             case CONTINUE:
-                GenericsType[] gens = node.getGenericsTypes();
-                if (gens != null) {
-                    for (GenericsType gen : gens) {
-                        if (gen.getLowerBound() != null) {
-                            visitClassReference(gen.getLowerBound());
-                        }
-                        if (gen.getUpperBounds() != null) {
-                            for (ClassNode upper : gen.getUpperBounds()) {
-                                visitClassReference(upper);
-                            }
-                        }
-                        if (gen.getType() != null && gen.getType().getName().charAt(0) != '?') {
-                            visitClassReference(gen.getType());
-                        }
-                    }
-                }
-
+                visitGenericTypes(node.getGenericsTypes(), null);
                 visitClassReference(node.getReturnType());
                 if (node.getExceptions() != null) {
                     for (ClassNode e : node.getExceptions()) {
                         visitClassReference(e);
                     }
                 }
-
                 if (handleParameterList(node.getParameters())) {
                     super.visitConstructorOrMethod(node, isConstructor);
                 }
@@ -1247,19 +1230,25 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private void visitGenericTypes(ClassNode node) {
-        if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-            for (GenericsType gen : node.getGenericsTypes()) {
-                if (gen.getType() != null && gen.getName().charAt(0) != '?') {
-                    visitClassReference(gen.getType());
-                }
-                if (gen.getLowerBound() != null) {
-                    visitClassReference(gen.getLowerBound());
-                } else if (gen.getUpperBounds() != null) {
-                    for (ClassNode upper : gen.getUpperBounds()) {
-                        // handle enums where the upper bound is the same as the type
-                        if (!upper.getName().equals(node.getName())) {
-                            visitClassReference(upper);
-                        }
+        if (node.isUsingGenerics()) {
+            visitGenericTypes(node.getGenericsTypes(), node.getName());
+        }
+    }
+
+    private void visitGenericTypes(GenericsType[] generics, String typeName) {
+        if (generics == null) return;
+        for (GenericsType gt : generics) {
+            if (gt.getType() != null && gt.getName().charAt(0) != '?') {
+                visitClassReference(gt.getType());
+            }
+            if (gt.getLowerBound() != null) {
+                visitClassReference(gt.getLowerBound());
+            }
+            if (gt.getUpperBounds() != null) {
+                for (ClassNode upper : gt.getUpperBounds()) {
+                    // handle enums where the upper bound is the same as the type
+                    if (!upper.getName().equals(typeName)) {
+                        visitClassReference(upper);
                     }
                 }
             }
@@ -1425,6 +1414,10 @@ assert primaryExprType != null && dependentExprType != null;
             // must find the component type of the object expression type
             ClassNode objType = primaryTypeStack.removeLast();
             primaryTypeStack.add(VariableScope.extractElementType(objType));
+        }
+
+        if (node.isUsingGenerics()) {
+            visitGenericTypes(node.getGenericsTypes(), null);
         }
 
         node.getMethod().visit(this);
