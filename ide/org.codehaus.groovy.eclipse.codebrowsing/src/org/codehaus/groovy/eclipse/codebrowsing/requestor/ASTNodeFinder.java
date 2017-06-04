@@ -238,7 +238,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     public void visitCastExpression(CastExpression expression) {
         if (expression.getEnd() > 0) {
-            check(expression.getType());
+            check(expression.getType(), expression.getNameStart(), expression.getNameEnd());
         }
         super.visitCastExpression(expression);
     }

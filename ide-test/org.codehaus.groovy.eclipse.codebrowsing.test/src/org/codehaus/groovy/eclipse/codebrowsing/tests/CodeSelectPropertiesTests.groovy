@@ -229,4 +229,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
         assertCodeSelect([contents], 'isXxx', 'xxx')
     }
+
+    // TODO: map properties, unknown properties
 }

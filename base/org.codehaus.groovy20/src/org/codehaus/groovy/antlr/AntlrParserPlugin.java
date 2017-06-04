@@ -2769,24 +2769,30 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST rightNode = leftNode.getNextSibling();
         ClassNode type = makeTypeWithArguments(rightNode);
 
-        // GRECLIPSE: start
-        // GRECLIPSE-768 when as expression is in nested
-        // loop, ensure that the sloc is the start of the
-        // expression and the end of the type
-
-        /* old {
-        return CastExpression.asExpression(type, leftExpression);
-        } new */
-        CastExpression asExpr = CastExpression.asExpression(type, leftExpression);
-        asExpr.setStart(leftExpression.getStart());
-        asExpr.setLineNumber(leftExpression.getLineNumber());
-        asExpr.setColumnNumber(leftExpression.getColumnNumber());
-        asExpr.setEnd(type.getEnd());
-        asExpr.setLastLineNumber(type.getLastLineNumber());
-        asExpr.setLastColumnNumber(type.getLastColumnNumber());
-        // FIXASC (end)
-        return asExpr;
-
+        // GRECLIPSE edit -- set the sloc from the start of the target and the end of the type
+        //return CastExpression.asExpression(type, leftExpression);
+        CastExpression asExpression = CastExpression.asExpression(type, leftExpression);
+        asExpression.setStart(leftExpression.getStart());
+        asExpression.setLineNumber(leftExpression.getLineNumber());
+        asExpression.setColumnNumber(leftExpression.getColumnNumber());
+        int typeStart;
+        if (type.getEnd() > 0) {
+            typeStart = type.getStart();
+            asExpression.setEnd(type.getEnd());
+            asExpression.setLastLineNumber(type.getLastLineNumber());
+            asExpression.setLastColumnNumber(type.getLastColumnNumber());
+        } else {
+            SourceInfo typeNode = (SourceInfo) rightNode.getFirstChild();
+            typeStart = locations.findOffset(typeNode.getLine(), typeNode.getColumn());
+            asExpression.setEnd(locations.findOffset(typeNode.getLineLast(), typeNode.getColumnLast()));
+            asExpression.setLastLineNumber(typeNode.getLineLast());
+            asExpression.setLastColumnNumber(typeNode.getColumnLast());
+        }
+        // set the range of the type by itself
+        asExpression.setNameStart(typeStart);
+        asExpression.setNameEnd(asExpression.getEnd());
+        return asExpression;
+        // GRECLIPSE end
     }
 
     protected Expression castExpression(AST castNode) {
@@ -2799,6 +2805,20 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         CastExpression castExpression = new CastExpression(type, expression);
         configureAST(castExpression, castNode);
+        // GRECLIPSE add -- set the sloc to the end of the target
+        castExpression.setEnd(expression.getEnd());
+        castExpression.setLastLineNumber(expression.getLastLineNumber());
+        castExpression.setLastColumnNumber(expression.getLastColumnNumber());
+        // set the range of the type by itself
+        if (type.getEnd() > 0) {
+            castExpression.setNameStart(type.getStart());
+            castExpression.setNameEnd(type.getEnd());
+        } else {
+            SourceInfo typeNode = (SourceInfo) node.getFirstChild();
+            castExpression.setNameStart(locations.findOffset(typeNode.getLine(), typeNode.getColumn()));
+            castExpression.setNameEnd(locations.findOffset(typeNode.getLineLast(), typeNode.getColumnLast()));
+        }
+        // GRECLIPSE end
         return castExpression;
     }
 

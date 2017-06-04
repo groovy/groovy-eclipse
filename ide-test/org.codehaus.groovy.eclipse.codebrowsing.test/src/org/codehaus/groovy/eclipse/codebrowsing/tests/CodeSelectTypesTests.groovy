@@ -471,6 +471,30 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'H')
     }
 
+    @Test
+    void testSelectCoercionType1() {
+        String contents = 'def i = 1 as int'
+        assertCodeSelect([contents], 'int', null)
+    }
+
+    @Test
+    void testSelectCoercionType2() {
+        String contents = 'def c = [] as Collection'
+        assertCodeSelect([contents], 'Collection')
+    }
+
+    @Test
+    void testSelectTypecastType1() {
+        String contents = 'def i = (int) 1'
+        assertCodeSelect([contents], 'int', null)
+    }
+
+    @Test
+    void testSelectTypecastType2() {
+        String contents = 'def c = (Collection) []'
+        assertCodeSelect([contents], 'Collection')
+    }
+
     @Test // GRECLIPSE-1219
     void testSelectAnnotationOnImport() {
         String contents = '@Deprecated import java.util.List; class Type { }'

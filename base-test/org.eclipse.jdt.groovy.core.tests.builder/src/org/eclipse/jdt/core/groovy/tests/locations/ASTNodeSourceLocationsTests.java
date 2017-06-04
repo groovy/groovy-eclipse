@@ -353,13 +353,21 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
     @Test
     public void testCastExpression1() throws Exception {
         checkBinaryExprSLocs(
+            "def x = ( Set ) foo ",
+            new CastExpressionSLocTester(),
+            "( Set ) foo");
+    }
+
+    @Test
+    public void testCastExpression2() throws Exception {
+        checkBinaryExprSLocs(
             "foo as Set",
             new CastExpressionSLocTester(),
             "foo as Set");
     }
 
     @Test
-    public void testCastExpression2() throws Exception {
+    public void testCastExpression3() throws Exception {
         checkBinaryExprSLocs(
             "def x = foo as Set",
             new CastExpressionSLocTester(),
@@ -367,7 +375,7 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testCastExpression3() throws Exception {
+    public void testCastExpression4() throws Exception {
         checkBinaryExprSLocs(
             "def x = foo as Set ",
             new CastExpressionSLocTester(),

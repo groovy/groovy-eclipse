@@ -17,47 +17,44 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import org.junit.Test
 
-final class CodeSelectLocalTests extends BrowsingTestSuite {
+final class CodeSelectVariablesTests extends BrowsingTestSuite {
 
     @Test
-    void testLocalVar1() {
+    void testSelectLocalVar1() {
         assertCodeSelect(['def xxx(xxx) { xxx }'], 'xxx')
     }
 
     @Test
-    void testLocalVar2() {
+    void testSelectLocalVar2() {
         assertCodeSelect(['def xxx(xxx) { "${xxx}" }'], 'xxx')
     }
 
     @Test
-    void testLocalVar3() {
+    void testSelectLocalVar3() {
         assertCodeSelect(['def xxx = { xxx -> "${xxx}" }'], 'xxx')
     }
 
     @Test
-    void testLocalVar4() {
+    void testSelectLocalVar4() {
         String contents = 'def (xxx, yyy) = []\nxxx\nyyy'
         assertCodeSelect([contents], 'xxx')
         assertCodeSelect([contents], 'yyy')
     }
 
-    // GRECLIPSE-1330
-    @Test
-    void testLocalVarInGString1() {
+    @Test // GRECLIPSE-1330
+    void testSelectLocalVarInGString1() {
         String contents = 'def i\n"$i"'
         assertCodeSelect([contents], 'i')
     }
 
-    // GRECLIPSE-1330
-    @Test
-    void testLocalVarInGString2() {
+    @Test // GRECLIPSE-1330
+    void testSelectLocalVarInGString2() {
         String contents = 'def i\n"$i"'
         assertCodeSelect([contents], '$i', 'i')
     }
 
-    // GRECLIPSE-1330
-    @Test
-    void testLocalVarInGString3() {
+    @Test // GRECLIPSE-1330
+    void testSelectLocalVarInGString3() {
         String contents = 'def i\n"${i}"'
         assertCodeSelect([contents], 'i')
     }

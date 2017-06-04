@@ -173,18 +173,6 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectArrowInClosure1() {
-        String contents = 'def closure = { -> }'
-        assertCodeSelect([contents], '->', null)
-    }
-
-    @Test
-    void testSelectArrowInClosure2() {
-        String contents = 'def closure = { -> return null }'
-        assertCodeSelect([contents], '->', null)
-    }
-
-    @Test
     void testSelectKeywordAssert1() {
         String contents = 'assert it != null'
         assertCodeSelect([contents], 'assert', null)
@@ -486,5 +474,5 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'finally', null)
     }
 
-    // TODO: enum, trait, interface, @interface, extends, implements, throws, throw, instanceof, synchronized, modifiers, break/continue in for/while, statement labels
+    // TODO: enum, trait, interface, @interface, extends, implements, throws, throw, instanceof, synchronized, modifiers, break/continue in for/while
 }
