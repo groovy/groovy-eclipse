@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.core.impl;
-
-import static org.codehaus.groovy.eclipse.core.util.ListUtil.newList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,11 +38,10 @@ public class StringSourceBuffer implements ISourceBuffer {
     }
 
     private List<Integer> createLineLookup(char[] sourceCode) {
+        List<Integer> offsets = new ArrayList<Integer>();
         if (sourceCode.length == 0) {
-            return new ArrayList<Integer>();
+            return offsets;
         }
-
-        List< Integer > offsets = newList();
         offsets.add(new Integer(0));
 
         int ch;

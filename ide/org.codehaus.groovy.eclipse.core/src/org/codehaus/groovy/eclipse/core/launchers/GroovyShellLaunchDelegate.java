@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ import static org.eclipse.core.runtime.FileLocator.resolve;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
-import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -34,28 +34,24 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.launching.JavaLaunchDelegate;
 import org.osgi.framework.Bundle;
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 31, 2009
- *
- */
 public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
 
     public static final String JLINE_JAR = "jline-*.jar";
 
-
     @Override
     public String[] getClasspath(ILaunchConfiguration configuration) throws CoreException {
-
         String[] classpath = super.getClasspath(configuration);
-        List<String> newClasspath = ListUtil.array(classpath);
+        List<String> newClasspath = Arrays.asList(classpath);
         try {
-            newClasspath.add(getPathTo("jline-*.jar"));
+            newClasspath.addAll(getExtraClasspathElements());
         } catch (IOException e) {
             GroovyCore.logException("Could not fine path to jline jars", e);
         }
-
         return newClasspath.toArray(new String[0]);
+    }
+
+    public static List<String> getExtraClasspathElements() throws CoreException, IOException {
+        return Collections.singletonList(getPathTo(JLINE_JAR));
     }
 
     private static String getPathTo(String jarName) throws CoreException, IOException {
@@ -67,9 +63,5 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
         } else {
             throw new CoreException(new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
         }
-    }
-
-    public static List<String> getExtraClasspathElements() throws CoreException, IOException {
-        return Collections.singletonList(GroovyShellLaunchDelegate.getPathTo(GroovyShellLaunchDelegate.JLINE_JAR));
     }
 }

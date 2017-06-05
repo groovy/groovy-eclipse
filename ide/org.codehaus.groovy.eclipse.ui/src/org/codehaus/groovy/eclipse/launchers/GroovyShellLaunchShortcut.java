@@ -15,12 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.launchers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.launchers.GroovyShellLaunchDelegate;
-import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -113,7 +114,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className);
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "-Djline.terminal=jline.UnsupportedTerminal");
-            List<String> classpath = ListUtil.newList(JavaRuntime.computeDefaultRuntimeClassPath(project));
+            List<String> classpath = new ArrayList<String>(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
             try {
                 classpath.addAll(0, GroovyShellLaunchDelegate.getExtraClasspathElements());
             } catch (Exception e) {

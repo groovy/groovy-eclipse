@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import groovyjarjarantlr.Token;
-
+import java.util.Arrays;
 import java.util.List;
 
+import groovyjarjarantlr.Token;
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
@@ -72,7 +71,7 @@ public class SemicolonRemover extends GroovyFormatter {
     }
 
     private boolean isDelimiter(Token token) {
-        List<Integer> delimiterTypes = ListUtil.list(GroovyTokenTypeBridge.RCURLY, GroovyTokenTypeBridge.NLS, GroovyTokenTypeBridge.EOF);
+        List<Integer> delimiterTypes = Arrays.asList(GroovyTokenTypeBridge.RCURLY, GroovyTokenTypeBridge.NLS, GroovyTokenTypeBridge.EOF);
         return token != null && delimiterTypes.contains(token.getType());
     }
 

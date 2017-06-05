@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.core.util
 
-import org.codehaus.groovy.eclipse.core.util.ArrayUtils
+import org.eclipse.jdt.groovy.core.util.ArrayUtils
 import org.junit.Test
 
 final class ArrayUtilsTests {

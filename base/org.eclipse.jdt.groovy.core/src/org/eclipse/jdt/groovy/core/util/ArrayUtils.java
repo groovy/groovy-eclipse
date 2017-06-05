@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.core.util;
+package org.eclipse.jdt.groovy.core.util;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -23,12 +23,12 @@ import org.eclipse.core.runtime.Assert;
 
 /**
  * Use this class so we don't have a dependency on apache commons-lang.
- * No code was copied from that jar
- *
- * @author Andrew Eisenberg
- * @created Sep 20, 2012
+ * <p>
+ * NODE: No code was copied from that library.
  */
 public class ArrayUtils {
+
+    private ArrayUtils() {}
 
     public static Object[] add(Object[] arr, Object val) {
         return add(arr, arr.length, val);

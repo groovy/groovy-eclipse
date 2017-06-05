@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -60,10 +59,6 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 
-/**
- * @author Andrew Eisenberg
- * @created Oct 7, 2009
- */
 public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     /**
      * Used for dialog presentation if the user needs to choose from
@@ -501,12 +496,10 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     private ILaunchConfiguration findConfiguration(String projectName, String mainTypeName) throws CoreException {
         ILaunchConfiguration returnValue = null;
         ILaunchConfigurationType configType = getGroovyLaunchConfigType();
-        List<ILaunchConfiguration> candidateConfigs = ListUtil.newEmptyList();
-
+        List<ILaunchConfiguration> candidateConfigs = new ArrayList<ILaunchConfiguration>();
         ILaunchConfiguration[] configs = getLaunchManager().getLaunchConfigurations(configType);
         for (int i = 0; i < configs.length; i++) {
             ILaunchConfiguration config = configs[i];
-
             if (config.getAttribute(GROOVY_TYPE_TO_RUN, "").equals(mainTypeName) &&
                     config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "").equals(projectName)) {
                 candidateConfigs.add(config);

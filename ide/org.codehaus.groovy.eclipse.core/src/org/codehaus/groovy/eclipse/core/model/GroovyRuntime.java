@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.core.model;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
-import org.codehaus.groovy.eclipse.core.util.ObjectUtils;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -32,6 +30,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 
 /**
@@ -111,7 +110,7 @@ public class GroovyRuntime {
         for (int i = 0; i < entries.length; i++) {
             final IClasspathEntry entry = entries[i];
             if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                if (ObjectUtils.equals(entry.getPath(), GroovyClasspathContainer.CONTAINER_ID)
+                if (GroovyClasspathContainer.CONTAINER_ID.equals(entry.getPath())
                         || GroovyClasspathContainer.CONTAINER_ID.isPrefixOf(entry.getPath())) {
                     return entry;
                 }
@@ -127,7 +126,7 @@ public class GroovyRuntime {
         for (int i = 0; i < entries.length; i++) {
             final IClasspathEntry entry = entries[i];
             if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                if (ObjectUtils.equals(entry.getPath(), libraryPath) || libraryPath.isPrefixOf(entry.getPath())) {
+                if (libraryPath.equals(entry.getPath()) || libraryPath.isPrefixOf(entry.getPath())) {
                     return true;
                 }
             }

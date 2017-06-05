@@ -27,11 +27,10 @@ import org.eclipse.jdt.groovy.core.Activator;
 
 /**
  * Common functionality for accessing private fields and methods.
- *
- * @author Andrew Eisenberg
- * @created May 8, 2009
  */
 public class ReflectionUtils {
+
+    private ReflectionUtils() {}
 
     public static <T> Constructor<T> getConstructor(Class<T> instanceType, Class<?>... parameterTypes) {
         try {

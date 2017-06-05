@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.core.model;
 
-import static org.codehaus.groovy.eclipse.core.util.ListUtil.newList;
-
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -235,7 +234,7 @@ public class GroovyProjectFacade {
 
 
     public List<IType> findAllRunnableTypes() throws JavaModelException {
-        final List<IType> results = newList();
+        final List<IType> results = new ArrayList<IType>();
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
         for (IPackageFragmentRoot root : roots) {
             if (!root.isReadOnly()) {
@@ -318,7 +317,7 @@ public class GroovyProjectFacade {
     }
 
     public List<IType> findAllScripts() throws JavaModelException {
-        final List<IType> results = newList();
+        final List<IType> results = new ArrayList<IType>();
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
         for (IPackageFragmentRoot root : roots) {
             if (!root.isReadOnly()) {

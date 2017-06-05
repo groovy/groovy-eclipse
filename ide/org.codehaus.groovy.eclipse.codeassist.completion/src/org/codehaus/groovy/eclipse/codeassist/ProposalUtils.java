@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist;
 
-import static org.codehaus.groovy.eclipse.core.util.ListUtil.newEmptyList;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -259,7 +258,7 @@ public class ProposalUtils {
      * e.g. mA = ['m','A']
      */
     private static String[] toCamelCaseParts(String str) {
-        List<String> parts = newEmptyList();
+        List<String> parts = new ArrayList<String>();
         for (int i = str.length() - 1; i >= 0; --i) {
             if (Character.isUpperCase(str.charAt(i))) {
                 parts.add(str.substring(i));
