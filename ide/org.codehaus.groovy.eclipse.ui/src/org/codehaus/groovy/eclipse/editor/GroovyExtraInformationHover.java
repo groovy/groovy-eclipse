@@ -27,7 +27,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
-import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
@@ -126,11 +125,11 @@ public class GroovyExtraInformationHover extends JavadocHover {
      * Possibly compute the hover. Might return null.
      */
     private Object computeHover(IRegion hoverRegion, IJavaElement[] elements) {
-        Object hover;
-        hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", new Class[] {IJavaElement[].class, ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class }, this, new Object[] {elements, getEditorInputJavaElement(), hoverRegion, null});
-        if (hover instanceof JavadocBrowserInformationControlInput && elements[0] instanceof IGroovyResolvedElement) {
-            JavadocBrowserInformationControlInput input = (JavadocBrowserInformationControlInput) hover;
-            hover = new JavadocBrowserInformationControlInput((JavadocBrowserInformationControlInput) input.getPrevious(), input.getElement(), wrapHTML(input, (IGroovyResolvedElement) elements[0]), input.getLeadingImageWidth());
+        JavadocBrowserInformationControlInput hover = getHoverInfo(elements, getEditorInputJavaElement(), hoverRegion, null);
+        if (hover != null && elements[0] instanceof IGroovyResolvedElement) {
+            hover = new JavadocBrowserInformationControlInput(
+                (JavadocBrowserInformationControlInput) hover.getPrevious(), hover.getElement(),
+                wrapHTML(hover, (IGroovyResolvedElement) elements[0]), hover.getLeadingImageWidth());
         }
         return hover;
     }
@@ -144,16 +143,14 @@ public class GroovyExtraInformationHover extends JavadocHover {
             preamble = "";
         }
         if (elt.getExtraDoc() != null) {
-
-            String wrapped = preamble + extraDocAsHtml(elt) + "\n<br/><hr/><br/>\n" + input.getHtml();
-            return wrapped;
+            return preamble + extraDocAsHtml(elt) + "\n<br/><hr/><br/>\n" + input.getHtml();
         } else {
             return preamble + input.getHtml();
         }
     }
 
-    protected String extraDocAsHtml(IGroovyResolvedElement elt) {
-        String extraDoc = "/**" + elt.getExtraDoc() + "*/";
+    protected String extraDocAsHtml(IGroovyResolvedElement elem) {
+        String extraDoc = elem.getExtraDoc();
         if (!extraDoc.startsWith("/**")) {
             extraDoc = "/**" + extraDoc;
         }
@@ -161,7 +158,13 @@ public class GroovyExtraInformationHover extends JavadocHover {
             extraDoc = extraDoc + "*/";
         }
 
-        return (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, String.class}, null, new Object[] {elt, extraDoc});
+        String html;
+        try {
+            html = (String) ReflectionUtils.throwableExecutePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, IJavaElement.class, String.class}, null, new Object[] {elem, elem, extraDoc});
+        } catch (Exception e) {
+            html = (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, String.class}, null, new Object[] {elem, extraDoc});
+        }
+        return html;
     }
 
     private String createLabel(ASTNode inferredElement) {
@@ -201,7 +204,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         sb.append("(");
         Parameter[] params = node.getParameters();
         if (params != null) {
-            for (int i = 0; i < params.length; i++) {
+            for (int i = 0, n = params.length; i < n; i += 1) {
                 sb.append(createClassLabel(params[i].getType()));
                 sb.append(" " + params[i].getName());
                 if (i < params.length - 1) {
@@ -221,12 +224,12 @@ public class GroovyExtraInformationHover extends JavadocHover {
             return "def";
         }
         sb.append(node.getNameWithoutPackage());
-        GenericsType[] genericsTypes = node.getGenericsTypes();
-        if (genericsTypes != null && genericsTypes.length > 0) {
+        GenericsType[] generics = node.getGenericsTypes();
+        if (generics != null && generics.length > 0) {
             sb.append(" <");
-            for (int i = 0; i < genericsTypes.length; i++) {
-                sb.append(genericsTypes[i].getName());
-                if (i < genericsTypes.length - 1) {
+            for (int i = 0, n = generics.length; i < n; i += 1) {
+                sb.append(generics[i].getName());
+                if (i < generics.length - 1) {
                     sb.append(", ");
                 }
             }
