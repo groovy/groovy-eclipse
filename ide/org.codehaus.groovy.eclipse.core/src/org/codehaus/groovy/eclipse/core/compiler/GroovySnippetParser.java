@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
-import java.util.Hashtable;
+import static org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies.proceedWithAllProblems;
+
 import java.util.Iterator;
 import java.util.Map;
 
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.antlr.AntlrParserPlugin;
 import org.codehaus.groovy.antlr.GroovySourceAST;
+import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -33,20 +35,83 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 11, 2009
- *
- * This class is used to parse a snippet of groovy source code into a module node
- * The module node is not resolved
+ * This class is used to parse a snippet of groovy code into a module node.
+ * The module node is not resolved.
  */
 public class GroovySnippetParser {
+
+    private LocationSupport locations;
+
+    public LocationSupport getLocations() {
+        return locations;
+    }
+
+    private CategorizedProblem[] problems;
+
+    public CategorizedProblem[] getProblems() {
+        return problems;
+    }
+
+    /**
+     * Compiles source code into a ModuleNode.  Source code
+     * must be a complete file including package declaration
+     * and import statements.
+     *
+     * @param source the groovy source code to compile
+     */
+    public ModuleNode parse(CharSequence source) {
+        ModuleNode node = dietParse(source).getModuleNode();
+        if (node == null) {
+            return null;
+        }
+
+        // remove any remaining synthetic methods
+        for (ClassNode classNode : node.getClasses()) {
+            for (Iterator<MethodNode> it = classNode.getMethods().iterator(); it.hasNext();) {
+                MethodNode method = it.next();
+                if ((method.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0) {
+                    it.remove();
+                }
+            }
+        }
+
+        return node;
+    }
+
+    public GroovySourceAST parseForCST(CharSequence source) {
+        SourceUnit sourceUnit = dietParse(source).getSourceUnit();
+        ParserPlugin parserPlugin = (ParserPlugin) ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
+        if (parserPlugin instanceof AntlrParserPlugin) {
+            // TODO: This field is nulled out at the end of AntlrParserPlugin.buildAST
+            return (GroovySourceAST) ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "ast", parserPlugin);
+        }
+        return null;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private GroovyCompilationUnitDeclaration dietParse(CharSequence source) {
+        Map<String, String> options = JavaCore.getOptions();
+        options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+        CompilerOptions compilerOptions = new CompilerOptions(options);
+        ProblemReporter problemReporter = new ProblemReporter(proceedWithAllProblems(), compilerOptions, new DefaultProblemFactory());
+
+        GroovyParser parser = new GroovyParser(compilerOptions, problemReporter, false, true);
+        ICompilationUnit unit = new MockCompilationUnit(source.toString().toCharArray(), "Snippet.groovy".toCharArray());
+        CompilationResult compilationResult = new CompilationResult(unit, 0, 0, compilerOptions.maxProblemsPerUnit);
+
+        GroovyCompilationUnitDeclaration gcud = (GroovyCompilationUnitDeclaration) parser.dietParse(unit, compilationResult);
+        locations = (LocationSupport) ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "locations",
+            ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", gcud.getSourceUnit()));
+        problems = compilationResult.getProblems();
+        return gcud;
+    }
 
     private static class MockCompilationUnit implements ICompilationUnit {
 
@@ -62,6 +127,10 @@ public class GroovySnippetParser {
             return contents;
         }
 
+        public char[] getFileName() {
+            return fileName;
+        }
+
         public char[] getMainTypeName() {
             return new char[0];
         }
@@ -70,84 +139,8 @@ public class GroovySnippetParser {
             return new char[0][];
         }
 
-        public char[] getFileName() {
-            return fileName;
-        }
-
         public boolean ignoreOptionalProblems() {
             return false;
-        }
-
-    }
-
-    private CategorizedProblem[] problems;
-
-    /**
-     * Compiles source code into a ModuleNode.  Source code
-     * must be a complete file including package declaration
-     * and import statements.
-     *
-     * @param source the groovy source code to compile
-     */
-    public ModuleNode parse(String source) {
-        Map<String, String> table = JavaCore.getOptions();
-        table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        CompilerOptions options = new CompilerOptions(table);
-        ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
-                new DefaultProblemFactory());
-
-        GroovyParser parser = new GroovyParser(options, reporter, false, true);
-        ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
-        CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
-
-
-        GroovyCompilationUnitDeclaration decl =
-            (GroovyCompilationUnitDeclaration)
-            parser.dietParse(unit, compilationResult);
-        ModuleNode node = decl.getModuleNode();
-
-        if (node == null) {
-            return null;
-        }
-        // Remove any remaining synthetic methods
-        for (ClassNode classNode : (Iterable<ClassNode>) node.getClasses()) {
-            for (Iterator<MethodNode> methodIter = classNode.getMethods().iterator(); methodIter.hasNext();) {
-                MethodNode method = methodIter.next();
-                if ((method.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0) {
-                    methodIter.remove();
-                }
-            }
-        }
-
-        problems = compilationResult.getErrors();
-        return node;
-    }
-
-    public CategorizedProblem[] getProblems() {
-        return problems;
-    }
-
-    public GroovySourceAST parseForCST(String source) {
-        Hashtable<String, String> table = JavaCore.getOptions();
-        table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        CompilerOptions options = new CompilerOptions(table);
-        ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
-                new DefaultProblemFactory());
-
-        GroovyParser parser = new GroovyParser(null, reporter, false, true);
-        ICompilationUnit unit = new MockCompilationUnit(source.toCharArray(), "Hello.groovy".toCharArray());
-        CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
-
-
-        GroovyCompilationUnitDeclaration decl =
-            (GroovyCompilationUnitDeclaration)
-            parser.dietParse(unit, compilationResult);
-        SourceUnit sourceUnit = decl.getSourceUnit();
-        ParserPlugin parserPlugin = (ParserPlugin) ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
-        if (parserPlugin instanceof AntlrParserPlugin) {
-            return (GroovySourceAST) ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "ast", parserPlugin);
-        } else {
-            return null;
         }
     }
 }

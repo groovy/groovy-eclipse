@@ -190,6 +190,16 @@ final class TokenStreamTests {
     }
 
     @Test
+    void testBlockComment1() {
+        doTest('/* This is a block comment in a line */\n\'hello\'', -1, QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF)
+    }
+
+    @Test
+    void testBlockComment2() {
+        doTest('/*\nThis is a block comment\n*/\n\'hello\'', -1, QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF)
+    }
+
+    @Test
     void testLineComment1() {
         doTest('// This is a comment\n\'hello\'', -1, QUOTED_STRING, LINE_BREAK, LINE_COMMENT, EOF)
     }
@@ -205,13 +215,8 @@ final class TokenStreamTests {
     }
 
     @Test
-    void testBlockComment1() {
-        doTest('/* This is a block comment in a line */\n\'hello\'', -1, QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF)
-    }
-
-    @Test
-    void testBlockComment2() {
-        doTest('/*\nThis is a block comment\n*/\n\'hello\'', -1, QUOTED_STRING, LINE_BREAK, BLOCK_COMMENT, EOF)
+    void testFauxLineComment() {
+        doTest('"//";\nfrag', -1, IDENT, LINE_BREAK, SEMI, QUOTED_STRING, EOF)
     }
 
     @Test
@@ -234,43 +239,38 @@ final class TokenStreamTests {
         doTest('foo.&bar', -1, IDENT, METHOD_POINTER, IDENT, EOF)
     }
 
-    @Test(expected=TokenStreamException)
-    void testError1() throws Exception {
-        StringSourceBuffer sb = new StringSourceBuffer('0..1]')
-        TokenStream stream = new TokenStream(sb, '0..1]'.length() - 1)
-        stream.next()
-    }
-
-    @Test
-    void testOffsets1() {
-        // Don't mess with the dot's, the auto formatter eats spaces.
-        // ............0.........1.........2.........3
-        // ............0123456789012345678901234567890123456789
-        doTestOffsets('10.times { println it }', [9, 23, 3, 8, 2, 3, 0, 2] as int[])
-    }
-
-    @Test
-    void testOffsets2() {
-        // Don't mess with the dot's, the auto formatter eats spaces.
-        // ............0.........1.........2.........3
-        // ............0123456789012345678901234567890123456789
-        doTestOffsets('list[thing[i]].name', [15, 19, 14, 15, 4, 14, 0, 4] as int[])
-    }
-
     @Test
     void testPeek() {
-        StringSourceBuffer sb = new StringSourceBuffer('hello')
-        TokenStream stream = new TokenStream(sb, 'hello'.length() - 1)
+        TokenStream stream = new TokenStream(new StringSourceBuffer('hello'), 4)
         assert stream.peek().isType(IDENT)
     }
 
     @Test
     void testLast() {
-        StringSourceBuffer sb = new StringSourceBuffer('hello.')
-        TokenStream stream = new TokenStream(sb, 'hello.'.length() - 1)
+        TokenStream stream = new TokenStream(new StringSourceBuffer('hello.'), 5)
         Token next = stream.next()
         assert stream.last() == next
         assert stream.peek().isType(IDENT)
         assert stream.last() == next
+    }
+
+    @Test(expected=TokenStreamException)
+    void testError1() throws Exception {
+        TokenStream stream = new TokenStream(new StringSourceBuffer('0..1]'), 4)
+        stream.next()
+    }
+
+    @Test
+    void testOffsets1() {
+        //.............0.........1.........2..
+        //.............01234567890123456789012
+        doTestOffsets('10.times { println it }', [9, 23, 3, 8, 2, 3, 0, 2] as int[])
+    }
+
+    @Test
+    void testOffsets2() {
+        //.............0.........1.........2.........3
+        //.............0123456789012345678901234567890123456789
+        doTestOffsets('list[thing[i]].name', [15, 19, 14, 15, 4, 14, 0, 4] as int[])
     }
 }

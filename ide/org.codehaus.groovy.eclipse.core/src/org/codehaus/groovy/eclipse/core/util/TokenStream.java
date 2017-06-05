@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,35 @@
  */
 package org.codehaus.groovy.eclipse.core.util;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codehaus.groovy.ast.Comment;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
+import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.codehaus.groovy.eclipse.core.impl.ReverseSourceBuffer;
 
 /**
  * Token stream used by the ExpressionFinder parser.
- *
- * @author empovazan
  */
 public class TokenStream {
+
     private static final Token TOKEN_EOF = new Token(Token.Type.EOF, -1, -1, null);
 
-    private ISourceBuffer buffer;
+    private static final Pattern MULTI_LINE_COMMENT = Pattern.compile("(?s)/\\*.*\\*/");
+    private static final Pattern SINGLE_LINE_COMMENT = Pattern.compile(".*//");
+    private static final Pattern SINGLE_QUOTE1 = Pattern.compile("^\'.*\'");
+    private static final Pattern SINGLE_QUOTE2 = Pattern.compile("^\".*\"");
+    private static final Pattern TRIPLE_QUOTE1 = Pattern.compile("^\'\'\'.*\'\'\'");
+    private static final Pattern TRIPLE_QUOTE2 = Pattern.compile("^\"\"\".*\"\"\"");
 
+    private final ISourceBuffer buffer;
+    private Token last, next;
     private int offset;
-
     private char ch;
-
-    private Token last;
-
-    private Token next = null;
 
     public TokenStream(ISourceBuffer buffer, int offset) {
         this.buffer = buffer;
@@ -45,9 +51,12 @@ public class TokenStream {
         this.ch = buffer.charAt(offset);
     }
 
+    public char getCurrentChar() {
+        return ch;
+    }
+
     /**
-     * @return The next token in the stream.
-     * @throws TokenStreamException
+     * Returns the next token in the stream without changing the offset.
      */
     public Token peek() throws TokenStreamException {
         int offset = this.offset;
@@ -65,12 +74,15 @@ public class TokenStream {
         return ret;
     }
 
-    public char getCurrentChar() {
-        return ch;
+    /**
+     * Returns the last token retrieved using {@link #peek()}
+     */
+    public Token last() {
+        return last;
     }
 
     /**
-     * @return The next token in the stream.
+     * Returns the next token in the stream.
      */
     public Token next() throws TokenStreamException {
         if (next != null) {
@@ -157,10 +169,12 @@ public class TokenStream {
         if (ch == '.') {
             nextChar();
             return new Token(Token.Type.DOUBLE_DOT, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
-        } if (ch == '?')  {
+        }
+        if (ch == '?') {
             nextChar();
             return new Token(Token.Type.SAFE_DEREF, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
-        } if (ch == '*') {
+        }
+        if (ch == '*') {
             nextChar();
             return new Token(Token.Type.SPREAD, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
         }
@@ -173,22 +187,14 @@ public class TokenStream {
         nextChar();
         if (offset != -1 && isLineBreakChar()) {
             char secondChar = ch;
-
             nextChar();
-            return new Token(Token.Type.LINE_BREAK, offset + 1, endOffset, new String(new char[]{firstChar, secondChar}));
+            return new Token(Token.Type.LINE_BREAK, offset + 1, endOffset, new String(new char[] {firstChar, secondChar}));
         }
-        return new Token(Token.Type.LINE_BREAK, offset+ 1, endOffset, new String(new char[]{firstChar}));
+        return new Token(Token.Type.LINE_BREAK, offset + 1, endOffset, new String(new char[] {firstChar}));
     }
 
     private boolean isLineBreakChar() {
         return ch == '\n' || ch == '\r';
-    }
-
-    /**
-     * @return The last token retrieved using {@link #peek()}
-     */
-    public Token last() {
-        return last;
     }
 
     private void nextChar() {
@@ -240,11 +246,11 @@ public class TokenStream {
         Pattern singleQuote;
         Pattern tripleQuote;
         if (quote == '\'') {
-            singleQuote = Pattern.compile("^\'.*\'");
-            tripleQuote = Pattern.compile("^\'\'\'.*\'\'\'");
+            singleQuote = SINGLE_QUOTE1;
+            tripleQuote = TRIPLE_QUOTE1;
         } else {
-            singleQuote = Pattern.compile("^\".*\"");
-            tripleQuote = Pattern.compile("^\"\"\".*\"\"\"");
+            singleQuote = SINGLE_QUOTE2;
+            tripleQuote = TRIPLE_QUOTE2;
         }
 
         Token token = matchQuote(tripleQuote);
@@ -257,12 +263,11 @@ public class TokenStream {
             return token;
         }
 
-        throw new TokenStreamException(
-                "Could not close quoted string, end offset = " + offset);
+        throw new TokenStreamException("Could not close quoted string, end offset = " + offset);
     }
 
     private Token matchQuote(Pattern quotePattern) {
-        ISourceBuffer matchBuffer = new ReverseSourceBuffer(this.buffer, offset);
+        ISourceBuffer matchBuffer = new ReverseSourceBuffer(buffer, offset);
         Matcher matcher = quotePattern.matcher(matchBuffer);
         if (matcher.find()) {
             String match = matcher.group(0);
@@ -290,53 +295,67 @@ public class TokenStream {
     }
 
     private Token skipLineComment() {
-        ISourceBuffer matchBuffer = new ReverseSourceBuffer(this.buffer, offset);
-        Pattern pattern = Pattern.compile(".*//");
-        Matcher matcher = pattern.matcher(matchBuffer);
-        if (matcher.find() && matcher.start()==0) {
+        Matcher matcher = SINGLE_LINE_COMMENT.matcher(new ReverseSourceBuffer(buffer, offset));
+        if (matcher.find() && matcher.start() == 0) {
             String match = matcher.group(0);
             int endOffset = offset + 1;
             int startOffset = offset - match.length() + 1;
-            offset = startOffset;
-            if (offset != 0) {
-                ch = buffer.charAt(--offset);
-            } else {
-                ch = buffer.charAt(offset--);
+            // check to be sure offset is within a line comment
+            if (isComment(startOffset)) {
+                offset = startOffset;
+                if (offset != 0) {
+                    ch = buffer.charAt(--offset);
+                } else {
+                    ch = buffer.charAt(offset--);
+                }
+                return new Token(Token.Type.LINE_COMMENT, startOffset, endOffset, match);
             }
-            return new Token(Token.Type.LINE_COMMENT, startOffset, endOffset, match);
         }
-        // } else {
-        // ch = buffer.charAt(--offset);
-        // if (ch == '\r' && offset != 0) {
-        // ch = buffer.charAt(--offset);
-        // } else if (offset == 0) {
-        // offset = -1;
-        // return TOKEN_EOF;
-        // }
-        // }
         return null;
     }
 
     private Token scanBlockComment() {
-        ISourceBuffer matchBuffer = new ReverseSourceBuffer(this.buffer, offset);
-        Pattern pattern = Pattern.compile("(?s)/\\*.*\\*/");
-        Matcher matcher = pattern.matcher(matchBuffer);
+        Matcher matcher = MULTI_LINE_COMMENT.matcher(new ReverseSourceBuffer(buffer, offset));
         if (matcher.find()) {
             String match = matcher.group(0);
             int endOffset = offset + 1;
             int startOffset = offset - match.length() + 1;
-            offset = startOffset;
-            if (offset != 0) {
-                ch = buffer.charAt(--offset);
-            } else {
-                ch = buffer.charAt(offset--);
+            // check to be sure offset is within a block comment
+            if (isComment(startOffset)) {
+                offset = startOffset;
+                if (offset != 0) {
+                    ch = buffer.charAt(--offset);
+                } else {
+                    ch = buffer.charAt(offset--);
+                }
+                return new Token(Token.Type.BLOCK_COMMENT, startOffset, endOffset, match);
             }
-            return new Token(Token.Type.BLOCK_COMMENT, startOffset, endOffset, match);
-        } else {
-            ch = buffer.charAt(--offset);
         }
+        ch = buffer.charAt(--offset); // return the slash to the stream
         return null;
     }
+
+    private boolean isComment(int index) {
+        if (comments == null) {
+            CharSequence source = buffer.subSequence(0, buffer.length());
+            GroovySnippetParser parser = new GroovySnippetParser();
+            ModuleNode module = parser.parse(source);
+
+            // extract the comment ranges from the parse results
+            List<Comment> list = module.getContext().getComments();
+            int i = 0, n = (list == null ? 0 : list.size());
+            comments = new int[n * 2];
+            if (n > 0) {
+                for (Comment comment : list) {
+                    comments[i++] = parser.getLocations().findOffset(comment.sline, comment.scol);
+                    comments[i++] = parser.getLocations().findOffset(comment.eline, comment.ecol);
+                }
+                Arrays.sort(comments); // should be sorted already, but let's be sure
+            }
+        }
+        return (Arrays.binarySearch(comments, index) % 2) == 0;
+    }
+    private int[] comments;
 
     private char la(int index) {
         if (offset - index >= 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -225,11 +225,11 @@ public class GroovyParser {
         return gcl;
     }
 
-    public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
-        this(null, options, problemReporter, allowTransforms, isReconcile);
+    public GroovyParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
+        this(null, compilerOptions, problemReporter, allowTransforms, isReconcile);
     }
 
-    public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
+    public GroovyParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
         // FIXASC review callers who pass null for options
         // FIXASC set parent of the loader to system or context class loader?
 
@@ -237,12 +237,12 @@ public class GroovyParser {
         // the paths (which point to cached classloaders) can be cleared
 
         this.requestor = requestor;
-        this.compilerOptions = options;
+        this.compilerOptions = compilerOptions;
         this.problemReporter = problemReporter;
-        this.projectName = options.groovyProjectName;
-        this.gclClasspath = (options == null ? null : options.groovyClassLoaderPath);
+        this.projectName = compilerOptions.groovyProjectName;
+        this.gclClasspath = compilerOptions.groovyClassLoaderPath;
 
-        GroovyClassLoader gcl = getLoaderFor(this.gclClasspath);
+        GroovyClassLoader gcl = getLoaderFor(gclClasspath);
         // ---
         // Status of transforms and reconciling: Oct-18-2011
         // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
