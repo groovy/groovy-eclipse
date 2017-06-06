@@ -491,6 +491,15 @@
 							<arch>x86_64</arch>
 						</environment>
 					</environments>
+					<!--dependency-resolution>
+						<extraRequirements>
+							<requirement>
+								<id>org.eclipse.xyz</id>
+								<type>eclipse-feature</type>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+						</extraRequirements>
+					</dependency-resolution-->
 					<pomDependencies>consider</pomDependencies>
 				</configuration>
 			</plugin>
