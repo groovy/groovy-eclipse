@@ -19,18 +19,35 @@
 package org.codehaus.groovy.transform;
 
 import groovy.transform.AnnotationCollector;
-
-import java.lang.reflect.Method;
-import java.util.*;
-
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 import static groovyjarjarasm.asm.Opcodes.*;
 
@@ -80,8 +97,9 @@ public class AnnotationCollectorTransform {
                     break;
                 }
             }
-            if (collector==null) return;
-            
+            if (collector == null) {
+                return;
+            }
             // force final class, remove interface, annotation, enum and abstract modifiers
             cn.setModifiers((ACC_FINAL+cn.getModifiers()) & ~(ACC_ENUM|ACC_INTERFACE|ACC_ANNOTATION|ACC_ABSTRACT));
             // force Object super class
@@ -107,7 +125,9 @@ public class AnnotationCollectorTransform {
             // remove annotations
             for (ListIterator<AnnotationNode> it = cn.getAnnotations().listIterator(); it.hasNext();) {
                 AnnotationNode an = it.next();
-                if (an==collector) continue;
+                if (an == collector) {
+                    continue;
+                }
                 it.remove();
             }
         }
@@ -143,8 +163,7 @@ public class AnnotationCollectorTransform {
             l.get(0).setSourcePosition(an.getClassNode());
             // GRECLIPSE end
             l.add(map);
-            ArrayExpression ae = new ArrayExpression(ClassHelper.OBJECT_TYPE, l);
-            return ae;
+            return new ArrayExpression(ClassHelper.OBJECT_TYPE, l);
         }
     }
     
@@ -163,14 +182,18 @@ public class AnnotationCollectorTransform {
 
     private List<AnnotationNode> getTargetListFromValue(AnnotationNode collector, AnnotationNode aliasAnnotationUsage, SourceUnit source) {
         Expression memberValue = collector.getMember("value");
-        if (memberValue == null) return Collections.EMPTY_LIST;
+        if (memberValue == null) {
+            return Collections.emptyList();
+        }
         if (!(memberValue instanceof ListExpression)) {
             addError("Annotation collector expected a list of classes, but got a "+memberValue.getClass(), collector, source);
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         ListExpression memberListExp = (ListExpression) memberValue;
         List<Expression> memberList = memberListExp.getExpressions();
-        if (memberList.isEmpty()) return Collections.EMPTY_LIST;
+        if (memberList.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<AnnotationNode> ret = new ArrayList<AnnotationNode>();
         for (Expression e : memberList) {
             AnnotationNode toAdd = new AnnotationNode(e.getType());
@@ -191,7 +214,7 @@ public class AnnotationCollectorTransform {
         List<AnnotationNode> ret = new ArrayList<AnnotationNode>(orig.size());
         for (AnnotationNode an : orig) {
             AnnotationNode newAn = new AnnotationNode(an.getClassNode());
-            newAn.getMembers().putAll(an.getMembers());
+            copyMembers(an, newAn);
             newAn.setSourcePosition(aliasAnnotationUsage);
             ret.add(newAn);
         }
@@ -200,17 +223,29 @@ public class AnnotationCollectorTransform {
 
     private static List<AnnotationNode> getTargetListFromAnnotations(ClassNode alias) {
         List<AnnotationNode> annotations = alias.getAnnotations();
-        if (annotations.size() < 2) return Collections.EMPTY_LIST;
-        
+        if (annotations.size() < 2) {
+            return Collections.emptyList();
+        }
         List<AnnotationNode> ret = new ArrayList<AnnotationNode>(annotations.size());
         for (AnnotationNode an : annotations) {
             ClassNode type = an.getClassNode();
             if (type.getName().equals(AnnotationCollector.class.getName())) continue;
             AnnotationNode toAdd = new AnnotationNode(type);
-            toAdd.getMembers().putAll(an.getMembers());
+            copyMembers(an, toAdd);
             ret.add(toAdd);
         }
         return ret;
+    }
+
+    private static void copyMembers(final AnnotationNode from, final AnnotationNode to) {
+        Map<String, Expression> members = from.getMembers();
+        copyMembers(members, to);
+    }
+
+    private static void copyMembers(final Map<String, Expression> members, final AnnotationNode to) {
+        for (Map.Entry<String, Expression> entry : members.entrySet()) {
+            to.addMember(entry.getKey(), entry.getValue());
+        }
     }
 
     private static List<AnnotationNode> getTargetListFromClass(ClassNode alias) {
@@ -226,28 +261,32 @@ public class AnnotationCollectorTransform {
     }
     
     private static List<AnnotationNode> makeListOfAnnotations(Object[][] data) {
-        if (data.length==0) return Collections.EMPTY_LIST;
-
+        if (data.length == 0) {
+            return Collections.emptyList();
+        }
         List<AnnotationNode> ret = new ArrayList<AnnotationNode>(data.length);
         for (Object[] inner : data) {
-            Class anno = (Class) inner[0];
+            Class<?> anno = (Class) inner[0];
             AnnotationNode toAdd = new AnnotationNode(ClassHelper.make(anno));
             ret.add(toAdd);
 
             Map<String,Object> member = (Map<String, Object>) inner[1];
-            if (member.isEmpty()) continue;
-            Map<String, Expression> generated = new HashMap<String, Expression>(member.size());
-            for (String name : member.keySet()) {
-                Object val = member.get(name);
-                generated.put(name, makeExpression(val));
+            if (member.isEmpty()) {
+                continue;
             }
-            toAdd.getMembers().putAll(generated);
+            Map<String, Expression> generated = new HashMap<String, Expression>(member.size());
+            for (Map.Entry<String, Object> entry : member.entrySet()) {
+                generated.put(entry.getKey(), makeExpression(entry.getValue()));
+            }
+            copyMembers(generated, toAdd);
         }
         return ret;
     }
-    
+
     private static Expression makeExpression(Object o) {
-        if (o instanceof Class) return new ClassExpression(ClassHelper.make((Class) o));
+        if (o instanceof Class) {
+            return new ClassExpression(ClassHelper.make((Class) o));
+        }
         //TODO: value as Annotation here!
         if (o instanceof Object[][]) {
             List<AnnotationNode> annotations = makeListOfAnnotations((Object[][])o);
@@ -279,7 +318,9 @@ public class AnnotationCollectorTransform {
         List<AnnotationNode> stored     = getStoredTargetList(aliasAnnotationUsage, source);
         List<AnnotationNode> targetList = getTargetListFromValue(collector, aliasAnnotationUsage, source);
         int size = targetList.size()+stored.size();
-        if (size==0) return Collections.EMPTY_LIST;
+        if (size == 0) {
+            return Collections.emptyList();
+        }
         List<AnnotationNode> ret = new ArrayList<AnnotationNode>(size);
         ret.addAll(stored);
         ret.addAll(targetList);

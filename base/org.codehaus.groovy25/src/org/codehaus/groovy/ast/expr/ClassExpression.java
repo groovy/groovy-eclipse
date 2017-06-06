@@ -25,7 +25,7 @@ import org.codehaus.groovy.ast.GroovyCodeVisitor;
 /**
  * Represents access to a Java/Groovy class in an expression, such
  * as when invoking a static method or accessing a static type
- *
+ * 
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
 public class ClassExpression extends Expression {
@@ -37,11 +37,11 @@ public class ClassExpression extends Expression {
     public void visit(GroovyCodeVisitor visitor) {
         visitor.visitClassExpression(this);
     }
-
+    
     public Expression transformExpression(ExpressionTransformer transformer) {
         return this;
     }
-
+    
     public String getText() {
         return getType().getName();
     }

@@ -144,7 +144,7 @@ public abstract class ProcessingUnit {
      * errors.
      */
 
-    public void completePhase() throws CompilationFailedException {       
+    public void completePhase() throws CompilationFailedException {
         // GRECLIPSE edit
         //errorCollector.failIfErrors();
         if (errorCollector.hasErrors()) {
