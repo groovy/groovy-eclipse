@@ -3560,6 +3560,17 @@ argList
         )
         )
         {argListHasLabels = (hls&1)!=0; }
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // in case of missing right paren "method(obj.exp", complete arglist
+            if (currentAST != null && !hasClosureList) {
+                #argList = #(create(ELIST,"ELIST",first,LT(1)),currentAST.root);
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 /** A single argument in (...) or [...].  Corresponds to to a method or closure parameter.

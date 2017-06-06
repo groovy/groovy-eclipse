@@ -884,25 +884,48 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     /**
-     * In this case, we are really completing on the method name and not
-     * inside the parens so change the information
+     * In this case, we are really completing on the method name and not inside the parens so change the information.
      */
     private void createContextForCallContext(Expression origExpression, AnnotatedNode methodExpr, String methodName) {
-        context = new MethodInfoContentAssistContext(completionOffset, completionExpression, fullCompletionExpression, origExpression,
-                blockStack.getLast(), lhsNode, unit, currentDeclaration, completionEnd, methodExpr, methodName, methodExpr.getEnd());
+        context = new MethodInfoContentAssistContext(
+            completionOffset,
+            completionExpression,
+            fullCompletionExpression,
+            origExpression,
+            blockStack.getLast(),
+            lhsNode,
+            unit,
+            currentDeclaration,
+            completionEnd,
+            methodExpr,
+            methodName,
+            methodExpr.getEnd());
         throw new VisitCompleteException();
     }
 
     private void createContext(ASTNode completionNode, ASTNode declaringNode, ContentAssistLocation location) {
-        context = new ContentAssistContext(completionOffset, completionExpression, fullCompletionExpression,
-            completionNode, declaringNode, lhsNode, location, unit, currentDeclaration, completionEnd);
+        context = new ContentAssistContext(
+            completionOffset,
+            completionExpression,
+            fullCompletionExpression,
+            completionNode,
+            declaringNode,
+            lhsNode,
+            location,
+            unit,
+            currentDeclaration,
+            completionEnd);
         throw new VisitCompleteException();
     }
 
     protected boolean doTest(ASTNode node) {
-        return node.getEnd() > 0 &&
-            ((supportingNodeEnd > node.getStart() && supportingNodeEnd <= node.getEnd()) ||
-            (completionOffset > node.getStart() && completionOffset <= node.getEnd()));
+        if (node.getEnd() > 0) {
+            boolean containsCompletionOffset = (completionOffset > node.getStart() && completionOffset <= node.getEnd());
+            boolean containsSupportingOffset = (supportingNodeEnd > node.getStart() && supportingNodeEnd <= node.getEnd());
+
+            return containsCompletionOffset || containsSupportingOffset;
+        }
+        return false;
     }
 
     /**

@@ -428,4 +428,19 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
         applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&  isEmpty')
     }
+
+    @Test
+    void testIncompleteMethodCall() {
+        String contents = '''\
+            class Foo {
+              void bar(Object param) {
+                baz(param.getC
+              }
+              void baz(Object param) {
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getC'))
+        proposalExists(proposals, 'getClass', 1)
+    }
 }

@@ -358,20 +358,18 @@ tokens {
     private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
     public void startComment(int line, int column) {
-        // System.out.println(">> comment at l"+line+"c"+column);
-        commentStartPositions.push((line<<16)+column);
+        commentStartPositions.push((line << 16) + column);
     }
 
     public void endComment(int type, int line, int column,String text) {
-        // System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
         int lineAndColumn = commentStartPositions.pop();
-        int startLine = lineAndColumn>>>16;
-        int startColumn = lineAndColumn&0xffff;
-        if (type==0) {
-            Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+        int startLine = lineAndColumn >>> 16;
+        int startColumn = lineAndColumn & 0xffff;
+        if (type == 0) {
+            Comment comment = Comment.makeSingleLineComment(startLine, startColumn, line, column, text);
             comments.add(comment);
-        } else if (type==1) {
-            Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+        } else if (type == 1) {
+            Comment comment = Comment.makeMultiLineComment(startLine, startColumn, line, column, text);
             comments.add(comment);
         }
     }
@@ -449,37 +447,37 @@ tokens {
         if (lt == null)  lt = Token.badToken;
 
         Map row = new HashMap();
-        row.put("error" ,message);
+        row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line", new Integer(lt.getLine()));
-        row.put("column", new Integer(lt.getColumn()));
+        row.put("line",     Integer.valueOf(lt.getLine()));
+        row.put("column",   Integer.valueOf(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
     public void reportError(String message, Token lt) {
         Map row = new HashMap();
-        row.put("error" ,message);
+        row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line", new Integer(lt.getLine()));
-        row.put("column", new Integer(lt.getColumn()));
+        row.put("line",     Integer.valueOf(lt.getLine()));
+        row.put("column",   Integer.valueOf(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
     public void reportError(String message, AST lt) {
         Map row = new HashMap();
-        row.put("error" ,message);
+        row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line", new Integer(lt.getLine()));
-        row.put("column", new Integer(lt.getColumn()));
+        row.put("line",     Integer.valueOf(lt.getLine()));
+        row.put("column",   Integer.valueOf(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered exception.
      */
@@ -490,7 +488,7 @@ tokens {
         if (lt == null)  lt = Token.badToken;
 
         Map row = new HashMap();
-        row.put("error", e.getMessage());
+        row.put("error",    e.getMessage());
         row.put("filename", getFilename());
         row.put("line",     Integer.valueOf(lt.getLine()));
         row.put("column",   Integer.valueOf(lt.getColumn()));
@@ -3538,6 +3536,17 @@ argList
         )
         )
         {argListHasLabels = (hls&1)!=0; }
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // in case of missing right paren "method(obj.exp", complete arglist
+            if (currentAST != null && !hasClosureList) {
+                #argList = #(create(ELIST,"ELIST",first,LT(1)),currentAST.root);
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 /** A single argument in (...) or [...].  Corresponds to to a method or closure parameter.
