@@ -861,6 +861,29 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testAnnoElems3() {
+        addGroovySource '''\
+            class Bar {
+              public static final String VALUE = 'nls'
+            }
+            '''.stripIndent(), 'Bar', 'foo'
+
+        String contents = '''\
+            import static foo.Bar.VALUE
+            class C {
+              @SuppressWarnings(VALUE)
+              def method() {
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
+    }
+
+    @Test
     void testGString() {
         String contents = '''\
             class X {

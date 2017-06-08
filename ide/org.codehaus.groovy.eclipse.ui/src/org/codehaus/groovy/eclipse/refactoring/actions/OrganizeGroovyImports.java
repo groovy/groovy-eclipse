@@ -92,7 +92,7 @@ public class OrganizeGroovyImports {
                 current = node;
                 if (node.getEnd() > 0) {
                     if (isNotEmpty(node.getGenericsTypes())) {
-                        handleTypeParameters(node.getGenericsTypes(), node.getName());
+                        visitTypeParameters(node.getGenericsTypes(), node.getName());
                     }
                     handleTypeReference(node.getUnresolvedSuperClass(), false);
                     for (ClassNode impls : node.getUnresolvedInterfaces()) {
@@ -122,7 +122,7 @@ public class OrganizeGroovyImports {
             if (node.getEnd() > 0) {
                 if (!(node instanceof ConstructorNode) &&
                         isNotEmpty(node.getGenericsTypes())) {
-                    handleTypeParameters(node.getGenericsTypes(), null);
+                    visitTypeParameters(node.getGenericsTypes(), null);
                 }
                 handleTypeReference(node.getReturnType(), false);
                 for (ClassNode exception : node.getExceptions()) {
@@ -162,9 +162,6 @@ public class OrganizeGroovyImports {
         public void visitConstantExpression(ConstantExpression expression) {
             if (expression.getEnd() > 0 && expression instanceof AnnotationConstantExpression) {
                 handleTypeReference(expression.getType(), true);
-            } else {
-                // see StaticImportVisitor.transformInlineConstants(Expression)
-                doNotRemoveImport(expression.getNodeMetaData("static.import"));
             }
             super.visitConstantExpression(expression);
         }
@@ -183,7 +180,7 @@ public class OrganizeGroovyImports {
                 if (expression.isImplicitThis()) {
                     checkRetainImport(expression.getMethodAsString()); // could it be static?
                 } else if (isNotEmpty(expression.getGenericsTypes())) {
-                    handleTypeParameters(expression.getGenericsTypes(), null);
+                    visitTypeParameters(expression.getGenericsTypes(), null);
                 }
             }
             super.visitMethodCallExpression(expression);
@@ -223,9 +220,20 @@ public class OrganizeGroovyImports {
                 if (expression.getAccessedVariable() == expression) {
                     handleTypeReference(expression.getType(), false);
                 }
+                // Assume dynamic variables are a candidate for organize imports,
+                // but only if name begins with a capital letter and does not match
+                // the idiomatic static constant naming. This will hopefully filter
+                // out false positives, but misses types that start with lower case.
                 if (expression.getAccessedVariable() instanceof DynamicVariable || expression.isDynamicTyped()) {
                     if (!checkRetainImport(expression.getName())) { // could it be static?
-                        handleVariable(expression);
+                        String name = expression.getName();
+                        if (!missingTypes.containsKey(name) &&
+                            Character.isUpperCase(name.charAt(0)) &&
+                            !STATIC_CONSTANT.matcher(name).matches()) {
+
+                            missingTypes.put(name, new UnresolvedTypeData(name, false,
+                                new SourceRange(expression.getStart(), expression.getEnd() - expression.getStart())));
+                        }
                     }
                 }
             }
@@ -250,23 +258,7 @@ public class OrganizeGroovyImports {
             super.visitParameter(parameter);
         }
 
-        /**
-         * Assume dynamic variables are a candidate for organize imports, but
-         * only if name begins with a capital letter and does not match the
-         * idiomatic static constant naming.  This will hopefully filter out
-         * most false positives, but will miss types that start with lower case.
-         */
-        private void handleVariable(VariableExpression expr) {
-            String name = expr.getName();
-            if (!missingTypes.containsKey(name) &&
-                    Character.isUpperCase(name.charAt(0)) &&
-                    !STATIC_CONSTANT.matcher(name).matches()) {
-                missingTypes.put(name, new UnresolvedTypeData(name, false,
-                        new SourceRange(expr.getStart(), expr.getEnd() - expr.getStart())));
-            }
-        }
-
-        private void handleTypeParameters(GenericsType[] generics, String typeName) {
+        protected void visitTypeParameters(GenericsType[] generics, String typeName) {
             for (GenericsType generic : generics) {
                 if (generic.getStart() < 1) {
                     continue;
@@ -320,7 +312,7 @@ public class OrganizeGroovyImports {
 
             // check node's generics types
             if (isNotEmpty(node.getGenericsTypes())) {
-                handleTypeParameters(node.getGenericsTypes(), node.getName());
+                visitTypeParameters(node.getGenericsTypes(), node.getName());
             }
 
             if (!node.isResolved() && node.redirect() != current) {

@@ -238,15 +238,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 // GRECLIPSE edit
                 //if (constant != null) return constant;
                 if (constant != null) {
-                    String name = pe.getText().replace('$', '.');
-                    Object alias = pe.getNodeMetaData("static.import.alias");
-                    if (alias != null && !alias.equals(pe.getPropertyAsString())) {
-                        name += " as " + alias;
-                    }
-                    // store the qualified name to facilitate organizing static imports
-                    constant.putNodeMetaData("static.import", name);
-
-                    return constant;
+                    return ResolveVisitor.cloneConstantExpression(constant, exp);
                 }
                 // GRECLIPSE end
             }

@@ -1370,7 +1370,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     // GRECLIPSE add
-    protected ConstantExpression cloneConstantExpression(Expression val, Expression src) {
+    protected static ConstantExpression cloneConstantExpression(Expression val, Expression src) {
         ConstantExpression ret = new ConstantExpression(((ConstantExpression) val).getValue());
         ret.setNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, src);
         // TODO: Copy any other fields or metadata?

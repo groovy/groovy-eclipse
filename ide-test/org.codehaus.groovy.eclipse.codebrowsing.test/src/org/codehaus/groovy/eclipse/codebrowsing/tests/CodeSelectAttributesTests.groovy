@@ -138,4 +138,25 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
         def elem = assertCodeSelect([source], 'VALUE')
         assert elem.inferredElement instanceof FieldNode
     }
+
+    @Test
+    void testCodeSelectOnAttributeValue4() {
+        addGroovySource '''\
+            class Bar {
+              public static final String VALUE = 'nls'
+            }
+            '''.stripIndent(), 'Bar', 'foo'
+
+        String source = '''\
+            import static foo.Bar.VALUE
+            class C {
+              @SuppressWarnings(VALUE)
+              def method() {
+              }
+            }
+            '''.stripIndent()
+
+        def elem = assertCodeSelect([source], 'VALUE')
+        assert elem.inferredElement instanceof FieldNode
+    }
 }
