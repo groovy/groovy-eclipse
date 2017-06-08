@@ -198,8 +198,8 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     protected static boolean isTypeDeclaration(ASTNode node, ModuleNode module) {
         // don't use inner class nodes since they really should resolve to the super type
         if (node instanceof ClassNode &&  !(node instanceof InnerClassNode)) {
-            for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
-                if (clazz == node) {
+            for (ClassNode clazz : module.getClasses()) {
+                if (clazz.equals(node)) {
                     return true;
                 }
             }

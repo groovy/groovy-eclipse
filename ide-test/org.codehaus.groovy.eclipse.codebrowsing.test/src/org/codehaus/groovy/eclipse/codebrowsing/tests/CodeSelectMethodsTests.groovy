@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMet
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.SourceRange
 import org.junit.Test
 
 final class CodeSelectMethodsTests extends BrowsingTestSuite {
@@ -280,9 +281,31 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod2() {
-        String contents = '\"\".substring(0,1)'
+        String contents = '"".substring(0,1)'
         IJavaElement elem = assertCodeSelect([contents], 'substring')
         assert ((IMethod) elem).getParameterTypes().length == 2 : 'Wrong number of parameters to method'
+    }
+
+    @Test
+    void testCodeSelectEnumConstant() {
+        String contents = '''\
+            enum Color {
+              RED, BLACK
+            }
+            enum Suit {
+              CLUBS(Color.BLACK),
+              DIAMONDS(Color.RED),
+              HEARTS(Color.RED),
+              SPADES(Color.BLACK),
+
+              final Color color
+              Suit(Color color) {
+                this.color = color
+              }
+            }
+            '''.stripIndent()
+        // enum Suit was visited for each constant, which covered the initializer params
+        assertCodeSelect(contents, new SourceRange(contents.indexOf('Color.'), 5), 'Color')
     }
 
     //

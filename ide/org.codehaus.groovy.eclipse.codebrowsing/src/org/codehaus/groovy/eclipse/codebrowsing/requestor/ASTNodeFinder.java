@@ -173,8 +173,11 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         if (annos > 0)
             start = GroovyUtils.endOffset(node.getAnnotations().get(annos - 1));
 
-        // visit type and generics
-        check(node.getType(), start, node.getEnd() - node.getName().length());
+        // don't check enum constant declarations, which have an implicit type (not visible in the source)
+        if (start > 0 && (!node.getType().isEnum() || !node.getType().equals(node.getDeclaringClass()))) {
+            // visit type and generics
+            check(node.getType(), start, node.getEnd() - node.getName().length());
+        }
     }
 
     @Override

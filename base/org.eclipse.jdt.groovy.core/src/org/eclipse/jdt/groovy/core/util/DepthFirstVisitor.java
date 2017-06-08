@@ -149,7 +149,6 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         for (Statement stmt : node.getObjectInitializerStatements()) {
             stmt.visit(this);
         }
-        // TODO: Visit "<clinit>" statements before visitContents?
 
         node.visitContents(this);
 
@@ -362,6 +361,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     public void visitClassExpression(ClassExpression expression) {
         visitAnnotations(expression.getAnnotations());
+        //visitTypeReference(expression.getType(), expression);
         visitExpression(expression);
     }
 
@@ -379,7 +379,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     public void visitConstantExpression(ConstantExpression expression) {
-        // check for an inlined constant (see ResolveVisitor.transformInlineConstants)
+        // check for an inlined constant (see ResolveVisitor.cloneConstantExpression)
         visitIfPresent((Expression) expression.getNodeMetaData(ORIGINAL_EXPRESSION));
         visitExpression(expression);
     }
@@ -539,14 +539,13 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     //--------------------------------------------------------------------------
 
+    @SuppressWarnings("unchecked")
     protected void visitAnnotations(Collection<? extends AnnotationNode> nodes) {
         if (isNotEmpty(nodes)) {
             for (AnnotationNode node : nodes) {
                 if (node.isBuiltIn()) continue;
 
-                Collection<? extends AnnotationNode> annos =
-                    node.getNodeMetaData("AnnotationCollector");
-                visitAnnotations(annos);
+                visitAnnotations((Collection<? extends AnnotationNode>) node.getNodeMetaData("AnnotationCollector"));
 
                 visitAnnotation(node);
             }
