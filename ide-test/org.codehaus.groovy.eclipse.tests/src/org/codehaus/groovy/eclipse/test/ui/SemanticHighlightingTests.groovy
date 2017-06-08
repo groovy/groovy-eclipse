@@ -61,6 +61,23 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testScriptFields() {
+        String contents = '''\
+              import groovy.transform.Field
+              @Field String one
+              @Field Integer two = 1234
+              @Field private Object three // four
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('one'), 'one'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'), 'two'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('1234'), '1234'.length(), NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('three'), 'three'.length(), FIELD))
+    }
+
+    @Test
     void testStaticFields() {
         String contents = '''\
             class X {

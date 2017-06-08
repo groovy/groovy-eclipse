@@ -60,7 +60,16 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
                 log.info "$str msg"
               }
             }'''.stripIndent()
-        ], 'log', 'Foo'); // TODO: Want this to be 'log', but field is not in Java model.
+        ], 'log', 'Foo') // TODO: Want this to be 'log', but field is not in Java model.
+    }
+
+    @Test
+    void testCodeSelectScriptFieldInClass() {
+        assertCodeSelect(['''\
+            import groovy.transform.Field
+            @Field String str
+            '''.stripIndent()
+        ], 'str')
     }
 
     @Test

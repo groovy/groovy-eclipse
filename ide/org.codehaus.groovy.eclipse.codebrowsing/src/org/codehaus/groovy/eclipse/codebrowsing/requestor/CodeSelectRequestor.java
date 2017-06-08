@@ -239,7 +239,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                             // find the requested java element
                             IJavaElement maybeRequested = findRequestedElement(result.declaration, effectiveDeclaringType, type);
                             // try to resolve the type of the requested element; this will add the proper metadata to the hover
-                            requestedElement = resolveRequestedElement(result, maybeRequested);
+                            requestedElement = resolveRequestedElement(maybeRequested, result);
                         } else {
                             // try to resolve as a type (outer class) then as a package
                             IType candidate = gunit.getJavaProject().findType(qualifier);
@@ -395,78 +395,73 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (declaration instanceof ClassNode) {
             maybeRequested = jdtDeclaringType;
         } else if (jdtDeclaringType.getTypeRoot() != null) {
-            if (declaration.getEnd() > 0) {
-                // GRECLIPSE-1233 can't use getEltAt because of default parameters.
-                // instead, just iterate through children.  Method variants
-                // are always after the original method
-                int start = declaration.getStart();
-                int end = declaration.getEnd();
-                String name;
-                if (declaration instanceof MethodNode) {
-                    name = ((MethodNode) declaration).getName();
-                    if (name.equals("<init>")) {
-                        name = jdtDeclaringType.getElementName();
-                    }
-                    // check for @Trait method
-                    @SuppressWarnings("unchecked")
-                    List<MethodNode> traitMethods = (List<MethodNode>) declaringType.getNodeMetaData("trait.methods");
-                    if (traitMethods != null) {
-                        for (MethodNode method : traitMethods) {
-                            if (method == declaration) {
-                                return jdtDeclaringType.getMethod(name, null);
-                            }
-                        }
-                    }
-                } else if (declaration instanceof FieldNode) {
-                    name = ((FieldNode) declaration).getName();
-                    // check for @Lazy field
-                    Iterable<AnnotationNode> annos = ((FieldNode) declaration).getAnnotations();
-                    if (annos != null) {
-                        for (AnnotationNode anno : annos) {
-                            if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
-                                name = name.substring(1); // strip the leading $
-                            }
-                        }
-                    }
-                    // check for @Trait field
-                    @SuppressWarnings("unchecked")
-                    List<FieldNode> traitFields = (List<FieldNode>) declaringType.getNodeMetaData("trait.fields");
-                    if (traitFields != null) {
-                        for (FieldNode field : traitFields) {
-                            if (field == declaration) {
-                                return jdtDeclaringType.getField(name);
-                            }
-                        }
-                    }
-                } else if (declaration instanceof PropertyNode) {
-                    name = ((PropertyNode) declaration).getName();
-                } else {
-                    name = declaration.getText();
+            String name;
+            if (declaration instanceof MethodNode) {
+                name = ((MethodNode) declaration).getName();
+                if (name.equals("<init>")) {
+                    name = jdtDeclaringType.getElementName();
                 }
+                // check for @Trait method
+                @SuppressWarnings("unchecked")
+                List<MethodNode> traitMethods = (List<MethodNode>) declaringType.getNodeMetaData("trait.methods");
+                if (traitMethods != null) {
+                    for (MethodNode method : traitMethods) {
+                        if (method == declaration) {
+                            return jdtDeclaringType.getMethod(name, null);
+                        }
+                    }
+                }
+            } else if (declaration instanceof FieldNode) {
+                name = ((FieldNode) declaration).getName();
+                // check for @Lazy field
+                Iterable<AnnotationNode> annos = ((FieldNode) declaration).getAnnotations();
+                if (annos != null) {
+                    for (AnnotationNode anno : annos) {
+                        if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
+                            name = name.substring(1); // strip the leading $
+                        }
+                    }
+                }
+                // check for @Field field
+                if (declaration.getEnd() > 0 && declaringType.isScript()) {
+                    return jdtDeclaringType.getField(name);
+                }
+                // check for @Trait field
+                @SuppressWarnings("unchecked")
+                List<FieldNode> traitFields = (List<FieldNode>) declaringType.getNodeMetaData("trait.fields");
+                if (traitFields != null) {
+                    for (FieldNode field : traitFields) {
+                        if (field == declaration) {
+                            return jdtDeclaringType.getField(name);
+                        }
+                    }
+                }
+            } else if (declaration instanceof PropertyNode) {
+                name = ((PropertyNode) declaration).getName();
+            } else {
+                name = declaration.getText();
+            }
 
+            if (declaration.getEnd() > 0) {
+                int start = declaration.getStart(), until = declaration.getEnd();
                 for (IJavaElement child : jdtDeclaringType.getChildren()) {
                     ISourceRange range = ((ISourceReference) child).getSourceRange();
-                    if (range.getOffset() <= start && range.getOffset() + range.getLength() >= end && child.getElementName().equals(name)) {
+                    if (range.getOffset() <= start && range.getOffset() + range.getLength() >= until && child.getElementName().equals(name)) {
                         maybeRequested = child;
                         break;
-                    } else if (start + end < range.getOffset()) {
+                    } else if (start + until < range.getOffset()) {
                         // since children are listed incrementally no need to go further
                         break;
                     }
                 }
             }
             if (maybeRequested == null) { // try something else because source location not set right
-                String name = null;
-                Parameter[] parameters = null;
-                if (declaration instanceof MethodNode) {
-                    name = ((MethodNode) declaration).getName();
-                    parameters = ((MethodNode) declaration).getParameters();
-                } else if (declaration instanceof PropertyNode) {
-                    name = ((PropertyNode) declaration).getName();
-                } else if (declaration instanceof FieldNode) {
-                    name = ((FieldNode) declaration).getName();
-                }
                 if (name != null) {
+                    Parameter[] parameters = null;
+                    if (declaration instanceof MethodNode) {
+                        name = ((MethodNode) declaration).getName();
+                        parameters = ((MethodNode) declaration).getParameters();
+                    }
                     maybeRequested = findElement(jdtDeclaringType, name, parameters);
                 }
                 if (maybeRequested == null) {
@@ -479,46 +474,48 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     /**
-     * Converts the maybeRequested element into a resolved element by creating a unique key for it.
+     * Converts the requested element into a resolved element by creating a unique key for it.
      */
-    private IJavaElement resolveRequestedElement(TypeLookupResult result, IJavaElement maybeRequested) {
+    private IJavaElement resolveRequestedElement(IJavaElement maybeRequested, TypeLookupResult result) {
         AnnotatedNode declaration = (AnnotatedNode) result.declaration;
-        if (declaration instanceof PropertyNode && maybeRequested instanceof IMethod) {
-            // the field associated with this property does not exist, use the method instead
-            String getterName = maybeRequested.getElementName();
-            MethodNode maybeDeclaration = declaration.getDeclaringClass().getMethods(getterName).get(0);
-            declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
-        }
-        if (declaration instanceof ConstructorNode && maybeRequested.getElementType() == IJavaElement.TYPE) {
-            // implicit default constructor. use type instead
+        if (declaration instanceof PropertyNode) {
+            if (maybeRequested instanceof IField) {
+                declaration = ((PropertyNode) declaration).getField();
+            } else if (maybeRequested instanceof IMethod) {
+                String methodName = maybeRequested.getElementName();
+                MethodNode methodNode = declaration.getDeclaringClass().getMethods(methodName).get(0);
+                if (methodNode != null) declaration = methodNode;
+            }
+        } else if (declaration instanceof ConstructorNode && maybeRequested.getElementType() == IJavaElement.TYPE) {
+            // implicit default constructor; use type instead
             declaration = declaration.getDeclaringClass();
         }
 
         String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType, maybeRequested);
-        IJavaElement candidate;
 
+        IJavaElement candidate;
         // Create the Groovy Resolved Element, which is like a resolved element, but contains extraDoc, as
         // well as the inferred declaration (which may not be the same as the actual declaration)
         switch (maybeRequested.getElementType()) {
             case IJavaElement.FIELD:
                 if (maybeRequested.isReadOnly()) {
-                    candidate = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
+                    candidate = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
                 } else {
-                    candidate = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
+                    candidate = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
                 }
                 break;
             case IJavaElement.METHOD:
                 if (maybeRequested.isReadOnly()) {
-                    candidate = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, result.declaration);
+                    candidate = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, declaration);
                 } else {
-                    candidate = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, result.declaration);
+                    candidate = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, declaration);
                 }
                 break;
             case IJavaElement.TYPE:
                 if (maybeRequested.isReadOnly()) {
-                    candidate = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
+                    candidate = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
                 } else {
-                    candidate = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, result.declaration);
+                    candidate = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
                 }
                 break;
             default:

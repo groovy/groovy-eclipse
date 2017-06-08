@@ -404,9 +404,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         // visit fields created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
-                                if (field.getNameEnd() <= 0) {
-                                    setNameLocation(field);
-                                }
                                 visitField(field);
                             }
                         }
@@ -2324,21 +2321,6 @@ assert primaryExprType != null && dependentExprType != null;
     }
     private static final String SANITY_CHECK_MESSAGE =
         "Inferencing engine in invalid state after visitor completed.  %s stack should be empty after visit completed.";
-
-    private void setNameLocation(FieldNode fieldNode)
-            throws JavaModelException {
-        fieldNode.setNameEnd(fieldNode.getEnd());
-        int nameLength = fieldNode.getName().length();
-        Expression init = fieldNode.getInitialExpression();
-        if (init != null && !(init instanceof EmptyExpression)) {
-            String fieldText = unit.getSource().substring(fieldNode.getStart(), init.getStart());
-            int nameStart = fieldNode.getStart() + fieldText.lastIndexOf(fieldNode.getName());
-            if (nameStart < fieldNode.getStart()) throw new JavaModelException(null, 980);
-            fieldNode.setNameEnd(nameStart + nameLength);
-        }
-        fieldNode.setNameStart(fieldNode.getNameEnd() - nameLength);
-        fieldNode.setNameEnd(fieldNode.getNameEnd() - 1); // name end index is inclusive... not sure why
-    }
 
     //--------------------------------------------------------------------------
 
