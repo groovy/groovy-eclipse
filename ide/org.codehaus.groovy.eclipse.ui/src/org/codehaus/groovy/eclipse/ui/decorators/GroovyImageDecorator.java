@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
+import org.eclipse.jdt.internal.core.ExternalJavaProject;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
 import org.eclipse.jdt.ui.JavaElementImageDescriptor;
@@ -100,7 +101,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
 
         boolean isGradle = (GroovyPluginImages.DESC_GRADLE_FILE != null && ContentTypeUtils.isGradleLikeFileName(resource.getName()));
         ImageDescriptor desc = isGradle ? GroovyPluginImages.DESC_GRADLE_FILE : GroovyPluginImages.DESC_GROOVY_FILE;
-        if (!isGradle)
+        if (!isGradle && !isExternalProject(resource.getProject()))
         try {
             if (isGroovyProject(resource.getProject())) {
                 if (isRuntimeCompiled(resource)) {
@@ -116,6 +117,13 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
         }
 
         return getImage(new JavaElementImageDescriptor(desc, flags, size));
+    }
+
+    /**
+     * @see org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider#createFakeCompiltationUnit(Object,boolean)
+     */
+    private boolean isExternalProject(IProject project) {
+        return project.getName().equals(ExternalJavaProject.EXTERNAL_PROJECT_NAME);
     }
 
     private boolean isGroovyProject(IProject project) throws CoreException {
