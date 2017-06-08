@@ -488,7 +488,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     }
 
     private void checkGenerics(ClassNode node) {
-        if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+        if (node.isUsingGenerics() && isNotEmpty(node.getGenericsTypes())) {
             checkGenerics(node.getGenericsTypes(), node.getName());
         }
     }

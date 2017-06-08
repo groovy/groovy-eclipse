@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 import groovy.transform.Field;
 
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -44,16 +43,12 @@ import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.CatchStatement;
-import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -70,6 +65,7 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
+import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
@@ -81,64 +77,121 @@ import org.eclipse.text.edits.TextEdit;
  */
 public class OrganizeGroovyImports {
 
-    private static final ClassNode CLASS_NODE_FIELD = ClassHelper.make(Field.class);
+    // TODO: Handle import and package annotations
 
-    private class FindUnresolvedReferencesVisitor extends ClassCodeVisitorSupport {
+    private static final ClassNode SCRIPT_FIELD_CLASS_NODE = ClassHelper.make(Field.class);
+
+    private class FindUnresolvedReferencesVisitor extends DepthFirstVisitor {
 
         private ClassNode current;
 
         @Override
-        protected void visitAnnotation(AnnotationNode annotation) {
-            // skip nodes added by an annotation collector transformation
-            if (annotation.getNodeMetaData("AnnotationCollector") == null) {
-                handleType(annotation.getClassNode(), true);
+        public void visitClass(ClassNode node) {
+            ClassNode previous = current;
+            try {
+                current = node;
+                if (node.getEnd() > 0) {
+                    if (isNotEmpty(node.getGenericsTypes())) {
+                        handleTypeParameters(node.getGenericsTypes(), node.getName());
+                    }
+                    handleTypeReference(node.getUnresolvedSuperClass(), false);
+                    for (ClassNode impls : node.getUnresolvedInterfaces()) {
+                        handleTypeReference(impls, false);
+                    }
+                }
+                super.visitClass(node);
+            } finally {
+                current = previous;
             }
-            super.visitAnnotation(annotation);
         }
 
         @Override
+        public void visitField(FieldNode node) {
+            if (node.getEnd() > 0) {
+                handleTypeReference(node.getType(), false);
+                // fields in a script have a Field annotation
+                if (node.getOwner().isScript()) {
+                    handleTypeReference(SCRIPT_FIELD_CLASS_NODE, true);
+                }
+            }
+            super.visitField(node);
+        }
+
+        @Override
+        public void visitMethod(MethodNode node) {
+            if (node.getEnd() > 0) {
+                if (!(node instanceof ConstructorNode) &&
+                        isNotEmpty(node.getGenericsTypes())) {
+                    handleTypeParameters(node.getGenericsTypes(), null);
+                }
+                handleTypeReference(node.getReturnType(), false);
+                for (ClassNode exception : node.getExceptions()) {
+                    handleTypeReference(exception, false);
+                }
+            }
+            super.visitMethod(node);
+        }
+
+        //
+
+        @Override
         public void visitArrayExpression(ArrayExpression expression) {
-            handleType(expression.getType(), false);
+            if (expression.getEnd() > 0) {
+                handleTypeReference(expression.getType(), false);
+            }
             super.visitArrayExpression(expression);
         }
 
         @Override
         public void visitCastExpression(CastExpression expression) {
-            handleType(expression.getType(), false);
+            if (expression.getEnd() > 0) {
+                handleTypeReference(expression.getType(), false);
+            }
             super.visitCastExpression(expression);
         }
 
         @Override
         public void visitClassExpression(ClassExpression expression) {
             if (expression.getEnd() > 0) {
-                handleType(expression.getType(), false);
+                handleTypeReference(expression.getType(), false);
             }
-        }
-
-        @Override
-        public void visitClosureExpression(ClosureExpression expression) {
-            Parameter[] parameters = expression.getParameters();
-            if (parameters != null) {
-                for (Parameter param : parameters) {
-                    handleType(param.getOriginType(), false);
-                }
-            }
-            super.visitClosureExpression(expression);
+            super.visitClassExpression(expression);
         }
 
         @Override
         public void visitConstantExpression(ConstantExpression expression) {
-            if (expression instanceof AnnotationConstantExpression) {
-                handleType(expression.getType(), true);
+            if (expression.getEnd() > 0 && expression instanceof AnnotationConstantExpression) {
+                handleTypeReference(expression.getType(), true);
             } else {
                 // see StaticImportVisitor.transformInlineConstants(Expression)
                 doNotRemoveImport(expression.getNodeMetaData("static.import"));
             }
+            super.visitConstantExpression(expression);
+        }
+
+        @Override
+        public void visitConstructorCallExpression(ConstructorCallExpression expression) {
+            if (expression.getEnd() > 0 && !expression.isUsingAnonymousInnerClass()) {
+                handleTypeReference(expression.getType(), false);
+            }
+            super.visitConstructorCallExpression(expression);
+        }
+
+        @Override
+        public void visitMethodCallExpression(MethodCallExpression expression) {
+            if (expression.getEnd() > 0) {
+                if (expression.isImplicitThis()) {
+                    checkRetainImport(expression.getMethodAsString()); // could it be static?
+                } else if (isNotEmpty(expression.getGenericsTypes())) {
+                    handleTypeParameters(expression.getGenericsTypes(), null);
+                }
+            }
+            super.visitMethodCallExpression(expression);
         }
 
         @Override
         public void visitPropertyExpression(PropertyExpression expression) {
-            if (!expression.isStatic() && !expression.isSynthetic()) {
+            if (expression.getEnd() > 0 && !expression.isStatic()) {
                 Object alias = expression.getNodeMetaData("static.import.alias");
                 if (alias != null) {
                     String staticImport = expression.getText().replace('$', '.');
@@ -152,142 +205,50 @@ public class OrganizeGroovyImports {
         }
 
         @Override
-        public void visitVariableExpression(VariableExpression expression) {
-            if (expression.getAccessedVariable() == expression) {
-                handleType(expression.getType(), false);
-            }
-            if (expression.getAccessedVariable() instanceof DynamicVariable || expression.isDynamicTyped()) {
-                if (!checkRetainImport(expression.getName())) { // could it be static?
-                    handleVariable(expression);
-                }
-            }
-        }
-
-        @Override
-        public void visitMethodCallExpression(MethodCallExpression call) {
-            if (!call.isSynthetic() && call.getStart() > 0) {
-                if (call.isImplicitThis()) {
-                    checkRetainImport(call.getMethodAsString()); // could it be static?
-                } else if (call.getGenericsTypes() != null) {
-                    for (GenericsType type : call.getGenericsTypes()) {
-                        handleType(type.getType(), false);
-                    }
-                }
-            }
-            super.visitMethodCallExpression(call);
-        }
-
-        @Override
-        public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
-            if (!call.isSynthetic() && call.getStart() > 0) {
-                String method = call.getOwnerType().getName().replace('$', '.') + '.' + call.getMethod();
-                Object alias = call.getNodeMetaData("static.import.alias");
+        public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
+            if (expression.getEnd() > 0) {
+                String method = expression.getOwnerType().getName().replace('$', '.') + '.' + expression.getMethod();
+                Object alias = expression.getNodeMetaData("static.import.alias");
                 if (alias != null) {
                     method += " as " + alias;
                 }
                 doNotRemoveImport(method);
             }
-            super.visitStaticMethodCallExpression(call);
+            super.visitStaticMethodCallExpression(expression);
         }
 
         @Override
-        public void visitConstructorCallExpression(ConstructorCallExpression call) {
-            handleType(call.getType(), false);
-            super.visitConstructorCallExpression(call);
-        }
-
-        @Override
-        public void visitConstructor(ConstructorNode node) {
-            if (!node.isSynthetic()) {
-                for (Parameter param : node.getParameters()) {
-                    handleType(param.getOriginType(), false);
+        public void visitVariableExpression(VariableExpression expression) {
+            if (expression.getEnd() > 0) {
+                if (expression.getAccessedVariable() == expression) {
+                    handleTypeReference(expression.getType(), false);
                 }
-            }
-            super.visitConstructor(node);
-        }
-
-        @Override
-        public void visitField(FieldNode node) {
-            // can't check for synthetic here because it seems that non-synthetic nodes are being marked as synthetic
-            if (node.getEnd() > 0) {
-                handleType(node.getType(), false);
-                // fields in a script would have Field annotation
-                if (node.getOwner().isScript()) {
-                    handleType(CLASS_NODE_FIELD, true);
-                }
-            }
-            super.visitField(node);
-        }
-
-        @Override
-        public void visitMethod(MethodNode node) {
-            if (!node.isSynthetic()) {
-                handleType(node.getReturnType(), false);
-                for (Parameter param : node.getParameters()) {
-                    handleType(param.getOriginType(), false);
-                }
-                ClassNode[] exceptions = node.getExceptions();
-                if (exceptions != null) {
-                    for (ClassNode exception : exceptions) {
-                        handleType(exception, false);
-                    }
-                }
-                GenericsType[] generics = node.getGenericsTypes();
-                if (generics != null) {
-                    for (GenericsType generic : generics) {
-                        if (!generic.isPlaceholder()) {
-                            handleType(generic.getType(), false);
-                        } else if (generic.getLowerBound() != null) {
-                            handleType(generic.getLowerBound(), false);
-                        } else if (generic.getUpperBounds() != null) {
-                            for (ClassNode upper : generic.getUpperBounds()) {
-                                handleType(upper, false);
-                            }
-                        }
+                if (expression.getAccessedVariable() instanceof DynamicVariable || expression.isDynamicTyped()) {
+                    if (!checkRetainImport(expression.getName())) { // could it be static?
+                        handleVariable(expression);
                     }
                 }
             }
-            super.visitMethod(node);
-        }
-
-        @Override
-        public void visitClass(ClassNode node) {
-            current = node;
-            if (!node.isSynthetic()) {
-                handleType(node.getSuperClass(), false);
-                for (ClassNode impls : node.getInterfaces()) {
-                    handleType(impls, false);
-                }
-                // GRECLIPSE-1693
-                GenericsType[] generics = node.getUnresolvedSuperClass().getGenericsTypes();
-                if (generics != null) {
-                    for (GenericsType generic : generics) {
-                        handleType(generic.getType(), false);
-                    }
-                }
-            }
-            super.visitClass(node);
-        }
-
-        @Override
-        public void visitCatchStatement(CatchStatement node) {
-            handleType(node.getVariable().getType(), false);
-            super.visitCatchStatement(node);
-        }
-
-        @Override
-        public void visitForLoop(ForStatement node) {
-            if (!(node.getCollectionExpression() instanceof ClosureListExpression)) {
-                // check the type node of "for (Item i in x)" but skip "for (i in x)"
-                ClassNode type = node.getVariable().getOriginType();
-                if (type.getStart() > 0) {
-                    handleType(type, false);
-                }
-            }
-            super.visitForLoop(node);
+            super.visitVariableExpression(expression);
         }
 
         //
+
+        @Override
+        protected void visitAnnotation(AnnotationNode annotation) {
+            if (annotation.getEnd() > 0) {
+                handleTypeReference(annotation.getClassNode(), true);
+            }
+            super.visitAnnotation(annotation);
+        }
+
+        @Override
+        protected void visitParameter(Parameter parameter) {
+            if (parameter != null && parameter.getEnd() > 0) {
+                handleTypeReference(parameter.getOriginType(), false);
+            }
+            super.visitParameter(parameter);
+        }
 
         /**
          * Assume dynamic variables are a candidate for organize imports, but
@@ -305,11 +266,32 @@ public class OrganizeGroovyImports {
             }
         }
 
+        private void handleTypeParameters(GenericsType[] generics, String typeName) {
+            for (GenericsType generic : generics) {
+                if (generic.getStart() < 1) {
+                    continue;
+                }
+                if (!generic.isPlaceholder() && !generic.isWildcard()) {
+                    handleTypeReference(generic.getType(), false);
+                }
+                if (generic.getLowerBound() != null) {
+                    handleTypeReference(generic.getLowerBound(), false);
+                }
+                if (generic.getUpperBounds() != null) {
+                    for (ClassNode upper : generic.getUpperBounds()) {
+                        if (!upper.getName().equals(typeName)) {
+                            handleTypeReference(upper, false);
+                        }
+                    }
+                }
+            }
+        }
+
         /**
          * Adds the type name to missingTypes if it is not resolved or ensures
          * that the import will be retained if the type is resolved.
          */
-        private void handleType(ClassNode node, boolean isAnnotation) {
+        private void handleTypeReference(ClassNode node, boolean isAnnotation) {
             if (getBaseType(node).isPrimitive()) {
                 return;
             }
@@ -322,7 +304,7 @@ public class OrganizeGroovyImports {
                 until = node.getEnd()-1;
 
                 // getEnd() includes generics; try to constrain the range
-                if (generics != null && generics.length > 0) {
+                if (isNotEmpty(generics)) {
                     if (generics[0].getStart() > 0)
                         until = generics[0].getStart() - 1;
                 } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
@@ -337,22 +319,8 @@ public class OrganizeGroovyImports {
             String name = getTypeName(node);
 
             // check node's generics types
-            if (node.isUsingGenerics() && generics != null && generics.length > 0) {
-                for (GenericsType gt : generics) {
-                    if (!gt.isPlaceholder() && !gt.isWildcard()) {
-                        handleType(gt.getType(), false);
-                    }
-                    if (gt.getLowerBound() != null) {
-                        handleType(gt.getLowerBound(), false);
-                    } else if (gt.getUpperBounds() != null) {
-                        for (ClassNode upper : gt.getUpperBounds()) {
-                            // handle enums where the upper bound is the same as the type
-                            if (!upper.getName().equals(node.getName())) {
-                                handleType(upper, false);
-                            }
-                        }
-                    }
-                }
+            if (isNotEmpty(node.getGenericsTypes())) {
+                handleTypeParameters(node.getGenericsTypes(), node.getName());
             }
 
             if (!node.isResolved() && node.redirect() != current) {

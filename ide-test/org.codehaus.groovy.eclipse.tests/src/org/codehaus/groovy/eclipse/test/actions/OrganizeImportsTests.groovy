@@ -237,14 +237,8 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1693
     void testAddImportForGenerics2() {
-        createGroovyType 'p1', 'Foo', '''
-            class Foo<T> {
-            }
-            '''
-        createGroovyType 'p2', 'Bar', '''
-            class Bar {
-            }
-            '''
+        createGroovyType 'p1', 'Foo', 'class Foo<T> {}'
+        createGroovyType 'p2', 'Bar', 'class Bar {}'
 
         String originalContents = '''
             import p1.Foo
@@ -262,10 +256,23 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testAddImportForGenerics3() {
+        createGroovyType 'foo', 'Bar', 'class Bar {}'
+
         String contents = '''
-            def maps = Collections.<ConcurrentMap>emptyList();
+            class Baz<T extends Bar> {
+            }
             '''
-        doAddImportTest(contents, ['import java.util.concurrent.ConcurrentMap'])
+        doAddImportTest(contents, ['import foo.Bar'])
+    }
+
+    @Test
+    void testAddImportForGenerics4() {
+        createGroovyType 'foo', 'Bar', 'class Bar {}'
+
+        String contents = '''
+            def maps = Collections.<Bar>emptyList();
+            '''
+        doAddImportTest(contents, ['import foo.Bar'])
     }
 
     @Test
