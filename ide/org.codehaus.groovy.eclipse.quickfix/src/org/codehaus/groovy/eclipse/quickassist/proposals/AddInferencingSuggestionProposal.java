@@ -38,7 +38,7 @@ public class AddInferencingSuggestionProposal extends GroovyQuickAssistProposal 
 
     @Override
     public Image getImage() {
-        return JavaPluginImages.get(JavaPluginImages.IMG_OBJS_IMPDECL);
+        return JavaPluginImages.get(JavaPluginImages.IMG_OBJS_SEARCH_READACCESS);
     }
 
     @Override

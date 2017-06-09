@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -35,7 +34,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IMessageProvider;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -71,26 +69,25 @@ import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class NewDSLDWizard extends BasicNewResourceWizard {
-    
+
     class NewDSLDWizardPage extends WizardNewFileCreationPage {
 
         public NewDSLDWizardPage(String pageName, IStructuredSelection selection) {
             super(pageName, selection);
         }
-        
-        
+
         @Override
         protected InputStream getInitialContents() {
             return new StringInputStream(
                     "// this is a DSLD file\n" +
-            		"// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
-            		"\n" +
-            		"// The following snippet adds the 'newProp' to all types that are a subtype of GroovyObjects\n" +
-            		"// contribute(currentType(subType('groovy.lang.GroovyObject'))) {\n" +
-            		"//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
-            		"// }\n");
+                    "// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
+                    "\n" +
+                    "// The following snippet adds the 'newProp' to all types that are a subtype of GroovyObjects\n" +
+                    "// contribute(currentType(subType('groovy.lang.GroovyObject'))) {\n" +
+                    "//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
+                    "// }\n");
         }
-        
+
         /**
          * Check that containing project is a groovy project (if not---error).
          * Check that containing folder is in a source folder (if not---warning).
@@ -100,9 +97,9 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
             if (!super.validatePage()) {
                 return false;
             }
-            
+
             IPath path = getContainerFullPath();
-            IProject project; 
+            IProject project;
             if (path.segmentCount() > 1) {
                 IFolder folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(path);
                 project = folder.getProject();
@@ -121,7 +118,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                 setErrorMessage("Project " + project.getName() + " is not a groovy project.");
                 return false;
             }
-            
+
             IJavaProject javaProject = JavaCore.create(project);
             try {
                 // check that the folder is inside of a source folder
@@ -135,7 +132,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                     }
                 }
                 if (!inSourceFolder) {
-                    setMessage("Path is not in a source folder.  It is significantly easier to edit DSLDs when they are in source folders", 
+                    setMessage("Path is not in a source folder.  It is significantly easier to edit DSLDs when they are in source folders",
                             IMessageProvider.WARNING);
                 }
             } catch (JavaModelException e) {
@@ -146,15 +143,15 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
             return true;
         }
     }
-    
+
     class StringInputStream extends InputStream {
 
         private Reader reader;
-        
+
         public StringInputStream(String contents){
             this.reader = new StringReader(contents);
         }
-        
+
         /* (non-Javadoc)
          * @see java.io.InputStream#read()
          */
@@ -162,11 +159,11 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
             return reader.read();
         }
 
-        
+
         public void close() throws IOException {
             reader.close();
-        } 
-        
+        }
+
     }
 
 
@@ -186,7 +183,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
         super.addPages();
         mainPage = new NewDSLDWizardPage("newDSLDFilePage", getSelection());//$NON-NLS-1$
         mainPage.setTitle("DSLD File");
-        mainPage.setDescription("Create a new Groovy DSL Descriptor"); 
+        mainPage.setDescription("Create a new Groovy DSL Descriptor");
         mainPage.setFileExtension("dsld");
         addPage(mainPage);
     }
@@ -204,8 +201,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
      * Method declared on BasicNewResourceWizard.
      */
     protected void initializeDefaultPageImageDescriptor() {
-        ImageDescriptor desc = imageDescriptorFromPlugin(GroovyDSLCoreActivator.PLUGIN_ID, "icons/GROOVY.png");
-        setDefaultPageImageDescriptor(desc);
+        setDefaultPageImageDescriptor(imageDescriptorFromPlugin("org.codehaus.groovy.eclipse", "groovy.png"));
     }
 
     /* (non-Javadoc)
@@ -214,8 +210,8 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
     public boolean performFinish() {
         IFile file = mainPage.createNewFile();
         if (file == null) {
-			return false;
-		}
+            return false;
+        }
 
         selectAndReveal(file);
 
@@ -229,7 +225,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                 }
             }
         } catch (PartInitException e) {
-            DialogUtil.openError(dw.getShell(), ResourceMessages.FileResource_errorMessage, 
+            DialogUtil.openError(dw.getShell(), ResourceMessages.FileResource_errorMessage,
                     e.getMessage(), e);
         }
 

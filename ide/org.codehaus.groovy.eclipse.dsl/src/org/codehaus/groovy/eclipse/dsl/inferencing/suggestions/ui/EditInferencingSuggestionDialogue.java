@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,19 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.widgets.Shell;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-20
- */
 public class EditInferencingSuggestionDialogue extends AddInferencingSuggestionDialogue {
-    
+
     public static final DialogueDescriptor EDIT_DIALOGUE_DESCRIPTOR = new DialogueDescriptor(
-            "Edit a Groovy inferencing suggestion", "Inferencing Suggestion", "icons/GROOVY.png");
+        "Edit a Groovy inferencing suggestion", "Inferencing Suggestion", "platform:/plugin/org.codehaus.groovy.eclipse/groovy.png");
+
     /**
-     * This constructor is used to edit an existing suggestion. Editing a
-     * declaring type is not yet supported.
+     * This constructor is used to edit an existing suggestion. Editing a declaring type is not yet supported.
      */
     public EditInferencingSuggestionDialogue(Shell parentShell, IGroovySuggestion suggestion, IProject project) {
         super(parentShell, project);
         setSuggestion(suggestion);
     }
-    
+
     protected DialogueDescriptor getDialogueDescriptor() {
         return EDIT_DIALOGUE_DESCRIPTOR;
     }
