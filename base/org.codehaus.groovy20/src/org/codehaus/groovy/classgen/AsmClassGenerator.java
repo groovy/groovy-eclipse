@@ -1329,7 +1329,10 @@ public class AsmClassGenerator extends ClassGenerator {
 
         BytecodeVariable variable = controller.getCompileStack().getVariable(variableName, false);
         if (variable == null) {
-            processClassVariable(variableName);
+            // GRECLIPSE edit
+            //processClassVariable(variableName);
+            processClassVariable(expression);
+            // GRECLIPSE end
         } else {
             controller.getOperandStack().loadOrStoreVariable(variable, expression.isUseReferenceDirectly());
         }
@@ -1353,7 +1356,11 @@ public class AsmClassGenerator extends ClassGenerator {
         }
     }
 
-    private void processClassVariable(String name) {
+    // GRECLIPSE edit
+    //private void processClassVariable(String name) {
+    private void processClassVariable(VariableExpression expression) {
+        String name = expression.getName();
+    // GRECLIPSE end
         if (passingParams && controller.isInScriptBody()) {
             //TODO: check if this part is actually used
             MethodVisitor mv = controller.getMethodVisitor();
@@ -1370,7 +1377,12 @@ public class AsmClassGenerator extends ClassGenerator {
                     "<init>",
                     "(Lgroovy/lang/Script;Ljava/lang/String;)V");
         } else {
-            PropertyExpression pexp = new PropertyExpression(VariableExpression.THIS_EXPRESSION, name);
+            // GRECLIPSE edit
+            //PropertyExpression pexp = new PropertyExpression(VariableExpression.THIS_EXPRESSION, name);
+            PropertyExpression pexp = new PropertyExpression(new VariableExpression("this", ClassHelper.DYNAMIC_TYPE), name);
+            pexp.getObjectExpression().setSourcePosition(expression);
+            pexp.getProperty().setSourcePosition(expression);
+            // GRECLIPSE end
             pexp.setImplicitThis(true);
             visitPropertyExpression(pexp);
         }
