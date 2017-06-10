@@ -27,6 +27,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
@@ -125,7 +126,11 @@ public class GroovyExtraInformationHover extends JavadocHover {
      * Possibly compute the hover. Might return null.
      */
     private Object computeHover(IRegion hoverRegion, IJavaElement[] elements) {
-        JavadocBrowserInformationControlInput hover = getHoverInfo(elements, getEditorInputJavaElement(), hoverRegion, null);
+        Class<?>[] types = {IJavaElement[].class, ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class};
+        Object[] values = {elements, getEditorInputJavaElement(), hoverRegion, null};
+
+        JavadocBrowserInformationControlInput hover = (JavadocBrowserInformationControlInput)
+            ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", types, null, values);
         if (hover != null && elements[0] instanceof IGroovyResolvedElement) {
             hover = new JavadocBrowserInformationControlInput(
                 (JavadocBrowserInformationControlInput) hover.getPrevious(), hover.getElement(),
