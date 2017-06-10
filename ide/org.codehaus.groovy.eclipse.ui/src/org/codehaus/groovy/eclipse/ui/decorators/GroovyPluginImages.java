@@ -15,19 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.ui.decorators;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.osgi.framework.FrameworkUtil;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 public final class GroovyPluginImages {
 
     public static final ImageDescriptor DESC_GRADLE_FILE = createDescriptor2(
             "platform:/plugin/org.eclipse.buildship.ui/icons/full/obj16/gradle_file.png");
-    public static final ImageDescriptor DESC_GROOVY_FILE = createDescriptor("icons/groovy_file.gif");
-    public static final ImageDescriptor DESC_NEW_GROOVY_PROJECT = createDescriptor("icons/full/newgroovyprj_wiz.gif");
+    public static final ImageDescriptor DESC_GROOVY_FILE = createDescriptor("$nl$/icons/groovy_file.gif");
+    public static final ImageDescriptor DESC_NEW_GROOVY_PROJECT = createDescriptor("$nl$/icons/full/newgroovyprj_wiz.gif");
 
     private static ImageDescriptor createDescriptor(String path) {
         // create the image descriptor without causing this bundle to be activated
-        return ImageDescriptor.createFromURL(FrameworkUtil.getBundle(GroovyPluginImages.class).getEntry(path));
+        return AbstractUIPlugin.imageDescriptorFromPlugin(GroovyPlugin.PLUGIN_ID, path);
     }
 
     private static ImageDescriptor createDescriptor2(String path) {

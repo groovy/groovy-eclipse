@@ -15,15 +15,13 @@
          id="org.codehaus.groovy.eclipse.codeassist.category"
          name="Groovy Proposals">
       <proposalCategory
-            icon="icons/groovy_file.gif">
-      </proposalCategory>
+            icon="$nl$/icons/groovy_file.gif" />
    </extension>
    <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
          id="org.codehaus.groovy.eclipse.codeassist.templates.category"
          name="Groovy Template Proposals">
       <proposalCategory
-            icon="icons/template.gif">
-      </proposalCategory>
+            icon="$nl$/icons/template.gif" />
    </extension>
    <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
          id="org.codehaus.groovy.eclipse.codeassist.completion.groovy"

@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Shell;
 public class AddInferencingSuggestionDialogue extends AbstractDialogue {
 
     public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor(
-        "Add a Groovy inferencing suggestion", "Inferencing Suggestion", "platform:/plugin/org.codehaus.groovy.eclipse/groovy.png");
+        "Add a Groovy inferencing suggestion", "Inferencing Suggestion", "platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy.png");
 
     private Point labelControlOffset;
 

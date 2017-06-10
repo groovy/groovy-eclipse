@@ -22,7 +22,7 @@ import org.eclipse.swt.widgets.Shell;
 public class EditInferencingSuggestionDialogue extends AddInferencingSuggestionDialogue {
 
     public static final DialogueDescriptor EDIT_DIALOGUE_DESCRIPTOR = new DialogueDescriptor(
-        "Edit a Groovy inferencing suggestion", "Inferencing Suggestion", "platform:/plugin/org.codehaus.groovy.eclipse/groovy.png");
+        "Edit a Groovy inferencing suggestion", "Inferencing Suggestion", "platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy.png");
 
     /**
      * This constructor is used to edit an existing suggestion. Editing a declaring type is not yet supported.

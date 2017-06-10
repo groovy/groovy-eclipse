@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 public class MethodParameterDialogue extends AbstractDialogue {
 
     public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor(
-        "Add parameter", "Suggestion Parameter", "platform:/plugin/org.codehaus.groovy.eclipse/groovy.png");
+        "Add parameter", "Suggestion Parameter", "platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy.png");
 
     private Point labelOffset;
 

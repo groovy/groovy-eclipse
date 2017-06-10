@@ -201,7 +201,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
      * Method declared on BasicNewResourceWizard.
      */
     protected void initializeDefaultPageImageDescriptor() {
-        setDefaultPageImageDescriptor(imageDescriptorFromPlugin("org.codehaus.groovy.eclipse", "groovy.png"));
+        setDefaultPageImageDescriptor(imageDescriptorFromPlugin("org.codehaus.groovy.eclipse", "$nl$/groovy.png"));
     }
 
     /* (non-Javadoc)
@@ -225,8 +225,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                 }
             }
         } catch (PartInitException e) {
-            DialogUtil.openError(dw.getShell(), ResourceMessages.FileResource_errorMessage,
-                    e.getMessage(), e);
+            DialogUtil.openError(dw.getShell(), ResourceMessages.FileResource_errorMessage, e.getMessage(), e);
         }
 
         return true;

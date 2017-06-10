@@ -160,7 +160,7 @@
             contributesToHeader="true"
             highlightPreferenceKey="typeCheckIndicationHighlighting"
             highlightPreferenceValue="false"
-            icon="icons/warn_type_check.gif"
+            icon="$nl$/icons/warn_type_check.gif"
             isGoToNextNavigationTarget="true"
             isGoToNextNavigationTargetKey="istypeCheckGoToNextNavigationTarget"
             isGoToPreviousNavigationTarget="true"
@@ -186,12 +186,12 @@
             category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.dsl.ui.NewDSLDWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="platform:/plugin/org.codehaus.groovy.eclipse/groovy16.png"
+            icon="platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy16.png"
             id="org.codehaus.groovy.eclipse.dsld.newDsldWizard"
             name="Groovy DSL Descriptor"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
          <description>
-            Create a new DSL descriptor file.
+            Create a new DSL descriptor file
          </description>
          <keywordReference
                id="org.codehaus.groovy.eclipse.dsl.keywords"/>
@@ -244,7 +244,7 @@
    <extension point="org.eclipse.core.runtime.applications" id="staticCheck">
       <application
             cardinality="singleton-global"
-            icon="platform:/plugin/org.codehaus.groovy.eclipse/groovy.png"
+            icon="platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy32.png"
             thread="main"
             visible="true">
          <run
