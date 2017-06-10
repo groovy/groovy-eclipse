@@ -17,21 +17,28 @@ package org.codehaus.groovy.eclipse.dsl.tests
 
 import static org.junit.Assume.assumeTrue
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IProject
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 
 final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
 
+    @BeforeClass
+    static void setUpTests() {
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS,   true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS,   true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.NAMED_ARGUMENTS,    true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
+    }
+
     @Before
     void setUp() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
-
-        addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        DSLInferencingTestSuite.refreshExternalFoldersProject()
         withProject { IProject project ->
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
           //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
@@ -47,7 +54,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs1() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -62,7 +69,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNoNamedArgs1() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false
             }
             '''.stripIndent()
@@ -77,7 +84,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs2() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -92,7 +99,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs3() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -107,7 +114,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs4() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -122,7 +129,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs5() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -137,7 +144,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNoNamedArgs6() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false
             }
             '''.stripIndent()
@@ -152,7 +159,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testOptionalArgs1() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", optionalParams:[aaa:Integer, bbb:Boolean, ccc:String]
             }
             '''.stripIndent()
@@ -167,7 +174,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testOptionalArgs2() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", namedParams:[aaa:Integer, bbb:Boolean, ccc:String]
             }
             '''.stripIndent()
@@ -182,7 +189,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testOptionalArgs3() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", namedParams:[aaa:Integer], optionalParams: [bbb:Boolean, ccc:String]
             }
             '''.stripIndent()
@@ -197,7 +204,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs7() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -215,7 +222,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testNamedArgs8() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -233,7 +240,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testParamGuessing1() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -249,7 +256,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testParamGuessing3() {
         createDSL '''\
-            currentType().accept {
+            contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
@@ -265,7 +272,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     // tests application of closures with and without named parameters
-    private static final String closuredsld = '''\
+    private static final String CLOSURE_DSLD = '''\
         contribute(currentType('Clos')) {
           method name: 'test1', params: [op:Closure]
           method name: 'test2', params: [first: String, op:Closure]
@@ -285,61 +292,61 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testClostureOp1() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '1 {', closureContents.length(), 'test1')
     }
 
     @Test
     void testClostureOp2() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '2("") {', closureContents.length(), 'test2')
     }
 
     @Test
     void testClostureOp3() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '3(op:{  })', closureContents.length(), 'test3')
     }
 
     @Test
     void testClostureOp4() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '4(first:"", op:{  })', closureContents.length(), 'test4')
     }
 
     @Test
     void testClostureOp5() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '5("", op:{  })', closureContents.length(), 'test5')
     }
 
     @Test
     void testClostureOp6() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '6(first:"") {', closureContents.length(), 'test6')
     }
 
     @Test
     void testClostureOp7() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '7(first:"", other:"") {', closureContents.length(), 'test7')
     }
 
     @Test
     void testClostureOp8() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '8("", first:"") {', closureContents.length(), 'test8')
     }
 
     @Test
     void testClostureOp9() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '9("", {  }, "", first:"")', closureContents.length(), 'test9')
     }
 
     @Test
     void testClostureOp0() {
-        createDSL(closuredsld)
+        createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '0("", {  }, "", first:"") {', closureContents.length(), 'test0')
     }
 }

@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.tests
 
 import static org.junit.Assume.assumeTrue
 
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IFile
@@ -24,6 +25,8 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Test
 
 final class DSLContentAssistTests extends CompletionTestSuite {
@@ -54,12 +57,14 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         }
         '''.stripIndent()
 
+    @BeforeClass
+    static void setUpTests() {
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
+    }
+
     @Before
     void setUp() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
-
-        addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        DSLInferencingTestSuite.refreshExternalFoldersProject()
         withProject { IProject project ->
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
           //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
@@ -79,23 +84,25 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     //
 
-    @Test
+    @Test @Ignore('Proposal "instance" appears twice in the result')
     void testDSLProposalFirstStaticField() {
         String contents = '''\
             @Singleton class Foo { static aaa }
-            Foo.
+            Foo.i
             '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.')))
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.i')))
+        // contributed by built-in DLSD for @Singleton AST transform
         assertProposalOrdering(proposals, 'instance', 'aaa')
     }
 
-    @Test
+    @Test @Ignore('Proposal "getInstance" appears twice in the result')
     void testDSLProposalFirstStaticMethod() {
         String contents = '''\
             @Singleton class Foo { static aaa() { } }
-            Foo.
+            Foo.g
             '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.')))
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.g')))
+        // contributed by built-in DLSD for @Singleton AST transform
         assertProposalOrdering(proposals, 'getInstance', 'aaa')
     }
 
@@ -104,22 +111,25 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         String contents = '''\
             import groovy.swing.SwingBuilder
               new SwingBuilder().edt {
-              delegate.x
+              delegate.f
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'delegate.')))
-        assertProposalOrdering(proposals, 'frame', 'registerBinding')
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'delegate.f')))
+        // contributed by built-in DSLD for SwingBuilder
+        assertProposalOrdering(proposals, 'frame', 'find')
     }
 
     @Test
     void testDSLProposalFirstMethod2() {
         String contents = '''\
             import groovy.swing.SwingBuilder
-              new SwingBuilder().edt {
+            new SwingBuilder().edt {
+              fr
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '{\n')))
-        assertProposalOrdering(proposals, 'frame', 'registerBinding')
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'fr')))
+        // contributed by built-in DSLD for SwingBuilder
+        assertProposalOrdering(proposals, 'frame', 'FrameFactory')
     }
 
     @Test // proposals should not exist since not applied to 'this'

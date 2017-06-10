@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.junit.Before
@@ -849,14 +851,17 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test // GRECLIPSE-1459
     void testNullType() {
-        createDsls('contribute(enclosingCall(hasArgument(type()))) {\n' +
-                '    property name:"foo", type:Integer\n' +
-                '}')
-        String contents = 'String flart(val, closure) { }\n' +
-                '\n' +
-                'flart "", {\n' +
-                '    foo\n' +
-                '}'
+        createDsls '''\
+            contribute(enclosingCall(hasArgument(type()))) {
+              property name:"foo", type:Integer
+            }
+            '''.stripIndent()
+        String contents = '''\
+            String flart(val, closure) { }
+            flart "", {
+              foo
+            }
+            '''.stripIndent()
         int start = contents.lastIndexOf('fo')
         int end = start + 'foo'.length()
         assertType(contents, start, end, 'java.lang.Integer')
@@ -893,14 +898,14 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String[][]>')
     }
 
-    @Test @Ignore // TODO expected to fail
+    @Test @NotYetImplemented
     void testArrayType4() {
         createDsls(ARRAY_TYPE_DSLD)
         String contents = 'foot4'
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String>[]')
     }
 
-    @Test @Ignore // TODO expected to fail
+    @Test @NotYetImplemented
     void testArrayType5() {
         createDsls(ARRAY_TYPE_DSLD)
         String contents = 'foot5'
