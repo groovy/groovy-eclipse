@@ -167,10 +167,10 @@ public class ProposalUtils {
             parameters = node.getParameters();
         }
         String[] parameterTypes = new String[parameters.length - ignoreParameters];
-        for (int i = 0; i < parameterTypes.length; i++) {
+        for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
             parameterTypes[i] = createTypeSignatureStr(parameters[i + ignoreParameters].getType());
         }
-        return Signature.createMethodSignature(parameterTypes, returnType);
+        return  node.getName() + Signature.createMethodSignature(parameterTypes, returnType);
     }
 
     public static char[] createSimpleTypeName(ClassNode node) {
