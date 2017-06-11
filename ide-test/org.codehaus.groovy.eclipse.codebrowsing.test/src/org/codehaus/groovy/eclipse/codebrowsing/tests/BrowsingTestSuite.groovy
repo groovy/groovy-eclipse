@@ -62,12 +62,10 @@ abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void prepareForCodeSelect(ICompilationUnit unit) {
+        openInEditor(unit)
         if (unit instanceof GroovyCompilationUnit) {
             def problems = unit.getModuleInfo(true).result.problems
             problems?.findAll { it.error }?.each { println it }
         }
-
-        waitForIndex()
-        openInEditor(unit)
     }
 }

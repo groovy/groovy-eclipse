@@ -224,13 +224,11 @@ public abstract class BuilderTestSuite {
 
     protected final void expectingNoProblemsFor(IPath... roots) {
         Problem[] allProblems = getSortedProblems(roots);
-        if (allProblems != null) {
-            TestCase.assertStringEquals("", toString(Arrays.asList(allProblems)), false);
-        }
+        TestCase.assertStringEquals("", toString(Arrays.asList(allProblems)), false);
     }
 
     protected final void expectingSpecificProblemFor(IPath root, Problem problem) {
-        expectingSpecificProblemsFor(root, new Problem[] { problem });
+        expectingSpecificProblemsFor(root, new Problem[] {problem});
     }
 
     protected void expectingSpecificProblemsFor(IPath root, Problem[] problems) {
@@ -263,12 +261,12 @@ public abstract class BuilderTestSuite {
     }
 
     private Problem[] getSortedProblems(IPath[] roots) {
-        Problem[] allProblems = null;
+        Problem[] allProblems = new Problem[0];
         for (IPath root : roots) {
             Problem[] problems = env.getProblemsFor(root);
             int length = problems.length;
             if (problems.length != 0) {
-                if (allProblems == null) {
+                if (allProblems.length == 0) {
                     allProblems = problems;
                 } else {
                     int all = allProblems.length;
@@ -277,17 +275,17 @@ public abstract class BuilderTestSuite {
                 }
             }
         }
-        if (allProblems != null) {
+        if (allProblems.length > 1) {
             Arrays.sort(allProblems);
         }
         return allProblems;
     }
 
-    private static String toString(List<?> list) {
-        StringBuilder buffer = new StringBuilder();
-        for (Object item : list) {
-            buffer.append(item).append('\n');
+    private static String toString(Iterable<?> seq) {
+        StringBuilder buf = new StringBuilder();
+        for (Object obj : seq) {
+            buf.append(obj).append('\n');
         }
-        return buffer.toString();
+        return buf.toString();
     }
 }

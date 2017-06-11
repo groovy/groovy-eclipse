@@ -61,7 +61,21 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testScriptFields() {
+    void testScriptFields1() {
+        String contents = '''\
+            @groovy.transform.Field List list = [1, 2]
+            list << 'three'
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('list'), 4, FIELD));
+    }
+
+    @Test
+    void testScriptFields2() {
         String contents = '''\
               import groovy.transform.Field
               @Field String one
@@ -1439,20 +1453,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('thing'), 5, FIELD),
             new HighlightedTypedPosition(contents.indexOf('lookup'), 6, STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('id'), 2, FIELD))
-    }
-
-    @Test
-    void testScriptField() {
-        String contents = '''\
-            @groovy.transform.Field List list = [1, 2]
-            list << 'three'
-            '''.stripIndent()
-
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('list'), 4, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('list'), 4, FIELD));
     }
 
     @Test

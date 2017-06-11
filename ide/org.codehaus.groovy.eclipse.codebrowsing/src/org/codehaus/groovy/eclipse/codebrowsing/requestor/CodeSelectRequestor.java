@@ -44,6 +44,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMet
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceType;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -395,7 +396,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (declaration instanceof ClassNode) {
             maybeRequested = jdtDeclaringType;
         } else if (jdtDeclaringType.getTypeRoot() != null) {
-            String name;
+            String name = null;
+            if (declaration instanceof PropertyNode) {
+                name = ((PropertyNode) declaration).getName();
+                // check for possible property node redirection
+                if (nodeToLookFor instanceof VariableExpression &&
+                        ((VariableExpression) nodeToLookFor).getAccessedVariable() != declaration) {
+                    declaration = (ASTNode) ((VariableExpression) nodeToLookFor).getAccessedVariable();
+                }
+            }
             if (declaration instanceof MethodNode) {
                 name = ((MethodNode) declaration).getName();
                 if (name.equals("<init>")) {
@@ -412,14 +421,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     }
                 }
             } else if (declaration instanceof FieldNode) {
-                name = ((FieldNode) declaration).getName();
+                FieldNode field = (FieldNode) declaration; name = field.getName();
                 // check for @Lazy field
-                Iterable<AnnotationNode> annos = ((FieldNode) declaration).getAnnotations();
-                if (annos != null) {
-                    for (AnnotationNode anno : annos) {
-                        if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
-                            name = name.substring(1); // strip the leading $
-                        }
+                for (AnnotationNode anno : field.getAnnotations()) {
+                    if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
+                        name = name.substring(1); // strip the leading $
                     }
                 }
                 // check for @Field field
@@ -430,23 +436,24 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 @SuppressWarnings("unchecked")
                 List<FieldNode> traitFields = (List<FieldNode>) declaringType.getNodeMetaData("trait.fields");
                 if (traitFields != null) {
-                    for (FieldNode field : traitFields) {
-                        if (field == declaration) {
+                    for (FieldNode traitField : traitFields) {
+                        if (traitField == declaration) {
                             return jdtDeclaringType.getField(name);
                         }
                     }
                 }
-            } else if (declaration instanceof PropertyNode) {
-                name = ((PropertyNode) declaration).getName();
-            } else {
-                name = declaration.getText();
+                // check for @Log, @Singleton, etc. field -- generalized to synthetic field that exists on declaring class
+                if (field.getEnd() < 1 && !(field instanceof JDTFieldNode) && field.getDeclaringClass().getField(name) != null) {
+                    // could check declaring class for AST transform annotation...
+                    return jdtDeclaringType.getField(name);
+                }
             }
 
-            if (declaration.getEnd() > 0) {
+            if (declaration.getEnd() > 0 && name != null) {
                 int start = declaration.getStart(), until = declaration.getEnd();
                 for (IJavaElement child : jdtDeclaringType.getChildren()) {
                     ISourceRange range = ((ISourceReference) child).getSourceRange();
-                    if (range.getOffset() <= start && range.getOffset() + range.getLength() >= until && child.getElementName().equals(name)) {
+                    if (range.getOffset() <= start && (range.getOffset() + range.getLength()) >= until && child.getElementName().equals(name)) {
                         maybeRequested = child;
                         break;
                     } else if (start + until < range.getOffset()) {

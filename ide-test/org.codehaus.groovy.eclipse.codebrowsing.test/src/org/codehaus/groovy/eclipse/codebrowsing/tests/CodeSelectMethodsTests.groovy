@@ -233,57 +233,95 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethod4() {
-        String contents = 'def empty = Collections.&emptyList'
+        String contents = 'List<String> empty = Collections.&emptyList'
         IJavaElement elem = assertCodeSelect([contents], 'emptyList')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assert method.returnType.toString(false) == 'java.util.List <T>' // want T to be java.lang.String
+        assert elem.inferredElement.returnType.toString(false) == 'java.util.List <T>' // want T to be java.lang.String
     }
 
     @Test
     void testCodeSelectStaticMethod5() {
         assumeTrue(isAtLeastGroovy(20))
-        String contents = 'import static java.util.Collections.singletonList\n' +
-            '@groovy.transform.TypeChecked\n' +
-            'class Foo { static {\n' +
-            '  singletonList(\"\")\n' +
-            '}}'
+        String contents = '''\
+            import static java.util.Collections.singletonList
+            @groovy.transform.TypeChecked
+            class Foo { static {
+              singletonList("")
+            }}'''.stripIndent()
         IJavaElement elem = assertCodeSelect([contents], 'singletonList')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
-        assert method.returnType.toString(false) == 'java.util.List <java.lang.String>'
+        assert elem.inferredElement.returnType.toString(false) == 'java.util.List <java.lang.String>'
+    }
+
+    @Test
+    void testCodeSelectNonStaticProperty1() {
+        String contents = '''\
+            class Super {
+              def getSql() { null }
+            }
+
+            class Foo extends Super {
+              def foo() {
+                sql
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'sql', 'getSql')
     }
 
     @Test
     void testCodeSelectStaticProperty1() {
-        String contents = 'class Super {\n    def static getSql() {   }\n}\n \n' +
-            'class Sub extends Super {\n    def static foo() {\n        sql  \n     }\n} '
+        String contents = '''\
+            class Super {
+              static def getSql() { null }
+            }
+
+            class Foo extends Super {
+              def static foo() {
+                sql
+              }
+            }
+            '''.stripIndent()
         assertCodeSelect([contents], 'sql', 'getSql')
     }
 
     @Test
     void testCodeSelectStaticProperty2() {
-        String contents = 'class Super {\n    def getSql() {   }\n}\n \nclass Sub extends Super {\n' +
-            '    def foo() {\n        sql  \n     }\n} '
+        String contents = '''\
+            class Foo {
+              static def getSql() { null }
+              def foo() {
+                sql
+              }
+            }
+            '''.stripIndent()
         assertCodeSelect([contents], 'sql', 'getSql')
     }
 
     @Test
     void testCodeSelectStaticProperty3() {
-        String contents = 'class Super {\n    def getSql() {   }\n    def foo() {\n        sql  \n' + '     }\n} '
-        assertCodeSelect([contents], 'sql', 'getSql')
+        String contents = '''\
+            import java.util.logging.*
+            class Foo {
+              static Logger getLog() { null }
+              def foo() {
+                log.info 'message' // should not be confused with field created by @Log transform (see CodeSelectFieldsTests.testCodeSelectLoggerFieldInClass)
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'log', 'getLog')
     }
 
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod1() {
         String contents = '\"\".substring(0)'
         IJavaElement elem = assertCodeSelect([contents], 'substring')
-        assert ((IMethod) elem).getParameterTypes().length == 1 : 'Wrong number of parameters to method'
+        assert elem.parameterTypes.length == 1 : 'Wrong number of parameters to method'
     }
 
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod2() {
         String contents = '"".substring(0,1)'
         IJavaElement elem = assertCodeSelect([contents], 'substring')
-        assert ((IMethod) elem).getParameterTypes().length == 2 : 'Wrong number of parameters to method'
+        assert elem.parameterTypes.length == 2 : 'Wrong number of parameters to method'
     }
 
     @Test

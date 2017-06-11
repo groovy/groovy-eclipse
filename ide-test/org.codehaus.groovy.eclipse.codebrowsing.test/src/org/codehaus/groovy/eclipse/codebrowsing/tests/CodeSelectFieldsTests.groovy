@@ -51,16 +51,15 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectLoggerFieldInClass() {
-        // field added by @Log transform is not fully selectable
         assertCodeSelect(['''\
             @groovy.util.logging.Log
             class Foo {
               String str
-              def meth() {
+              void meth() {
                 log.info "$str msg"
               }
             }'''.stripIndent()
-        ], 'log', 'Foo') // TODO: Want this to be 'log', but field is not in Java model.
+        ], 'log')
     }
 
     @Test
