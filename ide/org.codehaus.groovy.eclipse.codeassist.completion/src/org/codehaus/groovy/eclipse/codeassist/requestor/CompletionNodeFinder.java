@@ -744,11 +744,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     private boolean isArgument(Expression expr, List<? extends Expression> args) {
         if (args != null && !args.isEmpty()) {
             for (Expression arg : args) {
-                if (arg instanceof NamedArgumentListExpression) {
-                    return isArgument(expr, ((NamedArgumentListExpression) arg).getMapEntryExpressions());
-                }
                 if (arg == expr) {
                     return true;
+                }
+                if (arg instanceof NamedArgumentListExpression) {
+                    return isArgument(expr, ((NamedArgumentListExpression) arg).getMapEntryExpressions());
                 }
             }
         }
