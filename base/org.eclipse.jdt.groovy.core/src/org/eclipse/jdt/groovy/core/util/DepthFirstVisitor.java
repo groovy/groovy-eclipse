@@ -170,7 +170,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
         // visit inner classes
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
-            ClassNode inner = it.next();
+            InnerClassNode inner = it.next();
             // closures are represented as a class like Outer$_name_closure#, where # is a number
             if (!inner.isSynthetic() && !(inner instanceof GeneratedClosure)) {
                 visitClass(inner);
@@ -361,7 +361,6 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     public void visitClassExpression(ClassExpression expression) {
         visitAnnotations(expression.getAnnotations());
-        //visitTypeReference(expression.getType(), expression);
         visitExpression(expression);
     }
 
@@ -595,9 +594,5 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     protected static boolean isNotEmpty(Collection<?> collection) {
         return collection != null && !collection.isEmpty();
-    }
-
-    protected static boolean isRunMethod(MethodNode node) {
-        return node.getDeclaringClass().isScript() && node.getName().equals("run") && !isNotEmpty(node.getParameters());
     }
 }
