@@ -36,7 +36,7 @@ import org.eclipse.ui.PlatformUI;
 // Adapted from org.eclipse.jdt.ui.tests.performance.JdtPerformanceTestCase
 public class SynchronizationUtils {
 
-    public static void joinBackgroudActivities() {
+    public static void joinBackgroundActivities() {
         // Join Building
         boolean interrupted = true;
         while (interrupted) {
@@ -169,7 +169,7 @@ public class SynchronizationUtils {
             e.printStackTrace();
         }
 
-        SynchronizationUtils.joinBackgroudActivities();
+        SynchronizationUtils.joinBackgroundActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
             if (jobs[i].getName().contains("Java index")) {
@@ -187,7 +187,7 @@ public class SynchronizationUtils {
     }
 
     public static void waitForRefactoringToComplete() {
-        SynchronizationUtils.joinBackgroudActivities();
+        SynchronizationUtils.joinBackgroundActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
             if (jobs[i].getName().contains("Java index")) {
@@ -205,7 +205,7 @@ public class SynchronizationUtils {
     }
 
     public static void waitForDSLDProcessingToComplete() {
-        SynchronizationUtils.joinBackgroudActivities();
+        SynchronizationUtils.joinBackgroundActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
             if (jobs[i].getName().startsWith("Refresh DSLD scripts")) {

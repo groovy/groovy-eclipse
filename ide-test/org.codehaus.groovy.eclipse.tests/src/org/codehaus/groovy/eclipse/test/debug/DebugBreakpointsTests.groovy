@@ -60,7 +60,7 @@ final class DebugBreakpointsTests extends BreakpointTestSuite {
         int initialNumBreakpoints = breakpoints.length
         try {
             adapter.toggleLineBreakpoints(editor, selection)
-            SynchronizationUtils.joinBackgroudActivities()
+            SynchronizationUtils.joinBackgroundActivities()
         } finally {
             IBreakpoint[] newBreakpoints = breakpointManager.breakpoints
             assert newBreakpoints.length == initialNumBreakpoints + 1 : 'Unexpected number of breakpoints'

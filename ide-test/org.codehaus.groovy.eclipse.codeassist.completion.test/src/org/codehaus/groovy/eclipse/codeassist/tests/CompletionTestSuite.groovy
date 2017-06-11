@@ -172,7 +172,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
         // reconciler runs asynchronously; give it a chance to get caught up before creating edits
-        SynchronizationUtils.joinBackgroudActivities()
+        SynchronizationUtils.joinBackgroundActivities()
 
         proposal.apply(document)
         String actual = document.get()

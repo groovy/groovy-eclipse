@@ -241,7 +241,7 @@ public class TestProject {
     }
 
     private void deleteWorkingCopies() throws Exception {
-        SynchronizationUtils.joinBackgroudActivities();
+        SynchronizationUtils.joinBackgroundActivities();
 
         ICompilationUnit[] workingCopies = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
         if (workingCopies != null && workingCopies.length > 0) {
