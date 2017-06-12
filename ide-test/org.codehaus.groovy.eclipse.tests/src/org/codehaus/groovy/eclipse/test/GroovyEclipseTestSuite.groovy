@@ -164,7 +164,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final void addClasspathContainer(IPath path) {
-        testProject.addClasspathEntry(JavaCore.newContainerEntry(path))
+        testProject.addClasspathEntry(JavaCore.newContainerEntry(path, true))
     }
 
     protected final void addJUnit4() {

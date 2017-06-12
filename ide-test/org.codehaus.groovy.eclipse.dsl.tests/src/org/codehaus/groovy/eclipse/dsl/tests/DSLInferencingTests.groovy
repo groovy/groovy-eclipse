@@ -20,7 +20,6 @@ import groovy.transform.NotYetImplemented
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -92,7 +91,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDelegatesTo1() {
-        createDsls('currentType("Foo").accept { delegatesTo "Other" }')
+        createDsls('contribute(currentType("Foo")) { delegatesTo "Other" }')
         String contents =
             'class Foo { }\n' +
             'class Other { Class<String> blar() { } }\n' +
@@ -105,7 +104,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDelegatesTo2() {
-        createDsls('currentType("Foo").accept { delegatesTo type:"Other" }')
+        createDsls('contribute(currentType("Foo")) { delegatesTo type:"Other" }')
         String contents =
             'class Foo { }\n' +
             'class Other { Class<String> blar() { } }\n' +
@@ -116,9 +115,9 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertDeclaringType(contents, start, end, 'Other')
     }
 
-    @Test @Ignore('this one is not working since we don\'t filter out contributions when static context is mismatched')
+    @Test
     void testDelegatesTo3() {
-        createDsls('currentType("Foo").accept { delegatesTo type:"Other" }')
+        createDsls('contribute(currentType("Foo")) { delegatesTo type:"Other" }')
         String contents =
             'class Foo { }\n' +
             'class Other { Class<String> blar() { } }\n' +
@@ -131,7 +130,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDelegatesTo4() {
-        createDsls('currentType("Foo").accept { delegatesTo type:"Other", isStatic:true }')
+        createDsls('contribute(currentType("Foo")) { delegatesTo type:"Other", isStatic:true }')
         String contents =
             'class Foo { }\n' +
             'class Other { Class<String> blar() { } }\n' +
@@ -144,7 +143,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDelegatesTo5() {
-        createDsls('currentType("Foo").accept { delegatesTo type:"Other", asCategory:true }')
+        createDsls('contribute(currentType("Foo")) { delegatesTo type:"Other", asCategory:true }')
         String contents =
             'class Foo { }\n' +
             'class Other { Class<String> blar(Foo x) { }\n' +
@@ -164,7 +163,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDelegatesTo6() {
-        createDsls('currentType("Foo").accept { delegatesTo type:"Other", except: ["glar"]}')
+        createDsls('contribute(currentType("Foo")) { delegatesTo type:"Other", except: ["glar"]}')
         String contents =
             'class Foo {\n' +
             '  Class<String> glar() { }\n' +
@@ -189,7 +188,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testGenerics1() {
-        createDsls('currentType("Foo").accept { property name: "fooProp", type: "List<Class<Foo>>" }')
+        createDsls('contribute(currentType("Foo")) { property name: "fooProp", type: "List<Class<Foo>>" }')
         String contents =
             'class Foo {\n' +
             '}\n' +
@@ -201,7 +200,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testGenerics2() {
-        createDsls('currentType("Foo").accept { property name: "fooProp", type: "List<Class<Foo>>" }')
+        createDsls('contribute(currentType("Foo")) { property name: "fooProp", type: "List<Class<Foo>>" }')
         String contents =
             'class Foo {\n' +
             '}\n' +
@@ -214,7 +213,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testGenerics3() {
-        createDsls('currentType("Foo").accept { property name: "fooProp", type: "Map< Integer, Long>" }')
+        createDsls('contribute(currentType("Foo")) { property name: "fooProp", type: "Map< Integer, Long>" }')
         String contents =
             'class Foo {\n' +
             '}\n' +
@@ -226,7 +225,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDeprecated1() {
-        createDsls('currentType("Foo").accept { property name: "fooProp", type: "Map< Integer, Long>", isDeprecated:true }')
+        createDsls('contribute(currentType("Foo")) { property name: "fooProp", type: "Map< Integer, Long>", isDeprecated:true }')
         String contents =
             'class Foo {\n' +
             '}\n' +
@@ -239,7 +238,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDeprecated2() {
-        createDsls('currentType("Foo").accept { method name: "fooProp", type: "Map< Integer, Long>", isDeprecated:true }')
+        createDsls('contribute(currentType("Foo")) { method name: "fooProp", type: "Map< Integer, Long>", isDeprecated:true }')
         String contents =
             'class Foo {\n' +
             '}\n' +

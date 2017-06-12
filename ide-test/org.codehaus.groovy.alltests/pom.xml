@@ -24,7 +24,7 @@
         -->
 
         <configuration>
-          <argLine>-Xmx1G -XX:MaxPermSize=256M -Dgreclipse.dsld.disabled=true</argLine>
+          <argLine>-Xmx1G -XX:MaxPermSize=256M</argLine>
           <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>

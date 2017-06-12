@@ -65,6 +65,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Before
     void setUp() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
+        addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
         withProject { IProject project ->
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
           //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
