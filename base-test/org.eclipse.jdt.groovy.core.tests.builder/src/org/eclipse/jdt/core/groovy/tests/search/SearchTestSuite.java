@@ -334,7 +334,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
 
-    protected void waitForIndexer(IJavaElement... elements) throws Exception {
+    protected void waitForIndexer(IJavaElement... elements) throws JavaModelException {
         new SearchEngine().searchAllTypeNames(
             null, 0,
             "XXXXXXXXX".toCharArray(),
@@ -346,8 +346,20 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             null);
 
         for (Job job : Job.getJobManager().find(null)) {
-            if (job.getName().contains("Java index")) {
-                job.join();
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                {
+                    boolean interrupted;
+                    do {
+                        interrupted = false;
+                        try {
+                            job.join();
+                        } catch (InterruptedException e) {
+                            interrupted = true;
+                        }
+                    } while (interrupted);
+                }
             }
         }
     }
