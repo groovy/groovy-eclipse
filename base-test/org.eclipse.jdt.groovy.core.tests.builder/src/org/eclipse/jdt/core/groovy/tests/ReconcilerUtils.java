@@ -94,7 +94,9 @@ public class ReconcilerUtils {
         unit.becomeWorkingCopy(null);
         try {
             SimpleWorkingCopyOwner owner = new SimpleWorkingCopyOwner();
-            unit.reconcile(JavaConstants.AST_LEVEL, true, owner, null);
+            SimpleProgressMonitor monitor = new SimpleProgressMonitor("reconcile");
+            unit.reconcile(JavaConstants.AST_LEVEL, true, owner, monitor);
+            monitor.waitForCompletion();
             return owner.problems;
         } finally {
             unit.discardWorkingCopy();

@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
@@ -57,10 +56,8 @@ public class SynchronizationUtils {
                 wasInterrupted = true;
             }
         } while (wasInterrupted);
-        // Join jobs
         joinJobs(100, 500, 500);
     }
-
 
     private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
         long startTime = System.currentTimeMillis() + minTime;
@@ -83,22 +80,6 @@ public class SynchronizationUtils {
             Thread.sleep(intervalTime);
         } catch (InterruptedException e) {
         }
-    }
-
-    private static boolean allJobsQuiet() {
-        IJobManager jobManager = Job.getJobManager();
-        Job[] jobs = jobManager.find(null);
-        for (int i = 0; i < jobs.length; i++) {
-            Job job = jobs[i];
-            int state = job.getState();
-            //ignore jobs we don't care about
-            if (!job.getName().equals("Flush Cache Job") &&
-                    !job.getName().equals("Usage Data Event consumer") &&
-                    (state == Job.RUNNING || state == Job.WAITING)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static void runEventQueue() {
@@ -133,18 +114,32 @@ public class SynchronizationUtils {
         }
     }
 
+    private static boolean allJobsQuiet() {
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                // ignore jobs we don't care about
+                if (!job.getName().equals("Flush Cache Job") &&
+                        !job.getName().equals("Usage Data Event consumer")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public static void printJobs() {
-        IJobManager jobManager = Job.getJobManager();
-        Job[] jobs = jobManager.find(null);
         System.out.println("=====Printing Jobs========");
-        for (int i = 0; i < jobs.length; i++) {
-            Job job = jobs[i];
-            int state = job.getState();
-            // ignore jobs we don't care about
-            if (!job.getName().equals("Flush Cache Job") &&
-                    !job.getName().equals("Usage Data Event consumer") &&
-                    (state == Job.RUNNING || state == Job.WAITING)) {
-                System.out.println(job.getName());
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                // ignore jobs we don't care about
+                if (!job.getName().equals("Flush Cache Job") &&
+                        !job.getName().equals("Usage Data Event consumer")) {
+                    System.out.println(job.getName());
+                }
             }
         }
         System.out.println("==========================");
@@ -170,35 +165,12 @@ public class SynchronizationUtils {
         }
 
         SynchronizationUtils.joinBackgroundActivities();
-        Job[] jobs = Job.getJobManager().find(null);
-        for (int i = 0; i < jobs.length; i++) {
-            if (jobs[i].getName().contains("Java index")) {
-                boolean wasInterrupted = true;
-                while (wasInterrupted) {
-                    try {
-                        wasInterrupted = false;
-                        jobs[i].join();
-                    } catch (InterruptedException e) {
-                        wasInterrupted = true;
-                    }
-                }
-            }
-        }
-    }
-
-    public static void waitForRefactoringToComplete() {
-        SynchronizationUtils.joinBackgroundActivities();
-        Job[] jobs = Job.getJobManager().find(null);
-        for (int i = 0; i < jobs.length; i++) {
-            if (jobs[i].getName().contains("Java index")) {
-                boolean wasInterrupted = true;
-                while (wasInterrupted) {
-                    try {
-                        wasInterrupted = false;
-                        jobs[i].join();
-                    } catch (InterruptedException e) {
-                        wasInterrupted = true;
-                    }
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                if (job.getName().contains("Java index")) {
+                    joinUninterruptibly(job);
                 }
             }
         }
@@ -206,19 +178,26 @@ public class SynchronizationUtils {
 
     public static void waitForDSLDProcessingToComplete() {
         SynchronizationUtils.joinBackgroundActivities();
-        Job[] jobs = Job.getJobManager().find(null);
-        for (int i = 0; i < jobs.length; i++) {
-            if (jobs[i].getName().startsWith("Refresh DSLD scripts")) {
-                boolean wasInterrupted = true;
-                while (wasInterrupted) {
-                    try {
-                        wasInterrupted = false;
-                        jobs[i].join();
-                    } catch (InterruptedException e) {
-                        wasInterrupted = true;
-                    }
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                if (job.getName().startsWith("Refresh DSLD scripts")) {
+                    joinUninterruptibly(job);
                 }
             }
         }
+    }
+
+    private static void joinUninterruptibly(Job job) {
+        boolean interrupted;
+        do {
+            interrupted = false;
+            try {
+                job.join();
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        } while (interrupted);
     }
 }

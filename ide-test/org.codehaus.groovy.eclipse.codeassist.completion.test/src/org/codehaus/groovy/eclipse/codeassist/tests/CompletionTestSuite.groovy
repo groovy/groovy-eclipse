@@ -33,8 +33,6 @@ import org.eclipse.jdt.core.CompletionProposal
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.JavaModelException
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
-import org.eclipse.jdt.groovy.core.util.JavaConstants
 import org.eclipse.jdt.groovy.search.ITypeRequestor
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
@@ -77,8 +75,8 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
-        waitForIndex()
         JavaEditor editor = openInEditor(unit)
+        SynchronizationUtils.waitForIndexingToComplete(unit)
         JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer()
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor)
         List<ICompletionProposal> proposals = computerClass.newInstance().computeCompletionProposals(context, null)
@@ -271,24 +269,20 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected ICompletionProposal[] createProposalsAtOffset(ICompilationUnit unit, int completionOffset) {
-        int count = 0
-        int maxCount = 5
-        ICompletionProposal[] proposals
-        while ((proposals == null || proposals.length == 0) && count < maxCount) {
-            if (count > 0) {
-                SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile")
-                unit.reconcile(JavaConstants.AST_LEVEL, true, null, spm)
-                spm.waitForCompletion()
+        /*int count = 0, maxCount = 4
+        ICompletionProposal[] proposals = null
+        while (count < maxCount && (proposals == null || proposals.length == 0)) {
+            if (count++ > 0) {
+                ReconcilerUtils.reconcile(unit)
+                SynchronizationUtils.joinBackgroundActivities()
             }
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer)
-            count += 1
         }
-
         if (count >= maxCount) {
             println "Reached max ($maxCount) attempts and still got no proposals -- hopefully that is what the test expects"
         }
-
-        return proposals
+        return proposals*/
+        return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer)
     }
 
     protected ICompletionProposal[] orderByRelevance(ICompletionProposal[] proposals) {

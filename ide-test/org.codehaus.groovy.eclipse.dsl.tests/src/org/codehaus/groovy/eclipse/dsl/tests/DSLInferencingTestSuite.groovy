@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.TraceCategory
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.internal.resources.Folder
 import org.eclipse.core.internal.resources.Workspace
@@ -128,8 +129,9 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean expectingUnknown) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
+        def unit = addGroovySource(contents, nextUnitName())
+        SynchronizationUtils.waitForIndexingToComplete(unit)
+        def requestor = doVisit(exprStart, exprEnd, unit, false)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
         if (!expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
