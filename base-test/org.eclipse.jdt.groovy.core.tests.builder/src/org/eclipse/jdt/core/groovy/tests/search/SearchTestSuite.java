@@ -17,6 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -334,11 +335,12 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
 
+    // TODO: Merge this with SynchronizationUtils
     protected void waitForIndexer(IJavaElement... elements) throws JavaModelException {
         new SearchEngine().searchAllTypeNames(
-            null, 0,
+            null, 0, // no packages
             "XXXXXXXXX".toCharArray(),
-            SearchPattern.R_CASE_SENSITIVE | SearchPattern.R_EXACT_MATCH,
+            SearchPattern.R_EXACT_MATCH,
             IJavaSearchConstants.CLASS,
             SearchEngine.createJavaSearchScope(elements),
             new TypeNameRequestor() {},
@@ -349,7 +351,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                {
+                if (!Arrays.asList("Flush Cache Job", "Open Blocked Dialog", "Usage Data Event consumer").contains(job.getName())) {
                     boolean interrupted;
                     do {
                         interrupted = false;

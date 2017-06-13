@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -36,40 +39,44 @@ import org.eclipse.ui.PlatformUI;
 public class SynchronizationUtils {
 
     public static void joinBackgroundActivities() {
-        // Join Building
-        boolean interrupted = true;
-        while (interrupted) {
+        boolean interrupted;
+        do {
+            interrupted = false;
             try {
                 Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
-                interrupted = false;
+            } catch (OperationCanceledException e) {
+
             } catch (InterruptedException e) {
                 interrupted = true;
             }
-        }
-        boolean wasInterrupted = false;
+        } while (interrupted);
+
         do {
+            interrupted = false;
             try {
                 Job.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, null);
-                wasInterrupted = false;
             } catch (OperationCanceledException e) {
+
             } catch (InterruptedException e) {
-                wasInterrupted = true;
+                interrupted = true;
             }
-        } while (wasInterrupted);
+        } while (interrupted);
+
         joinJobs(100, 500, 500);
     }
 
     private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
         long startTime = System.currentTimeMillis() + minTime;
         runEventQueue();
-        while (System.currentTimeMillis() < startTime)
+        while (System.currentTimeMillis() < startTime) {
             runEventQueue(intervalTime);
+        }
 
         long endTime = maxTime > 0 && maxTime < Long.MAX_VALUE ? System.currentTimeMillis() + maxTime : Long.MAX_VALUE;
         boolean calm = allJobsQuiet();
         while (!calm && System.currentTimeMillis() < endTime) {
             runEventQueue(intervalTime);
-            //printJobs();
+          //printJobs();
             calm = allJobsQuiet();
         }
         return calm;
@@ -119,9 +126,7 @@ public class SynchronizationUtils {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                // ignore jobs we don't care about
-                if (!job.getName().equals("Flush Cache Job") &&
-                        !job.getName().equals("Usage Data Event consumer")) {
+                if (!SKIP_JOBS.contains(job.getName())) {
                     return false;
                 }
             }
@@ -135,9 +140,7 @@ public class SynchronizationUtils {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                // ignore jobs we don't care about
-                if (!job.getName().equals("Flush Cache Job") &&
-                        !job.getName().equals("Usage Data Event consumer")) {
+                if (!SKIP_JOBS.contains(job.getName())) {
                     System.out.println(job.getName());
                 }
             }
@@ -200,4 +203,6 @@ public class SynchronizationUtils {
             }
         } while (interrupted);
     }
+
+    private static final List<String> SKIP_JOBS = Arrays.asList("Flush Cache Job", "Open Blocked Dialog", "Usage Data Event consumer");
 }
