@@ -225,6 +225,17 @@
       </proposalProvider>
    </extension>
 
+   <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
+      <proposalFilter
+            description="Resolves duplicate proposals introduced by a DLSD"
+            name="Groovy DSL Proposal Filter"
+            proposalFilter="org.codehaus.groovy.eclipse.dsl.proposals.DSLDProposalFilter">
+         <appliesTo
+               projectNature="org.eclipse.jdt.groovy.core.groovyNature">
+         </appliesTo>
+      </proposalFilter>
+   </extension>
+
    <extension point="org.eclipse.core.resources.markers"
          id="inferencing_problem"
          name="Groovy type checking problem">

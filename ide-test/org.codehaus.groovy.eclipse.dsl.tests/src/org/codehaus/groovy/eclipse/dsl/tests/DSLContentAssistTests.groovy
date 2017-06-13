@@ -26,7 +26,6 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 final class DSLContentAssistTests extends CompletionTestSuite {
@@ -85,26 +84,26 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     //
 
-    @Test @Ignore('Proposal "instance" appears twice in the result')
+    @Test
     void testDSLProposalFirstStaticField() {
         String contents = '''\
-            @Singleton class Foo { static aaa }
+            @Singleton class Foo { static Object ijk }
             Foo.i
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.i')))
         // contributed by built-in DLSD for @Singleton AST transform
-        assertProposalOrdering(proposals, 'instance', 'aaa')
+        assertProposalOrdering(proposals, 'instance', 'ijk')
     }
 
-    @Test @Ignore('Proposal "getInstance" appears twice in the result')
+    @Test
     void testDSLProposalFirstStaticMethod() {
         String contents = '''\
-            @Singleton class Foo { static aaa() { } }
+            @Singleton class Foo { static Object getIjk() { } }
             Foo.g
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.g')))
         // contributed by built-in DLSD for @Singleton AST transform
-        assertProposalOrdering(proposals, 'getInstance', 'aaa')
+        assertProposalOrdering(proposals, 'getInstance', 'getIjk')
     }
 
     @Test

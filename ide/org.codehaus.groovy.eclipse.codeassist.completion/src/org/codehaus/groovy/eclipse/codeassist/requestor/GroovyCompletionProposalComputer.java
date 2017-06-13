@@ -224,7 +224,9 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                     try {
                         if (filter instanceof IProposalFilterExtension) {
                             List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(proposals, assistContext, javaContext);
-                            proposals = newProposals == null ? proposals : newProposals;
+                            if (newProposals != null) {
+                                proposals = newProposals;
+                            }
                         }
                     } catch (Exception e) {
                         GroovyContentAssist.logError("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);

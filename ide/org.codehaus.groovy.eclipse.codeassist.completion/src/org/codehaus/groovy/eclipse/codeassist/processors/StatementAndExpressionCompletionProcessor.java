@@ -416,7 +416,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             for (IProposalFilter filter : filters) {
                 try {
                     List<IGroovyProposal> newProposals = filter.filterProposals(groovyProposals, context, getJavaContext());
-                    groovyProposals = newProposals == null ? groovyProposals : newProposals;
+                    if (newProposals != null) {
+                        groovyProposals = newProposals;
+                    }
                 } catch (Exception e) {
                     GroovyContentAssist.logError("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
                 }
