@@ -131,7 +131,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'fr')))
         // contributed by built-in DSLD for SwingBuilder
-        assertProposalOrdering(proposals, 'frame', 'FrameFactory')
+        assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
     }
 
     @Test // proposals should not exist since not applied to 'this'

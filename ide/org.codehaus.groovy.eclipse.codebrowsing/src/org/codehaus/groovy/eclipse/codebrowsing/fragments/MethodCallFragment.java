@@ -77,7 +77,7 @@ public class MethodCallFragment implements IASTFragment {
             return getNext().getTrimmedEnd(unit);
         } else {
             char[] contents = unit.getContents();
-            int end = Math.min(actualEndPosition, contents.length);
+            int end = Math.min(actualEndPosition, contents.length - 1);
             while (end > getStart() && Character.isWhitespace(contents[end])) {
                 end -= 1;
             }

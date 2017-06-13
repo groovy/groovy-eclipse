@@ -48,12 +48,23 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.After
 import org.junit.AfterClass
+import org.junit.Before
 
 abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
+    @Before
+    final void setUpCompletionTestCase() {
+        SynchronizationUtils.waitForDSLDProcessingToComplete()
+    }
+
+    @After
+    final void tearDownCompletionTestCase() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
+    }
+
     @AfterClass
     static final void tearDownCompletionTestSuite() {
-        GroovyContentAssist.default.preferenceStore.with {
+        GroovyContentAssist.getDefault().preferenceStore.with {
             storePreferences.@properties.keys().each { k ->
                 if (!isDefault(k)) {
                     println "Resetting '$k' to its default"
@@ -63,10 +74,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         }
     }
 
-    @After
-    final void tearDownCompletionTestCase() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
-    }
+    //--------------------------------------------------------------------------
 
     protected ICompletionProposal[] createProposalsAtOffset(CharSequence contents, int offset) {
         return createProposalsAtOffset(addGroovySource(contents, nextUnitName()), offset)
@@ -96,7 +104,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         return contents.toString().lastIndexOf(lookFor) + lookFor.length()
     }
 
-    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = name.contains(' - ')) {
+    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = false) {
         int foundCount = 0
         for (proposal in proposals) {
             // field
@@ -121,11 +129,11 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
      * Finds the next proposal that matches the given criteria.
      *
      * @param name name to match
-     * @param isType {@code true} if looking for a type proposal
      * @param startFrom index to start from in {@code proposals}
+     * @param isType {@code true} if looking for a type proposal
      * @return index of the proposal that matches or {@code -1} if no match
      */
-    protected int indexOfProposal(ICompletionProposal[] proposals, String name, boolean isType = false, int startFrom = 0) {
+    protected int indexOfProposal(ICompletionProposal[] proposals, String name, int startFrom = 0, boolean isType = name.contains(' - ')) {
         assert startFrom >= 0 && startFrom < proposals.length
         for (i in startFrom..<proposals.length) {
             ICompletionProposal proposal = proposals[i]
@@ -148,8 +156,8 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     /**
      * Finds the first proposal that matches the given criteria.
      */
-    protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType = false) {
-        int i = indexOfProposal(proposals, name, isType)
+    protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType = name.contains(' - ')) {
+        int i = indexOfProposal(proposals, name, 0, isType)
         if (i != -1)
             return proposals[i]
         fail("Expected at least one proposal that matches '$name', but found none")
@@ -263,7 +271,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void assertProposalOrdering(ICompletionProposal[] proposals, String... order) {
         int prev = -1
         for (int i = 0; i < order.length; i += 1) {
-            int next = indexOfProposal(proposals, order[i], false, prev + 1)
+            int next = indexOfProposal(proposals, order[i], prev + 1)
 
             String message
             if (i == 0) {
