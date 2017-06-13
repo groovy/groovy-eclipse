@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,13 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
 /**
- * A method call fragment
+ * A method call fragment.
+ * <p>
  * This is the part of the method call expression that occurs after the '.'
  * and it includes the expression for the method selector as well as the
  * arguments expression.
- *
+ * <p>
  * The next {@link IASTFragment} is optional.
- *
- * @author andrew
- * @created Jun 4, 2010
  */
 public class MethodCallFragment implements IASTFragment {
 
@@ -79,7 +77,7 @@ public class MethodCallFragment implements IASTFragment {
             return getNext().getTrimmedEnd(unit);
         } else {
             char[] contents = unit.getContents();
-            int end = actualEndPosition;
+            int end = Math.min(actualEndPosition, contents.length);
             while (end > getStart() && Character.isWhitespace(contents[end])) {
                 end -= 1;
             }
