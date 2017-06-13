@@ -19,7 +19,6 @@ import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 import static org.junit.Assume.assumeTrue
 
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
@@ -185,7 +184,6 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     // create a slightly simpler interface for initiating content assist
     private ICompletionProposal[] getProposals(CharSequence contents, String target) {
-        String source = contents.toString()
-        createProposalsAtOffset(source, getIndexOf(source, target))
+        createProposalsAtOffset(contents, getIndexOf(contents, target))
     }
 }

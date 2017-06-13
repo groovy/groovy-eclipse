@@ -45,7 +45,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             List[] z
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File'), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, '[I', 'x')
         assertExtendedContextElements(context, '[Ljava.lang.String;', 'y')
@@ -62,7 +62,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             def z
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, 'File'), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
         assertExtendedContextElements(context, 'LSub;', 'y')

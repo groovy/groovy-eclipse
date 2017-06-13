@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
@@ -55,84 +54,84 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInJavaFile() {
         def unit = createJava()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'this.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'this.'))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInMethodScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'this.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'this.'))
         proposalExists(proposals, 'identity', 1)
     }
 
     @Test
     void testDGMInMethodScopeFromOther() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'new Object().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'new Object().'))
         proposalExists(proposals, 'identity', 1)
     }
 
     @Test
     void testDGMInConstructorScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'Class() {\n'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class() {\n'))
         proposalExists(proposals, 'identity', 1)
     }
 
     @Test
     void testDGMInScriptScope() {
         def unit = createGroovyForScript()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, '\n'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, '\n'))
         proposalExists(proposals, 'identity', 1)
     }
 
     @Test
     void testDGMInScriptOtherClassScope() {
         def unit = createGroovyForScript()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, 'new Object().'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, 'new Object().'))
         proposalExists(proposals, 'identity', 1)
     }
 
     @Test
     void testDGMInClassScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'Class() { }'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class() { }'))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInMethodParamScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'void doNothing('), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'void doNothing('))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInConstructorParamScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, 'Class('), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class('))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInModuleScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, '; } }'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, '; } }'))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInClosure() {
         def unit = createGroovyForClosure()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CLOSURECONTENTS, ' t -> '), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CLOSURECONTENTS, ' t -> '))
         proposalExists(proposals, 'identity', 1)
     }
 
     @Test
     void testDGSM() {
         def unit = createGroovyForScript()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, 'new Thread().startD'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, 'new Thread().startD'))
         proposalExists(proposals, 'startDaemon', 2)
     }
 
@@ -140,7 +139,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testPopertyVariantOfDGM() {
         String contents = '"".toURL().text'
         def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'toURL().t'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'toURL().t'))
         proposalExists(proposals, 'text', 1)
     }
 
@@ -148,7 +147,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testDateGM() {
         String contents = 'new Date().toCal'
         def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'toCal'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'toCal'))
         proposalExists(proposals, 'toCalendar', 1)
     }
 
@@ -156,7 +155,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testProcessGM() {
         String contents = 'Process p\n' + 'p.get'
         def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'get'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'get'))
         proposalExists(proposals, 'getIn', 1)
     }
 
@@ -164,7 +163,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testEncodingGM() {
         String contents = 'byte[] p\n' + 'p.encodeBase64'
         def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'encodeBase64'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'encodeBase64'))
         proposalExists(proposals, 'encodeBase64', 2)
     }
 
@@ -172,7 +171,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     void testXmlGM() {
         String contents = 'org.w3c.dom.NodeList p\n' + 'p.iterator'
         def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'iterator'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'iterator'))
         proposalExists(proposals, 'iterator', 1)
     }
 
@@ -182,10 +181,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
             setDGMFilter('inspect')
             String contents = 'this.insp'
             def unit = addGroovySource(contents)
-            ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'insp'), GroovyCompletionProposalComputer)
+            ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 0)
             setDGMFilter()
-            proposals = performContentAssist(unit, getIndexOf(contents, 'insp'), GroovyCompletionProposalComputer)
+            proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 1)
         } finally {
             setDGMFilter()
@@ -198,10 +197,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
             setDGMFilter('inspect', 'each', 'fsafd fdafsd fafds')
             String contents = 'this.insp'
             def unit = addGroovySource(contents)
-            ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, 'insp'), GroovyCompletionProposalComputer)
+            ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 0)
             setDGMFilter()
-            proposals = performContentAssist(unit, getIndexOf(contents, 'insp'), GroovyCompletionProposalComputer)
+            proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 1)
         } finally {
             setDGMFilter()

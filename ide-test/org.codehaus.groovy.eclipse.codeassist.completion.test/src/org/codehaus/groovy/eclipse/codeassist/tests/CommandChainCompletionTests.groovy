@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
@@ -25,92 +23,83 @@ import org.junit.Test
  */
 final class CommandChainCompletionTests extends CompletionTestSuite {
 
-    private static final String INITIAL_CONTENTS =
-            "class Inner {\n" +
-            "  Inner first(arg) { }\n" +
-            "  Inner second(arg) { }\n" +
-            "  Inner third(arg) { }\n" +
-            "  Inner aField" +
-            "}\n" +
-            "def start = new Inner()\n"
+    private static final String INITIAL_CONTENTS = '''\
+        class Inner {
+          Inner first(arg) { }
+          Inner second(arg) { }
+          Inner third(arg) { }
+          Inner aField
+        }
+        def start = new Inner()
+        '''.stripIndent()
 
     @Test
     void testCommandChain1() {
-        String contents = INITIAL_CONTENTS + "start.first 'foo' sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 1)
+        String contents = INITIAL_CONTENTS + 'start.first "foo" sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 1)
     }
 
     @Test
     void testCommandChain2() {
-        String contents = INITIAL_CONTENTS + "start.first 'foo' third 'foo' sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 1)
+        String contents = INITIAL_CONTENTS + 'start.first "foo" third "foo" sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 1)
     }
 
     @Test
     void testCommandChain3() {
-        String contents = INITIAL_CONTENTS + "start.first 'foo' third 'foo' aFi"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "aFi"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "aField", 1)
+        String contents = INITIAL_CONTENTS + 'start.first "foo" third "foo" aFi'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'aFi'))
+        proposalExists(proposals, 'aField', 1)
     }
 
     @Test
     void testCommandChain4() {
-        String contents = INITIAL_CONTENTS + "start.first 'foo' third 'foo','bar' sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 1)
+        String contents = INITIAL_CONTENTS + 'start.first "foo" third "foo","bar" sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 1)
     }
 
     @Test
     void testCommandChain5() {
-        String contents = INITIAL_CONTENTS + "start.first 'foo' sec 'foo' third"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 1)
+        String contents = INITIAL_CONTENTS + 'start.first "foo" sec "foo" third'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 1)
     }
 
     @Test
     void testCommandChain6() {
-        String contents = INITIAL_CONTENTS + "start.first 'foo' third foo.bar(nuthin) sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 1)
+        String contents = INITIAL_CONTENTS + 'start.first "foo" third foo.bar(nuthin) sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 1)
     }
 
     @Test
     void testNoCommandChain1() {
-        String contents = INITIAL_CONTENTS + "first 'foo' third 'foo' sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 0)
+        String contents = INITIAL_CONTENTS + 'first "foo" third "foo" sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 0)
     }
 
     @Test
     void testNoCommandChain2() {
-        String contents = INITIAL_CONTENTS + "first 'foo' third foo.bar(nuthin)\nsec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 0)
+        String contents = INITIAL_CONTENTS + 'first "foo" third foo.bar(nuthin)\nsec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 0)
     }
 
     @Test
     void testNoCommandChain3() {
-        String contents = INITIAL_CONTENTS + "first 'foo' third foo.bar(nuthin).sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 0)
+        String contents = INITIAL_CONTENTS + 'first "foo" third foo.bar(nuthin).sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 0)
     }
 
     @Test
     void testNoCommandChain4() {
-        String contents = INITIAL_CONTENTS + "first 'foo' third sec"
-        ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "sec"), GroovyCompletionProposalComputer)
-        proposalExists(proposals, "second", 0)
+        String contents = INITIAL_CONTENTS + 'first "foo" third sec'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'sec'))
+        proposalExists(proposals, 'second', 0)
     }
 }

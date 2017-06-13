@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
@@ -34,7 +33,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test // should not find local vars here
     void testLocalVarsInJavaFile() {
         ICompilationUnit unit = createJava()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "y\n"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, "y\n"))
         proposalExists(proposals, "xxx", 0)
         proposalExists(proposals, "xx", 0)
         proposalExists(proposals, "y", 0)
@@ -43,7 +42,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test // should not find local vars here.. They are calculated by JDT
     void testLocalVarsInGroovyFile() {
         ICompilationUnit unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "y\n"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, "y\n"))
         proposalExists(proposals, "xxx", 0)
         proposalExists(proposals, "xx", 0)
         proposalExists(proposals, "y", 0)
@@ -52,7 +51,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test // should find local vars here
     void testLocalVarsInScript() {
         ICompilationUnit unit = createGroovyForScript()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "}\n"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, "}\n"))
         proposalExists(proposals, "xxx", 1)
         proposalExists(proposals, "xx", 1)
         proposalExists(proposals, "y", 1)
@@ -61,7 +60,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test // should find local vars here
     void testLocalVarsInClosureInScript() {
         ICompilationUnit unit = createGroovyForScript()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "print t\n"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, "print t\n"))
         proposalExists(proposals, "xxx", 1)
         proposalExists(proposals, "xx", 1)
         proposalExists(proposals, "y", 1)
@@ -70,7 +69,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test // should not find local vars here
     void testLocalVarsInClosureInScript2() {
         ICompilationUnit unit = createGroovyForScript2()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS2, "print t\n.toStr"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS2, "print t\n.toStr"))
         proposalExists(proposals, "xxx", 0)
         proposalExists(proposals, "xx", 0)
         proposalExists(proposals, "y", 0)
@@ -79,7 +78,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test// should find local vars here
     void testLocalVarsInClosureInMethod() {
         ICompilationUnit unit = createGroovy()
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "print t\n"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, "print t\n"))
         proposalExists(proposals, "xxx", 1)
         proposalExists(proposals, "xx", 1)
         proposalExists(proposals, "y", 1)
@@ -88,7 +87,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-369
     void testSelfReferencingLocalVar() {
         ICompilationUnit unit = createGroovyForSelfReferencingScript()
-        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(SELFREFERENCINGSCRIPT, "xx."), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getLastIndexOf(SELFREFERENCINGSCRIPT, "xx."))
         proposalExists(proposals, "abs", 1)
     }
 
@@ -131,11 +130,11 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     void testClsoureVar5() {
         String contents = "o\nd\nge"
         ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "o"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, "o"))
         proposalExists(proposals, "owner", 0)
-        proposals = performContentAssist(unit, getIndexOf(contents, "d"), GroovyCompletionProposalComputer)
+        proposals = createProposalsAtOffset(unit, getIndexOf(contents, "d"))
         proposalExists(proposals, "delegate", 0)
-        proposals = performContentAssist(unit, getIndexOf(contents, "ge"), GroovyCompletionProposalComputer)
+        proposals = createProposalsAtOffset(unit, getIndexOf(contents, "ge"))
         proposalExists(proposals, "getDelegate", 0)
         proposalExists(proposals, "getOwner", 0)
     }

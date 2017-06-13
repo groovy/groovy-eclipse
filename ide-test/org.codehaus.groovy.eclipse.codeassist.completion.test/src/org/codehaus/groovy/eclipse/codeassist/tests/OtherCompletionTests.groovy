@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
@@ -45,7 +44,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'this.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.'))
         proposalExists(proposals, 'i', 1)
     }
 
@@ -70,12 +69,11 @@ final class OtherCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        def gunit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(gunit, getIndexOf(contents, 'foo.ba'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo.ba'))
         proposalExists(proposals, 'bar', 1)
         assert proposals[0].displayString == 'bar() : String - StringExtension (Groovy)'
 
-        proposals = performContentAssist(gunit, getIndexOf(contents, 'this.collect'), GroovyCompletionProposalComputer)
+        proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
         Arrays.sort(proposals, { ICompletionProposal o1, ICompletionProposal o2 ->
             o2.displayString <=> o1.displayString
         } as Comparator<ICompletionProposal>)
@@ -94,7 +92,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
             }
             new C().th
             '''.stripIndent()
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '().th'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '().th'))
         proposalExists(proposals, 'theB', 1)
         assert proposals[0].displayString == 'theB : B - C'
     }
@@ -102,196 +100,196 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test
     void testGString1() {
         String contents = '"${new String().c}"'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '.c'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.c'))
         proposalExists(proposals, 'center', 3)
     }
 
     @Test
     void testGString2() {
         String contents = '"""${new String().c}"""'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '.c'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.c'))
         proposalExists(proposals, 'center', 3)
     }
 
     @Test // GRECLIPSE-706
     void testContentAssistInInitializers1() {
         String contents = 'class A { { aa }\n def aaaa }'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'aa'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'aa'))
         proposalExists(proposals, 'aaaa', 1)
     }
 
     @Test // GRECLIPSE-706
     void testContentAssistInInitializers2() {
         String contents = 'class A { {  }\n def aaaa }'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '{ { '), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '{ { '))
         proposalExists(proposals, 'aaaa', 1)
     }
 
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers1() {
         String contents = 'class A { static { aa }\n static aaaa }'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'aa'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'aa'))
         proposalExists(proposals, 'aaaa', 1)
     }
 
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers2() {
         String contents = 'class A { static {  }\n static aaaa }'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'static { '), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'static { '))
         proposalExists(proposals, 'aaaa', 1)
     }
 
     @Test // GRECLIPSE-692
     void testMethodWithSpaces() {
         String contents = 'class A { def "ff f"()  { ff } }'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '{ ff'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '{ ff'))
         checkReplacementString(proposals, '"ff f"()', 1)
     }
 
     @Test // GRECLIPSE-692
     void testMethodWithSpaces2() {
         String contents = 'class A { def "fff"()  { fff } }'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '{ fff'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '{ fff'))
         checkReplacementString(proposals, 'fff()', 1)
     }
 
     @Test // STS-1165 content assist after a static method call was broken
     void testAfterStaticCall() {
         String contents = 'class A { static xxx(x) { }\n def something() {\nxxx oth }\ndef other}'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, 'oth'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'oth'))
         checkReplacementString(proposals, 'other', 1)
     }
 
     @Test
     void testArrayCompletion1() {
         String contents = 'class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].x'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'x'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
         checkReplacementString(proposals, 'xx', 1)
     }
 
     @Test
     void testArrayCompletion2() {
         String contents = 'class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].getX'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'getX'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getX'))
         checkReplacementString(proposals, 'getXx()', 1)
     }
 
     @Test
     void testArrayCompletion3() {
         String contents = 'class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].setX'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'setX'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'setX'))
         checkReplacementString(proposals, 'setXx(value)', 1)
     }
 
     @Test
     void testArrayCompletion4() {
         String contents = 'class XX { \nXX[] xx\nXX yy }\nnew XX().getXx()[0].x'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, 'x'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
         checkReplacementString(proposals, 'xx', 1)
     }
 
     @Test
     void testListCompletion1() {
         String contents = '[].'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, ['removeAll(arg0)', 'removeAll(c)'] as String[], 1)
     }
 
     @Test
     void testListCompletion2() {
         String contents = '[].re'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.re'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.re'))
         checkReplacementString(proposals, ['removeAll(arg0)', 'removeAll(c)'] as String[], 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion1() {
         String contents = '[1,2,3]*.intValue()[0].value'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, 'value', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion2() {
         String contents = '[1,2,3]*.intValue()[0].value'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.va'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.va'))
         checkReplacementString(proposals, 'value', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion3() {
         String contents = '[x:1,y:2,z:3]*.getKey()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, 'getKey()', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion4() {
         String contents = '[x:1,y:2,z:3]*.getKey()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.get'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.get'))
         checkReplacementString(proposals, 'getKey()', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion5() {
         String contents = '[x:1,y:2,z:3]*.key[0].toLowerCase()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, 'toLowerCase()', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion6() {
         String contents = '[x:1,y:2,z:3]*.key[0].toLowerCase()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.to'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.to'))
         checkReplacementString(proposals, 'toLowerCase()', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion7() {
         String contents = '[x:1,y:2,z:3]*.value[0].intValue()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, 'intValue()', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion8() {
         String contents = '[x:1,y:2,z:3]*.value[0].intValue()'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.int'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.int'))
         checkReplacementString(proposals, 'intValue()', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion9() {
         String contents = '[1,2,3]*.value[0].value'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, 'value', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion10() {
         String contents = '[1,2,3]*.value[0].value'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.val'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.val'))
         checkReplacementString(proposals, 'value', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion11() {
         String contents = '[1,2,3]*.value'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         checkReplacementString(proposals, 'value', 1)
     }
 
     @Test // GRECLIPSE-1165
     void testSpreadCompletion12() {
         String contents = '[1,2,3]*.value'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getLastIndexOf(contents, '.val'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.val'))
         checkReplacementString(proposals, 'value', 1)
     }
 
     @Test // GRECLIPSE-1388
     void testBeforeScript() {
         String contents = '\n\ndef x = 9'
-        ICompletionProposal[] proposals = performContentAssist(addGroovySource(contents), getIndexOf(contents, '\n'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '\n'))
         assertProposalOrdering(proposals, 'binding')
     }
 }

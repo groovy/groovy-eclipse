@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
@@ -199,7 +198,7 @@ final class NewFieldCompletionTests extends CompletionTestSuite {
             "class SomeClass {\nHTMLFrameHyperlinkEvent HTMLFrameHyperlinkEvent\nht  }"
 
         ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "\nht"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, "\nht"))
         proposalExists(proposals, "HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent", 0)
     }
 
@@ -210,7 +209,7 @@ final class NewFieldCompletionTests extends CompletionTestSuite {
             "class SomeClass {\nHTMLFrameHyperlinkEvent HTMLFrameHyperlinkEvent\n      }"
 
         ICompilationUnit unit = addGroovySource(contents, "File", "")
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "\n    "), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, "\n    "))
         proposalExists(proposals, "HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent", 0)
     }
 }

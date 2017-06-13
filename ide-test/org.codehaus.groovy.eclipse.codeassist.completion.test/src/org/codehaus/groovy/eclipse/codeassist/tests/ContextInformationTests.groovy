@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
@@ -34,7 +33,7 @@ final class ContextInformationTests extends CompletionTestSuite {
     private void runTest(ICompilationUnit unit, String target, String proposalName, int proposalCount) {
         String source = unit.getSource()
         int offset = getIndexOf(source, target)
-        ICompletionProposal[] proposals = performContentAssist(unit, offset, GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, offset)
 
         if (proposalCount != proposals.length) {
             Assert.fail("Expected " + proposalCount + " proposals, but found " + proposals.length + "\nin:\n" + printProposals(proposals))

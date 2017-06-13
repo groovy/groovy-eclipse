@@ -16,8 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -90,22 +88,19 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testMethodWithClosure() {
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "any"))
         checkReplacementString(proposals, "any { it }", 1)
     }
 
     @Test
     void testMethodWithNoArgs() {
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "clone"))
         checkReplacementString(proposals, "clone()", 1)
     }
 
     @Test
     void testMethodWith2Args() {
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "findIndexOf"))
         checkReplacementRegexp(proposals, "findIndexOf\\(\\w+\\) \\{ it \\}", 1)
     }
 
@@ -114,8 +109,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "any"))
         checkReplacementRegexp(proposals, "any\\(\\w+\\)", 1)
     }
 
@@ -124,8 +118,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "findIndexOf"))
         checkReplacementRegexp(proposals, "findIndexOf\\(\\w+, \\w+\\)", 1)
     }
 
@@ -248,78 +241,67 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test // accessing members of super types in closures
     void testClosureCompletion1() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " substring"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, " substring"))
         checkReplacementString(proposals, "substring(beginIndex)", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion2() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " first"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, " first"))
         checkReplacementString(proposals, "first", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion3() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " second2"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, " second2"))
         checkReplacementString(proposals, "second2()", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion4() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"))
         checkReplacementString(proposals, "substring(beginIndex)", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion5() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"))
         checkReplacementString(proposals, "first", 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion6() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"))
         checkReplacementString(proposals, "second2", 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion7() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"))
         checkReplacementString(proposals, "substring", 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion8() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.first"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "this.first"))
         checkReplacementString(proposals, "first", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion9() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"))
         checkReplacementString(proposals, "second2()", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion10() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "wait"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "wait"))
         checkReplacementString(proposals, "wait()", 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion11() {
-        ICompilationUnit groovyUnit = addGroovySource(CLOSURE_CONTENTS2)
-        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS2, "first"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS2, getLastIndexOf(CLOSURE_CONTENTS2, "first"))
         checkReplacementString(proposals, "first", 1)
     }
 
@@ -327,8 +309,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testNamedArguments0() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "clone"))
         checkReplacementString(proposals, "clone()", 1)
     }
 
@@ -336,8 +317,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testNamedArguments1() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "new Foo"))
         checkReplacementString(proposals, "(first:first, second:second)", 1)
     }
 
@@ -345,37 +325,32 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testNamedArguments2() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompilationUnit unit = addGroovySource(SCRIPTCONTENTS)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "new Foo"), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "new Foo"))
         checkReplacementString(proposals, "(third:third)", 1)
     }
 
     @Ignore @Test // GRECLIPSE-268
     void testGString1() {
-        ICompilationUnit unit = addGroovySource('""""""')
-        ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset('""""""', "\"\"\"".length())
         assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString2() {
-        ICompilationUnit unit = addGroovySource('"""${this}"""')
-        ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""${this}"""', "\"\"\"".length())
         assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString3() {
-        ICompilationUnit unit = addGroovySource('"""this"""')
-        ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"this".length(), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""this"""', "\"\"\"this".length())
         assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString4() {
         String contents = 'def flarb;\n"""${flarb}"""'
-        ICompilationUnit unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, '${flarb'), GroovyCompletionProposalComputer)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '${flarb'))
         checkReplacementString(proposals, "flarb", 1)
     }
 }

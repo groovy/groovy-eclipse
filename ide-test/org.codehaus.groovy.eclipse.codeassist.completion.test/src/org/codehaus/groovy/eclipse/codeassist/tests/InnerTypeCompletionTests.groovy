@@ -58,14 +58,14 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     void testInnerClass1() {
         String contents = 'class Outer { class Inner { Inner f } } '
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inner'))
-        proposalExists(proposals, 'Inner', 1)
+        proposalExists(proposals, 'Inner - Outer', 1)
     }
 
     @Test
     void testInnerClass2() {
         String contents = 'class Outer { class Inner { Inner f } } '
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inner'))
-        proposalExists(proposals, 'Inner', 1)
+        proposalExists(proposals, 'Inner - Outer', 1)
     }
 
     @Test

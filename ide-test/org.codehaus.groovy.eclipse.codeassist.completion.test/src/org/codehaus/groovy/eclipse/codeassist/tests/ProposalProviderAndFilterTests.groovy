@@ -19,10 +19,8 @@ import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalFilter1
 import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalFilter2
 import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalProvider1
 import org.codehaus.groovy.eclipse.codeassist.mock.MockProposalProvider2
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.codehaus.groovy.eclipse.test.ui.Extender1
 import org.codehaus.groovy.eclipse.test.ui.Extender2
-import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -50,8 +48,7 @@ final class ProposalProviderAndFilterTests extends CompletionTestSuite {
         addNature(Extender2.NATURE2)
 
         String contents = "println th"
-        ICompilationUnit unit = addGroovySource(contents, "File1", "")
-        performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer)
+        createProposalsAtOffset(contents, getIndexOf(contents, " th"))
 
         assert !MockProposalProvider1.wasProviderCalled() : "MockProposalProvider1 should not have been called"
         assert !MockProposalFilter1.wasFilterCalled()     : "MockProposalFilter1 should not have been called"
@@ -64,8 +61,7 @@ final class ProposalProviderAndFilterTests extends CompletionTestSuite {
         addNature(Extender1.NATURE1, Extender2.NATURE2)
 
         String contents = "println th"
-        ICompilationUnit unit = addGroovySource(contents, "File2", "")
-        performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer)
+        createProposalsAtOffset(contents, getIndexOf(contents, " th"))
 
         assert MockProposalProvider1.wasProviderCalled() : "MockProposalProvider1 should have been called"
         assert MockProposalFilter1.wasFilterCalled()     : "MockProposalFilter1 should have been called"

@@ -22,17 +22,15 @@ import java.util.regex.Pattern
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext
-import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal
-import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.core.CompletionProposal
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.groovy.search.ITypeRequestor
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
@@ -40,7 +38,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult
 import org.eclipse.jdt.groovy.search.VariableScope
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal
 import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -52,9 +49,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.After
 import org.junit.AfterClass
 
-/**
- * Includes utilities to help with all Content assist tests.
- */
 abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     @AfterClass
@@ -74,70 +68,77 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
     }
 
+    protected ICompletionProposal[] createProposalsAtOffset(CharSequence contents, int offset) {
+        return createProposalsAtOffset(addGroovySource(contents, nextUnitName()), offset)
+    }
+
+    protected ICompletionProposal[] createProposalsAtOffset(ICompilationUnit unit, int offset) {
+        return performContentAssist(unit, offset, GroovyCompletionProposalComputer)
+    }
+
+    /** Use {@link #createProposalsAtOffset} if testing {@link GroovyCompletionProposalComputer}. */
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
         JavaEditor editor = openInEditor(unit)
         SynchronizationUtils.waitForIndexingToComplete(unit)
-        JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer()
+        JavaSourceViewer viewer = (JavaSourceViewer) editor.viewer
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor)
-        List<ICompletionProposal> proposals = computerClass.newInstance().computeCompletionProposals(context, null)
+        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Create completion proposals for $unit.elementName")
+        List<ICompletionProposal> proposals = computerClass.newInstance().computeCompletionProposals(context, monitor)
 
         return proposals.toArray(new ICompletionProposal[proposals.size()])
     }
 
-    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount) {
-        boolean isType = name.contains(" - ")
-        proposalExists(proposals, name, expectedCount, isType)
+    protected int getIndexOf(CharSequence contents, String lookFor) {
+        return contents.toString().indexOf(lookFor) + lookFor.length()
     }
 
-    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType) {
+    protected int getLastIndexOf(CharSequence contents, String lookFor) {
+        return contents.toString().lastIndexOf(lookFor) + lookFor.length()
+    }
+
+    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = name.contains(' - ')) {
         int foundCount = 0
-        for (ICompletionProposal proposal : proposals) {
-            String propName = proposal.getDisplayString()
-            // if a field
-            if (propName.startsWith(name + " ")) {
+        for (proposal in proposals) {
+            // field
+            if (proposal.displayString.startsWith(name + ' ') && !(proposal instanceof LazyGenericTypeProposal)) {
                 foundCount += 1
             } else
-            // if a method
-            if (propName.startsWith(name + "(")) {
+            // method
+            if (proposal.displayString.startsWith(name + '(')) {
                 foundCount += 1
             } else
-            // if a type
-            if (isType && propName.startsWith(name)) {
+            // type
+            if (isType && proposal.displayString.startsWith(name)) {
                 foundCount += 1
             }
         }
         if (foundCount != expectedCount) {
-            fail("Expected to find proposal '" + name + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals: " + printProposals(proposals))
+            fail("Expected to find proposal '$name' $expectedCount times, but found it $foundCount times.  All Proposals:" + printProposals(proposals))
         }
     }
 
     /**
-     * Finds the next proposal that matches the passed in name.
+     * Finds the next proposal that matches the given criteria.
      *
-     * @param proposals all proposals
      * @param name name to match
-     * @param isType true if looking for a type proposal
-     * @param startFrom index to start from
-     * @return the index of the proposal that matches, or -1 if no match
+     * @param isType {@code true} if looking for a type proposal
+     * @param startFrom index to start from in {@code proposals}
+     * @return index of the proposal that matches or {@code -1} if no match
      */
-    protected int findProposal(ICompletionProposal[] proposals, String name, boolean isType, int startFrom) {
-        for (int i = startFrom; i < proposals.length; i++) {
+    protected int indexOfProposal(ICompletionProposal[] proposals, String name, boolean isType = false, int startFrom = 0) {
+        assert startFrom >= 0 && startFrom < proposals.length
+        for (i in startFrom..<proposals.length) {
             ICompletionProposal proposal = proposals[i]
-            // if a field
-            String propName = proposal.getDisplayString()
-            if (propName.startsWith(name + " ")) {
+            // field
+            if (proposal.displayString.startsWith(name + ' ') && !(proposal instanceof LazyGenericTypeProposal)) {
                 return i
-            } else
-            // if a method
-            if (propName.startsWith(name + "(")) {
+            }
+            // method
+            if (proposal.displayString.startsWith(name + '(')) {
                 return i
-            } else
-            // if a type
-            if (isType && propName.startsWith(name)) {
-                return i
-            } else
-            // if a keyword
-            if (name.equals(proposal.getDisplayString())) {
+            }
+            // type
+            if (isType && proposal.displayString.startsWith(name)) {
                 return i
             }
         }
@@ -145,167 +146,93 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     /**
-     * Returns the first proposal that matches the criteria passed in.
+     * Finds the first proposal that matches the given criteria.
      */
     protected ICompletionProposal findFirstProposal(ICompletionProposal[] proposals, String name, boolean isType = false) {
-        for (ICompletionProposal proposal : proposals) {
-            // if a field
-            String propName = proposal.getDisplayString()
-            if (propName.startsWith(name + " ") &&
-                    !(proposal instanceof LazyGenericTypeProposal)) {
-                return proposal
-            } else
-            // if a method
-            if (propName.startsWith(name + "(")) {
-                return proposal
-            } else
-            // if a type
-            if (isType && propName.startsWith(name)) {
-                return proposal
-            }
-        }
-        fail("Expected at least one proposal that matches '" + name + "', but found none")
-        return null
+        int i = indexOfProposal(proposals, name, isType)
+        if (i != -1)
+            return proposals[i]
+        fail("Expected at least one proposal that matches '$name', but found none")
     }
 
     protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
-        // reconciler runs asynchronously; give it a chance to get caught up before creating edits
-        SynchronizationUtils.joinBackgroundActivities()
-
         proposal.apply(document)
-        String actual = document.get()
-        actual = actual.replaceAll("\r\n", "\n")
-        expected = expected.replaceAll("\r\n", "\n")
-        assertEquals("Completion proposal applied but different results found.", expected, actual)
+        String expect = expected.normalize()
+        String actual = document.get().normalize()
+        assertEquals('Completion proposal applied but different results found.', expect, actual)
     }
 
     protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
-        for (ICompletionProposal proposal : proposals) {
-            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal
-            String replacement = javaProposal.getReplacementString()
+        for (proposal in proposals) {
+            String replacement = proposal.replacementString
             if (Pattern.matches(expectedReplacement, replacement)) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder()
-            for (ICompletionProposal proposal : proposals) {
-                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal
-                sb.append("\n" + javaProposal.getReplacementString())
+            StringBuilder sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
+            for (proposal in proposals) {
+                sb.append('\n').append(proposal.replacementString)
             }
-            fail("Expected to find proposal '" + expectedReplacement + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals:" + sb)
+            fail(sb)
         }
     }
 
     protected void checkReplacementString(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
-        for (ICompletionProposal proposal : proposals) {
-            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal
-            String replacement = javaProposal.getReplacementString()
+        for (proposal in proposals) {
+            String replacement = proposal.replacementString
             if (replacement.equals(expectedReplacement)) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder()
-            for (ICompletionProposal proposal : proposals) {
-                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal
-                sb.append("\n" + javaProposal.getReplacementString())
+            StringBuilder sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
+            for (proposal in proposals) {
+                sb.append('\n').append(proposal.replacementString)
             }
-            fail("Expected to find proposal '" + expectedReplacement + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals:" + sb)
+            fail(sb)
         }
     }
 
     /**
-     * The build machine sometimes seems to be running on a JDK with different local variable tables for
-     * system classes.  This variant of checkReplacementString() can take a couple of options rather
-     * than just one when asserting what is expected to be found.
+     * The build machine sometimes seems to be running on a JDK with different
+     * local variable tables for system classes.  This variant can take a couple
+     * of options rather than just one when asserting what is expected to be found.
      */
     protected void checkReplacementString(ICompletionProposal[] proposals, String[] expectedReplacementOptions, int expectedCount) {
         int foundCount = 0
-        for (ICompletionProposal proposal : proposals) {
-            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal
-            String replacement = javaProposal.getReplacementString()
+        for (proposal in proposals) {
+            String replacement = proposal.replacementString
             if (replacement.equals(expectedReplacementOptions[0]) || replacement.equals(expectedReplacementOptions[1])) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder()
-            for (ICompletionProposal proposal : proposals) {
-                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal
-                sb.append("\n" + javaProposal.getReplacementString())
+            StringBuilder sb = new StringBuilder("Expected to find proposal '${expectedReplacementOptions[0]}' or '${expectedReplacementOptions[1]}' $expectedCount times, but found them $foundCount times.  All Proposals:")
+            for (proposal in proposals) {
+                sb.append('\n').append(proposal.replacementString)
             }
-            fail("Expected to find proposal '" + expectedReplacementOptions[0] + "' or '"+expectedReplacementOptions[1]+"' " + expectedCount + " times, but found them " + foundCount + " times.\nAll Proposals:" + sb)
+            fail(sb)
         }
-    }
-
-    protected void validateProposal(CompletionProposal proposal, String name) {
-        assertEquals(proposal.getName(), name)
-    }
-
-    protected int getIndexOf(String contents, String lookFor) {
-        return contents.indexOf(lookFor)+lookFor.length()
-    }
-
-    protected int getLastIndexOf(String contents, String lookFor) {
-        return contents.lastIndexOf(lookFor)+lookFor.length()
-    }
-
-    protected ICompletionProposal[] createProposalsAtOffset(String contents, int completionOffset) {
-        return createProposalsAtOffset(contents, null, completionOffset)
-    }
-
-    protected ICompletionProposal[] createProposalsAtOffset(String contents, String javaContents, int completionOffset) {
-        if (javaContents != null) {
-            addJavaSource("public class JavaClass { }\n" + javaContents, "JavaClass")
-        }
-        def gunit = addGroovySource(contents, nextUnitName())
-        return createProposalsAtOffset(gunit, completionOffset)
-    }
-
-    protected ICompletionProposal[] createProposalsAtOffset(ICompilationUnit unit, int completionOffset) {
-        /*int count = 0, maxCount = 4
-        ICompletionProposal[] proposals = null
-        while (count < maxCount && (proposals == null || proposals.length == 0)) {
-            if (count++ > 0) {
-                ReconcilerUtils.reconcile(unit)
-                SynchronizationUtils.joinBackgroundActivities()
-            }
-            proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer)
-        }
-        if (count >= maxCount) {
-            println "Reached max ($maxCount) attempts and still got no proposals -- hopefully that is what the test expects"
-        }
-        return proposals*/
-        return performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer)
     }
 
     protected ICompletionProposal[] orderByRelevance(ICompletionProposal[] proposals) {
-        Arrays.sort(proposals, 0, proposals.length, new Comparator<ICompletionProposal>() {
-            public int compare(ICompletionProposal lhs, ICompletionProposal rhs) {
-                int leftRel = ((IJavaCompletionProposal) lhs).getRelevance()
-                int rghtRel = ((IJavaCompletionProposal) rhs).getRelevance()
-                if (leftRel != rghtRel) {
-                    return rghtRel - leftRel
-                }
-                // sort lexically
-                return lhs.getDisplayString().compareTo(rhs.getDisplayString())
-            }
-        })
-        return proposals
+        return proposals.sort { ICompletionProposal lhs, ICompletionProposal rhs ->
+            rhs.relevance <=> lhs.relevance ?: lhs.displayString <=> rhs.displayString
+        }
     }
 
     protected String printProposals(ICompletionProposal[] proposals) {
         StringBuilder sb = new StringBuilder()
-        for (ICompletionProposal proposal : proposals) {
+        for (proposal in proposals) {
             sb.append('\n').append(proposal.getDisplayString())
             if (proposal instanceof IJavaCompletionProposal) {
-                sb.append(" (").append(((IJavaCompletionProposal) proposal).getRelevance()).append(')')
+                sb.append(' (').append(proposal.relevance).append(')')
             }
         }
         return sb.toString()
@@ -336,7 +263,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void assertProposalOrdering(ICompletionProposal[] proposals, String... order) {
         int prev = -1
         for (int i = 0; i < order.length; i += 1) {
-            int next = findProposal(proposals, order[i], false, prev + 1)
+            int next = indexOfProposal(proposals, order[i], false, prev + 1)
 
             String message
             if (i == 0) {
@@ -350,21 +277,21 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         }
     }
 
-    protected void assertExtendedContextElements(GroovyExtendedCompletionContext context, String signature, String...expectedNames) {
+    protected void assertExtendedContextElements(GroovyExtendedCompletionContext context, String signature, String... expectedNames) {
         IJavaElement[] visibleElements = context.getVisibleElements(signature)
         assertEquals("Incorrect number of visible elements\nexpected: " + Arrays.toString(expectedNames) +
                 "\nfound: " + elementsToNames(visibleElements), expectedNames.length, visibleElements.length)
 
-        for (String name : expectedNames) {
+        for (name in expectedNames) {
             boolean found = false
-            for (IJavaElement element : visibleElements) {
-                if (element.getElementName().equals(name)) {
+            for (element in visibleElements) {
+                if (element.elementName.equals(name)) {
                     found = true
                     break
                 }
             }
-            if (! found) {
-                fail ("couldn't find element named " + name + " in " + elementsToNames(visibleElements))
+            if (!found) {
+                fail("couldn't find element named $name in ${elementsToNames(visibleElements)}")
             }
         }
     }
@@ -372,7 +299,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     private String elementsToNames(IJavaElement[] visibleElements) {
         String[] names = new String[visibleElements.length]
         for (int i = 0; i < names.length; i++) {
-            names[i] = visibleElements[i].getElementName()
+            names[i] = visibleElements[i].elementName
         }
         return Arrays.toString(names)
     }
@@ -380,7 +307,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected GroovyExtendedCompletionContext getExtendedCoreContext(ICompilationUnit unit, int invocationOffset) throws JavaModelException {
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit
         GroovyCompletionProposalComputer computer = new GroovyCompletionProposalComputer()
-        ContentAssistContext context = computer.createContentAssistContext(gunit, invocationOffset, new Document(String.valueOf(gunit.getContents())))
+        ContentAssistContext context = computer.createContentAssistContext(gunit, invocationOffset, new Document(String.valueOf(gunit.contents)))
 
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(gunit)
         SearchRequestor requestor = new SearchRequestor(context.completionNode)
@@ -392,7 +319,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     static class SearchRequestor implements ITypeRequestor {
 
         public VariableScope currentScope
-        public ASTNode node
+        public final ASTNode node
 
         public SearchRequestor(ASTNode node) {
             this.node = node
@@ -411,11 +338,11 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, toFind))
         checkReplacementString(proposals, replacementString, 1)
         ICompletionProposal proposal = findFirstProposal(proposals, lookFor)
-        NamedParameterProposal guessingProposal = (NamedParameterProposal) proposal
-        ICompletionProposal[] choices = guessingProposal.getChoices()
+        ICompletionProposal[] choices = proposal.choices
+
         assertEquals(expectedChoices.length, choices.length)
         for (int i = 0; i < expectedChoices.length; i++) {
-            assertEquals("unexpected choice", expectedChoices[i], choices[i].getDisplayString())
+            assertEquals('unexpected choice', expectedChoices[i], choices[i].displayString)
         }
     }
 
@@ -423,23 +350,19 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, lookFor))
         checkReplacementString(proposals, replacementString, 1)
         ICompletionProposal proposal = findFirstProposal(proposals, lookFor)
-        GroovyJavaGuessingCompletionProposal guessingProposal = (GroovyJavaGuessingCompletionProposal) proposal
-        guessingProposal.getReplacementString();  // instantiate the guesses.
-        ICompletionProposal[][] choices = guessingProposal.getChoices()
+        proposal.getReplacementString() // instantiate the guesses
+        ICompletionProposal[][] choices = proposal.choices
+
         assertEquals(expectedChoices.length, choices.length)
         for (int i = 0; i < expectedChoices.length; i++) {
             assertEquals(expectedChoices[i].length, choices[i].length)
 
-            // proposal ordering is arbitrary
-            Comparator<ICompletionProposal> c = new Comparator<ICompletionProposal>() {
-                public int compare(ICompletionProposal c1, ICompletionProposal c2) {
-                    return c1.getDisplayString().compareTo(c2.getDisplayString())
-                }
-            }
-            Arrays.sort(choices[i], 0, choices[i].length, c)
-            Arrays.sort(expectedChoices[i], 0, expectedChoices[i].length)
+            // fix order for comparison
+            expectedChoices[i].sort(true)
+            choices[i].sort(true) { ICompletionProposal p -> p.displayString }
+
             for (int j = 0; j < expectedChoices[i].length; j++) {
-                assertEquals("unexpected choice", expectedChoices[i][j], choices[i][j].getDisplayString())
+                assertEquals('unexpected choice', expectedChoices[i][j], choices[i][j].displayString)
             }
         }
     }
