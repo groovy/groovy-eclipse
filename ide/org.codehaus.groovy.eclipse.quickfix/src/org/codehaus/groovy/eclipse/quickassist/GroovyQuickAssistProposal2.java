@@ -37,9 +37,12 @@ public abstract class GroovyQuickAssistProposal2 extends GroovyQuickAssistPropos
 
     // helper in case it's easier to produce a TextEdit
     protected final TextChange toTextChange(TextEdit edit) {
-        TextChange change = new CompilationUnitChange(getDisplayString(), context.getCompilationUnit());
-        change.setEdit(edit);
-        return change;
+        if (edit != null) {
+            TextChange change = new CompilationUnitChange(getDisplayString(), context.getCompilationUnit());
+            change.setEdit(edit);
+            return change;
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -87,7 +90,9 @@ public abstract class GroovyQuickAssistProposal2 extends GroovyQuickAssistPropos
     public void apply(IDocument document) {
         try {
             TextChange change = getTextChange(new NullProgressMonitor());
-            change.getEdit().apply(document);
+            if (change != null) {
+                change.getEdit().apply(document);
+            }
         } catch (CoreException e) {
             GroovyQuickFixPlugin.log(e);
         } catch (BadLocationException e) {
