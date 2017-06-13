@@ -19,6 +19,7 @@ import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
+import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IProject
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -34,6 +35,8 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS,   true)
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.NAMED_ARGUMENTS,    true)
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
+
+        GroovyDSLCoreActivator.default.preferenceStore.setValue(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT, false)
     }
 
     @Before
