@@ -126,7 +126,7 @@ public class SynchronizationUtils {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (!SKIP_JOBS.contains(job.getName())) {
+                if (!SKIP_JOBS.contains(job.getName().toLowerCase())) {
                     return false;
                 }
             }
@@ -140,7 +140,7 @@ public class SynchronizationUtils {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (!SKIP_JOBS.contains(job.getName())) {
+                if (!SKIP_JOBS.contains(job.getName().toLowerCase())) {
                     System.out.println(job.getName());
                 }
             }
@@ -204,5 +204,5 @@ public class SynchronizationUtils {
         } while (interrupted);
     }
 
-    private static final List<String> SKIP_JOBS = Arrays.asList("Animation start", "Decoration Calculation", "Flush Cache Job", "Open Blocked Dialog", "Sending problem marker updates...", "Update for Decoration Completion", "Update package explorer", "Usage Data Event consumer");
+    private static final List<String> SKIP_JOBS = Arrays.asList("animation start", "decoration calculation", "flush cache job", "open blocked dialog", "sending problem marker updates...", "update for decoration completion", "update progress", "update package explorer", "usage data event consumer");
 }
