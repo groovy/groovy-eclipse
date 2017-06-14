@@ -351,7 +351,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (!Arrays.asList("Animation start", "Decoration Calculation", "Flush Cache Job", "Open Blocked Dialog", "Sending problem marker updates...", "Update for Decoration Completion", "Usage Data Event consumer").contains(job.getName())) {
+                if (!Arrays.asList("Animation start", "Decoration Calculation", "Flush Cache Job", "Open Blocked Dialog", "Sending problem marker updates...", "Update for Decoration Completion", "Update package explorer", "Usage Data Event consumer").contains(job.getName())) {
                     boolean interrupted;
                     do {
                         interrupted = false;
