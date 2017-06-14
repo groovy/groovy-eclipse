@@ -38,7 +38,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult
 import org.eclipse.jdt.groovy.search.VariableScope
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
@@ -104,11 +104,11 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         return contents.toString().lastIndexOf(lookFor) + lookFor.length()
     }
 
-    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = false) {
+    protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = name.contains(' - ')) {
         int foundCount = 0
         for (proposal in proposals) {
             // field
-            if (proposal.displayString.startsWith(name + ' ') && !(proposal instanceof LazyGenericTypeProposal)) {
+            if (proposal.displayString.startsWith(name + ' ') && !(proposal instanceof LazyJavaTypeCompletionProposal)) {
                 foundCount += 1
             } else
             // method
@@ -138,7 +138,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         for (i in startFrom..<proposals.length) {
             ICompletionProposal proposal = proposals[i]
             // field
-            if (proposal.displayString.startsWith(name + ' ') && !(proposal instanceof LazyGenericTypeProposal)) {
+            if (proposal.displayString.startsWith(name + ' ') && !(proposal instanceof LazyJavaTypeCompletionProposal)) {
                 return i
             }
             // method
