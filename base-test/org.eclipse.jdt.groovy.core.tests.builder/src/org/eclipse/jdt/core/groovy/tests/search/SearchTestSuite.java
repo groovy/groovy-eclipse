@@ -351,14 +351,14 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (!Arrays.asList("Animation start", "Flush Cache Job", "Open Blocked Dialog", "Update for Decoration Completion", "Usage Data Event consumer").contains(job.getName())) {
+                if (!Arrays.asList("Animation start", "Decoration Calculation", "Flush Cache Job", "Open Blocked Dialog", "Sending problem marker updates...", "Update for Decoration Completion", "Usage Data Event consumer").contains(job.getName())) {
                     boolean interrupted;
                     do {
                         interrupted = false;
                         try {
-                            System.err.println("Waiting for: " + job.getName());
-                            boolean completed = job.join(500, null);
-                            System.err.println(completed ? "Completed" : "Incomplete");
+                            System.err.print("Waiting for: " + job.getName() + "...");
+                            boolean completed = job.join(1000, null);
+                            System.err.println(completed ? "Done" : "Timed out");
                         } catch (InterruptedException e) {
                             interrupted = true;
                         }
