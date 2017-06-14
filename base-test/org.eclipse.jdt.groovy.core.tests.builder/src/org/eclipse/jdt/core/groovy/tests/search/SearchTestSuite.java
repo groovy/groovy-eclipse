@@ -17,7 +17,6 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -351,7 +350,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (!Arrays.asList("Flush Cache Job", "Open Blocked Dialog", "Usage Data Event consumer").contains(job.getName())) {
+                if (job.getName().startsWith("Java index")) {
                     boolean interrupted;
                     do {
                         interrupted = false;

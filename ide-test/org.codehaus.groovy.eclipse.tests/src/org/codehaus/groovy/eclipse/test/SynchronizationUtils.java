@@ -204,5 +204,5 @@ public class SynchronizationUtils {
         } while (interrupted);
     }
 
-    private static final List<String> SKIP_JOBS = Arrays.asList("Flush Cache Job", "Open Blocked Dialog", "Usage Data Event consumer");
+    private static final List<String> SKIP_JOBS = Arrays.asList("Animation start", "Flush Cache Job", "Open Blocked Dialog", "Update for Decoration Completion", "Usage Data Event consumer");
 }
