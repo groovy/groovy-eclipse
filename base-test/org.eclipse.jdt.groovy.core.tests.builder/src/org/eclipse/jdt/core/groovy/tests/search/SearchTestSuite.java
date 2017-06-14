@@ -356,9 +356,8 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
                     do {
                         interrupted = false;
                         try {
-                            System.err.print("Waiting for: " + job.getName() + "...");
-                            boolean completed = job.join(1000, null);
-                            System.err.println(completed ? "Done" : "Timed out");
+                            System.err.println("Waiting for: " + job.getName());
+                            job.join();
                         } catch (InterruptedException e) {
                             interrupted = true;
                         }
