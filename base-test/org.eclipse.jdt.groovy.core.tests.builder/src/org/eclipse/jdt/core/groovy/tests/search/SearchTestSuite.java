@@ -17,6 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -350,13 +351,14 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (job.getName().startsWith("Java index")) {
+                if (!Arrays.asList("Animation start", "Flush Cache Job", "Open Blocked Dialog", "Update for Decoration Completion", "Usage Data Event consumer").contains(job.getName())) {
                     boolean interrupted;
                     do {
                         interrupted = false;
                         try {
                             System.err.println("Waiting for: " + job.getName());
-                            job.join();
+                            boolean completed = job.join(500, null);
+                            System.err.println(completed ? "Completed" : "Incomplete");
                         } catch (InterruptedException e) {
                             interrupted = true;
                         }
