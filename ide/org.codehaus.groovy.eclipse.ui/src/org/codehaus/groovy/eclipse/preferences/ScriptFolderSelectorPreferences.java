@@ -83,7 +83,7 @@ public class ScriptFolderSelectorPreferences {
         public Image getImage(Object element) {
             return fElementImage;
         }
-        @Override @SuppressWarnings("static-access")
+        @Override
         public String getText(Object element) {
             return BasicElementLabels.getFilePattern((String) element);
         }
