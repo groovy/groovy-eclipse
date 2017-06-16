@@ -401,7 +401,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 name = ((PropertyNode) declaration).getName();
                 // check for possible property node redirection
                 if (nodeToLookFor instanceof VariableExpression &&
-                        ((VariableExpression) nodeToLookFor).getAccessedVariable() != declaration) {
+                        ((VariableExpression) nodeToLookFor).getAccessedVariable() != declaration &&
+                        ((VariableExpression) nodeToLookFor).getAccessedVariable() instanceof ASTNode) {
                     declaration = (ASTNode) ((VariableExpression) nodeToLookFor).getAccessedVariable();
                 }
             }
