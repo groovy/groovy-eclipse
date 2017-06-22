@@ -114,10 +114,10 @@ public class ScriptFolderSelectorPreferences {
         }
         private static String getName(IProject...projects) {
             if (projects.length == 1) {
-                return "Building proiject " + projects[0].getName();
+                return "Building project " + projects[0].getName();
             } else {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Building proijects ");
+                sb.append("Building projects ");
                 for (IProject project : projects) {
                     sb.append(project.getName() + " ");
                 }
