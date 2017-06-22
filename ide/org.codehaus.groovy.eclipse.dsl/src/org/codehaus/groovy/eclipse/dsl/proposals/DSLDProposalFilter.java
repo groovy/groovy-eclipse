@@ -39,10 +39,7 @@ public class DSLDProposalFilter implements IProposalFilterExtension {
         Map<String, ICompletionProposal> map = new LinkedHashMap<String, ICompletionProposal>();
 
         for (ICompletionProposal proposal : proposals) {
-            String key = proposal.getDisplayString();
-            Matcher m = BASE_DESC.matcher(key);
-            if (m.find()) key = m.group();
-
+            String key = getKeyString(proposal);
             ICompletionProposal previous = map.put(key, proposal);
             if (previous instanceof IJavaCompletionProposal && proposal instanceof IJavaCompletionProposal) {
                 int r1 = ((IJavaCompletionProposal) previous).getRelevance();
@@ -57,6 +54,28 @@ public class DSLDProposalFilter implements IProposalFilterExtension {
             return new ArrayList<ICompletionProposal>(map.values());
         }
         return null;
+    }
+
+    private static String getKeyString(ICompletionProposal proposal) {
+        String key = proposal.getDisplayString();
+        Matcher m = BASE_DESC.matcher(key);
+        if (m.find()) key = m.group();
+
+        // key for method: "printf(String format, Object[] values) : void - DefaultGroovyMethods"
+        String[] tokens = key.split("\\(|\\)|,");
+        if (tokens.length > 1) {
+            StringBuilder buf = new StringBuilder(tokens[0]).append('(');
+            for (int i = 1; i < tokens.length - 1; i += 1) {
+                if (i > 1) buf.append(',');
+                // remove parameter name from key string
+                buf.append(tokens[i].replaceFirst(" \\w+$", ""));
+            }
+            buf.append(')').append(tokens[tokens.length - 1]);
+            key = buf.toString();
+        }
+        // key for method: "printf(String, Object[]) : void - DefaultGroovyMethods"
+
+        return key;
     }
 
     private static final Pattern BASE_DESC = Pattern.compile("^.* - (\\w+\\.)*\\w+");

@@ -443,4 +443,18 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'getC'))
         proposalExists(proposals, 'getClass', 1)
     }
+
+    @Test
+    void testSyntheticBridgeMethod() {
+        String contents = '''\
+            class Foo implements Comparable<Foo> {
+              int compareTo(Foo that) { return 0 }
+              void bar() {
+                this.com
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'com'))
+        proposalExists(proposals, 'compareTo', 1)
+    }
 }

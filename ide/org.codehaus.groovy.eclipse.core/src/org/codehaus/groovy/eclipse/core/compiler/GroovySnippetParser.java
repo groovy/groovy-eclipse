@@ -15,12 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.isSynthetic;
 import static org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies.proceedWithAllProblems;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.antlr.AntlrParserPlugin;
 import org.codehaus.groovy.antlr.GroovySourceAST;
 import org.codehaus.groovy.antlr.LocationSupport;
@@ -75,7 +75,7 @@ public class GroovySnippetParser {
         for (ClassNode classNode : node.getClasses()) {
             for (Iterator<MethodNode> it = classNode.getMethods().iterator(); it.hasNext();) {
                 MethodNode method = it.next();
-                if ((method.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0) {
+                if (isSynthetic(method)) {
                     it.remove();
                 }
             }

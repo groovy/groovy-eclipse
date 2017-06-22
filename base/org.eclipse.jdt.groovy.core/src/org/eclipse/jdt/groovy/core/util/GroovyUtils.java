@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
+import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -337,6 +339,14 @@ public class GroovyUtils {
         }
 
         return result;
+    }
+
+    public static boolean isSynthetic(FieldNode node) {
+        return (node.getModifiers() & ACC_SYNTHETIC) != 0;
+    }
+
+    public static boolean isSynthetic(MethodNode node) {
+        return (node.getModifiers() & ACC_SYNTHETIC) != 0;
     }
 
     public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {

@@ -1118,23 +1118,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 boolean isInterface = classNode.isInterface();
-                boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
+                boolean isEnum = classNode.isEnum();
                 int mods = classNode.getModifiers();
                 if (isTrait(classNode)) {
                     mods |= Opcodes.ACC_INTERFACE;
                 }
-                if ((mods & Opcodes.ACC_ENUM) != 0) {
+                if (isEnum) {
                     // remove final
-                    mods = mods & ~Opcodes.ACC_FINAL;
+                    mods &= ~Opcodes.ACC_FINAL;
                 }
                 // FIXASC should this modifier be set?
                 // mods |= Opcodes.ACC_PUBLIC;
                 // FIXASC should not do this for inner classes, just for top level types
                 // FIXASC does this make things visible that shouldn't be?
-                mods = mods & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
+                mods &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
                 if (!isInner) {
                     if ((mods & Opcodes.ACC_STATIC) != 0) {
-                        mods = mods & ~(Opcodes.ACC_STATIC);
+                        mods &= ~(Opcodes.ACC_STATIC);
                     }
                 }
 
@@ -1252,8 +1252,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
                         continue;
                     }
-                    boolean isEnumField = (fieldNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
-                    boolean isSynthetic = (fieldNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0;
+                    boolean isEnumField = fieldNode.isEnum();
+                    boolean isSynthetic = GroovyUtils.isSynthetic(fieldNode);
                     if (!isSynthetic) {
                         // JavaStubGenerator ignores private fields but I don't think we want to here
                         FieldDeclarationWithInitializer fieldDeclaration =

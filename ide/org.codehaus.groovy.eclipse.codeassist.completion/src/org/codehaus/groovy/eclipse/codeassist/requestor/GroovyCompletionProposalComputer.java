@@ -50,6 +50,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
@@ -175,45 +176,53 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
             return Collections.EMPTY_LIST;
         }
 
-        String event = null;
+        String traceEvent = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Starting content assist for " + unit.getElementName());
-            event = "Content assist for " + unit.getElementName();
-            GroovyLogManager.manager.logStart(event);
+            traceEvent = "Content assist for " + unit.getElementName();
+            GroovyLogManager.manager.logStart(traceEvent);
         }
 
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
-
         ModuleNodeInfo moduleInfo = gunit.getModuleInfo(true);
         if (moduleInfo == null) {
-            if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Null module node for " + gunit.getElementName());
+            if (traceEvent != null) {
+                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Null module node");
             }
             return Collections.EMPTY_LIST;
         }
 
+        int offset = context.getInvocationOffset();
         IDocument document = context.getDocument();
-        ContentAssistContext assistContext = createContentAssistContext(gunit, context.getInvocationOffset(), document);
+        if (offset < 0 || offset > document.getLength()) {
+            if (traceEvent != null) {
+                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Completion offset " + offset + " is out of bounds");
+            }
+            return Collections.EMPTY_LIST;
+        }
+
+        ContentAssistContext assistContext = createContentAssistContext(gunit, offset, document);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
             List<IGroovyCompletionProcessorFactory> factories = LOCATION_FACTORIES.get(assistContext.location);
             if (factories != null) {
-                SearchableEnvironment nameEnvironment = createSearchableEnvironment(javaContext);
+                SubMonitor submon = SubMonitor.convert(monitor, factories.size());
+                SearchableEnvironment environment = createSearchableEnvironment(javaContext);
                 try {
                     for (IGroovyCompletionProcessorFactory factory : factories) {
-                        IGroovyCompletionProcessor processor =
-                            factory.createProcessor(assistContext, javaContext, nameEnvironment);
+                        IGroovyCompletionProcessor processor = factory.createProcessor(assistContext, javaContext, environment);
                         if (processor != null) {
                             if (processor instanceof ITypeResolver) {
                                 ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
                             }
-                            proposals.addAll(processor.generateProposals(monitor));
+                            proposals.addAll(processor.generateProposals(submon.newChild(1)));
                         }
                     }
                 } finally {
-                    if (nameEnvironment != null) {
-                        nameEnvironment.cleanup();
+                    if (environment != null) {
+                        environment.cleanup();
                     }
+                    submon.done();
                 }
             }
 
@@ -237,8 +246,8 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
             }
         }
 
-        if (event != null) {
-            GroovyLogManager.manager.logEnd(event, TraceCategory.CONTENT_ASSIST);
+        if (traceEvent != null) {
+            GroovyLogManager.manager.logEnd(traceEvent, TraceCategory.CONTENT_ASSIST);
         }
 
         return proposals;
@@ -291,7 +300,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         } catch (ParseException e) {
             // can ignore; probably just invalid code that is being completed at
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, "Cannot complete code: " + e.getMessage());
+                GroovyLogManager.manager.logException(TraceCategory.CONTENT_ASSIST, e);
             }
         }
         return "";

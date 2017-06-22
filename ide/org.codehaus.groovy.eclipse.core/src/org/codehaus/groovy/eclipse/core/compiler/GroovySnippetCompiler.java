@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.isSynthetic;
+
 import java.util.Iterator;
 import java.util.Map;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -91,7 +92,7 @@ public class GroovySnippetCompiler {
         for (ClassNode classNode : (Iterable<ClassNode>) node.getClasses()) {
             for (Iterator<MethodNode> methodIter = classNode.getMethods().iterator(); methodIter.hasNext();) {
                 MethodNode method = methodIter.next();
-                if ((method.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0) {
+                if (isSynthetic(method)) {
                     methodIter.remove();
                 }
             }

@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -43,7 +45,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
     private Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
 
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
-        List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
+        List<IGroovyProposal> proposals = new LinkedList<IGroovyProposal>();
 
         boolean firstTime = alreadySeen.isEmpty();
         List<MethodNode> allMethods = getAllMethods(type, alreadySeen);
@@ -84,6 +86,20 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
                 findStaticImportProposals(proposals, prefix, type.getModule());
                 findStaticFavoriteProposals(proposals, prefix, type.getModule());
+            }
+        }
+
+        // remove proposals for synthetic members
+        for (Iterator<IGroovyProposal> it = proposals.iterator(); it.hasNext();) {
+            IGroovyProposal proposal = it.next();
+            if (proposal instanceof GroovyMethodProposal) {
+                if (GroovyUtils.isSynthetic(((GroovyMethodProposal) proposal).getMethod())) {
+                    it.remove();
+                }
+            } else if (proposal instanceof GroovyFieldProposal) {
+                if (GroovyUtils.isSynthetic(((GroovyFieldProposal) proposal).getField())) {
+                    it.remove();
+                }
             }
         }
 
