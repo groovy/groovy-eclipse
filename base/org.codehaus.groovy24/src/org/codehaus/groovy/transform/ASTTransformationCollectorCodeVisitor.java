@@ -193,21 +193,21 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     }
 
     // GRECLIPSE edit
-    //private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
-    //    List<String> transformClassNames = getTransformClassNames(annotation, transformClassAnnotation);
-    //
-    //    if(transformClassNames.isEmpty()) {
-    //        source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
-    //                annotation.getClassNode().getName() + " does not specify any transform class names/classes", source));
-    //    }
-    //
-    //    for (String transformClass : transformClassNames) {
-    //        Class klass = loadTransformClass(transformClass, annotation); 
-    //        if (klass!=null) {
-    //            verifyAndAddTransform(annotation, klass);
-    //        }
-    //    }
-    //}
+    /*private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
+        List<String> transformClassNames = getTransformClassNames(annotation, transformClassAnnotation);
+
+        if(transformClassNames.isEmpty()) {
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
+                    annotation.getClassNode().getName() + " does not specify any transform class names/classes", source));
+        }
+
+        for (String transformClass : transformClassNames) {
+            Class klass = loadTransformClass(transformClass, annotation); 
+            if (klass!=null) {
+                verifyAndAddTransform(annotation, klass);
+            }
+        }
+    }*/
 
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
         if (transformClassNames.length == 0 && transformClasses.length == 0) {

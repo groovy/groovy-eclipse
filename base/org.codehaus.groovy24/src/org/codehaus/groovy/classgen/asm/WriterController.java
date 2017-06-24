@@ -57,6 +57,7 @@ public class WriterController {
             indyBinHelper = null;
         }
     }
+
     private AsmClassGenerator acg;
     private MethodVisitor methodVisitor;
     private CompileStack compileStack;
@@ -141,7 +142,7 @@ public class WriterController {
         this.compileStack = new CompileStack(this);
         this.cv = cv;
         // GRECLIPSE add the 2 trailing conditions
-        if (optimizeForInt && sourceUnit != null && !sourceUnit.isReconcile) {
+        if (optimizeForInt && (sourceUnit == null || !sourceUnit.isReconcile)) {
         // GRECLIPSE end
             this.statementWriter = new OptimizingStatementWriter(this);
         } else {

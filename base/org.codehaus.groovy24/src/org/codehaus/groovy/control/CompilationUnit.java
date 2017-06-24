@@ -1251,19 +1251,15 @@ public class CompilationUnit extends ProcessingUnit {
     /**
      * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
      * infrastructure don't need the bytecode, so we can skip creating it, they would rather have a more 'source like' AST.
-     * 
+     *
      * @param isReconcile is this a reconciling compile?
      */
     public void tweak(boolean isReconcile) {
-        // Can't do this for field initializers. They need to be in the constructor in order for them to
-        // be correctly visited by the verifier and have certain optimizations performed (creating returns)
         if (isReconcile) {
             verifier.inlineStaticFieldInitializersIntoClinit = false;
-            //verifier.inlineFieldInitializersIntoInit = false;
             staticImportVisitor.isReconcile = true;
         } else {
             verifier.inlineStaticFieldInitializersIntoClinit = true;
-            //verifier.inlineFieldInitializersIntoInit = true;
         }
         this.isReconcile = isReconcile;
     }

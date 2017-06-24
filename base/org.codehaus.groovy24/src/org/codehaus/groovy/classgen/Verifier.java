@@ -127,7 +127,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private ClassNode classNode;
     private MethodNode methodNode;
     // GRECLIPSE add
-    public boolean inlineFieldInitializersIntoInit = true;
     public boolean inlineStaticFieldInitializersIntoClinit = true;
     // GRECLIPSE end
 
@@ -955,10 +954,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
             }
         }
-        // GRECLIPSE add
-        // conditionally 'copy' the initializers into the ctors
-        if (inlineFieldInitializersIntoInit)
-        // GRECLIPSE end
+
         if (!Traits.isTrait(node)) {
             for (FieldNode fn : node.getFields()) {
                 addFieldInitialization(statements, staticStatements, fn, isEnum,
