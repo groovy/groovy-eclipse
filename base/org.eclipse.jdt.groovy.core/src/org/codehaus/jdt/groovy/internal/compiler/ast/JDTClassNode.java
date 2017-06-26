@@ -219,9 +219,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
 
             ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
-            superInterfaceBindings = superInterfaceBindings == null ? Binding.NO_SUPERINTERFACES : superInterfaceBindings;
-            ClassNode[] interfaces = new ClassNode[superInterfaceBindings.length];
-            for (int i = 0; i < superInterfaceBindings.length; i++) {
+            if (superInterfaceBindings == null) superInterfaceBindings = Binding.NO_SUPERINTERFACES;
+
+            int n = superInterfaceBindings.length;
+            ClassNode[] interfaces = new ClassNode[n];
+            for (int i = 0; i < n; i += 1) {
                 interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
             }
             setInterfaces(interfaces);
@@ -256,39 +258,37 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             return;
         }
 
-        MethodBinding[] bindings = null;
+        MethodBinding[] methodBindings;
         if (jdtBinding instanceof ParameterizedTypeBinding) {
             ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
-            bindings = genericType.methods();
+            methodBindings = genericType.methods();
         } else {
-            bindings = jdtBinding.methods();
+            methodBindings = jdtBinding.methods();
         }
-        if (bindings != null) {
-            for (int i = 0; i < bindings.length; i++) {
-                if (bindings[i].isConstructor()) {
-                    ConstructorNode cNode = constructorBindingToConstructorNode(bindings[i]);
+        if (methodBindings != null) {
+            for (MethodBinding methodBinding : methodBindings) {
+                if (methodBinding.isConstructor()) {
+                    ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
                     addConstructor(cNode);
                 } else {
-                    MethodNode mNode = methodBindingToMethodNode(bindings[i]);
+                    MethodNode mNode = methodBindingToMethodNode(methodBinding);
                     addMethod(mNode);
                 }
             }
         }
+
         if (jdtBinding instanceof BinaryTypeBinding) {
             MethodBinding[] infraBindings = ((BinaryTypeBinding) jdtBinding).infraMethods();
-            for (int i = 0; i < infraBindings.length; i++) {
-                if (infraBindings[i].isConstructor()) {
-                    ConstructorNode cNode = constructorBindingToConstructorNode(infraBindings[i]);
+            for (MethodBinding methodBinding : infraBindings) {
+                if (methodBinding.isConstructor()) {
+                    ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
                     addConstructor(cNode);
                 } else {
-                    MethodNode mNode = methodBindingToMethodNode(infraBindings[i]);
+                    MethodNode mNode = methodBindingToMethodNode(methodBinding);
                     addMethod(mNode);
                 }
             }
-        }
-        // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
-        // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
-        if (jdtBinding instanceof SourceTypeBinding) {
+        } else if (jdtBinding instanceof SourceTypeBinding) {
             SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
             ClassScope classScope = jdtSourceTypeBinding.scope;
             // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
@@ -298,29 +298,33 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 MethodVerifier verifier = environment.methodVerifier();
                 cuScope.verifyMethods(verifier);
             }
-            SyntheticMethodBinding[] syntheticMethodBindings = ((SourceTypeBinding) jdtBinding).syntheticMethods();
-            if (syntheticMethodBindings != null) {
-                for (int i = 0; i < syntheticMethodBindings.length; i++) {
-                    if (syntheticMethodBindings[i].isConstructor()) {
-                        ConstructorNode cNode = constructorBindingToConstructorNode(bindings[i]);
-                        addConstructor(cNode);
-                    } else {
-                        MethodNode mNode = methodBindingToMethodNode(syntheticMethodBindings[i]);
-                        addMethod(mNode);
+            if (jdtSourceTypeBinding.isPrototype()) {
+                // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
+                // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
+                SyntheticMethodBinding[] syntheticMethodBindings = jdtSourceTypeBinding.syntheticMethods();
+                if (syntheticMethodBindings != null) {
+                    for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
+                        if (syntheticBinding.isConstructor()) {
+                            ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
+                            addConstructor(cNode);
+                        } else {
+                            MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
+                            addMethod(mNode);
+                        }
                     }
                 }
             }
         }
 
-        FieldBinding[] fieldBindings = null;
+        FieldBinding[] fieldBindings;
         if (jdtBinding instanceof ParameterizedTypeBinding) {
             fieldBindings = ((ParameterizedTypeBinding) jdtBinding).genericType().fields();
         } else {
             fieldBindings = jdtBinding.fields();
         }
         if (fieldBindings != null) {
-            for (int i = 0; i < fieldBindings.length; i++) {
-                FieldNode fNode = fieldBindingToFieldNode(fieldBindings[i], groovyDecl);
+            for (FieldBinding fieldBinding : fieldBindings) {
+                FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyDecl);
                 addField(fNode);
             }
         }
