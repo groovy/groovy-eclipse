@@ -37,6 +37,13 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
+    void testGetterToProperty2() {
+        addGroovySource 'class Foo { def getURL() { null } }', 'Foo'
+        convertToProperty "new Foo().get${CARET}URL()"
+        assertEditorContents "new Foo().URL"
+    }
+
+    @Test
     void testIsserToProperty() {
         convertToProperty "[].is${CARET}Empty();"
         assertEditorContents "[].empty;"
