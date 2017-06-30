@@ -150,16 +150,13 @@ public class GroovyClassScope extends ClassScope {
                     // null binding indicates there was a problem resolving its type
                     if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
                         String getterName = "get" + MetaClassHelper.capitalize(name);
-                        createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type,
-                                groovyMethods, methodBindings, typeDeclaration);
+                        createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
                         if (!fBinding.isFinal()) {
                             String setterName = "set" + MetaClassHelper.capitalize(name);
-                            createMethod(setterName, property.isStatic(), "", new TypeBinding[] { fBinding.type },
-                                    TypeBinding.VOID, groovyMethods, methodBindings, typeDeclaration);
+                            createMethod(setterName, property.isStatic(), "", new TypeBinding[] {fBinding.type}, TypeBinding.VOID, groovyMethods, methodBindings, typeDeclaration);
                         }
                         if (fBinding.type == TypeBinding.BOOLEAN) {
-                            createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */
-                                    null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
+                            createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */ null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
                         }
                     }
                 }
@@ -170,18 +167,15 @@ public class GroovyClassScope extends ClassScope {
                     String name = property.getName();
                     String capitalizedName = MetaClassHelper.capitalize(name);
                     // Create getter
-                    createGetterMethod(name, "get" + capitalizedName, property.isStatic(), groovyMethods, methodBindings,
-                            typeDeclaration);
+                    createGetterMethod(name, "get" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration);
                     // Create setter if non-final property
                     if (!Modifier.isFinal(property.getModifiers())) {
-                        createSetterMethod(name, "set" + capitalizedName, property.isStatic(), groovyMethods, methodBindings,
-                                typeDeclaration, property.getType().getName());
+                        createSetterMethod(name, "set" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration, property.getType().getName());
                     }
                     // Create isA if type is boolean
                     String propertyType = property.getType().getName();
                     if (propertyType.equals("boolean")) {
-                        createGetterMethod(name, "is" + capitalizedName, property.isStatic(), groovyMethods, methodBindings,
-                                typeDeclaration);
+                        createGetterMethod(name, "is" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration);
                     }
                 }
             }
@@ -190,7 +184,7 @@ public class GroovyClassScope extends ClassScope {
         Map<String, MethodBinding> methodsMap = new HashMap<String, MethodBinding>();
         for (ReferenceBinding i : superInterfaces) {
             if (traitHelper.isTrait(i)) {
-                ReferenceBinding helperBinding = getHelperBinding(i);
+                ReferenceBinding helperBinding = traitHelper.getHelperBinding(i);
                 for (MethodBinding method : i.availableMethods()) {
                     if (method.isPrivate() || method.isStatic()) {
                         continue;
@@ -246,27 +240,9 @@ public class GroovyClassScope extends ClassScope {
         return key.toString();
     }
 
-    private ReferenceBinding getHelperBinding(ReferenceBinding interfaceBinding) {
-        if (interfaceBinding instanceof BinaryTypeBinding) {
-            StringBuilder nameBuilder = new StringBuilder();
-            nameBuilder.append(interfaceBinding.sourceName);
-            nameBuilder.append("$Trait$Helper");
-            ReferenceBinding helperBinding = compilationUnitScope().findType(nameBuilder.toString().toCharArray(),
-                    interfaceBinding.fPackage, interfaceBinding.fPackage);
-            if (helperBinding != null) {
-                if (helperBinding instanceof ProblemReferenceBinding) {
-                    helperBinding = ((ProblemReferenceBinding) helperBinding).closestReferenceMatch();
-                }
-            }
-            return helperBinding;
-        }
-        return null;
-    }
-
     private boolean isNotActuallyAbstract(MethodBinding methodBinding, ReferenceBinding helperBinding) {
         if (methodBinding.declaringClass instanceof SourceTypeBinding) {
-            AbstractMethodDeclaration methodDeclaration = ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext
-                    .declarationOf(methodBinding);
+            AbstractMethodDeclaration methodDeclaration = ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext.declarationOf(methodBinding);
             if (methodDeclaration != null) {
                 return (methodDeclaration.modifiers & ClassFileConstants.AccAbstract) == 0;
             }
@@ -286,7 +262,7 @@ public class GroovyClassScope extends ClassScope {
                         continue;
                     }
                     boolean same = true;
-                    for (int i = 0; i < expectedParameters.length; i++) {
+                    for (int i = 0, n = expectedParameters.length; i < n; i += 1) {
                         if (!actualParameters[i + 1].equals(expectedParameters[i])) {
                             same = false;
                             break;
@@ -607,6 +583,22 @@ public class GroovyClassScope extends ClassScope {
                 }
             }
             return false;
+        }
+
+        private ReferenceBinding getHelperBinding(ReferenceBinding interfaceBinding) {
+            if (interfaceBinding instanceof BinaryTypeBinding) {
+                StringBuilder nameBuilder = new StringBuilder();
+                nameBuilder.append(interfaceBinding.sourceName);
+                nameBuilder.append("$Trait$Helper");
+                ReferenceBinding helperBinding = compilationUnitScope().findType(nameBuilder.toString().toCharArray(), interfaceBinding.fPackage, interfaceBinding.fPackage);
+                if (helperBinding != null) {
+                    if (helperBinding instanceof ProblemReferenceBinding) {
+                        helperBinding = ((ProblemReferenceBinding) helperBinding).closestReferenceMatch();
+                    }
+                }
+                return helperBinding;
+            }
+            return null;
         }
     }
 }

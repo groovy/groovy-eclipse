@@ -166,14 +166,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             return;
         }
         try {
-            if (jdtBinding instanceof ParameterizedTypeBinding && !(jdtBinding instanceof RawTypeBinding)) {
-                // GenericsType[] gts = configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
-                GenericsType[] gts = new JDTClassNodeBuilder(this.resolver)
-                        .configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
-                setGenericsTypes(gts);
-                // return base;
-            } else if (jdtBinding instanceof RawTypeBinding) {
+            if (jdtBinding instanceof RawTypeBinding) {
                 // nothing to do
+            } else if (jdtBinding instanceof ParameterizedTypeBinding) {
+                GenericsType[] gts = new JDTClassNodeBuilder(this.resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+                setGenericsTypes(gts);
             } else {
                 // SourceTB, BinaryTB, TypeVariableB, WildcardB
                 TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
@@ -187,8 +184,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    // JDTClassNodes are created because of a JDT Reference Binding file so are
-    // always 'resolved' (although not initialized on creation)
+    // JDTClassNodes are created because of a JDT Reference Binding file so are always 'resolved' (although not initialized on creation)
     @Override
     public boolean isResolved() {
         return true;
@@ -332,8 +328,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public boolean mightHaveInners() {
-        // return super.hasInnerClasses();
-        return jdtBinding.memberTypes().length != 0;
+        return (jdtBinding.memberTypes().length != 0);
     }
 
     /**
@@ -439,7 +434,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
         if (methodBinding.thrownExceptions != null) {
             thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
-            for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
+            for (int i = 0, n = methodBinding.thrownExceptions.length; i < n; i += 1) {
                 thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
             }
         }
