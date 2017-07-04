@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,6 @@ import org.osgi.framework.Version;
 
 /**
  * Executes a DSLD script and collects the results.
- *
- * @author andrew
- * @created Nov 17, 2010
  */
 public class DSLDScriptExecutor {
 
@@ -381,7 +378,7 @@ public class DSLDScriptExecutor {
      */
     public Object contribution(Object args) {
         Object[] contributionArgs = extractArgsContribution(args);
-        if (args == null || contributionArgs.length == 0) {
+        if (contributionArgs == null || contributionArgs.length < 2) {
             return null;
         }
         IPointcut p = (IPointcut) contributionArgs[0];
