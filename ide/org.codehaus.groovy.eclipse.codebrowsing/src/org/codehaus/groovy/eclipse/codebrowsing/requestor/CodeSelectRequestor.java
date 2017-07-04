@@ -45,6 +45,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceTyp
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -398,55 +399,44 @@ public class CodeSelectRequestor implements ITypeRequestor {
         } else if (jdtDeclaringType.getTypeRoot() != null) {
             String name = null;
             if (declaration instanceof PropertyNode) {
-                name = ((PropertyNode) declaration).getName();
+                PropertyNode node = (PropertyNode) declaration;
+                name = node.getName();
                 // check for possible property node redirection
                 if (nodeToLookFor instanceof VariableExpression &&
                         ((VariableExpression) nodeToLookFor).getAccessedVariable() != declaration &&
                         ((VariableExpression) nodeToLookFor).getAccessedVariable() instanceof ASTNode) {
                     declaration = (ASTNode) ((VariableExpression) nodeToLookFor).getAccessedVariable();
                 }
+                // short-circuit if declaration exists in the Groovy model but not in the Java model
+                else if (existsOnlyInGroovyModel(node.getField(), name, declaringType, jdtDeclaringType)) {
+                    assert jdtDeclaringType instanceof SourceType;
+                    return jdtDeclaringType.getField(name);
+                }
             }
-            if (declaration instanceof MethodNode) {
-                name = ((MethodNode) declaration).getName();
-                if (name.equals("<init>")) {
-                    name = jdtDeclaringType.getElementName();
-                }
-                // check for @Trait method
-                @SuppressWarnings("unchecked")
-                List<MethodNode> traitMethods = (List<MethodNode>) declaringType.getNodeMetaData("trait.methods");
-                if (traitMethods != null) {
-                    for (MethodNode method : traitMethods) {
-                        if (method == declaration) {
-                            return jdtDeclaringType.getMethod(name, null);
-                        }
-                    }
-                }
-            } else if (declaration instanceof FieldNode) {
-                FieldNode field = (FieldNode) declaration; name = field.getName();
+            if (declaration instanceof FieldNode) {
+                FieldNode node = (FieldNode) declaration;
+                name = node.getName();
                 // check for @Lazy field
-                for (AnnotationNode anno : field.getAnnotations()) {
+                for (AnnotationNode anno : node.getAnnotations()) {
                     if (anno.getClassNode().getNameWithoutPackage().equals("Lazy") && name.charAt(0) == '$') {
                         name = name.substring(1); // strip the leading $
                     }
                 }
-                // check for @Field field
-                if (declaration.getEnd() > 0 && declaringType.isScript()) {
+                // short-circuit if declaration exists in the Groovy model but not in the Java model
+                if (existsOnlyInGroovyModel(node, name, declaringType, jdtDeclaringType)) {
+                    assert jdtDeclaringType instanceof SourceType;
                     return jdtDeclaringType.getField(name);
                 }
-                // check for @Trait field
-                @SuppressWarnings("unchecked")
-                List<FieldNode> traitFields = (List<FieldNode>) declaringType.getNodeMetaData("trait.fields");
-                if (traitFields != null) {
-                    for (FieldNode traitField : traitFields) {
-                        if (traitField == declaration) {
-                            return jdtDeclaringType.getField(name);
-                        }
-                    }
+            } else if (declaration instanceof MethodNode) {
+                MethodNode node = (MethodNode) declaration;
+                name = node.getName();
+                if (name.equals("<init>")) {
+                    name = jdtDeclaringType.getElementName();
                 }
-                // check for @Log, @Singleton, etc. field -- generalized to synthetic field that exists on declaring class
-                if (field.getEnd() < 1 && !(field instanceof JDTFieldNode) && field.getDeclaringClass().getField(name) != null) {
-                    // could check declaring class for AST transform annotation...
-                    return jdtDeclaringType.getField(name);
+                // short-circuit if declaration exists in the Groovy model but not in the Java model
+                if (existsOnlyInGroovyModel(node, name, declaringType, jdtDeclaringType)) {
+                    assert jdtDeclaringType instanceof SourceType;
+                    return jdtDeclaringType.getMethod(name, null);
                 }
             }
 
@@ -479,6 +469,46 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         }
         return maybeRequested;
+    }
+
+    private boolean existsOnlyInGroovyModel(FieldNode node, String name, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
+        // check for @Field field
+        if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+            return true;
+        }
+        // check for @Trait field
+        @SuppressWarnings("unchecked")
+        List<FieldNode> traitFields = (List<FieldNode>) declaringType.getNodeMetaData("trait.fields");
+        if (traitFields != null) {
+            for (FieldNode traitField : traitFields) {
+                if (traitField == node) {
+                    return true;
+                }
+            }
+        }
+        // check for @Log, @Singleton, etc. field -- generalized to synthetic field that exists on declaring class
+        if (node.getEnd() < 1 && !(node instanceof JDTFieldNode) && declaringType.getField(name) != null && findElement(jdtDeclaringType, name, null) == null) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean existsOnlyInGroovyModel(MethodNode node, String name, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
+        // check for @Trait method
+        @SuppressWarnings("unchecked")
+        List<MethodNode> traitMethods = (List<MethodNode>) declaringType.getNodeMetaData("trait.methods");
+        if (traitMethods != null) {
+            for (MethodNode traitMethod : traitMethods) {
+                if (traitMethod == node) {
+                    return true;
+                }
+            }
+        }
+        // check for @Newify, @Sortable, @Singleton, etc. -- synthetic field that exists on declaring class
+        if (node.getEnd() < 1 && !(node instanceof JDTMethodNode) && !declaringType.getMethods(name).isEmpty() && findElement(jdtDeclaringType, name, node.getParameters()) == null) {
+            return true;
+        }
+        return false;
     }
 
     /**

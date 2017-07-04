@@ -252,6 +252,31 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assert elem.inferredElement.returnType.toString(false) == 'java.util.List <java.lang.String>'
     }
 
+    @Test
+    void testCodeSelectStaticMethod6() {
+        String contents = '''\
+            @groovy.transform.Sortable
+            class Foo {
+              String number
+            }
+            Foo.comparatorByNumber()
+            '''.stripIndent()
+        IJavaElement elem = assertCodeSelect([contents], 'comparatorByNumber')
+        assert elem.inferredElement.returnType.toString(false) == 'java.util.Comparator'
+    }
+
+    @Test
+    void testCodeSelectStaticMethod7() {
+        String contents = '''\
+            @Singleton(property='foo')
+            class Foo {
+            }
+            Foo.getFoo()
+            '''.stripIndent()
+        IJavaElement elem = assertCodeSelect([contents], 'getFoo')
+        assert elem.inferredElement.returnType.toString(false) == 'Foo'
+    }
+
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod1() {
         String contents = '\"\".substring(0)'
