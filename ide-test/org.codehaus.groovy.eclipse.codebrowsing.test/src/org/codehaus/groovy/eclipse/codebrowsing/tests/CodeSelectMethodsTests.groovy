@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMet
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.SourceRange
 import org.junit.Test
 
@@ -251,65 +252,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assert elem.inferredElement.returnType.toString(false) == 'java.util.List <java.lang.String>'
     }
 
-    @Test
-    void testCodeSelectNonStaticProperty1() {
-        String contents = '''\
-            class Super {
-              def getSql() { null }
-            }
-
-            class Foo extends Super {
-              def foo() {
-                sql
-              }
-            }
-            '''.stripIndent()
-        assertCodeSelect([contents], 'sql', 'getSql')
-    }
-
-    @Test
-    void testCodeSelectStaticProperty1() {
-        String contents = '''\
-            class Super {
-              static def getSql() { null }
-            }
-
-            class Foo extends Super {
-              def static foo() {
-                sql
-              }
-            }
-            '''.stripIndent()
-        assertCodeSelect([contents], 'sql', 'getSql')
-    }
-
-    @Test
-    void testCodeSelectStaticProperty2() {
-        String contents = '''\
-            class Foo {
-              static def getSql() { null }
-              def foo() {
-                sql
-              }
-            }
-            '''.stripIndent()
-        assertCodeSelect([contents], 'sql', 'getSql')
-    }
-
-    @Test
-    void testCodeSelectStaticProperty3() {
-        String contents = '''\
-            import java.util.logging.*
-            class Foo {
-              static Logger getLog() { null }
-              def foo() {
-                log.info 'message' // should not be confused with field created by @Log transform (see CodeSelectFieldsTests.testCodeSelectLoggerFieldInClass)
-              }
-            }
-            '''.stripIndent()
-        assertCodeSelect([contents], 'log', 'getLog')
-    }
-
     @Test // GRECLIPSE-831
     void testCodeSelectOverloadedMethod1() {
         String contents = '\"\".substring(0)'
@@ -365,13 +307,36 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         String contents = 'def x = new java.util.Date()'
         IJavaElement elem = assertCodeSelect([contents], 'Date')
         assert elem instanceof IMethod : 'Expected method not type'
-        assert ((IMethod) elem).isConstructor() : 'Expected ctor not method'
+        assert elem.isConstructor() : 'Expected ctor not method'
 
         // check the preceding elements for selection bleedthrough
         assertCodeSelect([contents], 'util', 'java.util')
         assertCodeSelect([contents], 'java', 'java')
         assertCodeSelect([contents], 'new', '')
         assertCodeSelect([contents], 'x', 'x')
+    }
+
+    @Test
+    void testCodeSelectNewifyConstructor1() {
+        String contents = 'class Foo { @Newify(Date) def x = Date(123L) }'
+        IJavaElement elem = assertCodeSelect([contents], 'Date')
+        assert elem instanceof IMethod : 'Expected method not type'
+        assert elem.isConstructor() : 'Expected ctor not method'
+    }
+
+    @Test
+    void testCodeSelectNewifyConstructor2() {
+        String contents = 'class Foo { @Newify(Date) def x = Date.new(123L) }'
+        IJavaElement elem = assertCodeSelect([contents], 'new', 'Date')
+        assert elem instanceof IMethod : 'Expected method not type'
+        assert elem.isConstructor() : 'Expected ctor not method'
+    }
+
+    @Test
+    void testCodeSelectNewifyConstructor2a() {
+        String contents = 'class Foo { @Newify(Date) def x = Date.new(123L) }'
+        IJavaElement elem = assertCodeSelect([contents], 'Date')
+        assert elem instanceof IType : 'Expected type not ctor'
     }
 
     @Test
@@ -433,7 +398,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectConstuctorMultipleConstructors4() {
         // single-arg constructor is defined last and use of constant reference in ctor call means arg types not resolved at time of ctor selection
         addGroovySource('class Foo { Foo(String s1, String s2) { } \n Foo(String s1) { } }', 'Foo', 'p')
-        addGroovySource('interface Bar { String CONST = \"whatever\" }', 'Bar', 'p')
+        addGroovySource('interface Bar { String CONST = "whatever" }', 'Bar', 'p')
         IMethod method = assertConstructor('p', 'Baz', 'Foo', 'new Foo(Bar.CONST)')
         assert method.parameters.length == 1 : 'Should have found constructor with 1 arg'
     }

@@ -282,8 +282,6 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     public void visitConstructorCallExpression(ConstructorCallExpression call) {
         if (call.getEnd() > 0) {
-            int start, until;
-
             if (call.getNameStart() > 0) {
                 if (call.isUsingAnonymousInnerClass()) {
                     check(call.getType().getUnresolvedSuperClass());
@@ -292,24 +290,21 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                     checkNameRange(call);
                 }
                 checkGenerics(call.getType());
-
-                start = call.getStart();
-                until = call.getNameStart() - 1;
             } else try {
-                start = call.getStart() + "new ".length();
-                until = call.getArguments().getStart() - 1;
+                int start = call.getStart() + "new ".length();
+                int until = call.getArguments().getStart() - 1;
 
                 // check call name and generics
                 check(call.getType(), start, until);
-
-                until = start;
-                start = call.getStart();
             } catch (VisitCompleteException e) {
                 result = call;
                 throw e;
             }
+            // in case of @Newify, "new" keyword is not present
+            if (call.getStart() == call.getType().getStart() && !call.isUsingAnonymousInnerClass()) {
+                check(call.getType());
+            }
         }
-
         // visit argument list and anonymous body
         super.visitConstructorCallExpression(call);
     }

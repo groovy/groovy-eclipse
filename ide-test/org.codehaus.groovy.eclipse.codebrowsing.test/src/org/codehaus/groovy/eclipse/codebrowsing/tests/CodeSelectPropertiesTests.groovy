@@ -37,7 +37,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetProperty2() {
+    void testGetProperty1a() {
         assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
@@ -54,7 +54,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetProperty3() {
+    void testGetProperty1b() {
         assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
@@ -85,7 +85,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty2() {
+    void testSetProperty1a() {
         assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
@@ -102,7 +102,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty3() {
+    void testSetProperty1b() {
         assumeTrue(isAtLeastGroovy(20))
 
         String contents = '''\
@@ -228,6 +228,65 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             '''.stripIndent()
 
         assertCodeSelect([contents], 'isXxx', 'xxx')
+    }
+
+    @Test
+    void testCodeSelectNonStaticProperty1() {
+        String contents = '''\
+            class Super {
+              def getSql() { null }
+            }
+
+            class Foo extends Super {
+              def foo() {
+                sql
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'sql', 'getSql')
+    }
+
+    @Test
+    void testCodeSelectStaticProperty1() {
+        String contents = '''\
+            class Super {
+              static def getSql() { null }
+            }
+
+            class Foo extends Super {
+              def static foo() {
+                sql
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'sql', 'getSql')
+    }
+
+    @Test
+    void testCodeSelectStaticProperty2() {
+        String contents = '''\
+            class Foo {
+              static def getSql() { null }
+              def foo() {
+                sql
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'sql', 'getSql')
+    }
+
+    @Test
+    void testCodeSelectStaticProperty3() {
+        String contents = '''\
+            import java.util.logging.*
+            class Foo {
+              static Logger getLog() { null }
+              def foo() {
+                log.info 'message' // should not be confused with field created by @Log transform (see CodeSelectFieldsTests.testCodeSelectLoggerFieldInClass)
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'log', 'getLog')
     }
 
     // TODO: map properties, unknown properties

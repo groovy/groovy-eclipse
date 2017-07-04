@@ -163,7 +163,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
             keyword = String.valueOf(contents, start, length).equals("def");
         }
         // "new " something
-        else if (node instanceof ConstructorCallExpression && length == 3) {
+        else if (node instanceof ConstructorCallExpression && length == 3 && start < ((ConstructorCallExpression) node).getNameStart()) {
             keyword = String.valueOf(contents, start, length).equals("new");
         }
         // something " as " something
