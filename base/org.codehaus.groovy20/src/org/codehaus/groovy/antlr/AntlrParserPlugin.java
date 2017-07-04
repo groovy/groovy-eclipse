@@ -3070,8 +3070,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret = new ConstructorCallExpression(this.classNode, arguments);
         }
 
-        // GRECLIPSE start
-        // in the case of Groovy 1.8 command expressions, the slocs are incorrect for the start of the method
+        // GRECLIPSE add
+        ret.setNameStart(name.getStart());
+        ret.setNameEnd(name.getEnd() - 1);
+        // in the case of command expressions, the slocs are incorrect for the start of the method
         if (!implicitThis && methodCallNode.getText().equals("<command>")) {
             ret.setStart(objectExpression.getStart());
             ret.setLineNumber(objectExpression.getLineNumber());
@@ -3080,7 +3082,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.setLastLineNumber(arguments.getLastLineNumber());
             ret.setLastColumnNumber(arguments.getLastColumnNumber());
         }
-        //GRECLIPSE end
+        // GRECLIPSE end
         configureAST(ret, methodCallNode);
         return ret;
     }

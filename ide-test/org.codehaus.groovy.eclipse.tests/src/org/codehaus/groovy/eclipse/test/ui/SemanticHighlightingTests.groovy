@@ -804,6 +804,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testNewifyTransformCtorCalls() {
+        String contents = '''\
+            class X {
+              X() {}
+              X(String s) {}
+            }
+            @Newify(X)
+            class Y {
+              X x1 = X()
+              X x2 = X.new()
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('X(S'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('s)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('x1'), 2, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('x2'), 2, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('X()'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('new'), 3, CTOR_CALL))
+    }
+
+    @Test
     void testEnumDefs() {
         String contents = '''\
             enum X {
