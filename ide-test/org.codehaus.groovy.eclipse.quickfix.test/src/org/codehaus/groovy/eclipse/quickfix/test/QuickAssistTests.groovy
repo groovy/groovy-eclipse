@@ -910,13 +910,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testExtractToField_MethodToModule() {
         ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testMethodToModule')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
     }
 
     @Test
     void testExtractToField_ClosureToModule() {
         ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get('testClosureToModule')
-        assertProposalNotOffered(testCase.getInput(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
+        assertConversion(testCase.getInput(), testCase.getExpected(), testCase.getSelectionOffset(), testCase.getSelectionLength(), new ConvertVariableToFieldProposal())
     }
 
     @Test
