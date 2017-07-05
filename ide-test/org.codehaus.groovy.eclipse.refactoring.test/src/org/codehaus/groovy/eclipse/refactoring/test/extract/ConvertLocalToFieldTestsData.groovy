@@ -41,9 +41,9 @@ class ConvertLocalToFieldTestsData {
 	
 	static Map<String, TestCase> testCases = [
 		testMethodToModule:
-		new TestCase("""def test() { def target/**/ }"""),
+		new TestCase('def test() { def target/**/ }', '@groovy.transform.Field def target\ndef test() { target/**/ }'),
 		testClosureToModule:
-		new TestCase("""def test = { def target/**/ }"""),
+		new TestCase('def test = { def target/**/ }', '@groovy.transform.Field def target\ndef test = { target/**/ }'),
 		testDeclarationWithDef:
 		new TestCase(
 			"""

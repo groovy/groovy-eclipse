@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -50,6 +50,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
@@ -188,29 +189,27 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException {
+    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            pm.beginTask("", 5);
+            monitor.beginTask("", 5);
 
             RefactoringStatus result = Checks.validateEdit(unit, getValidationContext());
             if (result.hasFatalError()) {
                 return result;
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             IASTFragment selectionFragment = getSelectionFragment();
             if (selectionFragment == null) {
-                result.merge(RefactoringStatus
-                        .createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
+                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
                 return result;
             }
             Expression selectedExpression = selectionFragment.getAssociatedExpression();
             if (!(selectedExpression instanceof VariableExpression)) {
-                result.merge(RefactoringStatus
-                        .createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
+                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
                 return result;
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             VariableExpression selectedVariableExpression = (VariableExpression) selectedExpression;
             Variable declaredVariable = selectedVariableExpression.getAccessedVariable();
@@ -219,11 +218,10 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
                 return result;
             }
             if (!(declaredVariable instanceof VariableExpression)) {
-                result.merge(RefactoringStatus
-                        .createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
+                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
                 return result;
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             VariableExpression variableExpressionInDeclaration = (VariableExpression) declaredVariable;
             DeclarationExpression declarationExpression = getDeclarationExpression(variableExpressionInDeclaration);
@@ -234,11 +232,10 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             }
 
             if (declarationExpression.isMultipleAssignmentDeclaration()) {
-                result.merge(RefactoringStatus
-                        .createFatalErrorStatus("Cannot convert a variable declared using multiple assignment."));
+                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot convert a variable declared using multiple assignment."));
                 return result;
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             // We should check declaration for local type usage here
 
@@ -249,38 +246,33 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
                 result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing class declaration."));
                 return result;
             }
-            if (containingClassNode.isScript()) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot add field to a script."));
-                return result;
-            }
             if (containingClassNode.isInterface() || containingClassNode.isAnnotationDefinition()) {
                 result.merge(RefactoringStatus.createFatalErrorStatus("Cannot add field to an interface or annotation definition."));
                 return result;
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             return result;
         } finally {
-            pm.done();
+            monitor.done();
         }
     }
 
     @Override
     public String[] guessFieldNames() {
-        return new String[] { variableExpressionInDeclaration.getName() };
+        return new String[] {variableExpressionInDeclaration.getName()};
     }
 
     @Override
-    public RefactoringStatus checkFinalConditions(IProgressMonitor pm) throws CoreException {
+    public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            pm.beginTask("", 4);
+            monitor.beginTask("", 4);
 
             FieldNode conflictingField = getContainingClassNode().getDeclaredField(getFieldName());
             if (conflictingField != null) {
-                return RefactoringStatus
-                        .createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_Name_conflict_with_field);
+                return RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_Name_conflict_with_field);
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             CompilationUnitChange change = new CompilationUnitChange("Convert Groovy Local Variable To Field", unit);
             change.setEdit(new MultiTextEdit());
@@ -291,7 +283,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             for (TextEdit edit : group.getTextEdits()) {
                 change.addEdit(edit);
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             // Convert declaration to a reference
             group = declarationToReferenceTextEditGroup();
@@ -299,7 +291,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             for (TextEdit edit : group.getTextEdits()) {
                 change.addEdit(edit);
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             // Rename variable references
             RefactoringStatus status = new RefactoringStatus();
@@ -308,63 +300,64 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             for (TextEdit edit : group.getTextEdits()) {
                 change.addEdit(edit);
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             this.change = change;
 
             return status;
         } finally {
-            pm.done();
+            monitor.done();
         }
     }
 
     private TextEditGroup createFieldTextEditGroup() {
+        TextEdit textEdit = null;
+
         ClassNode classNode = getContainingClassNode();
-        char[] contents = unit.getContents();
+        MethodNode methodNode = getContainingMethodNode();
+        if (methodNode.isScriptBody() && getContainingClosureExpression() == null) {
+            textEdit = new InsertEdit(getDeclarationOffset(), "@groovy.transform.Field ");
+        } else {
+            try {
+                char[] contents = unit.getContents();
+                int methodOffset = methodNode.getStart();
+                int methodLineOffset = methodNode.getStart() - methodNode.getColumnNumber() + 1;
+                int insertOffset = classNode.isScript() ? classNode.getStart() : CharOperation.indexOf('{', contents, classNode.getStart()) + 1;
 
-        MethodNode method = getContainingMethodNode();
-        int methodLineOffset = method.getStart() - method.getColumnNumber() + 1;
-        int methodOffset = method.getStart();
-        String methodIndentation = String.valueOf(CharOperation.subarray(contents, methodLineOffset, methodOffset));
-        int indentLevel = ASTTools.getCurrentIntentation(methodIndentation);
+                String methodIndentation = String.valueOf(CharOperation.subarray(contents, methodLineOffset, methodOffset));
+                String fieldText = createFieldText(ASTTools.getCurrentIntentation(methodIndentation));
+                String newline = TextUtilities.determineLineDelimiter(String.valueOf(contents), "\n");
 
-        String fieldText = null;
-        try {
-
-            fieldText = createFieldText(indentLevel);
-        } catch (Exception e) {}
+                textEdit = new InsertEdit(insertOffset, classNode.isScript() ? fieldText + newline : newline + fieldText);
+            } catch (Exception e) {
+            }
+        }
 
         TextEditGroup group = new TextEditGroup("Create field.");
-        if (fieldText != null) {
-            int insertOffset = CharOperation.indexOf('{', contents, classNode.getStart()) + 1;
-            String newline = TextUtilities.determineLineDelimiter(String.valueOf(contents), "\n");
-            group.addTextEdit(new InsertEdit(insertOffset, newline + fieldText));
+        if (textEdit != null) {
+            group.addTextEdit(textEdit);
         }
         return group;
     }
 
-    /**
-     * Adapted from
-     * ExtractGroovyConstantRefactoring#createConstantText
-     */
-    private String createFieldText(int indentLevel) throws MalformedTreeException, BadLocationException {
+    private String createFieldText(int indentLevel) throws BadLocationException, MalformedTreeException {
         StringBuilder sb = new StringBuilder();
 
         String indentation = CodeFormatterUtil.createIndentString(indentLevel, unit.getJavaProject());
         sb.append(indentation);
 
-        String visibility = JdtFlags.getVisibilityString(getVisibility());
-        sb.append(visibility);
-        if (!visibility.equals("")) {
-            sb.append(" ");
+        if (getContainingClassNode().isScript()) {
+            sb.append("@groovy.transform.Field ");
+        } else {
+            String visibility = JdtFlags.getVisibilityString(getVisibility());
+            if (!visibility.equals("")) {
+                sb.append(visibility).append(' ');
+            }
         }
-
-        char[] contents = unit.getContents();
 
         // typeOrDef is the value of the token that comes before the variable
         // name in the declaration expression (e.g. "String", "int", "def").
-        String typeOrDef = new String(CharOperation.subarray(contents, declarationExpression.getStart(),
-                variableExpressionInDeclaration.getStart()));
+        char[] typeOrDef = CharOperation.subarray(unit.getContents(), getDeclarationOffset(), variableExpressionInDeclaration.getStart());
         sb.append(typeOrDef).append(getFieldName());
 
         IDocument doc = new Document(sb.toString());
@@ -377,37 +370,40 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     private TextEditGroup declarationToReferenceTextEditGroup() {
         TextEditGroup group = new TextEditGroup("Convert local variable declaration to reference.");
-        int typeOrDefLength = variableExpressionInDeclaration.getStart() - declarationExpression.getStart();
-        group.addTextEdit(new ReplaceEdit(declarationExpression.getStart(), typeOrDefLength, ""));
+        if (!getContainingMethodNode().isScriptBody() || getContainingClosureExpression() != null) {
+            int typeOrDefLength = variableExpressionInDeclaration.getStart() - getDeclarationOffset();
+            group.addTextEdit(new ReplaceEdit(getDeclarationOffset(), typeOrDefLength, ""));
+        }
         return group;
     }
 
     private TextEditGroup renameVariableReferencesTextEditGroup(RefactoringStatus status) {
-        final Set<VariableExpression> references = new HashSet<VariableExpression>();
-        ClassCodeVisitorSupport referencesVisitor = new ClassCodeVisitorSupport() {
-            @Override
-            public void visitVariableExpression(VariableExpression variableExpression) {
-                if (variableExpression.getAccessedVariable() == variableExpressionInDeclaration
-                        && variableExpression.getLineNumber() >= 0) {
-                    references.add(variableExpression);
-                }
-            }
-        };
-
-        referencesVisitor.visitClass(getContainingClassNode());
-        Iterator<InnerClassNode> innerClasses = getContainingClassNode().getInnerClasses();
-        while (innerClasses != null && innerClasses.hasNext()) {
-            ClassNode innerClass = innerClasses.next();
-            referencesVisitor.visitClass(innerClass);
-        }
-
         TextEditGroup group = new TextEditGroup("Update local variables to reference field.");
-        for (VariableExpression reference : references) {
-            if (getUsedVariableAndFieldNames(reference).contains(getFieldName())) {
-                status.merge(RefactoringStatus.createWarningStatus("New field conflicts with existing name."));
+        if (!getContainingMethodNode().isScriptBody() || getContainingClosureExpression() != null) {
+            final Set<VariableExpression> references = new HashSet<VariableExpression>();
+            GroovyClassVisitor referencesVisitor = new DepthFirstVisitor() {
+                @Override
+                public void visitVariableExpression(VariableExpression variableExpression) {
+                    if (variableExpression.getAccessedVariable() == variableExpressionInDeclaration && variableExpression.getLineNumber() >= 0) {
+                        references.add(variableExpression);
+                    }
+                }
+            };
+
+            referencesVisitor.visitClass(getContainingClassNode());
+            Iterator<InnerClassNode> innerClasses = getContainingClassNode().getInnerClasses();
+            while (innerClasses != null && innerClasses.hasNext()) {
+                ClassNode innerClass = innerClasses.next();
+                referencesVisitor.visitClass(innerClass);
             }
 
-            group.addTextEdit(new ReplaceEdit(reference.getStart(), reference.getLength(), getFieldName()));
+            for (VariableExpression reference : references) {
+                if (getUsedVariableAndFieldNames(reference).contains(getFieldName())) {
+                    status.merge(RefactoringStatus.createWarningStatus("New field conflicts with existing name."));
+                }
+
+                group.addTextEdit(new ReplaceEdit(reference.getStart(), reference.getLength(), getFieldName()));
+            }
         }
         return group;
     }
@@ -424,8 +420,14 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         return selectionFragment;
     }
 
-    private ClassNode getContainingClassNode() {
+    private ModuleNode getModuleNode() {
+        if (moduleNode == null) {
+            moduleNode = unit.getModuleNode();
+        }
+        return moduleNode;
+    }
 
+    private ClassNode getContainingClassNode() {
         if (containingClassNode == null) {
             ModuleNode moduleNode = getModuleNode();
             if (moduleNode == null) {
@@ -434,97 +436,38 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             if (declarationExpression == null) {
                 return null;
             }
-            containingClassNode = ASTTools.getContainingClassNode(moduleNode, declarationExpression.getStart());
+            containingClassNode = ASTTools.getContainingClassNode(moduleNode, variableExpressionInDeclaration.getStart());
         }
         return containingClassNode;
     }
 
-    private ModuleNode getModuleNode() {
-        if (moduleNode == null) {
-            moduleNode = unit.getModuleNode();
+    private MethodNode getContainingMethodNode() {
+        if (methodNode == null) {
+            methodNode = new VariableExpressionFinder(variableExpressionInDeclaration).method;
         }
-        return moduleNode;
+        return methodNode;
+    }
+
+    private ClosureExpression getContainingClosureExpression() {
+        return new VariableExpressionFinder(variableExpressionInDeclaration).closure;
     }
 
     private DeclarationExpression getDeclarationExpression(final VariableExpression variableExpressionInDeclaration) {
-        if (declarationExpression != null) {
-            return declarationExpression;
+        if (declarationExpression == null) {
+            declarationExpression = new VariableExpressionFinder(variableExpressionInDeclaration).declaration;
         }
-
-        ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
-            @Override
-            public void visitDeclarationExpression(DeclarationExpression declarationExpression) {
-                // Remember the most recent DeclarationExpression we visited.
-                ConvertGroovyLocalToFieldRefactoring.this.declarationExpression = declarationExpression;
-                super.visitDeclarationExpression(declarationExpression);
-            }
-
-            @Override
-            public void visitVariableExpression(VariableExpression variableExpression) {
-                // The moment we visit the variableExpressionInDeclaration node,
-                // we know that the the most recent DeclarationExpression we've
-                // visited is the one that contains
-                // variableExpressionInDeclaration.
-                // That's why we throw the VisitCompleteException to stop
-                // visiting nodes.
-                if (variableExpression == variableExpressionInDeclaration) {
-                    throw new VisitCompleteException();
-                }
-                super.visitVariableExpression(variableExpression);
-            }
-        };
-
-        for (ClassNode classNode : getModuleNode().getClasses()) {
-            try {
-                visitor.visitClass(classNode);
-            } catch (VisitCompleteException expected) {
-                break;
-            }
-            // If a VisitCompleteException was not thrown, we did not find the
-            // declarationExpression that contains
-            // variableExpressionInDeclaration.
-            // Therefore, we set declarationExpression to null, since it's just
-            // some irrelevant DeclarationExpression.
-            declarationExpression = null;
-        }
-
         return declarationExpression;
     }
 
-    /**
-     * Same as getDeclarationExpression except with the containing method
-     */
-    private MethodNode getContainingMethodNode() {
-        if (methodNode != null) {
-            return methodNode;
+    private int getDeclarationOffset() {
+        if (declarationExpression.getEnd() > 0) {
+            return declarationExpression.getStart();
         }
-
-        ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
-            @Override
-            public void visitConstructorOrMethod(MethodNode methodNode, boolean isConstructor) {
-                ConvertGroovyLocalToFieldRefactoring.this.methodNode = methodNode;
-                super.visitConstructorOrMethod(methodNode, isConstructor);
-            }
-
-            @Override
-            public void visitVariableExpression(VariableExpression variableExpression) {
-                if (variableExpression == variableExpressionInDeclaration) {
-                    throw new VisitCompleteException();
-                }
-                super.visitVariableExpression(variableExpression);
-            }
-        };
-
-        for (ClassNode classNode : getModuleNode().getClasses()) {
-            try {
-                visitor.visitClass(classNode);
-            } catch (VisitCompleteException expected) {
-                break;
-            }
-            methodNode = null;
+        if (!declarationExpression.getAnnotations().isEmpty()) {
+            return declarationExpression.getAnnotations().get(0).getStart() - 1;
         }
-
-        return methodNode;
+        // declaration expression sloc may not be set (ex: @Newify local variable expression)
+        throw new IllegalStateException("No start offset for eclaration expression: " + declarationExpression.getText());
     }
 
     /**
@@ -571,5 +514,50 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         }
 
         return result;
+    }
+
+    private class VariableExpressionFinder extends DepthFirstVisitor {
+        DeclarationExpression declaration;
+        ClosureExpression closure;
+        MethodNode method;
+
+        VariableExpressionFinder(final VariableExpression variableExpressionInDeclaration) {
+            DepthFirstVisitor visitor = new DepthFirstVisitor() {
+                @Override
+                public void visitMethod(MethodNode node) {
+                    method = node;
+                    super.visitMethod(node);
+                    method = null;
+                }
+
+                @Override
+                public void visitClosureExpression(ClosureExpression expr) {
+                    closure = expr;
+                    super.visitClosureExpression(expr);
+                    closure = null;
+                }
+
+                @Override
+                public void visitDeclarationExpression(DeclarationExpression expr) {
+                    declaration = expr;
+                    super.visitDeclarationExpression(expr);
+                    declaration = null;
+                }
+
+                @Override
+                public void visitVariableExpression(VariableExpression expr) {
+                    if (expr == variableExpressionInDeclaration) {
+                        throw new VisitCompleteException();
+                    }
+                    super.visitVariableExpression(expr);
+                }
+            };
+
+            try {
+                visitor.visitModule(getModuleNode());
+            } catch (VisitCompleteException expected) {
+                ;
+            }
+        }
     }
 }
