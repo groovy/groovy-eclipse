@@ -73,7 +73,6 @@ import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringChangeDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
@@ -312,7 +311,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     private String getDefaultNewlineCharacterTwice() {
-        String newline = TextUtilities.determineLineDelimiter(String.valueOf(unit.getContents()), "\n");
+        String newline = ASTTools.getLineDelimeter(unit);
         return newline + newline;
     }
 

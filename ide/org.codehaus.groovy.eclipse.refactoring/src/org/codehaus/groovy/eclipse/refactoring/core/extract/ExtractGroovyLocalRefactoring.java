@@ -54,6 +54,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.Assert;
@@ -98,12 +99,9 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
-/**
- * @author Andrew Eisenberg
- */
 public class ExtractGroovyLocalRefactoring extends Refactoring {
 
-    private static final String[] KNOWN_METHOD_NAME_PREFIXES= {"get", "is", "to", "set"};
+    private static final String[] KNOWN_METHOD_NAME_PREFIXES = {"get", "is", "to", "set"};
 
     private static final String ATTRIBUTE_REPLACE = "replace";
 
@@ -112,6 +110,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     private GroovyCompilationUnit unit;
 
     private ModuleNode module;
+
     private int start = -1, length = -1;
 
     private String localName;
@@ -124,39 +123,55 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private List<IASTFragment> matchingFragments;
 
-    public ExtractGroovyLocalRefactoring(JavaRefactoringArguments arguments,
-            RefactoringStatus status) {
+    public ExtractGroovyLocalRefactoring(JavaRefactoringArguments arguments, RefactoringStatus status) {
     }
 
-
-    public ExtractGroovyLocalRefactoring(
-            GroovyCompilationUnit unit, int offset, int length) {
+    public ExtractGroovyLocalRefactoring(GroovyCompilationUnit unit, int offset, int length) {
         this.unit = unit;
         this.start = offset;
         this.length = length;
         this.module = unit.getModuleNode();
     }
 
-
+    //--------------------------------------------------------------------------
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException {
+    public String getName() {
+        return "Extract to local variable" + (isReplaceAllOccurrences() ? " (replace all occurrences)" : "");
+    }
+
+    public String getLocalName() {
+        return localName;
+    }
+
+    public void setLocalName(String localName) {
+        Assert.isNotNull(localName);
+        this.localName = localName;
+    }
+
+    public boolean isReplaceAllOccurrences() {
+        return replaceAllOccurrences;
+    }
+
+    public void setReplaceAllOccurrences(boolean replaceAllOccurrences) {
+        this.replaceAllOccurrences = replaceAllOccurrences;
+    }
+
+    @Override
+    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            pm.beginTask("", 6);
+            monitor.beginTask("", 6);
 
             IASTFragment expr = getSelectedFragment();
             if (expr == null) {
-                return RefactoringStatus.createFatalErrorStatus("Must select a full expression",
-                        JavaStatusContext.create(unit, new SourceRange(start, length)));
+                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit, new SourceRange(start, length)));
             }
 
             int trimmedLength = expr.getTrimmedLength(unit);
             int exprLength = expr.getLength();
-            // problem is that some expressions include whitespace in the end of
-            // their sloc.
+            // problem is that some expressions include whitespace in the end of their sloc.
             // need to handle this case.
-            // the selected length must be somewhere >= the trimmed (no
-            // whitespace) length and <= the non-trimeed (w/ whitespace) length
+            // the selected length must be somewhere >= the trimmed (no whitespace) length and <= the non-trimeed (w/ whitespace) length
             if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
                 return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit, new SourceRange(start, length)));
             }
@@ -175,43 +190,69 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 result.addFatalError("Illegal expression selected");
             }
 
-            result.merge(checkSelection(new SubProgressMonitor(pm, 3)));
-            // if (!result.hasFatalError() && isLiteralNodeSelected()) {
-            // replaceAllOccurrences = false;
-            // }
+            result.merge(checkSelection(new SubProgressMonitor(monitor, 3)));
+            /*if (!result.hasFatalError() && isLiteralNodeSelected()) {
+                replaceAllOccurrences = false;
+            }*/
             return result;
 
         } finally {
-            pm.done();
+            monitor.done();
         }
     }
 
     @Override
-    public RefactoringStatus checkFinalConditions(IProgressMonitor pm) throws CoreException {
+    public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            pm.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
+            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
 
             RefactoringStatus result = new RefactoringStatus();
-            change = doCreateChange(result, new SubProgressMonitor(pm, 2));
+            change = doCreateChange(result, new SubProgressMonitor(monitor, 2));
 
-            if (getExcludedVariableNames().contains(localName)) {
-                result.addWarning(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_another_variable,
-                        BasicElementLabels.getJavaElementName(localName)));
+            if (getExcludedVariableNames().contains(getLocalName())) {
+                result.addWarning(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_another_variable, BasicElementLabels.getJavaElementName(getLocalName())));
             }
 
             result.merge(checkMatchingFragments());
-
             change.setKeepPreviewEdits(true);
-
             return result;
+
         } finally {
-            pm.done();
+            monitor.done();
         }
     }
 
+    @Override
+    public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
+        try {
+            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
+            ExtractLocalDescriptor descriptor = createRefactoringDescriptor();
+            change.setDescriptor(new RefactoringChangeDescriptor(descriptor));
+            return change;
+        } finally {
+            monitor.done();
+        }
+    }
+
+    public RefactoringStatus checkLocalNameOnChange(String newName) {
+        Assert.isTrue(newName.equals(getLocalName()));
+        String selectedText = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
+        if (newName.equals(selectedText)) {
+            return RefactoringStatus.createFatalErrorStatus("Extracted variable name must be different from original text");
+        }
+        return Checks.checkTempName(newName, unit);
+    }
+
+    public String[] guessLocalNames() {
+        String text = getBaseNameFromExpression(getSelectedFragment());
+        String[] excludedNames = getExcludedVariableNames().toArray(new String[0]);
+        return NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, text, unit.getJavaProject(), 0, excludedNames, true);
+    }
+
+    //--------------------------------------------------------------------------
+
     /**
-     * Finds all variable names that are currently in use
-     * in the scope
+     * Finds all variable names that are currently in use in the scope.
      */
     private Set<String> getExcludedVariableNames() {
         Set<String> usedNames = new HashSet<String>();
@@ -232,10 +273,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     /**
-     * Ensure that the matching expressions are not LHS of an assignment
-     *
-     * @return
-     * @throws JavaModelException
+     * Ensures that the matching expressions are not LHS of an assignment.
      */
     private RefactoringStatus checkMatchingFragments() {
         RefactoringStatus result = new RefactoringStatus();
@@ -243,20 +281,18 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         for (IASTFragment matchingExpr : matchingExprs) {
             if (isDeclaration(matchingExpr)) {
                 String msg = "The selected expression is a declaration.  Extracting may cause an error.";
-                result.addError(msg, JavaStatusContext.create(unit, new SourceRange(matchingExpr.getStart(), matchingExpr
-                        .getLength())));
+                result.addError(msg, JavaStatusContext.create(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
             }
             if (isLeftValue(matchingExpr)) {
                 String msg = RefactoringCoreMessages.ExtractTempRefactoring_assigned_to;
-                result.addWarning(msg, JavaStatusContext.create(unit, new SourceRange(matchingExpr.getStart(), matchingExpr
-                        .getLength())));
+                result.addWarning(msg, JavaStatusContext.create(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
             }
         }
         return result;
     }
 
-    private boolean isDeclaration(IASTFragment matchingExpr) {
-        Expression associatedExpression = matchingExpr.getAssociatedExpression();
+    private boolean isDeclaration(IASTFragment fragment) {
+        Expression associatedExpression = fragment.getAssociatedExpression();
         if (associatedExpression instanceof VariableExpression) {
             if (((VariableExpression) associatedExpression).getAccessedVariable() == associatedExpression) {
                 return true;
@@ -265,8 +301,8 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return false;
     }
 
-    private boolean isLeftValue(IASTFragment frag) {
-        return frag.kind() == ASTFragmentKind.BINARY && ((BinaryExpressionFragment) frag).getToken().getType() == Types.ASSIGN;
+    private boolean isLeftValue(IASTFragment fragment) {
+        return fragment.kind() == ASTFragmentKind.BINARY && ((BinaryExpressionFragment) fragment).getToken().getType() == Types.ASSIGN;
     }
 
     private List<IASTFragment> getMatchingExpressions() {
@@ -303,27 +339,23 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return matchingFragments;
     }
 
-
-
-    private CompilationUnitChange doCreateChange(RefactoringStatus status, IProgressMonitor pm) throws CoreException {
+    private CompilationUnitChange doCreateChange(RefactoringStatus status, IProgressMonitor monitor) throws CoreException {
         CompilationUnitChange newChange = new CompilationUnitChange("Extract Local Variable", unit);
         try {
-            pm.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
+            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
             newChange.setEdit(new MultiTextEdit());
             createTempDeclaration(newChange, status);
             if (!status.hasFatalError()) {
                 addReplaceExpressionWithTemp(newChange);
             }
         } finally {
-            pm.done();
+            monitor.done();
         }
         return newChange;
     }
 
     /**
-     * Replace all occurrences with the new variable name
-     *
-     * @param newChange
+     * Replaces all occurrences with the new variable name.
      */
     private void addReplaceExpressionWithTemp(CompilationUnitChange newChange) {
         List<IASTFragment> matchingExpressions;
@@ -334,7 +366,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         }
         for (IASTFragment matchingExpr : matchingExpressions) {
             TextEditGroup group = new TextEditGroup(RefactoringCoreMessages.ExtractTempRefactoring_replace_occurrences);
-            ReplaceEdit edit = new ReplaceEdit(matchingExpr.getStart(), matchingExpr.getLength(), localName);
+            ReplaceEdit edit = new ReplaceEdit(matchingExpr.getStart(), matchingExpr.getLength(), getLocalName());
             group.addTextEdit(edit);
             newChange.addChangeGroup(new TextEditChangeGroup(newChange, group));
             newChange.addEdit(edit);
@@ -342,11 +374,9 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     private void createTempDeclaration(CompilationUnitChange newChange, RefactoringStatus status) {
-        List<IASTFragment> matchingExpressions = replaceAllOccurrences ? getMatchingExpressions() : Collections
-                .singletonList(getSelectedFragment());
+        List<IASTFragment> matchingExpressions = replaceAllOccurrences ? getMatchingExpressions() : Collections.singletonList(getSelectedFragment());
 
         int insertLoc = insertAt(matchingExpressions, status);
-
         if (insertLoc == -1 && !status.hasFatalError()) {
             status.addFatalError("Could not find a suitable extraction location", createContext());
         }
@@ -374,8 +404,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     /**
-     * Based on all of the matching expressions, determine where to insert the
-     * declaration.
+     * Determines where to insert the declaration based on all of the matching expressions.
      */
     private int insertAt(List<IASTFragment> matchingExpressions, RefactoringStatus status) {
         // find the first matching expression.
@@ -448,8 +477,8 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private int findLineStart(int insertLoc) {
         char[] contents = unit.getContents();
-        while (insertLoc > 0 && contents[insertLoc] != '\n' && contents[insertLoc] != '\r') {
-            insertLoc--;
+        while (insertLoc > 0 && contents[insertLoc - 1] != '\n' && contents[insertLoc - 1] != '\r') {
+            insertLoc -= 1;
         }
         return insertLoc;
     }
@@ -458,9 +487,9 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         int length = -1;
         if (parentsStack.length == 0) {
             return new IASTFragment[0];
-//        } else if (parentsStack.length == 1) {
-//            return (IASTFragment[]) parentsStack[0].toArray(new IASTFragment[0]);
-        }
+        }/* else if (parentsStack.length == 1) {
+            return (IASTFragment[]) parentsStack[0].toArray(new IASTFragment[0]);
+        }*/
         int minArrayLength = parentsStack[0].size();
         for (int i = 1; i < parentsStack.length; i++) {
             minArrayLength = Math.min(minArrayLength, parentsStack[i].size());
@@ -479,7 +508,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     /**
-     * Creates a sub-array of <code>length</code> elements
+     * Creates a sub-array of <code>length</code> elements.
      */
     private IASTFragment[] getStackPrefix(List<IASTFragment> stack, int length) {
         IASTFragment[] array = new IASTFragment[length + 1];
@@ -492,10 +521,8 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     /**
-     * Checks to see if the ith element of all stacks are ==
+     * Checks to see if the ith element of all stacks are ==.
      *
-     * @param parentsStack
-     * @param i
      * @return true iff all elements are equal in the ith position
      */
     private boolean allStacksEqual(List<IASTFragment>[] parentsStack, int i) {
@@ -522,25 +549,29 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return parentStack;
     }
 
-//    private boolean isLiteralNodeSelected() throws JavaModelException {
-//        ASTNode expr = getSelectedFragment().getAssociatedExpression();
-//        if (expr == null) {
-//            return false;
-//        }
-//        if (expr instanceof ConstantExpression) {
-//            ConstantExpression constExpr = (ConstantExpression) expr;
-//            return constExpr.isEmptyStringExpression() || constExpr.isFalseExpression() || constExpr.isNullExpression()
-//                    || constExpr.isTrueExpression() || constExpr.getValue() instanceof Number
-//                    || unit.getContents()[constExpr.getStart()] == '"';
-//        } else {
-//            return false;
-//        }
-//    }
+    /*
+    private boolean isLiteralNodeSelected() throws JavaModelException {
+        ASTNode expr = getSelectedFragment().getAssociatedExpression();
+        if (expr == null) {
+            return false;
+        }
+        if (expr instanceof ConstantExpression) {
+            ConstantExpression constExpr = (ConstantExpression) expr;
+            return constExpr.isEmptyStringExpression() ||
+                constExpr.isFalseExpression() ||
+                constExpr.isNullExpression() ||
+                constExpr.isTrueExpression() ||
+                constExpr.getValue() instanceof Number ||
+                unit.getContents()[constExpr.getStart()] == '"';
+        } else {
+            return false;
+        }
+    }
+    */
 
     private String createExpressionText(String prefix, RefactoringStatus status) {
         StringBuilder sb = new StringBuilder();
-        sb.append("def ").append(localName).append(" = ").append(
-                getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd()));
+        sb.append("def ").append(getLocalName()).append(" = ").append(getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd()));
         IDocument doc = new Document(sb.toString());
         DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(doc, new FormatterPreferences(unit), 0);
         try {
@@ -552,12 +583,13 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             GroovyCore.logException("Exception during extract local variable refactoring", e);
             status.addFatalError(e.getMessage(), createContext());
         }
-        return prefix + doc.get();
+        String declarationExpression = prefix + doc.get() + ASTTools.getLineDelimeter(unit);
+        return declarationExpression;
     }
 
-    private RefactoringStatus checkSelection(IProgressMonitor pm) throws JavaModelException {
+    private RefactoringStatus checkSelection(IProgressMonitor monitor) throws JavaModelException {
         try {
-            pm.beginTask("", 2);
+            monitor.beginTask("", 2);
 
             IASTFragment selectedExpression = getSelectedFragment();
 
@@ -565,17 +597,17 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 String message = RefactoringCoreMessages.ExtractTempRefactoring_select_expression;
                 return RefactoringStatus.createFatalErrorStatus(message, createContext());
             }
-            pm.worked(1);
+            monitor.worked(1);
 
             RefactoringStatus result= new RefactoringStatus();
             result.merge(checkExpression());
             if (result.hasFatalError())
                 return result;
-            pm.worked(1);
+            monitor.worked(1);
 
             return result;
         } finally {
-            pm.done();
+            monitor.done();
         }
     }
 
@@ -603,7 +635,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return new RefactoringStatus();
     }
 
-
     private RefactoringStatusContext createContext() {
         IJavaElement elt;
         try {
@@ -629,35 +660,49 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return selectedExpression;
     }
 
-    // !! similar to ExtractTempRefactoring equivalent
+    /*
     public String getSignaturePreview() throws JavaModelException {
-        return "def" + ' ' + localName;
+        // !! similar to ExtractTempRefactoring equivalent
+        return "def" + ' ' + getLocalName();
     }
+    */
 
-    public void setReplaceAllOccurrences(boolean replaceAllOccurrences) {
-        this.replaceAllOccurrences = replaceAllOccurrences;
-    }
-
-    public boolean isReplaceAllOccurrences() {
-        return replaceAllOccurrences;
-    }
-
-    public RefactoringStatus checkLocalNameOnChange(String newName) {
-        Assert.isTrue(newName.equals(getLocalName()));
-        String selectedText = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
-        if (newName.equals(selectedText)) {
-            return RefactoringStatus.createFatalErrorStatus("Extracted variable name must be different from original text");
+    private String getBaseNameFromExpression(IASTFragment assignedFragment) {
+        if (assignedFragment == null) {
+            return "local";
         }
-        return Checks.checkTempName(newName, unit);
+        GuessBaseNameVisitor visitor = new GuessBaseNameVisitor();
+        assignedFragment.accept(visitor);
+        return visitor.getGuessedName();
     }
 
-    public String[] guessLocalNames() {
-        String text = getBaseNameFromExpression(getSelectedFragment());
-        String[] excludedNames = getExcludedVariableNames().toArray(new String[0]);
-        return NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, text, unit.getJavaProject(), 0, excludedNames, true);
+    private ExtractLocalDescriptor createRefactoringDescriptor() {
+        final Map<String, String> arguments = new HashMap<String, String>();
+        String project = null;
+        IJavaProject javaProject = unit.getJavaProject();
+        if (javaProject != null)
+            project = javaProject.getElementName();
+        final String description = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(getLocalName()));
+        final String expression = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
+        final String header = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description, new Object[] {
+            BasicElementLabels.getJavaElementName(getLocalName()), BasicElementLabels.getJavaCodeString(expression)
+        });
+        final JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
+        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_name_pattern, BasicElementLabels.getJavaElementName(getLocalName())));
+        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
+        if (replaceAllOccurrences)
+            comment.addSetting(RefactoringCoreMessages.ExtractTempRefactoring_replace_occurrences);
+        final ExtractLocalDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project, description, comment.asString(), arguments, RefactoringDescriptor.NONE);
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, unit));
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, getLocalName());
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, start + " " + length);
+        arguments.put(ATTRIBUTE_REPLACE, Boolean.valueOf(replaceAllOccurrences).toString());
+        return descriptor;
     }
 
-    class GuessBaseNameVisitor extends FragmentVisitor {
+    //--------------------------------------------------------------------------
+
+    private static class GuessBaseNameVisitor extends FragmentVisitor {
 
         StringBuilder sb = new StringBuilder();
 
@@ -671,8 +716,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                     String curr = KNOWN_METHOD_NAME_PREFIXES[i];
                     if (name.startsWith(curr)) {
                         if (name.equals(curr)) {
-                            return "local"; // don't suggest 'get' as variable
-                                            // name
+                            return "local"; // don't suggest 'get' as variable name
                         } else if (Character.isUpperCase(name.charAt(curr.length()))) {
                             return name.substring(curr.length());
                         }
@@ -732,7 +776,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
         private String nameFromExpression(Expression expr) {
             String name = null;
-            if (expr instanceof org.codehaus.groovy.ast.expr.CastExpression) {
+            if (expr instanceof CastExpression) {
                 expr = ((CastExpression) expr).getExpression();
             }
 
@@ -743,77 +787,15 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             } else if (expr instanceof StaticMethodCallExpression) {
                 name = ((StaticMethodCallExpression) expr).getMethod();
             } else if (expr instanceof BinaryExpression) {
-                name = nameFromExpression(((BinaryExpression) expr).getLeftExpression())
-                        + nameFromExpression(((BinaryExpression) expr).getRightExpression());
+                name = nameFromExpression(((BinaryExpression) expr).getLeftExpression()) + nameFromExpression(((BinaryExpression) expr).getRightExpression());
             } else if (expr instanceof Variable) {
                 name = ((Variable) expr).getName();
             }
 
-            // always capitalize
-            // the first character will be made lower case later
             if (name != null && name.length() > 0) {
-                name = "" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+                name = MetaClassHelper.capitalize(name);
             }
             return name;
         }
-    }
-
-    private String getBaseNameFromExpression(IASTFragment assignedFragment) {
-        if (assignedFragment == null) {
-            return "local";
-        }
-        GuessBaseNameVisitor visitor = new GuessBaseNameVisitor();
-        assignedFragment.accept(visitor);
-        return visitor.getGuessedName();
-    }
-
-    public void setLocalName(String newName) {
-        Assert.isNotNull(newName);
-        localName = newName;
-    }
-
-    public String getLocalName() {
-        return localName;
-    }
-
-    @Override
-    public String getName() {
-        return "Extract to local variable" + (isReplaceAllOccurrences() ? " (replace all occurrences)" : "");
-    }
-
-    @Override
-    public Change createChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
-        try {
-            pm.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
-            ExtractLocalDescriptor descriptor = createRefactoringDescriptor();
-            change.setDescriptor(new RefactoringChangeDescriptor(descriptor));
-            return change;
-        } finally {
-            pm.done();
-        }
-    }
-
-    private ExtractLocalDescriptor createRefactoringDescriptor() {
-        final Map<String, String> arguments = new HashMap<String, String>();
-        String project = null;
-        IJavaProject javaProject = unit.getJavaProject();
-        if (javaProject != null)
-            project = javaProject.getElementName();
-        final String description = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(localName));
-        final String expression = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
-        final String header = Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description, new String[] {
-            BasicElementLabels.getJavaElementName(localName), BasicElementLabels.getJavaCodeString(expression)
-        });
-        final JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_name_pattern, BasicElementLabels.getJavaElementName(localName)));
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
-        if (replaceAllOccurrences)
-            comment.addSetting(RefactoringCoreMessages.ExtractTempRefactoring_replace_occurrences);
-        final ExtractLocalDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project, description, comment.asString(), arguments, RefactoringDescriptor.NONE);
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, unit));
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, localName);
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, start + " " + length);
-        arguments.put(ATTRIBUTE_REPLACE, Boolean.valueOf(replaceAllOccurrences).toString());
-        return descriptor;
     }
 }

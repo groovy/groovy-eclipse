@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
 import static org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractLocalTestsData.*
+import static org.junit.Assert.assertEquals
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyLocalRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
@@ -39,19 +40,19 @@ final class ExtractLocalTests extends RefactoringTestSuite {
         refactoring.setLocalName(refactoring.guessLocalNames()[0])
         RefactoringStatus result = performRefactoring(refactoring, false)
         assert result == null || result.isOK() : 'was supposed to pass'
-        assertEqualLines('invalid extraction', expected, cu.getSource())
+        assertEquals('invalid extraction', expected, cu.getSource())
 
         assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
+        assert !RefactoringCore.getUndoManager().anythingToRedo() : '!anythingToRedo'
 
         RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', before, cu.getSource())
+        assertEquals('invalid undo', before, cu.getSource())
 
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
+        assert !RefactoringCore.getUndoManager().anythingToUndo() : '!anythingToUndo'
         assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
 
         RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', expected, cu.getSource())
+        assertEquals('invalid redo', expected, cu.getSource())
     }
 
     @Test
@@ -127,5 +128,31 @@ final class ExtractLocalTests extends RefactoringTestSuite {
     @Test
     void test13() {
         helper(getTest13In(), getTest13Out(), findLocation('a + b', 'test13'), 'a + b'.length(), true)
+    }
+
+    /**
+     * @see https://github.com/groovy/groovy-eclipse/issues/157
+     */
+    @Test
+    void test157() {
+        String constant = '"value"'
+
+        String contents = """\
+            class Foo {
+              void bar() {
+                String local = ${constant};
+              }
+            }
+            """.stripIndent().replaceAll('\n', '\r\n')
+        String expected = """\
+            class Foo {
+              void bar() {
+                def value = ${constant}
+                String local = value;
+              }
+            }
+            """.stripIndent().replaceAll('\n', '\r\n')
+
+        helper(contents, expected, contents.indexOf(constant), constant.length(), false)
     }
 }

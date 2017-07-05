@@ -41,11 +41,14 @@ import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode.VisitKind;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 
@@ -55,6 +58,11 @@ import org.eclipse.text.edits.ReplaceEdit;
  * @author mike klenk
  */
 public class ASTTools {
+
+    public static String getLineDelimeter(GroovyCompilationUnit unit) {
+        String hint = StubUtility.getLineDelimiterUsed(unit.getJavaProject());
+        return TextUtilities.determineLineDelimiter(String.valueOf(unit.getContents()), hint);
+    }
 
     /**
      * Returns a selection from the start of the first statement

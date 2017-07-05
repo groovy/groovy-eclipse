@@ -60,7 +60,6 @@ import org.eclipse.jdt.internal.corext.util.JdtFlags;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextEditChangeGroup;
@@ -326,7 +325,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
                 String methodIndentation = String.valueOf(CharOperation.subarray(contents, methodLineOffset, methodOffset));
                 String fieldText = createFieldText(ASTTools.getCurrentIntentation(methodIndentation));
-                String newline = TextUtilities.determineLineDelimiter(String.valueOf(contents), "\n");
+                String newline = ASTTools.getLineDelimeter(unit);
 
                 textEdit = new InsertEdit(insertOffset, classNode.isScript() ? fieldText + newline : newline + fieldText);
             } catch (Exception e) {
