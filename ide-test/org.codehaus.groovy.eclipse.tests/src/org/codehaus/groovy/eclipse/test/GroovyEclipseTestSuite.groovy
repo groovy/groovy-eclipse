@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test
 
+import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_MARK_OCCURRENCES
+
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
@@ -203,6 +205,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final JavaEditor openInEditor(ICompilationUnit unit) {
+        setJavaPreference(EDITOR_MARK_OCCURRENCES, 'false')
         try {
             EditorUtility.openInEditor(unit)
         } finally {
