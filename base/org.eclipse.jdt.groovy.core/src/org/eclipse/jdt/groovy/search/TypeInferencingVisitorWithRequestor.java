@@ -53,7 +53,6 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -833,15 +832,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryTypeStack.removeLast();
         }
 
-        // don't visit binary expressions in a constructor that have no source location.
-        // the reason is that these were copied from the field initializer.
-        // we want to visit them under the field initializer, not the construcor
-        if (node instanceof DeclarationExpression && node.getEnd() == 0) {
-            return;
-        }
-
-        visitAnnotations(node);
-
         boolean isAssignment = node.getOperation().getType() == Types.EQUALS;
         BinaryExpression oldEnclosingAssignment = enclosingAssignment;
         if (isAssignment) {
@@ -1137,12 +1127,6 @@ assert primaryExprType != null && dependentExprType != null;
             case STOP_VISIT:
                 throw new VisitCompleted(status);
         }
-    }
-
-    @Override
-    public void visitDeclarationExpression(DeclarationExpression node) {
-        // this is ok. the variable expression is visited appropriately
-        visitBinaryExpression(node);
     }
 
     @Override

@@ -828,6 +828,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testNewifyTransformLocalVars() {
+        String contents = '@Newify def d = Date.new(123L)'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('d'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('new'), 3, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('123L'), 4, NUMBER))
+    }
+
+    @Test
     void testEnumDefs() {
         String contents = '''\
             enum X {
