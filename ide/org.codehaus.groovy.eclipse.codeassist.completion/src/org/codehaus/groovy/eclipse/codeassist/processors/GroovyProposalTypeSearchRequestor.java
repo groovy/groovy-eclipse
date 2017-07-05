@@ -246,37 +246,31 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
     }
 
     /**
-     * This method is called after all types have been accepted by
-     * this requestor.  Converts each type into an {@link ICompletionProposal}
-     * @return list of all {@link ICompletionProposal}s applicable for this
-     * content assist request.
+     * Called after all types have been accepted by this requestor.  Converts each type into an {@link ICompletionProposal}.
+     *
+     * @return list of all {@link ICompletionProposal}s applicable for this content assist request
      */
     List<ICompletionProposal> processAcceptedTypes(JDTResolver resolver) {
+        checkCancel();
 
-        this.checkCancel();
-
-        if (this.acceptedTypes == null)
+        int n;
+        if (acceptedTypes == null || (n = acceptedTypes.size()) == 0) {
             return Collections.EMPTY_LIST;
-
-        int length = this.acceptedTypes.size();
-
-        if (length == 0)
-            return Collections.EMPTY_LIST;
+        }
 
         HashtableOfObject onDemandFound = new HashtableOfObject();
-        String thisPackageName = module.getPackageName() == null ? "" : module.getPackageName();
+        String thisPackageName = module.getPackageName();
+        if (thisPackageName == null) thisPackageName = "";
 
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         try {
-            next: for (int i = 0; i < length; i += 1) {
-
-                // does not check cancellation for every types to avoid
-                // performance loss
+            next: for (int i = 0; i < n; i += 1) {
+                // does not check cancellation for every types to avoid performance loss
                 if ((i % CHECK_CANCEL_FREQUENCY) == 0) {
                     checkCancel();
                 }
 
-                AcceptedType acceptedType = (AcceptedType) this.acceptedTypes.elementAt(i);
+                AcceptedType acceptedType = (AcceptedType) acceptedTypes.elementAt(i);
                 char[] packageName = acceptedType.packageName;
                 char[] simpleTypeName = acceptedType.simpleTypeName;
                 char[][] enclosingTypeNames = acceptedType.enclosingTypeNames;
@@ -285,8 +279,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
 
                 char[] typeName;
                 char[] flatEnclosingTypeNames;
-                if (enclosingTypeNames == null
-                        || enclosingTypeNames.length == 0) {
+                if (enclosingTypeNames == null || enclosingTypeNames.length == 0) {
                     flatEnclosingTypeNames = null;
                     typeName = simpleTypeName;
                 } else {
@@ -300,76 +293,51 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                     initializeImportArrays(resolver.getScope());
                 }
 
-                // check to see if this type is imported explicitly
-                for (int j = 0; j < imports.length; j++) {
-                    char[][] importName = imports[j];
-                    if (CharOperation.equals(typeName, importName[0])) {
-                        // potentially use fully qualified type name
-                        // if there is already something else with the same
-                        // simple
-                        // name imported
-                        proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility,
-                            typeName, fullyQualifiedName, !CharOperation.equals(fullyQualifiedName, importName[1])));
-                        continue next;
+                if (imports != null) {
+                    // check to see if this type is imported explicitly
+                    for (char[][] importName : imports) {
+                        if (CharOperation.equals(typeName, importName[0])) {
+                            // potentially use fully qualified type name if there is already something else with the same simple name imported
+                            proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, !CharOperation.equals(fullyQualifiedName, importName[1])));
+                            continue next;
+                        }
                     }
                 }
 
-                if ((enclosingTypeNames == null || enclosingTypeNames.length == 0)
-                        && CharOperation.equals(thisPackageName
-                                .toCharArray(), packageName)) {
-                    proposals.add(proposeType(packageName, simpleTypeName,
-                            modifiers, accessibility, typeName,
-                            fullyQualifiedName, false));
+                if ((enclosingTypeNames == null || enclosingTypeNames.length == 0) && CharOperation.equals(thisPackageName.toCharArray(), packageName)) {
+                    proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, false));
                     continue next;
-                } else {
+                } else if (((AcceptedType) onDemandFound.get(simpleTypeName)) == null && onDemandimports != null) {
                     char[] fullyQualifiedEnclosingTypeOrPackageName = null;
-
-                    if (((AcceptedType) onDemandFound
-                            .get(simpleTypeName)) == null) {
-                        for (int j = 0; j < this.onDemandimports.length; j++) {
-                            char[] importFlatName = onDemandimports[j];
-
-                            if (fullyQualifiedEnclosingTypeOrPackageName == null) {
-                                if (enclosingTypeNames != null
-                                        && enclosingTypeNames.length != 0) {
-                                    fullyQualifiedEnclosingTypeOrPackageName = CharOperation
-                                            .concat(packageName,
-                                                    flatEnclosingTypeNames, '.');
-                                } else {
-                                    fullyQualifiedEnclosingTypeOrPackageName = packageName;
-                                }
-                            }
-                            if (CharOperation.equals(
-                                            fullyQualifiedEnclosingTypeOrPackageName,
-                                            importFlatName)) {
-                                acceptedType.qualifiedTypeName = typeName;
-                                acceptedType.fullyQualifiedName = fullyQualifiedName;
-                                onDemandFound.put(simpleTypeName,
-                                        acceptedType);
-                                continue next;
+                    for (char[] importFlatName : onDemandimports) {
+                        if (fullyQualifiedEnclosingTypeOrPackageName == null) {
+                            if (enclosingTypeNames != null && enclosingTypeNames.length != 0) {
+                                fullyQualifiedEnclosingTypeOrPackageName = CharOperation.concat(packageName, flatEnclosingTypeNames, '.');
+                            } else {
+                                fullyQualifiedEnclosingTypeOrPackageName = packageName;
                             }
                         }
-                        proposals.add(proposeType(fullyQualifiedEnclosingTypeOrPackageName != null ? fullyQualifiedEnclosingTypeOrPackageName : packageName,
-                                simpleTypeName, modifiers, accessibility,
-                                typeName, fullyQualifiedName, true));
+                        if (CharOperation.equals(fullyQualifiedEnclosingTypeOrPackageName, importFlatName)) {
+                            acceptedType.qualifiedTypeName = typeName;
+                            acceptedType.fullyQualifiedName = fullyQualifiedName;
+                            onDemandFound.put(simpleTypeName, acceptedType);
+                            continue next;
+                        }
                     }
+                    char[] packName = fullyQualifiedEnclosingTypeOrPackageName != null ? fullyQualifiedEnclosingTypeOrPackageName : packageName;
+                    proposals.add(proposeType(packName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, true));
                 }
             }
+
             char[][] keys = onDemandFound.keyTable;
-            Object[] values = onDemandFound.valueTable;
-            int max = keys.length;
-            for (int i = 0; i < max; i++) {
+            Object[] vals = onDemandFound.valueTable;
+            for (int i = 0; i < keys.length; i += 1) {
                 if ((i % CHECK_CANCEL_FREQUENCY) == 0)
                     checkCancel();
                 if (keys[i] != null) {
-                    AcceptedType value = (AcceptedType) values[i];
+                    AcceptedType value = (AcceptedType) vals[i];
                     if (value != null) {
-                        proposals.add(proposeType(value.packageName,
-                                value.simpleTypeName, value.modifiers,
-                                value.accessibility,
-                                value.qualifiedTypeName,
-                                value.fullyQualifiedName,
-                                value.mustBeQualified));
+                        proposals.add(proposeType(value.packageName, value.simpleTypeName, value.modifiers, value.accessibility, value.qualifiedTypeName, value.fullyQualifiedName, value.mustBeQualified));
                     }
                 }
             }
@@ -379,10 +347,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         return proposals;
     }
 
-    private ICompletionProposal proposeNoImportType(char[] packageName,
-            char[] simpleTypeName, int modifiers, int accessibility,
-            char[] qualifiedTypeName, char[] fullyQualifiedName,
-            boolean isQualified) {
+    private ICompletionProposal proposeNoImportType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
         char[] completionName;
         if (isQualified) {
             completionName = fullyQualifiedName;
@@ -402,22 +367,16 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         proposal.setAccessibility(accessibility);
         proposal.setPackageName(packageName);
         String completionString = new String(completionName);
-        JavaTypeCompletionProposal javaCompletionProposal = new JavaTypeCompletionProposal(
-                completionString, null, this.offset, this.replaceLength,
-                ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal),
-                proposal.getRelevance(), completionString, javaContext);
+        JavaTypeCompletionProposal javaCompletionProposal = new JavaTypeCompletionProposal(completionString, null, this.offset, this.replaceLength, ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), completionString, javaContext);
         javaCompletionProposal.setRelevance(proposal.getRelevance());
 
         return javaCompletionProposal;
     }
 
-    private ICompletionProposal proposeType(char[] packageName,
-            char[] simpleTypeName, int modifiers, int accessibility,
-            char[] qualifiedTypeName, char[] fullyQualifiedName,
-            boolean isQualified) {
-        return isImport ?
-                proposeNoImportType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified) :
-                proposeImportableType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified);
+    private ICompletionProposal proposeType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
+        return isImport
+            ? proposeNoImportType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified)
+            : proposeImportableType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified);
     }
 
     private ICompletionProposal proposeImportableType(char[] packageName,
