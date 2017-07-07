@@ -466,7 +466,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             return declarationExpression.getAnnotations().get(0).getStart() - 1;
         }
         // declaration expression sloc may not be set (ex: @Newify local variable expression)
-        throw new IllegalStateException("No start offset for eclaration expression: " + declarationExpression.getText());
+        throw new IllegalStateException("No start offset for declaration expression on line " + variableExpressionInDeclaration.getLineNumber());
     }
 
     /**
