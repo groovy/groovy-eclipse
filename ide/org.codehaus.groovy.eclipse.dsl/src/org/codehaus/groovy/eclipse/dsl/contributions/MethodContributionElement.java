@@ -41,14 +41,12 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
-import org.eclipse.jdt.groovy.search.VariableScope;
 
 public class MethodContributionElement implements IContributionElement {
 
     private static final BlockStatement EMPTY_BLOCK = new BlockStatement();
     private static final ClassNode[] NO_EXCEPTIONS = ClassNode.EMPTY_ARRAY;
     private static final ParameterContribution[] NO_PARAMETER_CONTRIBUTION = new ParameterContribution[0];
-    private static final ClassNode UNKNOWN_TYPE = ClassHelper.DYNAMIC_TYPE;
 
     private final String methodName;
     private final ParameterContribution[] params;
@@ -71,13 +69,34 @@ public class MethodContributionElement implements IContributionElement {
     private final boolean isDeprecated;
     private final boolean noParens;
 
-    public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
+    public MethodContributionElement(
+            String methodName,
+            ParameterContribution[] params,
+            String returnType,
+            String declaringType,
+            boolean isStatic,
+            String provider,
+            String doc,
+            boolean useNamedArgs,
+            boolean isDeprecated,
+            int relevanceMultiplier) {
         this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, false, isDeprecated, relevanceMultiplier);
     }
 
-    public MethodContributionElement(String methodName, ParameterContribution[] params, ParameterContribution[] namedParams,
-            ParameterContribution[] optionalParams, String returnType, String declaringType, boolean isStatic, String provider,
-            String doc, boolean useNamedArgs, boolean noParens, boolean isDeprecated, int relevanceMultiplier) {
+    public MethodContributionElement(
+            String methodName,
+            ParameterContribution[] params,
+            ParameterContribution[] namedParams,
+            ParameterContribution[] optionalParams,
+            String returnType,
+            String declaringType,
+            boolean isStatic,
+            String provider,
+            String doc,
+            boolean useNamedArgs,
+            boolean noParens,
+            boolean isDeprecated,
+            int relevanceMultiplier) {
         this.methodName = methodName;
         this.params = params;
         this.namedParams = namedParams;
@@ -89,18 +108,15 @@ public class MethodContributionElement implements IContributionElement {
         this.noParens = noParens;
         this.isDeprecated = isDeprecated;
         this.relevanceMultiplier = relevanceMultiplier;
-
         this.provider = provider == null ? GROOVY_DSL_PROVIDER : provider;
         this.doc = doc == null ? NO_DOC + this.provider : doc;
-
     }
 
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
-        if (name.equals(methodName))
-            return new TypeAndDeclaration(ensureReturnType(resolver), toMethod(declaringType, resolver),
-                    ensureDeclaringType(declaringType, resolver), doc);
-        else
-            return null;
+        if (name.equals(methodName)) {
+            return new TypeAndDeclaration(returnType(resolver), toMethod(declaringType, resolver), declaringType(declaringType, resolver), doc);
+        }
+        return null;
     }
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
@@ -175,18 +191,11 @@ public class MethodContributionElement implements IContributionElement {
     private MethodNode toMethod(ClassNode declaringType, ResolverCache resolver) {
         if (cachedRegularParameters == null) {
             cachedRegularParameters = initParams(params, resolver);
-            cachedOptionalParameters = initParams(optionalParams, resolver);
             cachedNamedParameters = initParams(namedParams, resolver);
-            if (cachedReturnType == null) {
-                if (resolver != null) {
-                    cachedReturnType = resolver.resolve(returnType);
-                } else {
-                    cachedReturnType = VariableScope.OBJECT_CLASS_NODE;
-                }
-            }
+            cachedOptionalParameters = initParams(optionalParams, resolver);
         }
-        MethodNode meth = new NamedArgsMethodNode(methodName, opcode(), cachedReturnType, cachedRegularParameters, cachedNamedParameters, cachedOptionalParameters, NO_EXCEPTIONS, EMPTY_BLOCK);
-        meth.setDeclaringClass(ensureDeclaringType(declaringType, resolver));
+        MethodNode meth = new NamedArgsMethodNode(methodName, modifiers(), returnType(resolver), cachedRegularParameters, cachedNamedParameters, cachedOptionalParameters, NO_EXCEPTIONS, EMPTY_BLOCK);
+        meth.setDeclaringClass(declaringType(declaringType, resolver));
         return meth;
     }
 
@@ -203,23 +212,31 @@ public class MethodContributionElement implements IContributionElement {
         return ps;
     }
 
-    protected ClassNode ensureReturnType(ResolverCache resolver) {
+    protected ClassNode returnType(ResolverCache resolver) {
         if (cachedReturnType == null) {
-            cachedReturnType = resolver.resolve(returnType);
+            if (resolver != null) {
+                cachedReturnType = resolver.resolve(returnType);
+                if (returnType.indexOf('<') < 1) {
+                    cachedReturnType = cachedReturnType.getPlainNodeReference();
+                }
+            } else {
+                cachedReturnType = ClassHelper.DYNAMIC_TYPE;
+            }
         }
-        return cachedReturnType == null ? UNKNOWN_TYPE : cachedReturnType;
+        return cachedReturnType;
     }
 
-    protected ClassNode ensureDeclaringType(ClassNode lexicalDeclaringType, ResolverCache resolver) {
+    protected ClassNode declaringType(ClassNode lexicalDeclaringType, ResolverCache resolver) {
         if (declaringType != null && cachedDeclaringType == null) {
             cachedDeclaringType = resolver.resolve(declaringType);
         }
         return cachedDeclaringType == null ? lexicalDeclaringType : cachedDeclaringType;
     }
 
-    protected int opcode() {
-        int modifiers = isStatic ? Opcodes.ACC_STATIC : Opcodes.ACC_PUBLIC;
-        modifiers |= isDeprecated ? Opcodes.ACC_DEPRECATED : 0;
+    protected int modifiers() {
+        int modifiers = Opcodes.ACC_PUBLIC;
+        if (isStatic) modifiers |= Opcodes.ACC_STATIC;
+        if (isDeprecated) modifiers |= Opcodes.ACC_DEPRECATED;
         return modifiers;
     }
 
@@ -237,8 +254,18 @@ public class MethodContributionElement implements IContributionElement {
 
     @Override
     public String toString() {
-        return "public " + (isStatic ? "static " : "") + (isDeprecated ? "deprecated " : "")
-                + (useNamedArgs ? "useNamedArgs " : "") + returnType + " " + declaringType + "." + methodName + "("
-                + Arrays.toString(params) + ") (" + provider + ")";
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("public ");
+        if (isStatic) sb.append("static ");
+        if (isDeprecated) sb.append("deprecated ");
+        if (useNamedArgs) sb.append("useNamedArgs ");
+        sb.append(returnType).append(' ');
+        sb.append(declaringType);
+        sb.append('.').append(methodName);
+        sb.append('(').append(Arrays.toString(params)).append(')');
+        sb.append(' ').append('(').append(provider).append(')');
+
+        return sb.toString();
     }
 }
