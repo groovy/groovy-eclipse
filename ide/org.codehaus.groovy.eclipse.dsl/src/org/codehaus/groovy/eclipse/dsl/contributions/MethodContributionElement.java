@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import static org.codehaus.groovy.eclipse.dsl.contributions.ContributionElems.removeJavadocMarkup;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class MethodContributionElement implements IContributionElement {
 
     private static final BlockStatement EMPTY_BLOCK = new BlockStatement();
     private static final ClassNode[] NO_EXCEPTIONS = ClassNode.EMPTY_ARRAY;
-    private static final ParameterContribution[] NO_PARAMETER_CONTRIBUTION = new ParameterContribution[0];
+    private static final ParameterContribution[] NO_PARAMETER_CONTRIBUTION = {};
 
     private final String methodName;
     private final ParameterContribution[] params;
@@ -108,8 +110,8 @@ public class MethodContributionElement implements IContributionElement {
         this.noParens = noParens;
         this.isDeprecated = isDeprecated;
         this.relevanceMultiplier = relevanceMultiplier;
-        this.provider = provider == null ? GROOVY_DSL_PROVIDER : provider;
-        this.doc = doc == null ? NO_DOC + this.provider : doc;
+        this.provider = (provider != null ? removeJavadocMarkup(provider) : GROOVY_DSL_PROVIDER);
+        this.doc = (doc != null ? doc : NO_DOC + (provider != null ? provider : GROOVY_DSL_PROVIDER));
     }
 
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
 
-/**
- * 
- * @author andrew
- * @created Jan 6, 2012
- */
 public class EmptyContributionElement implements IContributionElement {
 
     private ClassNode declaringType;
@@ -60,5 +55,4 @@ public class EmptyContributionElement implements IContributionElement {
     public String getDeclaringTypeName() {
         return declaringType.getName();
     }
-
 }

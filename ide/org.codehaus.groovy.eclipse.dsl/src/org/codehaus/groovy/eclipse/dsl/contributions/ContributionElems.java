@@ -15,15 +15,23 @@
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
-import java.util.List;
-
-import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Interface representing a contribution to a set of DSLD {@link IPointcut}s.
+ * Provides support methods for {@link IContributionElement} implementations.
  */
-public interface IContributionGroup {
+public final class ContributionElems {
 
-    List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches);
+    private ContributionElems() {}
+
+    public static String removeJavadocMarkup(String text) {
+        Matcher m = Pattern.compile("\\{@link(?:\\s.*?)?\\s+([^\\}]+)\\}").matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            m.appendReplacement(sb, m.group(1));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
 }

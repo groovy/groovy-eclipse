@@ -48,12 +48,10 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * A contribution group will determine the set of contribution elements (eg-
  * extra methods, properties, templates, etc) that are added to a particular type
  * when the attached pointcut matches.
- *
- * @author andrew
- * @created Nov 17, 2010
  */
 public class DSLContributionGroup extends ContributionGroup {
-    private static final ParameterContribution[] NO_PARAMS = new ParameterContribution[0];
+
+    private static final ParameterContribution[] NO_PARAMS = {};
 
     private static final String NO_TYPE = "java.lang.Object";
 
@@ -65,7 +63,6 @@ public class DSLContributionGroup extends ContributionGroup {
      */
     @SuppressWarnings("rawtypes")
     private final Closure contributionClosure;
-
 
     private VariableScope scope;
 
@@ -128,7 +125,6 @@ public class DSLContributionGroup extends ContributionGroup {
         }
     }
 
-
     @Override
     public Object getProperty(String property) {
         if ("wormhole".equals(property)) {
@@ -175,8 +171,7 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     /**
-     * Called by closure to add a method
-     * @param args
+     * Called by closure to add a method.
      */
     void method(Map<String, Object> args) {
         String name = asString(args.get("name"));
@@ -237,8 +232,6 @@ public class DSLContributionGroup extends ContributionGroup {
         return str.equalsIgnoreCase("true") ||
                str.equalsIgnoreCase("yes");
     }
-
-
 
     /**
      * Called by closure to add a property
@@ -474,7 +467,6 @@ public class DSLContributionGroup extends ContributionGroup {
         }
     }
 
-
     void provider(Object args) {
         provider = args == null ? null : asString(args);
     }
@@ -530,8 +522,7 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     /**
-     * Logs a message to the groovy console log if open
-     * @param msg
+     * Logs a message to the groovy console log if open.
      */
     Object log(Object msg) {
         if (GroovyLogManager.manager.hasLoggers()) {

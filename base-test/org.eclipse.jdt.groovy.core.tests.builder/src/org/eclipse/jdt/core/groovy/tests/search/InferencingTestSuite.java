@@ -94,7 +94,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
         assertNotNull("Did not find expected ASTNode", requestor.node);
-        if (! expectedType.equals(printTypeName(requestor.result.type))) {
+        if (!expectedType.equals(printTypeName(requestor.result.type))) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected type not found.\n");
             sb.append("Expected: " + expectedType + "\n");
@@ -105,7 +105,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             fail(sb.toString());
         }
 
-        if (extraDocSnippet != null && (requestor.result.extraDoc==null || !requestor.result.extraDoc.contains(extraDocSnippet))) {
+        if (extraDocSnippet != null && (requestor.result.extraDoc == null || !requestor.result.extraDoc.replace("}", "").contains(extraDocSnippet))) {
             StringBuilder sb = new StringBuilder();
             sb.append("Incorrect Doc found.\n");
             sb.append("Expected doc should contain: " + extraDocSnippet + "\n");
@@ -115,9 +115,9 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             fail(sb.toString());
         }
 
-        // this is from https://issuetracker.springsource.com/browse/STS-1854
+        // https://issuetracker.springsource.com/browse/STS-1854
         // make sure that the Type parameterization of Object has not been messed up
-        assertNull("Problem!!! Object type has type parameters now.  See STS-1854", VariableScope.OBJECT_CLASS_NODE.getGenericsTypes());
+        assertNull("Problem!!! Object type has type parameters now. See STS-1854", VariableScope.OBJECT_CLASS_NODE.getGenericsTypes());
     }
 
     /**
