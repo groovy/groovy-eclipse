@@ -32,9 +32,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.IField
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.ui.internal.Workbench
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -50,82 +48,75 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @After
     void tearDown() {
         removeNature(OutlineExtender1.NATURE, OutlineExtender2.NATURE)
-        Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false)
     }
 
     @Test
     void testStandardOutlineIfNoExtender() {
-        String contents = 'class X { }'
-        GroovyOutlinePage outline = openFile('X', contents)
+        GroovyOutlinePage outline = openFile('X', 'class X { }')
 
         // check no outline view
-        Assert.assertNull(outline)
+        assert outline == null
     }
 
     @Test
     void testStandardOutlineIfUnitNotApplyToExtender() {
-        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender1.NATURE) // applies to *X*.groovy files
 
-        String contents = 'class Z { }'
-        GroovyOutlinePage outline = openFile('Z', contents)
+        GroovyOutlinePage outline = openFile('Z', 'class Z { }')
 
         // check no outline view
-        Assert.assertNull(outline)
+        assert outline == null
     }
 
     @Test
     void testOutlineActivated() {
-        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender1.NATURE) // applies to *X*.groovy files
 
-        String contents = 'class X { }'
-        GroovyOutlinePage outline = openFile('X', contents)
+        GroovyOutlinePage outline = openFile('X', 'class X { }')
 
         // check outline view exists
-        Assert.assertNotNull(outline)
+        assert outline != null
     }
 
     @Test
     void testFirstDeclaredWins1() {
         // NOTE: addNature() appends to the head of the array
-        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
-        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
+        addNature(OutlineExtender1.NATURE) // applies to *X*.groovy files
 
-        String contents = 'class XY { }'
-        GroovyOutlinePage outline = openFile('XY', contents)
+        GroovyOutlinePage outline = openFile('XY', 'class XY { }')
 
         // check outline view exists
-        TCompilationUnit tu = (TCompilationUnit) outline.getOutlineCompilationUnit()
-        Assert.assertTrue(tu.outlineExtender.getClass() == OutlineExtender1.class)
+        TCompilationUnit tu = (TCompilationUnit) outline.outlineCompilationUnit
+        assert tu.outlineExtender.getClass() == OutlineExtender1
     }
 
     @Test
     void testFirstDeclaredWins2() {
         // NOTE: addNature() appends to the head of the array
-        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
-        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender1.NATURE) // applies to *X*.groovy files
+        addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
-        String contents = 'class XY { }'
-        GroovyOutlinePage outline = openFile('XY', contents)
+        GroovyOutlinePage outline = openFile('XY', 'class XY { }')
 
         // check outline view exists
-        TCompilationUnit tu = (TCompilationUnit) outline.getOutlineCompilationUnit()
-        Assert.assertTrue(tu.outlineExtender.getClass() == OutlineExtender2.class)
+        TCompilationUnit tu = (TCompilationUnit) outline.outlineCompilationUnit
+        assert tu.outlineExtender.getClass() == OutlineExtender2
     }
 
     @Test
     void testOutlineTreeConsistency1() {
-        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
-        String contents = '''\
+        TGroovyOutlinePage outline = (TGroovyOutlinePage) openFile('YTest', '''\
             Integer field1 = 0
             String field2 = 'S'
             Long method1() {}
             Integer method2() {
               return 0
-            }'''.stripIndent()
-        TGroovyOutlinePage outline = (TGroovyOutlinePage) openFile('YTest', contents)
-        TCompilationUnit2 tu = (TCompilationUnit2) outline.getOutlineCompilationUnit()
-        def children = (tu.getChildren()[0] as TType).getChildren()
+            }'''.stripIndent())
+        TCompilationUnit2 tu = (TCompilationUnit2) outline.outlineCompilationUnit
+        def children = (tu.children[0] as TType).children
 
         assert children.length == 4
         assertIsField(children[0], 'field1', 'QInteger;')
@@ -136,76 +127,69 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
     @Test
     void testOutlineTreeConsistency2() {
-        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
-        String contents = '''\
+        GroovyOutlinePage outline = openFile('YTest', '''\
             inline1 {
               inline2 {
                 Integer fieldA = 12
               }
-            }'''.stripIndent()
-        GroovyOutlinePage outline = openFile('YTest', contents)
-        TCompilationUnit2 tu = (TCompilationUnit2) outline.getOutlineCompilationUnit()
+            }'''.stripIndent())
+        TCompilationUnit2 tu = (TCompilationUnit2) outline.outlineCompilationUnit
 
         // check consistency
-        TType yTest = (TType) tu.getChildren()[0]
+        TType yTest = (TType) tu.children[0]
 
-        TType inline1 = (TType) yTest.getChildren()[0]
-        Assert.assertEquals(1, inline1.getChildren().length)
-        assertIsType(inline1.getChildren()[0], 'inline2')
+        TType inline1 = (TType) yTest.children[0]
+        assert inline1.children.length == 1
+        assertIsType(inline1.children[0], 'inline2')
 
-        TType inline2 = (TType) inline1.getChildren()[0]
-        Assert.assertEquals(1, inline2.getChildren().length)
-        assertIsField(inline2.getChildren()[0], 'fieldA', 'QInteger;')
+        TType inline2 = (TType) inline1.children[0]
+        assert inline2.children.length == 1
+        assertIsField(inline2.children[0], 'fieldA', 'QInteger;')
     }
 
     @Test
     void testOutlineTreeSynchronized() {
-        addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        addNature(OutlineExtender2.NATURE) // applies to *Y*.groovy files
 
-        String contents =
-            'Integer field1 = 0 \n' +
-            'String field2 = "S"'
-        GroovyOutlinePage outline = openFile('YTest', contents)
-
-        TCompilationUnit2 tu = (TCompilationUnit2) outline.getOutlineCompilationUnit()
+        GroovyOutlinePage outline = openFile('YTest', '''\
+            Integer field1 = 0
+            String field2 = "S"
+            '''.stripIndent())
+        TCompilationUnit2 tu = (TCompilationUnit2) outline.outlineCompilationUnit
 
         // check consistency
-        TType tx = (TType) tu.getChildren()[0]
-        Assert.assertEquals(2, tx.getChildren().length)
-        assertIsField(tx.getChildren()[0], 'field1', 'QInteger;')
-        assertIsField(tx.getChildren()[1], 'field2', 'QString;')
+        TType tx = (TType) tu.children[0]
+        assert tx.children.length == 2
+        assertIsField(tx.children[0], 'field1', 'QInteger;')
+        assertIsField(tx.children[1], 'field2', 'QString;')
 
         // update content
         GroovyEditor editor = (GroovyEditor) openInEditor(tu)
-        JavaSourceViewer viewer = (JavaSourceViewer) editor.getViewer()
-        viewer.getTextWidget().setSelection(0)
-        viewer.getTextWidget().insert('Long field3 = 100 \n')
+        JavaSourceViewer viewer = (JavaSourceViewer) editor.viewer
+        viewer.textWidget.selection = 0
+        viewer.textWidget.insert('Long field3 = 100 \n')
         buildProject()
         waitForIndex()
         tu.refresh()
 
         // check consistency
-        tx = (TType) tu.getChildren()[0]
-        Assert.assertEquals(3, tx.getChildren().length)
-        assertIsField(tx.getChildren()[0], 'field3', 'QLong;')
-        assertIsField(tx.getChildren()[1], 'field1', 'QInteger;')
-        assertIsField(tx.getChildren()[2], 'field2', 'QString;')
-
-        editor.close(false)
+        tx = (TType) tu.children[0]
+        assert tx.children.length == 3
+        assertIsField(tx.children[0], 'field3', 'QLong;')
+        assertIsField(tx.children[1], 'field1', 'QInteger;')
+        assertIsField(tx.children[2], 'field2', 'QString;')
     }
 
     @Test
     void testUseGroovyScriptOutline() {
-        addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        addNature(OutlineExtender1.NATURE) // applies to *X*.groovy files
 
-        String contents = 'int yyy'
-        GroovyOutlinePage outline = openFile('Z', contents)
+        GroovyOutlinePage outline = openFile('Z', 'int yyy')
 
         // should use script outline extender
-        Assert.assertEquals('Wrong outline extender chosen',
-            'org.codehaus.groovy.eclipse.editor.outline.GroovyScriptOCompilationUnit',
-            outline.getOutlineCompilationUnit().getClass().getName())
+        assert outline.outlineCompilationUnit.class.name == 'org.codehaus.groovy.eclipse.editor.outline.GroovyScriptOCompilationUnit' : 'Wrong outline extender chosen'
     }
 
     @Test
@@ -220,60 +204,60 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
         GroovyOutlinePage outline = openFile('Script', contents)
 
-        OCompilationUnit unit = outline.getOutlineCompilationUnit()
-        IJavaElement[] children = unit.getChildren()
+        OCompilationUnit unit = outline.outlineCompilationUnit
+        IJavaElement[] children = unit.children
 
-        Assert.assertEquals('Wrong number of children', 6, children.length)
-        Assert.assertEquals('', children[0].getElementName()); // import container has no name
-        Assert.assertEquals('xxx', children[1].getElementName())
-        Assert.assertEquals('ttt', children[2].getElementName())
-        Assert.assertEquals('hhh', children[3].getElementName())
-        Assert.assertEquals('Y', children[4].getElementName())
-        Assert.assertEquals('blah', children[5].getElementName())
+        assert children.length == 6
+        assert children[0].elementName == '' // import container has no name
+        assert children[1].elementName == 'xxx'
+        assert children[2].elementName == 'ttt'
+        assert children[3].elementName == 'hhh'
+        assert children[4].elementName == 'Y'
+        assert children[5].elementName == 'blah'
 
-        Assert.assertEquals(IJavaElement.IMPORT_CONTAINER, children[0].getElementType())
-        Assert.assertEquals(IJavaElement.FIELD, children[1].getElementType())
-        Assert.assertEquals(IJavaElement.FIELD, children[2].getElementType())
-        Assert.assertEquals(IJavaElement.FIELD, children[3].getElementType())
-        Assert.assertEquals(IJavaElement.TYPE, children[4].getElementType())
-        Assert.assertEquals(IJavaElement.METHOD, children[5].getElementType())
+        assert children[0].elementType == IJavaElement.IMPORT_CONTAINER
+        assert children[1].elementType == IJavaElement.FIELD
+        assert children[2].elementType == IJavaElement.FIELD
+        assert children[3].elementType == IJavaElement.FIELD
+        assert children[4].elementType == IJavaElement.TYPE
+        assert children[5].elementType == IJavaElement.METHOD
 
-        Assert.assertEquals('[I', ((IField) children[1]).getTypeSignature())
-        Assert.assertEquals('Qdef;', ((IField) children[2]).getTypeSignature())
-        Assert.assertEquals('QObject;', ((IField) children[3]).getTypeSignature())
+        assert ((IField) children[1]).typeSignature == '[I'
+        assert ((IField) children[2]).typeSignature == 'Qdef;'
+        assert ((IField) children[3]).typeSignature == 'QObject;'
 
-        Assert.assertEquals(contents.indexOf('xxx'), ((IField) children[1]).getNameRange().getOffset())
-        Assert.assertEquals(contents.indexOf('ttt'), ((IField) children[2]).getNameRange().getOffset())
-        Assert.assertEquals(contents.indexOf('hhh'), ((IField) children[3]).getNameRange().getOffset())
+        assert ((IField) children[1]).nameRange.offset == contents.indexOf('xxx')
+        assert ((IField) children[2]).nameRange.offset == contents.indexOf('ttt')
+        assert ((IField) children[3]).nameRange.offset == contents.indexOf('hhh')
 
-        Assert.assertEquals(3, ((IField) children[1]).getNameRange().getLength())
-        Assert.assertEquals(3, ((IField) children[2]).getNameRange().getLength())
-        Assert.assertEquals(3, ((IField) children[3]).getNameRange().getLength())
+        assert ((IField) children[1]).nameRange.length == 3
+        assert ((IField) children[2]).nameRange.length == 3
+        assert ((IField) children[3]).nameRange.length == 3
     }
 
     @Test
     void testStructureUnknown() {
-        String contents = 'class X {  }\n int o( \n}'
-        GroovyOutlinePage outline = openFile('Problem', contents)
-        Assert.assertNull('X is not a script, so no Groovy outline should be available', outline)
+        GroovyOutlinePage outline = openFile('Problem', '''\
+            class X {  }
+             int o(
+            }
+            '''.stripIndent())
+
+        assert outline == null : 'X is not a script, so no Groovy outline should be available'
         //OCompilationUnit unit = outline.getOutlineCompilationUnit()
         //IJavaElement[] children = unit.getChildren()
         //assertEquals(1, children.length)
         //assertEquals('Problem' + GroovyScriptOutlineExtender.NO_STRUCTURE_FOUND, children[0].getElementName())
     }
 
+    //--------------------------------------------------------------------------
+
     private GroovyOutlinePage openFile(String className, String contents) {
         GroovyCompilationUnit unit = addGroovySource(contents, className)
-        unit.reconcile(true, null)
         GroovyEditor editor = (GroovyEditor) openInEditor(unit)
-
-        GroovyOutlinePage outline = editor.getOutlinePage()
-        if (!unit.isWorkingCopy()) {
-            Assert.fail('not working copy')
-        }
-        if (unit.getModuleNode() == null) {
-            Assert.fail('Module node is null')
-        }
+        assert unit.isWorkingCopy() : 'not working copy'
+        assert unit.getModuleNode() != null : 'Module node is null'
+        GroovyOutlinePage outline = editor.outlinePage
         if (outline != null) {
             outline.refresh()
             return outline
@@ -285,21 +269,19 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
      * check that the element is the appropriate field
      */
     private void assertIsField(IJavaElement element, String name, String typeSignature) {
-        Assert.assertTrue('Element' + element.getElementName() + ' in not an instanceof OMethod', element instanceof OField)
-        OField field = (OField) element
-        Assert.assertTrue("Field name is '" + field.getElementName() + "' instead of '" + name + "'", name.equals(field.getElementName()))
-        Assert.assertTrue("Field type signature is '" + field.getTypeSignature() + "' instead of '" + name + "'", typeSignature.equals(field.getTypeSignature()))
+        assert element instanceof OField : "Element $element.elementName is not an instanceof OField"
+        assert element.elementName == name : "Field name is '$element.elementName' instead of '$name'"
+        assert element.typeSignature == typeSignature : "Field type signature is '$element.typeSignature' instead of '$typeSignature'"
     }
 
     /**
      * check that the element is the appropriate method
      */
     private void assertIsMethod(IJavaElement element, String name, String returnType) {
-        Assert.assertTrue("Element " + element.getElementName() + " in not an instanceof OMethod", element instanceof OMethod)
-        OMethod method = (OMethod) element
-        Assert.assertTrue("Method name is '" + method.getElementName() + "' instead of '" + name + "'", name.equals(method.getElementName()))
+        assert element instanceof OMethod : "Element $element.elementName is not an instanceof OMethod"
+        assert element.elementName == name : "Method name is '$element.elementName' instead of '$name'"
         if (returnType != null) {
-            Assert.assertTrue("Method return type is '" + method.getReturnTypeName() + "' instead of '" + returnType + "'", returnType.equals(method.getReturnTypeName()))
+            assert element.returnTypeName == returnType : "Method return type is '$element.returnTypeName' instead of '$returnType'"
         }
     }
 
@@ -307,8 +289,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
      * check that the element is the appropriate type
      */
     private void assertIsType(IJavaElement element, String name) {
-        Assert.assertTrue("Element " + element.getElementName() + " in not an instanceof OType", element instanceof OType)
-        OType type = (OType) element
-        Assert.assertTrue("Type name is '" + type.getElementName() + "' instead of '" + name + "'", name.equals(type.getElementName()))
+        assert element instanceof OType : "Element $element.elementName is not an instanceof OType"
+        assert element.elementName == name : "Type name is '$element.elementName' instead of '$name'"
     }
 }
