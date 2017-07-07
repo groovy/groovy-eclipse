@@ -171,7 +171,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 		String transformName = snt.getClass().getName();
                 		StringBuilder sb = new StringBuilder();
                 		sb.append("Unable to run AST transform "+transformName+": missing class "+ncdfe.getMessage());
-                		sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined? http://groovy.codehaus.org/Eclipse+Plugin+2.0.0+FAQ#EclipsePlugin2.0.0FAQ-Q.DoesitsupportcustomASTtransformations%3F");
+                		sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined?");
                 		source.addError(new SyntaxException(sb.toString(), ncdfe, 0, 0));
                 	}
                 	// GRECLIPSE - end
