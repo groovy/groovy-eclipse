@@ -27,19 +27,20 @@ import org.junit.Test
  */
 final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
-    private static final String SCRIPTCONTENTS =
-        "any\n" +
-        "clone\n" +
-        "findIndexOf\n" +
-        "inject\n" +
-        "class Foo {\n" +
-        "  Foo(first, second) { }\n" +
-        "  Foo(int third) { }\n" +
-        "  def method1(arg) { }\n" +
-        "  def method2(arg, Closure c1) { }\n" +
-        "  def method3(arg, Closure c1, Closure c2) { }\n" +
-        "}\n" +
-        "new Foo()"
+    private static final String SCRIPTCONTENTS = '''\
+        any
+        clone
+        findIndexOf
+        inject
+        class Foo {
+          Foo(first, second) { }
+          Foo(int third) { }
+          def method1(arg) { }
+          def method2(arg, Closure c1) { }
+          def method3(arg, Closure c1, Closure c2) { }
+        }
+        new Foo()
+        '''.stripIndent()
     private final static String CLOSURE_CONTENTS =
         "class Other {\n" +
         "    def first\n" +
@@ -88,20 +89,20 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testMethodWithClosure() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "any"))
-        checkReplacementString(proposals, "any { it }", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'any'))
+        checkReplacementString(proposals, 'any { it }', 1)
     }
 
     @Test
     void testMethodWithNoArgs() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "clone"))
-        checkReplacementString(proposals, "clone()", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'clone'))
+        checkReplacementString(proposals, 'clone()', 1)
     }
 
     @Test
     void testMethodWith2Args() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "findIndexOf"))
-        checkReplacementRegexp(proposals, "findIndexOf\\(\\w+\\) \\{ it \\}", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'findIndexOf'))
+        checkReplacementRegexp(proposals, /findIndexOf\(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) \{ it \}/, 1)
     }
 
     @Test
@@ -109,8 +110,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "any"))
-        checkReplacementRegexp(proposals, "any\\(\\w+\\)", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'any'))
+        checkReplacementRegexp(proposals, /any\(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\)/, 1)
     }
 
     @Test
@@ -118,16 +119,16 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "findIndexOf"))
-        checkReplacementRegexp(proposals, "findIndexOf\\(\\w+, \\w+\\)", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'findIndexOf'))
+        checkReplacementRegexp(proposals, /findIndexOf\(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*, \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\)/, 1)
     }
 
     @Test
     void testClosureApplication1a() {
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method1"
-        String expected = "new Foo().method1(arg)"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
+        String contents = 'new Foo().method1'
+        String expected = 'new Foo().method1(arg)'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
     }
 
     @Test
@@ -135,9 +136,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method1"
-        String expected = "new Foo().method1(arg)"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
+        String contents = 'new Foo().method1'
+        String expected = 'new Foo().method1(arg)'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
     }
 
     @Test
@@ -145,9 +146,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method1"
-        String expected = "new Foo().method1(arg)"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
+        String contents = 'new Foo().method1'
+        String expected = 'new Foo().method1(arg)'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
     }
 
     @Test
@@ -156,17 +157,17 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method1"
-        String expected = "new Foo().method1(arg)"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method1")
+        String contents = 'new Foo().method1'
+        String expected = 'new Foo().method1(arg)'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
     }
 
     @Test
     void testClosureApplication2a() {
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method2"
-        String expected = "new Foo().method2(arg) { it }"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
+        String contents = 'new Foo().method2'
+        String expected = 'new Foo().method2(arg) { it }'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
     }
 
     @Test
@@ -174,9 +175,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method2"
-        String expected = "new Foo().method2(arg, { it })"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
+        String contents = 'new Foo().method2'
+        String expected = 'new Foo().method2(arg, { it })'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
     }
 
     @Test
@@ -184,9 +185,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method2"
-        String expected = "new Foo().method2(arg) c1"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
+        String contents = 'new Foo().method2'
+        String expected = 'new Foo().method2(arg) c1'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
     }
 
     @Test
@@ -195,17 +196,17 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method2"
-        String expected = "new Foo().method2(arg, c1)"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method2")
+        String contents = 'new Foo().method2'
+        String expected = 'new Foo().method2(arg, c1)'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
     }
 
     @Test
     void testClosureApplication3a() {
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method3"
-        String expected = "new Foo().method3(arg, { it }) { it }"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
+        String contents = 'new Foo().method3'
+        String expected = 'new Foo().method3(arg, { it }) { it }'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
     }
 
     @Test
@@ -213,9 +214,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method3"
-        String expected = "new Foo().method3(arg, { it }, { it })"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
+        String contents = 'new Foo().method3'
+        String expected = 'new Foo().method3(arg, { it }, { it })'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
     }
 
     @Test
@@ -223,9 +224,9 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method3"
-        String expected = "new Foo().method3(arg, c1) c2"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
+        String contents = 'new Foo().method3'
+        String expected = 'new Foo().method3(arg, c1) c2'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
     }
 
     @Test
@@ -234,123 +235,123 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         addGroovySource(SCRIPTCONTENTS)
-        String contents = "new Foo().method3"
-        String expected = "new Foo().method3(arg, c1, c2)"
-        checkProposalApplicationNonType(contents, expected, contents.length(), "method3")
+        String contents = 'new Foo().method3'
+        String expected = 'new Foo().method3(arg, c1, c2)'
+        checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion1() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, " substring"))
-        checkReplacementString(proposals, "substring(beginIndex)", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, ' substring'))
+        checkReplacementString(proposals, 'substring(beginIndex)', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion2() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, " first"))
-        checkReplacementString(proposals, "first", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, ' first'))
+        checkReplacementString(proposals, 'first', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion3() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, " second2"))
-        checkReplacementString(proposals, "second2()", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, ' second2'))
+        checkReplacementString(proposals, 'second2()', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion4() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"))
-        checkReplacementString(proposals, "substring(beginIndex)", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'delegate.substring'))
+        checkReplacementString(proposals, 'substring(beginIndex)', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion5() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"))
-        checkReplacementString(proposals, "first", 0)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'delegate.first'))
+        checkReplacementString(proposals, 'first', 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion6() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"))
-        checkReplacementString(proposals, "second2", 0)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'delegate.second2'))
+        checkReplacementString(proposals, 'second2', 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion7() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"))
-        checkReplacementString(proposals, "substring", 0)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'this.substring'))
+        checkReplacementString(proposals, 'substring', 0)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion8() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "this.first"))
-        checkReplacementString(proposals, "first", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'this.first'))
+        checkReplacementString(proposals, 'first', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion9() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"))
-        checkReplacementString(proposals, "second2()", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'this.second2'))
+        checkReplacementString(proposals, 'second2()', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion10() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, "wait"))
-        checkReplacementString(proposals, "wait()", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS, getLastIndexOf(CLOSURE_CONTENTS, 'wait'))
+        checkReplacementString(proposals, 'wait()', 1)
     }
 
     @Test // accessing members of super types in closures
     void testClosureCompletion11() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS2, getLastIndexOf(CLOSURE_CONTENTS2, "first"))
-        checkReplacementString(proposals, "first", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(CLOSURE_CONTENTS2, getLastIndexOf(CLOSURE_CONTENTS2, 'first'))
+        checkReplacementString(proposals, 'first', 1)
     }
 
     @Test
     void testNamedArguments0() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "clone"))
-        checkReplacementString(proposals, "clone()", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'clone'))
+        checkReplacementString(proposals, 'clone()', 1)
     }
 
     @Ignore @Test
     void testNamedArguments1() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "new Foo"))
-        checkReplacementString(proposals, "(first:first, second:second)", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'new Foo'))
+        checkReplacementString(proposals, '(first:first, second:second)', 1)
     }
 
     @Ignore @Test
     void testNamedArguments2() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, "new Foo"))
-        checkReplacementString(proposals, "(third:third)", 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'new Foo'))
+        checkReplacementString(proposals, '(third:third)', 1)
     }
 
     @Ignore @Test // GRECLIPSE-268
     void testGString1() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('""""""', "\"\"\"".length())
-        assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
+        ICompletionProposal[] proposals = createProposalsAtOffset('""""""', 3)
+        assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString2() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('"""${this}"""', "\"\"\"".length())
-        assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""${this}"""', 3)
+        assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString3() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('"""this"""', "\"\"\"this".length())
-        assert proposals.length == 0 : "Should not have found any proposals, but found:\n" + printProposals(proposals)
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""this"""', '"""this'.length())
+        assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
     }
 
     @Test // GRECLIPSE-268
     void testGString4() {
         String contents = 'def flarb;\n"""${flarb}"""'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '${flarb'))
-        checkReplacementString(proposals, "flarb", 1)
+        checkReplacementString(proposals, 'flarb', 1)
     }
 }

@@ -71,7 +71,7 @@ public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
         return false;
     }
     private static final Pattern GROOVY_SOURCE_DISCRIMINATOR =
-        Pattern.compile("\\Apackage\\s+\\w+(?:\\s*\\.\\s*\\w+)*\\s++(?!;)");
+        Pattern.compile("\\Apackage\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)");
 
     @Override
     public void reset() {

@@ -89,7 +89,7 @@ public class ConvertToPropertyAction extends Action {
                         ArgumentListExpression args = (ArgumentListExpression) call.getArguments();
 
                         Matcher match; // check for accessor or mutator
-                        if (args.getExpressions().isEmpty() && (match = compile("(?:get|is)(\\w+)").matcher(call.getMethodAsString())).matches()) {
+                        if (args.getExpressions().isEmpty() && (match = compile("(?:get|is)(\\p{javaJavaIdentifierPart}+)").matcher(call.getMethodAsString())).matches()) {
                             int offset = node.getStart(),
                                 length = (args.getEnd() + 1) - offset;
                             String propertyName = match.group(1);
@@ -97,7 +97,7 @@ public class ConvertToPropertyAction extends Action {
                             // replace "getPropertyName()" with "propertyName"
                             return new ReplaceEdit(offset, length, StringUtils.uncapitalize(propertyName));
 
-                        } else if (args.getExpressions().size() == 1 && (match = compile("set(\\w+)").matcher(call.getMethodAsString())).matches()) {
+                        } else if (args.getExpressions().size() == 1 && (match = compile("set(\\p{javaJavaIdentifierPart}+)").matcher(call.getMethodAsString())).matches()) {
                             int offset = node.getStart(),
                                 length = args.getStart() - offset;
                             String propertyName = match.group(1);

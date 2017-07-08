@@ -524,13 +524,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
     private IProposalCreator[] chooseProposalCreators(boolean isStatic) {
         String completionExpression = getContext().fullCompletionExpression;
         if (completionExpression == null) completionExpression = "";
-        if (completionExpression.matches(".+\\.@\\w*")) {
+        if (completionExpression.matches(".+\\.@(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?")) {
             if (!isStatic) {
                 return new IProposalCreator[] {new FieldProposalCreator()};
             }
             return new IProposalCreator[0];
         }
-        if (completionExpression.matches(".+\\.&\\w*")) {
+        if (completionExpression.matches(".+\\.&(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?")) {
             return new IProposalCreator[] {new MethodProposalCreator()};
             // TODO: Completions should not insert parens and arguments.
             // TODO: Don't want "class" suggested. Static case is not well handled.

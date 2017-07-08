@@ -68,7 +68,7 @@ public class DSLDProposalFilter implements IProposalFilterExtension {
             for (int i = 1; i < tokens.length - 1; i += 1) {
                 if (i > 1) buf.append(',');
                 // remove parameter name from key string
-                buf.append(tokens[i].replaceFirst(" \\w+$", ""));
+                buf.append(tokens[i].replaceFirst(" \\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*$", ""));
             }
             buf.append(')').append(tokens[tokens.length - 1]);
             key = buf.toString();
@@ -78,5 +78,5 @@ public class DSLDProposalFilter implements IProposalFilterExtension {
         return key;
     }
 
-    private static final Pattern BASE_DESC = Pattern.compile("^.* - (\\w+\\.)*\\w+");
+    private static final Pattern BASE_DESC = Pattern.compile("^.* - (\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*");
 }

@@ -163,7 +163,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         for (String text : ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets) {
             int startIndex = messages[0].indexOf(text);
             if (startIndex >= 0) {
-                Pattern pattern = Pattern.compile("\\b\\w+\\b");
+                Pattern pattern = Pattern.compile("\\b\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\b");
                 Matcher matcher = pattern.matcher(messages[0].substring(startIndex + text.length()));
                 if (matcher.find()) {
                     return getTopLevelType(matcher.group());

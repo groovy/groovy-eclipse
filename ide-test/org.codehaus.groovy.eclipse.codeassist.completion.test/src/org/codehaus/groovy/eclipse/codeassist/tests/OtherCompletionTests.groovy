@@ -78,8 +78,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
             o2.displayString <=> o1.displayString
         } as Comparator<ICompletionProposal>)
         proposalExists(proposals, 'collect', 3)
-        assert proposals[0].displayString ==~ /collect\(Collection \w+, Closure \w+\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
-        assert proposals[1].displayString ==~ /collect\(Closure \w+\) : List - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
+        assert proposals[0].displayString ==~ /collect\(Collection \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*, Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
+        assert proposals[1].displayString ==~ /collect\(Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : List - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
         assert proposals[2].displayString ==~ /collect\(\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
     }
 

@@ -281,7 +281,7 @@ public class GroovyUtils {
 
     public static Expression getTraitFieldExpression(MethodCallExpression call) {
         if (call.getObjectExpression().getType().getName().endsWith("$Trait$FieldHelper")) {
-            Matcher m = Pattern.compile(".+__(\\w+)\\$[gs]et").matcher(call.getMethodAsString());
+            Matcher m = Pattern.compile(".+__(\\p{javaJavaIdentifierPart}+)\\$[gs]et").matcher(call.getMethodAsString());
             if (m.matches()) {
                 String fieldName = m.group(1);
                 @SuppressWarnings("unchecked")

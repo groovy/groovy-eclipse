@@ -311,7 +311,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     String qualifier = GroovyUtils.splitName(type)[0].replace('$', '.');
 
                     // check for selection in fully-qualified name like 'java.lang.String'
-                    Pattern pattern = Pattern.compile("^\\Q" + selected + "\\E\\w*");
+                    Pattern pattern = Pattern.compile("^\\Q" + selected + "\\E\\p{javaJavaIdentifierPart}*");
                     Matcher matcher = pattern.matcher(qualifier);
                     if (matcher.find()) {
                         return matcher.group();

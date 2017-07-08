@@ -167,7 +167,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
 
                             if (prefix.length() > 0) {
                                 // check for selection in fully-qualified name like 'java.lang.String' or 'java.util.Map.Entry'
-                                pattern = Pattern.compile("^\\Q" + prefix + "\\E\\w*");
+                                pattern = Pattern.compile("^\\Q" + prefix + "\\E\\p{javaJavaIdentifierPart}*");
                                 matcher = pattern.matcher(qualifier);
                                 if (matcher.find()) {
                                     IType it = compilationUnit.getJavaProject().findType(matcher.group());

@@ -527,7 +527,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         if (method != null) {
             for (AnnotationNode annotation : method.getAnnotations()) {
                 if (annotation.getClassNode().getName().equals("groovy.transform.TailRecursive")) {
-                    return variableExpression.getName().matches("_\\w+_");
+                    return variableExpression.getName().matches("_\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*_");
                 }
             }
         }
