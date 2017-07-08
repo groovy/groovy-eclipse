@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
@@ -30,6 +31,7 @@ import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -214,6 +216,11 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             Variable declaredVariable = selectedVariableExpression.getAccessedVariable();
             if (declaredVariable instanceof DynamicVariable) {
                 result.merge(RefactoringStatus.createFatalErrorStatus("Cannot convert dynamic variable."));
+                return result;
+            }
+
+            if (declaredVariable instanceof Parameter || isTailRecursiveMethodParameter(selectedVariableExpression)) {
+                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_method_parameters));
                 return result;
             }
             if (!(declaredVariable instanceof VariableExpression)) {
@@ -513,6 +520,18 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
         }
 
         return result;
+    }
+
+    private boolean isTailRecursiveMethodParameter(VariableExpression variableExpression) {
+        MethodNode method = new VariableExpressionFinder(variableExpression).method;
+        if (method != null) {
+            for (AnnotationNode annotation : method.getAnnotations()) {
+                if (annotation.getClassNode().getName().equals("groovy.transform.TailRecursive")) {
+                    return variableExpression.getName().matches("_\\w+_");
+                }
+            }
+        }
+        return false;
     }
 
     private class VariableExpressionFinder extends DepthFirstVisitor {
