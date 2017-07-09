@@ -354,10 +354,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
     private HighlightedTypedPosition handleMapEntryExpression(MapEntryExpression expr) {
         Expression key = expr.getKeyExpression();
-        if (key instanceof ConstantExpression) {
+        if (key instanceof ConstantExpression && key.getEnd() > 0 && key.getStart() == expr.getStart()) {
+            char c;
             unitLength(); // ensure loaded
-            char c = contents[key.getStart()];
-            if (c != '\'' && c != '"' && c != '/') {
+            if (key.getStart() < contents.length && (c = contents[key.getStart()]) != '\'' && c != '"' && c != '/') {
                 return new HighlightedTypedPosition(key.getStart(), key.getLength(), HighlightKind.MAP_KEY);
             }
         }
