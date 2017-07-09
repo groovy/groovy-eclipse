@@ -191,7 +191,7 @@ public class GroovyRuntime {
 
     private static IClasspathEntry createContainerEntry(boolean isMinimal) {
         return JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID, new IAccessRule[0],
-                (isMinimal ? GroovyClasspathContainer.MINIMAL_ATTRIBUTE_ARR : new IClasspathAttribute[0]), true);
+            (isMinimal ? new IClasspathAttribute[] {GroovyClasspathContainer.MINIMAL_ATTRIBUTE} : new IClasspathAttribute[0]), true);
     }
 
     public static void addMinimalGroovyClasspathContainer(IJavaProject javaProject) {

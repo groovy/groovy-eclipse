@@ -44,13 +44,11 @@ import org.eclipse.jdt.internal.core.ClasspathAttribute;
 
 public class GroovyClasspathContainer implements IClasspathContainer {
 
+    public static final String DESC = "Groovy Libraries";
+
     public static final Path CONTAINER_ID = new Path("GROOVY_SUPPORT");
 
     public static final IClasspathAttribute MINIMAL_ATTRIBUTE = new ClasspathAttribute("minimal", "true");
-
-    public static final String DESC = "Groovy Libraries";
-
-    public static final IClasspathAttribute[] MINIMAL_ATTRIBUTE_ARR = new IClasspathAttribute[] { MINIMAL_ATTRIBUTE };
 
     private IClasspathEntry[] entries;
 
@@ -84,26 +82,15 @@ public class GroovyClasspathContainer implements IClasspathContainer {
             final List<IClasspathEntry> cpEntries = new ArrayList<IClasspathEntry>(libraries.size());
 
             for (IPath jarPath : libraries) {
-                 IPath srcPath = null;
-
                 // check for sources
-                File srcJarFile = new File(jarPath.removeFileExtension().toString() + "-sources.jar");
-                if (srcJarFile.exists()) {
-                    srcPath = new Path(srcJarFile.getAbsolutePath());
-                }
+                IPath srcPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment() + "-sources.jar");
 
                 // check for javadoc
-                IClasspathAttribute[] cpAttrs;
-                File docJarFile = new File(jarPath.removeFileExtension().toString() + "-javadoc.jar");
-                if (docJarFile.exists()) {
-                    cpAttrs = new IClasspathAttribute[] {
-                        new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docJarFile.getAbsolutePath())
-                    };
-                } else {
-                    cpAttrs = new IClasspathAttribute[0];
-                }
+                IPath docPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment() + "-javadoc.jar");
 
-                cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, cpAttrs, true));
+                cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, (docPath == null) ? null : new IClasspathAttribute[] {
+                    new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURL().toString())
+                }, true));
             }
 
             if (!minimalLibraries && useGroovyLibs()) {
@@ -134,16 +121,14 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
     private boolean useGroovyLibs() {
         IScopeContext projectScope = new ProjectScope(project);
-        IEclipsePreferences projectNode = projectScope
-                .getNode(GroovyCoreActivator.PLUGIN_ID);
+        IEclipsePreferences projectNode = projectScope.getNode(GroovyCoreActivator.PLUGIN_ID);
         String val = projectNode.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default");
         if (val.equals(Boolean.TRUE.toString())) {
             return true;
         } else if (val.equals(Boolean.FALSE.toString())) {
             return false;
         } else {
-            return GroovyCoreActivator.getDefault().getPreference(
-                    PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+            return GroovyCoreActivator.getDefault().getPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
         }
     }
 
@@ -154,7 +139,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         File[] files = CompilerUtils.findJarsInDotGroovyLocation();
         final List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>(files.length);
         for (File file : files) {
-            IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()), null, null, null, new IClasspathAttribute[0], true);
+            IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()), null, null, null, null, true);
             newEntries.add(entry);
         }
         return newEntries;

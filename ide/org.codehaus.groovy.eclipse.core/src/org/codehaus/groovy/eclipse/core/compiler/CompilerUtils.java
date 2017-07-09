@@ -249,11 +249,7 @@ public class CompilerUtils {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         Enumeration<URL> enu = groovyBundle.findEntries("lib", jarName, false);
         if (enu != null && enu.hasMoreElements()) {
-            URL jarUrl = enu.nextElement();
-            if (jarUrl.getFile().endsWith("-sources.jar") && enu.hasMoreElements()) {
-                jarUrl = enu.nextElement();
-            }
-            return toFilePath(jarUrl);
+            return toFilePath(enu.nextElement());
         }
         return null;
     }
