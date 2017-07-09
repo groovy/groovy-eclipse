@@ -339,8 +339,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     private char[][] getSpecialParameterNames(Parameter[] params) {
         // as opposed to getAllParameterNames, we can assume that the names are
-        // correct as is
-        // because these parameters were explicitly set by a script
+        // correct as is because these parameters were explicitly set by a script
         char[][] paramNames = new char[params.length][];
         for (int i = 0, n = params.length; i < n; i += 1) {
             paramNames[i] = params[i].getName().toCharArray();

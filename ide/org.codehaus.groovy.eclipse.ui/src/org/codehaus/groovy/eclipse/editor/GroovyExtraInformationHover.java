@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -166,8 +167,12 @@ public class GroovyExtraInformationHover extends JavadocHover {
         String html;
         try {
             html = (String) ReflectionUtils.throwableExecutePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, IJavaElement.class, String.class}, null, new Object[] {elem, elem, extraDoc});
-        } catch (Exception e) {
+        } catch (NoSuchMethodException e) {
             html = (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, String.class}, null, new Object[] {elem, extraDoc});
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return html;
     }
@@ -192,9 +197,9 @@ public class GroovyExtraInformationHover extends JavadocHover {
     private String createFieldLabel(FieldNode node) {
         StringBuilder sb = new StringBuilder();
         sb.append(createClassLabel(node.getType()));
-        sb.append(" ");
+        sb.append(' ');
         sb.append(createClassLabel(node.getDeclaringClass()));
-        sb.append(".");
+        sb.append('.');
         sb.append(node.getName());
         return sb.toString();
     }
@@ -202,22 +207,22 @@ public class GroovyExtraInformationHover extends JavadocHover {
     private String createMethodLabel(MethodNode node) {
         StringBuilder sb = new StringBuilder();
         sb.append(createClassLabel(node.getReturnType()));
-        sb.append(" ");
+        sb.append(' ');
         sb.append(createClassLabel(node.getDeclaringClass()));
-        sb.append(".");
+        sb.append('.');
         sb.append(node.getName());
-        sb.append("(");
+        sb.append('(');
         Parameter[] params = node.getParameters();
         if (params != null) {
             for (int i = 0, n = params.length; i < n; i += 1) {
-                sb.append(createClassLabel(params[i].getType()));
-                sb.append(" " + params[i].getName());
-                if (i < params.length - 1) {
+                if (i > 0) {
                     sb.append(", ");
                 }
+                sb.append(createClassLabel(params[i].getType()));
+                sb.append(' ').append(params[i].getName());
             }
         }
-        sb.append(")");
+        sb.append(')');
 
         return sb.toString();
     }
@@ -225,20 +230,20 @@ public class GroovyExtraInformationHover extends JavadocHover {
     private String createClassLabel(ClassNode node) {
         StringBuilder sb = new StringBuilder();
         node = node.redirect();
-        if (ClassHelper.DYNAMIC_TYPE == node) {
+        /*if (ClassHelper.DYNAMIC_TYPE == node) {
             return "def";
-        }
+        }*/
         sb.append(node.getNameWithoutPackage());
         GenericsType[] generics = node.getGenericsTypes();
         if (generics != null && generics.length > 0) {
-            sb.append(" <");
+            sb.append('<');
             for (int i = 0, n = generics.length; i < n; i += 1) {
-                sb.append(generics[i].getName());
-                if (i < generics.length - 1) {
+                if (i > 0) {
                     sb.append(", ");
                 }
+                sb.append(generics[i].toString());
             }
-            sb.append("> ");
+            sb.append('>');
         }
         return sb.toString();
     }

@@ -18,8 +18,11 @@ package org.eclipse.jdt.groovy.core.util;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -31,6 +34,18 @@ import org.eclipse.jdt.groovy.core.Activator;
 public class ReflectionUtils {
 
     private ReflectionUtils() {}
+
+    public static Class<?>[] getAllInterfaces(Class<?> clazz) {
+        @SuppressWarnings("rawtypes")
+        Set<Class> interfaces = new LinkedHashSet<Class>();
+
+        do {
+            Collections.addAll(interfaces, clazz.getInterfaces());
+        }
+        while ((clazz = clazz.getSuperclass()) != null);
+
+        return interfaces.toArray(NO_TYPES);
+    }
 
     public static <T> Constructor<T> getConstructor(Class<T> instanceType, Class<?>... parameterTypes) {
         try {

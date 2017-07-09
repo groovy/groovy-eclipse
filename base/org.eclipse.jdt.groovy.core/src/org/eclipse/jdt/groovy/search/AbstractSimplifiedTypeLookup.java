@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,8 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
- * @author Andrew Eisenberg
- * @created Nov 20, 2009 A simplified type lookup that targets the general case where a provider wants to add initialization to a
- *          class and add new methods/fields to certain types of objects
+ * A simplified type lookup that targets the general case where a provider wants to add
+ * initialization to a class and add new methods or fields to certain types of objects.
  */
 public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtension {
 
@@ -61,8 +60,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
             this.confidence = null;
         }
 
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc,
-                TypeConfidence confidence) {
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc, TypeConfidence confidence) {
             this.type = type;
             this.declaration = declaration;
             this.declaringType = declaringType;
@@ -98,8 +96,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
      * @return true iff the current expression being inferred is a quoted string
      */
     protected boolean isQuotedString() {
-        return currentExpression instanceof GStringExpression
-                || currentExpression.getText().length() != currentExpression.getLength();
+        return currentExpression instanceof GStringExpression || currentExpression.getText().length() != currentExpression.getLength();
     }
 
     // not called, but must be implemented
@@ -107,8 +104,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
         return lookupType(node, scope, objectExpressionType, false);
     }
 
-    public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType,
-            boolean isStaticObjectExpression) {
+    public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         ClassNode declaringType;
         if (objectExpressionType != null) {
             declaringType = objectExpressionType;
@@ -123,7 +119,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                 }
             }
         }
-        // I would have likd to pass this value into lookupTypeAndDeclaration, but
+        // I would have liked to pass this value into lookupTypeAndDeclaration, but
         // I can't break api here
         isStatic = isStaticObjectExpression;
         currentExpression = node;
@@ -135,8 +131,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
         if (tAndD != null) {
             TypeConfidence confidence = checkConfidence(node, tAndD.confidence, tAndD.declaration, tAndD.extraDoc);
-            return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
-                    tAndD.declaration, confidence, scope, tAndD.extraDoc);
+            return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType, tAndD.declaration, confidence, scope, tAndD.extraDoc);
         }
         return null;
     }
