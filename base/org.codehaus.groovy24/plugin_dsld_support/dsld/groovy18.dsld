@@ -1,11 +1,11 @@
 /*
- * Copyright 2011 SpringSource
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,42 +15,48 @@
  */
 package dsld
 
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.GenericsType
-import org.codehaus.groovy.ast.FieldNode
-
-import groovy.transform.IndexedProperty
+import groovy.transform.*
+import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.runtime.MetaClassHelper
 
 /**
- * This is the DSLD for AST Transforms shipped with Groovy-core 1.8.x
- * And this script is not applicable for earlier versions of Groovy
+ * DSLD for AST Transforms shipped with Groovy 1.8+
  *
  * @author Andrew Eisenberg
  * @since 2.5.1
  */
 
-// IndexedProperty
-// 1.8 only
-currentType(fields : fields(annotatedBy(IndexedProperty))).accept {
-    provider = "Indexed property"
-    fields.each { FieldNode field ->
-       def propertyName = field.name
-       propertyName = propertyName.size() == 1 ? propertyName.toUpperCase() : propertyName[0].toUpperCase() + propertyName[1..-1]
-       def type = findElementType(field)
-       method name: 'get' + propertyName, type: type, params: [index: int]
-       method name: 'set' + propertyName, type: 'void', params: [index: int, element: type]
-   }
+//@groovy.transform.IndexedProperty
+contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
+    provider = 'IndexedProperty AST transform'
+    for (FieldNode field : fields) {
+        String propertyName = MetaClassHelper.capitalize(field.name)
+
+        // field must be an array or collection; get its component type
+        ClassNode type
+        if (type.isArray()) {
+            type = type.componentType
+        } else {
+            GenericsType[] gt = type.genericsTypes
+            if (gt && gt.length > 0) {
+                type = gt[0]?.type
+            } else {
+                type = ClassHelper.OBJECT_TYPE
+            }
+        }
+
+        method name: 'get' + propertyName, type: type, params: [index: int]
+        method name: 'set' + propertyName, type: void, params: [index: int, element: type]
+    }
 }
 
-def findElementType(FieldNode field) {
-   ClassNode type = field.type
-   if (type.isArray()) {
-       return type.componentType
-   }
-   GenericsType[] gt = type.genericsTypes
-   if (gt && gt.length > 0) {
-       gt[0]?.type
-   } else {
-       Object
-   }
+//@groovy.transform.Sortable
+contribute(currentType(annotatedBy(Sortable))) {
+    provider = 'Sortable AST transform'
+    //delegatesTo type: "java.lang.Comparable<${currentType.name}>"
+    for (MethodNode node : currentType.methods.findAll { MethodNode mn ->
+        mn.isPublic() && mn.isStatic() && mn.name.startsWith('comparatorBy') && !mn.parameters
+    }) {
+        method name: node.name, type: node.returnType, isStatic: true
+    }
 }
