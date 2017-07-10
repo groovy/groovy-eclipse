@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import java.util.Collection;
@@ -21,40 +26,37 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
-
 /**
- * The current context used to match against when evaluating pointcuts,
- * Class is a bit messy
+ * The current context used to match against when evaluating pointcuts.
  *
- * @author andrew
- * @created Nov 17, 2010
+ * Class is a bit messy
  */
 public class GroovyDSLDContext {
-
 
     public final String[] projectNatures;
 
     /**
      * This value does not change once it is set since inferencing happens on
-     * a per-file basis
+     * a per-file basis.
      */
     public final String fullPathName;
 
     /**
      * This value does not change once it is set since inferencing happens on
-     * a per-file basis
+     * a per-file basis.
      */
     public final String simpleFileName;
 
     /**
-     * Patch from project to package root
+     * Path from project to package root.
      */
     public final String packageRootPath;
 
     /**
-     * Path from package root to file name (exclusive)
+     * Path from package root to file name (exclusive).
      */
     public final String packageFolderPath;
 
@@ -65,6 +67,8 @@ public class GroovyDSLDContext {
 
     private VariableScope currentScope;
 
+    private IJavaProject currentProject;
+
     /**
      * the type of the expression currently being analyzed
      * set by the type lookup, should not be set by the pointcuts
@@ -72,12 +76,10 @@ public class GroovyDSLDContext {
     private ClassNode targetType;
 
     public GroovyDSLDContext(GroovyCompilationUnit unit, ModuleNode module, JDTResolver jdtResolver) throws CoreException {
-        this(getProjectNatures(unit),
-                getFullPathToFile(unit),
-                getPathToPackage(unit));
+        this(getProjectNatures(unit), getFullPathToFile(unit), getPathToPackage(unit));
         resolverCache = new ResolverCache(jdtResolver, module);
+        currentProject = unit.getJavaProject();
     }
-
 
     /**
      * Not API!!!
@@ -89,7 +91,7 @@ public class GroovyDSLDContext {
         this.packageRootPath = packageRootPath;
         if (fullPathName != null) {
             int lastDot = fullPathName.lastIndexOf('/');
-            this.simpleFileName = fullPathName.substring(lastDot+1);
+            this.simpleFileName = fullPathName.substring(lastDot + 1);
         } else {
             this.simpleFileName = null;
         }
@@ -117,12 +119,10 @@ public class GroovyDSLDContext {
         return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
     }
 
-
     private static String getFullPathToFile(GroovyCompilationUnit unit) {
         IResource resource = unit.getResource();
         return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
     }
-
 
     private static String[] getProjectNatures(GroovyCompilationUnit unit) throws CoreException {
         return unit.getJavaProject().getProject().getDescription().getNatureIds();
@@ -151,24 +151,21 @@ public class GroovyDSLDContext {
     public void setCurrentBinding(BindingSet currentBinding) {
         this.currentBinding = currentBinding;
     }
+
     public void resetBinding() {
         this.currentBinding = new BindingSet();
     }
 
-
     /**
-     * Only the type lookup and the proposl provider should use this method
-     * @param currentBinding
+     * Only the type lookup and the proposl provider should use this method.
      */
     public BindingSet getCurrentBinding() {
         return currentBinding;
     }
 
     /**
-     * Adds the collection to the currnt binding.  At this point, currentBinding should never be null
-     * Used by the pointcuts only
-     * @param bindingName
-     * @param toAdd
+     * Adds the collection to the currnt binding.  At this point, currentBinding should never be null.
+     * Used by the pointcuts only.
      */
     public void addToBinding(String bindingName, Collection<?> toAdd) {
         currentBinding.addToBinding(bindingName, toAdd);
@@ -187,12 +184,12 @@ public class GroovyDSLDContext {
     }
 
     /**
-     * @param typeName
      * @return true iff typeName equals the targetType name or any tyoe in the hierarchy
      */
     public boolean matchesType(String typeName) {
         return matchesType(typeName, targetType);
     }
+
     public boolean matchesType(String typeName, ClassNode toCheck) {
         // when left unspecified, always return true
         if (typeName == null || toCheck == null) {
@@ -217,7 +214,9 @@ public class GroovyDSLDContext {
         return false;
     }
 
-
+    public IJavaProject getCurrentProject() {
+        return currentProject;
+    }
 
     public VariableScope getCurrentScope() {
         return currentScope;
@@ -239,25 +238,11 @@ public class GroovyDSLDContext {
         set.add(type);
         getAllSupers(type.getSuperClass(), set);
         for (ClassNode inter : type.getAllInterfaces()) {
-            if (! inter.getName().equals(type.getName())) {
+            if (!inter.getName().equals(type.getName())) {
                 getAllSupers(inter, set);
             }
         }
     }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("ContextPattern [fileName=");
-        builder.append(fullPathName);
-        builder.append(", targetType=");
-        builder.append(targetType);
-        builder.append(", currentScope=");
-        builder.append(currentScope);
-        builder.append("]");
-        return builder.toString();
-    }
-
 
     public ResolverCache getResolverCache() {
         return resolverCache;
@@ -274,7 +259,21 @@ public class GroovyDSLDContext {
     public void setStatic(boolean s) {
         isStatic = s;
     }
+
     public boolean isStatic() {
         return isStatic;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ContextPattern [fileName=");
+        builder.append(fullPathName);
+        builder.append(", targetType=");
+        builder.append(targetType);
+        builder.append(", currentScope=");
+        builder.append(currentScope);
+        builder.append("]");
+        return builder.toString();
     }
 }

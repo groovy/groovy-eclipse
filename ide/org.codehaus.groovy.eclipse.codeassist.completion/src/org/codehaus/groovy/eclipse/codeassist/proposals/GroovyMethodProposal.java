@@ -245,8 +245,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         char[][] typeNames = new char[parameters.length][];
         int i = 0;
         for (Parameter param : parameters) {
-            typeNames[i] = ProposalUtils.createSimpleTypeName(param.getType());
-            i++;
+            typeNames[i++] = ProposalUtils.createSimpleTypeName(param.getType());
         }
         return typeNames;
     }
@@ -255,16 +254,15 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
      * FIXADE I am concerned that this takes a long time since we are doing a lookup for each method any way to cache?
      */
     protected char[][] calculateAllParameterNames(ICompilationUnit unit, MethodNode method) {
+        Parameter[] params = method.getParameters();
+        final int n = (params == null ? 0 : params.length);
+        if (n == 0) {
+            return CharOperation.NO_CHAR_CHAR;
+        }
+
         try {
             IType declaringType = findDeclaringType(unit, method);
             if (declaringType != null && declaringType.exists()) {
-                Parameter[] params = method.getParameters();
-                final int n = params == null ? 0 : params.length;
-
-                if (n == 0) {
-                    return CharOperation.NO_CHAR_CHAR;
-                }
-
                 String[] parameterTypeSignatures = new String[n];
                 for (int i = 0; i < n; i += 1) {
                     if (declaringType.isBinary()) {
@@ -312,7 +310,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                     assert maybeMethodParameters != null;
                     if (maybeMethodParameters.length == parameterTypeSignatures.length) {
                         closestMatch = maybeMethod;
-                        for (int i = 0; i < maybeMethodParameters.length; i++) {
+                        for (int i = 0, n = maybeMethodParameters.length; i < n; i += 1) {
                             String maybeMethodParameterName = removeGenerics(maybeMethodParameters[i]);
                             if (!parameterTypeSignatures[i].equals(maybeMethodParameterName)) {
                                 continue methodsIteration;
