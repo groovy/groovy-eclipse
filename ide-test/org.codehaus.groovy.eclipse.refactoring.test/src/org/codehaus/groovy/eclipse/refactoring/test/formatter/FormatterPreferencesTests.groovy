@@ -26,7 +26,6 @@ import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences
 import org.codehaus.groovy.eclipse.refactoring.formatter.IFormatterPreferences
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.JavaPlugin
@@ -45,7 +44,7 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
-        gunit = addGroovySource('class Test { }', 'Test', 'nice.pkg')
+        gunit = addGroovySource('class Test { }', nextUnitName(), 'nice.pkg')
     }
 
     @After
