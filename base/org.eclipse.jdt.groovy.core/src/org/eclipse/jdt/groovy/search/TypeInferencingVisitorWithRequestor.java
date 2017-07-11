@@ -96,6 +96,7 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -103,6 +104,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
@@ -1884,20 +1886,22 @@ assert primaryExprType != null && dependentExprType != null;
                 if (constructors == null || constructors.isEmpty()) {
                     return null;
                 }
-                String[] jdtParamTypes = method.getParameterTypes() == null ? NO_PARAMS : method.getParameterTypes();
+                String[] jdtParamTypes = method.getParameterTypes();
+                if (jdtParamTypes == null) jdtParamTypes = NO_PARAMS;
                 outer: for (ConstructorNode constructorNode : constructors) {
-                    Parameter[] groovyParams = constructorNode.getParameters() == null ? NO_PARAMETERS : constructorNode.getParameters();
-                    if (groovyParams != null && groovyParams.length > 0) {
-                        int implicitParamCount = 0;
-                        if (method.getDeclaringType().isEnum()) implicitParamCount = 2;
-                        if (groovyParams[0].getName().startsWith("$")) implicitParamCount = 1;
-                        // ignore implicit constructor parameters of constructors for enums or inner types
-                        if (implicitParamCount > 0) {
-                            Parameter[] newGroovyParams = new Parameter[groovyParams.length - implicitParamCount];
-                            System.arraycopy(groovyParams, implicitParamCount, newGroovyParams, 0, newGroovyParams.length);
-                            groovyParams = newGroovyParams;
-                        }
+                    Parameter[] groovyParams = constructorNode.getParameters();
+                    if (groovyParams == null) groovyParams = NO_PARAMETERS;
+
+                    // ignore implicit parameters of constructors for enums or inner types
+                    int implicitParamCount = 0;
+                    if (method.getDeclaringType().isEnum()) implicitParamCount = 2;
+                    if (groovyParams.length > 0 && groovyParams[0].getName().startsWith("$")) implicitParamCount = 1;
+                    if (implicitParamCount > 0) {
+                        Parameter[] newGroovyParams = new Parameter[groovyParams.length - implicitParamCount];
+                        System.arraycopy(groovyParams, implicitParamCount, newGroovyParams, 0, newGroovyParams.length);
+                        groovyParams = newGroovyParams;
                     }
+
                     if (groovyParams.length != jdtParamTypes.length) {
                         continue;
                     }
@@ -1927,9 +1931,21 @@ assert primaryExprType != null && dependentExprType != null;
                 if (methods.isEmpty()) {
                     return null;
                 }
-                String[] jdtParamTypes = method.getParameterTypes() == null ? NO_PARAMS : method.getParameterTypes();
+                String[] jdtParamTypes = method.getParameterTypes();
+                if (jdtParamTypes == null) jdtParamTypes = NO_PARAMS;
+
+                Expression targetExpr; // append implicit parameter for @Category method
+                if ((method.getFlags() & Flags.AccStatic) == 0 && (targetExpr = findCategoryTarget(clazz)) != null) {
+                    TypeLookupResult result = lookupExpressionType(targetExpr, null, true, scopes.getLast());
+                    ClassNode targetType = result.type.getGenericsTypes()[0].getType();
+
+                    String typeSignature = GroovyUtils.getTypeSignature(targetType, false, false);
+                    jdtParamTypes = (String[]) ArrayUtils.add(jdtParamTypes, 0, typeSignature);
+                }
+
                 outer: for (MethodNode methodNode : methods) {
-                    Parameter[] groovyParams = methodNode.getParameters() == null ? NO_PARAMETERS : methodNode.getParameters();
+                    Parameter[] groovyParams = methodNode.getParameters();
+                    if (groovyParams == null) groovyParams = NO_PARAMETERS;
                     if (groovyParams.length != jdtParamTypes.length) {
                         continue;
                     }
@@ -2486,9 +2502,17 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
+    public static Expression findCategoryTarget(ClassNode node) {
+        for (AnnotationNode annotation : node.getAnnotations()) {
+            if ("groovy.lang.Category".equals(annotation.getClassNode().getName())) {
+                return annotation.getMember("value");
+            }
+        }
+        return null;
+    }
+
     private static ConstructorNode findDefaultConstructor(ClassNode node) {
-        List<ConstructorNode> constructors = node.getDeclaredConstructors();
-        for (ConstructorNode constructor : constructors) {
+        for (ConstructorNode constructor : node.getDeclaredConstructors()) {
             if (constructor.getParameters() == null || constructor.getParameters().length == 0) {
                 return constructor;
             }

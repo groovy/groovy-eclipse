@@ -1504,7 +1504,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testMethodOverload() {
+    void testMethodOverloads() {
         // overloads with generics caused confusion in TypeInferencingVisitor
         String contents = '''\
             class X {
@@ -1521,6 +1521,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('strings'), 'strings'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('findSomething'), 'findSomething'.length(), METHOD),
             new HighlightedTypedPosition(contents.indexOf('inputs'), 'inputs'.length(), PARAMETER))
+    }
+
+    @Test
+    void testCategoryMethodOverloads() {
+        // implicit 'self' parameter added by transformation caused confusion in TypeInferencingVisitor
+        String contents = '''\
+            import java.util.regex.Pattern
+            @Category(Number)
+            class X {
+                void method(String string) {
+                  println this
+                }
+                void method(Pattern regex) {
+                  println this
+                }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('println'), 'println'.length(), GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('println'), 'println'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('method'), 'method'.length(), STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('regex'), 'regex'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('println'), 'println'.length(), GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('println'), 'println'.length(), METHOD_CALL))
     }
 
     @Test
