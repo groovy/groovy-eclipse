@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -26,11 +27,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Tests that the type being analyzed matches.  The match can
- * either be a string match (ie - the type name),
- * or it can pass the current type to a containing pointcut
- * @author andrew
- * @created Feb 10, 2011
+ * Tests that the type being analyzed matches. The match can either be a string
+ * match (i.e. the type name), or it can pass the current type to a pointcut.
  */
 public class EnclosingClassPointcut extends AbstractPointcut {
 
@@ -38,45 +36,51 @@ public class EnclosingClassPointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
-    @Override
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
-        if (enclosing == null || enclosing.isScript() || enclosing.isInterface() || enclosing.isAnnotationDefinition() || enclosing.isEnum()) {
-            return null;
-        }
-        
-        Collection<ClassNode> enclosingCollection = Collections.singleton(enclosing);
-        
-        Object firstArgument = getFirstArgument();
-        if (firstArgument instanceof String) {
-            if (enclosing.getName().equals(firstArgument)) {
-                return enclosingCollection;
-            } else {
-                return null;
-            }
-        } else if (firstArgument instanceof Class) {
-            if (enclosing.getName().equals(((Class<?>) firstArgument).getName())) {
-                return enclosingCollection;
-            } else {
-                return null;
-            }
-        } else if (firstArgument == null) {
-            return enclosingCollection;
-        } else {
-            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, enclosingCollection);
-        }
-    }
-
     /**
-     * expecting no args or one arg that is either a string or a pointcut or a class
+     * Expects no args or one arg that is either a string or a pointcut or a class.
      */
     @Override
     public void verify() throws PointcutVerificationException {
         String hasOneOrNoArgs = hasOneOrNoArgs();
         if (hasOneOrNoArgs != null) {
-            
             throw new PointcutVerificationException(hasOneOrNoArgs, this);
         }
         super.verify();
+    }
+
+    @Override
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+        ClassNode enclosingType = pattern.getCurrentScope().getEnclosingTypeDeclaration();
+        if (enclosingType == null || enclosingType.isScript() || enclosingType.isAnnotationDefinition() || (enclosingType.isInterface() && !isTrait(enclosingType))) {
+            return null;
+        }
+
+        String enclosingTypeName = enclosingType.getName();
+        Object firstArgument = getFirstArgument();
+
+        if (firstArgument instanceof String) {
+            if (enclosingTypeName.equals(firstArgument)) {
+                return Collections.singleton(enclosingType);
+            }
+        } else if (firstArgument instanceof Class) {
+            if (enclosingTypeName.equals(((Class<?>) firstArgument).getName())) {
+                return Collections.singleton(enclosingType);
+            }
+        } else if (firstArgument instanceof IPointcut) {
+            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, Collections.singleton(enclosingType));
+        } else {
+            System.err.println("First argument to enclosingClass pointcut was not a Class, String, or IPointcut: " + firstArgument);
+        }
+        return null;
+    }
+
+    // TODO: Replace with org.codehaus.groovy.transform.trait.Traits#isTrait when the minimum supported Groovy >= 2.3.
+    private static boolean isTrait(ClassNode type) {
+        for (AnnotationNode node : type.getAnnotations()) {
+            if ("groovy.transform.Trait".equals(node.getClassNode().getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

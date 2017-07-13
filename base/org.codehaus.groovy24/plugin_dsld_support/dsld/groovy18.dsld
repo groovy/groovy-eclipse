@@ -50,6 +50,21 @@ contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
     }
 }
 
+//@groovy.transform.SelfType
+contribute(enclosingClass(annos: annotatedBy(SelfType))) {
+    provider = 'SelfType AST transform'
+    for (AnnotationNode node : annos) {
+        Expression expr = node.getMember('value')
+        if (expr instanceof ClassExpression) {
+            delegatesTo type: expr.type
+        } else if (expr instanceof ListExpression) {
+            for (Expression e : expr.expressions) {
+                delegatesTo type: e.type
+            }
+        }
+    }
+}
+
 //@groovy.transform.Sortable
 contribute(currentType(annotatedBy(Sortable))) {
     provider = 'Sortable AST transform'
