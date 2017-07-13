@@ -428,13 +428,29 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testReplaceDef4() {
+        assertConversion(
+            'def bar = [1g, 2g]; def foo = bar',
+            'def bar = [1g, 2g]; List<BigInteger> foo = bar',
+            20, 3, new ReplaceDefWithStaticTypeProposal())
+    }
+
+    @Test
+    void testReplaceDef5() {
+        assertConversion(
+            'def bar = [1g, 2g] as BigInteger[]; def foo = bar',
+            'def bar = [1g, 2g] as BigInteger[]; BigInteger[] foo = bar',
+            36, 3, new ReplaceDefWithStaticTypeProposal())
+    }
+
+    @Test
+    void testReplaceDef6() {
         assertProposalNotOffered(
             'int bar = 1; def foo = bar',
             17, 0, new ReplaceDefWithStaticTypeProposal())
     }
 
     @Test
-    void testReplaceDef5() {
+    void testReplaceDef7() {
         assertProposalNotOffered(
             'def method() { return null }',
             0, 3, new ReplaceDefWithStaticTypeProposal())

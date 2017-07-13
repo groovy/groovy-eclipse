@@ -24,6 +24,8 @@ import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
@@ -85,6 +87,7 @@ public class ReplaceDefWithStaticTypeProposal extends GroovyQuickAssistProposal2
 
     @Override
     protected TextChange getTextChange(IProgressMonitor monitor) throws CoreException, BadLocationException {
-        return toTextChange(new ReplaceEdit(sloc.getOffset(), sloc.getLength(), type.getNameWithoutPackage()));
+        String typeName = Signature.toString(GroovyUtils.getTypeSignature(type, false, false));
+        return toTextChange(new ReplaceEdit(sloc.getOffset(), sloc.getLength(), typeName));
     }
 }

@@ -20,7 +20,6 @@ import java.lang.reflect.InvocationTargetException;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -29,7 +28,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocBrowserInformationControlInput;
@@ -183,7 +184,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         }
         String label;
         if (inferredElement instanceof ClassNode) {
-            label = createClassLabel((ClassNode) inferredElement);
+            label = createTypeLabel((ClassNode) inferredElement);
         } else if (inferredElement instanceof MethodNode) {
             label = createMethodLabel((MethodNode) inferredElement);
         } else if (inferredElement instanceof FieldNode) {
@@ -196,19 +197,20 @@ public class GroovyExtraInformationHover extends JavadocHover {
 
     private String createFieldLabel(FieldNode node) {
         StringBuilder sb = new StringBuilder();
-        sb.append(createClassLabel(node.getType()));
+        sb.append(createTypeLabel(node.getType()));
         sb.append(' ');
-        sb.append(createClassLabel(node.getDeclaringClass()));
+        sb.append(createTypeLabel(node.getDeclaringClass()));
         sb.append('.');
         sb.append(node.getName());
+
         return sb.toString();
     }
 
     private String createMethodLabel(MethodNode node) {
         StringBuilder sb = new StringBuilder();
-        sb.append(createClassLabel(node.getReturnType()));
+        sb.append(createTypeLabel(node.getReturnType()));
         sb.append(' ');
-        sb.append(createClassLabel(node.getDeclaringClass()));
+        sb.append(createTypeLabel(node.getDeclaringClass()));
         sb.append('.');
         sb.append(node.getName());
         sb.append('(');
@@ -218,7 +220,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
                 if (i > 0) {
                     sb.append(", ");
                 }
-                sb.append(createClassLabel(params[i].getType()));
+                sb.append(createTypeLabel(params[i].getType()));
                 sb.append(' ').append(params[i].getName());
             }
         }
@@ -227,24 +229,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return sb.toString();
     }
 
-    private String createClassLabel(ClassNode node) {
-        StringBuilder sb = new StringBuilder();
-        node = node.redirect();
-        /*if (ClassHelper.DYNAMIC_TYPE == node) {
-            return "def";
-        }*/
-        sb.append(node.getNameWithoutPackage());
-        GenericsType[] generics = node.getGenericsTypes();
-        if (generics != null && generics.length > 0) {
-            sb.append('<');
-            for (int i = 0, n = generics.length; i < n; i += 1) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                sb.append(generics[i].toString());
-            }
-            sb.append('>');
-        }
-        return sb.toString();
+    private String createTypeLabel(ClassNode node) {
+        return Signature.toString(GroovyUtils.getTypeSignature(node, false, false));
     }
 }
