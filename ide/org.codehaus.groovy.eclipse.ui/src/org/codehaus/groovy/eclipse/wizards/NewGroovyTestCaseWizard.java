@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,11 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.junit.wizards.NewTestCaseCreationWizard;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 22, 2009
- */
 public class NewGroovyTestCaseWizard extends NewTestCaseCreationWizard {
 
     public NewGroovyTestCaseWizard() {
         super();
-        setWindowTitle("New Groovy JUnit test case");
+        setWindowTitle("New Groovy JUnit Test Case");
     }
 
     @Override
