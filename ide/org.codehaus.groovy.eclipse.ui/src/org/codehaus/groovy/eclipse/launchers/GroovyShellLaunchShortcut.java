@@ -20,8 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.launchers.GroovyShellLaunchDelegate;
+import org.codehaus.groovy.tools.shell.Main;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfigurationType;
@@ -42,33 +41,30 @@ import org.eclipse.ui.IEditorPart;
 
 /**
  * This class is reponsible for creating a launching the Groovy shell.  If an
- * existing launch configuration exists it will use that, if not it will
- * create a new launch configuration and launch it.
+ * existing launch configuration exists it will use that, if not it will create
+ * a new launch configuration and launch it.
  *
  * @see ILaunchShortcut
  */
 public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 
     /**
-     * The ID of this groovy launch configuration
+     * The ID of this groovy launch configuration.
      */
-    public static final String GROOVY_SHELL_LAUNCH_CONFIG_ID = "org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration" ;
+    public static final String GROOVY_SHELL_LAUNCH_CONFIG_ID = "org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration";
 
     /**
-     * Used for dialog presentation if the used needs to choose from
-     * matching Launch configurations
+     * Used for dialog presentation if the used needs to choose from matching Launch configurations.
      */
-    public static final String SELECT_CONFIG_DIALOG_TITLE = "Select Groovy Shell Launch" ;
+    public static final String SELECT_CONFIG_DIALOG_TITLE = "Select Groovy Shell Launch";
 
     /**
-     * Used for dialog presentation if the used needs to choose from
-     * matching Launch configurations
+     * Used for dialog presentation if the used needs to choose from matching Launch configurations.
      */
-    public static final String SELECT_CONFIG_DIALOG_TEXT = "Please select the Groovy Shell run configuration to Launch" ;
+    public static final String SELECT_CONFIG_DIALOG_TEXT = "Please select the Groovy Shell run configuration to Launch";
 
     /**
-     * This is the string that will show if the groovy file the user is trying to run
-     * doesn't meet the criteria to be run.
+     * This is the string that will show if the groovy file the user is trying to run doesn't meet the criteria to be run.
      */
     public static final String GROOVY_FILE_NOT_RUNNABLE_MESSAGE = "The groovy shell could not be run.";
 
@@ -90,9 +86,9 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
      *
      * @see ILaunchShortcut#launch
      */
-    public void launch(IEditorPart editor, String mode)  {
+    public void launch(IEditorPart editor, String mode) {
         // make sure we are saved as we run groovy from the file
-        editor.getEditorSite().getPage().saveEditor(editor,false);
+        editor.getEditorSite().getPage().saveEditor(editor, false);
         IEditorInput input = editor.getEditorInput();
         @SuppressWarnings("cast")
         IFile file = (IFile) input.getAdapter(IFile.class);
@@ -100,26 +96,17 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
         if (unit.getJavaProject() != null) {
             launchGroovy(unit.getJavaProject(), mode);
         }
-
     }
 
     private void launchGroovy(IJavaProject project, String mode) {
-        String className = org.codehaus.groovy.tools.shell.Main.class.getName();
-
         try {
             String launchName = getLaunchManager().generateLaunchConfigurationName(project.getProject().getName());
-            ILaunchConfigurationWorkingCopy launchConfig =
-                    getGroovyLaunchConfigType().newInstance(null, launchName);
+            ILaunchConfigurationWorkingCopy launchConfig = getGroovyLaunchConfigType().newInstance(null, launchName);
 
-            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className);
+            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, Main.class.getName());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "-Djline.terminal=jline.UnsupportedTerminal");
             List<String> classpath = new ArrayList<String>(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
-            try {
-                classpath.addAll(0, GroovyShellLaunchDelegate.getExtraClasspathElements());
-            } catch (Exception e) {
-                GroovyCore.logException("Error getting extra classpath elements to launch", e);
-            }
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, classpath);
 
             DebugUITools.launch(launchConfig, mode);
@@ -140,13 +127,11 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
     }
 
     /**
-     * This is a convenince method for getting the Launch Manager from
-     * the Debug plugin.
+     * This is a convenince method for getting the Launch Manager from the Debug plugin.
      *
-     * @return Returns the default Eclipse launch manager.
+     * @return the default Eclipse launch manager
      */
     public static ILaunchManager getLaunchManager() {
         return DebugPlugin.getDefault().getLaunchManager();
     }
-
 }

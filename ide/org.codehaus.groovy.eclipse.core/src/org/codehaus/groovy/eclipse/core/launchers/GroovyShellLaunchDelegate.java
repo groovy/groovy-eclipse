@@ -15,53 +15,43 @@
  */
 package org.codehaus.groovy.eclipse.core.launchers;
 
-import static org.eclipse.core.runtime.FileLocator.resolve;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-
-import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.launching.JavaLaunchDelegate;
-import org.osgi.framework.Bundle;
 
 public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
-
-    public static final String JLINE_JAR = "jline-*.jar";
 
     @Override
     public String[] getClasspath(ILaunchConfiguration configuration) throws CoreException {
         String[] classpath = super.getClasspath(configuration);
-        List<String> newClasspath = Arrays.asList(classpath);
-        try {
-            newClasspath.addAll(getExtraClasspathElements());
-        } catch (IOException e) {
-            GroovyCore.logException("Could not fine path to jline jars", e);
-        }
-        return newClasspath.toArray(new String[0]);
-    }
 
-    public static List<String> getExtraClasspathElements() throws CoreException, IOException {
-        return Collections.singletonList(getPathTo(JLINE_JAR));
-    }
-
-    private static String getPathTo(String jarName) throws CoreException, IOException {
-        Bundle groovyBundle = Platform.getBundle("org.codehaus.groovy");
-        Enumeration<URL> enu = groovyBundle.findEntries("lib", jarName, false);
-        if (enu != null && enu.hasMoreElements()) {
-            URL jar = resolve(enu.nextElement());
-            return jar.getFile();
-        } else {
-            throw new CoreException(new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
+        // check for required supporting libraries
+        boolean jline = false, commons_cli = false;
+        for (String entry : classpath) {
+            if (entry.matches(".*\\bjline.*\\.jar$")) {
+                jline = true;
+            } else if (entry.matches(".*\\bcommons-cli.*\\.jar$")) {
+                commons_cli = true;
+            }
         }
+
+        // try to add them to the classpath if they are not present
+        if (!jline) {
+            IPath path = CompilerUtils.getJarInGroovyLib("jline-*.jar");
+            if (path != null) {
+                classpath = (String[]) ArrayUtils.add(classpath, path.toOSString());
+            }
+        }
+        if (!commons_cli) {
+            IPath path = CompilerUtils.getJarInGroovyLib("commons-cli-*.jar");
+            if (path != null) {
+                classpath = (String[]) ArrayUtils.add(classpath, path.toOSString());
+            }
+        }
+
+        return classpath;
     }
 }
