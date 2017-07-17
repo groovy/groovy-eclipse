@@ -54,37 +54,42 @@ public class GroovyTabAction extends TextEditorAction {
 
         ITextSelection selection = getSelection();
         final IDocument d = getDocument();
-
         if (d != null) {
             try {
                 int offset = selection.getOffset();
 
-                // We are making a few assumptions about the circumstances under
-                // which we get to this point in the code:
+                // We are making a few assumptions about the circumstances under which we get to this point in the code:
                 Assert.isTrue(selection.getLength() == 0);
                 Assert.isTrue(isInSmartTabRegion(d, offset));
 
-                @SuppressWarnings("cast")
-                GroovyIndentationService indentation = GroovyIndentationService.get(JavaCore.create(
-                    ((IFile) getTextEditor().getEditorInput().getAdapter(IFile.class)).getProject()));
-
                 int tabLine = d.getLineOfOffset(offset);
-                int newIndentLevel = indentation.computeIndentForLine(d, tabLine);
                 String lineStartText = getLineTextUpto(d, offset);
-                int cursorIndent = indentation.indentLevel(lineStartText);
 
-                if (cursorIndent < newIndentLevel) {
-                    // Smart tab should apply
-                    String leadingWhiteSpace = getLineLeadingWhiteSpace(d, tabLine);
-                    int editOffset = d.getLineOffset(tabLine);
-                    int editLength = leadingWhiteSpace.length();
-                    String editText = indentation.createIndentation(newIndentLevel);
-                    d.replace(editOffset, editLength, editText);
-                    selectAndReveal(editOffset + editText.length(), 0);
+                @SuppressWarnings("cast")
+                IFile file = (IFile) getTextEditor().getEditorInput().getAdapter(IFile.class);
+                if (file != null && file.getProject() != null) {
+
+                    GroovyIndentationService indentation = GroovyIndentationService.get(JavaCore.create(file.getProject()));
+                    int newIndentLevel = indentation.computeIndentForLine(d, tabLine);
+                    int cursorIndent = indentation.indentLevel(lineStartText);
+
+                    if (cursorIndent < newIndentLevel) {
+                        // Smart tab should apply
+                        String leadingWhiteSpace = getLineLeadingWhiteSpace(d, tabLine);
+                        int editOffset = d.getLineOffset(tabLine);
+                        int editLength = leadingWhiteSpace.length();
+                        String editText = indentation.createIndentation(newIndentLevel);
+                        d.replace(editOffset, editLength, editText);
+                        selectAndReveal(editOffset + editText.length(), 0);
+                    } else {
+                        // Just indent one tab size using whatever style dictated by preferences (i.e. maybe use tabs or spaces)
+                        String editText = indentation.getTabString();
+                        d.replace(offset, 0, editText);
+                        selectAndReveal(offset + editText.length(), 0);
+                    }
                 } else {
-                    // Just indent one tab size using whatever style
-                    // dictated by preferences (i.e. maybe use tabs or spaces)
-                    String editText = indentation.getTabString();
+                    // Insert one tab without relying on GroovyIndentationService
+                    String editText = "\t";
                     d.replace(offset, 0, editText);
                     selectAndReveal(offset + editText.length(), 0);
                 }
