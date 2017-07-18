@@ -157,7 +157,7 @@
             class="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
             default="true"
-            icon="$nl$/icons/groovy_file.gif"
+            icon="$nl$/icons/groovy_file.png"
             id="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             name="Groovy Editor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont">
@@ -184,7 +184,7 @@
       <wizard
             category="org.codehaus.groovy.eclipse"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="$nl$/icons/newgroovyclass_wiz.gif"
+            icon="$nl$/icons/newgroovyclass_wiz.png"
             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"
             name="Groovy Class"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
@@ -201,7 +201,6 @@
       <wizard
             category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.wizards.GroovyProjectWizard"
-            descriptionImage="$nl$/icons/full/newgroovyprj_wiz.gif"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             icon="$nl$/icons/newgroovyprj_wiz.gif"
             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"

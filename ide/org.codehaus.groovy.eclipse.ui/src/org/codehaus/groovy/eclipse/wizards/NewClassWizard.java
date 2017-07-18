@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,53 +24,41 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.wizards.NewElementWizard;
 
-/**
- * @see Wizard
- */
-public class NewClassWizard extends NewElementWizard  {
-	private NewClassWizardPage fPage;
+public class NewClassWizard extends NewElementWizard {
 
-	public NewClassWizard() {
-		super();
-		setDefaultPageImageDescriptor(JavaPluginImages.DESC_WIZBAN_NEWCLASS);
-		setDialogSettings(JavaPlugin.getDefault().getDialogSettings());
+    private NewClassWizardPage fPage;
 
-		setWindowTitle("Create a new Groovy class");
-	}
+    public NewClassWizard() {
+        super();
+        setDefaultPageImageDescriptor(JavaPluginImages.DESC_WIZBAN_NEWCLASS);
+        setDialogSettings(JavaPlugin.getDefault().getDialogSettings());
 
-	/*
-	 * @see Wizard#createPages
-	 */
-	public void addPages() {
-		super.addPages();
-		fPage= new NewClassWizardPage();
-		addPage(fPage);
-		fPage.init(getSelection());
-	}
+        setWindowTitle("Create a new Groovy class.");
+    }
 
-
-    /*(non-Javadoc)
-     * @see org.eclipse.jdt.internal.ui.wizards.NewElementWizard#canRunForked()
+    /*
+     * @see Wizard#createPages
      */
-	protected boolean canRunForked() {
+    public void addPages() {
+        super.addPages();
+        fPage = new NewClassWizardPage();
+        addPage(fPage);
+        fPage.init(getSelection());
+    }
+
+    protected boolean canRunForked() {
         return !fPage.isEnclosingTypeSelected();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jdt.internal.ui.wizards.NewElementWizard#finishPage(org.eclipse.core.runtime.IProgressMonitor)
-     */
     protected void finishPage(IProgressMonitor monitor) throws InterruptedException, CoreException {
         fPage.createType(monitor); // use the full progress monitor
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.wizard.IWizard#performFinish()
-     */
     public boolean performFinish() {
         warnAboutTypeCommentDeprecation();
-        boolean res= super.performFinish();
+        boolean res = super.performFinish();
         if (res) {
-            IResource resource= fPage.getModifiedResource();
+            IResource resource = fPage.getModifiedResource();
             if (resource != null) {
                 selectAndReveal(resource);
                 openResource((IFile) resource);
@@ -79,8 +67,7 @@ public class NewClassWizard extends NewElementWizard  {
         return res;
     }
 
-
-	public IJavaElement getCreatedElement() {
-		return fPage.getCreatedType();
-	}
+    public IJavaElement getCreatedElement() {
+        return fPage.getCreatedType();
+    }
 }

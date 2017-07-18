@@ -23,8 +23,8 @@ public final class GroovyPluginImages {
 
     public static final ImageDescriptor DESC_GRADLE_FILE = createDescriptor2(
             "platform:/plugin/org.eclipse.buildship.ui/icons/full/obj16/gradle_file.png");
-    public static final ImageDescriptor DESC_GROOVY_FILE = createDescriptor("$nl$/icons/groovy_file.gif");
-    public static final ImageDescriptor DESC_NEW_GROOVY_PROJECT = createDescriptor("$nl$/icons/full/newgroovyprj_wiz.gif");
+    public static final ImageDescriptor DESC_GROOVY_FILE = createDescriptor("$nl$/icons/groovy_file.png");
+    public static final ImageDescriptor DESC_NEW_GROOVY_PROJECT = createDescriptor("$nl$/icons/full/newgroovyprj_wiz.png");
 
     private static ImageDescriptor createDescriptor(String path) {
         // create the image descriptor without causing this bundle to be activated
