@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,25 @@
  */
 package org.codehaus.groovy.eclipse.adapters;
 
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.IFileEditorInput;
 
-/**
- * This class will take an FileEditorInput and adapt it to varios Groovy friendly
- * classes / interfaces.
- *
- * @author David Kerber
- */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyIFileEditorInputAdapterFactory implements IAdapterFactory {
 
-    private static final Class<?>[] classes = new Class[] {ClassNode.class};
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object getAdapter(Object adaptableObject, Class adapterType) {
-        Object returnValue = null;
-        if ((ClassNode.class.equals(adapterType) || ClassNode[].class.equals(adapterType)) && adaptableObject instanceof IFileEditorInput) {
-            try {
-                IFileEditorInput fileEditor = (IFileEditorInput) adaptableObject;
-                returnValue = fileEditor.getFile().getAdapter(adapterType);
-            } catch (Exception ex) {
-                GroovyCore.logException("error adapting file to ClassNode", ex);
-            }
-        }
-        return returnValue;
+    public Class[] getAdapterList() {
+        return new GroovyFileAdapterFactory().getAdapterList();
     }
 
-    public Class<?>[] getAdapterList() {
-        return classes;
+    public Object getAdapter(Object adaptable, Class adapterType) {
+        Object result = null;
+        if (adaptable instanceof IFileEditorInput) {
+            IFile file = ((IFileEditorInput) adaptable).getFile();
+            // delegate to GroovyFileAdapterFactory
+            result = file.getAdapter(adapterType);
+        }
+        return result;
     }
 }

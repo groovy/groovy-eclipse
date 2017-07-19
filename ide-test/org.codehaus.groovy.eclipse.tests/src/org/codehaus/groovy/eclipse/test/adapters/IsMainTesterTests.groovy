@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.adapters
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester
-import org.eclipse.core.resources.IResource
 import org.junit.Test
 
 /**
@@ -26,9 +25,8 @@ import org.junit.Test
 final class IsMainTesterTests extends GroovyEclipseTestSuite {
 
     private void doTest(String text, boolean expected) {
-        IResource file = addGroovySource(text, 'MainClass', 'pack1').getResource()
-        GroovyResourcePropertyTester tester = new GroovyResourcePropertyTester()
-        boolean result = tester.test(file, 'hasMain', null, null)
+        def unit = addGroovySource(text, 'MainClass', 'pack1').getResource()
+        boolean result = new GroovyResourcePropertyTester().test(unit, 'hasMain', null, null)
         assert result == expected : 'Should have ' + (expected ? '' : '*not*') + ' found a main method in class:\n' + text
     }
 

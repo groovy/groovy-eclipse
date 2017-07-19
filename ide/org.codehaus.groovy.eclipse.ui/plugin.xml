@@ -819,10 +819,14 @@
             class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
          <adapter
                type="org.codehaus.groovy.ast.ClassNode"/>
+         <adapter
+               type="org.codehaus.groovy.ast.ModuleNode"/>
       </factory>
       <factory
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             class="org.codehaus.groovy.eclipse.adapters.GroovyEditorAdapterFactory">
+         <adapter
+               type="org.codehaus.groovy.ast.ClassNode"/>
          <adapter
                type="org.codehaus.groovy.ast.ModuleNode"/>
       </factory>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -31,12 +30,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.debug.core.IJavaLineBreakpoint;
 import org.eclipse.jdt.debug.core.JDIDebugModel;
@@ -54,7 +50,7 @@ import org.eclipse.ui.texteditor.IEditorStatusLine;
  */
 public class BreakpointLocationVerifierJob extends Job {
 
-    public final static Object FAMILY = new Object();
+    public static final Object FAMILY = new Object();
 
     /**
      * The temporary breakpoint that has been set. Can be <code>null</code> if the callee was not able
@@ -102,17 +98,12 @@ public class BreakpointLocationVerifierJob extends Job {
 
     @Override
     public IStatus run(IProgressMonitor monitor) {
-        ICompilationUnit cu = JavaCore.createCompilationUnitFrom((IFile) fResource);
         try {
-            ModuleNode node = null;
-            if (cu instanceof GroovyCompilationUnit) {
-                node = ((GroovyCompilationUnit) cu).getModuleNode();
-            }
-
+            @SuppressWarnings("cast")
+            ModuleNode node = (ModuleNode) ((IFile) fResource).getAdapter(ModuleNode.class);
             if (node == null) {
-                return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
+                return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
             }
-
             if (fBreakpoint != null) {
                 DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(fBreakpoint, true);
             }
@@ -120,19 +111,18 @@ public class BreakpointLocationVerifierJob extends Job {
             ASTNode valid = finder.findValidBreakpointLocation(node);
             if (valid instanceof MethodNode && ((MethodNode) valid).getNameEnd() > 0) {
                 createNewMethodBreakpoint((MethodNode) valid, fTypeName);
-                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK,
-                        ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null);
+                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
             } else if (valid != null) {
                 createNewLineBreakpoint(valid, fTypeName);
-                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.OK, ActionMessages.BreakpointLocationVerifierJob_breakpoint_set, null);
+                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
             }
-        } catch (JavaModelException e) {
         } catch (CoreException e) {
+            JDIDebugUIPlugin.log(new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), "Breakpoint location verification failed", e));
         }
-        // Cannot find a valid location
-        report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
-        return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), IStatus.ERROR, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
 
+        // cannot find a valid location
+        report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
+        return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
     }
 
     private void createNewMethodBreakpoint(MethodNode node, String typeName) throws CoreException {
@@ -153,7 +143,7 @@ public class BreakpointLocationVerifierJob extends Job {
     private String createMethodSignature(MethodNode node) {
         String returnType = createTypeSignatureStr(node.getReturnType());
         String[] parameterTypes = new String[node.getParameters().length];
-        for (int i = 0; i < parameterTypes.length; i++) {
+        for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
             parameterTypes[i] = createTypeSignatureStr(node.getParameters()[i].getType());
         }
         return Signature.createMethodSignature(parameterTypes, returnType).replace('.', '/');

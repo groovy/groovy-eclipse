@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -263,20 +262,12 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     }
 
     protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
-        IEditorInput editorInput = editor.getEditorInput();
         @SuppressWarnings("cast")
-        ICompilationUnit unit = (ICompilationUnit) editorInput.getAdapter(ICompilationUnit.class);
-        if (unit == null) {
-            @SuppressWarnings("cast")
-            IFile file = (IFile) editorInput.getAdapter(IFile.class);
-            if (file != null) {
-                unit = JavaCore.createCompilationUnitFrom(file);
-            }
-        }
-        if (! (unit instanceof GroovyCompilationUnit)) {
+        ModuleNode moduleNode = (ModuleNode) editor.getEditorInput().getAdapter(ModuleNode.class);
+        /*if (moduleNode == null) {
             throw new CoreException(Status.CANCEL_STATUS);
-        }
-        return ((GroovyCompilationUnit) unit).getModuleNode();
+        }*/
+        return moduleNode;
     }
 
     public void toggleWatchpoints(final IWorkbenchPart part, final ISelection finalSelection) {

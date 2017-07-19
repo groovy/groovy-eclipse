@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.core.adapters;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -27,45 +28,52 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 
 /**
- * This class will take an IFile and adapt it to varios Groovy friends classes / interfaces.
- *
- * @author David Kerber
+ * Adapts an IFile (likely a compilation unit) to Groovy AST types.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyFileAdapterFactory implements IAdapterFactory {
 
-    private static final Class[] classes = new Class[] {ClassNode.class, ClassNode[].class};
+    public Class[] getAdapterList() {
+        return new Class[] {ClassNode.class, ClassNode[].class, ModuleNode.class};
+    }
 
-    public Object getAdapter(Object adaptableObject, Class adapterType) {
-        Object returnValue = null;
-        if (adaptableObject instanceof IFile) {
-            IFile file = (IFile) adaptableObject;
+    public Object getAdapter(Object adaptable, Class adapterType) {
+        Object result = null;
+        if (adaptable instanceof IFile && Arrays.asList(getAdapterList()).contains(adapterType)) {
+            IFile file = (IFile) adaptable;
             if (ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
-                if (ClassNode.class.equals(adapterType) || ClassNode[].class.equals(adapterType)) {
-                    try {
-                        // we know this will be a GCU because of the file extension
-                        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-                        ModuleNode module = unit.getModuleNode();
-                        if (module != null) {
-                            List<ClassNode> classNodeList = module.getClasses();
-                            if (classNodeList != null && !classNodeList.isEmpty()) {
-                                if (ClassNode.class.equals(adapterType)) {
-                                    returnValue = classNodeList.get(0);
-                                } else if (ClassNode[].class.equals(adapterType)) {
-                                    returnValue = classNodeList.toArray(ClassNode.EMPTY_ARRAY);
+                try {
+                    GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+                    ModuleNode module = unit.getModuleNode();
+                    if (module != null) {
+                        if (adapterType.equals(ModuleNode.class)) {
+                            result = module;
+                        } else {
+                            List<ClassNode> classNodes = module.getClasses();
+                            if (classNodes != null && !classNodes.isEmpty()) {
+                                if (adapterType.equals(ClassNode.class)) {
+                                    if (classNodes.size() == 1) {
+                                        result = classNodes.get(0);
+                                    } else {
+                                        String mainClassName = module.getMainClassName();
+                                        for (ClassNode classNode : classNodes) {
+                                            if (classNode.getName().equals(mainClassName)) {
+                                                result = classNode;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } else if (adapterType.equals(ClassNode[].class)) {
+                                    result = classNodes.toArray(ClassNode.EMPTY_ARRAY);
                                 }
                             }
                         }
-                    } catch (Exception ex) {
-                        GroovyCore.logException("error adapting file to ClassNode", ex);
                     }
+                } catch (Exception e) {
+                    GroovyCore.logException("error adapting IFile to ClassNode", e);
                 }
             }
         }
-        return returnValue;
-    }
-
-    public Class[] getAdapterList() {
-        return classes;
+        return result;
     }
 }

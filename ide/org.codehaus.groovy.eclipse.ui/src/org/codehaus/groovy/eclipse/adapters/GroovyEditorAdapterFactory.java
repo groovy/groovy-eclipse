@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,52 +15,39 @@
  */
 package org.codehaus.groovy.eclipse.adapters;
 
-import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdapterFactory;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.ui.IEditorInput;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyEditorAdapterFactory implements IAdapterFactory {
-    private static final Class<?>[] classes = new Class[] { ModuleNode.class };
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object getAdapter(Object adaptableObject, Class adapterType) {
-        if (!(adaptableObject instanceof GroovyEditor)) {
+    public Class[] getAdapterList() {
+        return new GroovyFileAdapterFactory().getAdapterList();
+    }
+
+    public Object getAdapter(Object adaptable, Class adapterType) {
+        if (!(adaptable instanceof GroovyEditor)) {
             throw new IllegalArgumentException("adaptable is not the GroovyEditor");
         }
 
-        Object adapter = ((GroovyEditor) adaptableObject).getEditorInput().getAdapter(adapterType);
-        if (adapter != null)
+        IEditorInput editorInput = ((GroovyEditor) adaptable).getEditorInput();
+
+        // delegate to GroovyIFileEditorInputAdapterFactory?
+        Object adapter = editorInput.getAdapter(adapterType);
+        if (adapter != null) {
             return adapter;
+        }
 
+        // delegate to GroovyFileAdapterFactory?
         @SuppressWarnings("cast")
-        IFile file = (IFile) ((GroovyEditor) adaptableObject).getEditorInput().getAdapter(IFile.class);
+        IFile file = (IFile) editorInput.getAdapter(IFile.class);
         if (file != null) {
-            return adaptFromFile(adapterType, file);
+            return file.getAdapter(adapterType);
         }
-        return null;
-    }
 
-    private Object adaptFromFile(Class<?> adapterType, IFile file) {
-        if (adapterType.isAssignableFrom(ModuleNode.class)) {
-            return getModuleNodeFromFile(file);
-        }
         return null;
-    }
-
-    private static ModuleNode getModuleNodeFromFile(IFile file) {
-        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-        if (unit instanceof GroovyCompilationUnit) {
-            return ((GroovyCompilationUnit) unit).getModuleNode();
-        }
-        return null;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Class[] getAdapterList() {
-        return classes;
     }
 }
