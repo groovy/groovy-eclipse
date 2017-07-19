@@ -69,59 +69,45 @@ import org.eclipse.ui.texteditor.ITextEditor;
  * Borrowed from same class in AJDT
  */
 public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtension {
-	public final static Object TOGGLE_BREAKPOINT_FAMILY = new Object();
 
-	public ToggleBreakpointAdapter() {
-		// init helper in UI thread
-		ActionDelegateHelper.getDefault();
-	}
+    public final static Object TOGGLE_BREAKPOINT_FAMILY = new Object();
 
-    protected void report(final String message, final IWorkbenchPart part) {
-        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-            public void run() {
-                @SuppressWarnings("cast")
-                IEditorStatusLine statusLine = (IEditorStatusLine) part.getAdapter(IEditorStatusLine.class);
-                if (statusLine != null) {
-                    if (message != null) {
-                        statusLine.setMessage(true, message, null);
-                    } else {
-                        statusLine.setMessage(true, null, null);
-                    }
-                }
-                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-                    JDIDebugUIPlugin.getActiveWorkbenchShell().getDisplay().beep();
-                }
-            }
-        });
+    protected static IResource getResource(IEditorPart editor) {
+        @SuppressWarnings("cast")
+        IResource resource = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+        if (resource == null) {
+            resource = ResourcesPlugin.getWorkspace().getRoot();
+        }
+        return resource;
     }
 
-    protected IType getType(ITextSelection selection) {
-        IMember member = ActionDelegateHelper.getDefault().getCurrentMember(selection);
-        IType type = null;
-        if (member instanceof IType) {
-            type = (IType) member;
-        } else if (member != null) {
-            type = member.getDeclaringType();
-        }
-        // bug 52385: we don't want local and anonymous types from compilation
-        // unit,
-        // we are getting 'not-always-correct' names for them.
-        try {
-            while (type != null && !type.isBinary() && type.isLocal()) {
-                type = type.getDeclaringType();
-            }
-        } catch (JavaModelException e) {
-            JDIDebugUIPlugin.log(e);
-        }
-        return type;
+    public ToggleBreakpointAdapter() {
+        // init helper in UI thread
+        ActionDelegateHelper.getDefault();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.debug.ui.actions.IToggleBreakpointsTarget#toggleLineBreakpoints(IWorkbenchPart,
-     *      ISelection)
-     */
+    //--------------------------------------------------------------------------
+
+    public boolean canToggleBreakpoints(IWorkbenchPart part, ISelection selection) {
+        return canToggleLineBreakpoints(part, selection);
+    }
+
+    public boolean canToggleLineBreakpoints(IWorkbenchPart part, ISelection selection) {
+        return selection instanceof ITextSelection;
+    }
+
+    public boolean canToggleMethodBreakpoints(IWorkbenchPart part, ISelection selection) {
+        return false;
+    }
+
+    public boolean canToggleWatchpoints(IWorkbenchPart part, ISelection selection) {
+        return false;
+    }
+
+    public void toggleBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
+        toggleLineBreakpoints(part, selection, true);
+    }
+
     public void toggleLineBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
         toggleLineBreakpoints(part, selection, false);
     }
@@ -193,18 +179,18 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                                 }
                             }
                             if(typeName == null) {
-                            	ICompilationUnit unit = JavaCore.createCompilationUnitFrom((IFile) resource);
-                            	if(unit != null) {
-	                            	IType[] types = unit.getAllTypes();
-	                            	for (int i = 0; i < types.length; i++) {
-	                            		 int begin = types[i].getSourceRange().getOffset();
-	                                     int end = begin + types[i].getSourceRange().getLength();
-	                                     if (offset >= begin && offset <= end && !types[i].isInterface()) {
-	                                         typeName = types[i].getPackageFragment().getElementName() + "." + types[i].getTypeQualifiedName(); //$NON-NLS-1$
-	                                         break;
-	                                     }
-									}
-                            	}
+                                ICompilationUnit unit = JavaCore.createCompilationUnitFrom((IFile) resource);
+                                if(unit != null) {
+                                    IType[] types = unit.getAllTypes();
+                                    for (int i = 0; i < types.length; i++) {
+                                         int begin = types[i].getSourceRange().getOffset();
+                                         int end = begin + types[i].getSourceRange().getLength();
+                                         if (offset >= begin && offset <= end && !types[i].isInterface()) {
+                                             typeName = types[i].getPackageFragment().getElementName() + "." + types[i].getTypeQualifiedName(); //$NON-NLS-1$
+                                             break;
+                                         }
+                                    }
+                                }
                             }
                         } else {
                             typeName = type.getFullyQualifiedName();
@@ -241,24 +227,17 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
         job.schedule();
     }
 
+    public void toggleMethodBreakpoints(IWorkbenchPart part, ISelection finalSelection) {
+    }
+
+    public void toggleWatchpoints(IWorkbenchPart part, ISelection finalSelection) {
+    }
+
+    //--------------------------------------------------------------------------
+
     private void createLineBreakpoint(IResource resource, String typeName, int offset, int lineNumber, int charStart, int charEnd, int hitCount, boolean register, Map<String, Object> attributes, IDocument document, boolean bestMatch, IType type, IEditorPart editorPart) throws CoreException {
         IJavaLineBreakpoint breakpoint = JDIDebugModel.createLineBreakpoint(resource, typeName, lineNumber, charStart, charEnd, hitCount, register, attributes);
         new BreakpointLocationVerifierJob(breakpoint, lineNumber, typeName, type, resource, editorPart).schedule();
-    }
-
-    public boolean canToggleLineBreakpoints(IWorkbenchPart part, ISelection selection) {
-        return selection instanceof ITextSelection;
-    }
-
-    public void toggleMethodBreakpoints(final IWorkbenchPart part, final ISelection finalSelection) {
-    }
-
-    private void removeBreakpoint(IBreakpoint breakpoint, boolean delete) throws CoreException {
-        DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(breakpoint, delete);
-    }
-
-    public boolean canToggleMethodBreakpoints(IWorkbenchPart part, ISelection selection) {
-    	return false;
     }
 
     protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
@@ -270,28 +249,46 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
         return moduleNode;
     }
 
-    public void toggleWatchpoints(final IWorkbenchPart part, final ISelection finalSelection) {
-    }
-
-    protected static IResource getResource(IEditorPart editor) {
-        IEditorInput editorInput = editor.getEditorInput();
-        @SuppressWarnings("cast")
-        IResource resource = (IFile) editorInput.getAdapter(IFile.class);
-        if (resource == null) {
-            resource = ResourcesPlugin.getWorkspace().getRoot();
+    protected IType getType(ITextSelection selection) {
+        IMember member = ActionDelegateHelper.getDefault().getCurrentMember(selection);
+        IType type = null;
+        if (member instanceof IType) {
+            type = (IType) member;
+        } else if (member != null) {
+            type = member.getDeclaringType();
         }
-        return resource;
+        // bug 52385: we don't want local and anonymous types from compilation
+        // unit, we are getting 'not-always-correct' names for them.
+        try {
+            while (type != null && !type.isBinary() && type.isLocal()) {
+                type = type.getDeclaringType();
+            }
+        } catch (JavaModelException e) {
+            JDIDebugUIPlugin.log(e);
+        }
+        return type;
     }
 
-    public boolean canToggleWatchpoints(IWorkbenchPart part, ISelection selection) {
-    	return false;
+    private void removeBreakpoint(IBreakpoint breakpoint, boolean delete) throws CoreException {
+        DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(breakpoint, delete);
     }
 
-    public void toggleBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
-        toggleLineBreakpoints(part, selection, true);
-    }
-
-    public boolean canToggleBreakpoints(IWorkbenchPart part, ISelection selection) {
-        return canToggleLineBreakpoints(part, selection);
+    protected void report(final String message, final IWorkbenchPart part) {
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
+            public void run() {
+                @SuppressWarnings("cast")
+                IEditorStatusLine statusLine = (IEditorStatusLine) part.getAdapter(IEditorStatusLine.class);
+                if (statusLine != null) {
+                    if (message != null) {
+                        statusLine.setMessage(true, message, null);
+                    } else {
+                        statusLine.setMessage(true, null, null);
+                    }
+                }
+                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                    JDIDebugUIPlugin.getActiveWorkbenchShell().getDisplay().beep();
+                }
+            }
+        });
     }
 }

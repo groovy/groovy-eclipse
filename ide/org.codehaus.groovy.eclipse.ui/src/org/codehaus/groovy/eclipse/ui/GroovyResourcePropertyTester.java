@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
@@ -27,13 +28,9 @@ import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Property tester for testing to see if a groovy file has a main
- * or is a test case.
- *
- * @author David Kerber
+ * Determines if a groovy file has a main method or is a script.
  */
 public class GroovyResourcePropertyTester extends PropertyTester {
 
@@ -44,38 +41,47 @@ public class GroovyResourcePropertyTester extends PropertyTester {
     public static final String isScript = "isScript";
 
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
-        boolean returnValue = false;
+        boolean result = false;
 
         if (hasMain.equals(property) || isScript.equals(property)) {
-            if (receiver instanceof IAdaptable) {
-                try {
+            try {
+                if (receiver instanceof IFile) {
+                    ICompilationUnit unit = JavaCore.createCompilationUnitFrom((IFile) receiver);
+                    result = isRunnable(unit);
+
+                } else if (receiver instanceof IAdaptable) {
                     @SuppressWarnings("cast")
                     ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
+                    result = isRunnable(unit);
+
                     if (unit == null) {
                         @SuppressWarnings("cast")
                         IFile file = (IFile) ((IAdaptable) receiver).getAdapter(IFile.class);
-                        if (file != null && Util.isJavaLikeFileName(file.getName())) {
+                        if (file != null) {
                             unit = JavaCore.createCompilationUnitFrom(file);
+                            result = isRunnable(unit);
                         }
                     }
-                    if (unit != null) {
-                        if (hasMain.equals(property) || isScript.equals(property)) {
-                            List<IType> results = GroovyProjectFacade.findAllRunnableTypes(unit);
-                            returnValue = results.size() > 0;
-                        }
-                    }
-                } catch (IllegalArgumentException e) {
-                    // can ignore
-                    // passed in non-JavaLike file name
-                } catch (JavaModelException e) {
-                    // can ignore situations when trying to find types that are not on the classpath
-                    if (e.getStatus() != null &&
-                            e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
-                        GroovyCore.logException("Exception when testing for main methods " + receiver, e);
-                    }
+                }
+            } catch (IllegalArgumentException e) {
+                // can ignore; passed in non-JavaLike file name
+            } catch (JavaModelException e) {
+                // can ignore situations when trying to find types that are not on the classpath
+                if (e.getStatus() != null && e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
+                    GroovyCore.logException("Exception when testing for main methods " + receiver, e);
                 }
             }
         }
-        return returnValue;
+
+        return result;
+    }
+
+    private boolean isRunnable(ICompilationUnit unit) throws JavaModelException {
+        boolean result = false;
+        if (unit instanceof GroovyCompilationUnit) {
+            List<IType> runnables = GroovyProjectFacade.findAllRunnableTypes(unit);
+            result = (!runnables.isEmpty());
+        }
+        return result;
     }
 }
