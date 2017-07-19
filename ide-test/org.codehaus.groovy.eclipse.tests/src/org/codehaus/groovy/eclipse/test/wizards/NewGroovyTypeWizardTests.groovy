@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.wizards.NewClassWizardPage
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
@@ -28,20 +27,20 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
 import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup
 import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jdt.ui.wizards.NewElementWizardPage
+import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
-// Original source code:
-// http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.ui.tests/ui/org/eclipse/jdt/ui/tests/wizardapi/NewTypeWizardTest.java?revision=1.8
+// Original source code: http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.ui.tests/ui/org/eclipse/jdt/ui/tests/wizardapi/NewTypeWizardTest.java?revision=1.8
 final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
 
     // FIXKDV: the wizard has some options/controls that probably shouldn't be there
-    //  For example a button to make a class public or default
-    //  Other such things to clean up?
 
     @Before
     void setUp() {
@@ -65,10 +64,18 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         StubUtility.setCodeTemplate(CodeTemplateContextType.ANNOTATIONBODY_ID, '/* annotation body */\n', null)
     }
 
-    /** Helper method to check an IStatus */
-    protected void assertStatus(int severity, String msgFragment, IStatus status) {
-        assert status.getSeverity() == severity
-        assert status.getMessage().contains(msgFragment) : 'Unexpected message: ' + status.getMessage()
+    private NewClassWizardPage clearModifiers(NewClassWizardPage wizardPage) {
+        SelectionButtonDialogFieldGroup group = (SelectionButtonDialogFieldGroup) ReflectionUtils.getPrivateField(NewTypeWizardPage, 'fAccMdfButtons', wizardPage)
+        for (i in 0..5) {
+            group.setSelection(i, false)
+        }
+        wizardPage
+    }
+
+    private void assertStatus(int severity, String msgFragment, NewClassWizardPage wizardPage) {
+        IStatus status = ReflectionUtils.getPrivateField(NewElementWizardPage, 'fCurrStatus', wizardPage)
+        assert status.severity == severity
+        assert status.message.contains(msgFragment) : 'Unexpected message: ' + status.message
     }
 
     @Test
@@ -77,7 +84,7 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         NewClassWizardPage wizardPage = new NewClassWizardPage()
         wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
         wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        assertStatus(IStatus.WARNING, 'is not a groovy project.  Groovy Nature will be added to project upon completion.', wizardPage.status)
+        assertStatus(IStatus.WARNING, 'is not a groovy project.  Groovy Nature will be added to project upon completion.', wizardPage)
     }
 
     @Test
@@ -88,7 +95,7 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         wizardPage.setPackageFragmentRoot(root, true)
         wizardPage.setPackageFragment(frag, true)
         wizardPage.setTypeName('Nuthin', true)
-        assertStatus(IStatus.ERROR, 'Cannot create Groovy type because of exclusion patterns on the source folder.', wizardPage.status)
+        assertStatus(IStatus.ERROR, 'Cannot create Groovy type because of exclusion patterns on the source folder.', wizardPage)
     }
 
     @Test
@@ -96,7 +103,7 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         removeNature(GROOVY_NATURE)
         NewClassWizardPage wizardPage = new NewClassWizardPage()
         wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        assertStatus(IStatus.WARNING, 'The use of the default package is discouraged.', wizardPage.status)
+        assertStatus(IStatus.WARNING, 'The use of the default package is discouraged.', wizardPage)
     }
 
     @Test
@@ -131,40 +138,6 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         assertEquals(expected, wizardPage.createdType.compilationUnit.source)
     }
 
-    @Test @Ignore('this test fails/crashes in Groovy. cause: problems resolving generic types?')
-    void testCreateGroovyClass2GenericSuper() {
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        wizardPage.setEnclosingTypeSelection(false, true)
-        wizardPage.setTypeName('E', true)
-        wizardPage.setSuperClass('java.util.ArrayList<String>', true)
-        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
-        wizardPage.setMethodStubSelection(false, false, false, true)
-        wizardPage.setAddComments(true, true)
-        wizardPage.enableCommentControl(true)
-
-        wizardPage.createType(null)
-
-        String expected = '''\
-            |/**
-            | * File
-            | */
-            |package test1;
-            |
-            |import java.util.ArrayList;
-            |
-            |/**
-            | * Type
-            | */
-            |class E extends ArrayList<String> {
-            |    /* class body */
-            |}
-            |'''.stripMargin()
-
-        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
-    }
-
     @Test
     void testCreateGroovyClass2() {
         NewClassWizardPage wizardPage = new NewClassWizardPage()
@@ -192,6 +165,75 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             | * Type
             | */
             |class E extends ArrayList {
+            |    /* class body */
+            |}
+            |'''.stripMargin()
+
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+    }
+
+    @Test
+    void testCreateGroovyClass3() {
+        NewClassWizardPage wizardPage = new NewClassWizardPage()
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+        wizardPage.setEnclosingTypeSelection(false, true)
+        wizardPage.setTypeName('E', true)
+        wizardPage.setSuperClass('java.util.ArrayList<String>', true)
+        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
+        wizardPage.setMethodStubSelection(false, false, false, true)
+        wizardPage.setAddComments(true, true)
+        wizardPage.enableCommentControl(true)
+
+        wizardPage.createType(new NullProgressMonitor())
+
+        String expected = '''\
+            |/**
+            | * File
+            | */
+            |package test1
+            |
+            |import java.util.ArrayList
+            |
+            |/**
+            | * Type
+            | */
+            |class E extends ArrayList<String> {
+            |    /* class body */
+            |}
+            |'''.stripMargin()
+
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+    }
+
+    @Test
+    void testCreateGroovyClass4() {
+        NewClassWizardPage wizardPage = clearModifiers(new NewClassWizardPage())
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+        wizardPage.setEnclosingTypeSelection(false, true)
+        wizardPage.setTypeName('Foo', true)
+        wizardPage.setSuperClass('', true)
+        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
+        wizardPage.setMethodStubSelection(false, false, false, true)
+        wizardPage.setModifiers(wizardPage.F_FINAL, true)
+        wizardPage.setAddComments(true, true)
+        wizardPage.enableCommentControl(true)
+
+        wizardPage.createType(new NullProgressMonitor())
+
+        String expected = '''\
+            |/**
+            | * File
+            | */
+            |package test1
+            |
+            |import groovy.transform.PackageScope
+            |
+            |/**
+            | * Type
+            | */
+            |@PackageScope final class Foo {
             |    /* class body */
             |}
             |'''.stripMargin()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
@@ -33,62 +33,41 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
-import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup;
-import org.eclipse.jdt.ui.wizards.NewTypeWizardPage;
+import org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 
-/**
- * @author MelamedZ
- * @author Thorsten Kamann <thorsten.kamann@googlemail.com>
- */
 public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizardPage {
 
-    private static final int FINAL_INDEX = 1;
-
-    private IStatus fStatus;
-
-    /**
-     * Creates a new <code>NewClassWizardPage</code>
-     */
     public NewClassWizardPage() {
         super();
         setTitle("Groovy Class");
-        setDescription("Create a new Groovy class");
+        setDescription("Create a new Groovy class.");
     }
 
+    @Override
+    public int getModifiers() {
+        int modifiers = super.getModifiers();
+        return modifiers & ~F_PUBLIC; // public is default in Groovy
+    }
+
+    protected boolean isPackagePrivate() {
+        int modifiers = super.getModifiers();
+        return 0 == (modifiers & (F_PUBLIC | F_PRIVATE | F_PROTECTED));
+    }
 
     @Override
     protected void createModifierControls(Composite composite, int nColumns) {
+        // TODO: Add radio buttons for class, enum, interface, @interface, script, or trait
         super.createModifierControls(composite, nColumns);
-        SelectionButtonDialogFieldGroup group = getOtherModifierButtonsFieldGroup();
-        group.getSelectionButton(FINAL_INDEX).setText("Create Script");
-    }
-
-    @Override
-    protected String getCompilationUnitName(String typeName) {
-        return typeName + ".groovy";
-    }
-
-    @Override
-    protected void createTypeMembers(IType type, ImportsManager imports,
-            IProgressMonitor monitor) throws CoreException {
-        super.createTypeMembers(type, imports, monitor);
-        if (isCreateMain()) {
-            // replace main method with a more groovy version
-            IMethod main = type.getMethod("main", new String[] {"[QString;"} );
-            if (main != null && main.exists()) {
-                main.delete(true, monitor);
-                type.createMethod("static main(args) {\n\n}", null, true, monitor);
-            }
-        }
     }
 
     @Override
@@ -102,8 +81,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         IJavaProject project = pack.getJavaProject();
         try {
             if (!project.getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
-                status.setWarning(project.getElementName()
-                        + " is not a groovy project.  Groovy Nature will be added to project upon completion.");
+                status.setWarning(project.getElementName() + " is not a groovy project.  Groovy Nature will be added to project upon completion.");
             }
         } catch (CoreException e) {
             status.setError("Exception when accessing project natures for " + project.getElementName());
@@ -111,8 +89,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 
         String typeName = getTypeNameWithoutParameters();
         // must not exist as a .groovy file
-        if (!isEnclosingTypeSelected()
-                && (status.getSeverity() < IStatus.ERROR)) {
+        if (!isEnclosingTypeSelected() && (status.getSeverity() < IStatus.ERROR)) {
             if (pack != null) {
                 IType type = null;
                 try {
@@ -126,19 +103,16 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             }
         }
 
-        // lastly, check exclusion filters to see if Groovy files are allowed in
-        // the source folder
+        // lastly, check exclusion filters to see if Groovy files are allowed in the source folder
         if (status.getSeverity() < IStatus.ERROR) {
             try {
                 ClasspathEntry entry = (ClasspathEntry) ((IPackageFragmentRoot) pack.getParent()).getRawClasspathEntry();
                 if (entry != null) {
                     char[][] inclusionPatterns = entry.fullInclusionPatternChars();
                     char[][] exclusionPatterns = entry.fullExclusionPatternChars();
-                    if (Util.isExcluded(pack.getResource().getFullPath().append(getCompilationUnitName(typeName)),
-                            inclusionPatterns, exclusionPatterns, false)) {
+                    if (Util.isExcluded(pack.getResource().getFullPath().append(getCompilationUnitName(typeName)), inclusionPatterns, exclusionPatterns, false)) {
                         status.setError("Cannot create Groovy type because of exclusion patterns on the source folder.");
                     }
-
                 }
             } catch (JavaModelException e) {
                 status.setError(e.getLocalizedMessage());
@@ -150,37 +124,35 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
     }
 
     @Override
-    public void createType(IProgressMonitor monitor) throws CoreException,
-    InterruptedException {
+    public void createType(IProgressMonitor monitor) throws CoreException, InterruptedException {
+        SubMonitor submon = SubMonitor.convert(monitor, 7);
+
         IPackageFragment pack = getPackageFragment();
         if (pack != null) {
             IProject project = pack.getJavaProject().getProject();
             if (!GroovyNature.hasGroovyNature(project)) {
-                // add groovy nature
                 GroovyRuntime.addGroovyNature(project);
             }
         }
 
-        super.createType(monitor);
-        monitor = new SubProgressMonitor(monitor, 1);
-
+        super.createType(submon.newChild(1));
 
         GroovyCompilationUnit unit = (GroovyCompilationUnit) pack.getCompilationUnit(getCompilationUnitName(getTypeName()));
         try {
-            monitor.beginTask("Remove semi-colons", 1);
-            unit.becomeWorkingCopy(new SubProgressMonitor(monitor, 1));
+            char[] contents = unit.getContents();
+            unit.becomeWorkingCopy(submon.newChild(1));
+            MultiTextEdit textEdit = new MultiTextEdit();
 
             // remove ';' on package declaration
             IPackageDeclaration[] packs = unit.getPackageDeclarations();
-            char[] contents = unit.getContents();
-            MultiTextEdit multi = new MultiTextEdit();
             if (packs.length > 0) {
                 ISourceRange range = packs[0].getSourceRange();
                 int position = range.getOffset() + range.getLength();
                 if (contents[position] == ';') {
-                    multi.addChild(new ReplaceEdit(position, 1, ""));
+                    textEdit.addChild(new ReplaceEdit(position, 1, ""));
                 }
             }
+            submon.worked(1);
 
             // remove ';' on import declaration
             IImportDeclaration[] imports = unit.getImports();
@@ -188,20 +160,31 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
                 ISourceRange range = imports[0].getSourceRange();
                 int position = range.getOffset() + range.getLength() - 1;
                 if (contents[position] == ';') {
-                    multi.addChild(new ReplaceEdit(position, 1, ""));
+                    textEdit.addChild(new ReplaceEdit(position, 1, ""));
                 }
             }
+            submon.worked(1);
 
-            // remove type declaration for scripts
-            if (isScript()) {
-                ISourceRange range = unit.getTypes()[0].getSourceRange();
-                multi.addChild(new DeleteEdit(range.getOffset(), range.getLength()));
+            if (isPackagePrivate()) {
+                // add package visibility transform
+                IType type = unit.getType(getTypeName());
+                int offset = type.getSourceRange().getOffset();
+                if (type.getJavadocRange() != null) {
+                    offset = type.getJavadocRange().getOffset();
+                    offset += type.getJavadocRange().getLength();
+                    while (contents[offset] == '\n' || contents[offset] == '\r') offset += 1;
+                }
+                textEdit.addChild(new InsertEdit(offset, "@PackageScope "));
+
+                ImportRewrite importRewrite = CodeStyleConfiguration.createImportRewrite(unit, true);
+                importRewrite.addImport("groovy.transform.PackageScope");
+                textEdit.addChild(importRewrite.rewriteImports(submon.newChild(1)));
             }
-            if (multi.hasChildren()) {
-                unit.applyTextEdit(multi, new SubProgressMonitor(monitor, 1));
-                unit.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1));
+
+            if (textEdit.hasChildren()) {
+                unit.applyTextEdit(textEdit, submon.newChild(1));
+                unit.commitWorkingCopy(true, submon.newChild(1));
             }
-            monitor.worked(1);
         } finally {
             if (unit != null) {
                 unit.discardWorkingCopy();
@@ -210,52 +193,32 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
         }
     }
 
-    private boolean isScript() {
-        // the final check box has been usurped and is now the checkbox for
-        // script
-        SelectionButtonDialogFieldGroup group = getOtherModifierButtonsFieldGroup();
-        return group.isSelected(FINAL_INDEX);
+    @Override
+    protected void createTypeMembers(IType type, ImportsManager imports, IProgressMonitor monitor) throws CoreException {
+        super.createTypeMembers(type, imports, monitor);
+        if (isCreateMain()) {
+            // replace main method with a groovier version
+            IMethod main = type.getMethod("main", new String[] {"[QString;"});
+            if (main != null && main.exists()) {
+                main.delete(true, monitor);
+                String newline = StubUtility.getLineDelimiterUsed(main);
+                type.createMethod("static main(args) {" + newline + "}", null, true, monitor);
+            }
+        }
     }
 
-    /**
-     * @return
-     */
-    public SelectionButtonDialogFieldGroup getOtherModifierButtonsFieldGroup() {
-        return (SelectionButtonDialogFieldGroup) ReflectionUtils.getPrivateField(
-                NewTypeWizardPage.class, "fOtherMdfButtons", this);
+    @Override
+    protected String getCompilationUnitName(String typeName) {
+        return typeName + ".groovy";
     }
 
     private String getTypeNameWithoutParameters() {
-        String typeNameWithParameters= getTypeName();
-        int angleBracketOffset= typeNameWithParameters.indexOf('<');
+        String typeNameWithParameters = getTypeName();
+        int angleBracketOffset = typeNameWithParameters.indexOf('<');
         if (angleBracketOffset == -1) {
             return typeNameWithParameters;
         } else {
             return typeNameWithParameters.substring(0, angleBracketOffset);
         }
     }
-
-    @Override
-    public int getModifiers() {
-        int modifiers = super.getModifiers();
-        modifiers &= ~F_PUBLIC;
-        modifiers &= ~F_PRIVATE;
-        modifiers &= ~F_PROTECTED;
-        modifiers &= ~F_FINAL;
-        return modifiers;
-    }
-
-    /**
-     * Retrieve the current status, as last set by updateStatus.
-     */
-    public IStatus getStatus() {
-        return fStatus;
-    }
-
-    @Override
-    protected void updateStatus(IStatus status) {
-        super.updateStatus(status);
-        fStatus = status;
-    }
-
 }
