@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.chooser;
 
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -26,18 +30,18 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.prefs.BackingStoreException;
 
 /**
  * Chooses which Groovy compiler/runtime to use and provides some other useful
  * information about the bundle.
  */
-@SuppressWarnings("deprecation")
 public class CompilerChooser implements BundleActivator {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.compilerResolver";
@@ -81,17 +85,6 @@ public class CompilerChooser implements BundleActivator {
         return null;
     }
 
-    /**
-     * @return the active groovy (specified) version
-     */
-    public SpecifiedVersion getActiveSpecifiedVersion() {
-        if (activeIndex == -1) {
-            return SpecifiedVersion.findVersion(getActiveVersion());
-        } else {
-            return allSpecifiedVersions[activeIndex];
-        }
-    }
-
     public Version getActiveVersion() {
         if (activeIndex == -1) {
             Bundle bundle = getActiveBundle();
@@ -101,10 +94,6 @@ public class CompilerChooser implements BundleActivator {
         }
     }
 
-    public SpecifiedVersion[] getAllSpecifiedVersions() {
-        return allSpecifiedVersions;
-    }
-
     public Version getAssociatedVersion(SpecifiedVersion specifiedVersion) {
         for (int i = 0, n = allSpecifiedVersions.length; i < n; i += 1) {
             if (allSpecifiedVersions[i] == specifiedVersion) {
@@ -112,6 +101,41 @@ public class CompilerChooser implements BundleActivator {
             }
         }
         return null;
+    }
+
+    public SpecifiedVersion[] getAllSpecifiedVersions() {
+        return allSpecifiedVersions;
+    }
+
+    /**
+     * @return the active Groovy (specified) version
+     */
+    public SpecifiedVersion getActiveSpecifiedVersion() {
+        if (activeIndex == -1) {
+            return SpecifiedVersion.findVersion(getActiveVersion());
+        } else {
+            return allSpecifiedVersions[activeIndex];
+        }
+    }
+
+    private SpecifiedVersion getVersionFromProperties() {
+        SpecifiedVersion version = SpecifiedVersion.findVersionFromString(System.getProperty(GROOVY_COMPILER_LEVEL));
+        if (version == SpecifiedVersion.UNSPECIFIED) {
+            // now look at the non-vmargs
+            String property = System.getProperty(ECLIPSE_COMMANDS);
+            if (property != null) {
+                String[] split = property.split("\\\n");
+                String versionText = null;
+                for (int i = 0, n = split.length; i < n; i += 1) {
+                    if (DASH_GROOVY_COMPILER_LEVEL.equals(split[i]) && i < split.length - 1) {
+                        versionText = split[i + 1];
+                        break;
+                    }
+                }
+                version = SpecifiedVersion.findVersionFromString(versionText);
+            }
+        }
+        return version;
     }
 
     /**
@@ -185,7 +209,7 @@ public class CompilerChooser implements BundleActivator {
         if (initialized) return this;
         initialized = true;
 
-        SpecifiedVersion specifiedVersion = findSysPropVersion();
+        SpecifiedVersion specifiedVersion = getVersionFromProperties();
         if (specifiedVersion == SpecifiedVersion.UNSPECIFIED) {
             // system property was unspecified, now try looking at configuration
             specifiedVersion = getVersionFromPrefenences();
@@ -227,24 +251,12 @@ public class CompilerChooser implements BundleActivator {
                     Bundle bundle = bundles[i];
                     if (i != activeIndex) {
                         System.out.println("Avoided bundle version " + bundle.getVersion());
-                        bundle.uninstall();
+                        bundle.uninstall(); refreshPackages(bundle);
                     } else {
                         System.out.println("Blessed bundle version " + bundle.getVersion());
                     }
                 }
-                PackageAdmin pkgAdmin = bundleContext.getService(bundleContext.getServiceReference(PackageAdmin.class));
-                try {
-                    java.lang.reflect.Method method = pkgAdmin.getClass().getMethod("refreshPackages", Bundle[].class, boolean.class, FrameworkListener[].class);
-                    if (method == null) {
-                        pkgAdmin.refreshPackages(bundles);
-                    } else {
-                        method.setAccessible(true);
-                        method.invoke(pkgAdmin, bundles, Boolean.TRUE, null);
-                    }
-                } catch (Exception e) {
-                    pkgAdmin.refreshPackages(bundles);
-                }
-                dump(bundles);
+                //refreshPackages(bundles);
             } else {
                 System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
             }
@@ -290,6 +302,13 @@ public class CompilerChooser implements BundleActivator {
         }
     }
 
+    @SuppressWarnings("unused")
+    private void logMessage(String s) {
+        ILog log = Platform.getLog(bundleContext.getBundle());
+        log.log(new Status(IStatus.INFO, PLUGIN_ID, "GroovyCompilerChooser: " + s));
+    }
+
+    @SuppressWarnings("unused")
     private void logWarning(String s) {
         ILog log = Platform.getLog(bundleContext.getBundle());
         log.log(new Status(IStatus.WARNING, PLUGIN_ID, "GroovyCompilerChooser: " + s));
@@ -300,30 +319,20 @@ public class CompilerChooser implements BundleActivator {
         log.log(new Status(IStatus.ERROR, PLUGIN_ID, "GroovyCompilerChooser: " + t.getMessage(), t));
     }
 
-    /**
-     * Finds the compiler version that is specified in the system properties
-     */
-    private SpecifiedVersion findSysPropVersion() {
-        SpecifiedVersion version = SpecifiedVersion.findVersionFromString(System.getProperty(GROOVY_COMPILER_LEVEL));
-        if (version == SpecifiedVersion.UNSPECIFIED) {
-            // now look at the non vmwargs
-            version = internalFindCommandLineVersion(System.getProperty(ECLIPSE_COMMANDS));
-        }
-        return version;
-    }
-
-    private SpecifiedVersion internalFindCommandLineVersion(String property) {
-        if (property == null) {
-            return SpecifiedVersion.UNSPECIFIED;
-        }
-        String[] split = property.split("\\\n");
-        String versionText = null;
-        for (int i = 0, n = split.length; i < n; i += 1) {
-            if (DASH_GROOVY_COMPILER_LEVEL.equals(split[i]) && i < split.length - 1) {
-                versionText = split[i + 1];
-                break;
+    private void refreshPackages(Bundle... bundles) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        bundleContext.getBundle(0).adapt(FrameworkWiring.class).refreshBundles(Arrays.asList(bundles), new FrameworkListener() {
+            public void frameworkEvent(FrameworkEvent event) {
+                if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
+                    latch.countDown();
+                }
             }
+        });
+        try {
+            latch.await(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return SpecifiedVersion.findVersionFromString(versionText);
+        dump(bundles);
     }
 }
