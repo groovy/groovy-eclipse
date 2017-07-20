@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.frameworkadapter.util;
+package org.codehaus.groovy.eclipse.chooser;
 
 import org.osgi.framework.Version;
 
@@ -56,7 +56,7 @@ public enum SpecifiedVersion {
     }
 
     /**
-     * Generates a {@link SpecifiedVersion} from a name of a groovy jar
+     * Generates a {@link SpecifiedVersion} from a name of a groovy jar.
      *
      * @param jarName the name of a jar
      * @return the {@link SpecifiedVersion} if known. Will return {@link UNSPECIFIED} if not known
@@ -116,7 +116,6 @@ public enum SpecifiedVersion {
         if (compilerLevel == null) {
             return UNSPECIFIED;
         }
-
         if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
             return _16;
         }

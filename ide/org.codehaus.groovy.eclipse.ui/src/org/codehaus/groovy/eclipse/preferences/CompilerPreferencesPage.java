@@ -16,12 +16,12 @@
 package org.codehaus.groovy.eclipse.preferences;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.chooser.SpecifiedVersion;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerCheckerParticipant;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ProjectScope;
