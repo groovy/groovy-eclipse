@@ -19,10 +19,9 @@ import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.core.runtime.ILog;
-import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SafeRunner;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.Bundle;
@@ -170,23 +169,20 @@ public class CompilerChooser implements BundleActivator {
         // the choose workspace dialog still shows) but before JDT is initialized
         // (so that the groovy bundles aren't loaded).
 
+        if (Platform.getBundle("org.eclipse.core.resources").getState() == Bundle.STARTING) {
+            initializeNoThrow();
+            return;
+        }
+
         // the service listener is called synchronously as the resources bundle is actived
         String filter = "(" + Constants.OBJECTCLASS + "=org.eclipse.core.resources.IWorkspace)";
         serviceListener = new ServiceListener() {
             public void serviceChanged(ServiceEvent event) {
                 if (event.getType() == ServiceEvent.REGISTERED) {
-                    try {
-                        initialize();
-
-                    } catch (BundleException e) {
-                        logError(e);
-                        throw new RuntimeException(e);
-                    } catch (RuntimeException e) {
-                        logError(e);
-                        throw e;
-                    } finally {
-                        CompilerChooser.this.bundleContext.removeServiceListener(serviceListener);
-                    }
+                    CompilerChooser.this.bundleContext.
+                        removeServiceListener(serviceListener);
+                    serviceListener = null;
+                    initializeNoThrow();
                 }
             }
         };
@@ -194,7 +190,8 @@ public class CompilerChooser implements BundleActivator {
     }
 
     public void stop(BundleContext bundleContext) throws Exception {
-        this.bundleContext.removeServiceListener(serviceListener);
+        if (serviceListener != null)
+            bundleContext.removeServiceListener(serviceListener);
         this.bundleContext = null;
         serviceListener = null;
         initialized = false;
@@ -202,6 +199,14 @@ public class CompilerChooser implements BundleActivator {
 
     public boolean isInitiailzed() {
         return initialized;
+    }
+
+    private void initializeNoThrow() {
+        SafeRunner.run(new ISafeRunnable() {
+            public void run() throws Exception {
+                initialize();
+            }
+        });
     }
 
     //VisibleForTesting
@@ -251,12 +256,12 @@ public class CompilerChooser implements BundleActivator {
                     Bundle bundle = bundles[i];
                     if (i != activeIndex) {
                         System.out.println("Avoided bundle version " + bundle.getVersion());
-                        bundle.uninstall(); refreshPackages(bundle);
+                        bundle.uninstall(); //refreshPackages(bundle);
                     } else {
                         System.out.println("Blessed bundle version " + bundle.getVersion());
                     }
                 }
-                //refreshPackages(bundles);
+                refreshPackages(bundles);
             } else {
                 System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
             }
@@ -271,44 +276,18 @@ public class CompilerChooser implements BundleActivator {
         return this;
     }
 
-    private void dump(Bundle[] bundles) {
+    private void dump(Bundle... bundles) {
         for (Bundle b : bundles) {
-            String state;
-            switch (b.getState()) {
-            case Bundle.ACTIVE:
-                state = "ACTIVE";
-                break;
-            case Bundle.UNINSTALLED:
-                state = "UNINSTALLED";
-                break;
-            case Bundle.INSTALLED:
-                state = "INSTALLED";
-                break;
-            case Bundle.RESOLVED:
-                state = "RESOLVED";
-                break;
-            case Bundle.STARTING:
-                state = "STARTING";
-                break;
-            case Bundle.STOPPING:
-                state = "STOPPING";
-                break;
-            default:
-                state = "UNKOWN(" + b.getState() + ")";
-            }
-
-            String message = b.getBundleId() + " " + b.getVersion() + " " + state;
+            String message = b.getBundleId() + " " + b.getVersion() + " " + stateString(b.getState());
             System.out.println(message);
         }
     }
 
-    @SuppressWarnings("unused")
-    private void logMessage(String s) {
+    /*private void logMessage(String s) {
         ILog log = Platform.getLog(bundleContext.getBundle());
         log.log(new Status(IStatus.INFO, PLUGIN_ID, "GroovyCompilerChooser: " + s));
     }
 
-    @SuppressWarnings("unused")
     private void logWarning(String s) {
         ILog log = Platform.getLog(bundleContext.getBundle());
         log.log(new Status(IStatus.WARNING, PLUGIN_ID, "GroovyCompilerChooser: " + s));
@@ -317,7 +296,7 @@ public class CompilerChooser implements BundleActivator {
     private void logError(Throwable t) {
         ILog log = Platform.getLog(bundleContext.getBundle());
         log.log(new Status(IStatus.ERROR, PLUGIN_ID, "GroovyCompilerChooser: " + t.getMessage(), t));
-    }
+    }*/
 
     private void refreshPackages(Bundle... bundles) {
         final CountDownLatch latch = new CountDownLatch(1);
@@ -334,5 +313,23 @@ public class CompilerChooser implements BundleActivator {
             e.printStackTrace();
         }
         dump(bundles);
+    }
+
+    private static String stateString(int bundleState) {
+        switch (bundleState) {
+        case Bundle.ACTIVE:
+            return "ACTIVE";
+        case Bundle.UNINSTALLED:
+            return "UNINSTALLED";
+        case Bundle.INSTALLED:
+            return "INSTALLED";
+        case Bundle.RESOLVED:
+            return "RESOLVED";
+        case Bundle.STARTING:
+            return "STARTING";
+        case Bundle.STOPPING:
+            return "STOPPING";
+        }
+        return "UNKOWN(" + bundleState + ")";
     }
 }
