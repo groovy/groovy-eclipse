@@ -1,4 +1,5 @@
-This folder contains some standard DSL descriptor files that are specific to this version
- of Groovy-Eclipse and are applicable for all projects in your workspace.  In general, 
- you should not edit the files here.  If you want to add custom DSLDs for the entire
- workspace, then you should place them in ~/.groovy/greclipse/dsld. 
+This folder contains some standard DSL descriptor files that are
+specific to this version of Groovy-Eclipse and are applicable to
+all projects in your workspace.  In general, you should not edit
+the files here.  If you want to add custom DSLDs for your entire
+workspace, then you should add them to ~/.groovy/greclipse/dsld.

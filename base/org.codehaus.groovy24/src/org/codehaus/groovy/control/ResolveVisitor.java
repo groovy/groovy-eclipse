@@ -64,7 +64,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private Set<FieldNode> fieldTypesChecked = new HashSet<FieldNode>();
     // GRECLIPSE add
     private final Set<String> resolutionFailedCache = new HashSet<String>(32);
-    private Map cachedClasses = new HashMap();
+    private final Map<String, Object> cachedClasses = new HashMap<String, Object>();
     private static final Object NO_CLASS = new Object();
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration = false;
@@ -103,7 +103,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
     }
-
 
     private static String replacePoints(String name) {
         return name.replace('.','$');
@@ -396,7 +395,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         for (ClassNode classToCheck : hierClasses.values()) {
             // GRECLIPSE add
-            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + "$" + firstComponent)) {
+            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
             // GRECLIPSE end
             val = new ConstructedNestedClass(classToCheck,type.getName());
             if (resolveFromCompileUnit(val)) {
@@ -453,7 +452,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE end
         for (ClassNode testNode : outerClasses) {
             // GRECLIPSE add
-            name = testNode.getName() + "$" + type.getName();
+            name = testNode.getName() + '$' + type.getName();
             if (!resolutionFailedCache.contains(name)) {
             // GRECLIPSE end
             val = new ConstructedNestedClass(testNode,type.getName());
@@ -469,7 +468,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ClassNode next : testNode.getAllInterfaces()) {
                 if (type.getName().contains(next.getName())) continue;
                 // GRECLIPSE add
-                name = next.getName() + "$" + type.getName();
+                name = next.getName() + '$' + type.getName();
                 if (resolutionFailedCache.contains(name)) continue;
                 // GRECLIPSE end
                 val = new ConstructedNestedClass(next,type.getName());
@@ -524,27 +523,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
                 tmp.className = savedName;
             }   else {
-                // GRECLIPSE edit
-                //String savedName = type.getName();
-                //String replacedPointType = replaceLastPoint(savedName);
-                //type.setName(replacedPointType);
-                //if (resolve(type, false, true, true)) return true;
-                //type.setName(savedName);
-                return resolveStaticInner(type);
+                String savedName = type.getName();
+                String replacedPointType = replaceLastPoint(savedName);
+                type.setName(replacedPointType);
+                if (resolve(type, false, true, true)) return true;
+                type.setName(savedName);
             }
         }
         return false;
     }
-
-    protected boolean resolveStaticInner(ClassNode type) {
-        String savedName = type.getName();
-        String replacedPointType = replaceLastPoint(savedName);
-        type.setName(replacedPointType);
-        if (resolve(type, false, true, true)) return true;
-        type.setName(savedName);
-        return false;
-    }
-    // GRECLIPSE end
 
     // GRECLIPSE private->protected
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
@@ -748,7 +735,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticImports().values()) {
                 if (importNode.getFieldName().equals(name)) {
                     // GRECLIPSE add
-                    String cName = importNode.getType().getName() + "$" + name;
+                    String cName = importNode.getType().getName() + '$' + name;
                     if (resolutionFailedCache.contains(cName)) continue;
                     // GRECLIPSE end
                     ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
@@ -789,7 +776,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 // GRECLIPSE add
                 if (!importNode.isUnresolvable()) {
-                    String cName = importNode.getClassName() + "$" + name;
+                    String cName = importNode.getClassName() + '$' + name;
                     if (resolutionFailedCache.contains(cName)) continue;
                 // GRECLIPSE end
                 ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
@@ -1635,7 +1622,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected boolean resolveToScript(ClassNode type) {
         String name = type.getName();
         if (name.startsWith("java.")) return type.isResolved();
-        //TODO: don't ignore inner static classes completely
+        // TODO: don't ignore inner static classes completely
         if (name.indexOf('$') != -1) return type.isResolved();
         ModuleNode module = currentClass.getModule();
         if (module.hasPackageName() && name.indexOf('.') == -1) return type.isResolved();
@@ -1644,7 +1631,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     /**
-     * @return true if resolution should continue, false otherwise (because, for example, it previously succeeded for this unit)
+     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
      */
     protected boolean commencingResolution() {
         // template method

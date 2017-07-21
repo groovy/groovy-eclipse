@@ -959,10 +959,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
         // GRECLIPSE edit -- prevent concurrent modification exceptions
-        //for (String name : names) {
-        for (int i = 0; i < names.size(); i += 1) {
-            String name = names.get(i);
-        // GRECLIPSE end
+        for (String name : new ArrayList<String>(names)) {
             SourceUnit source = sources.get(name);
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {
@@ -1041,8 +1038,8 @@ public class CompilationUnit extends ProcessingUnit {
 
         if (!sort) return unsorted;
 
-        // GRECLIPSE edit
-        /*int[] indexClass = new int[unsorted.size()];
+        /* GRECLIPSE edit
+        int[] indexClass = new int[unsorted.size()];
         int[] indexInterface = new int[unsorted.size()];
         {
             int i = 0;
@@ -1092,7 +1089,8 @@ public class CompilationUnit extends ProcessingUnit {
         return sorted;
     }
 
-    /*private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
+    @SuppressWarnings("unused")
+    private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
         List<ClassNode> sorted = new ArrayList<ClassNode>(unsorted.size());
         for (int i = 0; i < unsorted.size(); i++) {
             int min = -1;
@@ -1107,7 +1105,7 @@ public class CompilationUnit extends ProcessingUnit {
             index[min] = -1;
         }
         return sorted;
-    }*/
+    }
 
     /**
      * A loop driver for applying operations to all primary ClassNodes in

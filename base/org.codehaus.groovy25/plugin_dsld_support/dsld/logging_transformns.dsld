@@ -38,7 +38,7 @@ package dsld
   ]
 ].each { data ->
     contribute(currentType(annotations: annotatedBy(data.annotation))) {
-        provider = 'Logging AST Transform'
+        provider = 'Logging AST transform'
         for (annotationNode in annotations) {
             def loggerName = annotationNode.getMember('value') ?: 'log'
             property name: loggerName, type: data.loggerType, isStatic: true // also final, private, transient

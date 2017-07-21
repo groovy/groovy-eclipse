@@ -63,6 +63,7 @@ import java.util.List;
  */
 class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
 
+    @SuppressWarnings("unused")
     private static final ClassNode INVOKERHELPER_CLASSNODE = ClassHelper.make(InvokerHelper.class);
 
     private final VariableExpression weaved;

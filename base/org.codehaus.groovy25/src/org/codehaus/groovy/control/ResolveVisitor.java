@@ -288,7 +288,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolveToInner(type)) return;
         // GRECLIPSE edit
         //addError("unable to resolve class " + type.getName() + " " + msg, node);
-        String fullMsg = "unable to resolve class " + toNiceName(type) + " " + msg;
+        String fullMsg = "unable to resolve class " + type.toString(false) + " " + msg;
         if (type.getEnd() > 0) {
             if (type.getNameEnd() > 0) {
                 addTypeError(fullMsg, type);
@@ -300,15 +300,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         // GRECLIPSE end
     }
-
-    // GRECLIPSE add
-    private String toNiceName(ClassNode node) {
-        if (node.isArray()) {
-            return toNiceName(node.getComponentType()) + "[]";
-        }
-        return node.getName();
-    }
-    // GRECLIPSE end
 
     private void resolveOrFail(ClassNode type, ASTNode node, boolean prefereImports) {
         resolveGenericsTypes(type.getGenericsTypes());
@@ -530,28 +521,16 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return true;
                 }
                 tmp.className = savedName;
-            }   else {
-                // GRECLIPSE edit
-                //String savedName = type.getName();
-                //String replacedPointType = replaceLastPoint(savedName);
-                //type.setName(replacedPointType);
-                //if (resolve(type, false, true, true)) return true;
-                //type.setName(savedName);
-                return resolveStaticInner(type);
+            } else {
+                String savedName = type.getName();
+                String replacedPointType = replaceLastPoint(savedName);
+                type.setName(replacedPointType);
+                if (resolve(type, false, true, true)) return true;
+                type.setName(savedName);
             }
         }
         return false;
     }
-
-    protected boolean resolveStaticInner(ClassNode type) {
-        String savedName = type.getName();
-        String replacedPointType = replaceLastPoint(savedName);
-        type.setName(replacedPointType);
-        if (resolve(type, false, true, true)) return true;
-        type.setName(savedName);
-        return false;
-    }
-    // GRECLIPSE end
 
     // GRECLIPSE private->protected
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {

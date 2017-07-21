@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
@@ -84,68 +85,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         return dsls
     }
 
-    //
-
-    @Test
-    void testDSLProposalFirstStaticField() {
-        String contents = '''\
-            @Singleton class Foo { static Object ijk }
-            Foo.i
-            '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.i')))
-        // contributed by built-in DLSD for @Singleton AST transform
-        assertProposalOrdering(proposals, 'instance', 'ijk')
-    }
-
-    @Test
-    void testDSLProposalFirstStaticMethod() {
-        String contents = '''\
-            @Singleton class Foo { static Object getIjk() { } }
-            Foo.g
-            '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.g')))
-        // contributed by built-in DLSD for @Singleton AST transform
-        assertProposalOrdering(proposals, 'getInstance', 'getIjk')
-    }
-
-    @Test
-    void testDSLProposalFirstMethod1() {
-        String contents = '''\
-            import groovy.swing.SwingBuilder
-              new SwingBuilder().edt {
-              delegate.f
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'delegate.f')))
-        // contributed by built-in DSLD for SwingBuilder
-        assertProposalOrdering(proposals, 'frame', 'find')
-    }
-
-    @Test
-    void testDSLProposalFirstMethod2() {
-        String contents = '''\
-            import groovy.swing.SwingBuilder
-            new SwingBuilder().edt {
-              fr
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'fr')))
-        // contributed by built-in DSLD for SwingBuilder
-        assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
-    }
-
-    @Test // proposals should not exist since not applied to 'this'
-    void testDSLProposalFirstMethod3() {
-        String contents = '''\
-            import groovy.swing.SwingBuilder
-              new SwingBuilder().edt {
-              this.x
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'this.')))
-        proposalExists(proposals, 'frame', 0)
-        proposalExists(proposals, 'registerBinding', 0)
-    }
+    //--------------------------------------------------------------------------
 
     @Test // GRECLIPSE-1324
     void testEmptyClosure1() {
@@ -280,5 +220,166 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'val.fl'))
         ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
         applyProposalAndCheck(new Document(contents), proposal, contents.replace('val.fl', 'val.flart val '))
+    }
+
+    @Test
+    void testNewifyTransform1() {
+        String contents = '''\
+            @Newify class Foo {
+              List list = ArrayList.n
+              Map map = HashM
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 0)
+    }
+
+    @Test
+    void testNewifyTransform2() {
+        String contents = '''\
+            @Newify(HashMap) class Foo {
+              List list = ArrayList.n
+              Map map = HashM
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform3() {
+        String contents = '''\
+            @Newify(auto=false, value=HashMap) class Foo {
+              List list = ArrayList.n
+              Map map = HashM
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 0)
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testSelfTypeTransform1() {
+        assumeTrue(isAtLeastGroovy(24)) // SelfType was added in Groovy 2.4
+
+        String contents = '''\
+            import groovy.transform.*
+
+            class Foo { String string }
+
+            @CompileStatic
+            @SelfType(Foo)
+            trait Bar {
+              void baz() {
+                def s1 = str
+                def s2 = getStr
+              }
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'str'))
+        proposalExists(proposals, 'string', 1)
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr')))
+        proposalExists(proposals, 'getString()', 1)
+    }
+
+    @Test
+    void testSelfTypeTransform2() {
+        assumeTrue(isAtLeastGroovy(24)) // SelfType was added in Groovy 2.4
+
+        String contents = '''\
+            import groovy.transform.*
+
+            class Foo { String string }
+
+            @CompileStatic
+            @SelfType([Foo, GroovyObject])
+            trait Bar {
+              void baz() {
+                def s1 = str
+                def s2 = getStr
+              }
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'str'))
+        proposalExists(proposals, 'string', 1)
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'getStr')))
+        proposalExists(proposals, 'getString()', 1)
+    }
+
+    @Test
+    void testSingletonTransform1() {
+        String contents = '''\
+            @Singleton class Foo { static Object ijk }
+            Foo.i
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.i')))
+        // contributed by built-in DLSD for @Singleton AST transform
+        assertProposalOrdering(proposals, 'instance', 'ijk')
+    }
+
+    @Test
+    void testSingletonTransform2() {
+        String contents = '''\
+            @Singleton class Foo { static Object getIjk() { } }
+            Foo.g
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.g')))
+        // contributed by built-in DLSD for @Singleton AST transform
+        assertProposalOrdering(proposals, 'getInstance', 'getIjk')
+    }
+
+    @Test
+    void testSwingBuilder1() {
+        String contents = '''\
+            import groovy.swing.SwingBuilder
+              new SwingBuilder().edt {
+              delegate.f
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'delegate.f')))
+        // contributed by built-in DSLD for SwingBuilder
+        assertProposalOrdering(proposals, 'frame', 'find')
+    }
+
+    @Test
+    void testSwingBuilder2() {
+        String contents = '''\
+            import groovy.swing.SwingBuilder
+            new SwingBuilder().edt {
+              fr
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'fr')))
+        // contributed by built-in DSLD for SwingBuilder
+        assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
+    }
+
+    @Test // proposals should not exist since not applied to 'this'
+    void testSwingBuilder3() {
+        String contents = '''\
+            import groovy.swing.SwingBuilder
+              new SwingBuilder().edt {
+              this.x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.'))
+        proposalExists(proposals, 'frame', 0)
+        proposalExists(proposals, 'registerBinding', 0)
     }
 }
