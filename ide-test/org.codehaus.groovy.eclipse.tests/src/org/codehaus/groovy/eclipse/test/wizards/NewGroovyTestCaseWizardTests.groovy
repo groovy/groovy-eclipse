@@ -16,10 +16,15 @@
 package org.codehaus.groovy.eclipse.test.wizards
 
 import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
+import static org.junit.Assert.assertEquals
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.wizards.NewGroovyTestTypeWizardPage
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils
+import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo
 import org.junit.Before
 import org.junit.Test
@@ -28,36 +33,88 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
+        addNature(GROOVY_NATURE)
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
     }
 
-    private NewGroovyTestTypeWizardPage createGroovyTestTypeWizardPage() {
-        NewGroovyTestTypeWizardPage wizardPage = new NewGroovyTestTypeWizardPage(new NewTestCaseWizardPageTwo())
-            wizardPage.setPackageFragment(getPackageFragment('testPackage'), true)
+    private NewGroovyTestTypeWizardPage newGroovyTestTypeWizardPage() {
+        def wizardPage = new NewGroovyTestTypeWizardPage(new NewTestCaseWizardPageTwo())
         wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test'), true)
+        wizardPage.setEnclosingTypeSelection(false, true)
+        wizardPage.setJUnit4(false, true)
+
+        wizardPage.metaClass.setStubSelection = { String which, boolean state ->
+            def stubs = ReflectionUtils.getPrivateField(NewTestCaseWizardPageOne, 'fMethodStubsButtons', delegate)
+            int index = ['setUpClass', 'tearDownClass', 'setUp', 'tearDown', 'constructor'].indexOf(which)
+            assert stubs.isEnabled(index) : "$which checkbox is not enabled"
+            stubs.setSelection(index, state)
+        }
+
         return wizardPage
     }
 
     @Test
-    void testAddGroovyTestCaseNonGroovyProject() {
+    void testCreateGroovyTestCase_NotGroovyProject() {
         removeNature(GROOVY_NATURE)
-        NewGroovyTestTypeWizardPage page = createGroovyTestTypeWizardPage()
-        String testCaseName = 'NonGroovyProjectTestCase'
-        page.setEnclosingTypeSelection(false, true)
-        page.setTypeName(testCaseName, true)
-        page.createType(new NullProgressMonitor())
-        def type = page.createdType
-        assert type == null
+
+        def wizardPage = newGroovyTestTypeWizardPage()
+        wizardPage.setTypeName('NonGroovyProjectTestCase', true)
+        wizardPage.createType(new NullProgressMonitor())
+
+        assert wizardPage.createdType == null
     }
 
     @Test
-    void testAddGroovyTestCaseGroovyProject() {
-        addNature(GROOVY_NATURE)
-        NewGroovyTestTypeWizardPage page = createGroovyTestTypeWizardPage()
-        String testCaseName = 'GroovyProjectTestCase'
-        page.setEnclosingTypeSelection(false, true)
-        page.setTypeName(testCaseName, true)
-        page.createType(new NullProgressMonitor())
-        def type = page.createdType
-        assert type.elementName == testCaseName
+    void testCreateGroovyTestCase_YesGroovyProject() {
+        def wizardPage = newGroovyTestTypeWizardPage()
+        wizardPage.setTypeName('GroovyProjectTestCase', true)
+        wizardPage.createType(new NullProgressMonitor())
+
+        String expected = '''\
+            |package test
+            |
+            |import groovy.util.GroovyTestCase
+            |
+            |class GroovyProjectTestCase extends GroovyTestCase {
+            |
+            |}
+            |'''.stripMargin()
+
+        assert wizardPage.createdType?.elementName == 'GroovyProjectTestCase'
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+    }
+
+    @Test
+    void testCreateGroovyTestCase_SetUpAndTearDown() {
+        def wizardPage = newGroovyTestTypeWizardPage()
+        wizardPage.setTypeName('GroovyProjectTestCase', true)
+        wizardPage.setStubSelection('setUp', true)
+        wizardPage.setStubSelection('tearDown', true)
+        wizardPage.setStubSelection('constructor', true)
+        wizardPage.createType(new NullProgressMonitor())
+
+        String expected = '''\
+            |package test
+            |
+            |import groovy.util.GroovyTestCase
+            |
+            |class GroovyProjectTestCase extends GroovyTestCase {
+            |
+            |  public GroovyProjectTestCase(String name) {
+            |    super(name)
+            |  }
+            |
+            |  protected void setUp() throws Exception {
+            |  }
+            |
+            |  protected void tearDown() throws Exception {
+            |  }
+            |
+            |}
+            |'''.stripMargin()
+
+        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
     }
 }

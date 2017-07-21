@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.wizards;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
+import org.codehaus.groovy.eclipse.refactoring.formatter.SemicolonRemover;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
@@ -24,13 +25,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
@@ -40,10 +38,11 @@ import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
-import org.eclipse.text.edits.ReplaceEdit;
 
 public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizardPage {
 
@@ -125,7 +124,7 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 
     @Override
     public void createType(IProgressMonitor monitor) throws CoreException, InterruptedException {
-        SubMonitor submon = SubMonitor.convert(monitor, 7);
+        SubMonitor submon = SubMonitor.convert(monitor, 6);
 
         IPackageFragment pack = getPackageFragment();
         if (pack != null) {
@@ -143,26 +142,12 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             unit.becomeWorkingCopy(submon.newChild(1));
             MultiTextEdit textEdit = new MultiTextEdit();
 
-            // remove ';' on package declaration
-            IPackageDeclaration[] packs = unit.getPackageDeclarations();
-            if (packs.length > 0) {
-                ISourceRange range = packs[0].getSourceRange();
-                int position = range.getOffset() + range.getLength();
-                if (contents[position] == ';') {
-                    textEdit.addChild(new ReplaceEdit(position, 1, ""));
-                }
-            }
-            submon.worked(1);
-
-            // remove ';' on import declaration
-            IImportDeclaration[] imports = unit.getImports();
-            if (imports != null && imports.length > 0) {
-                ISourceRange range = imports[0].getSourceRange();
-                int position = range.getOffset() + range.getLength() - 1;
-                if (contents[position] == ';') {
-                    textEdit.addChild(new ReplaceEdit(position, 1, ""));
-                }
-            }
+            // remove ';' from package and import declarations
+            new SemicolonRemover(
+                new TextSelection(0, contents.length),
+                new Document(String.valueOf(contents)),
+                textEdit
+            ).format();
             submon.worked(1);
 
             if (isPackagePrivate()) {

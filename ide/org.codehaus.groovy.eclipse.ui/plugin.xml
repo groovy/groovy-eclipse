@@ -214,7 +214,7 @@
       <wizard
             category="org.codehaus.groovy.eclipse"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="$nl$/icons/newgroovytestsuite_wiz.gif"
+            icon="$nl$/icons/newgroovytestcase_wiz.png"
             id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"
             name="Groovy Test Case"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
@@ -464,7 +464,7 @@
       <actionSet
             id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"
             label="Groovy Element Creation"
-            visible="true">
+            visible="false">
          <action
                class="org.codehaus.groovy.eclipse.wizards.OpenGroovyProjectWizardAction"
                icon="$nl$/icons/newgroovyproject_wiz.png"
@@ -477,7 +477,7 @@
       <actionSet
             description="Converts between groovy and java file extensions"
             id="org.codehaus.groovy.eclipse.conversion"
-            label="Convert to or from groovy file extension"
+            label="Convert to/from groovy source"
             visible="false">
          <action
                class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
