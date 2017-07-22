@@ -206,6 +206,8 @@ public class CompilerChooser implements BundleActivator {
             public void run() throws Exception {
                 initialize();
             }
+            public void handleException(Throwable t) {
+            }
         });
     }
 
