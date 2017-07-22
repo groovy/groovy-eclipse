@@ -164,15 +164,10 @@ public class CompilerChooser implements BundleActivator {
     public void start(BundleContext bundleContext) throws Exception {
         this.bundleContext = bundleContext;
 
-        // There is a small window where the chooser can be initialized.
-        // It has to be after the workspace has started (in order to ensure
-        // the choose workspace dialog still shows) but before JDT is initialized
-        // (so that the groovy bundles aren't loaded).
-
-        if (Platform.getBundle("org.eclipse.core.resources").getState() == Bundle.STARTING) {
-            initializeNoThrow();
-            return;
-        }
+        // There is a small window where the chooser can be initialized. It has
+        // to be after the workspace has started (in order to ensure the choose
+        // workspace dialog still shows) but before JDT is initialized (so that
+        // the Groovy bundles aren't fully loaded).
 
         // the service listener is called synchronously as the resources bundle is actived
         String filter = "(" + Constants.OBJECTCLASS + "=org.eclipse.core.resources.IWorkspace)";
@@ -190,8 +185,7 @@ public class CompilerChooser implements BundleActivator {
     }
 
     public void stop(BundleContext bundleContext) throws Exception {
-        if (serviceListener != null)
-            bundleContext.removeServiceListener(serviceListener);
+        this.bundleContext.removeServiceListener(serviceListener);
         this.bundleContext = null;
         serviceListener = null;
         initialized = false;
@@ -258,12 +252,12 @@ public class CompilerChooser implements BundleActivator {
                     Bundle bundle = bundles[i];
                     if (i != activeIndex) {
                         System.out.println("Avoided bundle version " + bundle.getVersion());
-                        bundle.uninstall(); //refreshPackages(bundle);
+                        bundle.uninstall(); refreshPackages(bundle);
                     } else {
                         System.out.println("Blessed bundle version " + bundle.getVersion());
                     }
                 }
-                refreshPackages(bundles);
+                //refreshPackages(bundles);
             } else {
                 System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
             }
