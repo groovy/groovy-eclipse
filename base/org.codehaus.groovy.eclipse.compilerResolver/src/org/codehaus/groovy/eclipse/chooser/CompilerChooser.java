@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.chooser;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -169,7 +171,7 @@ public class CompilerChooser implements BundleActivator {
         // workspace dialog still shows) but before JDT is initialized (so that
         // the Groovy bundles aren't fully loaded).
 
-        // the service listener is called synchronously as the resources bundle is actived
+        // the service listener is called synchronously as the resources bundle is started
         String filter = "(" + Constants.OBJECTCLASS + "=org.eclipse.core.resources.IWorkspace)";
         serviceListener = new ServiceListener() {
             public void serviceChanged(ServiceEvent event) {
@@ -185,7 +187,9 @@ public class CompilerChooser implements BundleActivator {
     }
 
     public void stop(BundleContext bundleContext) throws Exception {
-        this.bundleContext.removeServiceListener(serviceListener);
+        if (serviceListener != null) {
+            bundleContext.removeServiceListener(serviceListener);
+        }
         this.bundleContext = null;
         serviceListener = null;
         initialized = false;
@@ -207,75 +211,59 @@ public class CompilerChooser implements BundleActivator {
 
     //VisibleForTesting
     public CompilerChooser initialize() throws BundleException {
-        if (initialized) return this;
-        initialized = true;
+        if (!initialized) {
+            initialized = true;
 
-        SpecifiedVersion specifiedVersion = getVersionFromProperties();
-        if (specifiedVersion == SpecifiedVersion.UNSPECIFIED) {
-            // system property was unspecified, now try looking at configuration
-            specifiedVersion = getVersionFromPrefenences();
-        }
+            SpecifiedVersion specifiedVersion = getVersionFromProperties();
+            if (specifiedVersion == SpecifiedVersion.UNSPECIFIED) {
+                // system property was unspecified, now try looking at configuration
+                specifiedVersion = getVersionFromPrefenences();
+            }
 
-        System.out.println("Starting Groovy-Eclipse compiler resolver. Specified compiler level: " + specifiedVersion.toReadableVersionString());
+            System.out.println("Starting Groovy-Eclipse compiler resolver. Specified compiler level: " + specifiedVersion.toReadableVersionString());
 
-        Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
+            Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
+            if (bundles == null || bundles.length == 0) {
+                System.out.println("No Groovy bundles found...this will cause some problems.");
+                bundles = new Bundle[0];
+            } else {
+                // print debug infos about the bundles to debug screwy behavior
+                dump(Arrays.asList(bundles));
+            }
 
-        if (bundles == null || bundles.length == 0) {
-            System.out.println("No Groovy bundles found...this will cause some problems.");
-            bundles = new Bundle[0];
-        } else {
-            // print debug infos about the bundles to debug screwy behavior
-            dump(bundles);
-        }
-
-        allVersions = new Version[bundles.length];
-        allSpecifiedVersions = new SpecifiedVersion[bundles.length];
-
-        if (specifiedVersion != SpecifiedVersion.UNSPECIFIED) {
-            // if there are multiple bundles that match the SpecifiedVersion, let the latest one win out
-            boolean found = false;
+            allVersions = new Version[bundles.length];
+            allSpecifiedVersions = new SpecifiedVersion[bundles.length];
             for (int i = 0, n = bundles.length; i < n; i += 1) {
                 Bundle bundle = bundles[i];
                 allVersions[i] = bundle.getVersion();
                 allSpecifiedVersions[i] = SpecifiedVersion.findVersion(bundle.getVersion());
-                if (allSpecifiedVersions[i] == specifiedVersion && !found) {
+                if (allSpecifiedVersions[i] == specifiedVersion && activeIndex == -1) {
                     activeIndex = i;
-                    found = true;
                 }
             }
 
-            // if activeIndex == 0, then there's nothing to do since specified bundle is already first
-            // WRONG on e4.4 it looks like osgi remember which bundle was activated last time and will
-            // use that one again, rather than automatically use latest available version.
-            if (found /*&& activeIndex > 0*/) {
+            if (bundles.length > 1) {
+                int skip = Math.max(0, activeIndex);
+                Collection<Bundle> dirty = new ArrayList<Bundle>();
                 for (int i = 0, n = bundles.length; i < n; i += 1) {
                     Bundle bundle = bundles[i];
-                    if (i != activeIndex) {
-                        System.out.println("Avoided bundle version " + bundle.getVersion());
-                        bundle.uninstall(); refreshPackages(bundle);
+                    if (i == skip) {
+                        System.out.println("Skipped bundle version " + bundle.getVersion());
                     } else {
-                        System.out.println("Blessed bundle version " + bundle.getVersion());
+                        System.out.println("Stopped bundle version " + bundle.getVersion());
+                        bundle.uninstall();
+                        dirty.add(bundle);
                     }
                 }
-                //refreshPackages(bundles);
-            } else {
-                System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
-            }
-        } else {
-            for (int i = 0, n = bundles.length; i < n; i += 1) {
-                Bundle bundle = bundles[i];
-                allVersions[i] = bundle.getVersion();
-                allSpecifiedVersions[i] = SpecifiedVersion.findVersion(bundle.getVersion());
+                refreshPackages(dirty);
             }
         }
-
         return this;
     }
 
-    private void dump(Bundle... bundles) {
+    private void dump(Collection<Bundle> bundles) {
         for (Bundle b : bundles) {
-            String message = b.getBundleId() + " " + b.getVersion() + " " + stateString(b.getState());
-            System.out.println(message);
+            System.out.println(String.format("%3d %s_%s %s", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState())));
         }
     }
 
@@ -294,9 +282,14 @@ public class CompilerChooser implements BundleActivator {
         log.log(new Status(IStatus.ERROR, PLUGIN_ID, "GroovyCompilerChooser: " + t.getMessage(), t));
     }*/
 
-    private void refreshPackages(Bundle... bundles) {
+    private void refreshPackages(Collection<Bundle> bundles) {
+        FrameworkWiring wiring = bundleContext.getBundle(0).adapt(FrameworkWiring.class);
+
+        System.out.println("Refresh bundles:");
+        dump(wiring.getDependencyClosure(bundles));
+
         final CountDownLatch latch = new CountDownLatch(1);
-        bundleContext.getBundle(0).adapt(FrameworkWiring.class).refreshBundles(Arrays.asList(bundles), new FrameworkListener() {
+        wiring.refreshBundles(bundles, new FrameworkListener() {
             public void frameworkEvent(FrameworkEvent event) {
                 if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
                     latch.countDown();
@@ -308,13 +301,10 @@ public class CompilerChooser implements BundleActivator {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        dump(bundles);
     }
 
     private static String stateString(int bundleState) {
         switch (bundleState) {
-        case Bundle.ACTIVE:
-            return "ACTIVE";
         case Bundle.UNINSTALLED:
             return "UNINSTALLED";
         case Bundle.INSTALLED:
@@ -325,7 +315,9 @@ public class CompilerChooser implements BundleActivator {
             return "STARTING";
         case Bundle.STOPPING:
             return "STOPPING";
+        case Bundle.ACTIVE:
+            return "ACTIVE";
         }
-        return "UNKOWN(" + bundleState + ")";
+        return "UNKNOWN(" + bundleState + ")";
     }
 }
