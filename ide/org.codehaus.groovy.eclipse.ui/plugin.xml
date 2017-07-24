@@ -187,7 +187,7 @@
             icon="$nl$/icons/newgroovyclass_wiz.png"
             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"
             name="Groovy Class"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
          <class class="org.codehaus.groovy.eclipse.wizards.NewClassWizard">
             <parameter
                   name="javatype"
@@ -205,7 +205,7 @@
             icon="$nl$/icons/newgroovyproject_wiz.png"
             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"
             name="Groovy Project"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective"
             project="true">
          <description>
             Create a new Groovy project
@@ -217,7 +217,7 @@
             icon="$nl$/icons/newgroovytestcase_wiz.png"
             id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"
             name="Groovy Test Case"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
          <class class="org.codehaus.groovy.eclipse.wizards.NewGroovyTestCaseWizard">
             <parameter
                   name="javatype"
