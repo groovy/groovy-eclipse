@@ -137,20 +137,13 @@ public class GroovyDocumentScanner implements IDocumentListener {
     /**
      * Translate Antlr line/column positions of a token into Eclipse document offset.
      *
-     * @param token
      * @return offset of the start of the token in the document.
-     * @throws BadLocationException
      */
     public int getOffset(Token token) throws BadLocationException {
-        int offset = GroovyScanner.getOffset(document, token.getLine(), token.getColumn());
-        if (TOKEN_POSITION_ASSERTS) {
-            // These asserts should give some confidence we compute
-            // positions correctly.
-            if (token.getType() == GroovyTokenTypeBridge.EOF) {
-                // EOF token is an exception, it is not actually in the
-                // document so its position info doesn't seem to obey these
-                // assumptions.
-            } else {
+        int offset = 0;
+        if (token != null) {
+            offset = GroovyScanner.getOffset(document, token.getLine(), token.getColumn());
+            if (TOKEN_POSITION_ASSERTS && token.getType() != GroovyTokenTypeBridge.EOF) {
                 int col = token.getColumn() - 1;
                 int line = token.getLine() - 1;
 
