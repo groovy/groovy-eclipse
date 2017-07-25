@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" id="svg2" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <defs id="defs4">
+    <linearGradient gradientTransform="translate(-1.977903,-1.044194)" id="page-stroke" gradientUnits="userSpaceOnUse" x1="10.544736" y1="1038.5779" x2="10.544736" y2="1052.3228">
+      <stop offset="0" style="stop-color:#b28a30;stop-opacity:1" id="page-stroke-stop0"/>
+      <stop offset="1" style="stop-color:#7c703e;stop-opacity:1" id="page-stroke-stop1"/>
+    </linearGradient>
+    <linearGradient gradientTransform="translate(2.022097,-1.044194)" id="flap-bg" gradientUnits="userSpaceOnUse" x1="7.9987183" y1="1042.2307" x2="9.9874563" y2="1040.3303">
+      <stop offset="0" style="stop-color:#e0c88f;stop-opacity:1" id="flap-bg-stop0"/>
+      <stop offset="1" style="stop-color:#d5b269;stop-opacity:1" id="flap-bg-stop1"/>
+    </linearGradient>
+    <linearGradient x1="3.0193796" gradientUnits="userSpaceOnUse" x2="14.028606" y1="1044.3735" y2="1044.3735" id="page-bg">
+      <stop offset="0" style="stop-color:#f9fafc;stop-opacity:1" id="page-bg-stop0"/>
+      <stop offset="1" style="stop-color:#dce7f7;stop-opacity:1" id="page-bg-stop1"/>
+    </linearGradient>
+  </defs>
+  <g id="layer1" style="display:inline" transform="translate(0,-1036.3622)">
+    <path d="m 3.5193795,1037.8597 7.0096695,0 2.999557,3.0066 0,10.0209 -10.0092265,0 z" id="page" style="display:inline;fill:url(#page-bg);stroke:url(#page-stroke);stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dashoffset:0;stroke-opacity:1;fill-opacity:1.0">
+      <title id="title3284">
+                page
+            </title>
+    </path>
+    <path d="m 9.998718,1037.397 0,3.9112 3.977478,0 z" id="flap" style="fill:url(#flap-bg);fill-opacity:1;stroke:none;display:inline">
+      <title id="title3286">
+                flap
+            </title>
+    </path>
+    <g transform="scale(0.95048921,1.0520898)" style="font-style:normal;font-weight:normal;font-size:10.80410862px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#366c9d;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" id="text3234">
+      <path id="path3239" style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L Medium';fill:#356b9d;fill-opacity:1" d="m 8.3036001,994.38904 c -0.594226,-0.0108 -0.626639,-0.0216 -0.756288,-0.0972 -0.07563,-0.0432 -0.129649,-0.12111 -0.129649,-0.23996 0,-0.32412 0.3614554,-0.40815 1.0853304,-0.42976 0.3689992,-0.008 1.5042255,0.0115 2.1494395,-0.31029 0.772821,-0.38548 0.913789,-0.77955 0.913789,-1.25156 0,-0.78922 -0.117179,-0.9351 -0.236048,-1.07272 -0.118869,-0.13761 0.390749,-0.22731 0.660852,-0.22731 0.270102,0 0.206724,-0.44965 0.206724,-1.13493 0,-0.61937 -0.211415,-0.62663 -0.875809,-0.62663 -0.271756,0 -0.556644,0.3671 -0.797904,0.79986 -0.9187829,0 -1.055233,-0.007 -1.595439,-0.007 -1.3205612,0 -1.6670623,1.01571 -1.7776931,1.72402 -0.081513,0.52189 -0.1602246,1.24096 0.1691042,1.7523 -0.723875,0.16206 -1.0109182,0.48618 -1.0109182,1.08041 0,0.41237 0.026632,0.98856 0.026632,0.98856 -0.6041,0.26739 -1.0683957,0.52401 -1.0683957,0.96698 0,1.22764 0.808951,1.11282 3.233123,1.11282 1.8042858,0 2.8516608,-0.13155 2.8516608,-1.70704 0,-0.54021 -0.05539,-0.78605 -0.423257,-1.06018 -0.367871,-0.27414 -0.777752,-0.25993 -1.5232348,-0.25992 z m 1.2621203,-3.61001 c 0.5402026,0 0.7776896,0.18677 0.7776896,0.82994 0,0.79576 -0.4286469,1.094 -1.1201102,1.094 -0.669855,0 -0.7861687,-0.14631 -0.7861687,-0.59952 0,-1.04747 0.6604433,-1.32442 1.1285893,-1.32442 z m -0.1936173,4.72879 c 0.5270969,0 0.7534579,0.0947 0.7534579,0.44046 0,0.48364 -0.1988941,0.49023 -1.6936656,0.49023 -1.515784,0 -1.985064,0.0681 -1.985064,-0.44367 0,-0.55936 0.6474684,-0.47893 1.2836171,-0.47893 0.703414,0 0.9585013,-0.008 1.6416546,-0.008 z"/>
+    </g>
+  </g>
+</svg>

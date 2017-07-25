@@ -184,7 +184,7 @@
       <wizard
             category="org.codehaus.groovy.eclipse"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="$nl$/icons/newgroovyclass_wiz.png"
+            icon="$nl$/icons/wiz/newgroovyclass.png"
             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"
             name="Groovy Class"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
@@ -202,7 +202,7 @@
             category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.wizards.GroovyProjectWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="$nl$/icons/newgroovyproject_wiz.png"
+            icon="$nl$/icons/wiz/newgroovyproject.png"
             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"
             name="Groovy Project"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective"
@@ -214,7 +214,7 @@
       <wizard
             category="org.codehaus.groovy.eclipse"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="$nl$/icons/newgroovytestcase_wiz.png"
+            icon="$nl$/icons/wiz/newgroovytestcase.png"
             id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"
             name="Groovy Test Case"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
@@ -467,7 +467,7 @@
             visible="false">
          <action
                class="org.codehaus.groovy.eclipse.wizards.OpenGroovyProjectWizardAction"
-               icon="$nl$/icons/newgroovyproject_wiz.png"
+               icon="$nl$/icons/wiz/newgroovyproject.png"
                id="opengroovyprojectwizard"
                label="Groovy Project..."
                toolbarPath="org.eclipse.jdt.ui.JavaElementCreationActionSet/JavaWizards"

@@ -160,7 +160,7 @@
             contributesToHeader="true"
             highlightPreferenceKey="typeCheckIndicationHighlighting"
             highlightPreferenceValue="false"
-            icon="$nl$/icons/warn_type_check.gif"
+            icon="$nl$/icons/stc_warning.png"
             isGoToNextNavigationTarget="true"
             isGoToNextNavigationTargetKey="istypeCheckGoToNextNavigationTarget"
             isGoToPreviousNavigationTarget="true"
