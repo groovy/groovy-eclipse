@@ -24,6 +24,7 @@ import java.util.Map;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
@@ -66,7 +67,9 @@ class JDTClassNodeBuilder {
         // GRECLIPSE-1639: Not all TypeBinding instances have been resolved when we get to this point.
         // See comment on org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.getTypeFromCompoundName(char[][], boolean, boolean)
         if (type instanceof UnresolvedReferenceBinding) {
-            type = resolver.getScope().environment.askForType(((UnresolvedReferenceBinding) type).compoundName);
+            char[][] compoundName = ((UnresolvedReferenceBinding) type).compoundName;
+            type = resolver.getScope().environment.askForType(compoundName);
+            if (type == null) throw new IllegalStateException("Unable to resolve type: " + CharOperation.toString(compoundName));
         }
 
         if (type instanceof TypeVariableBinding) {
