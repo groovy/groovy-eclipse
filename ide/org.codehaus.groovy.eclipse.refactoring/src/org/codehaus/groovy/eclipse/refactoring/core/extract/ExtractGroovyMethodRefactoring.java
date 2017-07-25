@@ -25,7 +25,6 @@ import java.util.Observer;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -423,7 +422,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private void checkStaticModifier() {
         if (methodCodeFinder.isStatic()) {
-            newMethod.setModifiers(newMethodModifier | Opcodes.ACC_STATIC);
+            newMethod.setModifiers(newMethodModifier | MethodNode.ACC_STATIC);
         } else {
             newMethod.setModifiers(newMethodModifier);
         }
