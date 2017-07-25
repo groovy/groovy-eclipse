@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -2635,7 +2634,7 @@ assert primaryExprType != null && dependentExprType != null;
 
     private static boolean isEnumInit(StaticMethodCallExpression node) {
         int typeModifiers = node.getOwnerType().getModifiers();
-        return ((typeModifiers & Opcodes.ACC_ENUM) > 0 && node.getMethod().equals("$INIT"));
+        return ((typeModifiers & ClassNode.ACC_ENUM) > 0 && node.getMethod().equals("$INIT"));
     }
 
     private static boolean isLazy(FieldNode fieldNode) {

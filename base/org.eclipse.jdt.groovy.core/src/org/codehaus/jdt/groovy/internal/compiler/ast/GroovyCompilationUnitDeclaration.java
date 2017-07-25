@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 
 import groovy.lang.GroovyRuntimeException;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -1095,11 +1094,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             CompilationResult compilationResult = unitDeclaration.compilationResult;
             char[] mainName = toMainName(compilationResult.getFileName());
-            boolean isInner = false;
-            List<ClassNode> classNodes = null;
-            classNodes = moduleClassNodes;
+            boolean isInner;
             Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<ClassNode, List<TypeDeclaration>>();
-            for (ClassNode classNode : classNodes) {
+            for (ClassNode classNode : moduleClassNodes) {
                 if (!classNode.isPrimaryClassNode()) {
                     continue;
                 }
@@ -1110,35 +1107,33 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (classNode instanceof InnerClassNode) {
                     isInner = true;
                 } else {
+                    isInner = false;
                     typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
                     if (!CharOperation.equals(typeDeclaration.name, mainName)) {
                         typeDeclaration.bits |= ASTNode.IsSecondaryType;
                     }
-                    isInner = false;
                 }
 
                 boolean isInterface = classNode.isInterface();
                 boolean isEnum = classNode.isEnum();
                 int mods = classNode.getModifiers();
                 if (isTrait(classNode)) {
-                    mods |= Opcodes.ACC_INTERFACE;
+                    mods |= ClassNode.ACC_INTERFACE;
                 }
                 if (isEnum) {
                     // remove final
-                    mods &= ~Opcodes.ACC_FINAL;
+                    mods &= ~ClassNode.ACC_FINAL;
                 }
-                // FIXASC should this modifier be set?
-                // mods |= Opcodes.ACC_PUBLIC;
                 // FIXASC should not do this for inner classes, just for top level types
                 // FIXASC does this make things visible that shouldn't be?
-                mods &= ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED);
+                mods &= ~(ClassNode.ACC_PRIVATE | ClassNode.ACC_PROTECTED);
                 if (!isInner) {
-                    if ((mods & Opcodes.ACC_STATIC) != 0) {
-                        mods &= ~(Opcodes.ACC_STATIC);
+                    if ((mods & ClassNode.ACC_STATIC) != 0) {
+                        mods &= ~(ClassNode.ACC_STATIC);
                     }
                 }
 
-                typeDeclaration.modifiers = mods & ~((isInterface || isEnum) ? Opcodes.ACC_ABSTRACT : 0);
+                typeDeclaration.modifiers = mods & ~((isInterface || isEnum) ? ClassNode.ACC_ABSTRACT : 0);
                 fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
                 GenericsType[] generics = classNode.getGenericsTypes();
                 if (generics != null && generics.length > 0) {
@@ -1150,7 +1145,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, typeDeclaration, compilationResult);
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
                 typeDeclaration.properties = classNode.getProperties();
-                if (classNode instanceof InnerClassNode) {
+                if (isInner) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
                     ClassNode outerClass = innerClassNode.getOuterClass();
                     String outername = outerClass.getNameWithoutPackage();
@@ -1260,7 +1255,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), 0, 0);
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
                         if (!isEnumField) {
-                            fieldDeclaration.modifiers = fieldNode.getModifiers() & ~Opcodes.ACC_ENUM; // Seems like this has already been taken away
+                            fieldDeclaration.modifiers = fieldNode.getModifiers() & ~ClassNode.ACC_ENUM; // Seems like this has already been taken away
                             fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
                             if (fieldNode.isStatic() && fieldNode.isFinal() &&
                                     fieldNode.getInitialExpression() instanceof ConstantExpression) {

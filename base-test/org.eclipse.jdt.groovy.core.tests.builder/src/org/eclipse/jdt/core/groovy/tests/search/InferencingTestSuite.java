@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -204,7 +203,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             flags = 0;
         }
 
-        return (flags & Opcodes.ACC_DEPRECATED) != 0;
+        return (flags & ClassNode.ACC_DEPRECATED) != 0;
     }
 
     public static SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {

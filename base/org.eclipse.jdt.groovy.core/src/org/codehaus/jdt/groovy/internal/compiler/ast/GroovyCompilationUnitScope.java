@@ -22,6 +22,7 @@ import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -198,28 +199,17 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     // FIXASC move this into GroovyClassScope
     /**
-     * Ensure Groovy types extend groovy.lang.GroovyObject
+     * Ensures Groovy types extend groovy.lang.GroovyObject.
      */
     private void augmentTypeHierarchy(SourceTypeBinding typeBinding) {
-        if (typeBinding.isAnnotationType() || typeBinding.isInterface()) {
-            return;
-        }
-        ReferenceBinding groovyLangObjectBinding = getGroovyLangObjectBinding();
-        if (!typeBinding.implementsInterface(groovyLangObjectBinding, true)) {
-            ReferenceBinding[] superInterfaceBindings = typeBinding.superInterfaces;
-            if (superInterfaceBindings != null) {
-                int count = superInterfaceBindings.length;
-                System.arraycopy(superInterfaceBindings, 0, superInterfaceBindings = new ReferenceBinding[count + 1], 0, count);
-                superInterfaceBindings[count] = groovyLangObjectBinding;
-                typeBinding.superInterfaces = superInterfaceBindings;
+        if (!typeBinding.isAnnotationType() && !typeBinding.isInterface() && typeBinding.superInterfaces != null) {
+            CompilationUnitScope unitScope = compilationUnitScope();
+            unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
+            ReferenceBinding groovyLangObjectBinding = unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
+            if (!typeBinding.implementsInterface(groovyLangObjectBinding, true)) {
+                typeBinding.superInterfaces = (ReferenceBinding[]) ArrayUtils.add(typeBinding.superInterfaces, groovyLangObjectBinding);
             }
         }
-    }
-
-    private final ReferenceBinding getGroovyLangObjectBinding() {
-        CompilationUnitScope unitScope = compilationUnitScope();
-        unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
-        return unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
     }
 
     @Override
@@ -233,6 +223,12 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             }
         }
         super.buildTypeBindings(accessRestriction);
+    }
+
+    @Override
+    public ReferenceBinding findMemberType(char[] typeName, ReferenceBinding enclosingType) {
+        ReferenceBinding type = super.findMemberType(typeName, enclosingType);
+        return type;
     }
 
     /*
