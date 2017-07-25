@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.astviews;
-/**
- * Interface to implement to be a tree node.
- * @author emp
- */
-interface ITreeNode {
-	ITreeNode getParent();
 
-	/**
-	 * Gets the value this tree node represents. This is the wrapped value.  
-	 * @return
-	 */
-	Object getValue();
-	
-	String getDisplayName();
-	
-	ITreeNode[] getChildren();
-	
-	boolean isLeaf();
+interface ITreeNode {
+    /**
+     * Gets the value this tree node represents. This is the wrapped value.
+     */
+    Object getValue();
+
+    ITreeNode getParent();
+
+    String getDisplayName();
+
+    ITreeNode[] getChildren();
+
+    boolean isLeaf();
 }

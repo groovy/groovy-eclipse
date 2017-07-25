@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,64 +15,31 @@
  */
 package org.codehaus.groovy.eclipse.astviews;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 public class Activator extends AbstractUIPlugin {
 
-	// The plug-in ID
-    public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.GroovyASTView"; //$NON-NLS-1$
+    public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.GroovyASTView";
 
-	// The shared instance
-	private static Activator plugin;
+    private static Activator plugin;
 
-	/**
-	 * The constructor
-	 */
-	public Activator() {
-		plugin = this;
-	}
+    public Activator() {
+        plugin = this;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 */
-	@Override
+    public static Activator getDefault() {
+        return plugin;
+    }
+
+    @Override
     public void start(BundleContext context) throws Exception {
-		super.start(context);
-	}
+        super.start(context);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 */
-	@Override
+    @Override
     public void stop(BundleContext context) throws Exception {
-		plugin = null;
-		super.stop(context);
-	}
-
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
-	public static Activator getDefault() {
-		return plugin;
-	}
-
-	/**
-	 * Returns an image descriptor for the image file at the given
-	 * plug-in relative path
-	 *
-	 * @param path the path
-	 * @return the image descriptor
-	 */
-	public static ImageDescriptor getImageDescriptor(String path) {
-		return imageDescriptorFromPlugin(PLUGIN_ID, path);
-	}
+        plugin = null;
+        super.stop(context);
+    }
 }

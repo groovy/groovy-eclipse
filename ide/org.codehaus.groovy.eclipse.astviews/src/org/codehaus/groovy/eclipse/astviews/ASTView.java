@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,10 +51,10 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 /**
- * A view into the Groovy AST. Anyone who needs to manipulate the AST will find
- * this useful for exploring various nodes.
+ * A view into the Groovy AST. Anyone who needs to manipulate the AST will find this useful for exploring various nodes.
  */
 public class ASTView extends ViewPart {
+
     private TreeViewer viewer;
 
     private Action doubleClickAction;
@@ -65,7 +65,7 @@ public class ASTView extends ViewPart {
 
     private IElementChangedListener listener;
 
-    class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
+    private static class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
         ITreeNode root;
 
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
@@ -75,10 +75,10 @@ public class ASTView extends ViewPart {
         }
 
         public Object[] getElements(Object inputElement) {
-            if (! (inputElement instanceof ModuleNode)) {
+            if (!(inputElement instanceof ModuleNode)) {
                 return new Object[0];
             }
-            root = TreeNodeFactory.createTreeNode(null, inputElement, "Module Nodes"); //$NON-NLS-1$
+            root = TreeNodeFactory.createTreeNode(null, inputElement, "Module Nodes");
             Object[] children = root.getChildren();
             return children;
         }
@@ -99,27 +99,19 @@ public class ASTView extends ViewPart {
         }
     }
 
-    class ViewLabelProvider extends LabelProvider {
-
-        @Override
+    private static class ViewLabelProvider extends LabelProvider {
         public String getText(Object obj) {
             return ((ITreeNode) obj).getDisplayName();
         }
 
-        @Override
         public Image getImage(Object obj) {
             return null;
         }
     }
 
-    public ASTView() {
-    }
-
     /**
-     * This is a callback that will allow us to create the viewer and initialize
-     * it.
+     * This is a callback that will allow us to create the viewer and initialize it.
      */
-    @Override
     public void createPartControl(Composite parent) {
         viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
         DrillDownAdapter drillDownAdapter = new DrillDownAdapter(viewer);
@@ -134,7 +126,6 @@ public class ASTView extends ViewPart {
         //contributeToActionBars();
     }
 
-    @Override
     public void dispose() {
         unhookGroovy();
         super.dispose();
@@ -166,15 +157,12 @@ public class ASTView extends ViewPart {
                         }
                     }
                 } catch (Exception e) {
-                    GroovyCore.logException("Error updating AST Viewer", e); //$NON-NLS-1$
+                    GroovyCore.logException("Error updating AST Viewer", e);
                 }
                 editor = null;
-                // This is a guard - the content provider should not be null,
-                // but sometimes this happens when the
-                // part is disposed of for various reasons (unhandled exceptions
-                // AFAIK). Without this guard,
-                // error message popups continue until Eclipse if forcefully
-                // killed.
+                // This is a guard - the content provider should not be null, but sometimes this happens when the
+                // part is disposed of for various reasons (unhandled exceptions AFAIK). Without this guard,
+                // error message popups continue until Eclipse if forcefully killed.
                 if (viewer.getContentProvider() != null) {
                     viewer.setInput(null);
                 }
@@ -197,11 +185,8 @@ public class ASTView extends ViewPart {
         }
 
         listener = new IElementChangedListener() {
-
             public void elementChanged(ElementChangedEvent event) {
-                // The editor is currently not a GroovyEditor, so
-                // there is not
-                // ASTView to refresh.
+                // The editor is currently not a GroovyEditor, so there is not ASTView to refresh.
                 if (editor == null) {
                     return;
                 }
@@ -259,7 +244,6 @@ public class ASTView extends ViewPart {
         };
 
         JavaCore.addElementChangedListener(listener, ElementChangedEvent.POST_RECONCILE);
-
     }
 
     private void unhookGroovy() {
