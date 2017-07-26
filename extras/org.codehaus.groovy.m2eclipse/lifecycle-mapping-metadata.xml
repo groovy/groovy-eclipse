@@ -17,7 +17,7 @@
       </pluginExecutionFilter>
       <action>
         <configurator>
-            <id>org.codehaus.groovy.m2eclipse.configurator</id>
+          <id>org.codehaus.groovy.m2eclipse.configurator</id>
         </configurator>
       </action>
     </pluginExecution>
@@ -36,7 +36,7 @@
       </pluginExecutionFilter>
       <action>
         <configurator>
-            <id>org.codehaus.groovy.m2eclipse.configurator</id>
+          <id>org.codehaus.groovy.m2eclipse.configurator</id>
         </configurator>
       </action>
     </pluginExecution>
@@ -50,29 +50,29 @@
         </goals>
       </pluginExecutionFilter>
       <action>
-        <execute />
+        <execute/>
       </action>
     </pluginExecution>
     <pluginExecution>
-        <pluginExecutionFilter>
-            <groupId>org.codehaus.gmavenplus</groupId>
-            <artifactId>gmavenplus-plugin</artifactId>
-            <versionRange>[1.0,)</versionRange>
-            <goals>
-              <goal>addSources</goal>
-              <goal>addTestSources</goal>
-              <goal>generateStubs</goal>
-              <goal>compile</goal>
-              <goal>testGenerateStubs</goal>
-              <goal>testCompile</goal>
-              <goal>removeStubs</goal>
-              <goal>removeTestStubs</goal>
-            </goals>
+      <pluginExecutionFilter>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
+        <versionRange>[1.0,)</versionRange>
+        <goals>
+          <goal>addSources</goal>
+          <goal>addTestSources</goal>
+          <goal>generateStubs</goal>
+          <goal>compile</goal>
+          <goal>testGenerateStubs</goal>
+          <goal>testCompile</goal>
+          <goal>removeStubs</goal>
+          <goal>removeTestStubs</goal>
+        </goals>
         </pluginExecutionFilter>
         <action>
-            <configurator>
-                <id>org.codehaus.groovy.m2eclipse.configurator</id>
-            </configurator>
+          <configurator>
+            <id>org.codehaus.groovy.m2eclipse.configurator</id>
+          </configurator>
         </action>
     </pluginExecution>
   </pluginExecutions>

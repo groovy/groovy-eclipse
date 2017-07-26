@@ -24,10 +24,6 @@ public class Activator extends AbstractUIPlugin {
 
     private static Activator plugin;
 
-    public Activator() {
-        plugin = this;
-    }
-
     public static Activator getDefault() {
         return plugin;
     }
@@ -35,6 +31,7 @@ public class Activator extends AbstractUIPlugin {
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
+        plugin = this;
     }
 
     @Override

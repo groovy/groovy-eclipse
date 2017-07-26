@@ -18,19 +18,15 @@ package org.codehaus.groovy.m2eclipse;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.PluginExecution;
-import org.apache.maven.project.MavenProject;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -40,36 +36,17 @@ import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 import org.eclipse.m2e.jdt.IClasspathDescriptor;
 import org.eclipse.m2e.jdt.IJavaProjectConfigurator;
 import org.eclipse.m2e.jdt.internal.AbstractJavaProjectConfigurator;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator implements IJavaProjectConfigurator {
 
-    private static final String SRC_MAIN_GROOVY = "src/main/groovy";
-    private static final String SRC_TEST_GROOVY = "src/test/groovy";
-
-    private static final String COMPILE = "compile";
-    private static final String TEST_COMPILE = "testCompile";
-
-    private enum SourceType {
-        MAIN, TEST, BOTH, NONE
-    }
-
-    @Override
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor)
             throws CoreException {
         super.configure(request, monitor);
         IProject project = request.getProject();
-        if (getSourceType(request.getMavenProjectFacade()) != null) {
+        if (ProjectSourceType.getSourceType(request.getMavenProjectFacade()) != null) {
             if (!project.hasNature(GroovyNature.GROOVY_NATURE)) {
-                if (!project.hasNature(JavaCore.NATURE_ID)) {
-                    addJavaNature(project);
-                }
                 GroovyRuntime.addGroovyNature(project);
-            }
-
-            // add dsl support if not already there
-            IJavaProject javaProject = JavaCore.create(project);
-            if (!GroovyRuntime.hasClasspathContainer(javaProject, GroovyRuntime.DSLD_CONTAINER_ID)) {
-                GroovyRuntime.addLibraryToClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID, false);
             }
         } else {
             GroovyRuntime.removeGroovyNature(project);
@@ -78,34 +55,37 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
 
     public void configureClasspath(IMavenProjectFacade facade, IClasspathDescriptor classpath, IProgressMonitor monitor)
             throws CoreException {
-        SourceType sourceType = getSourceType(facade);
+        ProjectSourceType sourceType = ProjectSourceType.getSourceType(facade);
         if (sourceType != null) {
-            // add source folders
             IJavaProject javaProject = JavaCore.create(facade.getProject());
+
+            // add DSL support classpath container
+            if (!GroovyRuntime.hasClasspathContainer(javaProject, GroovyRuntime.DSLD_CONTAINER_ID) &&
+                    new ScopedPreferenceStore(InstanceScope.INSTANCE, "org.codehaus.groovy.eclipse.dsl").getBoolean("org.codehaus.groovy.eclipse.dsl.auto.add.support")) {
+                GroovyRuntime.addClassPathEntry(javaProject, newContainerEntry(GroovyRuntime.DSLD_CONTAINER_ID));
+            }
+
+            // add source folders
             IPath projectPath = facade.getFullPath();
 
             Set<IPath> toRemove = new HashSet<IPath>();
 
-            IFolder testFolder = javaProject.getProject().getFolder(SRC_TEST_GROOVY);
-            IPath testPath = testFolder.getFullPath(); //$NON-NLS-1$
-            if (testFolder.exists() && (sourceType == SourceType.TEST || sourceType == SourceType.BOTH)) {
-                IPath testOutPath = projectPath.append("target/test-classes"); //$NON-NLS-1$
-                if (!hasEntry(javaProject, testPath)) {
-                    GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(testPath, new Path[0], testOutPath));
+            IFolder testFolder = javaProject.getProject().getFolder("src/test/groovy");
+            if (testFolder.exists() && (sourceType == ProjectSourceType.TEST || sourceType == ProjectSourceType.BOTH)) {
+                if (!hasEntry(javaProject, testFolder.getFullPath())) {
+                    GroovyRuntime.addClassPathEntryToFront(javaProject, newSourceFolderEntry(testFolder.getFullPath(), projectPath.append("target/test-classes")));
                 }
             } else {
-                toRemove.add(testPath);
+                toRemove.add(testFolder.getFullPath());
             }
 
-            IFolder sourceFolder = javaProject.getProject().getFolder(SRC_MAIN_GROOVY);
-            IPath sourcePath = sourceFolder.getFullPath();
-            if (sourceFolder.exists() && (sourceType == SourceType.MAIN || sourceType == SourceType.BOTH)) {
-                IPath sourceOutPath = projectPath.append("target/classes"); //$NON-NLS-1$
-                if (!hasEntry(javaProject, sourcePath)) {
-                    GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(sourcePath, new Path[0], sourceOutPath));
+            IFolder sourceFolder = javaProject.getProject().getFolder("src/main/groovy");
+            if (sourceFolder.exists() && (sourceType == ProjectSourceType.MAIN || sourceType == ProjectSourceType.BOTH)) {
+                if (!hasEntry(javaProject, sourceFolder.getFullPath())) {
+                    GroovyRuntime.addClassPathEntryToFront(javaProject, newSourceFolderEntry(sourceFolder.getFullPath(), projectPath.append("target/classes")));
                 }
             } else {
-                toRemove.add(sourcePath);
+                toRemove.add(sourceFolder.getFullPath());
             }
 
             // We should remove the generated sources from the classpath if it exists
@@ -121,10 +101,13 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         }
     }
 
-    private boolean hasEntry(IJavaProject javaProject, IPath path)
+    public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor)
+            throws CoreException {
+    }
+
+    private static boolean hasEntry(IJavaProject javaProject, IPath path)
             throws JavaModelException {
-        IClasspathEntry[] entries = javaProject.getRawClasspath();
-        for (IClasspathEntry entry : entries) {
+        for (IClasspathEntry entry : javaProject.getRawClasspath()) {
             if (entry.getPath().equals(path)) {
                 return true;
             }
@@ -132,135 +115,27 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         return false;
     }
 
-    public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor)
-            throws CoreException {
+    private static IClasspathEntry newContainerEntry(IPath path) {
+        return JavaCore.newContainerEntry(
+            path,
+            null, // access rules
+            new IClasspathAttribute[] {
+                JavaCore.newClasspathAttribute("maven.pomderived", "true")
+            },
+            false // exported
+        );
     }
 
-    /**
-     * Determine if this maven project uses src/main/groovy and/or src/test/groovy.  Only
-     * applicable for gmaven.  With groovy-eclipse-compiler, this is configured by the build-helper-maven-plugin
-     * @param mavenProject
-     * @return
-     */
-    private SourceType getSourceType(IMavenProjectFacade facade) {
-        MavenProject mavenProject = facade.getMavenProject();
-        Plugin plugin = getGMavenPlugin(mavenProject);
-        if (plugin != null) {
-            return getSourceTypeInGMavenProject(plugin);
-        }
-
-        // Recognize gmaven-plus
-        Plugin gmavenPlusPlugin = mavenProject.getPlugin("org.codehaus.gmavenplus:gmavenplus-plugin"); //$NON-NLS-1$
-        if (gmavenPlusPlugin != null) {
-             return getSourceTypeInGMavenProject(gmavenPlusPlugin);
-        }
-
-        // look to see if there is the maven-compiler-plugin
-        // with a compilerId of the groovy eclipse compiler
-        if (compilerPluginUsesGroovyEclipseAdapter(mavenProject, "org.apache.maven.plugins", "maven-compiler-plugin")) {
-            return getSourceTypeInGECProject(facade);
-        }
-
-        // For eclipse plugins written in groovy :
-        // look to see if there is the tycho-compiler-plugin
-        // with a compilerId of the groovy eclipse compiler
-        // /!\ Requires m2e-tycho >= 0.6.0.201210231015
-        if (compilerPluginUsesGroovyEclipseAdapter(mavenProject, "org.eclipse.tycho", "tycho-compiler-plugin")) {
-            //Assume configuration is controlled in the MANIFEST.MF, hence returning SourceType.NONE here
-            return SourceType.NONE;
-        }
-
-        // not a groovy project
-        return null;
-    }
-
-    private SourceType getSourceTypeInGMavenProject(Plugin plugin) {
-        SourceType result = SourceType.NONE;
-        if (plugin != null && plugin.getExecutions() != null && !plugin.getExecutions().isEmpty()) {
-            for (PluginExecution execution : plugin.getExecutions()) {
-                if (execution.getGoals().contains(COMPILE)) {
-                    switch (result) {
-                        case NONE:
-                            result = SourceType.MAIN;
-                            break;
-                        case TEST:
-                            result = SourceType.BOTH;
-                            break;
-                    }
-                   }
-                if (execution.getGoals().contains(TEST_COMPILE)) {
-                    switch (result) {
-                        case NONE:
-                            result = SourceType.TEST;
-                            break;
-                        case MAIN:
-                            result = SourceType.BOTH;
-                            break;
-                    }
-                   }
+    private static IClasspathEntry newSourceFolderEntry(IPath sourcePath, IPath targetPath) {
+        return JavaCore.newSourceEntry(
+            sourcePath,
+            null, // inclusions
+            null, // exclusions
+            targetPath,
+            new IClasspathAttribute[] {
+                JavaCore.newClasspathAttribute("optional", "true"),
+                JavaCore.newClasspathAttribute("maven.pomderived", "true")
             }
-        }
-        return result;
-    }
-
-    /**
-     * in this case, look to see if the folders exist.
-     * if so, they are automatically added
-     */
-    private SourceType getSourceTypeInGECProject(IMavenProjectFacade facade) {
-        IProject project = facade.getProject();
-        boolean srcMainGroovy = project.getFolder(SRC_MAIN_GROOVY).exists();
-        boolean srcTestGroovy = project.getFolder(SRC_TEST_GROOVY).exists();
-        if (srcMainGroovy) {
-            if (srcTestGroovy) {
-                return SourceType.BOTH;
-            } else {
-                return SourceType.MAIN;
-            }
-        } else if (srcTestGroovy) {
-            return SourceType.TEST;
-        } else {
-            return SourceType.NONE;
-        }
-    }
-
-    private Plugin getGMavenPlugin(MavenProject mavenProject) {
-        Plugin p = mavenProject.getPlugin("org.codehaus.gmaven:gmaven-plugin"); //$NON-NLS-1$
-        if (p == null) {
-            // try the old (pre-1.1) version of the plugin
-            p = mavenProject.getPlugin("org.codehaus.groovy.maven:gmaven-plugin"); //$NON-NLS-1$
-        }
-        return p;
-    }
-
-    private boolean compilerPluginUsesGroovyEclipseAdapter(MavenProject mavenProject, String pluginGroupId, String pluginArtifactId) {
-        for (Plugin buildPlugin : mavenProject.getBuildPlugins()) {
-            if (pluginArtifactId.equals(buildPlugin.getArtifactId()) && pluginGroupId.equals(buildPlugin.getGroupId())) {
-                for (Dependency dependency : buildPlugin.getDependencies()) {
-                    if ("groovy-eclipse-compiler".equals(dependency.getArtifactId()) && "org.codehaus.groovy".equals(dependency.getGroupId())) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    public static void addJavaNature(final IProject project)
-            throws CoreException {
-        final IProjectDescription description = project.getDescription();
-        final String[] ids = description.getNatureIds();
-
-        // add groovy nature at the start so that its image will be shown
-        final String[] newIds = new String[ids == null ? 1 : ids.length + 1];
-        newIds[0] = JavaCore.NATURE_ID;
-        if (ids != null) {
-            for (int i = 1; i < newIds.length; i++) {
-                newIds[i] = ids[i - 1];
-            }
-        }
-
-        description.setNatureIds(newIds);
-        project.setDescription(description, null);
+        );
     }
 }
