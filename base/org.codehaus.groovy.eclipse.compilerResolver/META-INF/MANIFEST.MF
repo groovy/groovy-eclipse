@@ -4,7 +4,8 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.compilerResolver;singleton:=tru
 Bundle-Name: Groovy Compiler Resolver
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.9.2.qualifier
-Export-Package: org.codehaus.groovy.eclipse.chooser;version="2.9.2"
+Export-Package: org.codehaus.groovy.eclipse.chooser,
+ org.codehaus.groovy.frameworkadapter.util
 Require-Bundle: org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.chooser.CompilerChooser
