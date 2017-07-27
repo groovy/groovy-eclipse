@@ -15,9 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
-import org.codehaus.groovy.eclipse.chooser.SpecifiedVersion;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.preferences.CompilerSwitchUIHelper;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;

@@ -29,9 +29,9 @@ import java.util.TreeSet;
 import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.eclipse.chooser.CompilerChooser;
-import org.codehaus.groovy.eclipse.chooser.SpecifiedVersion;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;

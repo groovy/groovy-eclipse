@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
-import org.codehaus.groovy.eclipse.chooser.SpecifiedVersion;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;

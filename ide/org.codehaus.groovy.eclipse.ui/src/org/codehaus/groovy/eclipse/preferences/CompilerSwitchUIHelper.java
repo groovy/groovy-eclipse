@@ -18,9 +18,9 @@ package org.codehaus.groovy.eclipse.preferences;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.codehaus.groovy.eclipse.chooser.SpecifiedVersion;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;

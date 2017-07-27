@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.chooser;
+package org.codehaus.groovy.frameworkadapter.util;
 
 import org.osgi.framework.Version;
 
