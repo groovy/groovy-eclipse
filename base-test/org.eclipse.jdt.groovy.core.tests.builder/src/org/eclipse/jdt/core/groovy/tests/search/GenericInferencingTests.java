@@ -431,7 +431,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure4() {
         String contents = "def fn = (String.&trim) >> (Class.&forName)";
-        assertType(contents, 4, 6, GroovyUtils.GROOVY_LEVEL > 20 ? "groovy.lang.Closure<java.lang.Class<?>>" : "groovy.lang.Closure<java.lang.Class<? extends java.lang.Object>>");
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Class<?>>");
     }
 
     @Test

@@ -1,71 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    To use this scrupt:
-      1) Make sure that you have an eclipse 4.4 installation available.
-      2) Clone Groovy-Eclipse from git and start up a workspace with all of these projects
-      3) Update build.properties to point to the appropriate locations
-      4) Comment/uncomment do-17-build, do-18-build, or  do-20-build (exactly one of these must be uncommented at once)
-      5) Update version1.7, version1.8, or version20 to the correct, new version number
-      6) run `ant extract-create-install` to build the groovy-eclipse-batch artifact and install it locally
-      7) OR run `ant extract-create-publish` to publish to codehaus and mirror it on maven central
-
-      When running extract-create-publish, you must supply the following two properties:
-        groovy.deploy.username : your codehaus username
-        groovy.deploy.password : your codehaus password
+  To use this script:
+    1) Clone Groovy-Eclipse from git and set up a workspace with at least these projects:
+        - org.codehaus.groovyXX
+        - org.eclipse.jdt.core
+        - org.eclipse.jdt.groovy.core
+        - org.codehaus.groovy.eclipse.ant
+    2) Update build.properties to point to the appropriate locations and versions
+    3) Comment/uncomment do-18-build, do-20-build or ... (exactly one of these must be uncommented at once)
+    4a) run `extract-create` to build the groovy-eclipse-batch jar and pom
+     OR
+    4b) run `extract-create-install` to build groovy-eclipse-batch and install it locally
+     OR
+    4c) run `publish` to publish to codehaus and mirror it on maven central
 -->
-<project name="Build the groovy-eclipse-batch jar" basedir="." default="extract-create-install">
-
-    <!-- add the ant libs needed for pgp singing
-    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
-      <classpath>
-        <pathelement location="antlibs/ant-contrib-1.0b3.jar"/>
-      </classpath>
-    </taskdef>
-    -->
+<project name="groovy-eclipse-batch" basedir="." default="extract-create-install">
 
     <property file="build.properties"/>
+    <property name="jar.dest" location="${basedir}/build"/>
+    <property name="jar.prefix" value="groovy-eclipse-batch"/>
+    <property name="extract.loc" location="${jar.dest}/extract"/>
 
     <import file="maven/build-maven.xml"/>
 
-    <!-- =================================
-          target: extract-create-publish
-          Do all the work: extract the original jars to the extract location and jar it up to a single jar
-          also copy over the pom.
-          Finally, deploy the artifact to the artifact repo
-       ================================= -->
-    <target name="extract-create-publish" depends="extract-create,publish"/>
 
-    <!-- =================================
-          target: extract-create
-          Do all work except install and deployment to repo
-       ================================= -->
-    <target name="extract-create" depends="-init,-extract,-create.jar,-copy-pom,-mavenInit"/>
-
-    <!--  =================================
-          target: publish
-          publish to the codehaus repository as well as install locally
-         =================================  -->
-    <target name="publish" depends="-init,extract-create-install,-deployDefault"
-      description="Deploy jars to maven repository on codehaus.org.">
+    <target name="clean">
+        <delete dir="build" quiet="true"/>
     </target>
 
-    <!--  =================================
-          target: extract-create-install
-         installs into the local repo
-         =================================  -->
-    <target name="extract-create-install" depends="-init,extract-create">
+
+    <target name="extract-create" depends="-init,-extract"
+      description="Create artifacts for deployment">
+
+        <!-- create groovy-eclipse-batch.jar from extract directory -->
+        <jar destfile="${jar.dest}/${jar.name}" manifest="maven/MANIFEST.MF">
+            <fileset dir="${extract.loc}">
+                <exclude name="**/*.g" />
+                <exclude name="**/*.groovy" />
+                <exclude name="**/*.jar" />
+                <exclude name="**/*.java" />
+                <exclude name="**/*.smap" />
+
+                <exclude name=".api_description" />
+                <exclude name=".options" />
+                <exclude name="about.html" />
+                <exclude name="overview.html" />
+                <exclude name="overviewj.html" />
+                <exclude name="**/package.html" />
+                <exclude name="plugin.properties" />
+                <exclude name="plugin.xml" />
+
+                <exclude name="META-INF/eclipse.inf" />
+                <exclude name="META-INF/maven/**" />
+                <exclude name="META-INF/*.RSA" />
+                <exclude name="META-INF/*.SF" />
+            </fileset>
+        </jar>
+
+        <!-- copy pom.xml and inject version -->
+        <copy file="maven/pom.xml" tofile="${jar.dest}/${pom.name}"/>
+        <replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version}"/>
+    </target>
+
+
+    <target name="extract-create-install" depends="extract-create,-mavenInit"
+      description="Install artifacts to local repository">
         <mavenInstall version="${version}" prefix="${jar.prefix}"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -extract
-          extract the contents of all jars and copy them to the extract location
-         - - - - - - - - - - - - - - - - - -->
-    <target name="-extract" depends="-init">
+
+    <target name="publish" depends="extract-create-install,-mavenDeployInit"
+      description="Publish artifacts to remote repository">
+        <mavenDeploy version="${version}" prefix="${jar.prefix}"/>
+    </target>
+
+
+    <target name="-extract" description="extract the contents of all jars and copy them to the extract location">
         <mkdir dir="${jar.dest}"/>
-        <delete dir="${extract.loc}" failonerror="no"/>
+        <delete dir="${extract.loc}" quiet="true"/>
         <mkdir dir="${extract.loc}"/>
+
         <unzip dest="${extract.loc}">
             <fileset refid="orig.plugin.jars"/>
             <fileset refid="orig.groovy.jars"/>
@@ -80,37 +95,12 @@
             <fileset refid="ant.groovy.class.files"/>
         </copy>
 
-        <!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
-        <unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e44/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
-
+        <!-- now unzip the jdt compiler adapter jar. It's a jar within a jar. -->
+        <unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -create.jar
-          jar up all relevant files in the extract location
-         - - - - - - - - - - - - - - - - - -->
-    <target name="-create.jar" depends="-init">
-        <delete dir="${jar.dest}" failonerror="no"/>
-        <mkdir dir="${jar.dest}"/>
-        <jar destfile="${jar.dest}/${jar.name}" manifest="maven/MANIFEST.MF">
-            <fileset dir="${extract.loc}">
-                <include name="**/*.class"/>
-                <include name="**/*.properties"/>
-                <include name="**/*.props"/>
-                <include name="**/*.rsc"/>
-                <include name="**/dgminfo"/>
-                <include name="**/*.profile"/>
-            </fileset>
-        </jar>
-    </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init
-          create properties and filesets
-         - - - - - - - - - - - - - - - - - -->
-    <target name="-init" depends="-fail-if-no-version-specified,-init18,-init20,-init21,-init22,-init23,-init24">
-        <property name="jar.prefix" value="groovy-eclipse-batch"/>
-
+    <target name="-init" depends="-fail-if-no-version-specified,-init18,-init20,-init21,-init22,-init23,-init24,-init25">
         <property name="jar.name" value="${jar.prefix}-${version}.jar"/>
         <property name="pom.name" value="${jar.prefix}.pom"/>
 
@@ -130,118 +120,107 @@
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
             <!-- include groovy-all and the sources -->
             <include name="${groovy.folder}/lib/groovy-all*.jar"/>
-
-            <!-- Also include the non-locking classloader with sources -->
+            <!-- also include the non-locking classloader with sources -->
             <include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
         </fileset>
-
         <fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
             <include name="**/*.*" />
         </fileset>
-        <fileset dir="${git.repo.loc}/jdt-patch/e44/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+        <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
             <include name="**/*.*" />
         </fileset>
-        <!-- Ensure that this comes after the core groocy compiler files because the groovy-eclipse.jar must overwrite the groovy jar -->
+        <!-- ensure that this comes after the core groocy compiler files because the groovy-eclipse.jar must overwrite the groovy jar -->
         <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin" id="groovy.core.class.files">
             <include name="**/*.*" />
         </fileset>
         <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin-trace" id="groovy.trace.class.files">
             <include name="**/*.*" />
         </fileset>
-        <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin" id="ant.groovy.class.files">
+        <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin-ant" id="ant.groovy.class.files">
             <include name="**/*.*" />
         </fileset>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init18
-         - - - - - - - - - - - - - - - - - -->
+
     <target name="-init18" if="do-18-build">
         <echo message="Building groovy 1.8.x"/>
-       <property name="version" value="${version1.8}"/>
-         <property name="groovy.folder" value="org.codehaus.groovy18"/>
+        <property name="version" value="${version1.8}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy18"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init20
-         - - - - - - - - - - - - - - - - - -->
+
     <target name="-init20" if="do-20-build">
         <echo message="Building groovy 2.0.x"/>
-       <property name="version" value="${version2.0}"/>
-         <property name="groovy.folder" value="org.codehaus.groovy20"/>
+        <property name="version" value="${version2.0}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy20"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init21
-         - - - - - - - - - - - - - - - - - -->
+
     <target name="-init21" if="do-21-build">
         <echo message="Building groovy 2.1.x"/>
-       <property name="version" value="${version2.1}"/>
-         <property name="groovy.folder" value="org.codehaus.groovy21"/>
+        <property name="version" value="${version2.1}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy21"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init22
-         - - - - - - - - - - - - - - - - - -->
+
     <target name="-init22" if="do-22-build">
         <echo message="Building groovy 2.2.x"/>
-       <property name="version" value="${version2.2}"/>
-         <property name="groovy.folder" value="org.codehaus.groovy22"/>
+        <property name="version" value="${version2.2}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy22"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init23
-         - - - - - - - - - - - - - - - - - -->
+
     <target name="-init23" if="do-23-build">
         <echo message="Building groovy 2.3.x"/>
-       <property name="version" value="${version2.3}"/>
-         <property name="groovy.folder" value="org.codehaus.groovy23"/>
+        <property name="version" value="${version2.3}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy23"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -init24
-         - - - - - - - - - - - - - - - - - -->
+
     <target name="-init24" if="do-24-build">
         <echo message="Building groovy 2.4.x"/>
-       <property name="version" value="${version2.4}"/>
-         <property name="groovy.folder" value="org.codehaus.groovy24"/>
+        <property name="version" value="${version2.4}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy24"/>
     </target>
+
+
+    <target name="-init25" if="do-25-build">
+        <echo message="Building groovy 2.5.x"/>
+        <property name="version" value="${version2.5}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy25"/>
+    </target>
+
 
     <target name="-check-build-version">
         <property file="build.properties"/>
         <condition property="no-version-specified">
             <not>
             <or>
-                <isset property="do-17-build"/>
                 <isset property="do-18-build"/>
                 <isset property="do-20-build"/>
                 <isset property="do-21-build"/>
                 <isset property="do-22-build"/>
                 <isset property="do-23-build"/>
                 <isset property="do-24-build"/>
+                <isset property="do-25-build"/>
             </or>
             </not>
         </condition>
     </target>
 
+
     <target name="-fail-if-no-version-specified" depends="-check-build-version" if="no-version-specified">
-        <fail message="You must set exactly one of do-17-build, ... do-24-build to specify a groovy version to build"/>
+        <fail message="You must set exactly one of do-18-build, ... do-25-build to specify a groovy version to build"/>
     </target>
 
-    <!-- - - - - - - - - - - - - - - - - -
-          target: -copy-pom
-          copy the pom to the jar destination and ensure that the proper version is inserted
-         - - - - - - - - - - - - - - - - - -->
-    <target name="-copy-pom" depends="-init">
-        <copy file="maven/pom.xml" tofile="${jar.dest}/${pom.name}"/>
-        <replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version}">
-        </replace>
-    </target>
 
-    <!-- does the deploy and updates the username and pass -->
-    <target name="-deployDefault" depends="-init,-mavenDeployInit">
-        <mavenDeploy version="${version}" prefix="${jar.prefix}"/>
-    </target>
+    <!-- add the ant libs needed for pgp singing
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+      <classpath>
+        <pathelement location="antlibs/ant-contrib-1.0b3.jar"/>
+      </classpath>
+    </taskdef>
+    -->
 
     <!--
     <target name="-gpgSign" depends="-init,-create.jar,-fake.jar,-copy-pom" description="Use GPS to sign all the jars" >
