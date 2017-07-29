@@ -88,7 +88,15 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
 
     protected static boolean isAbsent(IClasspathDescriptor classpath, IPath path) {
         if (classpath.containsPath(path)) {
-            classpath.touchEntry(path);
+            //classpath.touchEntry(path); -- call directly in Eclipse 4.6+ (m2e 1.7+)
+            try {
+                java.lang.reflect.Method touchEntry = IClasspathDescriptor.class.getDeclaredMethod("touchEntry", IPath.class);
+                touchEntry.invoke(classpath, path);
+            } catch (NoSuchMethodException e) {
+            } catch (IllegalAccessException e) {
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                throw new RuntimeException(e.getCause());
+            }
             return false;
         }
         return true;

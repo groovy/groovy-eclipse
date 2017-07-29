@@ -6,7 +6,7 @@
       <pluginExecutionFilter>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <versionRange>[2.0,)</versionRange>
+        <versionRange>[3.1,)</versionRange>
         <goals>
           <goal>compile</goal>
           <goal>testCompile</goal>
@@ -44,7 +44,7 @@
       <pluginExecutionFilter>
         <groupId>org.codehaus.groovy</groupId>
         <artifactId>groovy-eclipse-compiler</artifactId>
-        <versionRange>[2.6.0,)</versionRange>
+        <versionRange>[2.9.0,)</versionRange>
         <goals>
           <goal>add-groovy-build-paths</goal>
         </goals>
