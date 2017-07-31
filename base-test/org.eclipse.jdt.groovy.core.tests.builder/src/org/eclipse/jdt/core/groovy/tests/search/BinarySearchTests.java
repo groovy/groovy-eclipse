@@ -117,17 +117,16 @@ public final class BinarySearchTests extends SearchTestSuite {
     }
 
     private MockSearchRequestor performSearch(IJavaElement toSearchFor) throws Exception {
-        assertTrue("Expected binary member, but got: " + toSearchFor == null ? null :
-                toSearchFor.getClass().getName(), toSearchFor instanceof BinaryMember);
+        assertTrue("Expected binary member, but got: " + toSearchFor == null ? null : toSearchFor.getClass().getName(), toSearchFor instanceof BinaryMember);
 
         SearchPattern pattern = SearchPattern.createPattern(toSearchFor, IJavaSearchConstants.REFERENCES);
-        SearchParticipant[] participants = {SearchEngine.getDefaultSearchParticipant()};
+        SearchParticipant participant = SearchEngine.getDefaultSearchParticipant();
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {javaProject});
         MockSearchRequestor requestor = new MockSearchRequestor();
         SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search in project binaries");
 
-        new SearchEngine().search(pattern, participants, scope, requestor, monitor);
-        monitor.waitForCompletion();
+        new SearchEngine().search(pattern, new SearchParticipant[] {participant}, scope, requestor, monitor);
+        monitor.waitForCompletion(10);
         return requestor;
     }
 
