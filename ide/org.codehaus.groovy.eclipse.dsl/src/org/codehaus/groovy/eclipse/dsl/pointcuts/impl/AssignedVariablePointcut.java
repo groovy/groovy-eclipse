@@ -18,7 +18,8 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -26,22 +27,22 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches when current context is enclosed by a method declaration that satisfies
- * the given name (string) or constraints (pointcut).
+ * Matches when current context is enclosed by a variable assignment that
+ * satisfies the given name (string) or constraints (pointcut).
  */
-public class EnclosingMethodPointcut extends AbstractPointcut {
+public class AssignedVariablePointcut extends AbstractPointcut {
 
-    public EnclosingMethodPointcut(IStorage containerIdentifier, String pointcutName) {
+    public AssignedVariablePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        MethodNode enclosing = pattern.getCurrentScope().getEnclosingMethodDeclaration();
-        if (enclosing != null) {
+        BinaryExpression enclosing = (BinaryExpression) pattern.getCurrentScope().getWormhole().get("enclosingAssignment");
+        if (enclosing != null && enclosing.getLeftExpression() instanceof Variable) {
             Object argument = getFirstArgument();
             if (argument instanceof String) {
-                if (argument.equals(enclosing.getName())) {
+                if (argument.equals(((Variable) enclosing.getLeftExpression()).getName())) {
                     return Collections.singleton(enclosing);
                 }
             } else {

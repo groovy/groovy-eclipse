@@ -1813,6 +1813,7 @@ assert primaryExprType != null && dependentExprType != null;
             scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(completeExpressionStack.getLast()));
         }
         scope.setPrimaryNode(primaryType == null);
+        scope.getWormhole().put("enclosingAssignment", enclosingAssignment);
 
         TypeLookupResult result = lookupExpressionType(node, primaryType, isStatic, scope);
         return handleRequestor(node, primaryType, result);

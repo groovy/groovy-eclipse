@@ -271,6 +271,23 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testNewifyTransform4() {
+        String contents = '''\
+            @Newify
+            List list = ArrayList.n
+            @Newify(HashMap)
+            Map map = HashM
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        //proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+        // TODO: waiting for https://issues.apache.org/jira/browse/GROOVY-8249
+    }
+
+    @Test
     void testSelfTypeTransform1() {
         assumeTrue(isAtLeastGroovy(24)) // SelfType was added in Groovy 2.4
 

@@ -327,14 +327,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public ASTNode getEnclosingNode() {
-        if (shared.nodeStack.size() > 1) {
-            ASTNode current = shared.nodeStack.removeLast();
-            ASTNode enclosing = shared.nodeStack.getLast();
-            shared.nodeStack.add(current);
-            return enclosing;
-        } else {
-            return null;
+        int n = shared.nodeStack.size();
+        if (n > 1) {
+            return shared.nodeStack.get(n - 2);
         }
+        return null;
     }
 
     public void setPrimaryNode(boolean isPrimaryNode) {

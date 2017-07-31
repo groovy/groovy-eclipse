@@ -50,7 +50,7 @@ contribute(currentType(mixins: annotatedBy(Mixin))) {
 }
 
 //@groovy.lang.Newify
-contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: annotatedBy(Newify)) | enclosingMethod(annos: annotatedBy(Newify))) {
+contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: annotatedBy(Newify)) | enclosingMethod(annos: annotatedBy(Newify)) | assignedVariable(annos: annotatedBy(Newify))) {
     provider = 'Newify AST transform'
 
     def addNewifyMethods = { ClassNode type, String name = type.nameWithoutPackage ->

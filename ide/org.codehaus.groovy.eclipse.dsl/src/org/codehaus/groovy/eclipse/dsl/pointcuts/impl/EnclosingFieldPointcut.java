@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Tests that the type being analyzed matches.  The match can
- * either be a string match (ie - the type name),
- * or it can pass the current type to a containing pointcut
- * @author andrew
- * @created Feb 10, 2011
+ * Matches when current context is enclosed by a field declaration that satisfies
+ * the given name (string) or constraints (pointcut).
  */
 public class EnclosingFieldPointcut extends AbstractPointcut {
 
@@ -41,31 +38,24 @@ public class EnclosingFieldPointcut extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         FieldNode enclosing = pattern.getCurrentScope().getEnclosingFieldDeclaration();
-        if (enclosing == null) {
-            return null;
-        }
-        
-        Object firstArgument = getFirstArgument();
-        Collection<FieldNode> enclosingCollection = Collections.singleton(enclosing);
-        if (firstArgument instanceof String) {
-            if (enclosing.getName().equals(firstArgument)) {
-                return enclosingCollection;
+        if (enclosing != null) {
+            Object argument = getFirstArgument();
+            if (argument instanceof String) {
+                if (argument.equals(enclosing.getName())) {
+                    return Collections.singleton(enclosing);
+                }
             } else {
-                return null;
+                return matchOnPointcutArgument((IPointcut) argument, pattern, Collections.singleton(enclosing));
             }
-        } else {
-            return matchOnPointcutArgument((IPointcut) firstArgument, pattern, enclosingCollection);
         }
+        return null;
     }
 
-    /**
-     * expecting one arg that is either a string or a pointcut or a class
-     */
     @Override
     public void verify() throws PointcutVerificationException {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutArg();
-        if (oneStringOrOnePointcutArg != null) {
-            throw new PointcutVerificationException(oneStringOrOnePointcutArg, this);
+        String failure = oneStringOrOnePointcutArg();
+        if (failure != null) {
+            throw new PointcutVerificationException(failure, this);
         }
         super.verify();
     }
