@@ -221,6 +221,13 @@ public class ContentTypeUtils {
 
     //--------------------------------------------------------------------------
 
+    @Deprecated // retained for backwards compatibility
+    public static boolean isGroovyLikeFileName(String fileName) {
+        return isGroovyLikeFileName((CharSequence) fileName);
+    }
+
+    //--------------------------------------------------------------------------
+
     static {
         IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
         if (contentTypeManager != null) {
