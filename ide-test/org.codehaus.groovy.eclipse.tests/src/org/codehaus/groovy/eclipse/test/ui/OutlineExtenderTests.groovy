@@ -189,7 +189,8 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
         GroovyOutlinePage outline = openFile('Z', 'int yyy')
 
         // should use script outline extender
-        assert outline.outlineCompilationUnit.class.name == 'org.codehaus.groovy.eclipse.editor.outline.GroovyScriptOCompilationUnit' : 'Wrong outline extender chosen'
+        String oCompUnitName = outline.outlineCompilationUnit.class.simpleName
+        assert oCompUnitName == 'GroovyScriptOCompilationUnit' : 'Wrong outline extender chosen'
     }
 
     @Test
@@ -202,7 +203,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
             class Y { }
             String blah() {  }
             '''.stripIndent()
-        GroovyOutlinePage outline = openFile('Script', contents)
+        GroovyOutlinePage outline = openFile('Script1', contents)
 
         OCompilationUnit unit = outline.outlineCompilationUnit
         IJavaElement[] children = unit.children
@@ -224,7 +225,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
 
         assert ((IField) children[1]).typeSignature == '[I'
         assert ((IField) children[2]).typeSignature == 'Qdef;'
-        assert ((IField) children[3]).typeSignature == 'QObject;'
+        assert ((IField) children[3]).typeSignature == 'Qjava.lang.Object;'
 
         assert ((IField) children[1]).nameRange.offset == contents.indexOf('xxx')
         assert ((IField) children[2]).nameRange.offset == contents.indexOf('ttt')
@@ -236,6 +237,21 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testGroovyScriptOutline2() {
+        String contents = '''\
+            import groovy.transform.Field
+            @Field Map<String,Object> map = [:]
+            @Newify Object obj = Object.new()
+            '''.stripIndent()
+        GroovyOutlinePage outline = openFile('Script2', contents)
+        IJavaElement[] children = outline.outlineCompilationUnit.children
+
+        assert children.tail()*.elementName == ['map', 'obj']
+        assert children.tail()*.typeSignature == ['Qjava.util.Map<QString;QObject;>;', 'Qjava.lang.Object;']
+        assert children*.elementType == [IJavaElement.IMPORT_CONTAINER, IJavaElement.FIELD, IJavaElement.FIELD]
+    }
+
+    @Test
     void testStructureUnknown() {
         GroovyOutlinePage outline = openFile('Problem', '''\
             class X {  }
@@ -244,10 +260,9 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
             '''.stripIndent())
 
         assert outline == null : 'X is not a script, so no Groovy outline should be available'
-        //OCompilationUnit unit = outline.getOutlineCompilationUnit()
-        //IJavaElement[] children = unit.getChildren()
+        //IJavaElement[] children = outline.outlineCompilationUnit.children
         //assertEquals(1, children.length)
-        //assertEquals('Problem' + GroovyScriptOutlineExtender.NO_STRUCTURE_FOUND, children[0].getElementName())
+        //assertEquals('Problem -- No structure found', children[0].elementName)
     }
 
     //--------------------------------------------------------------------------

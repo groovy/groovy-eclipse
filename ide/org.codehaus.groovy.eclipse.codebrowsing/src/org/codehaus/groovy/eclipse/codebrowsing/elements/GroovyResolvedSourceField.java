@@ -68,7 +68,7 @@ public class GroovyResolvedSourceField extends ResolvedSourceField implements IG
             return new org.eclipse.jdt.internal.core.SourceFieldElementInfo() {{
                 FieldNode field = (FieldNode) inferredElement;
 
-                setTypeName(field.getType().getNameWithoutPackage().toCharArray());
+                setTypeName(field.getType().toString(false).toCharArray());
                 setNameSourceStart(field.getNameStart());
                 setNameSourceEnd(field.getNameEnd());
                 setSourceRangeStart(field.getStart());
