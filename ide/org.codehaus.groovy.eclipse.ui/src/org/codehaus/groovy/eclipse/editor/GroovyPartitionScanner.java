@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,29 +46,77 @@ import org.eclipse.swt.graphics.RGB;
 
 public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 
-    public final static String GROOVY_MULTILINE_STRINGS= "__groovy_multiline_string"; //$NON-NLS-1$
+    public static final String GROOVY_MULTILINE_STRINGS = "__groovy_multiline_string";
+
     /**
-     * Array with legal content types.
      * @since 3.0
      */
-    public final static String[] LEGAL_CONTENT_TYPES= new String[] {
+    public final static String[] LEGAL_CONTENT_TYPES = new String[] {
+        JAVA_CHARACTER,
+        JAVA_STRING,
         JAVA_DOC,
         JAVA_MULTI_LINE_COMMENT,
         JAVA_SINGLE_LINE_COMMENT,
-        JAVA_STRING,
-        JAVA_CHARACTER,
-        GROOVY_MULTILINE_STRINGS
+        GROOVY_MULTILINE_STRINGS,
     };
 
     /**
-     * Detector for empty comments.
+     * Creates the partitioner and sets up the appropriate rules.
      */
-    static class EmptyCommentDetector implements IWordDetector {
+    public GroovyPartitionScanner() {
+        super();
+        List<IRule> rules = createRules(false);
+        setPredicateRules(rules.toArray(new IPredicateRule[rules.size()]));
+    }
 
+    public static List<IRule> createRules(boolean withColor) {
+        List<IRule> rules = new ArrayList<IRule>(8);
+
+        IToken javadocComment = new Token(JAVA_DOC);
+        IToken multilnComment = new Token(JAVA_MULTI_LINE_COMMENT);
+        IToken endlineComment = new Token(JAVA_SINGLE_LINE_COMMENT);
+
+        // special case for empty comments
+        rules.add(new WordPredicateRule(multilnComment));
+
+        // javadoc comments
+        rules.add(new MultiLineRule("/**", "*/", javadocComment, (char) 0, true));
+
+        // multi-line comments
+        rules.add(new MultiLineRule("/*", "*/", multilnComment, (char) 0, true));
+
+        // single-line comments
+        rules.add(new EndOfLineRule("//", endlineComment));
+
+
+        Object textAttr = null;
+        if (withColor) {
+            IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
+            RGB rgb = PreferenceConverter.getColor(prefs, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+            textAttr = new TextAttribute(new Color(null, rgb), null, SWT.ITALIC);
+        }
+        IToken groovyString = new Token(textAttr != null ? textAttr : GROOVY_MULTILINE_STRINGS);
+        IToken javaString = new Token(textAttr != null ? textAttr : JAVA_STRING);
+
+        // multi-line strings
+        rules.add(new MultiLineRule("'''", "'''", groovyString));
+        rules.add(new MultiLineRule("\"\"\"", "\"\"\"", groovyString));
+
+        // single-line strings
+        rules.add(new SingleLineRule("'", "'", javaString, '\\'));
+        rules.add(new SingleLineRule("\"", "\"", javaString, '\\'));
+
+        // slashy and dollar-slashy strings are identified by semantic highlighting
+
+        return rules;
+    }
+
+    //--------------------------------------------------------------------------
+
+    static class EmptyCommentDetector implements IWordDetector {
         public boolean isWordStart(char c) {
             return (c == '/');
         }
-
         public boolean isWordPart(char c) {
             return (c == '*' || c == '/');
         }
@@ -97,70 +145,5 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         public IToken getSuccessToken() {
             return fSuccessToken;
         }
-    }
-
-    /**
-     * Creates the partitioner and sets up the appropriate rules.
-     */
-    public GroovyPartitionScanner() {
-        super();
-
-        List<IRule> rules = createRules(false);
-
-
-        IPredicateRule[] result= new IPredicateRule[rules.size()];
-        rules.toArray(result);
-        setPredicateRules(result);
-    }
-
-    public static List<IRule> createRules(boolean withColor) {
-        IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
-
-        Object objComment;
-        Object objdComment;
-        Object objmString;
-        Object objsString;
-        Object objsComment;
-        if (withColor) {
-            RGB rgb = PreferenceConverter.getColor(store,PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-            objComment = objmString = objsString = objsComment = objdComment = new TextAttribute(new Color(null, rgb), null,
-                    SWT.ITALIC);
-        } else {
-            objComment = JAVA_MULTI_LINE_COMMENT;
-            objmString = GROOVY_MULTILINE_STRINGS;
-            objsString = JAVA_STRING;
-            objsComment = JAVA_SINGLE_LINE_COMMENT;
-            objdComment = JAVA_DOC;
-        }
-
-        IToken comment= new Token(objComment);
-        IToken mString = new Token(objmString);
-        IToken sString = new Token(objsString);
-        IToken sComment= new Token(objsComment);
-        IToken jdoc = new Token(objdComment);
-
-        List<IRule> rules= new ArrayList<IRule>();
-
-        // Add rule for single line comments.
-        rules.add(new EndOfLineRule("//", sComment));
-
-
-        // Add rule for strings and character constants.
-        rules.add(new MultiLineRule("'''", "'''", mString));
-        rules.add(new MultiLineRule("\"\"\"", "\"\"\"", mString));
-        // GRECLIPSE-1111 do not eagerly match these kinds of multiline strings
-        rules.add(new SingleLineRule("\"", "\"", sString, '\\'));
-        rules.add(new SingleLineRule("'", "'", sString, '\\'));
-
-        // Add special case word rule.
-        rules.add(new WordPredicateRule(comment));
-
-        // Add rule for JavaDoc
-        rules.add(new MultiLineRule("/**", "*/", jdoc, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
-
-        // Add rules for multi-line comments
-        rules.add(new MultiLineRule("/*", "*/", comment, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
-
-        return rules;
     }
 }

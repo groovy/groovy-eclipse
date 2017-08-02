@@ -19,12 +19,18 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyDebugOptionsEnforcer;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyJavaDebugElementAdapterFactory;
+import org.codehaus.groovy.eclipse.editor.GroovyAwareFoldingStructureProvider;
 import org.codehaus.groovy.eclipse.editor.GroovyOutlineTools;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.text.folding.JavaFoldingStructureProviderRegistry;
+import org.eclipse.jdt.ui.text.folding.DefaultJavaFoldingStructureProvider;
+import org.eclipse.jdt.ui.text.folding.IJavaFoldingStructureProvider;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -113,6 +119,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         outlineTools = new GroovyOutlineTools();
 
         addMonospaceFontListener();
+        setStructureProviderRegistry();
         DelegatingCleanUpPostSaveListener.installCleanUp();
 
         // register our own stack frame label provider so that groovy stack frames are shown differently
@@ -159,6 +166,26 @@ public class GroovyPlugin extends AbstractUIPlugin {
             PrefUtil.getInternalPreferenceStore().removePropertyChangeListener(junitMono);
             getPreferenceStore().removePropertyChangeListener(junitMono);
             junitMono = null;
+        }
+    }
+
+    private void setStructureProviderRegistry() {
+        try {
+            // JavaEditor.createSourceViewer is final so GroovyEditor cannot override
+            // to extend the default folding structure provider, override the provider registry
+            ReflectionUtils.setPrivateField(JavaPlugin.class, "fFoldingStructureProviderRegistry", JavaPlugin.getDefault(), new JavaFoldingStructureProviderRegistry() {
+                @Override
+                public IJavaFoldingStructureProvider getCurrentFoldingProvider() {
+                    IJavaFoldingStructureProvider provider = super.getCurrentFoldingProvider();
+                    if (provider.getClass().equals(DefaultJavaFoldingStructureProvider.class)) {
+                        provider = new GroovyAwareFoldingStructureProvider();
+                    }
+                    return provider;
+                }
+            });
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            // use Java defaults
         }
     }
 

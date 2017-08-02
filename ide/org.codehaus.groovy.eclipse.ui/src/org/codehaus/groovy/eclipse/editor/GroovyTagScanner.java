@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWhitespaceDetector;
 import org.eclipse.jface.text.rules.IWordDetector;
-import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 
@@ -40,9 +39,6 @@ import org.eclipse.jface.text.rules.WhitespaceRule;
  * A code scanner for Groovy files.
  *
  * Much of this class has been adapted from {@link JavaCodeScanner}
- *
- * @author Andrew Eisenberg
- * @created Dec 31, 2010
  */
 public class GroovyTagScanner extends AbstractJavaScanner {
 
@@ -303,7 +299,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
                 return Token.UNDEFINED;
             }
 
-            if ("interface".equals(buffer.toString())) //$NON-NLS-1$
+            if ("interface".equals(buffer.toString()))
                 return fInterfaceToken;
 
             while (readSegment(new ResettableScanner(scanner))) {
@@ -367,7 +363,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "interface",
         "long",
         "short",
-        "void"
+        "void",
     };
     private static final String[] keywords = {
         "abstract",
@@ -482,7 +478,6 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
     @Override
     protected List<IRule> createRules() {
-
         List<IRule> rules = new ArrayList<IRule>();
 
         // initial additional rules
@@ -490,22 +485,18 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             rules.addAll(initialAdditionalRules);
         }
 
-        // Add rule for character constants.
-        Token token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-        rules.add(new SingleLineRule("'", "'", token, '\\')); //$NON-NLS-2$ //$NON-NLS-1$
-
         // Add generic whitespace rule.
         rules.add(new WhitespaceRule(new JavaWhitespaceDetector()));
 
         // Add JLS3 rule for /@\s*interface/
         AnnotationRule atInterfaceRule = new AnnotationRule(
-                getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR),
-                getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
+            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR),
+            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
         rules.add(atInterfaceRule);
 
         // combined rule for all keywords
         JavaWordDetector wordDetector = new JavaWordDetector();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
+        Token token = getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
         CombinedWordRule combinedWordRule = new CombinedWordRule(wordDetector, token);
 
         // Java keywords
