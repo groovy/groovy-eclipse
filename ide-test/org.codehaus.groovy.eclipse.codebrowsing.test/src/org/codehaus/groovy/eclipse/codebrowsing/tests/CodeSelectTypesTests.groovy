@@ -423,6 +423,21 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testSelectInnerType7() {
+        String contents = '''\
+            @groovy.transform.TypeChecked
+            class Outer {
+              def method() { }
+              @Deprecated
+              static class Inner extends Object { }
+              @Deprecated
+              abstract static class Inert extends Number { }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Inert')
+    }
+
+    @Test
     void testSelectAnonymousInnerType() {
         String contents = 'class Outer { def meth() { def m = new Map() { } } }'
         assertCodeSelect([contents], 'Map')

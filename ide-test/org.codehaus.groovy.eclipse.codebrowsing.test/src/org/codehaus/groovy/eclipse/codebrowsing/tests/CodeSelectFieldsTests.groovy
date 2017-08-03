@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import org.eclipse.jdt.core.IField
 import org.junit.Test
 
 final class CodeSelectFieldsTests extends BrowsingTestSuite {
@@ -60,6 +61,24 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
               }
             }'''.stripIndent()
         ], 'log')
+    }
+
+    @Test
+    void testCodeSelectLoggerFieldInClass_staticImportConflict() {
+        // first import exposes Math.log
+        def elem = assertCodeSelect(['''\
+            import static java.lang.Math.*
+            import groovy.util.logging.Log
+            @Log
+            class Foo {
+              String str
+              def meth() {
+                log.info "$str msg"
+              }
+            }'''.stripIndent()
+        ], 'log')
+
+        assert elem instanceof IField
     }
 
     @Test
