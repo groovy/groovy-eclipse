@@ -78,7 +78,6 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
                 return; // prevent folding of entire script body
             }
         }
-        // TODO: fix class and instance initializers
         super.computeFoldingStructure(element, context);
     }
 

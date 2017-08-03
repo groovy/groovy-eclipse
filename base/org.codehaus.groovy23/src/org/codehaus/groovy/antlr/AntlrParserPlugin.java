@@ -1147,12 +1147,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return classNode != null && (classNode.getModifiers() & Opcodes.ACC_INTERFACE) > 0;
     }
 
-    protected void staticInit(AST staticInit) {        
+    protected void staticInit(AST staticInit) {
         BlockStatement code = (BlockStatement) statementList(staticInit);
         classNode.addStaticInitializerStatements(code.getStatements(),false);
+        // GRECLIPSE add
+        MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
+        if (clinit.getEnd() < 1) { // set source position for first initializer only
+            configureAST(clinit, staticInit);
+        }
+        // GRECLIPSE end
     }
-    
-    protected void objectInit(AST init) {        
+
+    protected void objectInit(AST init) {
         BlockStatement code = (BlockStatement) statementList(init);
         classNode.addObjectInitializerStatements(code);
     }

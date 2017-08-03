@@ -1118,6 +1118,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected void staticInit(AST staticInit) {
         BlockStatement code = (BlockStatement) statementList(staticInit);
         classNode.addStaticInitializerStatements(code.getStatements(), false);
+        // GRECLIPSE add
+        MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
+        if (clinit.getEnd() < 1) { // set source position for first initializer only
+            configureAST(clinit, staticInit);
+        }
+        // GRECLIPSE end
     }
 
     protected void objectInit(AST init) {
@@ -1607,12 +1613,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected Statement statementListNoChild(AST node, AST alternativeConfigureNode) {
         BlockStatement block = new BlockStatement();
         // alternativeConfigureNode is used only to set the source position
-        // GRECLIPSE edit
-        /*if (node != null) {
+        /* GRECLIPSE edit
+        if (node != null) {
             configureAST(block, node);
         } else {
             configureAST(block, alternativeConfigureNode);
-        }*/
+        }
+        */
         if (alternativeConfigureNode != null) {
             configureAST(block, alternativeConfigureNode);
         } else if (node != null) {
@@ -3545,13 +3552,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected void configureAST(ASTNode node, AST ast) {
         if (ast == null)
             throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null Node");
-        // GRECLIPSE edit
-        /*node.setColumnNumber(ast.getColumn());
+        /* GRECLIPSE edit
+        node.setColumnNumber(ast.getColumn());
         node.setLineNumber(ast.getLine());
         if (ast instanceof GroovySourceAST) {
             node.setLastColumnNumber(((GroovySourceAST) ast).getColumnLast());
             node.setLastLineNumber(((GroovySourceAST) ast).getLineLast());
-        }*/
+        }
+        */
         int startcol = ast.getColumn();
         int startline = ast.getLine();
         int startoffset = locations.findOffset(startline, startcol);
