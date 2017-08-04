@@ -437,16 +437,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
     }
 
     List<ICompletionProposal> processAcceptedConstructors(Set<String> usedParams, JDTResolver resolver) {
-        this.checkCancel();
-        if (this.acceptedConstructors == null)
+        int n;
+        if (acceptedConstructors == null || (n = acceptedConstructors.size()) == 0) {
             return Collections.emptyList();
+        }
 
-        int length = this.acceptedConstructors.size();
+        checkCancel();
 
-        if (length == 0)
-            return Collections.emptyList();
-
-        String currentPackageNameStr = this.module.getPackageName();
+        String currentPackageNameStr = module.getPackageName();
         char[] currentPackageName;
         if (currentPackageNameStr == null) {
             currentPackageName = CharOperation.NO_CHAR;
@@ -454,19 +452,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             currentPackageName = currentPackageNameStr.toCharArray();
             if (currentPackageName[currentPackageName.length - 1] == '.') {
                 char[] newPackageName = new char[currentPackageName.length - 1];
-                System.arraycopy(currentPackageName, 0, newPackageName, 0,
-                        newPackageName.length);
+                System.arraycopy(currentPackageName, 0, newPackageName, 0, newPackageName.length);
                 currentPackageName = newPackageName;
             }
         }
+
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         try {
-            for (int i = 0; i < length; i += 1) {
-
-                // does not check cancellation for every types to avoid
-                // performance loss
-                if ((i % CHECK_CANCEL_FREQUENCY) == 0)
+            for (int i = 0; i < n; i += 1) {
+                // does not check cancellation for every types to avoid performance loss
+                if ((i % CHECK_CANCEL_FREQUENCY) == 0) {
                     checkCancel();
+                }
 
                 AcceptedCtor acceptedConstructor = (AcceptedCtor) this.acceptedConstructors.elementAt(i);
 
@@ -490,31 +487,26 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                     initializeImportArrays(resolver.getScope());
                 }
 
-                // propose all constructors regardless of package, but ignore
-                // enums
+                // propose all constructors regardless of package, but ignore enums
                 if (!Flags.isEnum(typeModifiers)) {
-                    ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName, parameterCount, signature,
-                            parameterTypes, parameterNames, modifiers, packageName, typeModifiers, accessibility, simpleTypeName,
-                            fullyQualifiedName, false, extraFlags);
+                    ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, modifiers, packageName, typeModifiers, accessibility, simpleTypeName, fullyQualifiedName, false, extraFlags);
                     if (constructorProposal != null) {
                         proposals.add(constructorProposal);
 
                         if (contextOnly) {
-                            // also add all of the constructor arguments for
-                            // constructors with no
-                            // args and when it is the only constructor in the
-                            // classs
+                            // also add all of the constructor arguments for constructors with no args and when it is the only constructor in the class
                             ClassNode resolved = resolver.resolve(String.valueOf(fullyQualifiedName));
                             if (resolved != null) {
                                 List<ConstructorNode> constructors = resolved.getDeclaredConstructors();
                                 if (constructors != null && constructors.size() == 1) {
                                     ConstructorNode constructor = constructors.get(0);
                                     Parameter[] parameters = constructor.getParameters();
-                                    if (constructor.getStart() <= 0 && (parameters == null || parameters.length == 0)) {
+                                    if (parameters == null || parameters.length == 0) {
+                                        // instead of proposing no-arg constructor, propose type's properties as named arguments
+                                        proposals.remove(constructorProposal);
                                         for (PropertyNode prop : resolved.getProperties()) {
-                                            if (!prop.getName().equals("metaClass") && !usedParams.contains(prop.getName())) {
-                                                GroovyNamedArgumentProposal namedProp = new GroovyNamedArgumentProposal(prop.getName(),
-                                                        prop.getType(), null, null);
+                                            if (!"metaClass".equals(prop.getName()) && !usedParams.contains(prop.getName())) {
+                                                GroovyNamedArgumentProposal namedProp = new GroovyNamedArgumentProposal(prop.getName(), prop.getType(), null, String.valueOf(simpleTypeName));
                                                 proposals.add(namedProp.createJavaProposal(context, javaContext));
                                             }
                                         }

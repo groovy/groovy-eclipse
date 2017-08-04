@@ -43,8 +43,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
 
     private JDTResolver resolver;
 
-    public ConstructorCompletionProcessor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    public ConstructorCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
 
@@ -56,8 +55,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         }
         int completionExprStart;
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
-            completionExprStart = ((MethodInfoContentAssistContext) context).methodNameEnd
-                    - ((MethodInfoContentAssistContext) context).methodName.length();
+            completionExprStart = ((MethodInfoContentAssistContext) context).methodNameEnd - ((MethodInfoContentAssistContext) context).methodName.length();
         } else {
             completionExprStart = context.completionLocation - constructorCompletionText.length;
         }
@@ -68,14 +66,11 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         }
 
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-                context, getJavaContext(), completionExprStart,
-                context.completionEnd - completionExprStart,
-                getNameEnvironment().nameLookup, monitor);
-        getNameEnvironment().findConstructorDeclarations(
-                constructorCompletionText, true, requestor, monitor);
+            context, getJavaContext(), completionExprStart, context.completionEnd - completionExprStart, getNameEnvironment().nameLookup, monitor);
 
-        List<ICompletionProposal> constructorProposals = requestor.processAcceptedConstructors(findUsedParameters(context),
-                resolver);
+        getNameEnvironment().findConstructorDeclarations(constructorCompletionText, true, requestor, monitor);
+
+        List<ICompletionProposal> constructorProposals = requestor.processAcceptedConstructors(findUsedParameters(context), resolver);
 
         return constructorProposals;
     }
@@ -113,8 +108,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
     }
 
     /**
-     * Removes whitespace and the 'new ' prefix and does a fail-fast if a
-     * non-java identifier is found.
+     * Removes whitespace and the 'new ' prefix and does a fail-fast if a non-java identifier is found.
      */
     private char[] getCompletionText(String fullCompletionExpression) {
         List<Character> chars = new LinkedList<Character>();
@@ -122,8 +116,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             return CharOperation.NO_CHAR;
         }
         char[] fullArray = fullCompletionExpression.toCharArray();
-        int newIndex = CharOperation.indexOf("new ".toCharArray(), fullArray,
-                true) + 4;
+        int newIndex = CharOperation.indexOf("new ".toCharArray(), fullArray, true) + 4;
         if (newIndex == -1) {
             return null;
         }

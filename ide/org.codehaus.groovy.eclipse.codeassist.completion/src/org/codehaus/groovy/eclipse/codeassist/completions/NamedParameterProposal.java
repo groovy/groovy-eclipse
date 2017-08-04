@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionContext;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
@@ -73,17 +75,23 @@ public class NamedParameterProposal extends JavaCompletionProposal {
 
     private final String paramName;
 
-    public NamedParameterProposal(String paramName, String paramSignature, int replacementOffset, int replacementLength,
-            Image image,
-            StyledString displayString, int relevance, boolean inJavadoc, JavaContentAssistInvocationContext invocationContext,
-            boolean tryParamGuessing) {
-        super(computeReplacementString(paramName), replacementOffset, replacementLength, image, displayString,
-                relevance, inJavadoc,
-                invocationContext);
-        this.tryParamGuessing = tryParamGuessing;
-        coreContext = invocationContext.getCoreContext();
+    public NamedParameterProposal(
+        String paramName,
+        String paramSignature,
+        int replacementOffset,
+        int replacementLength,
+        Image image,
+        StyledString displayString,
+        int relevance,
+        boolean inJavadoc,
+        JavaContentAssistInvocationContext invocationContext,
+        boolean tryParamGuessing) {
+
+        super(computeReplacementString(paramName), replacementOffset, replacementLength, image, displayString, relevance, inJavadoc, invocationContext);
         this.paramName = paramName;
         this.paramSignature = paramSignature;
+        this.tryParamGuessing = tryParamGuessing;
+        coreContext = invocationContext.getCoreContext();
         this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 
@@ -132,16 +140,13 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         String type = Signature.toString(paramSignature);
         IJavaElement[] assignableElements = getAssignableElements();
         Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
-        ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement()).parameterProposals(type,
-                paramName, position, assignableElements, tryParamGuessing);
+        ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement()).parameterProposals(type, paramName, position, assignableElements, tryParamGuessing);
         if (argumentProposals.length == 0) {
-            argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null,
-                    paramName, 0) };
+            argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null, paramName, 0) };
         }
         paramNamePosition = position;
         return choices = argumentProposals;
     }
-
 
     private IJavaElement getEnclosingElement() {
         return coreContext.getEnclosingElement();
@@ -154,9 +159,18 @@ public class NamedParameterProposal extends JavaCompletionProposal {
     @Override
     public void apply(IDocument document, char trigger, int offset) {
         super.apply(document, trigger, offset);
+
         if (selectedRegion == null) {
             selectedRegion = calculateArgumentRegion();
         }
+
+        try {
+            // refresh so the AST is ready for subsequent named argument content assists
+            getJavaEditor().getAdapter(ICompilationUnit.class).reconcile(0, 0, null, null);
+        } catch (JavaModelException e) {
+            GroovyPlugin.getDefault().logError("Failed to reconcile after application of named argument proposal", e);
+        }
+
         setUpLinkedMode(document, ',');
     }
 
@@ -173,11 +187,9 @@ public class NamedParameterProposal extends JavaCompletionProposal {
                 if (shouldDoGuessing()) {
                     ensurePositionCategoryInstalled(document, model);
                     document.addPosition(getCategory(), paramNamePosition);
-                    group.addPosition(new ProposalPosition(document, paramNamePosition.getOffset(), paramNamePosition
-                            .getLength(), LinkedPositionGroup.NO_STOP, choices));
+                    group.addPosition(new ProposalPosition(document, paramNamePosition.getOffset(), paramNamePosition.getLength(), LinkedPositionGroup.NO_STOP, choices));
                 } else {
-                    group.addPosition(new LinkedPosition(document, argRegion.getOffset(), argRegion.getLength(),
-                            LinkedPositionGroup.NO_STOP));
+                    group.addPosition(new LinkedPosition(document, argRegion.getOffset(), argRegion.getLength(), LinkedPositionGroup.NO_STOP));
                 }
                 model.addGroup(group);
 
@@ -185,13 +197,21 @@ public class NamedParameterProposal extends JavaCompletionProposal {
                 JavaEditor editor = getJavaEditor();
                 if (editor != null) {
                     model.addLinkingListener(new EditorHighlightingSynchronizer(editor));
+                    model.addLinkingListener(new ILinkedModeListener() {
+                        public void left(LinkedModeModel model, int flags) {
+                            System.err.println();
+                        }
+                        public void suspend(LinkedModeModel model) {}
+                        public void resume(LinkedModeModel model, int flags) {}
+                    });
                 }
 
                 LinkedModeUI ui = new EditorLinkedModeUI(model, textViewer);
-                ui.setExitPosition(textViewer, baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
-                ui.setExitPolicy(new ExitPolicy(closingCharacter, document));
-                ui.setDoContextInfo(true);
                 ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT);
+                ui.setDoContextInfo(true);
+                ui.setExitPolicy(new ExitPolicy(closingCharacter, document));
+                ui.setExitPosition(textViewer, baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
+                ui.setSimpleMode(true);
                 ui.enter();
 
                 selectedRegion = ui.getSelectedRegion();

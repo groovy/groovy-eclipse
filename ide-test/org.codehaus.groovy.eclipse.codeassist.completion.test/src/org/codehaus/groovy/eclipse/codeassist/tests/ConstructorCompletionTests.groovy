@@ -82,187 +82,163 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
-    @Test // no named args since an explicit constructor exists
-    void testNoNamedArgs1() {
-        String contents = '''\
-            class Flar {
-              Flar() { }
-              String aaa
-              int bbb
-              Date ccc
-            }
-            new Flar()
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
-        proposalExists(proposals, 'aaa : __', 0)
-        proposalExists(proposals, 'bbb : __', 0)
-        proposalExists(proposals, 'ccc : __', 0)
-        proposalExists(proposals, 'Flar', 1)
-    }
-
-    @Test // no named args since an explicit constructor exists
-    void testNoNamedArgs2() {
-        addGroovySource('''\
-            class Flar {
-              Flar() { }
-              Flar(a,b,c) { }
-              String aaa
-              int bbb
-              Date ccc
-            }
-            '''.stripIndent(), 'Flar')
-
-        String contents = 'new Flar()'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
-        proposalExists(proposals, 'aaa : __', 0)
-        proposalExists(proposals, 'bbb : __', 0)
-        proposalExists(proposals, 'ccc : __', 0)
-        proposalExists(proposals, 'Flar', 2)
-    }
-
-    @Test // no named args since an explicit constructor exists
-    void testNoNamedArgs3() {
-        addGroovySource('''\
-            class Flar {
-              Flar() { }
-              Flar(a,b,c) { }
-              String aaa
-              int bbb
-              Date ccc
-            }
-            '''.stripIndent(), 'Flar', 'p')
-
-        String contents = 'new Flar()'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
-        proposalExists(proposals, 'aaa : __', 0)
-        proposalExists(proposals, 'bbb : __', 0)
-        proposalExists(proposals, 'ccc : __', 0)
-        proposalExists(proposals, 'Flar', 2)
-    }
-
     @Test
     void testNamedArgs1() {
         String contents = '''\
-            class Flar {
+            class Foo {
               String aaa
               int bbb
               Date ccc
             }
-            new Flar()
+            new Foo()
             '''.stripIndent()
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
         proposalExists(proposals, 'bbb : __', 1)
         proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'Flar', 1)
     }
 
     @Test
     void testNamedArgs2() {
         addGroovySource('''\
-            class Flar {
+            class Foo {
               String aaa
               int bbb
               Date ccc
             }
-            '''.stripIndent(), 'Flar')
+            '''.stripIndent(), 'Foo')
 
-        String contents = 'new Flar()'
+        String contents = 'new Foo()'
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
         proposalExists(proposals, 'bbb : __', 1)
         proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'Flar', 1)
     }
 
     @Test
     void testNamedArgs3() {
         addGroovySource('''\
-            class Flar {
+            class Foo {
               String aaa
               int bbb
               Date ccc
             }
-            '''.stripIndent(), 'Flar', 'p')
+            '''.stripIndent(), 'Foo', 'p')
 
-        String contents = 'new Flar()'
+        String contents = 'new p.Foo()'
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
         proposalExists(proposals, 'bbb : __', 1)
         proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'Flar', 1)
     }
 
-    @Test // some args filled in
+    @Test
     void testNamedArgs4() {
-        addGroovySource('''\
-            class Flar {
+        String contents = '''\
+            class Foo {
               String aaa
               int bbb
               Date ccc
             }
-            '''.stripIndent(), 'Flar')
+            new Foo(aaa:'1', )
+            '''.stripIndent()
 
-        String contents = 'new Flar(aaa:9)'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, ', '))
         proposalExists(proposals, 'aaa : __', 0)
         proposalExists(proposals, 'bbb : __', 1)
         proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'Flar', 1)
     }
 
-    @Test // some args filled in
+    @Test
     void testNamedArgs5() {
-        addGroovySource('''\
-            class Flar {
+        String contents = '''\
+            class Foo {
               String aaa
               int bbb
               Date ccc
             }
-            '''.stripIndent(), 'Flar')
+            new Foo(aaa:'1', bbb:2, )
+            '''.stripIndent()
 
-        String contents = 'new Flar(bbb:7, aaa:9)'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, ', '))
         proposalExists(proposals, 'aaa : __', 0)
         proposalExists(proposals, 'bbb : __', 0)
         proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'Flar', 1)
     }
 
-    @Test // some args filled in
+    @Test
     void testNamedArgs6() {
-        addGroovySource('''\
-            class Flar {
+        String contents = '''\
+            class Foo {
               String aaa
               int bbb
               Date ccc
             }
-            '''.stripIndent(), 'Flar')
+            new Foo(aaa:'1', bbb:2, ccc:null)
+            '''.stripIndent()
 
-        String contents = 'new Flar(bbb:7, ccc:8, aaa:9)'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 0)
         proposalExists(proposals, 'bbb : __', 0)
         proposalExists(proposals, 'ccc : __', 0)
-        proposalExists(proposals, 'Flar', 1)
     }
 
     @Test // STS-2628: ensure no double adding of named properties for booleans
     void testNamedArgs7() {
-        addGroovySource('''\
-            class Flar {
+        String contents = '''\
+            class Foo {
               boolean aaa
               boolean bbb
               boolean ccc
             }
-            '''.stripIndent(), 'Flar')
+            new Foo()
+            '''.stripIndent()
 
-        String contents = 'new Flar()'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
         proposalExists(proposals, 'bbb : __', 1)
         proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'Flar', 1)
+    }
+
+    @Test // explicit no-arg constructor exists
+    void testNamedArgs8() {
+        String contents = '''\
+            class Foo {
+              Foo() { }
+              String aaa
+              int bbb
+              Date ccc
+            }
+            new Foo()
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'aaa : __', 1)
+        proposalExists(proposals, 'bbb : __', 1)
+        proposalExists(proposals, 'ccc : __', 1)
+    }
+
+    @Test // explicit no-arg and tuple constructors exist
+    void testNoNamedArgs() {
+        String contents = '''\
+            class Foo {
+              Foo() { }
+              Foo(a,b,c) { }
+              String aaa
+              int bbb
+              Date ccc
+            }
+            new Foo()
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'aaa : __', 0)
+        proposalExists(proposals, 'bbb : __', 0)
+        proposalExists(proposals, 'ccc : __', 0)
+        proposalExists(proposals, 'Foo', 2)
     }
 
     @Test
@@ -282,6 +258,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new Flar()
             '''.stripIndent()
+
         String[] expectedChoices = [ 'yyy', '0' ]
         checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
     }
@@ -302,6 +279,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new p.Flar()
             '''.stripIndent()
+
         String[] expectedChoices = [ 'yyy', '0' ]
         checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
     }
@@ -323,6 +301,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new Flar()
             '''.stripIndent()
+
         String[] expectedChoices = [ 'yyy', '0' ]
         checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
     }
@@ -344,6 +323,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new Flar()
             '''.stripIndent()
+
         String[] expectedChoices = [ 'yyy', '0' ]
         checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
     }
@@ -365,7 +345,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new Flar()
             '''.stripIndent()
-      String[] expectedChoices = [ 'yyy', '0' ]
+
+        String[] expectedChoices = [ 'yyy', '0' ]
         checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
     }
 
@@ -386,6 +367,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new Flar()
             '''.stripIndent()
+
         String[] expectedChoices = [ 'xxx', '""' ]
         checkProposalChoices(contents, 'Flar(', 'aaa', 'aaa: __, ', expectedChoices)
     }
@@ -407,6 +389,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             boolean zzz
             new Flar()
             '''.stripIndent()
+
         String[] expectedChoices = [ 'xxx', '{  }' ]
         checkProposalChoices(contents, 'Flar(', 'aaa', 'aaa: __, ', expectedChoices)
     }
