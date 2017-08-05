@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.core.util;
 import static org.codehaus.groovy.ast.ClassCodeVisitorSupport.ORIGINAL_EXPRESSION;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getAllImportNodes;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getTraitFieldExpression;
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getTransformNodes;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -93,6 +94,7 @@ import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.runtime.GeneratedClosure;
+import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.eclipse.core.runtime.Assert;
 
 /**
@@ -102,9 +104,6 @@ import org.eclipse.core.runtime.Assert;
  * @see org.codehaus.groovy.ast.CodeVisitorSupport
  */
 public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCodeVisitor {
-
-    // NOTE: visitClass and visitMethod are unfinished
-    // TODO: visit type references and type parameters
 
     // TODO: Move into visitModule so overrides of visitMethod don't require "if (method == runMethod) return;".
     protected MethodNode runMethod;
@@ -146,6 +145,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     public void visitClass(ClassNode node) {
         visitAnnotations(node.getAnnotations());
+
         for (Statement stmt : node.getObjectInitializerStatements()) {
             stmt.visit(this);
         }
@@ -187,6 +187,14 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     public void visitField(FieldNode node) {
         visitAnnotations(node.getAnnotations());
+        // script field annotations are saved in script transforms map
+        if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+            for (ASTNode anno : getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
+                if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
+                    visitAnnotation((AnnotationNode) anno);
+                }
+            }
+        }
         visitIfPresent(node.getInitialExpression());
     }
 

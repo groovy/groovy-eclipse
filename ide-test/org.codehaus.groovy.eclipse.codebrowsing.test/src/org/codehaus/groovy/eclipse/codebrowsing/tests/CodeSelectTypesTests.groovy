@@ -98,7 +98,7 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectAnnotationClass() {
+    void testSelectAnnotationClass1() {
         String another = '@interface Anno { }'
         String contents = '@Anno class Type { }'
         assertCodeSelect([another, contents], 'Anno')
@@ -106,19 +106,26 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectAnnotationClass2() {
-        String contents = '@java.lang.Deprecated class Type { }'
+        String contents = '@Deprecated class Type { }'
         assertCodeSelect([contents], 'Deprecated')
     }
 
     @Test
     void testSelectAnnotationClass2a() {
         String contents = '@java.lang.Deprecated class Type { }'
+        assertCodeSelect([contents], 'Deprecated')
         assertCodeSelect([contents], 'java', 'java')
         assertCodeSelect([contents], 'lang', 'java.lang')
     }
 
     @Test
     void testSelectAnnotationClass3() {
+        String contents = 'import groovy.transform.*; @Field String field'
+        assertCodeSelect([contents], 'Field')
+    }
+
+    @Test
+    void testSelectAnnotationClass4() {
         assumeTrue(isAtLeastGroovy(21)) // CompileDynamic was added in 2.1
         // CompileDynamic is an AnnotationCollector, so it is not in the AST after transformation
         String contents = 'import groovy.transform.CompileDynamic; @CompileDynamic class Type { }'
@@ -126,21 +133,21 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectAnnotationClass4() {
+    void testSelectAnnotationClass5() {
         assumeTrue(isAtLeastGroovy(21)) // AnnotationCollector was added in 2.1
         String contents = 'import groovy.transform.*; @AnnotationCollector([EqualsAndHashCode]) public @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
-    void testSelectAnnotationClass4a() {
+    void testSelectAnnotationClass5a() {
         assumeTrue(isAtLeastGroovy(21)) // AnnotationCollector was added in 2.1
         String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector public @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
-    void testSelectAnnotationClass5() {
+    void testSelectAnnotationClass6() {
         assumeTrue(isAtLeastGroovy(21)) // enum constant annotation support was added in 2.1
         String another = 'import java.lang.annotation.*; @Target(ElementType.FIELD) @interface Tag { String value() }'
         String contents = 'enum Foo { @Tag("Bar") Baz }'

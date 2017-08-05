@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +40,10 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.transform.ASTTransformation;
+import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -179,6 +184,14 @@ public class GroovyUtils {
             types.add(param.getType());
         }
         return types;
+    }
+
+    public static Set<ASTNode> getTransformNodes(ClassNode classNode, Class<? extends ASTTransformation> xformType) {
+        CompilePhase phase = xformType.getAnnotation(GroovyASTTransformation.class).phase();
+        Map<?, Set<ASTNode>> map = classNode.getTransforms(phase);
+        Set<ASTNode> nodes = map.get(xformType);
+
+        return nodes != null ? Collections.unmodifiableSet(nodes) : Collections.EMPTY_SET;
     }
 
     public static ClassNode[] getTypeParameterBounds(ClassNode typeParam) {
@@ -351,13 +364,6 @@ public class GroovyUtils {
         if (!"groovy.lang.Closure".equals(closure.getName()) || closure == closure.redirect()) {
             return;
         }
-
-        //ClassNode redir =
-        //    closure.redirect();
-        //closure.setRedirect(null);
-        //closure.setInterfaces(redir.getInterfaces());
-        //ReflectionUtils.setPrivateField(ClassNode.class, "clazz", closure, redir.getTypeClass());
-        //ReflectionUtils.setPrivateField(ClassNode.class, "lazyInitDone", closure, Boolean.FALSE);
         closure.setGenericsTypes(new GenericsType[] {new GenericsType(getWrapperTypeIfPrimitive(returnType))});
     }
 }

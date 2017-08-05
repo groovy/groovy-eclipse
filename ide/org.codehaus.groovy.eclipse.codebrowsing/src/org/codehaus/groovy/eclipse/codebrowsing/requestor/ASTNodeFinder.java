@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +48,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -95,16 +92,9 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitClass(ClassNode node) {
-        visitAnnotations(node.getAnnotations());
         if (node.getNameEnd() > 0) {
             checkNameRange(node); // also checks generics
             checkSupers(node); // extends and implements
-        }
-
-        if (node.getObjectInitializerStatements() != null) {
-            for (Statement stmt : node.getObjectInitializerStatements()) {
-                stmt.visit(this);
-            }
         }
 
         // visit <clinit> body because this is where static field initializers are placed
@@ -122,35 +112,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             vce = e;
         }
 
-        // visit trait members
-        @SuppressWarnings("unchecked")
-        List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
-        if (traitFields != null) {
-            for (FieldNode field : traitFields) {
-                visitField(field);
-            }
-        }
-        @SuppressWarnings("unchecked")
-        List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
-        if (traitMethods != null) {
-            for (MethodNode method : traitMethods) {
-                visitMethod(method);
-            }
-        }
-
-        node.visitContents(this);
-
-        // visit inner classes
-        for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
-            ClassNode inner = it.next();
-            // do not look into closure classes.  A closure class
-            // looks like ParentClass$_name_closure#, where
-            // ParentClass is the name of the containing class.
-            // name is a name for the closure, and # is a number
-            if (!inner.isSynthetic() && !(inner instanceof GeneratedClosure)) {
-                visitClass(inner);
-            }
-        }
+        super.visitClass(node);
 
         // if we have gotten here, then we have not found a more appropriate candidate
         if (vce != null) {

@@ -87,6 +87,7 @@ import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -114,7 +115,7 @@ import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Visits {@link GroovyCompilationUnit" instances to determine the type of expressions they contain.
+ * Visits {@link GroovyCompilationUnit} instances to determine the type of expressions they contain.
  */
 public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport {
 
@@ -1164,14 +1165,18 @@ assert primaryExprType != null && dependentExprType != null;
         VisitStatus status = notifyRequestor(node, requestor, result);
         switch (status) {
             case CONTINUE:
-                ClassNode fieldType = node.getType();
-                // if two values are == then that means the type
-                // is synthetic and doesn't exist in code
-                // probably an enum field.
-                if (fieldType != node.getDeclaringClass()) {
-                    visitClassReference(fieldType);
-                }
                 visitAnnotations(node);
+                if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+                    for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
+                        if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
+                            visitAnnotation((AnnotationNode) anno);
+                        }
+                    }
+                }
+                // if two values are == then that means the type is synthetic and doesn't exist in code...probably an enum field
+                if (node.getType() != node.getDeclaringClass()) {
+                    visitClassReference(node.getType());
+                }
                 Expression init = node.getInitialExpression();
                 if (init != null) {
                     init.visit(this);
