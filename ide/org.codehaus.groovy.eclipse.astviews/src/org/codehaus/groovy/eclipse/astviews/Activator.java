@@ -28,15 +28,17 @@ public class Activator extends AbstractUIPlugin {
         return plugin;
     }
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        super.start(context);
+    public Activator() {
         plugin = this;
     }
 
     @Override
+    public void start(BundleContext context) throws Exception {
+        super.start(context);
+    }
+
+    @Override
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
         super.stop(context);
     }
 }

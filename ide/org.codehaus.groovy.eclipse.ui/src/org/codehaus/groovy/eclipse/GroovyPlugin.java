@@ -49,14 +49,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
     public static final String GROOVY_TEMPLATE_CTX = "org.codehaus.groovy.eclipse.templates";
     public static final String COMPILER_MISMATCH_MARKER = "org.codehaus.groovy.eclipse.core.compilerMismatch";
 
-    /**
-     * The single plugin instance.
-     */
     private static GroovyPlugin plugin;
 
-    /**
-     * @return the plugin instance
-     */
     public static GroovyPlugin getDefault() {
         return plugin;
     }
@@ -132,14 +126,18 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        super.stop(context);
-        textTools.dispose();
-        textTools = null;
-        outlineTools.dispose();
-        outlineTools = null;
+        try {
+            textTools.dispose();
+            textTools = null;
 
-        DelegatingCleanUpPostSaveListener.uninstallCleanUp();
-        removeMonospaceFontListener();
+            outlineTools.dispose();
+            outlineTools = null;
+
+            removeMonospaceFontListener();
+            DelegatingCleanUpPostSaveListener.uninstallCleanUp();
+        } finally {
+            super.stop(context);
+        }
     }
 
     private void addMonospaceFontListener() {

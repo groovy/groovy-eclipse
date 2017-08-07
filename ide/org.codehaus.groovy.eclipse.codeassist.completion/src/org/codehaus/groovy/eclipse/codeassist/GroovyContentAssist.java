@@ -40,39 +40,22 @@ public class GroovyContentAssist extends AbstractUIPlugin {
 
     private static GroovyContentAssist plugin;
 
+    public static GroovyContentAssist getDefault() {
+        return plugin;
+    }
+
     public GroovyContentAssist() {
         plugin = this;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
-     */
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
-     */
     @Override
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
         super.stop(context);
-    }
-
-    public static GroovyContentAssist getDefault() {
-        return plugin;
-    }
-
-    public static void logError(Throwable e) {
-        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, IStatus.OK, e.getLocalizedMessage(), e));
-    }
-
-    public static void logError(String message, Throwable e) {
-        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, IStatus.OK, message, e));
     }
 
     public Set<String> getFilteredDGMs() {
@@ -98,5 +81,13 @@ public class GroovyContentAssist extends AbstractUIPlugin {
             }
         }
         getPreferenceStore().setValue(FILTERED_DGMS, sb.toString());
+    }
+
+    public static void logError(Throwable e) {
+        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, IStatus.OK, e.getLocalizedMessage(), e));
+    }
+
+    public static void logError(String message, Throwable e) {
+        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, IStatus.OK, message, e));
     }
 }

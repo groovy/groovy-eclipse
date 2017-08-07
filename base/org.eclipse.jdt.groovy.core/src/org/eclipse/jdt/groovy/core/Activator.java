@@ -50,20 +50,22 @@ public class Activator extends Plugin {
 
     private static Activator plugin;
 
+    public static Activator getDefault() {
+        return plugin;
+    }
+
+    public Activator() {
+        plugin = this;
+    }
+
     public void start(BundleContext context) throws Exception {
         super.start(context);
-        plugin = this;
 
         SystemPropertyCleaner.clean();
     }
 
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
         super.stop(context);
-    }
-
-    public static Activator getDefault() {
-        return plugin;
     }
 
     public static IEclipsePreferences getInstancePreferences() {

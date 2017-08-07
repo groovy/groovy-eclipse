@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +20,15 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 public class GroovyCoreActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.core";
 
     private static GroovyCoreActivator plugin;
 
-    private IEclipsePreferences instanceScope;
+    public static GroovyCoreActivator getDefault() {
+        return plugin;
+    }
 
     public GroovyCoreActivator() {
         plugin = this;
@@ -42,23 +41,18 @@ public class GroovyCoreActivator extends Plugin {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        plugin = null;
+        super.stop(context);
     }
 
-    /**
-     * Returns the shared instance
-     *
-     * @return the shared instance
-     */
-    public static GroovyCoreActivator getDefault() {
-        return plugin;
-    }
+    //--------------------------------------------------------------------------
+
+    private IEclipsePreferences preferences;
 
     public IEclipsePreferences getPreferences() {
-        if (instanceScope == null) {
-            instanceScope = InstanceScope.INSTANCE.getNode(GroovyCoreActivator.PLUGIN_ID);
+        if (preferences == null) {
+            preferences = InstanceScope.INSTANCE.getNode(GroovyCoreActivator.PLUGIN_ID);
         }
-        return instanceScope;
+        return preferences;
     }
 
     public boolean getPreference(String key, boolean def) {

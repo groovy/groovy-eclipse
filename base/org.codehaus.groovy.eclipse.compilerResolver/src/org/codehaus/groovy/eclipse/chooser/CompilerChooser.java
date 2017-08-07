@@ -59,12 +59,12 @@ public class CompilerChooser implements BundleActivator {
     private Version[] allVersions = {};
     private SpecifiedVersion[] allSpecifiedVersions = {};
 
-    public CompilerChooser() {
-        instance = this;
-    }
-
     public static CompilerChooser getInstance() {
         return instance;
+    }
+
+    public CompilerChooser() {
+        instance = this;
     }
 
     public Bundle getActiveBundle() {
