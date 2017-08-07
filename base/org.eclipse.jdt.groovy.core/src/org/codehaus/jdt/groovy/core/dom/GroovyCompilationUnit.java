@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,12 +47,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
         super.accept0(visitor);
     }
 
-    // Not a clue in the world why we do this but it keeps the downstream code happy...
     public List getCommentList() {
-        List<?> l = super.getCommentList();
-        if (l == null) {
-            return Collections.emptyList();
-        }
-        return l;
+        // prevent NullPointerExceptions down-stream
+        return super.getCommentList() != null ? super.getCommentList() : Collections.emptyList();
     }
 }

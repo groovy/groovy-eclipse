@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,34 @@ package org.codehaus.jdt.groovy.model;
 
 import java.util.Map;
 
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.core.AnnotatableInfo;
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.CompilationUnitStructureRequestor;
-import org.eclipse.jdt.internal.core.ImportContainer;
-import org.eclipse.jdt.internal.core.ImportContainerInfo;
+import org.eclipse.jdt.internal.core.JavaElement;
 
-/**
- * Stub class that makes the constructor accessible to GroovyCompilationUnit
- *
- * @author Andrew Eisenberg
- * @created Jun 11, 2009
- */
 class GroovyCompilationUnitStructureRequestor extends CompilationUnitStructureRequestor {
 
-    protected GroovyCompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, Map<ImportContainer, ImportContainerInfo> newElements) {
+    @SuppressWarnings("rawtypes")
+    protected GroovyCompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUnitElementInfo unitInfo, Map newElements) {
         super(unit, unitInfo, newElements);
     }
 
-    void setParser(SourceElementParser parser) {
+    @Override
+    protected IAnnotation acceptAnnotation(Annotation annotation, AnnotatableInfo parentInfo, JavaElement parentHandle) {
+        IAnnotation result = super.acceptAnnotation(annotation, parentInfo, parentHandle);
+        return result;
+    }
+
+    @Override
+    public void exitCompilationUnit(int unitDeclarationEnd) {
+        super.exitCompilationUnit(unitDeclarationEnd);
+    }
+
+    protected void setParser(SourceElementParser parser) {
         this.parser = parser;
     }
 }

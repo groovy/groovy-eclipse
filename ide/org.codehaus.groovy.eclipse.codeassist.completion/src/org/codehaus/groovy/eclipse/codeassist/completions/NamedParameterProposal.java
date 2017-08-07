@@ -164,9 +164,11 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             selectedRegion = calculateArgumentRegion();
         }
 
+        // refresh so the AST is ready for subsequent named argument content assists
         try {
-            // refresh so the AST is ready for subsequent named argument content assists
-            getJavaEditor().getAdapter(ICompilationUnit.class).reconcile(0, 0, null, null);
+            @SuppressWarnings("cast")
+            ICompilationUnit unit = (ICompilationUnit) getJavaEditor().getAdapter(ICompilationUnit.class);
+            unit.reconcile(0, 0, null, null);
         } catch (JavaModelException e) {
             GroovyPlugin.getDefault().logError("Failed to reconcile after application of named argument proposal", e);
         }

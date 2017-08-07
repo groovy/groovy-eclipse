@@ -60,17 +60,12 @@ import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.CompilationUnitProblemFinder;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.OpenableElementInfo;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 2, 2009
- */
 public class GroovyCompilationUnit extends CompilationUnit {
 
     private class GroovyErrorHandlingPolicy implements IErrorHandlingPolicy {
@@ -133,7 +128,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 if (becameWorkingCopy) {
                     becomeWorkingCopy(null);
                 }
-                PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+                JavaModelManager.PerWorkingCopyInfo info = getPerWorkingCopyInfo();
                 if (info != null) {
                     return ModuleNodeMapper.getInstance().get(info);
                 }
@@ -171,7 +166,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
         // GRECLIPSE-804 must synchronize
         ModuleNodeMapper.getInstance().lock();
         try {
-            PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+            JavaModelManager.PerWorkingCopyInfo info = getPerWorkingCopyInfo();
             if (workingCopyInfoWillBeDiscarded(info)) {
                 ModuleNodeMapper.getInstance().remove(info);
             }
@@ -184,8 +179,8 @@ public class GroovyCompilationUnit extends CompilationUnit {
     /**
      * working copy info is about to be discared if useCount <= 1
      */
-    private boolean workingCopyInfoWillBeDiscarded(PerWorkingCopyInfo info) {
-        return info != null && ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1;
+    private boolean workingCopyInfoWillBeDiscarded(JavaModelManager.PerWorkingCopyInfo info) {
+        return info != null && ((Integer) ReflectionUtils.getPrivateField(JavaModelManager.PerWorkingCopyInfo.class, "useCount", info)).intValue() <= 1;
     }
 
     /**

@@ -952,9 +952,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 char[][] splits = CharOperation.splitOn('.', packageName.toCharArray());
                 long[] positions = positionsFor(splits, startOffset(packageNode), endOffset(packageNode));
                 ImportReference ref = new ImportReference(splits, positions, true, ClassFileConstants.AccDefault);
+                ref.annotations = createAnnotations(packageNode.getAnnotations());
                 ref.declarationEnd = ref.sourceEnd + trailerLength(packageNode);
                 ref.declarationSourceStart = ref.sourceStart - 8; // "package ".length()
                 ref.declarationSourceEnd = ref.sourceEnd;
+
                 unitDeclaration.currentPackage = ref;
             }
         }
@@ -987,6 +989,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         long[] positions = positionsFor(splits, typeStartOffset, endOffset);
                         ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, ClassFileConstants.AccDefault);
                     }
+                    ref.annotations = createAnnotations(importNode.getAnnotations());
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
                     if (ref.sourceEnd < 0) {
                         // synthetic node; set all source positions to "unknown"
@@ -999,6 +1002,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ref.declarationSourceStart = startOffset(importNode);
                         ref.declarationSourceEnd = ref.sourceEnd;
                     }
+
                     importReferences.add(ref);
                 }
 
@@ -1011,11 +1015,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         endOffset = endOffset(importPackage);
                     char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
                     ImportReference ref = new ImportReference(splits, positionsFor(splits, packageStartOffset, packageEndOffset), true, ClassFileConstants.AccDefault);
+                    ref.annotations = createAnnotations(importPackage.getAnnotations());
                     // import * style only have slocs for the entire ImportNode and not for the embedded type
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
                     ref.declarationEnd = ref.sourceEnd + trailerLength(importPackage);
                     ref.declarationSourceStart = importPackage.getStart();
                     ref.declarationSourceEnd = ref.sourceEnd;
+
                     importReferences.add(ref);
                 }
 
@@ -1035,10 +1041,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         long[] positions = positionsFor(splits, typeStartOffset, endOffset);
                         ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
                     }
+                    ref.annotations = createAnnotations(importNode.getAnnotations());
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
                     ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
                     ref.declarationSourceStart = startOffset(importNode);
                     ref.declarationSourceEnd = ref.sourceEnd;
+
                     importReferences.add(ref);
                 }
 
@@ -1052,10 +1060,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
                     long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
                     ImportReference ref = new ImportReference(splits, positions, true, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+                    ref.annotations = createAnnotations(importNode.getAnnotations());
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
                     ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
                     ref.declarationSourceStart = importNode.getStart();
                     ref.declarationSourceEnd = ref.sourceEnd;
+
                     importReferences.add(ref);
                 }
 
@@ -1615,7 +1625,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             for (Map.Entry<String, Expression> memberValuePair : memberValuePairs.entrySet()) {
                 char[] name = memberValuePair.getKey().toCharArray();
-                int start = memberValuePair.getValue().getStart() - name.length - 1, until = memberValuePair.getValue().getEnd();
+                // TODO: What to do when the value expression lacks source position information?
+                int start = Math.max(0, memberValuePair.getValue().getStart() - name.length - 1), until = memberValuePair.getValue().getEnd();
                 org.eclipse.jdt.internal.compiler.ast.Expression value = createAnnotationMemberExpression(memberValuePair.getValue());
                 mvps.add(new org.eclipse.jdt.internal.compiler.ast.MemberValuePair(name, start, until, value));
             }
