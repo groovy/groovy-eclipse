@@ -67,16 +67,15 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             super(unit);
         }
 
-        @Override
         public IJavaElement[] refreshChildren() {
-            ModuleNode node = (ModuleNode) getNode();
-            ClassNode scriptClassDummy;
-            String scriptName;
-            if (node != null) {
-                scriptClassDummy = node.getScriptClassDummy();
+            ModuleNode module = (ModuleNode) getNode();
+            ClassNode scriptClassDummy = null;
+            String scriptName = null;
+            if (module != null) {
+                scriptClassDummy = module.getScriptClassDummy();
                 if (scriptClassDummy == null) {
-                    if (!node.getClasses().isEmpty()) {
-                        scriptClassDummy = node.getClasses().get(0);
+                    if (!module.getClasses().isEmpty()) {
+                        scriptClassDummy = module.getClasses().get(0);
                     }
                 }
                 if (scriptClassDummy == null) {
@@ -84,100 +83,93 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
                 } else {
                     scriptName = scriptClassDummy.getNameWithoutPackage();
                 }
-            } else {
-                scriptName = null;
-                scriptClassDummy = null;
-            }
-            if (node == null || node.encounteredUnrecoverableError() || scriptClassDummy == null) {
-                return new IJavaElement[] {new OType(getUnit(), node, scriptName + " -- No structure found")};
             }
 
-            // otherwise, add all children directly except for the script class
+            if (module == null || module.encounteredUnrecoverableError() || scriptClassDummy == null) {
+                return new IJavaElement[] {new OType(getUnit(), module, scriptName + " -- No structure found")};
+            }
+
             try {
-                IJavaElement[] children = getUnit().getChildren();
-                final IType scriptType;
-                final List<IJavaElement> fakeChildren = new ArrayList<IJavaElement>();
+                final List<IJavaElement> outlineElements = new ArrayList<IJavaElement>();
+
+                // add top-level types except for the script itself
                 IType candidate = null;
-                for (IJavaElement elt : children) {
-                    if (elt.getElementName().equals(scriptName)) {
-                        candidate = (IType) elt;
+                for (IJavaElement child : getUnit().getChildren()) {
+                    if (child.getElementName().equals(scriptName)) {
+                        candidate = (IType) child;
                     } else {
-                        fakeChildren.add(elt);
+                        outlineElements.add(child);
                     }
                 }
-                scriptType = candidate;
+                final IType scriptType = candidate;
 
                 if (scriptType != null) {
-                    // do not add the script type directly. Rather, add all of the children
-                    // Additionally, do not add the run or main methods
-                    for (IJavaElement scriptElt : scriptType.getChildren()) {
-                        if (scriptElt instanceof IMember && !(isRunMethod(scriptElt) || isMainMethod(scriptElt) || isConstructor(scriptElt))) {
-                            fakeChildren.add(scriptElt);
+                    // add non-synthetic members
+                    for (IJavaElement child : scriptType.getChildren()) {
+                        if (child instanceof IMember && !(isRunMethod(child) || isMainMethod(child) || isConstructor(child))) {
+                            outlineElements.add(child);
                         }
                     }
 
-                    // add all of the field declarations
+                    // add non-synthetic field declarations
                     for (FieldNode field : scriptClassDummy.getFields()) {
                         if (!field.isSynthetic()) {
-                            fakeChildren.add(new GroovyResolvedSourceField((JavaElement) scriptType, field.getName(), null, null, field));
+                            outlineElements.add(new GroovyResolvedSourceField((JavaElement) scriptType, field.getName(), null, null, field));
                         }
                     }
 
                     // add all of the variable declarations
                     ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
-                        @Override
                         public void visitClosureExpression(ClosureExpression expression) {
+                            // prevent finding variables within closures
                         }
-
-                        @Override
                         public void visitDeclarationExpression(DeclarationExpression expression) {
-                            fakeChildren.add(new GroovyScriptVariable((JavaElement) scriptType, expression));
+                            outlineElements.add(new GroovyScriptVariable((JavaElement) scriptType, expression));
                             super.visitDeclarationExpression(expression);
                         }
                     };
-                    visitor.visitBlockStatement(node.getStatementBlock());
+                    visitor.visitBlockStatement(module.getStatementBlock());
                 }
 
                 // finally, sort all the elements by source location
-                IJavaElement[] fakeChildrenArr = fakeChildren.toArray(new IJavaElement[fakeChildren.size()]);
-                return sort(fakeChildrenArr);
+                return sort(outlineElements.toArray(new IJavaElement[outlineElements.size()]));
 
             } catch (JavaModelException e) {
                 GroovyCore.logException("Encountered exception when calculating children", e);
-                return new IJavaElement[] {new OType(getUnit(), node, scriptName + " -- Encountered exception.  See log.")};
+                return new IJavaElement[] {new OType(getUnit(), module, scriptName + " -- Encountered exception.  See log.")};
             }
         }
 
-        private static boolean isConstructor(IJavaElement scriptElt) throws JavaModelException {
-            if (scriptElt.getElementType() != IJavaElement.METHOD) {
+        private static boolean isConstructor(IJavaElement scriptElem) throws JavaModelException {
+            if (scriptElem.getElementType() != IJavaElement.METHOD) {
                 return false;
             }
-            return ((IMethod) scriptElt).isConstructor();
+            return ((IMethod) scriptElem).isConstructor();
         }
 
-        private static boolean isMainMethod(IJavaElement scriptElt) throws JavaModelException {
-            if (scriptElt.getElementType() != IJavaElement.METHOD) {
+        private static boolean isMainMethod(IJavaElement scriptElem) throws JavaModelException {
+            if (scriptElem.getElementType() != IJavaElement.METHOD) {
                 return false;
             }
-            return ((IMethod) scriptElt).isMainMethod();
+            return ((IMethod) scriptElem).isMainMethod();
         }
 
-        private static boolean isRunMethod(IJavaElement scriptElt) throws JavaModelException {
-            if (scriptElt.getElementType() != IJavaElement.METHOD) {
+        private static boolean isRunMethod(IJavaElement scriptElem) throws JavaModelException {
+            if (scriptElem.getElementType() != IJavaElement.METHOD) {
                 return false;
             }
-            if (!scriptElt.getElementName().equals("run")) {
+            if (!scriptElem.getElementName().equals("run")) {
                 return false;
             }
-            String[] parammeterTypes = ((IMethod) scriptElt).getParameterTypes();
+            String[] parammeterTypes = ((IMethod) scriptElem).getParameterTypes();
             return parammeterTypes == null || parammeterTypes.length == 0;
         }
 
         /**
          * Sorts array of IJavaElements by their start position.
          */
-        private static IJavaElement[] sort(IJavaElement[] elts) {
-            Arrays.sort(elts, new Comparator<IJavaElement>() {
+        private static IJavaElement[] sort(IJavaElement[] scriptElems) {
+            Arrays.sort(scriptElems, new Comparator<IJavaElement>() {
                 public int compare(IJavaElement e1, IJavaElement e2) {
                     try {
                         // really we should only be getting source refs elements here
@@ -190,7 +182,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
                     }
                 }
             });
-            return elts;
+            return scriptElems;
         }
     }
 
@@ -205,6 +197,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
 
         public GroovyScriptVariable(JavaElement parent, DeclarationExpression node) {
             super(parent, node, extractName(node));
+
             ClassNode fieldType = node.getLeftExpression().getType();
             if (ClassHelper.DYNAMIC_TYPE == fieldType) {
                 typeSignature = "Qdef;";
@@ -239,13 +232,11 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             return "no name";
         }
 
-        @Override
         public ASTNode getElementNameNode() {
             DeclarationExpression decl = (DeclarationExpression) getNode();
             return decl.getLeftExpression();
         }
 
-        @Override
         public ISourceRange getSourceRange() throws JavaModelException {
             ISourceRange range = super.getSourceRange();
             if (range.getLength() < 1) {
@@ -255,7 +246,6 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             return range;
         }
 
-        @Override
         public String getTypeSignature() {
             return typeSignature;
         }
