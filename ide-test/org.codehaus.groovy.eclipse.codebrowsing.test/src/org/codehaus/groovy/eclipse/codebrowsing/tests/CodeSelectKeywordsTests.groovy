@@ -344,19 +344,19 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
 
     @Test
     void testSelectKeywordCase1() {
-        String contents = 'switch(it){case "":}'
+        String contents = 'switch(it){case "":break;}'
         assertCodeSelect([contents], 'case', null)
     }
 
     @Test
     void testSelectKeywordCase2() {
-        String contents = 'def closure = { switch(it){case"":} }'
+        String contents = 'def closure = { switch(it){case"":break;} }'
         assertCodeSelect([contents], 'case', null)
     }
 
     @Test
     void testSelectKeywordCase3() {
-        String contents = 'class C {def f= new Object(){void m(p){ switch(p){case"":} }}}'
+        String contents = 'class C {def f= new Object(){void m(p){ switch(p){case"":break;} }}}'
         assertCodeSelect([contents], 'case', null)
     }
 

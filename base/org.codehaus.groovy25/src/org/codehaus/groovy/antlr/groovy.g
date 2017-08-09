@@ -314,32 +314,16 @@ tokens {
         return t;
     }
 
-    // GRECLIPSE add
-    public AST create2(int type, String txt, Token first, Token last) {
-        return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
-    }
-
-    private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
-            SourceInfo lastInfo = (SourceInfo) node;
-            GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
-            groovySourceAst.setColumnLast(lastInfo.getColumnLast());
-            groovySourceAst.setLineLast(lastInfo.getLineLast());
-      }
-      return ast;
-    }
-    // GRECLIPSE end
-
-    private AST attachLast(AST t, Object last) {
-        if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+    private AST attachLast(AST ast, Object last) {
+        if ((ast instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+            GroovySourceAST groovySourceAst = (GroovySourceAST) ast;
             SourceInfo lastInfo = (SourceInfo) last;
-            GroovySourceAST node = (GroovySourceAST)t;
-            node.setColumnLast(lastInfo.getColumn());
-            node.setLineLast(lastInfo.getLine());
+            groovySourceAst.setColumnLast(lastInfo.getColumn());
+            groovySourceAst.setLineLast(lastInfo.getLine());
             // This is a good point to call node.setSnippet(),
             // but it bulks up the AST too much for production code.
         }
-        return t;
+        return ast;
     }
 
     public AST create(int type, String txt, Token first, Token last) {
@@ -355,13 +339,22 @@ tokens {
     }
 
     // GRECLIPSE add
-    private Stack<Integer> commentStartPositions = new Stack<Integer>();
+    public AST create2(int type, String txt, Token first, Token last) {
+        AST ast = create(type, txt, astFactory.create(first));
+        if ((ast instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+            ((GroovySourceAST) ast).setLineLast(((SourceInfo) last).getLineLast());
+            ((GroovySourceAST) ast).setColumnLast(((SourceInfo) last).getColumnLast());
+        }
+        return ast;
+    }
+
+    private Stack<Integer> commentStartPositions = new Stack<>();
 
     public void startComment(int line, int column) {
         commentStartPositions.push((line << 16) + column);
     }
 
-    public void endComment(int type, int line, int column,String text) {
+    public void endComment(int type, int line, int column, String text) {
         int lineAndColumn = commentStartPositions.pop();
         int startLine = lineAndColumn >>> 16;
         int startColumn = lineAndColumn & 0xffff;
@@ -443,7 +436,7 @@ tokens {
     public void reportError(String message) {
         Token lt = null;
         try { lt = LT(1); }
-        catch (TokenStreamException ee) { }
+        catch (TokenStreamException e) { }
         if (lt == null)  lt = Token.badToken;
 
         Map row = new HashMap();
@@ -484,7 +477,7 @@ tokens {
     public void reportError(RecognitionException e) {
         Token lt = null;
         try { lt = LT(1); }
-        catch (TokenStreamException ee) { }
+        catch (TokenStreamException e2) { }
         if (lt == null)  lt = Token.badToken;
 
         Map row = new HashMap();
@@ -633,7 +626,7 @@ compilationUnit
         catch [RecognitionException e] {
             // report the error but don't throw away what we've successfully parsed
             reportError(e);
-            compilationUnit_AST = (AST) currentAST.root;
+            #compilationUnit = (AST) currentAST.root;
         }
         // GRECLIPSE end
     ;
@@ -653,8 +646,8 @@ packageDefinition
     //    {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
     :   an:annotationsOpt! "package"! (id:identifier!)?
         { // error recovery for missing package name
-            if (id_AST==null) {
-                reportError("Invalid package specification",LT(0));
+            if (#id == null) {
+                reportError("Invalid package specification", LT(0));
             } else {
                 #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
             }
@@ -684,15 +677,15 @@ importStatement
     :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? (is:identifierStar!)?
         {
           if (isStatic) {
-            if (is_AST==null) {
-              reportError("Invalid import static specification",first);
+            if (#is == null) {
+              reportError("Invalid import static specification", first);
               #importStatement = #(create(STATIC_IMPORT,"static_import",first,null),an,is);
             } else {
               #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
             }
           } else {
-            if (is_AST==null) {
-              reportError("Invalid import specification",LT(0));
+            if (#is == null) {
+              reportError("Invalid import specification", LT(0));
               #importStatement = #(create(IMPORT,"import",first,null),an,is);
             } else {
               #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);
@@ -1028,7 +1021,7 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1); int mark=mark();} // GRECLIPSE add
+identifierStar {Token first = LT(1); int mark = mark();} // GRECLIPSE add
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
@@ -1049,7 +1042,7 @@ identifierStar {Token first = LT(1); int mark=mark();} // GRECLIPSE add
          */
         exception
         catch [RecognitionException e] {
-            reportError("Invalid import ",first);
+            reportError("Invalid import", first);
             #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
             // Give up on this line and just go to the next
             rewind(mark);
@@ -1123,7 +1116,7 @@ annotation!  {Token first = LT(1);}
           String type = "_";
           Token token = new Token(IDENT, type);
           #i = create(IDENT, type, token, token);
-          #annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)), i, null);
+          #annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)),i,null);
         }
     // GRECLIPSE end
     ;
@@ -1163,7 +1156,7 @@ annotationMemberValuePair!  {Token first = LT(1);}
     // GRECLIPSE edit -- allow the pair to exist with no value initializer; user may want content assist for value
     //:   i:annotationIdent ASSIGN! nls! v:annotationMemberValueInitializer
     :   i:annotationIdent ASSIGN! nls! ( v:annotationMemberValueInitializer )?
-            {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)), i, v);}
+            {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);}
     ;
 
 annotationIdent
@@ -1240,12 +1233,12 @@ if (modifiers != null) {
          */
         (cb:classBlock)?
         {
-          if (cb_AST!=null) {
-            #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),modifiers,IDENT,tp,sc,ic,cb);
-          } else {
-            reportError("Malformed class declaration",LT(1));
-            #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),modifiers,IDENT,tp,sc,ic,null);
-          }
+            if (#cb != null) {
+                #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),modifiers,IDENT,tp,sc,ic,cb);
+            } else {
+                reportError("Malformed class declaration", LT(1));
+                #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),modifiers,IDENT,tp,sc,ic,null);
+            }
         }
         // GRECLIPSE end
         { currentClass = prevCurrentClass; }
@@ -1361,13 +1354,14 @@ classBlock  {Token first = LT(1);}
         // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
         exception
         catch [RecognitionException e] {
-            if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
-                classBlock_AST = (AST)currentAST.root;
+            if (errorList.isEmpty()) {
+                // dirty hack to avoid having trouble with cascading problems
+                #classBlock = (AST) currentAST.root;
             }
             reportError(e);
-            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);
-            currentAST.root = classBlock_AST;
-            currentAST.child = classBlock_AST!=null && classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+            #classBlock = #(create(OBJBLOCK,"OBJBLOCK",first,LT(1)),#classBlock);
+            currentAST.root = #classBlock;
+            currentAST.child = #classBlock != null && #classBlock.getFirstChild() != null ? #classBlock.getFirstChild() : #classBlock;
             currentAST.advanceChildToEnd(); 
         }
         // GRECLIPSE end
@@ -1590,17 +1584,21 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-    // GRECLIPSE add
-    // RECOVERY: GRECLIPSE-494
+
+        // GRECLIPSE add
         exception
         catch [RecognitionException e] {
-            reportError(e);
-            // Create a fake variable definition for this 'thing' and get the position right.
-            // Type is object
-            #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
-            consumeUntil(NLS);
+            // GRECLIPSE-494: "class C {\n def m(){}\n thing\n static main(args){}\n }"
+            if (LA(1) == IDENT) {
+                reportError(e);
+                // create a variable definition for "thing" in hopes that subsequent class members can still be parsed
+                #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
+                consumeUntil(NLS);
+            } else {
+                throw e;
+            }
         }
-    // GRECLIPSE end
+        // GRECLIPSE end
     ;
 
 // Now the various things that can be defined inside an interface
@@ -1893,21 +1891,6 @@ parameterDeclaration!
                       pm, #(create(TYPE,"TYPE",first,LT(1)),t), id, exp);
             }
         }
-        // GRECLIPSE add
-        // RECOVERY:
-        /*exception
-        catch [RecognitionException e] {
-        if (t_AST==null) {
-            // possibly 'public void foo(XMLConstant'
-            // create the best thing we can... all we have is the type - no name
-            parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
-        }
-        //if (pathElement_AST==null) {
-        //  throw e;
-        //}
-        reportError(e);
-        }*/
-        // GRECLIPSE end
     ;
 
 multicatch_types
@@ -2051,7 +2034,7 @@ openOrClosableBlock  {Token first = LT(1);}
  *  and expressions.
  */
 statement[int prevToken]
-{boolean sce=false; Token first = LT(1); AST casesGroup_AST = null;}
+{boolean sce = false; Token first = LT(1); AST casesGroup_AST = null; int start = mark();} // GRECLIPSE add
     // prevToken is NLS if previous statement is separated only by a newline
 
     :  (genericMethodStart)=>
@@ -2117,6 +2100,14 @@ statement[int prevToken]
     // do-while statement
     |   "do"^ statement "while"! LPAREN! strictContextExpression RPAREN! SEMI!
     *OBS*/
+    // GRECLIPSE add
+    | "do"^ compoundStatement nls! "while"! LPAREN! strictContextExpression[false]! RPAREN!
+        {
+            int end = mark(); rewind(start); // be sure error is on "do"
+            reportError(new NoViableAltException(first, getFilename()));
+            rewind(end);
+        }
+    // GRECLIPSE end
 
     // Import statement.  Can be used in any scope.  Has "import x as y" also.
     |   (annotationsOpt "import") => importStatement
@@ -2145,40 +2136,37 @@ statement[int prevToken]
     *OBS*/
 
     |   branchStatement
-    // GRECLIPSE add
-    exception
-    catch [RecognitionException e] {
-        // GRECLIPSE1048
-        // If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
-        // wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the
-        // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
-        // skip to the end of the line, otherwise assume we can continue from where we are.
-        // GRECLIPSE1046
-        // two situations to support: 'if (f.) ' where the 'then' condition is missing.  THis is now handled
-        // by a recovery rule in then then clause parsing.  And 'if (f.' where even the trailing paren is
-        // missing, that is dealt with here by noticing the condition exists but there is no then clause value.
-        // we build a basic if clause and soldier on.
-        boolean bang = true;
-        if (pfx_AST!=null) {
-            bang=false;
-            reportError(e);
-            if (e instanceof NoViableAltException) {
-                NoViableAltException nvae = (NoViableAltException) e;
-                if (pfx_AST.getLine()==nvae.token.getLine()) {
-                    consumeUntil(NLS);
+
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // GRECLIPSE-1048
+            // If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery.  Basically if the
+            // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
+            // skip to the end of the line, otherwise assume we can continue from where we are.
+            if (#pfx != null) {
+                reportError(e);
+                if (e instanceof NoViableAltException) {
+                    NoViableAltException nvae = (NoViableAltException) e;
+                    if (#pfx.getLine() == nvae.token.getLine()) {
+                        consumeUntil(NLS);
+                    }
                 }
             }
+            // GRECLIPSE-1046
+            // Two situations to support: 'if (f.) ' where the 'else' condition is missing.  This is now handled
+            // by a recovery rule in the else clause parsing.  And 'if (f.', where even the trailing parenthesis
+            // is missing, which is dealt with here by noticing the condition exists but ifCbs_AST is null.
+            // Create a basic if statement and soldier on.
+            else if (#ale != null && #ifCbs == null) {
+                // likely missing close paren
+                #statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
+            }
+            else {
+                throw e;
+            }
         }
-        if (ale_AST!=null && ifCbs_AST==null) {
-            // likely missing close paren
-            #statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
-            bang=false;
-        }
-        if (bang) {
-            throw e;
-        }
-    }
-    // GRECLIPSE end
+        // GRECLIPSE end
     ;
 
 forStatement {Token first = LT(1);}
@@ -2519,7 +2507,7 @@ commandArguments[AST head]
         exception
         catch [RecognitionException e] {
             // GRECLIPSE-1192
-            // Do we need better recognition of the specific problem here? 
+            // Do we need better recognition of the specific problem here?
             // (if so, see the label recovery for GRECLIPSE-1048)
             reportError(e);
         }
@@ -2761,7 +2749,7 @@ pathElement[AST prefix] {Token operator = LT(1);}
         // RECOVERY: a.{
         exception
         catch [RecognitionException e] {
-            if (pathElement_AST==null) {
+            if (#pathElement == null) {
                 throw e;
             }
             reportError(e);
@@ -2919,14 +2907,14 @@ methodCallArgs[AST callee]
         // GRECLIPSE add
         exception
         catch [RecognitionException e] {
-            if (#al!=null) {
+            if (#al != null) {
                 reportError(e);
                 // copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
                 if (callee != null && callee.getFirstChild() != null) {
-                    //method call like obj.method()
+                    // method call like obj.method()
                     #methodCallArgs = #(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1)),callee,al);
                 } else {
-                    //method call like method() or new Expr(), in the latter case "callee" is null
+                    // method call like method() or new Expr(), in the latter case "callee" is null
                     #methodCallArgs = #(create(METHOD_CALL,"(",callee,LT(1)),callee,al);
                 }
             } else {
@@ -3429,7 +3417,7 @@ identPrimary
  // GRECLIPSE edit
 //newExpression {Token first = LT(1);}
 //    :   "new"! nls! (ta:typeArguments!)? t:type!
-newExpression {Token first = LT(1); int jumpBack=mark();}
+newExpression {Token first = LT(1); int jumpBack = mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
         (   nls!
             mca:methodCallArgs[null]!
@@ -3459,29 +3447,19 @@ newExpression {Token first = LT(1); int jumpBack=mark();}
         // RECOVERY: missing '(' or '['
         exception
         catch [RecognitionException e] {
-            if (#t==null) {
-                reportError("missing type for constructor call",first);
+            if (#t == null) {
+                reportError("missing type for constructor call", first);
                 #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null);
-                // currentAST.root = newExpression_AST;
-                // currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-                // newExpression_AST.getFirstChild() : newExpression_AST;
-                // currentAST.advanceChildToEnd();
                 // probably others to include - or make this the default?
                 if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-                    // int i = ((MismatchedTokenException)e).token.getType();
+                    // int i = ((MismatchedTokenException) e).token.getType();
                     rewind(jumpBack);
                     consumeUntil(NLS);
                 }
-            } else if (#mca==null && #ad==null) {
-                reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
+            } else if (#mca == null && #ad == null) {
+                reportError("expecting '(' or '[' after type name to continue new expression", t_AST);
                 #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);
-                //currentAST.root = newExpression_AST;
-                //currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-                //newExpression_AST.getFirstChild() : newExpression_AST;
-                //currentAST.advanceChildToEnd();
                 if (e instanceof MismatchedTokenException) {
-                    Token t =  ((MismatchedTokenException)e).token;
-                    int i = ((MismatchedTokenException)e).token.getType();
                     rewind(jumpBack);
                     consume();
                     consumeUntil(NLS);
@@ -4154,7 +4132,7 @@ options {
 }
     :   "//"
         // GRECLIPSE add
-        { if (parser!=null) parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+        { if (parser != null) parser.startComment(inputState.getLine(), inputState.getColumn() - 2); }
         // GRECLIPSE end
         (
             options {  greedy = true;  }:
@@ -4163,7 +4141,7 @@ options {
             ~('\n'|'\r'|'\uffff')
         )*
         // GRECLIPSE add
-        { if (parser!=null) parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(),_begin,text.length()-_begin));
+        { if (parser != null) parser.endComment(0, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
         // GRECLIPSE end
           if (!whitespaceIncluded)  $setType(Token.SKIP);
         }
@@ -4194,7 +4172,7 @@ options {
 }
     :   { atMultiCommentStart() }? "/*"
         // GRECLIPSE add
-        { if (parser!=null) parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+        { if (parser != null) parser.startComment(inputState.getLine(), inputState.getColumn() - 2); }
         // GRECLIPSE end
         (   /*  '\r' '\n' can be matched in one alternative or by matching
                 '\r' in one iteration and '\n' in another. I am trying to
@@ -4216,7 +4194,7 @@ options {
         )*
         "*/"
         // GRECLIPSE add
-        { if (parser!=null) parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(),_begin,text.length()-_begin));
+        { if (parser != null) parser.endComment(1, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
           if (!whitespaceIncluded)  $setType(Token.SKIP);
         }
     ;

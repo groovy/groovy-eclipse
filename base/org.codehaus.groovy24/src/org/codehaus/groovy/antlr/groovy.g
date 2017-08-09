@@ -1085,7 +1085,7 @@ identifierStar {Token first = LT(1); int mark=mark();} // GRECLIPSE add
          */
         exception
         catch [RecognitionException e] {
-            reportError("Invalid import ",first);
+            reportError("Invalid import",first);
             #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
             // Give up on this line and just go to the next
             rewind(mark);
@@ -1629,17 +1629,21 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-    // GRECLIPSE add
-    // RECOVERY: GRECLIPSE-494
+
+        // GRECLIPSE add
         exception
         catch [RecognitionException e] {
-            reportError(e);
-            // Create a fake variable definition for this 'thing' and get the position right.
-            // Type is object
-            #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
-            consumeUntil(NLS);
+            // GRECLIPSE-494: "class C {\n def m(){}\n thing\n static main(args){}\n }"
+            if (LA(1) == IDENT) {
+                reportError(e);
+                // create a variable definition for "thing" in hopes that subsequent class members can still be parsed
+                #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
+                consumeUntil(NLS);
+            } else {
+                throw e;
+            }
         }
-    // GRECLIPSE end
+        // GRECLIPSE end
     ;
 
 // Now the various things that can be defined inside an interface
@@ -2089,7 +2093,7 @@ openOrClosableBlock  {Token first = LT(1);}
  *  and expressions.
  */
 statement[int prevToken]
-{boolean sce=false; Token first = LT(1); AST casesGroup_AST = null;}
+{boolean sce = false; Token first = LT(1); AST casesGroup_AST = null; int start = mark();} // GRECLIPSE add
     // prevToken is NLS if previous statement is separated only by a newline
 
     :  (genericMethodStart)=>
@@ -2155,6 +2159,14 @@ statement[int prevToken]
     // do-while statement
     |   "do"^ statement "while"! LPAREN! strictContextExpression RPAREN! SEMI!
     *OBS*/
+    // GRECLIPSE add
+    | "do"^ compoundStatement nls! "while"! LPAREN! strictContextExpression[false]! RPAREN!
+        {
+            int end = mark(); rewind(start); // be sure error is on "do"
+            reportError(new NoViableAltException(first, getFilename()));
+            rewind(end);
+        }
+    // GRECLIPSE end
 
     // Import statement.  Can be used in any scope.  Has "import x as y" also.
     |   (annotationsOpt "import") => importStatement
@@ -2183,40 +2195,37 @@ statement[int prevToken]
     *OBS*/
 
     |   branchStatement
-    // GRECLIPSE add
-    exception
-    catch [RecognitionException e] {
-        // GRECLIPSE1048
-        // If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
-        // wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the
-        // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
-        // skip to the end of the line, otherwise assume we can continue from where we are.
-        // GRECLIPSE1046
-        // two situations to support: 'if (f.) ' where the 'then' condition is missing.  THis is now handled
-        // by a recovery rule in then then clause parsing.  And 'if (f.' where even the trailing paren is
-        // missing, that is dealt with here by noticing the condition exists but there is no then clause value.
-        // we build a basic if clause and soldier on.
-        boolean bang = true;
-        if (pfx_AST!=null) {
-            bang=false;
-            reportError(e);
-            if (e instanceof NoViableAltException) {
-                NoViableAltException nvae = (NoViableAltException) e;
-                if (pfx_AST.getLine()==nvae.token.getLine()) {
-                    consumeUntil(NLS);
+
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // GRECLIPSE-1048
+            // If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery.  Basically if the
+            // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
+            // skip to the end of the line, otherwise assume we can continue from where we are.
+            if (#pfx != null) {
+                reportError(e);
+                if (e instanceof NoViableAltException) {
+                    NoViableAltException nvae = (NoViableAltException) e;
+                    if (#pfx.getLine() == nvae.token.getLine()) {
+                        consumeUntil(NLS);
+                    }
                 }
             }
+            // GRECLIPSE-1046
+            // Two situations to support: 'if (f.) ' where the 'else' condition is missing.  This is now handled
+            // by a recovery rule in the else clause parsing.  And 'if (f.', where even the trailing parenthesis
+            // is missing, which is dealt with here by noticing the condition exists but ifCbs_AST is null.
+            // Create a basic if statement and soldier on.
+            else if (#ale != null && #ifCbs == null) {
+                // likely missing close paren
+                #statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
+            }
+            else {
+                throw e;
+            }
         }
-        if (ale_AST!=null && ifCbs_AST==null) {
-            // likely missing close paren
-            #statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
-            bang=false;
-        }
-        if (bang) {
-            throw e;
-        }
-    }
-    // GRECLIPSE end
+        // GRECLIPSE end
     ;
 
 forStatement {Token first = LT(1);}

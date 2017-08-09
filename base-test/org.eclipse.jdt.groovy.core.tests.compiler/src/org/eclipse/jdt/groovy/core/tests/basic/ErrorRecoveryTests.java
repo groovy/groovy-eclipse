@@ -375,7 +375,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\n"+
             "class Greclipse1107 {\n"+
             "  public void foo() {\n"+
-            "    Blah blah = this\n"+
+            "    def blah = this\n"+
             "    do {\n"+
             "    } while (blah != null)\n"+
             "\n"+
@@ -388,18 +388,14 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "\tdo {\n" +
         "\t^\n" +
         "Groovy:unexpected token: do @ line 6, column 5.\n" +
-        "----------\n" +
-        "2. ERROR in MyDomainClass.groovy (at line 7)\n" +
-        "\t} while (blah != null)\n" +
-        "\t  ^\n" +
-        "Groovy:expecting EOF, found \'while\' @ line 7, column 7.\n" +
         "----------\n");
 
         checkGCUDeclaration("MyDomainClass.groovy",
             "package foo;\n"+
             "public class Greclipse1107 {\n"+
-            "  private java.lang.Object public;\n"+
             "  public Greclipse1107() {\n"+
+            "  }\n"+
+            "  public void foo() {\n"+
             "  }\n"+
             "}\n");
     }
@@ -413,7 +409,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\n"+
             "class Greclipse1107 {\n"+
             "  public void foo() {\n"+
-            "    Blah blah = this\n"+
+            "    def blah = this\n"+
             "    do {\n"+
             "    } while (blah != null)\n"+
             "\n"+
@@ -426,19 +422,15 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "\tdo {\n" +
         "\t^\n" +
         "Groovy:unexpected token: do @ line 7, column 5.\n" +
-        "----------\n" +
-        "2. ERROR in MyDomainClass.groovy (at line 8)\n" +
-        "\t} while (blah != null)\n" +
-        "\t  ^\n" +
-        "Groovy:expecting EOF, found \'while\' @ line 8, column 7.\n" +
         "----------\n");
 
         checkGCUDeclaration("MyDomainClass.groovy",
             "package foo;\n"+
             "import java.io.Serializable;\n"+
             "public class Greclipse1107 {\n"+
-            "  private java.lang.Object public;\n"+
             "  public Greclipse1107() {\n"+
+            "  }\n"+
+            "  public void foo() {\n"+
             "  }\n"+
             "}\n");
     }

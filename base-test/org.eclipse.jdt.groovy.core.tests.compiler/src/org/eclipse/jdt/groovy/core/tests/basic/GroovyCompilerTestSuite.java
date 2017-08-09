@@ -231,10 +231,8 @@ public abstract class GroovyCompilerTestSuite {
         if (expectedOutput == null || expectedOutput.length() == 0) {
             System.out.println(Util.displayString(declarationContents, 2));
         } else {
-            int foundIndex = declarationContents.indexOf(expectedOutput);
-            if (foundIndex == -1) {
-                fail(
-                    "Did not find expected output:\n" + expectedOutput + "\nin actual output:\n" + declarationContents);
+            if (declarationContents.indexOf(expectedOutput) == -1) {
+                assertEquals("Did not find expected output", expectedOutput, declarationContents);
             }
         }
     }

@@ -1748,7 +1748,7 @@ tryAgain:
         
         match("//");
         if ( inputState.guessing==0 ) {
-            if (parser!=null) parser.startComment(inputState.getLine(),inputState.getColumn()-2);
+            if (parser != null) parser.startComment(inputState.getLine(), inputState.getColumn() - 2);
         }
         {
         _loop687:
@@ -1765,7 +1765,7 @@ tryAgain:
         } while (true);
         }
         if ( inputState.guessing==0 ) {
-            if (parser!=null) parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(),_begin,text.length()-_begin));
+            if (parser != null) parser.endComment(0, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
             // GRECLIPSE end
             if (!whitespaceIncluded)  _ttype = Token.SKIP;
             
@@ -1786,7 +1786,7 @@ tryAgain:
           throw new SemanticException(" atMultiCommentStart() ");
         match("/*");
         if ( inputState.guessing==0 ) {
-            if (parser!=null) parser.startComment(inputState.getLine(),inputState.getColumn()-2);
+            if (parser != null) parser.startComment(inputState.getLine(), inputState.getColumn() - 2);
         }
         {
         _loop697:
@@ -1827,7 +1827,7 @@ inputState.guessing--;
         }
         match("*/");
         if ( inputState.guessing==0 ) {
-            if (parser!=null) parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(),_begin,text.length()-_begin));
+            if (parser != null) parser.endComment(1, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
             if (!whitespaceIncluded)  _ttype = Token.SKIP;
             
         }

@@ -5280,7 +5280,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport foo.\n" +
             "\t        ^\n" +
-            "Groovy:Invalid import  @ line 1, column 8.\n" +
+            "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
@@ -5337,7 +5337,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "2. ERROR in A.groovy (at line 1)\n" +
             "\timport static foo.Bar.\n" +
             "\t               ^\n" +
-            "Groovy:Invalid import  @ line 1, column 15.\n" +
+            "Groovy:Invalid import @ line 1, column 15.\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
@@ -5365,7 +5365,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport foo.\n" +
             "\t        ^\n" +
-            "Groovy:Invalid import  @ line 1, column 8.\n" +
+            "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
@@ -5393,7 +5393,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport foo.\n" +
             "\t        ^\n" +
-            "Groovy:Invalid import  @ line 1, column 8.\n" +
+            "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
