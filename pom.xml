@@ -34,7 +34,7 @@
 		<groovy-eclipse-compiler-version>2.9.2-01</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
-		<groovy-eclipse-batch-version>2.4.3-01</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.1.9-01</groovy-eclipse-batch-version>
 
 		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
 		<dist.bucket>dist.springsource.org</dist.bucket>
@@ -421,6 +421,11 @@
 	</repositories>
 
 	<pluginRepositories>
+		<pluginRepository>
+			<id>groovy-bintray</id>
+			<name>Groovy Bintray</name>
+			<url>https://dl.bintray.com/groovy/maven</url>
+		</pluginRepository>
 		<!-- required for Maven and Ant AWS dependency -->
 		<pluginRepository>
 			<id>springsource-maven-release</id>
