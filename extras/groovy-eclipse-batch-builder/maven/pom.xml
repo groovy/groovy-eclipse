@@ -38,11 +38,4 @@
   <issueManagement>
     <url>https://github.com/groovy/groovy-eclipse/issues</url>
   </issueManagement>
-  <distributionManagement>
-    <repository>
-      <id>codehaus-nexus-snapshots</id>
-      <name>Codehaus.org snapshot repository</name>
-      <url>https://nexus.codehaus.org/content/repositories/snapshots/groovy/</url>
-    </repository>
-  </distributionManagement>
 </project>

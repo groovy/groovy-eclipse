@@ -15,7 +15,7 @@
      OR
     4c) run `publish` to publish to codehaus and mirror it on maven central
 -->
-<project name="groovy-eclipse-batch" basedir="." default="extract-create-install">
+<project name="groovy-eclipse-batch" basedir="." default="extract-create">
 
     <property file="build.properties"/>
     <property name="jar.dest" location="${basedir}/build"/>
@@ -64,13 +64,13 @@
     </target>
 
 
-    <target name="extract-create-install" depends="extract-create,-mavenInit"
+    <target name="install" depends="extract-create,-mavenInit"
       description="Install artifacts to local repository">
         <mavenInstall version="${version}" prefix="${jar.prefix}"/>
     </target>
 
 
-    <target name="publish" depends="extract-create-install,-mavenDeployInit"
+    <target name="publish" depends="install,-mavenDeployInit"
       description="Publish artifacts to remote repository">
         <mavenDeploy version="${version}" prefix="${jar.prefix}"/>
     </target>
@@ -102,7 +102,7 @@
 
     <target name="-init" depends="-fail-if-no-version-specified,-init18,-init20,-init21,-init22,-init23,-init24,-init25">
         <property name="jar.name" value="${jar.prefix}-${version}.jar"/>
-        <property name="pom.name" value="${jar.prefix}.pom"/>
+        <property name="pom.name" value="${jar.prefix}-${version}.pom"/>
 
         <fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
             <include name="org.eclipse.osgi_*.jar" />
@@ -212,50 +212,5 @@
     <target name="-fail-if-no-version-specified" depends="-check-build-version" if="no-version-specified">
         <fail message="You must set exactly one of do-18-build, ... do-25-build to specify a groovy version to build"/>
     </target>
-
-
-    <!-- add the ant libs needed for pgp singing
-    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
-      <classpath>
-        <pathelement location="antlibs/ant-contrib-1.0b3.jar"/>
-      </classpath>
-    </taskdef>
-    -->
-
-    <!--
-    <target name="-gpgSign" depends="-init,-create.jar,-fake.jar,-copy-pom" description="Use GPS to sign all the jars" >
-        <path id="files.to.sign">
-            <fileset dir="${jar.dest}">
-                <include name="*.jar"/>
-                <include name="pom.xml"/>
-            </fileset>
-        </path>
-        <echo message="Singing jars in ${jar.dest}"/>
-        <foreach target="-gpgSignOne" param="file.to.sign">
-            <path refid="files.to.sign"/>
-        </foreach>
-    </target>
-    <target name="-gpgSignOne">
-        <echo message="Singing: ${file.to.sign}"/>
-        <exec executable="gpg" dir="${jar.dest}">
-            <arg value="-ab"/>
-            <arg value="${file.to.sign}"/>
-        </exec>
-    </target>
-    -->
-
-    <!-- updates username and pass to the specified properties
-         Commented out. It is assumed settings are taken from ~/.m2/settings.xml
-         So it doesn't have to be specified in the build
-    <target name="-forceUploadSettings" depends="-init,-mavenDeployInit">
-        <copy tofile="${jar.dest}/settings.xml">
-            <fileset file="maven/settings.xml"/>
-            <filterset>
-                <filter token="groovy.deploy.username" value="${groovy.deploy.username}"/>
-                <filter token="groovy.deploy.password" value="${groovy.deploy.password}"/>
-            </filterset>
-        </copy>
-    </target>
-    -->
 
 </project>
