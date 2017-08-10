@@ -34,7 +34,7 @@
 		<groovy-eclipse-compiler-version>2.9.2-01</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
-		<groovy-eclipse-batch-version>2.4.12-02</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.4.12-01</groovy-eclipse-batch-version>
 
 		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
 		<dist.bucket>dist.springsource.org</dist.bucket>
