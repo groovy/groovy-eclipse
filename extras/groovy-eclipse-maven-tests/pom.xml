@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated from archetype; please customize. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -11,7 +10,6 @@
 	<artifactId>groovy-eclipse-maven-tests</artifactId>
 	<name>Groovy-Eclipse and Maven can play nicely together!</name>
 	<version>1.0-SNAPSHOT</version>
-	
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,7 +25,7 @@
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
-			<version>2.3.1</version>
+			<version>2.4.12</version>
 			<type>jar</type>
 			<!-- <classifier>indy</classifier> -->
 		</dependency>
@@ -41,43 +39,11 @@
 
 	<build>
 		<plugins>
-		<plugin>
-		        <artifactId>maven-compiler-plugin</artifactId>
-		        <version>3.1</version>
-		        <configuration>
-		          <compilerId>groovy-eclipse-compiler</compilerId>
-		          <!-- set verbose to be true if you want lots of uninteresting messages -->
-		          <!-- <verbose>true</verbose> -->
-		          <source>1.7</source>
-		          <target>1.7</target>
-		        </configuration>
-		        <dependencies>
-		          <dependency>
-		            <groupId>org.codehaus.groovy</groupId>
-		            <artifactId>groovy-eclipse-compiler</artifactId>
-		            <version>2.9.2-01-SNAPSHOT</version>
-		          </dependency>
-		          <dependency>
-		            <!-- force a newer version of Groovy -->
-		            <groupId>org.codehaus.groovy</groupId>
-		            <artifactId>groovy-eclipse-batch</artifactId>
-		            <version>2.3.4-01</version>
-		          </dependency>
-		        </dependencies>
-		      </plugin>		
-<!-- 			<plugin>
+			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.0</version>
+				<version>3.6.1</version>
 				<configuration>
 					<compilerId>groovy-eclipse-compiler</compilerId>
- 					<includes>
-						<include>**/*.groovy</include>
-						<include>**/*.java</include>
-					</includes>
-					<testIncludes>
-						<testInclude>**/*.groovy</testInclude>
-						<testInclude>**/*.java</testInclude>
-					</testIncludes>
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
@@ -85,21 +51,15 @@
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-compiler</artifactId>
-						<version>2.8.0-01-SNAPSHOT</version>
-					</dependency>
- 					<dependency>
-						<groupId>org.codehaus.groovy</groupId>
-						<artifactId>groovy-eclipse-batch</artifactId>
-						<version>2.1.5-03</version>
+						<version>2.9.2-01</version>
 					</dependency>
 					<dependency>
-						<groupId>log4j</groupId>
-						<artifactId>log4j</artifactId>
-						<version>1.2.16</version>
-						<scope>runtime</scope>
+						<groupId>org.codehaus.groovy</groupId>
+						<artifactId>groovy-eclipse-batch</artifactId>
+						<version>2.4.12-01</version>
 					</dependency>
 				</dependencies>
-			</plugin> -->
+			</plugin>
 		</plugins>
 	</build>
 
