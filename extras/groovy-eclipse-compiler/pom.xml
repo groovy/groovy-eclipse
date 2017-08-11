@@ -3,53 +3,13 @@
 
 	<groupId>org.codehaus.groovy</groupId>
 	<artifactId>groovy-eclipse-compiler</artifactId>
- 	<version>2.9.2-01</version>
-<!-- 	<version>2.9.2-01-SNAPSHOT</version> -->
-
+	<version>2.9.2-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
+
 	<name>Groovy-Eclipse compiler</name>
+	<url>https://github.com/groovy/groovy-eclipse</url>
 	<description>Compiles Groovy code using the Groovy-Eclipse compiler.</description>
-	<url>http://groovy.codehaus.org/Eclipse+Plugin</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
-	<licenses>
-		<license>
-			<name>The Eclipse Public License</name>
-			<url>http://www.eclipse.org/legal/epl-v10.html</url>
-			<distribution>repo</distribution>
-		</license> 
-	</licenses> 
-
-	<parent>
-		<groupId>org.codehaus</groupId>
-		<artifactId>codehaus-parent</artifactId>
-		<version>4</version>
-	</parent>
-
-	<developers>
-		<developer>
-			<id>kdvolder</id>
-			<name>Kris De Volder</name>
-			<email>kdevolder@gopivotal.com</email>
-		</developer>
-	</developers>
-
-	<issueManagement>
-		<system>jira</system>
-		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
-	</issueManagement>
-	<scm>
-		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
-		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
-		<url>http://github.com/groovy/groovy-eclipse.git</url>
-	</scm>
-	<organization>
-		<name>The Codehuas</name>
-		<url>http://codehaus.org</url>
-	</organization>
 	<dependencies>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
@@ -66,8 +26,6 @@
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-container-default</artifactId>
 			<version>1.5.4</version>
-			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<artifactId>maven-plugin-api</artifactId>
@@ -77,7 +35,7 @@
 		<dependency>
 			<artifactId>maven-compiler-plugin</artifactId>
 			<groupId>org.apache.maven.plugins</groupId>
-			<version>3.0</version>
+			<version>3.6.1</version>
 		</dependency>
 		<dependency>
 			<artifactId>maven-core</artifactId>
@@ -86,35 +44,60 @@
 		</dependency>
 	</dependencies>
 
-	<repositories>
-		<repository>
-			<id>codehaus.org</id>
-			<url>http://repository.codehaus.org</url>
-		</repository>
-	</repositories>
+	<parent>
+		<groupId>org.codehaus</groupId>
+		<artifactId>codehaus-parent</artifactId>
+		<version>4</version>
+	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<licenses>
+		<license>
+			<name>The Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Pivotal Software, Inc.</name>
+		<url>https://pivotal.io</url>
+	</organization>
+
+	<scm>
+		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
+		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
+		<url>http://github.com/groovy/groovy-eclipse.git</url>
+	</scm>
+	<issueManagement>
+		<url>https://github.com/groovy/groovy-eclipse/issues</url>
+	</issueManagement>
 
 	<build>
-		<extensions>
+		<!--extensions>
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-webdav</artifactId>
 				<version>1.0-beta-2</version>
 			</extension>
-		</extensions>
+		</extensions-->
 		<plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+			<!--plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
