@@ -320,4 +320,56 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
         expectedRegion = new Region(0, contents.length())
         checkRegion(contents, initialRegion, expectedRegion)
     }
+
+    @Test
+    void testFindSurrounding13() {
+        String contents = '''\
+            enum E {
+              X {
+                def m() {
+                  def i = 1
+                }
+              },
+              Y {
+                def m() {
+                  def j = 2
+                }
+              };
+              abstract def m();
+            }
+            '''.stripIndent()
+
+        Region initialRegion = new Region(contents.indexOf('i'), 0)
+        Region expectedRegion = new Region(contents.indexOf('i'), 1)
+        def unit = checkRegion(contents, initialRegion, expectedRegion)
+
+        initialRegion = expectedRegion
+        expectedRegion = new Region(contents.indexOf('def i'), 'def i'.length())
+        checkRegion(contents, unit, initialRegion, expectedRegion)
+
+        initialRegion = expectedRegion
+        expectedRegion = new Region(contents.indexOf('def i'), 'def i = 1'.length())
+        checkRegion(contents, unit, initialRegion, expectedRegion)
+
+        initialRegion = expectedRegion
+        expectedRegion = new Region(contents.indexOf('{\n      def i'), '{\n      def i = 1\n    }'.length())
+        checkRegion(contents, unit, initialRegion, expectedRegion)
+
+        initialRegion = expectedRegion
+        expectedRegion = new Region(contents.indexOf('def m()'), 'def m() {\n      def i = 1\n    }'.length())
+        checkRegion(contents, unit, initialRegion, expectedRegion)
+
+        initialRegion = expectedRegion
+        expectedRegion = new Region(contents.indexOf('X {') + 2, '{\n    def m() {\n      def i = 1\n    }\n  }'.length())
+        checkRegion(contents, unit, initialRegion, expectedRegion)
+
+        // TODO: Should field node for X be the next surrounding node?
+        //initialRegion = expectedRegion
+        //expectedRegion = new Region(contents.indexOf('X {'), 'X {\n    def m() {\n      def i = 1\n    }\n  }'.length())
+        //checkRegion(contents, unit, initialRegion, expectedRegion)
+
+        initialRegion = expectedRegion
+        expectedRegion = new Region(0, contents.length() - 1)
+        checkRegion(contents, unit, initialRegion, expectedRegion)
+    }
 }

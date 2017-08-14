@@ -176,7 +176,9 @@ public class FindSurroundingNode extends ASTNodeFinder {
     public void visitField(FieldNode node) {
         nodeStack.push(factory.createFragment(node));
         super.visitField(node);
-        check(node);
+        if (!node.isEnum()) { // enum bodies are included in the source range of the field node but are rooted elsewhere
+            check(node);
+        }
         nodeStack.pop();
     }
 

@@ -193,7 +193,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         declarationStack.removeLast();
 
-        // static initializer is included in the field node's source range but is kept elsewhere
+        // enum bodies and static initializers are included in the field node's source range but are rooted elsewhere
         if (!node.isEnum() && !(node.isStatic() && node.getEnd() > node.getNameEnd() + 1)) {
             createContext(node, node.getDeclaringClass(), ContentAssistLocation.CLASS_BODY);
         }
