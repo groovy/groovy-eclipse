@@ -2511,7 +2511,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             booleanExpression.setSourcePosition(base);
             ret = new TernaryExpression(booleanExpression, left, right);
         }
-        configureAST(ret, ternaryNode);
+        // GRECLIPSE edit -- sloc was for operator only; TODO include surrounding parentheses
+        //configureAST(ret, ternaryNode);
+        ret.setStart(base.getStart());
+        ret.setLineNumber(base.getLineNumber());
+        ret.setColumnNumber(base.getColumnNumber());
+        Expression rhs = ((TernaryExpression) ret).getFalseExpression();
+        ret.setEnd(rhs.getEnd());
+        ret.setLastLineNumber(rhs.getLastLineNumber());
+        ret.setLastColumnNumber(rhs.getLastColumnNumber());
+        // GRECLIPSE end
         return ret;
     }
 
@@ -3669,6 +3678,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // BinaryExpression, their slocs would be wrong instead, they are set
             // according to their childrens' slocs.
             if ((node instanceof BinaryExpression ||
+                    node instanceof TernaryExpression ||
                     node instanceof MapEntryExpression ||
                     node instanceof MapExpression ||
                     node instanceof CastExpression ||
