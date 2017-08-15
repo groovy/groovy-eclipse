@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,31 +28,30 @@ import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
 import org.eclipse.jdt.internal.core.search.matching.LocalVariablePattern;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.search.matching.OrPattern;
+import org.eclipse.jdt.internal.core.search.matching.PackageReferencePattern;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
 import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 31, 2009
- */
 public class TypeRequestorFactory {
 
     public ITypeRequestor createRequestor(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
+        // TODO: AndPattern, MultiTypeDeclarationPattern, PackageDeclarationPattern, SuperTypeReferencePattern, TypeParameterPattern
         if (pattern instanceof TypeReferencePattern) {
-            return new TypeReferenceSearchRequestor((TypeReferencePattern) pattern, requestor,
-                    possibleMatch.document.getParticipant());
+            return new TypeReferenceSearchRequestor((TypeReferencePattern) pattern, requestor, possibleMatch.document.getParticipant());
         } else if (pattern instanceof TypeDeclarationPattern) {
-            return new TypeDeclarationSearchRequestor((TypeDeclarationPattern) pattern, requestor,
-                    possibleMatch.document.getParticipant());
+            return new TypeDeclarationSearchRequestor((TypeDeclarationPattern) pattern, requestor, possibleMatch.document.getParticipant());
         } else if (pattern instanceof FieldPattern) {
             return new FieldReferenceSearchRequestor((FieldPattern) pattern, requestor, possibleMatch.document.getParticipant());
         } else if (pattern instanceof MethodPattern) {
             return new MethodReferenceSearchRequestor((MethodPattern) pattern, requestor, possibleMatch.document.getParticipant());
+        } else if (pattern instanceof ConstructorPattern) {
+            return new ConstructorReferenceSearchRequestor((ConstructorPattern) pattern, requestor, possibleMatch.document.getParticipant());
+        } else if (pattern instanceof PackageReferencePattern) {
+            return new PackageReferenceSearchRequestor((PackageReferencePattern) pattern, requestor, possibleMatch.document.getParticipant());
         } else if (pattern instanceof LocalVariablePattern) {
-            ILocalVariable localVar = (ILocalVariable) ReflectionUtils.getPrivateField(LocalVariablePattern.class, "localVariable",
-                    pattern);
+            ILocalVariable localVar = (ILocalVariable) ReflectionUtils.getPrivateField(LocalVariablePattern.class, "localVariable", pattern);
             int start;
             try {
                 start = localVar.getSourceRange().getOffset();
@@ -60,13 +59,9 @@ public class TypeRequestorFactory {
                 Util.log(e);
                 start = -1;
             }
-            return new LocalVariableReferenceRequestor(localVar.getElementName(), localVar.getParent(), requestor,
-                    possibleMatch.document.getParticipant(), start);
-        } else if (pattern instanceof ConstructorPattern) {
-            return new ConstructorReferenceSearchRequestor((ConstructorPattern) pattern, requestor,
-                    possibleMatch.document.getParticipant());
+            return new LocalVariableReferenceRequestor(localVar.getElementName(), localVar.getParent(), requestor, possibleMatch.document.getParticipant(), start);
         } else if (pattern instanceof OrPattern) {
-            SearchPattern[] patterns = getPatterns((OrPattern) pattern);
+            SearchPattern[] patterns = (SearchPattern[]) ReflectionUtils.getPrivateField(OrPattern.class, "patterns", pattern);
             List<ITypeRequestor> requestors = new ArrayList<ITypeRequestor>(patterns.length);
             for (SearchPattern orPattern : patterns) {
                 if (orPattern != null) {
@@ -76,14 +71,8 @@ public class TypeRequestorFactory {
                     }
                 }
             }
-
             return new OrPatternRequestor(requestors);
         }
-
         return null;
-    }
-
-    private SearchPattern[] getPatterns(OrPattern pattern) {
-        return (SearchPattern[]) ReflectionUtils.getPrivateField(OrPattern.class, "patterns", pattern);
     }
 }

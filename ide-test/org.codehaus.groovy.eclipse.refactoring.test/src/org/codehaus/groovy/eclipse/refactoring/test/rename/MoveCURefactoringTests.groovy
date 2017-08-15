@@ -20,7 +20,6 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.refactoring.descriptors.MoveDescriptor
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
 import org.eclipse.ltk.core.refactoring.Refactoring
@@ -147,6 +146,60 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
             pack: 'p2', name: 'Groovy2.groovy',
             contents: 'package p2\npublic class Groovy2 extends p1.Groovy { }',
             finalContents: 'package p2\npublic class Groovy2 extends NEW.Groovy { }'
+        ))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/310
+    void testQualifiedMove3() {
+        // moves j1.Java to j2.Java; links in g1.Groovy should be updated
+        performRefactoringAndUndo('j2', new TestSource(
+            pack: 'j1', name: 'Java.java',
+            contents: '''\
+                package j1
+                public class Java {
+                  public static final int N = 1;
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package j2
+                public class Java {
+                  public static final int N = 1;
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'g1', name: 'Groovy.groovy',
+            contents: '''\
+                package g1
+
+                import static j1.Java.*
+
+                import j1.Java
+
+                class Groovy {
+                  def m1() {
+                    Java j = new j1.Java()
+                  }
+                  def m2() {
+                    def n = N
+                  }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package g1
+
+                import static j2.Java.*
+
+                import j2.Java
+
+                class Groovy {
+                  def m1() {
+                    Java j = new j2.Java()
+                  }
+                  def m2() {
+                    def n = N
+                  }
+                }
+                '''.stripIndent(),
         ))
     }
 

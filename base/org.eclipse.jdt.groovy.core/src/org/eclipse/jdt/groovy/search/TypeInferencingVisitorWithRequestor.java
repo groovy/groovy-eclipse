@@ -560,16 +560,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
             visitAnnotations(imp);
 
-            // this will not work for static or * imports, but that's OK because
-            // as of now, there is no reason to do that.
-            ClassNode type = imp.getType();
-            if (type != null) {
-                String importName = imp.getClassName().replace('$', '.') +
-                        (imp.getFieldName() != null ? "." + imp.getFieldName() : "");
-                enclosingElement = unit.getImport(importName);
-                if (!enclosingElement.exists()) {
-                    enclosingElement = oldEnclosingElement;
+            String importName;
+            if (imp.isStar()) {
+                if (!imp.isStatic()) {
+                    importName = imp.getPackageName() + "*";
+                } else {
+                    importName = imp.getClassName().replace('$', '.') + ".*";
                 }
+            } else {
+                if (!imp.isStatic()) {
+                    importName = imp.getClassName().replace('$', '.');
+                } else {
+                    importName = imp.getClassName().replace('$', '.') + "." + imp.getFieldName();
+                }
+                // TODO: concatenate import alias?
+            }
+
+            enclosingElement = unit.getImport(importName);
+            if (!enclosingElement.exists()) {
+                enclosingElement = oldEnclosingElement;
             }
 
             try {
@@ -593,6 +602,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 switch (status) {
                     case CONTINUE:
                         try {
+                            ClassNode type = imp.getType();
                             if (type != null) {
                                 visitClassReference(type);
                                 completeExpressionStack.add(imp);
