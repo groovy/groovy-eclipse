@@ -18,10 +18,12 @@ package org.eclipse.jdt.groovy.search;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.search.matching.ConstructorPattern;
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
@@ -73,6 +75,7 @@ public class TypeRequestorFactory {
             }
             return new OrPatternRequestor(requestors);
         }
+        Util.log(new Status(0, Activator.PLUGIN_ID, "Unhandled search pattern type: " + pattern.getClass().getSimpleName()));
         return null;
     }
 }
