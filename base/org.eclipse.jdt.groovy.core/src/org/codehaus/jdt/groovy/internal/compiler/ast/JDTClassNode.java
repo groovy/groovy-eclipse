@@ -335,39 +335,40 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * Convert a JDT MethodBinding to a Groovy MethodNode
      */
     private MethodNode methodBindingToMethodNode(MethodBinding methodBinding) {
-        // FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
-        // If they need to be correct we need to retrieve the method decl from the binding scope
+        try {
+            // FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
+            // If they need to be correct we need to retrieve the method decl from the binding scope
 
-        String name = String.valueOf(methodBinding.selector);
-
-        int modifiers = methodBinding.modifiers;
-        if (jdtBinding.isInterface() && (modifiers & (0x10000 /*Modifier.DEFAULT*/ | Modifier.STATIC)) == 0) {
-            modifiers |= Modifier.ABSTRACT;
-        }
-
-        ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
-
-        Parameter[] parameters = makeParameters(methodBinding.parameters);
-
-        int nExceptions; ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
-        if (methodBinding.thrownExceptions != null && (nExceptions = methodBinding.thrownExceptions.length) > 0) {
-            exceptions = new ClassNode[nExceptions];
-            for (int i = 0; i < nExceptions; i += 1) {
-                exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
+            int modifiers = methodBinding.modifiers;
+            if (jdtBinding.isInterface() && (modifiers & (0x10000 /*Modifier.DEFAULT*/ | Modifier.STATIC)) == 0) {
+                modifiers |= Modifier.ABSTRACT;
             }
+
+            ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
+
+            Parameter[] parameters = makeParameters(methodBinding.parameters);
+
+            int nExceptions; ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
+            if (methodBinding.thrownExceptions != null && (nExceptions = methodBinding.thrownExceptions.length) > 0) {
+                exceptions = new ClassNode[nExceptions];
+                for (int i = 0; i < nExceptions; i += 1) {
+                    exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
+                }
+            }
+
+            MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null /*body*/);
+            methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
+
+            // FIXASC (M3) likely to need something like this...
+            //if (jdtBinding.isAnnotation() && methodBinding.getDefaultValue() != null) {
+            //    methodNode.setAnnotationDefault(true);
+            //}
+
+            return methodNode;
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Failed to resolve method node for " + String.valueOf(
+                CharOperation.concatWith(jdtBinding.compoundName, methodBinding.selector, '.')), e);
         }
-
-        MethodNode mNode = new JDTMethodNode(methodBinding, resolver, name, modifiers, returnType, parameters, exceptions, null /*body*/);
-
-        // FIXASC (M3) likely to need something like this...
-        //if (jdtBinding.isEnum() && methodBinding.getDefaultValue() != null) {
-        //    mNode.setAnnotationDefault(true);
-        //}
-
-        GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables());
-        mNode.setGenericsTypes(generics);
-
-        return mNode;
     }
 
     private Parameter[] makeParameters(TypeBinding[] jdtParameters) {
