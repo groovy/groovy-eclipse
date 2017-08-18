@@ -15,6 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import static org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE;
+import static org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE;
+import static org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE;
+import static org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,22 +46,17 @@ import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 10, 2009
- *
- */
 public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
     private final int offset;
     private final int replaceLength;
     private final JavaContentAssistInvocationContext javaContext;
+
     public LocalVariableCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
         this.javaContext = javaContext;
@@ -65,7 +65,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        Map<String,ClassNode> localNames = findLocalNames(extractVariableNameStart());
+        Map<String, ClassNode> localNames = findLocalNames(extractVariableNameStart());
         List<ICompletionProposal> proposals = createProposals(localNames);
         // now add closure proposals if necessary
         proposals.addAll(createClosureProposals());
@@ -74,43 +74,32 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
 
     private List<ICompletionProposal> createClosureProposals() {
         if (getContext().currentScope.getEnclosingClosure() != null) {
-            List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(1);
-            VariableInfo ownerInfo = getContext().currentScope.lookupName("owner");
-            VariableInfo delegateInfo = getContext().currentScope.lookupName("delegate");
+            org.eclipse.jdt.groovy.search.VariableScope scope = getContext().currentScope;
+            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo ownerInfo = scope.lookupName("owner");
+            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo delegateInfo = scope.lookupName("delegate");
+
+            List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
             maybeAddClosureProperty(proposals, "owner", ownerInfo.declaringType, ownerInfo.type, false);
             maybeAddClosureProperty(proposals, "getOwner", ownerInfo.declaringType, ownerInfo.type, true);
             maybeAddClosureProperty(proposals, "delegate", delegateInfo.declaringType, delegateInfo.type, false);
             maybeAddClosureProperty(proposals, "getDelegate", delegateInfo.declaringType, delegateInfo.type, true);
-            maybeAddClosureProperty(proposals, "thisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getThisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "resolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getResolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "directive", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getDirective", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "maximumNumberOfParameters",
-                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getMaximumNumberOfParameters",
-                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "parameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getParameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE,
-                    org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "thisObject", CLOSURE_CLASS_NODE, OBJECT_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getThisObject", CLOSURE_CLASS_NODE, OBJECT_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "directive", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getDirective", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "resolveStrategy", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getResolveStrategy", CLOSURE_CLASS_NODE, OBJECT_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "parameterTypes", CLOSURE_CLASS_NODE, CLASS_ARRAY_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getParameterTypes", CLOSURE_CLASS_NODE, CLASS_ARRAY_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "maximumNumberOfParameters", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getMaximumNumberOfParameters", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, true);
             return proposals;
         } else {
             return Collections.emptyList();
         }
     }
 
-    private void maybeAddClosureProperty(List<ICompletionProposal> proposals, String name, ClassNode type, ClassNode declaringType,
-            boolean isMethod) {
+    private void maybeAddClosureProperty(List<ICompletionProposal> proposals, String name, ClassNode declaringType, ClassNode type, boolean isMethod) {
         if (ProposalUtils.looselyMatches(getContext().completionExpression, name)) {
             IGroovyProposal proposal;
             if (isMethod) {
@@ -142,7 +131,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         }
         int end = fullExpression.length() - 1;
         while (end >= 0 && Character.isJavaIdentifierPart(fullExpression.charAt(end))) {
-            end--;
+            end -= 1;
         }
         if (end >= 0) {
             return fullExpression.substring(++end);
@@ -152,32 +141,27 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private Map<String,ClassNode> findLocalNames(String prefix) {
-         Map<String,ClassNode> nameTypeMap = new HashMap<String,ClassNode>();
-
-         VariableScope scope = getVariableScope(getContext().containingCodeBlock);
-         while (scope != null) {
-             for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
-                 Variable var = varIter.next();
-                 boolean inBounds;
-                 if (var instanceof Parameter) {
-                     inBounds = ((Parameter) var).getEnd() < offset;
-                 } else if (var instanceof VariableExpression) {
-                     inBounds = ((VariableExpression) var).getEnd() < offset;
-                 } else {
-                     inBounds = true;
-                 }
-
+        Map<String, ClassNode> nameTypeMap = new HashMap<String, ClassNode>();
+        VariableScope scope = getVariableScope(getContext().containingCodeBlock);
+        while (scope != null) {
+            for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
+                Variable var = varIter.next();
+                boolean inBounds;
+                if (var instanceof Parameter) {
+                    inBounds = ((Parameter) var).getEnd() < offset;
+                } else if (var instanceof VariableExpression) {
+                    inBounds = ((VariableExpression) var).getEnd() < offset;
+                } else {
+                    inBounds = true;
+                }
                 if (inBounds && ProposalUtils.looselyMatches(prefix, var.getName())) {
                     nameTypeMap.put(var.getName(), var.getOriginType() != null ? var.getOriginType() : var.getType());
                 }
-             }
-             scope = scope.getParent();
-         }
-
-         return nameTypeMap;
+            }
+            scope = scope.getParent();
+        }
+        return nameTypeMap;
     }
-
-
 
     private VariableScope getVariableScope(ASTNode astNode) {
         if (astNode instanceof BlockStatement) {
@@ -193,32 +177,22 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         return null;
     }
 
-    private List<ICompletionProposal> createProposals(Map<String,ClassNode> nameTypes) {
+    private List<ICompletionProposal> createProposals(Map<String, ClassNode> nameTypes) {
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
-        for (Entry<String,ClassNode> nameType : nameTypes.entrySet()) {
+        for (Entry<String, ClassNode> nameType : nameTypes.entrySet()) {
             proposals.add(createProposal(nameType.getKey(), nameType.getValue()));
         }
         return proposals;
     }
 
-    /**
-     * @param offset
-     * @param replaceLength
-     * @param context
-     * @param proposals
-     * @param nameType
-     */
     private ICompletionProposal createProposal(String replaceName, ClassNode type) {
         CompletionProposal proposal = CompletionProposal.create(CompletionProposal.LOCAL_VARIABLE_REF, offset);
         proposal.setCompletion(replaceName.toCharArray());
-        proposal.setReplaceRange(offset - replaceLength,
-                getContext().completionEnd);
+        proposal.setReplaceRange(offset - replaceLength, getContext().completionEnd);
         proposal.setSignature(ProposalUtils.createTypeSignature(type));
-
         proposal.setRelevance(Relevance.HIGH.getRelavance());
         LazyJavaCompletionProposal completion = new LazyJavaCompletionProposal(proposal, javaContext);
         completion.setRelevance(proposal.getRelevance());
         return completion;
     }
-
 }

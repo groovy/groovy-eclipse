@@ -390,10 +390,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      */
     public VariableInfo lookupName(String name) {
         if ("super".equals(name)) {
-            ClassNode type = getDelegateOrThis();
+            ClassNode type = getThis();
             if (type != null) {
                 ClassNode superType = type.getSuperClass();
-                superType = superType == null ? VariableScope.OBJECT_CLASS_NODE : superType;
+                if (superType == null)
+                    superType = VariableScope.OBJECT_CLASS_NODE;
                 return new VariableInfo(name, superType, superType);
             }
         }

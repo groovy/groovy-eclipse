@@ -261,12 +261,12 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure3() {
         String contents =
-                "class Baz {\n" +
-                "  URL other\n" +
-                "  def method() {\n" +
-                "    sumthin { other }\n" +
-                "  }\n" +
-                "}";
+            "class Baz {\n" +
+            "  URL other\n" +
+            "  def method() {\n" +
+            "    sumthin { other }\n" +
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertType(contents, start, end, "java.net.URL");
@@ -304,10 +304,10 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testClosure5() {
         String contents =
             "def x = {\n" +
-            "maximumNumberOfParameters\n" +
-            "getMaximumNumberOfParameters()\n" +
-            "thisObject\n" +
-            "getThisObject()\n" +
+            "  maximumNumberOfParameters\n" +
+            "  getMaximumNumberOfParameters()\n" +
+            "  thisObject\n" +
+            "  getThisObject()\n" +
             "}";
         int start = contents.lastIndexOf("maximumNumberOfParameters");
         int end = start + "maximumNumberOfParameters".length();
@@ -327,10 +327,10 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testClosure6() {
         String contents =
             "def x = { def y = {\n" +
-            "maximumNumberOfParameters\n" +
-            "getMaximumNumberOfParameters()\n" +
-            "thisObject\n" +
-            "getThisObject()\n" +
+            "  maximumNumberOfParameters\n" +
+            "  getMaximumNumberOfParameters()\n" +
+            "  thisObject\n" +
+            "  getThisObject()\n" +
             "}}";
         int start = contents.lastIndexOf("maximumNumberOfParameters");
         int end = start + "maximumNumberOfParameters".length();
@@ -342,6 +342,68 @@ public final class InferencingTests extends InferencingTestSuite {
         end = start + "thisObject".length();
         assertType(contents, start, end, "java.lang.Object");
         start = contents.lastIndexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testClosure7() {
+        String contents =
+            "class A {\n" +
+            "  def m() { }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def m() {\n" +
+            "    def c = {\n" +
+            "      this\n" +
+            "      super\n" +
+            "      thisObject\n" +
+            "      getThisObject()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int start = contents.indexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "B");
+        start = contents.indexOf("super");
+        end = start + "super".length();
+        assertType(contents, start, end, "A");
+        start = contents.indexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.indexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testClosure8() {
+        String contents =
+            "class A {\n" +
+            "  def m() { }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def m() {\n" +
+            "    [].collect {\n" + // closure is part of method call expression
+            "      this\n" +
+            "      super\n" +
+            "      thisObject\n" +
+            "      getThisObject()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int start = contents.indexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "B");
+        start = contents.indexOf("super");
+        end = start + "super".length();
+        assertType(contents, start, end, "A");
+        start = contents.indexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.indexOf("getThisObject");
         end = start + "getThisObject".length();
         assertType(contents, start, end, "java.lang.Object");
     }
