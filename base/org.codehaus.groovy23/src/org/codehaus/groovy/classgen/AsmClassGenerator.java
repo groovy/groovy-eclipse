@@ -342,6 +342,11 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private void visitStdMethod(MethodNode node, boolean isConstructor, Parameter[] parameters, Statement code) {
+        // GRECLIPSE move -- correct local variable start/length to prevent debugger exceptions
+        controller.getCompileStack().init(node.getVariableScope(), parameters);
+        controller.getCallSiteWriter().makeSiteEntry();
+        // GRECLIPSE end
+        
         MethodVisitor mv = controller.getMethodVisitor();
         final ClassNode superClass = controller.getClassNode().getSuperClass();
         if (isConstructor && (code == null || !((ConstructorNode) node).firstStatementIsSpecialConstructorCall())) {
@@ -365,14 +370,16 @@ public class AsmClassGenerator extends ClassGenerator {
                 }
             }
             if (!hasCallToSuper) {
-            	// invokes the super class constructor
-            	mv.visitVarInsn(ALOAD, 0);
+                // invokes the super class constructor
+                mv.visitVarInsn(ALOAD, 0);
                 mv.visitMethodInsn(INVOKESPECIAL, BytecodeHelper.getClassInternalName(superClass), "<init>", "()V", false);
             }
-        } 
+        }
         
-        controller.getCompileStack().init(node.getVariableScope(), parameters);
-        controller.getCallSiteWriter().makeSiteEntry();
+        // GRECLIPSE move
+        //controller.getCompileStack().init(node.getVariableScope(), parameters);
+        //controller.getCallSiteWriter().makeSiteEntry();
+        // GRECLIPSE end
         
         // handle body
         super.visitConstructorOrMethod(node, isConstructor);

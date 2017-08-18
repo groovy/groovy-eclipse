@@ -114,7 +114,7 @@ public class AsmClassGenerator extends ClassGenerator {
     static final MethodCallerMultiAdapter setPropertyOnSuper = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "setPropertyOnSuper", false, false);
     static final MethodCallerMultiAdapter getPropertyOnSuper = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "getPropertyOnSuper", false, false);
 
-     // spread expressions
+    // spread expressions
     static final MethodCaller spreadMap = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "spreadMap");
     static final MethodCaller despreadList = MethodCaller.newStatic(ScriptBytecodeAdapter.class, "despreadList");
     // Closure
@@ -398,6 +398,11 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     private void visitStdMethod(MethodNode node, boolean isConstructor, Parameter[] parameters, Statement code) {
+        // GRECLIPSE move -- correct local variable start/length to prevent debugger exceptions
+        controller.getCompileStack().init(node.getVariableScope(), parameters);
+        controller.getCallSiteWriter().makeSiteEntry();
+        // GRECLIPSE end
+
         MethodVisitor mv = controller.getMethodVisitor();
         final ClassNode superClass = controller.getClassNode().getSuperClass();
         if (isConstructor && (code == null || !((ConstructorNode) node).firstStatementIsSpecialConstructorCall())) {
@@ -427,8 +432,10 @@ public class AsmClassGenerator extends ClassGenerator {
             }
         }
 
-        controller.getCompileStack().init(node.getVariableScope(), parameters);
-        controller.getCallSiteWriter().makeSiteEntry();
+        // GRECLIPSE move
+        //controller.getCompileStack().init(node.getVariableScope(), parameters);
+        //controller.getCallSiteWriter().makeSiteEntry();
+        // GRECLIPSE end
 
         // handle body
         super.visitConstructorOrMethod(node, isConstructor);
@@ -1206,10 +1213,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
         BytecodeVariable variable = controller.getCompileStack().getVariable(variableName, false);
         if (variable == null) {
-            // GRECLIPSE edit
-            //processClassVariable(variableName);
             processClassVariable(expression);
-            // GRECLIPSE end
         } else {
             controller.getOperandStack().loadOrStoreVariable(variable, expression.isUseReferenceDirectly());
         }
@@ -1233,11 +1237,7 @@ public class AsmClassGenerator extends ClassGenerator {
         }
     }
 
-    // GRECLIPSE edit
-    //private void processClassVariable(String name) {
     private void processClassVariable(VariableExpression expression) {
-        String name = expression.getName();
-    // GRECLIPSE end
         if (passingParams && controller.isInScriptBody()) {
             //TODO: check if this part is actually used
             MethodVisitor mv = controller.getMethodVisitor();
@@ -1246,16 +1246,13 @@ public class AsmClassGenerator extends ClassGenerator {
             mv.visitInsn(DUP);
 
             loadThisOrOwner();
-            mv.visitLdcInsn(name);
+            mv.visitLdcInsn(expression.getName());
 
             mv.visitMethodInsn(INVOKESPECIAL, "org/codehaus/groovy/runtime/ScriptReference", "<init>", "(Lgroovy/lang/Script;Ljava/lang/String;)V", false);
         } else {
-            // GRECLIPSE edit
-            //PropertyExpression pexp = new PropertyExpression(VariableExpression.THIS_EXPRESSION, name);
-            PropertyExpression pexp = new PropertyExpression(new VariableExpression("this", ClassHelper.DYNAMIC_TYPE), name);
+            PropertyExpression pexp = new PropertyExpression(new VariableExpression("this"), expression.getName());
             pexp.getObjectExpression().setSourcePosition(expression);
             pexp.getProperty().setSourcePosition(expression);
-            // GRECLIPSE end
             pexp.setImplicitThis(true);
             visitPropertyExpression(pexp);
         }
