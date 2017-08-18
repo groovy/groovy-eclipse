@@ -610,7 +610,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
         // method name
         String methodName = node.getName();
-        sb.append(Signature.C_DOT).append(methodName.equals("<init>") ? node.getDeclaringClass().getNameWithoutPackage() : methodName);
+        if (methodName.equals("<init>"))
+            methodName = node.getDeclaringClass().getNameWithoutPackage();
+        // BindingKeyParser fails if method name has 2 or more $s
+        if (methodName.indexOf('$') != methodName.lastIndexOf('$')) {
+            methodName = methodName.replace('$', '_');
+        }
+        sb.append(Signature.C_DOT).append(methodName);
 
         // generic types
         GenericsType[] generics = GroovyUtils.getGenericsTypes(node);
