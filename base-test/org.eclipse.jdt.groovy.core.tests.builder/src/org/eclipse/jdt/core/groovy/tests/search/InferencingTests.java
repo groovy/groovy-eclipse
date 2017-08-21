@@ -409,6 +409,40 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClosure9() {
+        assumeTrue(isAtLeastGroovy(21));
+
+        String contents =
+            "class A {\n" +
+            "  def m() { }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  def m() {\n" +
+            "    def c = {\n" +
+            "      this\n" +
+            "      super.m()\n" +
+            "      thisObject\n" +
+            "      getThisObject()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int start = contents.indexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "B");
+        start = contents.indexOf("super");
+        end = start + "super".length();
+        assertType(contents, start, end, "A");
+        start = contents.indexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.indexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
     public void testSpread1() {
         String contents = "def z = [1,2]*.value";
         int start = contents.lastIndexOf("value");

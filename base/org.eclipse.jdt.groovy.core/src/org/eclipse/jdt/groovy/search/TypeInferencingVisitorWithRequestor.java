@@ -1717,6 +1717,12 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitVariableExpression(VariableExpression node) {
+        // check for transformed expression (see MethodCallExpressionTransformer.transformToMopSuperCall)
+        Expression orig = (Expression) node.getNodeMetaData(ORIGINAL_EXPRESSION);
+        if (orig != null) {
+            orig.visit(this);
+        }
+
         scopes.getLast().setCurrentNode(node);
         visitAnnotations(node);
         if (node.getAccessedVariable() == node) {

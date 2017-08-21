@@ -386,8 +386,6 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     public void visitConstantExpression(ConstantExpression expression) {
-        // check for an inlined constant (see ResolveVisitor.cloneConstantExpression)
-        visitIfPresent((Expression) expression.getNodeMetaData(ORIGINAL_EXPRESSION));
         visitExpression(expression);
     }
 
@@ -572,6 +570,9 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected void visitExpression(Expression expression) {
+        // check for an inlined constant (see ResolveVisitor.cloneConstantExpression)
+        // or super ref (see MethodCallExpressionTransformer.transformToMopSuperCall)
+        visitIfPresent((Expression) expression.getNodeMetaData(ORIGINAL_EXPRESSION));
     }
 
     protected void visitParameters(Parameter[] nodes) {

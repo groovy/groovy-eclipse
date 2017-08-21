@@ -62,17 +62,22 @@ public class STCTypeLookup implements ITypeLookup {
             } else if (expr instanceof FieldExpression) {
                 declaration = ((FieldExpression) expr).getField();
             } else if (expr instanceof VariableExpression) {
-                Variable accessedVariable = ((VariableExpression) expr).getAccessedVariable();
-                if (accessedVariable instanceof DynamicVariable) {
-                    // defer to other type lookup impls
-                    confidence = TypeConfidence.UNKNOWN;
-                } else if (accessedVariable instanceof ASTNode) {
-                    declaration = (ASTNode) accessedVariable;
-                    if (inferredType instanceof ClassNode &&
-                            VariableScope.isPlainClosure((ClassNode) inferredType)) {
-                        VariableInfo info = scope.lookupName(accessedVariable.getName());
-                        if (info != null && VariableScope.isParameterizedClosure(info.type)) {
-                            inferredType = info.type; // Closure --> Closure<String>
+                VariableExpression vexp = (VariableExpression) expr;
+                if (vexp.isThisExpression() || vexp.isSuperExpression()) {
+                    declaration = (ClassNode) inferredType;
+                } else {
+                    Variable accessedVariable = vexp.getAccessedVariable();
+                    if (accessedVariable instanceof DynamicVariable) {
+                        // defer to other type lookup impls
+                        confidence = TypeConfidence.UNKNOWN;
+                    } else if (accessedVariable instanceof ASTNode) {
+                        declaration = (ASTNode) accessedVariable;
+                        if (inferredType instanceof ClassNode &&
+                                VariableScope.isPlainClosure((ClassNode) inferredType)) {
+                            VariableInfo info = scope.lookupName(accessedVariable.getName());
+                            if (info != null && VariableScope.isParameterizedClosure(info.type)) {
+                                inferredType = info.type; // Closure --> Closure<String>
+                            }
                         }
                     }
                 }
