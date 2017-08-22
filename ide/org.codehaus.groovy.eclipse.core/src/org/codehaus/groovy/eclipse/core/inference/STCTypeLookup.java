@@ -15,8 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.core.inference;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
@@ -33,6 +39,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -81,16 +88,25 @@ public class STCTypeLookup implements ITypeLookup {
                         }
                     }
                 }
+            } else if (expr instanceof ConstantExpression &&
+                    (declaration = scope.getEnclosingNode()) instanceof MethodCallExpression &&
+                    ((MethodCallExpression) declaration).getMethod() == expr && !(inferredType instanceof ClassNode)) {
+                MethodNode target = getMopMethodTarget((MethodCallExpression) declaration);
+                if (target != null) {
+                    declaration = target;
+                    inferredType = target.getReturnType();
+                    declaringType = target.getDeclaringClass();
+                }
             } else if (expr instanceof MethodCallExpression ||
                     expr instanceof StaticMethodCallExpression || expr instanceof ConstructorCallExpression ||
                     !(inferredType instanceof ClassNode) && // check for VariableExpressionTransformer's substitution
                     expr instanceof ConstantExpression && (declaration = scope.getEnclosingNode()) instanceof PropertyExpression) {
-                Object call = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                if (call instanceof MethodNode) {
-                    declaration = (MethodNode) call;
-                    declaringType = ((MethodNode) call).getDeclaringClass();
+                Object target = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                if (target instanceof MethodNode) {
+                    declaration = (MethodNode) target;
+                    declaringType = ((MethodNode) target).getDeclaringClass();
                     if (!(inferredType instanceof ClassNode) && !(expr instanceof ConstructorCallExpression)) {
-                        inferredType = ((MethodNode) call).getReturnType();
+                        inferredType = ((MethodNode) target).getReturnType();
                     }
                 } else {
                     // defer to other type lookup impls
@@ -138,6 +154,32 @@ public class STCTypeLookup implements ITypeLookup {
     }
 
     public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
+        return null;
+    }
+
+    //--------------------------------------------------------------------------
+
+    /**
+     * Resolves {@code this.super$2$method()} to {@code super.method()}
+     *
+     * @see MethodCallExpressionTransformer.transformToMopSuperCall
+     */
+    private static MethodNode getMopMethodTarget(MethodCallExpression call) {
+        if (call.isImplicitThis() && MopWriter.isMopMethod(call.getMethodAsString()) &&
+                call.getObjectExpression().getNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION) != null) {
+            Matcher m = Pattern.compile("super\\$(\\d+)\\$(.+)").matcher(call.getMethodAsString());
+            if (m.matches()) {
+                int dist = Integer.parseInt(m.group(1));
+                List<ClassNode> types = new ArrayList<ClassNode>();
+                for (ClassNode next = call.getMethodTarget().getDeclaringClass(); next != null; next = next.getSuperClass()) {
+                    types.add(next);
+                }
+
+                String name = m.group(2);
+                ClassNode type = types.get(types.size() - dist);
+                return type.getMethod(name, call.getMethodTarget().getParameters());
+            }
+        }
         return null;
     }
 }

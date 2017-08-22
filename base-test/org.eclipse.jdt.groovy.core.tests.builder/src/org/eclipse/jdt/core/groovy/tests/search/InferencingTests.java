@@ -410,7 +410,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure9() {
-        assumeTrue(isAtLeastGroovy(21));
+        assumeTrue(isAtLeastGroovy(20));
 
         String contents =
             "class A {\n" +
@@ -440,6 +440,32 @@ public final class InferencingTests extends InferencingTestSuite {
         start = contents.indexOf("getThisObject");
         end = start + "getThisObject".length();
         assertType(contents, start, end, "java.lang.Object");
+
+        // @CompileStatic 2.3+ alters calls to super methods
+        start = contents.lastIndexOf("m()"); end = start + 1;
+        assertDeclaration(contents, start, end, "A", "m", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testClosure10() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String contents =
+            "class A {\n" +
+            "  def m() { }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  def m() {\n" +
+            "    def c = {\n" +
+            "      super.equals(null)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        // @CompileStatic 2.3+ alters calls to super methods
+        int start = contents.indexOf("equals("), end = start + "equals".length();
+        assertDeclaration(contents, start, end, "java.lang.Object", "equals", DeclarationKind.METHOD);
     }
 
     @Test
@@ -1107,7 +1133,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testGRECLIPSE1720() {
-        assumeTrue(isAtLeastGroovy(21));
+        assumeTrue(isAtLeastGroovy(20));
 
         String contents =
             "import groovy.transform.CompileStatic\n" +

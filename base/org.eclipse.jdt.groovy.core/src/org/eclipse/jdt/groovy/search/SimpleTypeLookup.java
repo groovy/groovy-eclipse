@@ -646,12 +646,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @return target of method call expression if available or {@code null}
      */
     protected static MethodNode getMethodTarget(Expression expr) {
-        StatementMeta meta = (StatementMeta) expr.getNodeMetaData(StatementMeta.class);
-        if (meta != null) {
-            MethodNode target = (MethodNode) ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
+        if (expr instanceof MethodCallExpression) {
+            MethodNode target = ((MethodCallExpression) expr).getMethodTarget();
             return target;
+        } else {
+            StatementMeta meta = (StatementMeta) expr.getNodeMetaData(StatementMeta.class);
+            if (meta != null) {
+                MethodNode target = (MethodNode) ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
+                return target;
+            }
         }
-        // TODO: Is "((StaticMethodCallExpression) expr).getMetaMethod()" helpful?
+        // TODO: Is "((StaticMethodCallExpression) expr).getMetaMethod()" useful?
         return null;
     }
 

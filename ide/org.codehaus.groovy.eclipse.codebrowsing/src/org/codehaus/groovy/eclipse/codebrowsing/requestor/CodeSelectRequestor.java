@@ -504,7 +504,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 }
             }
         }
-        // check for @Newify, @Sortable, @Singleton, etc. -- synthetic field that exists on declaring class
+        // check for @Newify, @Sortable, @Singleton, etc. -- synthetic method that exists on declaring class
         if (node.getEnd() < 1 && !(node instanceof JDTMethodNode) && !declaringType.getMethods(name).isEmpty() && findElement(jdtDeclaringType, name, node.getParameters()) == null) {
             return true;
         }
