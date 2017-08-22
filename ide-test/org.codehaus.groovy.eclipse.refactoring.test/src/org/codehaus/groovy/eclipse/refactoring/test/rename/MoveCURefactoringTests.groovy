@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_IMPORT_GROUPS
+import static org.eclipse.jdt.ui.PreferenceConstants.ORGIMPORTS_IMPORTORDER
+
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
@@ -25,15 +28,20 @@ import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatur
 import org.eclipse.ltk.core.refactoring.Refactoring
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
 /**
- * Ensures that moving compilaiton units and scripts between packages updates import statements appropriately.
+ * Ensures that moving compilaiton units between packages correctly updates
+ * import statements and fully-qualified names.
  */
 final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
 
-    // assume we are moving the first CU to the new specified package
+    /**
+     * Moves the first test source to the specified new package.  References to
+     * any types contained within should be updated in the other test sources.
+     */
     private void performRefactoringAndUndo(String newPackageName, TestSource... sources) {
         ICompilationUnit[] units = createUnits(sources)
 
@@ -50,7 +58,10 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
 
         assert result.isOK() : 'Refactoring produced an error: ' + result
 
-        ICompilationUnit newUnit = getNewUnit(newPackageName, sources[0].name)
+        String typeName = sources[0].name.substring(0, sources[0].name.indexOf('.'))
+        String qualName = newPackageName.length() > 0 ? newPackageName + '.' + typeName : typeName
+        ICompilationUnit newUnit = packageFragmentRoot.javaProject.findType(qualName).compilationUnit
+
         ICompilationUnit origUnit = units[0]
         units[0] = newUnit
         assertContents(units, sources*.finalContents)
@@ -72,12 +83,13 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
         assertContents(units, sources*.finalContents)
     }
 
-    private ICompilationUnit getNewUnit(String newPackName, String name) {
-        String typeName = name.substring(0, name.indexOf('.'))
-        String qualName = newPackName.length() > 0 ? newPackName + '.' + typeName : typeName
-
-        packageFragmentRoot.javaProject.findType(qualName).compilationUnit
+    @Before
+    void setUp() {
+        setJavaPreference(ORGIMPORTS_IMPORTORDER, '\\#;;')
+        setJavaPreference(FORMATTER_BLANK_LINES_BETWEEN_IMPORT_GROUPS, '0')
     }
+
+    //--------------------------------------------------------------------------
 
     @Test
     void testSimpleMove1() {
@@ -172,7 +184,6 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
                 package g1
 
                 import static j1.Java.*
-
                 import j1.Java
 
                 class Groovy {
@@ -188,7 +199,6 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
                 package g1
 
                 import static j2.Java.*
-
                 import j2.Java
 
                 class Groovy {
@@ -246,8 +256,8 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testInnerMove1() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy { \n class Inner { } }',
-            finalContents: 'package NEW;\npublic class Groovy { \n class Inner { } }'
+            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
+            finalContents: 'package NEW;\npublic class Groovy {\n class Inner { }\n}'
         ), new TestSource(
             pack: 'p', name: 'Groovy2.groovy',
             contents: 'package p;\npublic class Groovy2 extends Groovy.Inner { }',
@@ -263,8 +273,8 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
             finalContents: 'package NEW;\nimport p.Groovy;\npublic class Groovy2 extends Groovy.Inner { }'
         ), new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy { \n class Inner { } }',
-            finalContents: 'package p;\npublic class Groovy { \n class Inner { } }'
+            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
+            finalContents: 'package p;\npublic class Groovy {\n class Inner { }\n}'
         ))
     }
 
@@ -272,8 +282,8 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testInnerMove3() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy { \n class Inner { } }',
-            finalContents: 'package NEW;\npublic class Groovy { \n class Inner { } }'
+            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
+            finalContents: 'package NEW;\npublic class Groovy {\n class Inner { }\n}'
         ), new TestSource(
             pack: 'p', name: 'Groovy2.groovy',
             contents: 'package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }',
@@ -289,8 +299,8 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
             finalContents: 'package NEW;\nimport p.Groovy.Inner;\npublic class Groovy2 extends Inner { }'
         ), new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy { \n class Inner { } }',
-            finalContents: 'package p;\npublic class Groovy { \n class Inner { } }'
+            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
+            finalContents: 'package p;\npublic class Groovy {\n class Inner { }\n}'
         ))
     }
 }
