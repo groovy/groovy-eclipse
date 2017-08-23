@@ -165,9 +165,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", stringify(grabField(decl,"setthree").type));
+        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
+        assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>", stringify(findField(decl, "settwo").type));
+        assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", stringify(findField(decl,"setthree").type));
     }
 
     @Test
@@ -185,9 +185,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", stringify(grabField(decl, "setthree").type));
+        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
+        assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>", stringify(findField(decl, "settwo").type));
+        assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", stringify(findField(decl, "setthree").type));
     }
 
     @Test
@@ -214,9 +214,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>40 ose:38)String[]>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(53>55)Set<(57>66 ose:62)String[][]>", stringify(grabField(decl, "setthree").type));
+        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
+        assertEquals("(29>31)Set<(33>40 ose:38)String[]>", stringify(findField(decl, "settwo").type));
+        assertEquals("(53>55)Set<(57>66 ose:62)String[][]>", stringify(findField(decl, "setthree").type));
         //assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>", stringify(grabField(decl, "setfour")));
     }
 
@@ -235,9 +235,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(grabField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>74)? extends (63>74)Serializable>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", stringify(grabField(decl, "setthree").type));
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>74)? extends (63>74)Serializable>", stringify(findField(decl, "settwo").type));
+        assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", stringify(findField(decl, "setthree").type));
     }
 
     @Test
@@ -255,9 +255,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(grabField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", stringify(grabField(decl, "setthree").type));
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>", stringify(findField(decl, "settwo").type));
+        assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", stringify(findField(decl, "setthree").type));
     }
 
     @Test @Ignore("support for A<X>.B<Y> has not been implemented")
@@ -282,9 +282,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(grabField(decl, "one").type));
-        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", stringify(grabField(decl, "setthree").type));
+        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "one").type));
+        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", stringify(findField(decl, "settwo").type));
+        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", stringify(findField(decl, "setthree").type));
     }
 
     @Test
@@ -302,9 +302,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(grabField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", stringify(grabField(decl, "settwo").type));
-        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", stringify(grabField(decl, "setthree").type));
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", stringify(findField(decl, "settwo").type));
+        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", stringify(findField(decl, "setthree").type));
     }
 
     @Test
@@ -320,7 +320,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>24)(16>18)Map.(20>24)Entry<(26>31)String(33>36)List<(38>43)String>>>", stringify(grabField(decl, "foo").type));
+        assertEquals("(12>14)Set<(16>24)(16>18)Map.(20>24)Entry<(26>31)String(33>36)List<(38>43)String>>>", stringify(findField(decl, "foo").type));
     }
 
     @Test
@@ -336,7 +336,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>20)(12>14)Map.(16>20)Entry<(22>27)String(29>32)List<(34>39)String>>", stringify(grabField(decl, "foo").type));
+        assertEquals("(12>20)(12>14)Map.(16>20)Entry<(22>27)String(29>32)List<(34>39)String>>", stringify(findField(decl, "foo").type));
     }
 
     @Test

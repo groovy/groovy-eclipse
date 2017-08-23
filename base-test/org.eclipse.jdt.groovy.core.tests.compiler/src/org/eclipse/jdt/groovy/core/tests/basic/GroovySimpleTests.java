@@ -1298,13 +1298,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 
-        FieldDeclaration fDecl = grabField(decl, "RED");
+        FieldDeclaration fDecl = findField(decl, "RED");
         assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>32 modifiersSourceStart=30 endPart1Position:30", stringifyFieldDecl(fDecl));
 
-        fDecl = grabField(decl, "GREEN");
+        fDecl = findField(decl, "GREEN");
         assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>41 modifiersSourceStart=37 endPart1Position:37", stringifyFieldDecl(fDecl));
 
-        fDecl = grabField(decl, "BLUE");
+        fDecl = findField(decl, "BLUE");
         assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>49 modifiersSourceStart=46 endPart1Position:46", stringifyFieldDecl(fDecl));
     }
 

@@ -31,11 +31,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import groovy.lang.GroovyRuntimeException;
+import groovy.transform.PackageScopeTarget;
 
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -2153,23 +2156,76 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // TODO: does this make types visible that shouldn't be?
                 modifiers &= ~(ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic);
             }
+            if (hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
+                modifiers &= ~ClassFileConstants.AccPublic;
+            }
             return modifiers;
         }
 
         private int getModifiers(FieldNode node) {
             int modifiers = node.getModifiers();
+            if (hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
+                modifiers &= ~ClassFileConstants.AccPrivate;
+            }
             return modifiers;
         }
 
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers();
             modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
+            if (hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
+                modifiers &= ~ClassFileConstants.AccPublic;
+            }
             return modifiers;
         }
 
         private int getModifiers(ConstructorNode node) {
             int modifiers = node.getModifiers();
+            if (hasPackageScopeXform(node, PackageScopeTarget.CONSTRUCTORS)) {
+                modifiers &= ~ClassFileConstants.AccPublic;
+            }
             return modifiers;
+        }
+
+        private boolean hasPackageScopeXform(AnnotatedNode node, final PackageScopeTarget type) {
+            boolean member = (!(node instanceof ClassNode) && type != PackageScopeTarget.CLASS);
+            for (AnnotationNode anno : node.getAnnotations()) {
+                if (isType("groovy.transform.PackageScope", anno.getClassNode().getName())) {
+                    Expression expr = anno.getMember("value");
+                    if (expr == null) {
+                        // if empty @PackageScope, node type and target type must be in alignment
+                        return member || (node instanceof ClassNode && type == PackageScopeTarget.CLASS);
+                    }
+
+                    final boolean[] val = new boolean[1];
+                    expr.visit(new CodeVisitorSupport() {
+                        @Override
+                        public void visitPropertyExpression(PropertyExpression property) {
+                            if (isType("groovy.transform.PackageScopeTarget", property.getObjectExpression().getText()) &&
+                                    property.getPropertyAsString().equals(type.name())) {
+                                val[0] = true;
+                            }
+                        }
+                        @Override
+                        public void visitVariableExpression(VariableExpression variable) {
+                            if (variable.getName().equals(type.name())) {
+                                ModuleNode mod = sourceUnit.getAST();
+                                ImportNode imp = mod.getStaticImports().get(type.name());
+                                if (imp != null && isType("groovy.transform.PackageScopeTarget", imp.getType().getName())) {
+                                    val[0] = true;
+                                } else if (imp == null && mod.getStaticStarImports().get("groovy.transform.PackageScopeTarget") != null) {
+                                    val[0] = true;
+                                }
+                            }
+                        }
+                    });
+                    return val[0];
+                }
+            }
+            if (member) { // check for @PackageScope(XXX) on class
+                return hasPackageScopeXform(node.getDeclaringClass(), type);
+            }
+            return false;
         }
 
         private boolean isAnon(ClassNode classNode) {
@@ -2193,6 +2249,32 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             Parameter last = parameters[parameters.length - 1];
             ClassNode type = last.getType();
             return type.isArray();
+        }
+
+        /**
+         * @param expect fully-qualified type name
+         * @param actual fully-qualified or unqualified type name (may be resolved against imports)
+         */
+        private boolean isType(String expect, String actual) {
+            if (actual.equals(expect)) {
+                return true;
+            }
+            int dot = expect.lastIndexOf('.');
+            if (dot != -1 && actual.equals(expect.substring(dot + 1))) {
+                ModuleNode mod = sourceUnit.getAST();
+                ClassNode imp = mod.getImportType(actual);
+                if (imp != null && imp.getName().equals(expect)) {
+                    return true;
+                } else if (imp == null) {
+                    String pkg = expect.substring(0, dot + 1);
+                    for (ImportNode sin : mod.getStarImports()) {
+                        if (sin.getPackageName().equals(pkg)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         private char[] toMainName(char[] fileName) {
@@ -2492,39 +2574,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Augment set of constructors based on annotations. If the annotations are going to trigger additional constructors later, add
-         * them here.
+         * Augment set of constructors based on annotations. If the annotations are going to trigger additional constructors later, add them here.
          */
-        private void executeEarlyTransforms_ConstructorRelated(char[] ctorName, ClassNode classNode,
-                List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
-            List<AnnotationNode> annos = classNode.getAnnotations();
+        private void executeEarlyTransforms_ConstructorRelated(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
             boolean hasImmutableAnnotation = false;
-            if (annos != null) {
-                for (AnnotationNode anno : annos) {
-                    if (anno.getClassNode() != null) {
-                        String annoName = anno.getClassNode().getName();
-                        if (annoName.equals("groovy.transform.Immutable")) {
-                            hasImmutableAnnotation = true;
-                        } else if (annoName.equals("Immutable")) {
-                            // do our best to see if this is the real groovy @Immutable class node
-                            ModuleNode module = classNode.getModule();
-                            if (module != null) {
-                                ClassNode imp = module.getImportType("Immutable");
-                                if (imp == null || imp.getName().equals("groovy.transform.Immutable")) {
-                                    hasImmutableAnnotation = true;
-                                }
-                            }
-                        }
-                    }
+            for (AnnotationNode anno : classNode.getAnnotations()) {
+                if (isType("groovy.transform.Immutable", anno.getClassNode().getName())) {
+                    hasImmutableAnnotation = true;
+                    break;
                 }
             }
-            // TODO probably ought to check if clashing import rather than assuming it is groovy-eclipse Immutable (even though that is
-            // very likely)
+            // TODO probably ought to check if clashing import rather than assuming it is groovy-eclipse Immutable (even though that is very likely)
             if (hasImmutableAnnotation) {
                 // @Immutable action: new constructor
 
-                // TODO Should check against existing ones before creating a duplicate but quite ugly, and
-                // groovy will be checking anyway...
+                // TODO Should check against existing ones before creating a duplicate but quite ugly, and groovy will be checking anyway...
                 List<FieldNode> fields = classNode.getFields();
                 if (fields.size() > 0) {
                     // only add constructor if one or more fields.
@@ -2534,8 +2598,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         FieldNode field = fields.get(i);
                         TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
                         // TODO should set type reference position
-                        arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1),
-                                parameterTypeReference, ClassFileConstants.AccPublic);
+                        arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1), parameterTypeReference, ClassFileConstants.AccPublic);
                         arguments[i].declarationSourceStart = fields.get(i).getStart();
                     }
                     ConstructorDeclaration constructor = new ConstructorDeclaration(unitDeclaration.compilationResult);

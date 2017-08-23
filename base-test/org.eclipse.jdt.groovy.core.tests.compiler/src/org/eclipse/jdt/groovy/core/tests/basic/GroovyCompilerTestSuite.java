@@ -39,9 +39,11 @@ import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
@@ -81,7 +83,7 @@ public abstract class GroovyCompilerTestSuite {
     }
 
     private final long compliance;
-    
+
     public GroovyCompilerTestSuite(long compliance) {
         this.compliance = compliance;
     }
@@ -237,11 +239,20 @@ public abstract class GroovyCompilerTestSuite {
         }
     }
 
-    protected static FieldDeclaration grabField(GroovyCompilationUnitDeclaration decl, String fieldname) {
-        FieldDeclaration[] fDecls = decl.types[0].fields;
-        for (int i = 0, n = fDecls.length; i < n; i += 1) {
-            if (new String(fDecls[i].name).equals(fieldname)) {
-                return fDecls[i];
+    protected static FieldDeclaration findField(GroovyCompilationUnitDeclaration decl, String name) {
+        for (FieldDeclaration field : decl.types[0].fields) {
+            if (name.equals(String.valueOf(field.name))) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    protected static MethodDeclaration findMethod(GroovyCompilationUnitDeclaration decl, String name) {
+        for (AbstractMethodDeclaration method : decl.types[0].methods) {
+            if (name.equals(String.valueOf(method.selector)) &&
+                    method instanceof MethodDeclaration) {
+                return (MethodDeclaration) method;
             }
         }
         return null;
