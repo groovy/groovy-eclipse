@@ -1124,32 +1124,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
 
-                boolean isInterface = classNode.isInterface();
-                boolean isEnum = classNode.isEnum();
-                int mods = classNode.getModifiers();
-                if (isTrait(classNode)) {
-                    mods |= ClassNode.ACC_INTERFACE;
-                }
-                if (isEnum) {
-                    // remove final
-                    mods &= ~ClassNode.ACC_FINAL;
-                }
-                // FIXASC should not do this for inner classes, just for top level types
-                // FIXASC does this make things visible that shouldn't be?
-                mods &= ~(ClassNode.ACC_PRIVATE | ClassNode.ACC_PROTECTED);
-                if (!isInner) {
-                    if ((mods & ClassNode.ACC_STATIC) != 0) {
-                        mods &= ~(ClassNode.ACC_STATIC);
-                    }
-                }
-
-                typeDeclaration.modifiers = mods & ~((isInterface || isEnum) ? ClassNode.ACC_ABSTRACT : 0);
+                typeDeclaration.modifiers = getModifiers(classNode, isInner);
                 fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
                 GenericsType[] generics = classNode.getGenericsTypes();
                 if (generics != null && generics.length > 0) {
                     typeDeclaration.typeParameters = createTypeParametersForGenerics(classNode.getGenericsTypes());
                 }
 
+                boolean isEnum = classNode.isEnum();
                 configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
                 configureSuperInterfaces(typeDeclaration, classNode);
                 typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, typeDeclaration, compilationResult);
@@ -1261,14 +1243,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     boolean isSynthetic = GroovyUtils.isSynthetic(fieldNode);
                     if (!isSynthetic) {
                         // JavaStubGenerator ignores private fields but I don't think we want to here
-                        FieldDeclarationWithInitializer fieldDeclaration =
-                                new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), 0, 0);
+                        FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), 0, 0);
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
                         if (!isEnumField) {
-                            fieldDeclaration.modifiers = fieldNode.getModifiers() & ~ClassNode.ACC_ENUM; // Seems like this has already been taken away
+                            fieldDeclaration.modifiers = getModifiers(fieldNode);
                             fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
-                            if (fieldNode.isStatic() && fieldNode.isFinal() &&
-                                    fieldNode.getInitialExpression() instanceof ConstantExpression) {
+                            if (fieldNode.isStatic() && fieldNode.isFinal() && fieldNode.getInitialExpression() instanceof ConstantExpression) {
                                 // this needs to be set for static finals to correctly determine constant status
                                 fieldDeclaration.initialization = createConstantExpression((ConstantExpression) fieldNode.getInitialExpression());
                             }
@@ -1332,12 +1312,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             for (ConstructorNode constructorNode : constructorNodes) {
                 ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(unitDeclaration.compilationResult);
-
                 fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
-
                 constructorDeclaration.annotations = createAnnotations(constructorNode.getAnnotations());
-                // FIXASC should we just use the constructor node modifiers or does groovy make all constructors public apart from those on enums?
-                constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : ClassFileConstants.AccPublic;
+                constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : getModifiers(constructorNode);
                 constructorDeclaration.selector = ctorName;
                 constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
                 constructorDeclaration.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
@@ -1405,8 +1382,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 MethodNode methodNode, CompilationResult compilationResult) {
             if (classNode.isAnnotationDefinition()) {
                 AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(compilationResult);
-                int modifiers = methodNode.getModifiers();
-                modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
+                int modifiers = getModifiers(methodNode);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.modifiers = modifiers;
                 if (methodNode.hasAnnotationDefault()) {
@@ -1427,9 +1403,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 boolean isMain = false;
                 // Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
                 // AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
-                int modifiers = methodNode.getModifiers();
+                int modifiers = getModifiers(methodNode);
 
-                modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.modifiers = modifiers;
                 methodDeclaration.selector = methodNode.getName().toCharArray();
@@ -2161,6 +2136,40 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else {
                 return e;
             }
+        }
+
+        private int getModifiers(ClassNode node, boolean isInner) {
+            int modifiers = node.getModifiers();
+            if (isTrait(node)) {
+                modifiers |= ClassFileConstants.AccInterface;
+            }
+            if (node.isInterface()) {
+                modifiers &= ~ClassFileConstants.AccAbstract;
+            }
+            if (node.isEnum()) {
+                modifiers &= ~(ClassFileConstants.AccAbstract | ClassFileConstants.AccFinal);
+            }
+            if (!isInner) {
+                // TODO: does this make types visible that shouldn't be?
+                modifiers &= ~(ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic);
+            }
+            return modifiers;
+        }
+
+        private int getModifiers(FieldNode node) {
+            int modifiers = node.getModifiers();
+            return modifiers;
+        }
+
+        private int getModifiers(MethodNode node) {
+            int modifiers = node.getModifiers();
+            modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
+            return modifiers;
+        }
+
+        private int getModifiers(ConstructorNode node) {
+            int modifiers = node.getModifiers();
+            return modifiers;
         }
 
         private boolean isAnon(ClassNode classNode) {
