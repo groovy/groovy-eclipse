@@ -2156,7 +2156,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // TODO: does this make types visible that shouldn't be?
                 modifiers &= ~(ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic);
             }
-            if (hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
+            if (/*node.isSyntheticPublic() &&*/ hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
                 modifiers &= ~ClassFileConstants.AccPublic;
             }
             return modifiers;
@@ -2164,7 +2164,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private int getModifiers(FieldNode node) {
             int modifiers = node.getModifiers();
-            if (hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
+            if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
                 modifiers &= ~ClassFileConstants.AccPrivate;
             }
             return modifiers;
@@ -2173,7 +2173,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers();
             modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
-            if (hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
+            if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~ClassFileConstants.AccPublic;
             }
             return modifiers;
@@ -2181,7 +2181,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private int getModifiers(ConstructorNode node) {
             int modifiers = node.getModifiers();
-            if (hasPackageScopeXform(node, PackageScopeTarget.CONSTRUCTORS)) {
+            if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.CONSTRUCTORS)) {
                 modifiers &= ~ClassFileConstants.AccPublic;
             }
             return modifiers;
@@ -2263,14 +2263,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (dot != -1 && actual.equals(expect.substring(dot + 1))) {
                 ModuleNode mod = sourceUnit.getAST();
                 ClassNode imp = mod.getImportType(actual);
-                if (imp != null && imp.getName().equals(expect)) {
-                    return true;
-                } else if (imp == null) {
-                    String pkg = expect.substring(0, dot + 1);
-                    for (ImportNode sin : mod.getStarImports()) {
-                        if (sin.getPackageName().equals(pkg)) {
-                            return true;
-                        }
+                if (imp != null) {
+                    return imp.getName().equals(expect);
+                }
+                String pkg = expect.substring(0, dot + 1);
+                for (ImportNode sin : mod.getStarImports()) {
+                    if (sin.getPackageName().equals(pkg)) {
+                        return true;
                     }
                 }
             }
@@ -2540,10 +2539,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * default parameter mechanism causes creation of a variant that collides with an existing declaration. I'm not sure if Groovy
          * should be reporting an error when this occurs, but Grails does actually do it and gets no error.
          */
-        private void addUnlessDuplicate(List<AbstractMethodDeclaration> accumulatedDeclarations, AbstractMethodDeclaration newDeclaration) {
+        private void addUnlessDuplicate(List<AbstractMethodDeclaration> methodDeclarations, AbstractMethodDeclaration newDeclaration) {
             boolean isDuplicate = false;
 
-            for (AbstractMethodDeclaration aMethodDecl : accumulatedDeclarations) {
+            for (AbstractMethodDeclaration aMethodDecl : methodDeclarations) {
                 if (CharOperation.equals(aMethodDecl.selector, newDeclaration.selector)) {
                     Argument[] mdArgs = aMethodDecl.arguments;
                     Argument[] vmdArgs = newDeclaration.arguments;
@@ -2569,43 +2568,59 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             if (!isDuplicate) {
-                accumulatedDeclarations.add(newDeclaration);
+                methodDeclarations.add(newDeclaration);
             }
         }
 
         /**
-         * Augment set of constructors based on annotations. If the annotations are going to trigger additional constructors later, add them here.
+         * Augments set of constructors based on AST transforms. If transforms are going to trigger additional constructors later, add them here.
          */
-        private void executeEarlyTransforms_ConstructorRelated(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
-            boolean hasImmutableAnnotation = false;
+        private void executeEarlyTransforms_ConstructorRelated(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
+            boolean immutable = false;
+            boolean inheritCtors = false;
             for (AnnotationNode anno : classNode.getAnnotations()) {
-                if (isType("groovy.transform.Immutable", anno.getClassNode().getName())) {
-                    hasImmutableAnnotation = true;
-                    break;
+                String name = anno.getClassNode().getName();
+                if (isType("groovy.transform.Immutable", name)) {
+                    immutable = true;
+                } else if (isType("groovy.transform.InheritConstructors", name)) {
+                    inheritCtors = true;
                 }
             }
-            // TODO probably ought to check if clashing import rather than assuming it is groovy-eclipse Immutable (even though that is very likely)
-            if (hasImmutableAnnotation) {
-                // @Immutable action: new constructor
 
-                // TODO Should check against existing ones before creating a duplicate but quite ugly, and groovy will be checking anyway...
+            if (immutable) {
+                // only add constructor if 1 or more fields; fall back on the default constructor for 0 fields
                 List<FieldNode> fields = classNode.getFields();
-                if (fields.size() > 0) {
-                    // only add constructor if one or more fields.
-                    // when no fields are present, fall back on the default generated constructor
-                    Argument[] arguments = new Argument[fields.size()];
-                    for (int i = 0; i < fields.size(); i++) {
+                int n = fields.size();
+                if (n > 0) {
+                    Parameter[] params = new Parameter[n];
+                    for (int i = 0; i < n; i += 1) {
                         FieldNode field = fields.get(i);
-                        TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
-                        // TODO should set type reference position
-                        arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1), parameterTypeReference, ClassFileConstants.AccPublic);
-                        arguments[i].declarationSourceStart = fields.get(i).getStart();
+                        params[i] = new Parameter(field.getType(), field.getName());
+                        params[i].setStart(field.getStart());
+                        params[i].setEnd(field.getEnd());
                     }
-                    ConstructorDeclaration constructor = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                    constructor.selector = ctorName;
-                    constructor.modifiers = ClassFileConstants.AccPublic;
-                    constructor.arguments = arguments;
-                    accumulatedMethodDeclarations.add(constructor);
+
+                    ConstructorDeclaration decl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                    decl.arguments = createArguments(params, false);
+                    decl.modifiers = ClassFileConstants.AccPublic;
+                    decl.selector = ctorName;
+                    decl.sourceEnd = classNode.getNameEnd();
+                    decl.sourceStart = classNode.getNameStart();
+
+                    addUnlessDuplicate(methodDeclarations, decl);
+                }
+            }
+
+            if (inheritCtors) {
+                for (ConstructorNode ctor : classNode.getSuperClass().getDeclaredConstructors()) {
+                    ConstructorDeclaration decl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                    decl.arguments = createArguments(ctor.getParameters(), false);
+                    decl.modifiers = ctor.getModifiers();
+                    decl.selector = ctorName;
+                    decl.sourceEnd = classNode.getNameEnd();
+                    decl.sourceStart = classNode.getNameStart();
+
+                    addUnlessDuplicate(methodDeclarations, decl);
                 }
             }
         }

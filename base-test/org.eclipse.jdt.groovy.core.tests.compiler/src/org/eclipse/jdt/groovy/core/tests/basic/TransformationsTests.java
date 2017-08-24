@@ -227,7 +227,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testPackageScope5c() {
+    public void testPackageScope6() {
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -241,6 +241,54 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, ""); // expect no errors/warnings
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
+    }
+
+    @Test // @PackageScope only applies to synthetic public members
+    public void testPackageScope7() {
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.PackageScope(groovy.transform.PackageScopeTarget.FIELDS)\n" +
+            "class Foo {\n" +
+            "  Object field1\n" +
+            "  public Object field2\n" +
+            "  private Object field3\n" +
+            "  protected Object field4\n" +
+            "}\n"
+        };
+
+        runNegativeTest(sources, ""); // expect no errors/warnings
+        FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field1");
+        assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
+        field = findField(getCUDeclFor("Foo.groovy"), "field2");
+        assertTrue("Expected public but was: " + Modifier.toString(field.modifiers), Modifier.isPublic(field.modifiers));
+        field = findField(getCUDeclFor("Foo.groovy"), "field3");
+        assertTrue("Expected private but was: " + Modifier.toString(field.modifiers), Modifier.isPrivate(field.modifiers));
+        field = findField(getCUDeclFor("Foo.groovy"), "field4");
+        assertTrue("Expected protected but was: " + Modifier.toString(field.modifiers), Modifier.isProtected(field.modifiers));
+    }
+
+    @Test // @PackageScope only applies to synthetic public members
+    public void testPackageScope8() {
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.PackageScope(groovy.transform.PackageScopeTarget.METHODS)\n" +
+            "class Foo {\n" +
+            "  Object method1() {}\n" +
+            "  public Object method2() {}\n" +
+            "  private Object method3() {}\n" +
+            "  protected Object method4() {}\n" +
+            "}\n"
+        };
+
+        runNegativeTest(sources, ""); // expect no errors/warnings
+        MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method1");
+        assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
+        method = findMethod(getCUDeclFor("Foo.groovy"), "method2");
+        assertTrue("Expected public but was: " + Modifier.toString(method.modifiers), Modifier.isPublic(method.modifiers));
+        method = findMethod(getCUDeclFor("Foo.groovy"), "method3");
+        assertTrue("Expected private but was: " + Modifier.toString(method.modifiers), Modifier.isPrivate(method.modifiers));
+        method = findMethod(getCUDeclFor("Foo.groovy"), "method4");
+        assertTrue("Expected protected but was: " + Modifier.toString(method.modifiers), Modifier.isProtected(method.modifiers));
     }
 
     @Test

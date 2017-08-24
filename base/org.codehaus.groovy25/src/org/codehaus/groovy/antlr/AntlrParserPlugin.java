@@ -1057,7 +1057,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             checkNoInvalidModifier(methodDef, "Method", modifiers, Opcodes.ACC_VOLATILE, "volatile");
             node = node.getNextSibling();
         }
-
+        // GRECLIPSE add
+        else {
+            modifiers |= Opcodes.ACC_SYNTHETIC;
+        }
+        // GRECLIPSE end
         if (isAnInterface()) {
             modifiers |= Opcodes.ACC_ABSTRACT;
         }
@@ -1181,13 +1185,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected void constructorDef(AST constructorDef) {
         List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
         AST node = constructorDef.getFirstChild();
-        int modifiers = Opcodes.ACC_PUBLIC;
         // GRECLIPSE add
         // constructor name is not stored as an AST node
         // instead grab the end of the Modifiers node and the start of the parameters node
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
+        int modifiers = Opcodes.ACC_PUBLIC;
         if (isType(MODIFIERS, node)) {
             modifiers = modifiers(node, annotations, modifiers);
             checkNoInvalidModifier(constructorDef, "Constructor", modifiers, Opcodes.ACC_STATIC, "static");
@@ -1196,6 +1200,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             checkNoInvalidModifier(constructorDef, "Constructor", modifiers, Opcodes.ACC_NATIVE, "native");
             node = node.getNextSibling();
         }
+        // GRECLIPSE add
+        else {
+            modifiers |= Opcodes.ACC_SYNTHETIC;
+        }
+        // GRECLIPSE end
 
         assertNodeType(PARAMETERS, node);
         Parameter[] parameters = parameters(node);
@@ -1241,7 +1250,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             modifiers = modifiers(node, annotations, modifiers);
             node = node.getNextSibling();
         }
-
+        // GRECLIPSE add
+        modifiers &= ~Opcodes.ACC_SYNTHETIC;
+        // GRECLIPSE end
         if (classNode.isInterface()) {
             modifiers |= Opcodes.ACC_STATIC | Opcodes.ACC_FINAL;
             if ((modifiers & (Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) == 0) {

@@ -268,11 +268,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
+            MethodNode constructorDecl = scope.getEnclosingMethodDeclaration(); // watch for initializers but no constructor
             if (constructorCall.isThisCall()) {
-                MethodNode constructorDecl = scope.getEnclosingMethodDeclaration(); // watch for initializers but no constructor
                 declaringType = constructorDecl != null ? constructorDecl.getDeclaringClass() : scope.getEnclosingTypeDeclaration();
             } else if (constructorCall.isSuperCall()) {
-                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass().getUnresolvedSuperClass();
+                declaringType = constructorDecl != null ? constructorDecl.getDeclaringClass().getUnresolvedSuperClass() : scope.getEnclosingTypeDeclaration();
             }
 
             // try to find best match if there is more than one constructor to choose from
