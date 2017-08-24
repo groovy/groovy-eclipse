@@ -891,7 +891,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnoElems() {
+    void testAnnoElems1() {
         String contents = '''\
             @Grab( module = 'something:anything' )
             import groovy.transform.*
@@ -911,6 +911,24 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testAnnoElems2() {
         String contents = '''\
+            import groovy.util.logging.Log
+            @Log(value='logger')
+            class C {
+              static {
+                logger.log('msg')
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), TAG_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('logger'), 'logger'.length(), STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('log'), 'log'.length(), METHOD_CALL))
+    }
+
+    @Test
+    void testAnnoElems3() {
+        String contents = '''\
             class C {
               public static final String VALUE = 'value'
               @SuppressWarnings(C.VALUE)
@@ -926,7 +944,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnoElems3() {
+    void testAnnoElems4() {
         addGroovySource '''\
             class Bar {
               public static final String VALUE = 'nls'

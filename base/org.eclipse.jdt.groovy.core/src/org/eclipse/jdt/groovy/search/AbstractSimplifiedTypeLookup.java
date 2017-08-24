@@ -119,13 +119,12 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                 }
             }
         }
-        // I would have liked to pass this value into lookupTypeAndDeclaration, but
-        // I can't break api here
+        // I would have liked to pass this value into lookupTypeAndDeclaration, but I can't break api here
         isStatic = isStaticObjectExpression;
         currentExpression = node;
 
         TypeAndDeclaration tAndD = null;
-        if (node instanceof ConstantExpression || node instanceof GStringExpression || node instanceof VariableExpression) {
+        if (node instanceof VariableExpression || (node instanceof ConstantExpression && (node.getEnd() < 1) || (node.getLength() == node.getText().length()))) {
             tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
         }
 
@@ -139,8 +138,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     /**
      * Gives an option for descendants to set confidence by their own
      */
-    protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration,
-            String extraDoc) {
+    protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration, String extraDoc) {
         return originalConfidence == null ? confidence() : originalConfidence;
     }
 
