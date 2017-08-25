@@ -232,7 +232,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "Foo.groovy",
             "import groovy.transform.*\n" +
             "import static groovy.transform.PackageScopeTarget.*\n" +
-            "@PackageScope([CLASS, FIELDS, METHODS, CONSTRUCTORS])\n" +
+            "@PackageScope([CLASS, FIELDS, METHODS])\n" +
             "class Foo {\n" +
             "  Object method() {}\n" +
             "}\n"

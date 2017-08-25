@@ -2186,9 +2186,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private int getModifiers(ConstructorNode node) {
             int modifiers = node.getModifiers();
-            if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.CONSTRUCTORS)) {
-                modifiers &= ~ClassFileConstants.AccPublic;
-            }
+            try {
+                PackageScopeTarget type = PackageScopeTarget.valueOf("CONSTRUCTORS");
+                if (node.isSyntheticPublic() && hasPackageScopeXform(node, type)) {
+                    modifiers &= ~ClassFileConstants.AccPublic;
+                }
+            } catch (IllegalArgumentException unavailable) {}
             return modifiers;
         }
 
