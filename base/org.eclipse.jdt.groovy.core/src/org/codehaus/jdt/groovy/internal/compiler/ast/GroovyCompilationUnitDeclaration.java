@@ -638,10 +638,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 for (Comment comment : comments) {
                     List<TaskEntry> allTasksInComment = new ArrayList<TaskEntry>();
                     for (int t = 0; t < taskTags.length; t++) {
-                        String taskTag = new String(taskTags[t]);
+                        String taskTag = String.valueOf(taskTags[t]);
                         String taskPriority = null;
                         if (taskPriorities != null) {
-                            taskPriority = new String(taskPriorities[t]);
+                            taskPriority = String.valueOf(taskPriorities[t]);
                         }
                         allTasksInComment.addAll(comment.getPositionsOf(taskTag, taskPriority,
                                 compilationResult.lineSeparatorPositions, caseSensitiveTags));
@@ -1333,7 +1333,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             if (earlyTransforms) {
-                executeEarlyTransforms_ConstructorRelated(ctorName, classNode, accumulatedMethodDeclarations);
+                applyEarlyTransforms(ctorName, classNode, accumulatedMethodDeclarations);
             }
         }
 
@@ -1861,7 +1861,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             String name = classNode.getName();
 
             if (name.length() == 1 && name.charAt(0) == '?') {
-                return new Wildcard(Wildcard.UNBOUND);
+                TypeReference tr = new Wildcard(Wildcard.UNBOUND);
+                tr.sourceStart = start;
+                tr.sourceEnd = end;
+                return tr;
             }
 
             int arrayLoc = name.indexOf("[");
@@ -1872,13 +1875,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             if (nameToPrimitiveTypeId.containsKey(name)) {
-                return TypeReference.baseTypeReference(nameToPrimitiveTypeId.get(name), 0);
+                TypeReference tr = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get(name), 0);
+                tr.sourceStart = start;
+                tr.sourceEnd = end;
+                return tr;
             }
 
             if (name.indexOf(".") == -1) {
                 if (typeArguments == null) {
                     TypeReference tr = verify(new SingleTypeReference(name.toCharArray(), toPos(start, end - 1)));
-
                     if (!checkGenerics) {
                         tr.bits |= ASTNode.IgnoreRawTypeCheck;
                     }
@@ -2272,6 +2277,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         return true;
                     }
                 }
+                // TODO: check default imports
             }
             return false;
         }
@@ -2573,9 +2579,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Augments set of constructors based on AST transforms. If transforms are going to trigger additional constructors later, add them here.
+         * Augments set of methods based on AST transforms. If transforms are going to trigger additional methods later, add them here.
          */
-        private void executeEarlyTransforms_ConstructorRelated(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
+        private void applyEarlyTransforms(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
             boolean immutable = false;
             boolean inheritCtors = false;
             for (AnnotationNode anno : classNode.getAnnotations()) {
@@ -2612,7 +2618,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             if (inheritCtors) {
-                for (ConstructorNode ctor : classNode.getSuperClass().getDeclaredConstructors()) {
+                ClassNode superClassNode = classNode.getSuperClass();
+                for (ConstructorNode ctor : superClassNode.getDeclaredConstructors()) {
                     ConstructorDeclaration decl = new ConstructorDeclaration(unitDeclaration.compilationResult);
                     decl.arguments = createArguments(ctor.getParameters(), false);
                     decl.modifiers = ctor.getModifiers();
@@ -2635,18 +2642,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * @return the verified type reference
          * @throws IllegalStateException if the type reference is malformed
          */
-        private TypeReference verify(TypeReference toVerify) {
+        private static TypeReference verify(TypeReference toVerify) {
             if (GroovyCheckingControl.checkTypeReferences) {
                 if (toVerify.getClass().equals(SingleTypeReference.class)) {
                     SingleTypeReference str = (SingleTypeReference) toVerify;
                     if (str.sourceStart == -1) {
                         if (str.sourceEnd != -2) {
-                            throw new IllegalStateException("TypeReference '" + new String(str.token) + " should end at -2");
+                            throw new IllegalStateException("TypeReference '" + String.valueOf(str.token) + " should end at -2");
                         }
                     } else {
                         if (str.sourceEnd < str.sourceStart) {
-                            throw new IllegalStateException(
-                                    "TypeReference '" + new String(str.token) + " should end at " + str.sourceStart + " or later");
+                            throw new IllegalStateException("TypeReference '" + String.valueOf(str.token) + " should end at " + str.sourceStart + " or later");
                         }
                     }
                 } else {

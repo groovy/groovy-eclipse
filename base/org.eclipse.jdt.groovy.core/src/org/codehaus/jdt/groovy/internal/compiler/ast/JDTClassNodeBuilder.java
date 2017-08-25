@@ -15,7 +15,6 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +24,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
@@ -144,15 +144,8 @@ class JDTClassNodeBuilder {
             return fb;
         } else if (tb instanceof BinaryTypeBinding) {
             if (tb.isGenericType()) {
-                try {
-                    Field f = BinaryTypeBinding.class.getDeclaredField("environment");
-                    f.setAccessible(true);
-                    LookupEnvironment le = (LookupEnvironment) f.get(tb);
-                    return le.convertToRawType(tb, false);
-                    // return resolver.getScope().environment.convertToRawType(tb, false);
-                } catch (Exception e) {
-                    throw new RuntimeException("Problem building rawtype ", e);
-                }
+                LookupEnvironment le = (LookupEnvironment) ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "environment", tb);
+                return le.convertToRawType(tb, false);
             } else {
                 return tb;
             }

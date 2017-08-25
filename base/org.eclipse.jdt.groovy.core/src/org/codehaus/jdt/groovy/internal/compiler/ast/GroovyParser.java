@@ -16,11 +16,11 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -49,8 +49,10 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
@@ -110,18 +112,12 @@ public class GroovyParser {
      */
     public static void close(GroovyClassLoader groovyClassLoader) {
         try {
-            Class<?> clazz = java.net.URLClassLoader.class;
-            Field field_urlClasspath = clazz.getDeclaredField("ucp");
-            field_urlClasspath.setAccessible(true);
-            Object urlClasspath = field_urlClasspath.get(groovyClassLoader);
-            Field field_loaders = urlClasspath.getClass().getDeclaredField("loaders");
-            field_loaders.setAccessible(true);
-            Object[] jarLoaders = ((java.util.Collection<?>) field_loaders.get(urlClasspath)).toArray();
+            Object urlClasspath = ReflectionUtils.getPrivateField(java.net.URLClassLoader.class, "ucp", groovyClassLoader);
+            Object[] jarLoaders = ((Collection<?>) ReflectionUtils.getPrivateField(urlClasspath.getClass(), "loaders", urlClasspath)).toArray();
             for (Object jarLoader : jarLoaders) {
                 try {
-                    Field field_jarFile = jarLoader.getClass().getDeclaredField("jar");
-                    field_jarFile.setAccessible(true);
-                    JarFile jarFile = (JarFile) field_jarFile.get(jarLoader);
+                    JarFile jarFile = (JarFile) ReflectionUtils.getPrivateField(jarLoader.getClass(), "jar", jarLoader);
+
                     String jarFileName = jarFile.getName();
                     if (jarFileName.indexOf("cache") != -1 || jarFileName.indexOf("plugins") != -1) {
                         jarFile.close();
@@ -166,23 +162,18 @@ public class GroovyParser {
             if (gclForBatch == null) {
                 try {
                     // Batch compilation
-                    if (requestor instanceof org.eclipse.jdt.internal.compiler.Compiler) {
-                        org.eclipse.jdt.internal.compiler.Compiler compiler = ((org.eclipse.jdt.internal.compiler.Compiler) requestor);
-                        LookupEnvironment lookupEnvironment = compiler.lookupEnvironment;
+                    if (requestor instanceof Compiler) {
+                        LookupEnvironment lookupEnvironment = ((Compiler) requestor).lookupEnvironment;
                         if (lookupEnvironment != null) {
                             INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
                             if (nameEnvironment instanceof FileSystem) {
                                 FileSystem fileSystem = (FileSystem) nameEnvironment;
                                 if (fileSystem != null) {
-                                    Field f = FileSystem.class.getDeclaredField("classpaths");
-                                    if (f != null) {
-                                        f.setAccessible(true);
+                                    Classpath[] classpaths = (Classpath[]) ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", fileSystem);
+                                    if (classpaths != null) {
                                         gclForBatch = new GroovyClassLoader();
-                                        Classpath[] classpaths = (Classpath[]) f.get(fileSystem);
-                                        if (classpaths != null) {
-                                            for (int i = 0; i < classpaths.length; i++) {
-                                                gclForBatch.addClasspath(classpaths[i].getPath());
-                                            }
+                                        for (Classpath classpath : classpaths) {
+                                            gclForBatch.addClasspath(classpath.getPath());
                                         }
                                     } else {
                                         System.err.println("Cannot find classpaths field on FileSystem class");
@@ -205,20 +196,17 @@ public class GroovyParser {
                 PathLoaderPair pathAndLoader = projectToLoaderCache.get(projectName);
                 if (pathAndLoader == null) {
                     if (GroovyLogManager.manager.hasLoggers()) {
-                        GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
-                                "Classpath for GroovyClassLoader (used to discover transforms): " + path);
+                        GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Classpath for GroovyClassLoader (used to discover transforms): " + path);
                     }
                     pathAndLoader = new PathLoaderPair(path);
                     projectToLoaderCache.put(projectName, pathAndLoader);
                 } else {
                     if (!path.equals(pathAndLoader.classpath)) {
                         // classpath change detected
-                        // System.out.println("Classpath change detected for " + projectName);
                         pathAndLoader = new PathLoaderPair(path);
                         projectToLoaderCache.put(projectName, pathAndLoader);
                     }
                 }
-                // System.out.println("Using loader with path " + pathAndLoader.classpath);
                 gcl = pathAndLoader.groovyClassLoader;
             }
         }
@@ -287,16 +275,10 @@ public class GroovyParser {
         }
     }
 
-    private static boolean NONLOCKING = false;
-
+    private static final boolean NONLOCKING = Boolean.getBoolean("greclipse.nonlocking");
     static {
-        try {
-            boolean value = System.getProperty("greclipse.nonlocking", "false").equalsIgnoreCase("true");
-            NONLOCKING = value;
-            if (value) {
-                System.out.println("property set: greclipse.nonlocking: will try to avoid locking jars");
-            }
-        } catch (Throwable t) {
+        if (NONLOCKING) {
+            System.out.println("property set: greclipse.nonlocking: will try to avoid locking jars");
         }
     }
 
@@ -367,38 +349,37 @@ public class GroovyParser {
         // complaints about the same file defining duplicate types.
         char[] fileName = sourceUnit.getFileName();
         if (sourceUnit instanceof org.eclipse.jdt.internal.compiler.batch.CompilationUnit) {
-            filepath = new String(((org.eclipse.jdt.internal.compiler.batch.CompilationUnit) sourceUnit).fileName);
+            filepath = String.valueOf(((org.eclipse.jdt.internal.compiler.batch.CompilationUnit) sourceUnit).fileName);
         } else {
-            filepath = new String(fileName);
+            filepath = String.valueOf(fileName);
         }
 
+        IPath path = new Path(filepath);
         // Try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it).
-        Path path = new Path(filepath);
         IFile eclipseFile = null;
         // GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
-        if (ResourcesPlugin.getPlugin() != null && path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or
-            // eclipse throws assertion failed here.
-            eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
+        // Needs 2 segments: a project and file name or eclipse throws assertion failed here
+        if (ResourcesPlugin.getPlugin() != null && path.segmentCount() >= 2) {
+            eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
             final IPath location = eclipseFile.getLocation();
             if (location != null) {
                 filepath = location.toFile().getAbsolutePath();
             }
         }
 
-        SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode),
-                compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), errorCollector, this.resolver);
+        SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, String.valueOf(sourceCode),
+            compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), errorCollector, this.resolver);
         groovySourceUnit.isReconcile = compilationUnit.isReconcile;
-        GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
-                sourceCode.length, compilationUnit, groovySourceUnit, compilerOptions);
+        GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
+            problemReporter, compilationResult, sourceCode.length, compilationUnit, groovySourceUnit, compilerOptions);
         // FIXASC get this from the Antlr parser
         compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode);
         compilationUnit.addSource(groovySourceUnit);
 
         // Check if it is worth plugging in a callback listener for parse/generation
-        if (requestor instanceof org.eclipse.jdt.internal.compiler.Compiler) {
-            org.eclipse.jdt.internal.compiler.Compiler compiler = ((org.eclipse.jdt.internal.compiler.Compiler) requestor);
-            if (compiler.requestor instanceof BatchImageBuilder) {
-                BuildNotifier notifier = ((BatchImageBuilder) compiler.requestor).notifier;
+        if (requestor instanceof Compiler) {
+            if (((Compiler) requestor).requestor instanceof BatchImageBuilder) {
+                BuildNotifier notifier = ((BatchImageBuilder) ((Compiler) requestor).requestor).notifier;
                 if (notifier != null) {
                     compilationUnit.setProgressListener(new ProgressListenerImpl(notifier));
                 }
@@ -406,13 +387,11 @@ public class GroovyParser {
         }
         gcuDeclaration.processToPhase(Phases.CONVERSION);
 
-        // Groovy moduleNode is null when there is a fatal error
-        // Otherwise, recover what we can
+        // ModuleNode is null when there is a fatal error
         if (gcuDeclaration.getModuleNode() != null) {
             gcuDeclaration.populateCompilationUnitDeclaration();
             for (TypeDeclaration decl : gcuDeclaration.types) {
-                GroovyTypeDeclaration gtDeclaration = (GroovyTypeDeclaration) decl;
-                resolver.record(gtDeclaration);
+                resolver.record((GroovyTypeDeclaration) decl);
             }
         }
         // Is this a script?
@@ -484,7 +463,6 @@ public class GroovyParser {
     }
 
     private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile, boolean allowTransforms) {
-
         // FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
         if (compilerOptions.groovyCustomizerClassesList != null && transformLoader != null) {
