@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
+import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
@@ -912,7 +913,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testAnnoElems2() {
         String contents = '''\
             import groovy.util.logging.Log
-            @Log(value='logger')
+            @Log(value='logger') // this logger should not be seen as property by DSLDTypeLookup
             class C {
               static {
                 logger.log('msg')
@@ -1784,7 +1785,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     private int counter
 
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
-        def references = new GatherSemanticReferences(addGroovySource(contents, "Highlighting${++counter}"))
+        def references = new GatherSemanticReferences(
+            addGroovySource(contents, "Highlighting${++counter}"))
+        SynchronizationUtils.waitForDSLDProcessingToComplete()
         references.factory = new TypeInferencingVisitorFactory() {
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)
