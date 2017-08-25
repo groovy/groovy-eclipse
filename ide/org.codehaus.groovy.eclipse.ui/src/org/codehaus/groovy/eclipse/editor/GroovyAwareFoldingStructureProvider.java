@@ -62,7 +62,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
     @Override
     protected void computeFoldingStructure(IJavaElement element, FoldingStructureComputationContext context) {
         // NOTE: be sure to call super.computeFoldingStructure when editor is null to preserve Java behavior
-        if (editor != null) {
+        if (editor != null && editor.getModuleNode() != null) {
             if (isMainType(element)) {
                 // add folding for multi-line closures
                 computeClosureFoldingStructure(element, context);
