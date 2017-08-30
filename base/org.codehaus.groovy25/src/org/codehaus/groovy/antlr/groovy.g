@@ -460,14 +460,14 @@ tokens {
     }
 
     /**
-     * Report a recovered error and specify the token.
+     * Report a recovered error and specify the node.
      */
-    public void reportError(String message, AST lt) {
+    public void reportError(String message, AST ln) {
         Map row = new HashMap();
         row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
+        row.put("line",     Integer.valueOf(ln.getLine()));
+        row.put("column",   Integer.valueOf(ln.getColumn()));
         errorList.add(row);
     }
 
@@ -475,16 +475,11 @@ tokens {
      * Report a recovered exception.
      */
     public void reportError(RecognitionException e) {
-        Token lt = null;
-        try { lt = LT(1); }
-        catch (TokenStreamException e2) { }
-        if (lt == null)  lt = Token.badToken;
-
         Map row = new HashMap();
         row.put("error",    e.getMessage());
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
+        row.put("filename", e.getFilename());
+        row.put("line",     Integer.valueOf(e.getLine()));
+        row.put("column",   Integer.valueOf(e.getColumn()));
         errorList.add(row);
     }
     // GRECLIPSE end
@@ -1021,7 +1016,7 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1); int mark = mark();} // GRECLIPSE add
+identifierStar {Token first = LT(1); int start = mark();} // GRECLIPSE add
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
@@ -1045,7 +1040,7 @@ identifierStar {Token first = LT(1); int mark = mark();} // GRECLIPSE add
             reportError("Invalid import", first);
             #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
             // Give up on this line and just go to the next
-            rewind(mark);
+            rewind(start);
             consumeUntil(NLS);
         }
         // GRECLIPSE end
@@ -1349,7 +1344,7 @@ classBlock  {Token first = LT(1);}
     :   LCURLY!
         ( classField )? ( sep! ( classField )? )*
         RCURLY!
-        {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);}
+        {#classBlock = #(create(OBJBLOCK,"OBJBLOCK",first,LT(1)),#classBlock);}
         // GRECLIPSE add
         // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
         exception
@@ -1978,13 +1973,39 @@ compoundStatement
     ;
 
 /** An open block is not allowed to have closure arguments. */
-openBlock  {Token first = LT(1);}
+openBlock  {Token first = LT(1); int start = mark();} // GRECLIPSE add
     :   LCURLY! nls!
         // AST type of SLIST means "never gonna be a closure"
         bb:blockBody[EOF]!
         RCURLY!
         {#openBlock = #(create(SLIST,"{",first,LT(1)),bb);}
 
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            int end = mark();
+            // rewind to the first token on the same line as opening '{' (aka first)
+            rewind(start);
+            while (LT(0) != null && LT(0).getLine() == first.getLine()) {
+                rewind(mark() - 1);
+            }
+            // advance through all tokens that have greater indentation
+            int col = LT(1).getColumn();
+            do {
+                consume();
+            } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
+
+            // if a closing '}' was found in the proper position, create a basic block
+            if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
+                match(RCURLY);
+                reportError(e);
+                #openBlock = #(create(SLIST,"{",first,LT(1)));
+            } else {
+                rewind(end);
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 /** A block body is a parade of zero or more statements or expressions. */
@@ -2103,9 +2124,7 @@ statement[int prevToken]
     // GRECLIPSE add
     | "do"^ compoundStatement nls! "while"! LPAREN! strictContextExpression[false]! RPAREN!
         {
-            int end = mark(); rewind(start); // be sure error is on "do"
             reportError(new NoViableAltException(first, getFilename()));
-            rewind(end);
         }
     // GRECLIPSE end
 
@@ -3417,7 +3436,7 @@ identPrimary
  // GRECLIPSE edit
 //newExpression {Token first = LT(1);}
 //    :   "new"! nls! (ta:typeArguments!)? t:type!
-newExpression {Token first = LT(1); int jumpBack = mark();}
+newExpression {Token first = LT(1); int start = mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
         (   nls!
             mca:methodCallArgs[null]!
@@ -3452,15 +3471,14 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
                 #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null);
                 // probably others to include - or make this the default?
                 if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-                    // int i = ((MismatchedTokenException) e).token.getType();
-                    rewind(jumpBack);
+                    rewind(start);
                     consumeUntil(NLS);
                 }
             } else if (#mca == null && #ad == null) {
-                reportError("expecting '(' or '[' after type name to continue new expression", t_AST);
+                reportError("expecting '(' or '[' after type name to continue new expression", #t);
                 #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);
                 if (e instanceof MismatchedTokenException) {
-                    rewind(jumpBack);
+                    rewind(start);
                     consume();
                     consumeUntil(NLS);
                 }

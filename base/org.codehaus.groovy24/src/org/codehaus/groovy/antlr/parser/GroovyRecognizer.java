@@ -278,32 +278,16 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return t;
     }
 
-    // GRECLIPSE add
-    public AST create2(int type, String txt, Token first, Token last) {
-        return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
-    }
-
-    private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
-            SourceInfo lastInfo = (SourceInfo) node;
-            GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
-            groovySourceAst.setColumnLast(lastInfo.getColumnLast());
-            groovySourceAst.setLineLast(lastInfo.getLineLast());
-      }
-      return ast;
-    }
-    // GRECLIPSE end
-
-    private AST attachLast(AST t, Object last) {
-        if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+    private AST attachLast(AST ast, Object last) {
+        if ((ast instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+            GroovySourceAST groovySourceAst = (GroovySourceAST) ast;
             SourceInfo lastInfo = (SourceInfo) last;
-            GroovySourceAST node = (GroovySourceAST)t;
-            node.setColumnLast(lastInfo.getColumn());
-            node.setLineLast(lastInfo.getLine());
+            groovySourceAst.setColumnLast(lastInfo.getColumn());
+            groovySourceAst.setLineLast(lastInfo.getLine());
             // This is a good point to call node.setSnippet(),
             // but it bulks up the AST too much for production code.
         }
-        return t;
+        return ast;
     }
 
     public AST create(int type, String txt, Token first, Token last) {
@@ -319,13 +303,22 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     }
 
     // GRECLIPSE add
+    public AST create2(int type, String txt, Token first, Token last) {
+        AST ast = create(type, txt, astFactory.create(first));
+        if ((ast instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
+            ((GroovySourceAST) ast).setLineLast(((SourceInfo) last).getLineLast());
+            ((GroovySourceAST) ast).setColumnLast(((SourceInfo) last).getColumnLast());
+        }
+        return ast;
+    }
+
     private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
     public void startComment(int line, int column) {
         commentStartPositions.push((line << 16) + column);
     }
 
-    public void endComment(int type, int line, int column,String text) {
+    public void endComment(int type, int line, int column, String text) {
         int lineAndColumn = commentStartPositions.pop();
         int startLine = lineAndColumn >>> 16;
         int startColumn = lineAndColumn & 0xffff;
@@ -407,7 +400,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public void reportError(String message) {
         Token lt = null;
         try { lt = LT(1); }
-        catch (TokenStreamException ee) { }
+        catch (TokenStreamException e) { }
         if (lt == null)  lt = Token.badToken;
 
         Map row = new HashMap();
@@ -431,14 +424,14 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     }
 
     /**
-     * Report a recovered error and specify the token.
+     * Report a recovered error and specify the node.
      */
-    public void reportError(String message, AST lt) {
+    public void reportError(String message, AST ln) {
         Map row = new HashMap();
         row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
+        row.put("line",     Integer.valueOf(ln.getLine()));
+        row.put("column",   Integer.valueOf(ln.getColumn()));
         errorList.add(row);
     }
 
@@ -446,16 +439,11 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
      * Report a recovered exception.
      */
     public void reportError(RecognitionException e) {
-        Token lt = null;
-        try { lt = LT(1); }
-        catch (TokenStreamException ee) { }
-        if (lt == null)  lt = Token.badToken;
-
         Map row = new HashMap();
         row.put("error",    e.getMessage());
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
+        row.put("filename", e.getFilename());
+        row.put("line",     Integer.valueOf(e.getLine()));
+        row.put("column",   Integer.valueOf(e.getColumn()));
         errorList.add(row);
     }
     // GRECLIPSE end
@@ -1001,8 +989,8 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             packageDefinition_AST = (AST)currentAST.root;
             // error recovery for missing package name
-            if (id_AST==null) {
-            reportError("Invalid package specification",LT(0));
+            if (id_AST == null) {
+            reportError("Invalid package specification", LT(0));
             } else {
             packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
             }
@@ -1261,9 +1249,7 @@ inputState.guessing--;
                 match(RPAREN);
                 if ( inputState.guessing==0 ) {
                     
-                    int end = mark(); rewind(start); // be sure error is on "do"
                     reportError(new NoViableAltException(first, getFilename()));
-                    rewind(end);
                     
                 }
                 statement_AST = (AST)currentAST.root;
@@ -1943,15 +1929,15 @@ inputState.guessing--;
             importStatement_AST = (AST)currentAST.root;
             
             if (isStatic) {
-            if (is_AST==null) {
-            reportError("Invalid import static specification",first);
+            if (is_AST == null) {
+            reportError("Invalid import static specification", first);
             importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,null)).add(an_AST).add(is_AST));
             } else {
             importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,LT(1))).add(an_AST).add(is_AST));
             }
             } else {
-            if (is_AST==null) {
-            reportError("Invalid import specification",LT(0));
+            if (is_AST == null) {
+            reportError("Invalid import specification", LT(0));
             importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,null)).add(an_AST).add(is_AST));
             } else {
             importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
@@ -1984,7 +1970,7 @@ inputState.guessing--;
         AST s_AST = null;
         Token  alias = null;
         AST alias_AST = null;
-        Token first = LT(1); int mark=mark();
+        Token first = LT(1); int start = mark();
         
         try {      // for error handling
             i1 = LT(1);
@@ -2068,10 +2054,10 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                reportError("Invalid import",first);
+                reportError("Invalid import", first);
                 identifierStar_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add((AST)astFactory.make( (new ASTArray(1)).add(create(STAR,"*",null)))));
                 // Give up on this line and just go to the next
-                rewind(mark);
+                rewind(start);
                 consumeUntil(NLS);
                 
             } else {
@@ -2267,10 +2253,10 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             classDefinition_AST = (AST)currentAST.root;
             
-            if (cb_AST!=null) {
+            if (cb_AST != null) {
             classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp33_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(cb_AST));
             } else {
-            reportError("Malformed class declaration",LT(1));
+            reportError("Malformed class declaration", LT(1));
             classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp33_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(null));
             }
             
@@ -5659,13 +5645,14 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
-                classBlock_AST = (AST)currentAST.root;
+                if (errorList.isEmpty()) {
+                // dirty hack to avoid having trouble with cascading problems
+                classBlock_AST = (AST) currentAST.root;
                 }
                 reportError(e);
                 classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
                 currentAST.root = classBlock_AST;
-                currentAST.child = classBlock_AST!=null && classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+                currentAST.child = classBlock_AST != null && classBlock_AST.getFirstChild() != null ? classBlock_AST.getFirstChild() : classBlock_AST;
                 currentAST.advanceChildToEnd(); 
                 
             } else {
@@ -8867,22 +8854,53 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST openBlock_AST = null;
         AST bb_AST = null;
-        Token first = LT(1);
+        Token first = LT(1); int start = mark();
         
-        match(LCURLY);
-        nls();
-        blockBody(EOF);
-        bb_AST = (AST)returnAST;
-        match(RCURLY);
-        if ( inputState.guessing==0 ) {
+        try {      // for error handling
+            match(LCURLY);
+            nls();
+            blockBody(EOF);
+            bb_AST = (AST)returnAST;
+            match(RCURLY);
+            if ( inputState.guessing==0 ) {
+                openBlock_AST = (AST)currentAST.root;
+                openBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(1))).add(bb_AST));
+                currentAST.root = openBlock_AST;
+                currentAST.child = openBlock_AST!=null &&openBlock_AST.getFirstChild()!=null ?
+                    openBlock_AST.getFirstChild() : openBlock_AST;
+                currentAST.advanceChildToEnd();
+            }
             openBlock_AST = (AST)currentAST.root;
-            openBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(1))).add(bb_AST));
-            currentAST.root = openBlock_AST;
-            currentAST.child = openBlock_AST!=null &&openBlock_AST.getFirstChild()!=null ?
-                openBlock_AST.getFirstChild() : openBlock_AST;
-            currentAST.advanceChildToEnd();
         }
-        openBlock_AST = (AST)currentAST.root;
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                int end = mark();
+                // rewind to the first token on the same line as opening '{' (aka first)
+                rewind(start);
+                while (LT(0) != null && LT(0).getLine() == first.getLine()) {
+                rewind(mark() - 1);
+                }
+                // advance through all tokens that have greater indentation
+                int col = LT(1).getColumn();
+                do {
+                consume();
+                } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
+                
+                // if a closing '}' was found in the proper position, create a basic block
+                if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
+                match(RCURLY);
+                reportError(e);
+                openBlock_AST = (AST)astFactory.make( (new ASTArray(1)).add(create(SLIST,"{",first,LT(1))));
+                } else {
+                rewind(end);
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = openBlock_AST;
     }
     
@@ -11491,7 +11509,7 @@ inputState.guessing--;
             if (inputState.guessing==0) {
                 
                 // GRECLIPSE-1192
-                // Do we need better recognition of the specific problem here? 
+                // Do we need better recognition of the specific problem here?
                 // (if so, see the label recovery for GRECLIPSE-1048)
                 reportError(e);
                 
@@ -12159,7 +12177,7 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                if (pathElement_AST==null) {
+                if (pathElement_AST == null) {
                 throw e;
                 }
                 reportError(e);
@@ -12596,14 +12614,14 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                if (al_AST!=null) {
+                if (al_AST != null) {
                 reportError(e);
                 // copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
                 if (callee != null && callee.getFirstChild() != null) {
-                //method call like obj.method()
+                // method call like obj.method()
                 methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1))).add(callee).add(al_AST));
                 } else {
-                //method call like method() or new Expr(), in the latter case "callee" is null
+                // method call like method() or new Expr(), in the latter case "callee" is null
                 methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee,LT(1))).add(callee).add(al_AST));
                 }
                 } else {
@@ -14185,7 +14203,7 @@ inputState.guessing--;
         AST mca_AST = null;
         AST cb_AST = null;
         AST ad_AST = null;
-        Token first = LT(1); int jumpBack=mark();
+        Token first = LT(1); int start = mark();
         
         try {      // for error handling
             match(LITERAL_new);
@@ -14306,30 +14324,19 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                if (t_AST==null) {
-                reportError("missing type for constructor call",first);
+                if (t_AST == null) {
+                reportError("missing type for constructor call", first);
                 newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null));
-                // currentAST.root = newExpression_AST;
-                // currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-                // newExpression_AST.getFirstChild() : newExpression_AST;
-                // currentAST.advanceChildToEnd();
                 // probably others to include - or make this the default?
                 if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-                // int i = ((MismatchedTokenException)e).token.getType();
-                rewind(jumpBack);
+                rewind(start);
                 consumeUntil(NLS);
                 }
-                } else if (mca_AST==null && ad_AST==null) {
-                reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
+                } else if (mca_AST == null && ad_AST == null) {
+                reportError("expecting '(' or '[' after type name to continue new expression", t_AST);
                 newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));
-                //currentAST.root = newExpression_AST;
-                //currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-                //newExpression_AST.getFirstChild() : newExpression_AST;
-                //currentAST.advanceChildToEnd();
                 if (e instanceof MismatchedTokenException) {
-                Token t =  ((MismatchedTokenException)e).token;
-                int i = ((MismatchedTokenException)e).token.getType();
-                rewind(jumpBack);
+                rewind(start);
                 consume();
                 consumeUntil(NLS);
                 }

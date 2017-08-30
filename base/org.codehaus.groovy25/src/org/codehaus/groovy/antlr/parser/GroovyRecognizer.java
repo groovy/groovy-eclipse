@@ -424,14 +424,14 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     }
 
     /**
-     * Report a recovered error and specify the token.
+     * Report a recovered error and specify the node.
      */
-    public void reportError(String message, AST lt) {
+    public void reportError(String message, AST ln) {
         Map row = new HashMap();
         row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
+        row.put("line",     Integer.valueOf(ln.getLine()));
+        row.put("column",   Integer.valueOf(ln.getColumn()));
         errorList.add(row);
     }
 
@@ -439,16 +439,11 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
      * Report a recovered exception.
      */
     public void reportError(RecognitionException e) {
-        Token lt = null;
-        try { lt = LT(1); }
-        catch (TokenStreamException e2) { }
-        if (lt == null)  lt = Token.badToken;
-
         Map row = new HashMap();
         row.put("error",    e.getMessage());
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
+        row.put("filename", e.getFilename());
+        row.put("line",     Integer.valueOf(e.getLine()));
+        row.put("column",   Integer.valueOf(e.getColumn()));
         errorList.add(row);
     }
     // GRECLIPSE end
@@ -1254,9 +1249,7 @@ inputState.guessing--;
                 match(RPAREN);
                 if ( inputState.guessing==0 ) {
                     
-                    int end = mark(); rewind(start); // be sure error is on "do"
                     reportError(new NoViableAltException(first, getFilename()));
-                    rewind(end);
                     
                 }
                 statement_AST = (AST)currentAST.root;
@@ -1977,7 +1970,7 @@ inputState.guessing--;
         AST s_AST = null;
         Token  alias = null;
         AST alias_AST = null;
-        Token first = LT(1); int mark = mark();
+        Token first = LT(1); int start = mark();
         
         try {      // for error handling
             i1 = LT(1);
@@ -2064,7 +2057,7 @@ inputState.guessing--;
                 reportError("Invalid import", first);
                 identifierStar_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add((AST)astFactory.make( (new ASTArray(1)).add(create(STAR,"*",null)))));
                 // Give up on this line and just go to the next
-                rewind(mark);
+                rewind(start);
                 consumeUntil(NLS);
                 
             } else {
@@ -8973,22 +8966,53 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST openBlock_AST = null;
         AST bb_AST = null;
-        Token first = LT(1);
+        Token first = LT(1); int start = mark();
         
-        match(LCURLY);
-        nls();
-        blockBody(EOF);
-        bb_AST = (AST)returnAST;
-        match(RCURLY);
-        if ( inputState.guessing==0 ) {
+        try {      // for error handling
+            match(LCURLY);
+            nls();
+            blockBody(EOF);
+            bb_AST = (AST)returnAST;
+            match(RCURLY);
+            if ( inputState.guessing==0 ) {
+                openBlock_AST = (AST)currentAST.root;
+                openBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(1))).add(bb_AST));
+                currentAST.root = openBlock_AST;
+                currentAST.child = openBlock_AST!=null &&openBlock_AST.getFirstChild()!=null ?
+                    openBlock_AST.getFirstChild() : openBlock_AST;
+                currentAST.advanceChildToEnd();
+            }
             openBlock_AST = (AST)currentAST.root;
-            openBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(1))).add(bb_AST));
-            currentAST.root = openBlock_AST;
-            currentAST.child = openBlock_AST!=null &&openBlock_AST.getFirstChild()!=null ?
-                openBlock_AST.getFirstChild() : openBlock_AST;
-            currentAST.advanceChildToEnd();
         }
-        openBlock_AST = (AST)currentAST.root;
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                int end = mark();
+                // rewind to the first token on the same line as opening '{' (aka first)
+                rewind(start);
+                while (LT(0) != null && LT(0).getLine() == first.getLine()) {
+                rewind(mark() - 1);
+                }
+                // advance through all tokens that have greater indentation
+                int col = LT(1).getColumn();
+                do {
+                consume();
+                } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
+                
+                // if a closing '}' was found in the proper position, create a basic block
+                if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
+                match(RCURLY);
+                reportError(e);
+                openBlock_AST = (AST)astFactory.make( (new ASTArray(1)).add(create(SLIST,"{",first,LT(1))));
+                } else {
+                rewind(end);
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = openBlock_AST;
     }
     
@@ -14263,7 +14287,7 @@ inputState.guessing--;
         AST mca_AST = null;
         AST cb_AST = null;
         AST ad_AST = null;
-        Token first = LT(1); int jumpBack = mark();
+        Token first = LT(1); int start = mark();
         
         try {      // for error handling
             match(LITERAL_new);
@@ -14389,15 +14413,14 @@ inputState.guessing--;
                 newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null));
                 // probably others to include - or make this the default?
                 if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-                // int i = ((MismatchedTokenException) e).token.getType();
-                rewind(jumpBack);
+                rewind(start);
                 consumeUntil(NLS);
                 }
                 } else if (mca_AST == null && ad_AST == null) {
                 reportError("expecting '(' or '[' after type name to continue new expression", t_AST);
                 newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));
                 if (e instanceof MismatchedTokenException) {
-                rewind(jumpBack);
+                rewind(start);
                 consume();
                 consumeUntil(NLS);
                 }

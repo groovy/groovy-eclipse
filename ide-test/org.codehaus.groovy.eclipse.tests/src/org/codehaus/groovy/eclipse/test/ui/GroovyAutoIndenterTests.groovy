@@ -20,7 +20,6 @@ import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_CLOSE_BRACES
 
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jface.preference.IPreferenceStore
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -38,81 +37,100 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
      */
     @Test
     void testScaffolding() {
-        makeEditor('<***>')
+        makeEditor("${CARET}")
         send('a')
-        Assert.assertEquals('a', getText())
-        assertEditorContents('a<***>')
+        assert this.text == 'a'
+        assertEditorContents("a${CARET}")
     }
 
     @Test
     void test1() {
-        makeEditor('<***>')
+        makeEditor("${CARET}")
         send('class Foo {\n')
-        assertEditorContents('class Foo {\n\t<***>\n}')
+
+        assertEditorContents """\
+            class Foo {
+            \t${CARET}
+            }""".stripIndent()
     }
 
     @Test
     void test2() {
-        makeEditor(
-                'class Foo {\n' +
-                '\tdef foo() {<***>\n' +
-                '}\n\n')
+        makeEditor """\
+            class Foo {
+            \tdef foo() {${CARET}
+            }
+            """.stripIndent()
+
         send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '\tdef foo() {\n' +
-                '\t\t<***>\n' +
-                '\t}\n' +
-                '}\n\n')
+
+        assertEditorContents """\
+            class Foo {
+            \tdef foo() {
+            \t\t${CARET}
+            \t}
+            }
+            """.stripIndent()
     }
 
     @Test
     void test3() {
-        makeEditor(
-                'class Foo {\n' +
-                '\tdef foo() {\n' +
-                '\t\tif (a<b) { \n' +
-                '\t\t\tblah()\n' +
-                '\t\t}<***>\n' +
-                '\t}\n' +
-                '}\n\n')
+        makeEditor """\
+            class Foo {
+            \tdef foo() {
+            \t\tif (a<b) {
+            \t\t\tblah()
+            \t\t}${CARET}
+            \t}
+            }
+            """.stripIndent()
+
         send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '\tdef foo() {\n' +
-                '\t\tif (a<b) { \n' +
-                '\t\t\tblah()\n' +
-                '\t\t}\n' +
-                '\t\t<***>\n' +
-                '\t}\n' +
-                '}\n\n')
+
+        assertEditorContents """\
+            class Foo {
+            \tdef foo() {
+            \t\tif (a<b) {
+            \t\t\tblah()
+            \t\t}
+            \t\t${CARET}
+            \t}
+            }
+            """.stripIndent()
     }
 
     @Test
     void testGRE631() {
-        makeEditor(
-                'class Foo {\n' +
-                '\tdef foo () {\n' +
-                '\t\tdef foo = [\"\"]<***>\n' +
-                '\t}\n' +
-                '}')
+        makeEditor """\
+            class Foo {
+            \tdef foo () {
+            \t\tdef foo = [""]${CARET}
+            \t}
+            }
+            """.stripIndent()
+
         send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '\tdef foo () {\n' +
-                '\t\tdef foo = [\"\"]\n' +
-                '\t\t<***>\n' +
-                '\t}\n' +
-                '}')
+
+        assertEditorContents """\
+            class Foo {
+            \tdef foo () {
+            \t\tdef foo = [""]
+            \t\t${CARET}
+            \t}
+            }
+            """.stripIndent()
+
         send('return []\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '\tdef foo () {\n' +
-                '\t\tdef foo = [\"\"]\n' +
-                '\t\treturn []\n' +
-                '\t\t<***>\n' +
-                '\t}\n' +
-                '}')
+
+        assertEditorContents """\
+            class Foo {
+            \tdef foo () {
+            \t\tdef foo = [""]
+            \t\treturn []
+            \t\t${CARET}
+            \t}
+            }
+            """.stripIndent()
     }
 
     /**
@@ -122,32 +140,22 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
     @Test
     void testSpaces() {
         setJavaPreference(FORMATTER_TAB_CHAR, JavaCore.SPACE)
-        makeEditor(
-                'class Foo {\n' +
-                '\tdef foo() {<***>\n' +
-                '}')
-        send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '\tdef foo() {\n' +
-                '        <***>\n' +
-                '    }\n' +
-                '}')
-    }
 
-    /**
-     * GRE_751: Pasting text into a multiline string should not perform any
-     * transformations.
-     */
-    @Test
-    void testPasteInMultiLineString() {
-        String initial = 'class Foo {\n' +
-                '\tdef command = \"\"\"<***>\"\"\"\n' +
-                '}'
-        makeEditor(initial)
-        String pasteString = 'A bunch of \n \t\tmore here. Not\t\t\nand done!'
-        sendPaste(pasteString)
-        assertEditorContents(initial.replace(CARET, pasteString + CARET))
+        makeEditor """\
+            class Foo {
+            \tdef foo() {${CARET}
+            }
+            """.stripIndent()
+
+        send('\n')
+
+        assertEditorContents """\
+            class Foo {
+            \tdef foo() {
+                    ${CARET}
+                }
+            }
+            """.stripIndent()
     }
 
     /**
@@ -156,44 +164,52 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
      */
     @Test
     void testSpacesOptionSetAfterOpen() {
-        makeEditor(
-                'class Foo {\n' +
-                '\tdef foo() {<***>\n' +
-                '}')
+        makeEditor"""\
+            class Foo {
+            \tdef foo() {${CARET}
+            }
+            """.stripIndent()
+
         setJavaPreference(FORMATTER_TAB_CHAR, JavaCore.SPACE)
         send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '\tdef foo() {\n' +
-                '        <***>\n' +
-                '    }\n' +
-                '}')
+
+        assertEditorContents """\
+            class Foo {
+            \tdef foo() {
+                    ${CARET}
+                }
+            }
+            """.stripIndent()
     }
 
     /**
-     * Check whether autoindentor works correct for mixed tab/spaces mode.
+     * Checks that auto-indenter works correct for mixed tab/spaces mode.
      */
     @Test
     void testMixedTabsAndSpaces() {
-        makeEditor(
-                'class Foo {\n' +
-                '    def foo() {\n' +
-                '        def bar {<***>\n' +
-                '        }\n' +
-                '    }\n'+
-                '}')
+        makeEditor """\
+            class Foo {
+                def foo() {
+                    def bar = {${CARET}
+                    }
+                }
+            }
+            """.stripIndent()
+
         setJavaPreference(FORMATTER_INDENTATION_SIZE, '4')
         setJavaPreference(FORMATTER_TAB_CHAR, MIXED)
         setJavaPreference(FORMATTER_TAB_SIZE, '8')
         send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '    def foo() {\n' +
-                '        def bar {\n' +
-                '\t    <***>\n' +
-                '        }\n' +
-                '    }\n'+
-                '}')
+
+        assertEditorContents """\
+            class Foo {
+                def foo() {
+                    def bar = {
+            \t    ${CARET}
+                    }
+                }
+            }
+            """.stripIndent()
     }
 
     /**
@@ -201,24 +217,45 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
      */
     @Test
     void testMixedTabsAndSpaces2() {
-        makeEditor(
-                'class Foo {\n' +
-                '    def foo() {\n' +
-                '\tdef bar {<***>\n' +
-                '\t}\n' +
-                '    }\n'+
-                '}')
+        makeEditor """\
+            class Foo {
+                def foo() {
+            \tdef bar {${CARET}
+            \t}
+                }
+            }
+            """.stripIndent()
+
         setJavaPreference(FORMATTER_INDENTATION_SIZE, '4')
         setJavaPreference(FORMATTER_TAB_CHAR, MIXED)
         setJavaPreference(FORMATTER_TAB_SIZE, '8')
         send('\n')
-        assertEditorContents(
-                'class Foo {\n' +
-                '    def foo() {\n' +
-                '\tdef bar {\n' +
-                '\t    <***>\n' +
-                '\t}\n' +
-                '    }\n'+
-                '}')
+
+        assertEditorContents """\
+            class Foo {
+                def foo() {
+            \tdef bar {
+            \t    ${CARET}
+            \t}
+                }
+            }
+            """.stripIndent()
+    }
+
+    /**
+     * GRE_751: Pasting text into a multiline string should not perform any
+     * transformations.
+     */
+    @Test
+    void testPasteInMultiLineString() {
+        String initial = '''\
+            class Foo {
+            \tdef command = """<***>"""
+            }
+            '''.stripIndent()
+        makeEditor(initial)
+        String pasteString = 'A bunch of \n \t\tmore here. Not\t\t\nand done!'
+        sendPaste(pasteString)
+        assertEditorContents(initial.replace(CARET, pasteString + CARET))
     }
 }

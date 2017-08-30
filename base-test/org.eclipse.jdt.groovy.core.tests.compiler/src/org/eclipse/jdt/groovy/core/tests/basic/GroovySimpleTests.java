@@ -1664,35 +1664,35 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testConstructorsForEnumWrong_GRE285() {
         runNegativeTest(new String[] {
-                "TestEnum.groovy",
-                "enum TestEnum {\n"+
-                "\n"+
-                "VALUE1(1, 'foo'),\n"+
-                "VALUE2(2)\n"+
-                "\n"+
-                "private final int _value\n"+
-                "private final String _description\n"+
-                "\n"+
-                "private TestEnum(int value, String description = null) {\n"+
-                "   _value = value\n"+
-                "   _description = description\n"+
-                "}\n"+
-                "\n"+
-                "String getDescription() { _description }\n"+
-                "\n"+
-                "int getValue() { _value }\n"+
-                "}"
-                },"");
+            "TestEnum.groovy",
+            "enum TestEnum {\n" +
+            "\n" +
+            "VALUE1(1, 'foo'),\n" +
+            "VALUE2(2)\n" +
+            "\n" +
+            "private final int _value\n" +
+            "private final String _description\n" +
+            "\n" +
+            "private TestEnum(int value, String description = null) {\n" +
+            "   _value = value\n" +
+            "   _description = description\n" +
+            "}\n" +
+            "\n" +
+            "String getDescription() { _description }\n" +
+            "\n" +
+            "int getValue() { _value }\n" +
+            "}\n"
+        },"");
     }
 
     @Test @Ignore
     public void testCrashingOnBadCode_GRE290() {
         runNegativeTest(new String[] {
             "Moo.groovy",
-            "package com.omxgroup.scripting;\n"+
-            "\n"+
-            "public class Moo {\n"+
-            "public static def moo() { println this.class }\n"+
+            "package com.omxgroup.scripting;\n" +
+            "\n" +
+            "public class Moo {\n" +
+            "public static def moo() { println this.class }\n" +
             "}\n"
         },
         "----------\n" +
@@ -1712,12 +1712,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testCrashingOnBadCode_GRE290_2() {
         runNegativeTest(new String[] {
             "Moo.groovy",
-            "public class Moo {\n"+
-            "\n"+
-            "public Moo processMoo(final moo) {\n"+
-            "final moo = processMoo(moo)\n"+
-            "return moo\n"+
-            "}\n"+
+            "public class Moo {\n" +
+            "\n" +
+            "public Moo processMoo(final moo) {\n" +
+            "final moo = processMoo(moo)\n" +
+            "return moo\n" +
+            "}\n" +
             "}\n"
         },
         "----------\n" +
@@ -1725,8 +1725,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "\tfinal moo = processMoo(moo)\n" +
         "\t      ^^^\n" +
         "Groovy:The current scope already contains a variable of the name moo\n" +
-        "----------\n"
-        );
+        "----------\n");
     }
 
     // 'this' by itself isn't an error
@@ -1734,13 +1733,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testCrashingOnBadCode_GRE290_3() {
         runNegativeTest(new String[] {
             "Moo.groovy",
-            "package com.omxgroup.scripting;\n"+
-            "\n"+
-            "public class Moo {\n"+
-            "public static def moo() { println this }\n"+
+            "package com.omxgroup.scripting;\n" +
+            "\n" +
+            "public class Moo {\n" +
+            "public static def moo() { println this }\n" +
             "}\n"
-        },
-        "");
+        },"");
     }
 
     @Test
@@ -1748,9 +1746,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "p/X.groovy",
             "words: [].each { final item ->\n" +
-            "  break words\n"+
-            "  }\n"
-        },"----------\n" +
+            "  break words\n" +
+            "}\n"
+        },
+        "----------\n" +
         "1. ERROR in p\\X.groovy (at line 2)\n" +
         "\tbreak words\n" +
         "\t^^^^^^^^^^^\n" +
@@ -1767,54 +1766,55 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "	public ContinueTestCase() {\n" +
             "		continue;\n" +
             "	}\n" +
-            "}\n" },
-            "----------\n" +
-            "1. ERROR in ContinueTestCase.groovy (at line 4)\n" +
-            "\tcontinue;\n" +
-            "\t^^^^^^^^\n" +
-            "Groovy:the continue statement is only allowed inside loops\n" +
-            "----------\n");
+            "}\n"
+        },
+        "----------\n" +
+        "1. ERROR in ContinueTestCase.groovy (at line 4)\n" +
+        "\tcontinue;\n" +
+        "\t^^^^^^^^\n" +
+        "Groovy:the continue statement is only allowed inside loops\n" +
+        "----------\n");
     }
 
     @Test
     public void testMissingContext_GRE308() {
         runNegativeTest(new String[] {
             "DibDabs.groovy",
-            "	def run(n) {\n"+
-            "\n"+
-            "		  OtherGroovy.iterate (3) {\n"+
-            "		  print it*2\n"+
-            "	  }  \n"+
-            "//		  		NOT RECORDED AGAINST THIS FILE??\n"+
-            "		  int i        "},
-            "----------\n" +
-            "1. ERROR in DibDabs.groovy (at line 7)\n" +
-            "\tint i        \n" +
-            "\t            ^\n" +
-            "Groovy:expecting \'}\', found \'\' @ line 7, column 17.\n" +
-            "----------\n");
-        }
+            "	def run(n) {\n\n" +
+            "		  OtherGroovy.iterate (3) {\n" +
+            "		  print it*2\n" +
+            "	  }  \n" +
+            "//		  		NOT RECORDED AGAINST THIS FILE??\n" +
+            "		  int i        "
+        },
+        "----------\n" +
+        "1. ERROR in DibDabs.groovy (at line 7)\n" +
+        "\tint i        \n" +
+        "\t            ^\n" +
+        "Groovy:expecting \'}\', found \'\' @ line 7, column 17.\n" +
+        "----------\n");
+    }
 
     // FIXASC less than ideal underlining for error location
     @Test
     public void testMissingContext_GRE308_2() {
         runNegativeTest(new String[] {
             "DibDabs.groovy",
-            "	def run(n) {\n"+
-            "\n"+
-            "		  OtherGroovy.iterate (3) {\n"+
-            "		  print it*2\n"+
-            "	  }  \n"+
-            "//		  		NOT RECORDED AGAINST THIS FILE??\n"+
-            "		  int i        \n"},
-            "----------\n" +
-            "1. ERROR in DibDabs.groovy (at line 7)\n" +
-            "\tint i        \n" +
-            "\n" +
-            "\t             ^\n" +
-            "Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" +
-            "----------\n");
-        }
+            "	def run(n) {\n\n" +
+            "		  OtherGroovy.iterate (3) {\n" +
+            "		  print it*2\n" +
+            "	  }  \n" +
+            "//		  		NOT RECORDED AGAINST THIS FILE??\n" +
+            "		  int i        \n"
+        },
+        "----------\n" +
+        "1. ERROR in DibDabs.groovy (at line 7)\n" +
+        "\tint i        \n" +
+        "\n" +
+        "\t             ^\n" +
+        "Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" +
+        "----------\n");
+    }
 
     // a valid script, no '.' after session2
     @Test
