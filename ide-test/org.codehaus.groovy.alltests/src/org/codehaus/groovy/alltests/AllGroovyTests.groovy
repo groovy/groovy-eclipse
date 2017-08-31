@@ -116,6 +116,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests,
+    org.codehaus.groovy.eclipse.refactoring.test.rename.RenamePackageTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.MoveCURefactoringTests,
     org.codehaus.groovy.eclipse.refactoring.test.rename.SyntheticAccessorRenamingTests,

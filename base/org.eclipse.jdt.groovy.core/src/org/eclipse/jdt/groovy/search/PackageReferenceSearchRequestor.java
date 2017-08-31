@@ -66,10 +66,10 @@ public class PackageReferenceSearchRequestor implements ITypeRequestor {
                 String name = ((ClassNode) node).getName(); // "java.util.Map$Entry"
 
                 if (name.startsWith(packageName) && name.length() <= node.getLength()) {
-                    // beware of inlined constant references
+                    // beware of class declarations and inlined constant references
                     if (enclosingElement instanceof ISourceReference) {
                         ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
-                        if (node.getStart() >= range.getOffset() && node.getEnd() <= (range.getOffset() + range.getLength())) {
+                        if (node.getStart() >= range.getOffset() && node.getLength() < range.getLength()) {
                             notifyRequestor(enclosingElement, node.getStart());
                         }
                     }

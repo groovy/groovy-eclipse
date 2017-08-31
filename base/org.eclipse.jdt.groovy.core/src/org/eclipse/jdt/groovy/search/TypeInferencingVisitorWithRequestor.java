@@ -545,10 +545,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (node != null) {
             visitAnnotations(node);
 
-            TypeLookupResult result = new TypeLookupResult(null, null, node, TypeConfidence.EXACT, null);
-            VisitStatus status = notifyRequestor(node, requestor, result);
-            if (status == VisitStatus.STOP_VISIT) {
-                throw new VisitCompleted(status);
+            IJavaElement oldEnclosing = enclosingElement;
+            enclosingElement = unit.getPackageDeclaration(node.getName().substring(0, node.getName().length() - 1));
+            try {
+                TypeLookupResult result = new TypeLookupResult(null, null, node, TypeConfidence.EXACT, null);
+                VisitStatus status = notifyRequestor(node, requestor, result);
+                if (status == VisitStatus.STOP_VISIT) {
+                    throw new VisitCompleted(status);
+                }
+            } finally {
+                enclosingElement = oldEnclosing;
             }
         }
     }
