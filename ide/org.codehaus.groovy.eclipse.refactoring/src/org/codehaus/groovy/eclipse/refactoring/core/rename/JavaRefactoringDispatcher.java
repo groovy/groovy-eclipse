@@ -1,9 +1,17 @@
 /*
- * Copyright (C) 2009 Stefan Reinhard, Stefan Sidler
+ * Copyright 2009-2017 the original author or authors.
  *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
@@ -15,7 +23,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLoc
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
@@ -28,9 +35,6 @@ import org.eclipse.jdt.internal.ui.refactoring.reorg.RenameUserInterfaceStarter;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 
-/**
- * @author Stefan Reinhard
- */
 public class JavaRefactoringDispatcher {
 
     static {
@@ -46,52 +50,6 @@ public class JavaRefactoringDispatcher {
         this.element = element;
     }
 
-    public RenameSupport dispatchJavaRenameRefactoring() throws CoreException {
-        if (element instanceof IType) {
-            return createTypeRefactoring((IType)element);
-        } else if (element instanceof IField) {
-            return createFieldRefactoring((IField)element);
-        } else if (element instanceof IMethod) {
-            return createMethodRefactoring((IMethod)element);
-        } else if (element instanceof ILocalVariable) {
-            return createLocalVariableRefactoring();
-        }
-        return null;
-    }
-
-    private RenameSupport createLocalVariableRefactoring() throws CoreException {
-        RenameJavaElementDescriptor descriptor = createDescriptorForLocalVariable();
-        return RenameSupport.create(descriptor);
-    }
-
-    public RenameJavaElementDescriptor createDescriptorForLocalVariable() {
-        Map<String, String> args = new HashMap<String, String>();
-        args.put("name", getNewName());
-        args.put("input", element.getHandleIdentifier());
-        RenameJavaElementDescriptor descriptor =
-            new RenameJavaElementDescriptor(IJavaRefactorings.RENAME_LOCAL_VARIABLE,
-                    element.getJavaProject().getElementName(), "Rename " + element.getElementName(),
-                    null, args, RenameSupport.UPDATE_REFERENCES);
-        ReflectionUtils.setPrivateField(RefactoringDescriptor.class, "fRefactoringId", descriptor, RenameLocalGroovyVariableContribution.ID);
-        return descriptor;
-    }
-
-    private RenameSupport createTypeRefactoring(IType type) throws CoreException {
-        return RenameSupport.create(type, getNewName(), RenameSupport.UPDATE_REFERENCES | RenameSupport.UPDATE_TEXTUAL_MATCHES);
-    }
-
-    private RenameSupport createFieldRefactoring(IField field) throws CoreException {
-        return RenameSupport.create(field, getNewName(),
-                RenameSupport.UPDATE_REFERENCES |
-                RenameSupport.UPDATE_GETTER_METHOD |
-                RenameSupport.UPDATE_SETTER_METHOD |
-                RenameSupport.UPDATE_TEXTUAL_MATCHES);
-    }
-
-    private RenameSupport createMethodRefactoring(IMethod method) throws CoreException {
-        return RenameSupport.create(method, getNewName(), RenameSupport.UPDATE_REFERENCES);
-    }
-
     private String newName;
 
     public String getNewName() {
@@ -105,4 +63,41 @@ public class JavaRefactoringDispatcher {
     public void setNewName(String name) {
         newName = name;
     }
+
+    //--------------------------------------------------------------------------
+
+    public RenameJavaElementDescriptor createDescriptorForLocalVariable() {
+        Map<String, String> args = new HashMap<String, String>();
+        args.put("name", getNewName());
+        args.put("input", element.getHandleIdentifier());
+        RenameJavaElementDescriptor descriptor = new RenameJavaElementDescriptor(
+            IJavaRefactorings.RENAME_LOCAL_VARIABLE, element.getJavaProject().getElementName(),
+            "Rename " + element.getElementName(), null, args, RenameSupport.UPDATE_REFERENCES);
+        ReflectionUtils.setPrivateField(RefactoringDescriptor.class, "fRefactoringId", descriptor,
+            RenameLocalGroovyVariableContribution.ID);
+        return descriptor;
+    }
+
+    public RenameSupport dispatchJavaRenameRefactoring() throws CoreException {
+        switch (element.getElementType()) {
+        case IJavaElement.TYPE:
+            return RenameSupport.create((IType) element, getNewName(), DEFAULT_FLAGS);
+
+        case IJavaElement.FIELD:
+            return RenameSupport.create((IField) element, getNewName(), DEFAULT_FLAGS |
+                RenameSupport.UPDATE_GETTER_METHOD | RenameSupport.UPDATE_SETTER_METHOD);
+
+        case IJavaElement.METHOD:
+            return RenameSupport.create((IMethod) element, getNewName(), DEFAULT_FLAGS);
+
+        case IJavaElement.LOCAL_VARIABLE:
+            return RenameSupport.create(createDescriptorForLocalVariable());
+
+        /*case IJavaElement.PACKAGE_FRAGMENT:
+            return RenameSupport.create((IPackageFragment) element, getNewName(), DEFAULT_FLAGS);*/
+        }
+        return null;
+    }
+
+    private static final int DEFAULT_FLAGS = RenameSupport.UPDATE_REFERENCES | RenameSupport.UPDATE_TEXTUAL_MATCHES;
 }
