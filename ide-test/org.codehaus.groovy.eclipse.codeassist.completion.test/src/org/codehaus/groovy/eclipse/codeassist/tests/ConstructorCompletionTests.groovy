@@ -109,7 +109,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent(), 'Foo')
 
-        String contents = 'new Foo()'
+        String contents = 'new Foo()' // separate source
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
@@ -127,7 +127,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent(), 'Foo', 'p')
 
-        String contents = 'new p.Foo()'
+        String contents = 'new p.Foo()' // fully-qualified reference
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
@@ -203,8 +203,24 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'ccc : __', 1)
     }
 
-    @Test // explicit no-arg constructor exists
+    @Test
     void testNamedArgs8() {
+        String contents = '''\
+            class Foo {
+              String bar
+              private String baz
+              def setBaz(String baz) { this.baz = baz }
+            }
+            new Foo()
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'bar : __', 1)
+        proposalExists(proposals, 'baz : __', 1)
+    }
+
+    @Test // explicit no-arg constructor exists
+    void testNamedArgs9() {
         String contents = '''\
             class Foo {
               Foo() { }

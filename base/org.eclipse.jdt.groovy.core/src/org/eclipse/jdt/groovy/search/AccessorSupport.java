@@ -119,9 +119,15 @@ public enum AccessorSupport {
      * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void return type and taking no parameters
      */
     public static boolean isGetter(MethodNode node) {
-        return node.getReturnType() != VariableScope.VOID_CLASS_NODE && node.getParameters().length == 0 &&
+        return !node.isVoidMethod() && node.getParameters().length == 0 &&
             ((node.getName().startsWith("get") && node.getName().length() > 3) ||
-                (node.getName().startsWith("is") && node.getName().length() > 2));
+             (node.getName().startsWith("is") && node.getName().length() > 2));
+    }
+
+    public static boolean isSetter(MethodNode node) {
+        return /*node.isVoidMethod() &&*/ node.getParameters().length == 1 &&
+            node.getName().startsWith("set") && node.getName().length() > 3;
+        // TODO: not varagrs?
     }
 
     public static AccessorSupport create(String methodName, boolean isCategory) {
