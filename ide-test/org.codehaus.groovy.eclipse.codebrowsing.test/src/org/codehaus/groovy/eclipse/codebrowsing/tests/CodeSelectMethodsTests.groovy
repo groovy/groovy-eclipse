@@ -127,26 +127,63 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectMethodInSuperClass() {
-        String contents = 'class PlantController {\ndef redirect(controller, action) { }\n' +
-            'def checkUser() {\nredirect(controller:\"user\",action:\"login\")\n}}\n'
-        String contents2 =
-            'class Other extends PlantController {\ndef doNothing() {\nredirect(controller:\"user\",action:\"login\")\n}}'
+        String contents1 = '''\
+            class PlantController {
+              def redirect(controller, action) { }
+            }
+            '''.stripIndent()
+        String contents2 = '''\
+            class Other extends PlantController {
+              def checkUser() {
+                redirect(controller: 'user', action: 'login')
+              }
+            }
+            '''.stripIndent()
 
-        assertCodeSelect([contents, contents2], 'redirect')
+        IJavaElement elem = assertCodeSelect([contents1, contents2], 'redirect')
+        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'PlantController'
     }
 
     @Test // GRECLIPSE-1755
     void testCodeSelectMethodInSuperInterface() {
-        String contents = 'interface SuperInterface {\ndef foo(String string);\n}\n'
-        String contents2 = 'interface SubInterface extends SuperInterface {\n' +
-            'def foo(String string, int integer);\n}'
-        String contents3 = 'class Foo implements SubInterface{\ndef foo(String string) {}\n' +
-            'def foo(String string, int integer) {}\n}'
-        String contents4 = 'class Bar {\ndef main() {\ndef bar = new Foo();\n' +
-            '((SubInterface) bar).foo(\"string\");\n}}'
+        String contents1 = '''\
+            interface SuperInterface {
+              def foo(String string);
+            }
+            '''.stripIndent()
+        String contents2 = '''\
+            interface SubInterface extends SuperInterface {
+              def foo(String string, int integer);
+            }
+            '''.stripIndent()
+        String contents3 = '''\
+            class Foo implements SubInterface {
+              def foo(String string) {}
+              def foo(String string, int integer) {}
+            }
+            '''.stripIndent()
+        String contents4 = '''\
+            class Bar {
+              def main() {
+                def bar = new Foo();
+                ((SubInterface) bar).foo("string");
+              }
+            }
+            '''.stripIndent()
 
-        IJavaElement elem = assertCodeSelect([contents, contents2, contents3, contents4], 'foo')
+        IJavaElement elem = assertCodeSelect([contents1, contents2, contents3, contents4], 'foo')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'SuperInterface'
+    }
+
+    @Test
+    void testCodeSelectScriptMethod() {
+        // ensure private method is not hidden by script's run() method
+        String contents = '''\
+            private String method() {
+              def local = null
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'method')
     }
 
     @Test

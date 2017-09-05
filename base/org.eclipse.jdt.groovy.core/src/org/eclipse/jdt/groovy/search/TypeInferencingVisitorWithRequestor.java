@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -381,21 +383,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitClassInternal(node);
 
             try {
-                // visitJDT so that we have the proper enclosing element
-                for (IJavaElement child : type.getChildren()) {
-                    // filter out synthetic members for enums
-                    if (type.isEnum() && shouldFilterEnumMember(child)) {
-                        continue;
-                    }
-                    switch (child.getElementType()) {
+                for (IMember member : membersOf(type, node.isScript())) {
+                    switch (member.getElementType()) {
                         case IJavaElement.METHOD:
-                            visitJDT((IMethod) child, requestor);
+                            visitJDT((IMethod) member, requestor);
                             break;
                         case IJavaElement.FIELD:
-                            visitJDT((IField) child, requestor);
+                            visitJDT((IField) member, requestor);
                             break;
                         case IJavaElement.TYPE:
-                            visitJDT((IType) child, requestor);
+                            visitJDT((IType) member, requestor);
                             break;
                     }
                 }
@@ -519,8 +516,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitConstructorOrMethod(methodNode, method.isConstructor());
 
             // check for anonymous inner types
-            IJavaElement[] children = method.getChildren();
-            for (IJavaElement child : children) {
+            for (IJavaElement child : method.getChildren()) {
                 if (child.getElementType() == IJavaElement.TYPE) {
                     visitJDT((IType) child, requestor);
                 }
@@ -2689,20 +2685,39 @@ assert primaryExprType != null && dependentExprType != null;
         return list != null && !list.isEmpty();
     }
 
-    private static boolean shouldFilterEnumMember(IJavaElement child) {
-        int type = child.getElementType();
-        String name = child.getElementName();
-        if (name.indexOf('$') >= 0) {
-            return true;
-        } else if (type == IJavaElement.METHOD) {
-            if ((name.equals("next") || name.equals("previous")) && ((IMethod) child).getNumberOfParameters() == 0) {
-                return true;
-            }
-        } else if (type == IJavaElement.METHOD) {
-            if (name.equals("MIN_VALUE") || name.equals("MAX_VALUE")) {
-                return true;
+    private static List<IMember> membersOf(IType type, boolean isScript) throws JavaModelException {
+        boolean isEnum = type.isEnum();
+        List<IMember> members = new ArrayList<IMember>();
+
+        for (IJavaElement child : type.getChildren()) {
+            String name = child.getElementName();
+            switch (child.getElementType()) {
+                case IJavaElement.METHOD: // exclude synthetic members for enums
+                    if (!isEnum || !(name.indexOf('$') > -1 || ((name.equals("next") || name.equals("previous")) && ((IMethod) child).getNumberOfParameters() == 0))) {
+                        members.add((IMethod) child);
+                    }
+                    break;
+                case IJavaElement.FIELD: // exclude synthetic members for enums
+                    if (!isEnum || !(name.indexOf('$') > -1 || name.equals("MIN_VALUE") || name.equals("MAX_VALUE"))) {
+                        members.add((IField) child);
+                    }
+                    break;
+                case IJavaElement.TYPE:
+                    members.add((IType) child);
             }
         }
-        return false;
+
+        if (isScript) {
+            // move 'run' method to the end since it covers other members
+            for (Iterator<IMember> it = members.iterator(); it.hasNext();) {
+                IMember member = it.next();
+                if (member.getElementType() == IJavaElement.METHOD && member.getElementName().equals("run") && ((IMethod) member).getNumberOfParameters() == 0) {
+                    it.remove(); members.add(member);
+                    break;
+                }
+            }
+        }
+
+        return members;
     }
 }
