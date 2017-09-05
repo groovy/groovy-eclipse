@@ -51,6 +51,9 @@ public class RemoveSpuriousSemicolonsProposal extends GroovyQuickAssistProposal2
                     until = start + context.getSelectionLength();
                 contents = CharOperation.subarray(contents, start, until);
             }
+            if (contents == null) {
+                contents = CharOperation.NO_CHAR;
+            }
             semis = Boolean.valueOf(CharOperation.contains(';', contents));
         }
 
@@ -61,7 +64,6 @@ public class RemoveSpuriousSemicolonsProposal extends GroovyQuickAssistProposal2
     protected TextChange getTextChange(IProgressMonitor monitor) {
         ITextSelection selection = new TextSelection(context.getSelectionOffset(), context.getSelectionLength());
         SemicolonRemover remover = new SemicolonRemover(selection, context.newTempDocument());
-        // if (textEdit.getChildrenSize() > 0)
         return toTextChange(remover.format());
     }
 }
