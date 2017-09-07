@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.codehaus.groovy</groupId>
@@ -9,13 +8,11 @@
 	<name>Tests for the groovy-eclipse-compiler</name>
 	<url>https://github.com/groovy/groovy-eclipse</url>
 
-	<properties>
-		<!-- groovy version to use for tests: -->
-		<groovy.all.version>2.4.12</groovy.all.version>
-		<groovy.xx.version>2.4.12-01</groovy.xx.version>
-		<maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+	<parent>
+		<groupId>org.codehaus</groupId>
+		<artifactId>codehaus-parent</artifactId>
+		<version>4</version>
+	</parent>
 
 	<licenses>
 		<license>
@@ -25,11 +22,15 @@
 		</license>
 	</licenses>
 
-	<parent>
-		<groupId>org.codehaus</groupId>
-		<artifactId>codehaus-parent</artifactId>
-		<version>4</version>
-	</parent>
+	<properties>
+		<!-- groovy version to use for tests: -->
+		<groovy.all.version>2.4.12</groovy.all.version>
+		<groovy.xx.version>2.4.12-01</groovy.xx.version>
+		<maven.compiler.source>1.5</maven.compiler.source>
+		<maven.compiler.target>1.5</maven.compiler.target>
+		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
 	<dependencies>
 		<!--dependency>
@@ -52,7 +53,7 @@
 		<dependency>
 			<groupId>org.apache.maven.plugins</groupId>
 			<artifactId>maven-compiler-plugin</artifactId>
-			<version>2.3.2</version>
+			<version>${maven-compiler-plugin.version}</version>
 			<type>maven-plugin</type>
 		</dependency>
 	</dependencies>
@@ -61,19 +62,15 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-				</configuration>
+				<version>${maven-compiler-plugin.version}</version>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.9</version>
 			</plugin>
 			<plugin>
 				<artifactId>maven-invoker-plugin</artifactId>
-				<version>1.5</version>
+				<version>1.10</version>
 				<configuration>
 					<projectsDirectory>src/it</projectsDirectory>
 					<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>

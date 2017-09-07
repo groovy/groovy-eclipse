@@ -1,15 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2010 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg     - Initial API and implementation
- *     Carlos Fernandez     - fix for nowarn
- *     Travis Schneeberger  - ensure that all options are supported
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.compiler;
 
 import java.io.File;
@@ -38,9 +41,9 @@ import org.codehaus.plexus.compiler.AbstractCompiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.compiler.CompilerException;
 import org.codehaus.plexus.compiler.CompilerMessage;
-import org.codehaus.plexus.compiler.CompilerResult;
 import org.codehaus.plexus.compiler.CompilerMessage.Kind;
 import org.codehaus.plexus.compiler.CompilerOutputStyle;
+import org.codehaus.plexus.compiler.CompilerResult;
 import org.codehaus.plexus.compiler.util.scan.InclusionScanException;
 import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
@@ -59,13 +62,9 @@ import org.codehaus.plexus.util.cli.Commandline;
  *
  * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
  *                   role-hint="groovy-eclipse-compiler"
- *
- *
- * @author <a href="mailto:andrew@eisenberg.as">Andrew Eisenberg</a>
- * @author <a href="mailto:trygvis@inamo.no">Trygve Laugst&oslash;l</a>
- * @author <a href="mailto:matthew.pocock@ncl.ac.uk">Matthew Pocock</a>
  */
 public class GroovyEclipseCompiler extends AbstractCompiler {
+
     // IMPORTANT!!! this class must not reference any JDT classes directly.  Must be loadable even if batch compiler not around
 
     private static final String PROB_SEPARATOR = "----------\n";
@@ -93,7 +92,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     /**
      * groovy-eclipse-batch must be depended upon explicitly.if it is not there, then raise a nice, readable error
-     * @throws CompilerException
      */
     private void checkForGroovyEclipseBatch() throws CompilerException {
         try {
@@ -105,13 +103,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     private boolean internalCompile(CompilerConfiguration config, List<CompilerMessage> messages) throws CompilerException {
-
         String[] args = createCommandLine(config);
         if (args.length == 0) {
             getLogger().info("Nothing to compile - all classes are up to date");
             return true;
         }
-
         boolean success;
         if (config.isFork()) {
             String executable = config.getExecutable();
@@ -294,8 +290,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 }
             }
             if (procArg.length() > 0) {
-                procArg.replace(procArg.length() - 1, procArg.length(), "");
-                args.put("-processor ", "\"" + procArg.toString() + "\"");
+                // remove the trailing comma
+                procArg.setLength(procArg.length() - 1);
+                args.put("-processor", procArg.toString());
             }
         }
 
@@ -510,16 +507,16 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     private void handleCurrentMessage(final boolean showWarnings, final List<CompilerMessage> parsedMessages, final StringBuilder sb)
     {
-    	final CompilerMessage message;
-    	if (sb.length() > 0) {
-    	    message = parseMessage(sb.toString(), showWarnings, true);
-    	    if (showWarnings || message.getKind() == Kind.ERROR) {
-    	        parsedMessages.add(message);
-    	    }
-    	}
+        final CompilerMessage message;
+        if (sb.length() > 0) {
+            message = parseMessage(sb.toString(), showWarnings, true);
+            if (showWarnings || message.getKind() == Kind.ERROR) {
+                parsedMessages.add(message);
+            }
+        }
     }
 
-	/**
+    /**
      * Construct a CompilerError object from a line of the compiler output
      *
      * @param msgText
@@ -586,9 +583,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * put args into a temp file to be referenced using the @ option in javac
      * command line
      *
-     * @param args
      * @return the temporary file wth the arguments
-     * @throws IOException
      */
     private File createFileWithArguments(String[] args, String outputDirectory) throws IOException {
         PrintWriter writer = null;
@@ -662,8 +657,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * <code>JAVA_HOME</code> environment variable.
      *
      * @return the path of the Javadoc tool
-     * @throws IOException
-     *             if not found
+     * @throws IOException if not found
      */
     private String getJavaExecutable() throws IOException {
         String javaCommand = "java" + (Os.isFamily(Os.FAMILY_WINDOWS) ? ".exe" : "");
@@ -736,10 +730,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     /**
-     * Linked Hash Map implementation that logs replaced entries
-     *
-     * @author <a href="kpiwko@redhat.com">Karel Piwko</a>
-     *
+     * Linked Hash Map implementation that logs replaced entries.
      */
     private static class DeduplicatingHashMap<K, V> extends LinkedHashMap<K, V> {
 
@@ -772,7 +763,5 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 this.put(entry.getKey(), entry.getValue());
             }
         }
-
-
     }
 }

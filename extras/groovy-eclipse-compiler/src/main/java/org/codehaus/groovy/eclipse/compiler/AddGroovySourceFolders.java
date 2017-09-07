@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +22,7 @@ import org.apache.maven.project.MavenProject;
 
 /**
  * Adds src/main/groovy and src/main/groovy as source folders
- * 
- * @author Andrew Eisenberg
- * @created Nov 25, 2011
+ *
  * @goal add-groovy-build-paths
  * @phase initialize
  * @NOexecute phase="initialize" lifecycle="default"
@@ -34,8 +30,9 @@ import org.apache.maven.project.MavenProject;
  * @since 2.6.0
  */
 public class AddGroovySourceFolders extends AbstractMojo {
+
     /**
-     * @parameter expression="${project}"
+     * @parameter property="project"
      * @required
      * @readonly
      * @since 1.0
@@ -44,9 +41,8 @@ public class AddGroovySourceFolders extends AbstractMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("Adding /src/main/groovy to the list of source folders");
-        this.project.addCompileSourceRoot(project.getBasedir() + "/src/main/groovy");
+        project.addCompileSourceRoot(project.getBasedir() + "/src/main/groovy");
         getLog().info("Adding /src/test/groovy to the list of test source folders");
-        this.project.addTestCompileSourceRoot(project.getBasedir() + "/src/test/groovy");
+        project.addTestCompileSourceRoot(project.getBasedir() + "/src/test/groovy");
     }
-
 }

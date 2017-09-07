@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,17 +24,15 @@ import org.eclipse.jdt.internal.compiler.batch.Main;
 
 /**
  * Simple progress monitor to keep track of number of files compiled.
- * Also, this is the launcher for the JDT compiler
- * 
- * @author Andrew Eisenberg
- * @created Aug 13, 2010
+ * Also, this is the launcher for the JDT compiler.
  */
 class InternalCompiler extends CompilationProgress {
-    
+
     static class Result {
         final boolean success;
         final int globalErrorsCount;
         final int globalWarningsCount;
+
         public Result(boolean success, int globalErrorCount, int globalWarningCount) {
             super();
             this.success = success;
@@ -73,14 +69,13 @@ class InternalCompiler extends CompilationProgress {
         if (verbose) {
             String file = remainingWork == 1 ? "file" : "files";
             logger.info(remainingWork + " " + file + " left.");
-            count++;
+            count += 1;
         }
     }
 
     static Result doCompile(String[] args, StringWriter out, Logger logger, boolean verbose) {
         InternalCompiler progress = new InternalCompiler(logger, verbose);
-        Main main = new Main(new PrintWriter(out), new PrintWriter(out), false/* systemExit */,
-                null/* options */, progress);
+        Main main = new Main(new PrintWriter(out), new PrintWriter(out), /*systemExit:*/ false, /*options:*/ null, progress);
         boolean result = main.compile(args);
         return new Result(result, main.globalErrorsCount, main.globalWarningsCount);
     }

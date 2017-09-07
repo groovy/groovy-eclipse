@@ -10,49 +10,16 @@
 	<url>https://github.com/groovy/groovy-eclipse</url>
 	<description>Compiles Groovy code using the Groovy-Eclipse compiler.</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-eclipse-batch</artifactId>
-			<version>2.4.3-01</version>
-			<optional>true</optional>
-		</dependency> 
-		<dependency>
-			<groupId>org.codehaus.plexus</groupId>
-			<artifactId>plexus-compiler-api</artifactId>
-			<version>2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.plexus</groupId>
-			<artifactId>plexus-container-default</artifactId>
-			<version>1.5.4</version>
-		</dependency>
-		<dependency>
-			<artifactId>maven-plugin-api</artifactId>
-			<groupId>org.apache.maven</groupId>
-			<version>2.0.6</version>
-		</dependency>
-		<dependency>
-			<artifactId>maven-compiler-plugin</artifactId>
-			<groupId>org.apache.maven.plugins</groupId>
-			<version>3.6.1</version>
-		</dependency>
-		<dependency>
-			<artifactId>maven-core</artifactId>
-			<groupId>org.apache.maven</groupId>
-			<version>2.0.6</version>
-		</dependency>
-	</dependencies>
-
 	<parent>
 		<groupId>org.codehaus</groupId>
 		<artifactId>codehaus-parent</artifactId>
 		<version>4</version>
 	</parent>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+	<organization>
+		<name>Pivotal Software, Inc.</name>
+		<url>https://pivotal.io</url>
+	</organization>
 
 	<licenses>
 		<license>
@@ -62,42 +29,48 @@
 		</license>
 	</licenses>
 
-	<organization>
-		<name>Pivotal Software, Inc.</name>
-		<url>https://pivotal.io</url>
-	</organization>
+	<dependencies>
+		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-eclipse-batch</artifactId>
+			<version>2.4.3-01</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.plexus</groupId>
+			<artifactId>plexus-compiler-api</artifactId>
+			<version>2.8.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.plexus</groupId>
+			<artifactId>plexus-container-default</artifactId>
+			<version>1.7.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-plugin-api</artifactId>
+			<version>2.0.11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-core</artifactId>
+			<version>2.0.11</version>
+		</dependency>
+	</dependencies>
 
-	<scm>
-		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
-		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
-		<url>http://github.com/groovy/groovy-eclipse.git</url>
-	</scm>
-	<issueManagement>
-		<url>https://github.com/groovy/groovy-eclipse/issues</url>
-	</issueManagement>
+	<properties>
+		<maven.compiler.source>1.5</maven.compiler.source>
+		<maven.compiler.target>1.5</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
 	<build>
-		<!--extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-webdav</artifactId>
-				<version>1.0-beta-2</version>
-			</extension>
-		</extensions-->
 		<plugins>
-			<!--plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
@@ -115,4 +88,13 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<scm>
+		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
+		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
+		<url>http://github.com/groovy/groovy-eclipse.git</url>
+	</scm>
+	<issueManagement>
+		<url>https://github.com/groovy/groovy-eclipse/issues</url>
+	</issueManagement>
 </project>
