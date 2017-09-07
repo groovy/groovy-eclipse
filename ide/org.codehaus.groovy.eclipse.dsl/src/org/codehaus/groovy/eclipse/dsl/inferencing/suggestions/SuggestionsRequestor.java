@@ -32,7 +32,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.core.NamedMember;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class SuggestionsRequestor implements ITypeRequestor {
@@ -101,15 +100,14 @@ public class SuggestionsRequestor implements ITypeRequestor {
     }
 
     protected boolean interestingElement(IJavaElement enclosingElement) {
-        // the clinit is always interesting since the clinit contains static initializers
+        // the clinit is always interesting since it contains static initializers
         if (enclosingElement.getElementName().equals("<clinit>")) {
             return true;
         }
-        if (enclosingElement instanceof NamedMember) {
+        if (enclosingElement instanceof ISourceReference) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
-                return range.getOffset() <= nodeToLookFor.getStart() &&
-                    range.getOffset() + range.getLength() >= nodeToLookFor.getEnd();
+                return range.getOffset() <= nodeToLookFor.getStart() && range.getOffset() + range.getLength() >= nodeToLookFor.getEnd();
             } catch (JavaModelException e) {
                 Util.log(e);
             }
