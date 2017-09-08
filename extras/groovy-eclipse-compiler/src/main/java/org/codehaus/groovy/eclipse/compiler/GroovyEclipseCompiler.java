@@ -28,13 +28,13 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.codehaus.groovy.eclipse.compiler.InternalCompiler.Result;
 import org.codehaus.plexus.compiler.AbstractCompiler;
@@ -47,7 +47,6 @@ import org.codehaus.plexus.compiler.CompilerResult;
 import org.codehaus.plexus.compiler.util.scan.InclusionScanException;
 import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
-import org.codehaus.plexus.compiler.util.scan.mapping.SourceMapping;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
@@ -91,14 +90,13 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     /**
-     * groovy-eclipse-batch must be depended upon explicitly.if it is not there, then raise a nice, readable error
+     * groovy-eclipse-batch must be depended upon explicitly; if it is not there, then raise a nice, readable error
      */
     private void checkForGroovyEclipseBatch() throws CompilerException {
         try {
             Class.forName("org.eclipse.jdt.core.compiler.CompilationProgress");
         } catch (Exception e) {
-            throw new CompilerException("Could not find groovy-eclipse-batch artifact. "
-                    + "Must add this artifact as an explicit dependency the pom.");
+            throw new CompilerException("Could not find groovy-eclipse-batch artifact. Must add this artifact as an explicit dependency the pom.");
         }
     }
 
@@ -142,20 +140,48 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     private File[] recalculateStaleFiles(CompilerConfiguration config) throws CompilerException {
         config.setSourceFiles(null);
-        long staleMillis = 0; // can we do better than using 0?
+
+        long staleMillis = 0; // Can we do better than using 0?
+
         Set<String> includes = config.getIncludes();
         if (includes == null || includes.isEmpty()) {
             includes = Collections.singleton("**/*");
         }
-        StaleSourceScanner scanner = new StaleSourceScanner(staleMillis, includes, config.getExcludes());
-        Set<File> staleSources = computeStaleSources(config, scanner);
+
+        Set<File> staleSources = computeStaleSources(config, new StaleSourceScanner(staleMillis, includes, config.getExcludes()));
+
         config.setSourceFiles(staleSources);
 
-        File[] sourceFiles = staleSources.toArray(new File[0]);
-        return sourceFiles;
+        return staleSources.toArray(new File[staleSources.size()]);
     }
 
-    private boolean startsWithHyphen(Object key) {
+    private Set<File> computeStaleSources(CompilerConfiguration compilerConfiguration, SourceInclusionScanner scanner) throws CompilerException {
+        scanner.addSourceMapping(new SuffixMapping(".groovy", ".class"));
+        scanner.addSourceMapping(new SuffixMapping(".java", ".class"));
+
+        File outputDirectory = new File(compilerConfiguration.getOutputLocation());
+        Set<File> staleSources = new TreeSet<File>();
+
+        for (String sourceRoot : compilerConfiguration.getSourceLocations()) {
+            File sourcePath = new File(sourceRoot);
+            if (!sourcePath.isDirectory() || sourcePath.equals(compilerConfiguration.getGeneratedSourcesDirectory())) {
+                continue;
+            }
+
+            if (verbose) {
+                getLogger().info("Looking for sources in source root: " + sourceRoot);
+            }
+            try {
+                staleSources.addAll(scanner.getIncludedSources(sourcePath, outputDirectory));
+            } catch (InclusionScanException e) {
+                throw new CompilerException("Error scanning source root: \'" + sourceRoot + "\' for stale files to recompile.", e);
+            }
+        }
+
+        return staleSources;
+    }
+
+    private static boolean startsWithHyphen(Object key) {
         return null != key && String.class.isInstance(key) && ((String) key).startsWith("-");
     }
 
@@ -174,8 +200,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
             String error = globalErrorsCount == 1 ? "error" : "errors";
             String warning = globalWarningsCount == 1 ? "warning" : "warnings";
-            return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and "
-                    + globalWarningsCount + " " + warning + ".", kind);
+            return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and " + globalWarningsCount + " " + warning + ".", kind);
         }
     }
 
@@ -221,9 +246,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         getLogger().info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
-        getLogger().debug(
-                "Compiling " + sourceFiles.length + " " + "source file" + (sourceFiles.length == 1 ? "" : "s") + " to "
-                        + destinationDir.getAbsolutePath());
+        getLogger().debug("Compiling " + sourceFiles.length + " " + "source file" + (sourceFiles.length == 1 ? "" : "s") + " to " + destinationDir.getAbsolutePath());
 
         // intentionally using DeduplicatingHashMap to preserve order and Map to deduplicate values
         // See https://jira.codehaus.org/browse/GRECLIPSE-1659
@@ -341,55 +364,17 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return argsList;
     }
 
-    private Set<File> computeStaleSources(CompilerConfiguration compilerConfiguration, SourceInclusionScanner scanner)
-            throws CompilerException {
-        SourceMapping mappingGroovy = new SuffixMapping(".groovy", ".class");
-
-        SourceMapping mappingJava = new SuffixMapping(".java", ".class");
-        scanner.addSourceMapping(mappingGroovy);
-        scanner.addSourceMapping(mappingJava);
-
-        File outputDirectory = new File(compilerConfiguration.getOutputLocation());
-        Set<File> staleSources = new HashSet<File>();
-
-        for (String sourceRoot : compilerConfiguration.getSourceLocations()) {
-            if (verbose) {
-                getLogger().info("Looking for sources in source root: " + sourceRoot);
-            }
-            File rootFile = new File(sourceRoot);
-
-            if (!rootFile.isDirectory()) {
-                continue;
-            }
-
-            try {
-                staleSources.addAll(scanner.getIncludedSources(rootFile, outputDirectory));
-            } catch (InclusionScanException e) {
-                throw new CompilerException(
-                        "Error scanning source root: \'" + sourceRoot + "\' " + "for stale files to recompile.", e);
-            }
-        }
-
-        return staleSources;
-    }
-
     /**
      * Compile the java sources in a external process, calling an external
      * executable, like javac.
      *
-     * @param config
-     *            compiler configuration
-     * @param executable
-     *            name of the executable to launch
-     * @param args
-     *            arguments for the executable launched
-     * @param messages2
+     * @param config compiler configuration
+     * @param executable name of the executable to launch
+     * @param args arguments for the executable launched
      * @return List of CompilerError objects with the errors encountered.
-     * @throws CompilerException
      */
-    private boolean compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation,
-            String[] args, List<CompilerMessage> messages) throws CompilerException {
-
+    private boolean compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args, List<CompilerMessage> messages)
+            throws CompilerException {
         Commandline cli = new Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
         cli.setExecutable(executable);
@@ -397,22 +382,22 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         try {
             // we need to setup any javaagent before the -jar flag
             if (!StringUtils.isEmpty(javaAgentClass)) {
-                cli.addArguments(new String[] { "-javaagent:" + getAdditionnalJavaAgentLocation() });
+                cli.addArguments(new String[] {"-javaagent:" + getAdditionnalJavaAgentLocation()});
             } else {
-                getLogger().info("no javaAgentClass seems to be set");
+                getLogger().debug("No javaAgentClass seems to be set");
             }
 
-            cli.addArguments(new String[] { "-jar", groovyEclipseLocation });
+            cli.addArguments(new String[] {"-jar", groovyEclipseLocation});
 
             File argumentsFile = createFileWithArguments(args, config.getOutputLocation());
-            cli.addArguments(new String[] { "@" + argumentsFile.getCanonicalPath().replace(File.separatorChar, '/') });
+            cli.addArguments(new String[] {"@" + argumentsFile.getCanonicalPath().replace(File.separatorChar, '/')});
 
             if (!StringUtils.isEmpty(config.getMaxmem())) {
-                cli.addArguments(new String[] { "-J-Xmx" + config.getMaxmem() });
+                cli.addArguments(new String[] {"-J-Xmx" + config.getMaxmem()});
             }
 
             if (!StringUtils.isEmpty(config.getMeminitial())) {
-                cli.addArguments(new String[] { "-J-Xms" + config.getMeminitial() });
+                cli.addArguments(new String[] {"-J-Xms" + config.getMeminitial()});
             }
 
         } catch (IOException e) {
@@ -424,17 +409,15 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         int returnCode;
 
-        if ((getLogger() != null) && getLogger().isDebugEnabled()) {
-            File commandLineFile = new File(config.getOutputLocation(), "greclipse."
-                    + (Os.isFamily(Os.FAMILY_WINDOWS) ? "bat" : "sh"));
+        if (getLogger().isDebugEnabled()) {
+            File commandLineFile = new File(config.getOutputLocation(), "greclipse." + (Os.isFamily(Os.FAMILY_WINDOWS) ? "bat" : "sh"));
             try {
                 FileUtils.fileWrite(commandLineFile.getAbsolutePath(), cli.toString().replaceAll("'", ""));
-
                 if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
-                    Runtime.getRuntime().exec(new String[] { "chmod", "a+x", commandLineFile.getAbsolutePath() });
+                    Runtime.getRuntime().exec(new String[] {"chmod", "a+x", commandLineFile.getAbsolutePath()});
                 }
             } catch (IOException e) {
-                if ((getLogger() != null) && getLogger().isWarnEnabled()) {
+                if (getLogger().isWarnEnabled()) {
                     getLogger().warn("Unable to write '" + commandLineFile.getName() + "' debug script file", e);
                 }
             }
@@ -450,7 +433,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             throw new CompilerException("Error while executing the external compiler.", e);
         }
 
-        if ((returnCode != 0) && messages.isEmpty()) {
+        if (returnCode != 0 && messages.isEmpty()) {
             if (err.getOutput().length() == 0) {
                 throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
             } else {
@@ -589,7 +572,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         PrintWriter writer = null;
         try {
             File tempFile;
-            if ((getLogger() != null) && getLogger().isDebugEnabled()) {
+            if (getLogger().isDebugEnabled()) {
                 tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments", new File(outputDirectory));
             } else {
                 tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments");
@@ -644,7 +627,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 getLogger().warn("Unsupported Encoding for URL: " + loc, e);
                 file = new File(loc.getPath());
             }
-            getLogger().info("Found location <" + file.getPath() + "> for className <" + className + ">");
+            if (verbose) {
+                getLogger().info("Found location <" + file.getPath() + "> for className <" + className + ">");
+            }
             return file.getPath();
         } else {
             throw new CompilerException("Cannot find the location of the requested className <" + className + "> in classpath");

@@ -1,47 +1,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.codehaus.groovy</groupId>
 	<artifactId>groovy-eclipse-compiler-tests</artifactId>
+	<groupId>org.codehaus.groovy</groupId>
 	<version>2.9.2-SNAPSHOT</version>
-
-	<name>Tests for the groovy-eclipse-compiler</name>
-	<url>https://github.com/groovy/groovy-eclipse</url>
-
-	<parent>
-		<groupId>org.codehaus</groupId>
-		<artifactId>codehaus-parent</artifactId>
-		<version>4</version>
-	</parent>
-
-	<licenses>
-		<license>
-			<name>The Eclipse Public License</name>
-			<url>http://www.eclipse.org/legal/epl-v10.html</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+	<packaging>pom</packaging>
 
 	<properties>
-		<!-- groovy version to use for tests: -->
+		<!-- groovy-all version to use for tests: -->
 		<groovy.all.version>2.4.12</groovy.all.version>
-		<groovy.xx.version>2.4.12-01</groovy.xx.version>
-		<maven.compiler.source>1.5</maven.compiler.source>
-		<maven.compiler.target>1.5</maven.compiler.target>
+		<!-- groovy-batch version to use for tests: -->
+		<groovy.xx.version>2.4.12-02</groovy.xx.version>
+		<!-- maven-compiler version to use for tests: -->
 		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<dependencies>
-		<!--dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy-eclipse-compiler</artifactId>
-			<version>${project.version}</version>
-		</dependency-->
 		<dependency>
-			<groupId>org.apache.maven.shared</groupId>
+			<groupId>org.apache.maven.plugin-testing</groupId>
 			<artifactId>maven-plugin-testing-harness</artifactId>
-			<version>1.1</version>
+			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -50,24 +30,10 @@
 			<version>2.0.1</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-compiler-plugin</artifactId>
-			<version>${maven-compiler-plugin.version}</version>
-			<type>maven-plugin</type>
-		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-			</plugin>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.9</version>
-			</plugin>
 			<plugin>
 				<artifactId>maven-invoker-plugin</artifactId>
 				<version>1.10</version>
@@ -77,15 +43,13 @@
 					<pomIncludes>
 						<pomInclude>*/pom.xml</pomInclude>
 					</pomIncludes>
-					<!-- Lombok test is broken so disabled. All I get is a error that 'build failed' trying to compile the lombok
-						data class in a forked process. The build.log gives no indication what the error was that
-						caused it to fail. -->
 					<pomExcludes>
-						<pomExclude>lombok-test/pom.xml</pomExclude>
+						<!-- src/main/groovy is not recognized when src/main/java contains only a dummy file -->
+						<pomExclude>basic-no-java0/pom.xml</pomExclude>
 					</pomExcludes>
+					<postBuildHookScript>verify</postBuildHookScript>
 					<settingsFile>src/it/settings.xml</settingsFile>
 					<localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-					<postBuildHookScript>verify.bsh</postBuildHookScript>
 				</configuration>
 				<executions>
 					<execution>
@@ -99,4 +63,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>

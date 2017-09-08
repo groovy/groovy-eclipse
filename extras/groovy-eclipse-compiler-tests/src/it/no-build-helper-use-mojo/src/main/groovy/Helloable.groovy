@@ -1,3 +1,0 @@
-interface Helloable {
-	void sayHello()
-}

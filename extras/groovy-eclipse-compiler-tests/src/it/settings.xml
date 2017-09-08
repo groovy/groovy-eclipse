@@ -27,6 +27,17 @@
 					<layout>default</layout>
 				</pluginRepository>
 				<pluginRepository>
+					<id>bintray</id>
+					<name>Groovy Bintray</name>
+					<url>https://dl.bintray.com/groovy/maven</url>
+					<releases>
+						<updatePolicy>never</updatePolicy>
+					</releases>
+					<snapshots>
+						<enabled>false</enabled>
+					</snapshots>
+				</pluginRepository>
+				<!--pluginRepository>
 					<id>codehaus-staging</id>
 					<name>codehaus-staging</name>
 					<url>https://nexus.codehaus.org/content/groups/staging/</url>
@@ -57,7 +68,7 @@
 						<checksumPolicy>warn</checksumPolicy>
 					</snapshots>
 					<layout>default</layout>
-				</pluginRepository>
+				</pluginRepository-->
 			</pluginRepositories>
 			<repositories>
 				<repository>
@@ -76,7 +87,7 @@
 					<url>file://${user.home}/.m2/repository</url>
 					<layout>default</layout>
 				</repository>
-				<repository>
+				<!--repository>
 					<id>codehaus-staging</id>
 					<name>codehaus-staging</name>
 					<url>https://nexus.codehaus.org/content/groups/staging/</url>
@@ -107,7 +118,7 @@
 						<checksumPolicy>warn</checksumPolicy>
 					</snapshots>
 					<layout>default</layout>
-				</repository>
+				</repository-->
 			</repositories>
 		</profile>
 	</profiles>
