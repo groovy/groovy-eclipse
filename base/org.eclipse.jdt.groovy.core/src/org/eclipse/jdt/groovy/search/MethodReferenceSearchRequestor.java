@@ -120,7 +120,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             declaringQualifiedName = CharOperation.concat(pattern.declaringQualification, pattern.declaringSimpleName, '.');
             if (declaringQualifiedName == null) {
                 if (declaringType != null) {
-                    declaringQualifiedName = CharOperation.concat(pattern.declaringPackageName, declaringType.getElementName().toCharArray(), '.');
+                    declaringQualifiedName = CharOperation.concat(declaringType.getPackageFragment().getElementName().toCharArray(), declaringType.getElementName().toCharArray(), '.');
                 } else {
                     declaringQualifiedName = CharOperation.NO_CHAR; // match the method signature in any type; checked within matchOnName(ClassNode)
                 }
