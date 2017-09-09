@@ -350,7 +350,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         mv.visitVarInsn(ALOAD, 1);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "org/codehaus/groovy/reflection/ClassInfo", "getMetaClass", "()Lgroovy/lang/MetaClass;", false);
                         mv.visitInsn(ARETURN);
-
                     }
                 })
         );
@@ -374,7 +373,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                             /**
                              *  the code is:
                              *  if (this.metaClass==null) {
-                             *      this.metaClass = this.$getStaticMetaClass
+                             *      this.metaClass = this.$getStaticMetaClass()
                              *      return this.metaClass
                              *  } else {
                              *      return this.metaClass
@@ -1326,7 +1325,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         MethodNode newMethod = new MethodNode(
                 oldMethod.getName(),
                 overridingMethod.getModifiers() | ACC_SYNTHETIC | ACC_BRIDGE,
-                oldMethod.getReturnType().getPlainNodeReference(),
+                // GRECLIPSE edit
+                //oldMethod.getReturnType().getPlainNodeReference(),
+                GenericsUtils.nonGeneric(oldMethod.getReturnType()),
+                // GRECLIPSE end
                 cleanParameters(oldMethod.getParameters()),
                 oldMethod.getExceptions(),
                 null

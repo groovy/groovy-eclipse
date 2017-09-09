@@ -22,6 +22,7 @@ import groovy.lang.MetaClass;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.ClassNodeSkip;
@@ -1327,7 +1328,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         MethodNode newMethod = new MethodNode(
                 oldMethod.getName(),
                 overridingMethod.getModifiers() | ACC_SYNTHETIC | ACC_BRIDGE,
-                oldMethod.getReturnType().getPlainNodeReference(),
+                // GRECLIPSE edit
+                //oldMethod.getReturnType().getPlainNodeReference(),
+                GenericsUtils.nonGeneric(oldMethod.getReturnType()),
+                // GRECLIPSE end
                 cleanParameters(oldMethod.getParameters()),
                 oldMethod.getExceptions(),
                 null

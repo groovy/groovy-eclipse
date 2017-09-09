@@ -1400,7 +1400,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
      */
-    @Test @Ignore
+    @Test
     public void testExtendingGenerics_GroovyExtendsJava14() {
         assumeTrue(isAtLeastGroovy(20));
 
