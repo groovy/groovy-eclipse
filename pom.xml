@@ -31,7 +31,7 @@
 			mostly test related, have groovy code that can't be compiled with standard
 			tycho jdt compiler. These two properties define what compiler will be used
 			for those bundles. -->
-		<groovy-eclipse-compiler-version>2.9.2-02</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>2.9.2-03</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
 		<groovy-eclipse-batch-version>2.1.9-01</groovy-eclipse-batch-version>
