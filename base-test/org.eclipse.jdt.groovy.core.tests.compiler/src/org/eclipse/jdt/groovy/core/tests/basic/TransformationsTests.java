@@ -508,7 +508,31 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testSingleton() {
+    public void testSortable() {
+        String[] sources = {
+            "Face.java",
+            "public interface Face<T> extends Comparable<T> {\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "@groovy.transform.Sortable\n" +
+            "class Impl implements Face<Impl> {\n" +
+            "  //int compareTo(Impl) is implicit\n" +
+            "}\n",
+
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    Impl i = new Impl();\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, ""); // expect no errors/warnings
+    }
+
+    @Test
+    public void testSingleton1() {
         String[] sources = {
             "Goo.groovy",
             "class Goo {\n" +
@@ -622,9 +646,9 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
 
             "Wibble.groovy",
-            "@Singleton class Wibble {" +
-            "  public String field = 'abc';\n"+
-            "}\n"
+            "@Singleton class Wibble {\n" +
+            "  public final String field = 'abc'\n"+
+            "}\n",
         };
 
         runConformTest(sources, "abc");

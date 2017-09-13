@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test.ui
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage
-import org.codehaus.groovy.eclipse.editor.outline.OCompilationUnit
 import org.codehaus.groovy.eclipse.editor.outline.OField
 import org.codehaus.groovy.eclipse.editor.outline.OMethod
 import org.codehaus.groovy.eclipse.editor.outline.OType
@@ -32,6 +31,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.IField
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.ui.views.contentoutline.IContentOutlinePage
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -183,9 +183,54 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testUseGroovyScriptOutline() {
-        addNature(OutlineExtender1.NATURE) // applies to *X*.groovy files
+    void testGroovyClassOutline1() {
+        def unit = addGroovySource '''\
+            class Pogo {
+              String value
+            }
+            '''.stripIndent()
+        def editor = openInEditor(unit)
+        def viewer = editor.getAdapter(IContentOutlinePage).outlineViewer
+        IJavaElement[] children = viewer.getRawChildren(viewer.getRoot())
 
+        assert children.size() == 1
+        assert children[0].elementName == 'Pogo'
+        assert children[0].elementType == IJavaElement.TYPE
+
+        children = viewer.getRawChildren(children[0])
+
+        assert children.size() == 1
+        assert children[0].elementName == 'value'
+        assert children[0].elementType == IJavaElement.FIELD
+    }
+
+    @Test
+    void testGroovyClassOutline2() {
+        def unit = addGroovySource '''\
+            @groovy.transform.Sortable
+            class Pogo {
+              String value
+            }
+            '''.stripIndent()
+        def editor = openInEditor(unit)
+        def viewer = editor.getAdapter(IContentOutlinePage).outlineViewer
+        IJavaElement[] children = viewer.getRawChildren(viewer.getRoot())
+
+        assert children.size() == 1
+        assert children[0].elementName == 'Pogo'
+        assert children[0].elementType == IJavaElement.TYPE
+
+        children = viewer.getRawChildren(children[0])
+
+        assert children.size() == 2
+        assert children[0].elementName == 'value'
+        assert children[0].elementType == IJavaElement.FIELD
+        assert children[1].elementName == 'compareTo'
+        assert children[1].elementType == IJavaElement.METHOD
+    }
+
+    @Test
+    void testGroovyScriptOutline0() {
         GroovyOutlinePage outline = openFile('Z', 'int yyy')
 
         // should use script outline extender
@@ -204,9 +249,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
             String blah() {  }
             '''.stripIndent()
         GroovyOutlinePage outline = openFile('Script1', contents)
-
-        OCompilationUnit unit = outline.outlineCompilationUnit
-        IJavaElement[] children = unit.children
+        IJavaElement[] children = outline.outlineCompilationUnit.children
 
         assert children.length == 6
         assert children[0].elementName == '' // import container has no name

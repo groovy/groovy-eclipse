@@ -2585,15 +2585,36 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Augments set of methods based on AST transforms. If transforms are going to trigger additional methods later, add them here.
          */
         private void applyEarlyTransforms(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
+            boolean sortable = false;
             boolean immutable = false;
             boolean inheritCtors = false;
             for (AnnotationNode anno : classNode.getAnnotations()) {
                 String name = anno.getClassNode().getName();
-                if (isType("groovy.transform.Immutable", name)) {
+                if (isType("groovy.transform.Sortable", name)) {
+                    sortable = true;
+                } else if (isType("groovy.transform.Immutable", name)) {
                     immutable = true;
                 } else if (isType("groovy.transform.InheritConstructors", name)) {
                     inheritCtors = true;
                 }
+            }
+
+            if (sortable) {
+                MethodDeclaration decl = new MethodDeclaration(unitDeclaration.compilationResult);
+
+                Parameter p = new Parameter(classNode, "that");
+                p.setSourcePosition(classNode); // prevent IllegalArgumentException in ASTConverter
+
+                decl.arguments = createArguments(new Parameter[] {p}, false);
+                decl.modifiers = ClassFileConstants.AccPublic;
+                decl.returnType = createTypeReferenceForClassNode(ClassHelper.int_TYPE);
+                decl.selector = "compareTo".toCharArray();
+                decl.sourceEnd = classNode.getEnd();
+                decl.sourceStart = classNode.getEnd() - 1;
+                decl.declarationSourceEnd = decl.sourceEnd;
+                decl.declarationSourceStart = decl.sourceStart;
+
+                addUnlessDuplicate(methodDeclarations, decl);
             }
 
             if (immutable) {
@@ -2615,6 +2636,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     decl.selector = ctorName;
                     decl.sourceEnd = classNode.getNameEnd();
                     decl.sourceStart = classNode.getNameStart();
+                    decl.declarationSourceStart = decl.sourceStart;
 
                     addUnlessDuplicate(methodDeclarations, decl);
                 }
@@ -2629,6 +2651,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     decl.selector = ctorName;
                     decl.sourceEnd = classNode.getNameEnd();
                     decl.sourceStart = classNode.getNameStart();
+                    decl.declarationSourceStart = decl.sourceStart;
 
                     addUnlessDuplicate(methodDeclarations, decl);
                 }
