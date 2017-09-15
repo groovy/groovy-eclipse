@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -23,12 +24,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.SpreadExpression;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
@@ -140,70 +147,60 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             return VisitStatus.CONTINUE;
         }
 
-        boolean doCheck = false;
-        boolean isDeclaration = false;
-        boolean isConstructorCall = false; // FIXADE hmmm...not capturing constructor calls here.
+        boolean isConstructorCall = false; // FIXADE hmmm...not capturing constructor calls here
+        boolean isDeclaration = (node instanceof MethodNode || node instanceof FieldNode);
         int start = 0;
         int end = 0;
 
-        if (node instanceof ConstantExpression) {
-            String cName = ((ConstantExpression) node).getText();
-            if (name.equals(cName)) {
-                start = node.getStart();
-                end = node.getEnd();
-                doCheck = end > 0; // avoid synthetic references
+        if (result.declaration instanceof MethodNode) {
+            if (name.equals(((MethodNode) result.declaration).getName())) {
+                start = startOffset(node);
+                end = endOffset(node);
             }
-        } else if (node instanceof FieldExpression) {
-            if (name.equals(((FieldExpression) node).getFieldName())) {
-                start = node.getStart();
-                end = node.getEnd();
-                doCheck = end > 0; // avoid synthetic references
+        } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
+            Variable var = (Variable) result.declaration;
+
+            boolean isMatchForProperty = false;
+            if (result.declaringType.getProperty(var.getName()) != null) {
+                String propName = MetaClassHelper.capitalize(var.getName());
+                if (name.startsWith("is") && name.substring(2).equals(propName)) {
+                    isMatchForProperty = (declaredParameterCount == 0 && !isAssignTarget(node, result.enclosingAssignment));
+                } else if (name.startsWith("get") && name.substring(3).equals(propName)) {
+                    isMatchForProperty = (declaredParameterCount == 0 && !isAssignTarget(node, result.enclosingAssignment));
+                } else if (name.startsWith("set") && name.substring(3).equals(propName)) {
+                    isMatchForProperty = (declaredParameterCount == 1 && !Modifier.isFinal(var.getModifiers()) && (isDeclaration || isAssignTarget(node, result.enclosingAssignment)));
+                }
             }
-        } else if (node instanceof MethodNode) {
-            MethodNode mnode = (MethodNode) node;
-            if (name.equals(mnode.getName())) {
-                isDeclaration = true;
-                start = mnode.getNameStart();
-                end = mnode.getNameEnd() + 1; // arrrgh...why +1?
-                doCheck = true;
-            }
-        } else if (node instanceof VariableExpression) {
-            VariableExpression vnode = (VariableExpression) node;
-            if (name.equals(vnode.getName())) {
-                start = vnode.getStart();
-                end = start + vnode.getName().length();
-                doCheck = true;
-            }
-        } else if (node instanceof StaticMethodCallExpression) {
-            StaticMethodCallExpression smnode = (StaticMethodCallExpression) node;
-            if (name.equals(smnode.getMethod())) {
-                start = smnode.getStart();
-                end = start + name.length();
-                doCheck = true;
+
+            if (isMatchForProperty) {
+                start = startOffset(node);
+                end = endOffset(node);
             }
         }
 
-        // at this point, if doCheck is true, then we know that the method name matches
-        if (doCheck && end > 0) {
-            // don't want to double accept nodes. This could happen with field and object initializers can get pushed into multiple constructors
+        if (end > 0) { // name matches, now check declaring type and parameter types
+            // don't want to double accept nodes; this could happen with field and object initializers can get pushed into multiple constructors
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
                 int numberOfParameters = findNumberOfParameters(node, result);
                 boolean isCompleteMatch = nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), numberOfParameters);
                 if (isCompleteMatch) {
-                    IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
+                    if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
+                        enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
+                    }
+
                     SearchMatch match = null;
                     if (isDeclaration && findDeclarations) {
-                        match = new MethodDeclarationMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, participant, realElement.getResource());
+                        match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, participant, enclosingElement.getResource());
                     } else if (!isDeclaration && findReferences) {
-                        match = new MethodReferenceMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, isConstructorCall, false, false, false, participant, realElement.getResource());
+                        match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
                     }
                     if (match != null) {
                         try {
                             requestor.acceptSearchMatch(match);
                             acceptedPositions.add(position);
                         } catch (CoreException e) {
-                            Util.log(e, "Error reporting search match inside of " + realElement + " in resource " + realElement.getResource());
+                            Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource " + enclosingElement.getResource());
                         }
                     }
                 }
@@ -218,6 +215,29 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     private int findNumberOfParameters(ASTNode node, TypeLookupResult result) {
         return (node instanceof MethodNode && ((MethodNode) node).getParameters() != null)
             ? ((MethodNode) node).getParameters().length : Math.max(0, result.scope.getMethodCallNumberOfArguments());
+    }
+
+    private boolean isAssignTarget(ASTNode node, BinaryExpression assignment) {
+        if (assignment != null) {
+            ASTNode target = assignment.getLeftExpression();
+            for (;;) {
+                if (target instanceof BinaryExpression) {
+                    target = ((BinaryExpression) target).getLeftExpression();
+                } else if (target instanceof PropertyExpression) {
+                    target = ((PropertyExpression) target).getProperty();
+                } else if (target instanceof SpreadExpression) {
+                    target = ((SpreadExpression) target).getExpression();
+                } else if (target instanceof FieldExpression) {
+                    target = ((FieldExpression) target).getField();
+                } else if (target instanceof CastExpression) {
+                    target = ((CastExpression) target).getExpression();
+                } else {
+                    break;
+                }
+            }
+            return (node == target);
+        }
+        return false;
     }
 
     /**
@@ -375,6 +395,30 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         throws JavaModelException {
         int flags = method.getFlags();
         return !(Flags.isPrivate(flags) || Flags.isStatic(flags));
+    }
+
+    private static int startOffset(ASTNode node) {
+        int offset;
+        if (node instanceof AnnotatedNode) {
+            offset = ((AnnotatedNode) node).getNameStart();
+            if (((AnnotatedNode) node).getNameEnd() < 1) {
+                offset = node.getStart();
+            }
+        } else {
+            offset = node.getStart();
+        }
+        return offset;
+    }
+
+    private static int endOffset(ASTNode node) {
+        int offset = 0;
+        if (node instanceof AnnotatedNode) {
+            offset = ((AnnotatedNode) node).getNameEnd() + 1;
+        }
+        if (offset <= 1) {
+            offset = node.getEnd();
+        }
+        return offset;
     }
 
     private static boolean equal(char[] arr, CharSequence seq) {
