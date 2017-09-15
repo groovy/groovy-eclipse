@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -24,18 +23,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.SpreadExpression;
-import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
@@ -148,33 +138,22 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         }
 
         boolean isConstructorCall = false; // FIXADE hmmm...not capturing constructor calls here
-        boolean isDeclaration = (node instanceof MethodNode || node instanceof FieldNode);
+        boolean isDeclaration = (node instanceof MethodNode);
         int start = 0;
         int end = 0;
 
         if (result.declaration instanceof MethodNode) {
             if (name.equals(((MethodNode) result.declaration).getName())) {
-                start = startOffset(node);
-                end = endOffset(node);
-            }
-        } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
-            Variable var = (Variable) result.declaration;
-
-            boolean isMatchForProperty = false;
-            if (result.declaringType.getProperty(var.getName()) != null) {
-                String propName = MetaClassHelper.capitalize(var.getName());
-                if (name.startsWith("is") && name.substring(2).equals(propName)) {
-                    isMatchForProperty = (declaredParameterCount == 0 && !isAssignTarget(node, result.enclosingAssignment));
-                } else if (name.startsWith("get") && name.substring(3).equals(propName)) {
-                    isMatchForProperty = (declaredParameterCount == 0 && !isAssignTarget(node, result.enclosingAssignment));
-                } else if (name.startsWith("set") && name.substring(3).equals(propName)) {
-                    isMatchForProperty = (declaredParameterCount == 1 && !Modifier.isFinal(var.getModifiers()) && (isDeclaration || isAssignTarget(node, result.enclosingAssignment)));
+                if (isDeclaration) {
+                    start = ((MethodNode) node).getNameStart();
+                    end = ((MethodNode) node).getNameEnd() + 1;
+                } else if (node.getText().equals(name)) { // guard against synthetic match like 'foo.bar' instead of 'foo.getBar()'
+                    start = node.getStart();
+                    end = node.getEnd();
+                } else if (node instanceof StaticMethodCallExpression && node.getText().contains("." + name + "(")) {
+                    start = ((StaticMethodCallExpression) node).getStart();
+                    end = start + name.length();
                 }
-            }
-
-            if (isMatchForProperty) {
-                start = startOffset(node);
-                end = endOffset(node);
             }
         }
 
@@ -215,29 +194,6 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     private int findNumberOfParameters(ASTNode node, TypeLookupResult result) {
         return (node instanceof MethodNode && ((MethodNode) node).getParameters() != null)
             ? ((MethodNode) node).getParameters().length : Math.max(0, result.scope.getMethodCallNumberOfArguments());
-    }
-
-    private boolean isAssignTarget(ASTNode node, BinaryExpression assignment) {
-        if (assignment != null) {
-            ASTNode target = assignment.getLeftExpression();
-            for (;;) {
-                if (target instanceof BinaryExpression) {
-                    target = ((BinaryExpression) target).getLeftExpression();
-                } else if (target instanceof PropertyExpression) {
-                    target = ((PropertyExpression) target).getProperty();
-                } else if (target instanceof SpreadExpression) {
-                    target = ((SpreadExpression) target).getExpression();
-                } else if (target instanceof FieldExpression) {
-                    target = ((FieldExpression) target).getField();
-                } else if (target instanceof CastExpression) {
-                    target = ((CastExpression) target).getExpression();
-                } else {
-                    break;
-                }
-            }
-            return (node == target);
-        }
-        return false;
     }
 
     /**
@@ -395,30 +351,6 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         throws JavaModelException {
         int flags = method.getFlags();
         return !(Flags.isPrivate(flags) || Flags.isStatic(flags));
-    }
-
-    private static int startOffset(ASTNode node) {
-        int offset;
-        if (node instanceof AnnotatedNode) {
-            offset = ((AnnotatedNode) node).getNameStart();
-            if (((AnnotatedNode) node).getNameEnd() < 1) {
-                offset = node.getStart();
-            }
-        } else {
-            offset = node.getStart();
-        }
-        return offset;
-    }
-
-    private static int endOffset(ASTNode node) {
-        int offset = 0;
-        if (node instanceof AnnotatedNode) {
-            offset = ((AnnotatedNode) node).getNameEnd() + 1;
-        }
-        if (offset <= 1) {
-            offset = node.getEnd();
-        }
-        return offset;
     }
 
     private static boolean equal(char[] arr, CharSequence seq) {

@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
@@ -51,7 +52,7 @@ public enum AccessorSupport {
                 (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
         case ISSER:
             return !isCategory && (node.getParameters() == null || node.getParameters().length == args) &&
-                (returnType.equals(VariableScope.OBJECT_CLASS_NODE) || returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType.equals(ClassHelper.boolean_TYPE));
+                (returnType.equals(ClassHelper.boolean_TYPE) /*|| returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE)*/);
         default:
             return false;
         }
@@ -75,8 +76,7 @@ public enum AccessorSupport {
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {
         if (name != null && name.length() > 0 && kinds != null && kinds.length > 0) {
-            String suffix = Character.toUpperCase(name.charAt(0)) + name.substring(1);
-
+            String suffix = MetaClassHelper.capitalize(name);
             for (AccessorSupport kind : kinds) {
                 if (kind == NONE) continue;
                 String methodName = kind.prefix + suffix;

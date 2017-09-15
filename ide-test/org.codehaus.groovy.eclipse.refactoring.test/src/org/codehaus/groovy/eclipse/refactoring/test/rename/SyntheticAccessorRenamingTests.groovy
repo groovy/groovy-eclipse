@@ -69,7 +69,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  def foo
+                  boolean foo
                   def run() {
                     foo
                     getFoo()
@@ -81,7 +81,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             finalContents: '''\
                 package p
                 class First {
-                  def flar
+                  boolean flar
                   def run() {
                     flar
                     getFlar()
@@ -137,13 +137,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  def foo
+                  boolean foo
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  def flar
+                  boolean flar
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -217,13 +217,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  def foo
+                  boolean foo
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  def flar
+                  boolean flar
                 }
                 '''.stripIndent()
         ), new TestSource(
