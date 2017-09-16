@@ -48,7 +48,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 public class SyntheticAccessorSearchRequestor {
 
     public void findSyntheticMatches(IJavaElement element, ISearchRequestor uiRequestor, IProgressMonitor monitor) throws CoreException {
-        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), uiRequestor, monitor);
+        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES | IJavaSearchConstants.IGNORE_RETURN_TYPE, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), uiRequestor, monitor);
     }
 
     public void findSyntheticMatches(IJavaElement element, int limitTo, SearchParticipant[] participants, IJavaSearchScope scope, final ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
