@@ -441,7 +441,7 @@ void faultInImports() {
 				} else {
 					// GROOVY edit
 					//problemReporter().importProblem(importReference, importBinding);
-					recordImportProblem(importReference, importBinding);
+					reportImportProblem(importReference, importBinding);
 					// GROOVY end
 					continue nextImport;
 				}
@@ -549,11 +549,6 @@ public void faultInTypes() {
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
 		this.topLevelTypes[i].faultInTypesForFieldsAndMethods();
 }
-// GROOVY add
-protected void recordImportProblem(ImportReference importReference, Binding importBinding) {
-	problemReporter().importProblem(importReference, importBinding);	
-}
-// GROOVY end
 // this API is for code assist purpose
 public Binding findImport(char[][] compoundName, boolean findStaticImports, boolean onDemand) {
 	if(onDemand) {
