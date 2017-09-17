@@ -2887,7 +2887,7 @@ public abstract class Scope {
 
 			methodBinding = findMethod(currentType, selector, argumentTypes, invocationSite, false);
 			// GROOVY add -- give it one more chance as the ast transform may have introduced it
-			// Is this the right approach?  Requires ast transforms running before this is done
+			// Is this the right approach?  Requires AST transforms running before this is done.
 			if (methodBinding == null) {
 				methodBinding = oneLastLook(currentType, selector, argumentTypes, invocationSite);
 			}
@@ -2899,10 +2899,10 @@ public abstract class Scope {
 
 			// special treatment for Object.getClass() in 1.5 mode (substitute parameterized return type)
 			if (argumentTypes == Binding.NO_PARAMETERS
-			    && CharOperation.equals(selector, TypeConstants.GETCLASS)
-			    && methodBinding.returnType.isParameterizedType()/*1.5*/) {
+				&& CharOperation.equals(selector, TypeConstants.GETCLASS)
+				&& methodBinding.returnType.isParameterizedType()/*1.5*/) {
 					return environment().createGetClassMethod(receiverType, methodBinding, this);
-		    }
+			}
 			return methodBinding;
 		} catch (AbortCompilation e) {
 			e.updateContext(invocationSite, referenceCompilationUnit().compilationResult);

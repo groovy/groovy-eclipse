@@ -11,8 +11,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import org.eclipse.core.resources.IResource;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
