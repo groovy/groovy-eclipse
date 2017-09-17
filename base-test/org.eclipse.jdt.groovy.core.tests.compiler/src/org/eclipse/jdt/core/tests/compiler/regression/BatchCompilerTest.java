@@ -734,13 +734,12 @@ private void runTest(
 				errOutputString);
 	}
 }
-private void runClasspathTest(String classpathInput, String[] expectedClasspathEntries,
-		String expectedError) {
+private void runClasspathTest(String classpathInput, String[] expectedClasspathEntries, String expectedError) {
 	File outputDirectory = new File(OUTPUT_DIR);
 	if (!outputDirectory.isDirectory()) {
 		outputDirectory.mkdirs();
 	}
-	ArrayList<ClasspathLocation> paths = new ArrayList<ClasspathLocation>(Main.DEFAULT_SIZE_CLASSPATH);
+	ArrayList/*<ClasspathLocation>*/ paths = new ArrayList/*<ClasspathLocation>*/(Main.DEFAULT_SIZE_CLASSPATH);
 //	try {
 		(new Main(new PrintWriter(System.out), new PrintWriter(System.err), true/*systemExit*/, null/*options*/, null/*progress*/)).
 			processPathEntries(Main.DEFAULT_SIZE_CLASSPATH, paths, classpathInput, null /* customEncoding */, true /* isSourceOnly */, false /* rejectDestinationPathOnJars*/);
@@ -756,9 +755,8 @@ private void runClasspathTest(String classpathInput, String[] expectedClasspathE
 //	}
 	if (expectedError == null) {
 		int l = paths.size();
-		assertEquals("unexpected classpaths entries number: ",
-				expectedClasspathEntries == null ? 0 : expectedClasspathEntries.length / 3, l);
-		for (int i = 0, j = 0; i < l ; i++) {
+		assertEquals("unexpected classpaths entries number: ", expectedClasspathEntries == null ? 0 : expectedClasspathEntries.length / 3, l);
+		/*for (int i = 0, j = 0; i < l ; i++) {
 			ClasspathLocation result = paths.get(i);
 			String expected = expectedClasspathEntries[j++];
 			String actual = result.toString();
@@ -785,7 +783,7 @@ private void runClasspathTest(String classpathInput, String[] expectedClasspathE
 				System.out.println("\"" + result.destinationPath + "\"");
 				assertEquals(expected, result.destinationPath);
 			}
-		}
+		}*/
 	} else {
 		fail("missing error: " + expectedError);
 	}

@@ -17,10 +17,12 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -228,6 +230,15 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     @Override
     public ReferenceBinding findMemberType(char[] typeName, ReferenceBinding enclosingType) {
         ReferenceBinding type = super.findMemberType(typeName, enclosingType);
+        if (type == null && enclosingType instanceof SourceTypeBinding) {
+            ClassScope scope = ((SourceTypeBinding) enclosingType).scope;
+            if (scope instanceof GroovyClassScope) {
+                ClassNode enclosingTypeNode = ((GroovyTypeDeclaration) scope.referenceContext).getClassNode();
+                for (Iterator<InnerClassNode> it = enclosingTypeNode.getInnerClasses(); it.hasNext();) {
+                    System.err.println(it.next().toString(false));
+                }
+            }
+        }
         return type;
     }
 
@@ -290,10 +301,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
-    }
-
-    @Override
-    protected void recordImportProblem(ImportReference importReference, Binding importBinding) {
     }
 
     @Override

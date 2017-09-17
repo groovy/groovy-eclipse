@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %pluginName
+Bundle-SymbolicName: org.eclipse.jdt.core.ant.compiler.adapter;singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: bogus
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Import-Package: org.eclipse.jdt.core.compiler,
+ org.eclipse.jdt.internal.antadapter,
+ org.eclipse.jdt.internal.compiler.batch,
+ org.eclipse.jdt.internal.compiler.impl,
+ org.eclipse.jdt.internal.compiler.util
+Bundle-Vendor: %providerName
+Bundle-Localization: plugin

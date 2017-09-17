@@ -118,6 +118,35 @@
 
 	<profiles>
 		<profile>
+			<id>e48</id>
+			<repositories>
+				<repository>
+					<id>photon</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/photon</url>
+				</repository>
+				<repository>
+					<id>photon-updates</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.8</url>
+				</repository>
+				<repository>
+					<id>photon-milestones</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.8milestones</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e48/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e48/Feature-org.codehaus.groovy.jdt.patch</module>
+			</modules>
+			<properties>
+				<dist.target>e4.8</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e48${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>e47</id>
 			<repositories>
 				<repository>

@@ -41,7 +41,7 @@
 			If all is working well? Then remove the '-test' -->
 		<dist.path>release/GRECLIPSE-test</dist.path>
 		<!-- if you change dist.targets you also have to change the list of <items> embedded in the build-loqic below -->
-		<dist.targets>e4.7,e4.6,e4.5,e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
+		<dist.targets>e4.8,e4.7,e4.6,e4.5,e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
 	</properties>
 
 	<profiles>
@@ -129,9 +129,10 @@
 					<goals>
 						<goal>executor</goal>
 					</goals>
-					<configuration> 
+					<configuration>
 						<items>
 							<!-- It would be nice to define the list of items as a variable up top but this not possible. -->
+							<item>e4.8</item>
 							<item>e4.7</item>
 							<item>e4.6</item>
 							<item>e4.5</item>
@@ -160,8 +161,8 @@
 						</pluginExecutors> 
 					</configuration>
 					</execution>
-				</executions>				
-			</plugin>		
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -217,7 +218,6 @@
 									uploading new content to. The idea is to leave older ones alone so people 
 									using those old eclipses can still get the latest release that was published 
 									for that old eclipse -->
-									
 								<for list="${dist.targets}" param="eXX">
 									<sequential>
 										<echo message="delete/upload ${dist.path} pattern: @{eXX}/**" />
@@ -236,7 +236,6 @@
 										</s3>
 									</sequential>
 								</for>
-
 							</target>
 						</configuration>
 						<goals>

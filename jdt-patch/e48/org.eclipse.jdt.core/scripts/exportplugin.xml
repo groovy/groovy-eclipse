@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Copyright (c) 2007, 2012 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<!-- build script to create a plugin from ${plugin} -->
+<project name="${plugin}" default="export plug-in [_3.8.1]" basedir="..">
+<target name="export plug-in [_3.8.1]">
+    <tstamp/>
+	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="3.8.1"/>
+	</antcall>
+</target>
+<target name="export plug-in [_3.8.1.qualifier] (binary only)">
+    <tstamp/>
+	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />
+	<antcall target="zz_internal_export_binary_only">
+		<param name="jdt_core_version" value="3.8.1.${qualifier}"/>
+	</antcall>
+</target>
+<target name="export plug-in [_3.8.1.qualifier] (with sources)">
+    <tstamp/>
+	<property name="qualifier" value="z${DSTAMP}-${TSTAMP}" />
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="3.8.1.${qualifier}"/>
+	</antcall>
+</target>
+
+<target name="zz_internal_export">
+
+	<tstamp/>
+	<property name="export-dir" value="../../plugin-export" />
+	<property name="plugin" value="org.eclipse.jdt.core" />
+	<property name="plugin-dir" value="${export-dir}/${plugin}_${jdt_core_version}"/>
+
+	<echo message="TARGET: ${export-dir}" />
+	<mkdir dir="${export-dir}" />
+	<delete dir="${plugin-dir}" />
+	<mkdir dir="${plugin-dir}" />
+
+	<echo message="UPDATE jdtCompilerAdapter.jar" />
+  	<jar 
+		jarfile="${plugin-dir}/jdtCompilerAdapter.jar"
+		basedir="antbin"/>
+
+	<echo message="UPDATE ${plugin}_${jdt_core_version}.jar" />
+	<copy todir="${plugin-dir}/META-INF">
+		<fileset dir="META-INF" />
+	</copy>  
+	<replaceregexp file="${plugin-dir}/META-INF/MANIFEST.MF" match="Bundle-Version: ((\d)+\.(\d)+\.(\d)+\.)qualifier" replace="Bundle-Version: \1${qualifier}" byline="true" />
+	<zip zipfile="${plugin-dir}/${plugin}_${jdt_core_version}.jar">
+		<fileset dir=".">
+		  <include name="plugin.xml" />
+		  <include name="plugin.properties" />
+	      <include name=".options"/>
+          <include name="about.html"/>
+        </fileset>
+		<fileset dir="${plugin-dir}">
+			<include name="META-INF/**" />
+		</fileset>
+        <fileset dir="bin" />
+        <fileset file="${plugin-dir}/jdtCompilerAdapter.jar"/>
+        <zipfileset dir="batch" prefix="src"/>
+	    <zipfileset dir="codeassist" prefix="src"/>
+	    <zipfileset dir="compiler" prefix="src"/>
+	    <zipfileset dir="dom" prefix="src"/>
+	    <zipfileset dir="eval" prefix="src"/>
+	    <zipfileset dir="formatter" prefix="src"/>
+	    <zipfileset dir="model" prefix="src"/>
+	    <zipfileset dir="search" prefix="src"/>
+	</zip>
+	<delete dir="${plugin-dir}/META-INF" />
+
+	<delete file="${plugin-dir}/jdtCompilerAdapter.jar"/>
+
+	<echo message="UPDATE ${export-dir}/../${plugin}_${jdt_core_version}.zip" />
+	<zip zipfile="${export-dir}/../${plugin}_${jdt_core_version}.zip"
+	    basedir="${export-dir}" 
+	    includes="${plugin}_${jdt_core_version}/**"	/>		
+	<!--
+		<delete dir="${plugin-dir}" />
+	-->
+</target>
+
+<target name="zz_internal_export_binary_only">
+
+	<tstamp/>
+	<property name="export-dir" value="../../plugin-export" />
+	<property name="plugin" value="org.eclipse.jdt.core" />
+	<property name="plugin-dir" value="${export-dir}/${plugin}_${jdt_core_version}"/>
+
+	<echo message="TARGET: ${export-dir}" />
+	<mkdir dir="${export-dir}" />
+	<delete dir="${plugin-dir}" />
+	<mkdir dir="${plugin-dir}" />
+
+	<echo message="UPDATE jdtCompilerAdapter.jar" />
+  	<jar 
+		jarfile="${plugin-dir}/jdtCompilerAdapter.jar"
+		basedir="antbin"/>
+
+	<echo message="UPDATE ${plugin}_${jdt_core_version}.jar" />
+	<copy todir="${plugin-dir}/META-INF">
+		<fileset dir="META-INF" />
+	</copy>  
+	<replaceregexp file="${plugin-dir}/META-INF/MANIFEST.MF" match="Bundle-Version: ((\d)+\.(\d)+\.(\d)+\.)qualifier" replace="Bundle-Version: \1${qualifier}" byline="true" />
+	<zip zipfile="${plugin-dir}/${plugin}_${jdt_core_version}.jar">
+		<fileset dir=".">
+		  <include name="plugin.xml" />
+		  <include name="plugin.properties" />
+	      <include name=".options"/>
+          <include name="about.html"/>
+        </fileset>
+		<fileset dir="${plugin-dir}">
+			<include name="META-INF/**" />
+		</fileset>
+        <fileset dir="bin" />
+        <fileset file="${plugin-dir}/jdtCompilerAdapter.jar"/>
+	</zip>
+	<delete dir="${plugin-dir}/META-INF" />
+
+	<delete file="${plugin-dir}/jdtCompilerAdapter.jar"/>
+
+	<echo message="UPDATE ${export-dir}/../${plugin}_${jdt_core_version}.zip" />
+	<zip zipfile="${export-dir}/../${plugin}_${jdt_core_version}.zip"
+	    basedir="${export-dir}" 
+	    includes="${plugin}_${jdt_core_version}/**"	/>
+	<!--
+		<delete dir="${plugin-dir}" />
+	-->
+</target>
+
+</project>
