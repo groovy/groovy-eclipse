@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1106,6 +1106,13 @@ private MethodBinding getMethodBinding0(MethodPattern methodPattern) {
 	this.bindings.put(methodPattern, result != null ? result : new ProblemMethodBinding(methodPattern.selector, null, ProblemReasons.NotFound));
 	return result;
 }
+private boolean matchParams(MethodPattern methodPattern, int index, TypeBinding binding) {
+	char[] qualifier = CharOperation.concat(methodPattern.parameterQualifications[index], methodPattern.parameterSimpleNames[index], '.');
+	int offset = (qualifier.length > 0 && qualifier[0] == '*') ? 1 : 0;
+	String s1 = new String(qualifier, offset, qualifier.length - offset);
+	char[] s2 = CharOperation.concat(binding.qualifiedPackageName(), binding.qualifiedSourceName(), '.');
+	return new String(s2).endsWith(s1);
+}
 
 private MethodBinding getMethodBinding(MethodPattern methodPattern, TypeBinding declaringTypeBinding) {
 	MethodBinding result;
@@ -1126,7 +1133,8 @@ private MethodBinding getMethodBinding(MethodPattern methodPattern, TypeBinding 
 		boolean found = false;
 		if (methodParameters != null && paramLength == paramTypeslength) {
 			for (int p=0; p<paramLength; p++) {
-				if (CharOperation.equals(methodParameters[p].sourceName(), parameterTypes[p])) {
+				TypeBinding parameter = methodParameters[p];
+				if (matchParams(methodPattern, p, parameter)) {
 					// param erasure match
 					found = true;
 				} else {
