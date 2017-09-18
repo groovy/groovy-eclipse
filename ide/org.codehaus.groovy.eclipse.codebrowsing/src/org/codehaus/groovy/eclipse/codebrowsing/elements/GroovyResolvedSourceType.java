@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,19 +23,15 @@ import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedSourceType;
 
 /**
- * A resolved java element suitable for hovers.  Includes
- * extra javaDoc information to appear in the hover
- * @author Andrew Eisenberg
- * @created Nov 22, 2010
+ * A resolved java element suitable for hovers. Includes extra Javadoc information to appear in the hover.
  */
 public class GroovyResolvedSourceType extends ResolvedSourceType implements IGroovyResolvedElement {
 
     private final String extraDoc;
     private final ASTNode inferredElement;
-    
-    public GroovyResolvedSourceType(JavaElement parent, String name,
-            String uniqueKey, String extraDoc, ASTNode inferredElement) {
-        super(parent, name, uniqueKey);
+
+    public GroovyResolvedSourceType(JavaElement parent, String typeName, String uniqueKey, String extraDoc, ASTNode inferredElement) {
+        super(parent, typeName, uniqueKey);
         this.extraDoc = extraDoc;
         this.inferredElement = inferredElement;
     }
@@ -43,6 +39,11 @@ public class GroovyResolvedSourceType extends ResolvedSourceType implements IGro
     public String getExtraDoc() {
         return extraDoc;
     }
+
+    public ASTNode getInferredElement() {
+        return inferredElement;
+    }
+
     public String getInferredElementName() {
         if (inferredElement instanceof Variable) {
             return ((Variable) inferredElement).getName();
@@ -53,9 +54,5 @@ public class GroovyResolvedSourceType extends ResolvedSourceType implements IGro
         } else {
             return inferredElement.getText();
         }
-    }
-
-    public ASTNode getInferredElement() {
-        return inferredElement;
     }
 }
