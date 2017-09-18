@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,25 +23,25 @@ import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.ResolvedBinaryField;
 
 /**
- * A resolved java element suitable for hovers.  Includes
- * extra javaDoc information to appear in the hover
- * @author Andrew Eisenberg
- * @created Nov 22, 2010
+ * A resolved java element suitable for hovers. Includes extra Javadoc information to appear in the hover.
  */
 public class GroovyResolvedBinaryField extends ResolvedBinaryField implements IGroovyResolvedElement {
 
     private final String extraDoc;
     private final ASTNode inferredElement;
-    
-    public GroovyResolvedBinaryField(JavaElement parent, String name,
-            String uniqueKey, String extraDoc, ASTNode inferredElement) {
-        super(parent, name, uniqueKey);
+
+    public GroovyResolvedBinaryField(JavaElement parent, String fieldName, String uniqueKey, String extraDoc, ASTNode inferredElement) {
+        super(parent, fieldName, uniqueKey);
         this.extraDoc = extraDoc;
         this.inferredElement = inferredElement;
     }
 
     public String getExtraDoc() {
         return extraDoc;
+    }
+
+    public ASTNode getInferredElement() {
+        return inferredElement;
     }
 
     public String getInferredElementName() {
@@ -54,9 +54,5 @@ public class GroovyResolvedBinaryField extends ResolvedBinaryField implements IG
         } else {
             return inferredElement.getText();
         }
-    }
-
-    public ASTNode getInferredElement() {
-        return inferredElement;
     }
 }
