@@ -57,15 +57,37 @@
       <pluginExecutionFilter>
         <groupId>org.codehaus.gmavenplus</groupId>
         <artifactId>gmavenplus-plugin</artifactId>
-        <versionRange>[1.0,)</versionRange>
+        <versionRange>[1.0,1.6)</versionRange>
         <goals>
           <goal>addSources</goal>
           <goal>addTestSources</goal>
           <goal>generateStubs</goal>
           <goal>compile</goal>
+          <goal>removeStubs</goal>
           <goal>testGenerateStubs</goal>
           <goal>testCompile</goal>
+          <goal>removeTestStubs</goal>
+        </goals>
+        </pluginExecutionFilter>
+        <action>
+          <configurator>
+            <id>org.codehaus.groovy.m2eclipse.configurator</id>
+          </configurator>
+        </action>
+    </pluginExecution>
+    <pluginExecution>
+      <pluginExecutionFilter>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
+        <versionRange>[1.6,)</versionRange>
+        <goals>
+          <goal>addSources</goal>
+          <goal>addTestSources</goal>
+          <goal>generateStubs</goal>
+          <goal>compile</goal>
           <goal>removeStubs</goal>
+          <goal>generateTestStubs</goal>
+          <goal>compileTests</goal>
           <goal>removeTestStubs</goal>
         </goals>
         </pluginExecutionFilter>

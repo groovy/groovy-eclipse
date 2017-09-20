@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.m2eclipse;
 
+import java.util.List;
+
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
@@ -82,7 +84,8 @@ enum ProjectSourceType {
         ProjectSourceType result = NONE;
         if (plugin != null && plugin.getExecutions() != null && !plugin.getExecutions().isEmpty()) {
             for (PluginExecution execution : plugin.getExecutions()) {
-                if (execution.getGoals().contains("compile")) {
+                List<String> goals = execution.getGoals();
+                if (goals.contains("compile")) {
                     switch (result) {
                     case NONE:
                         result = MAIN;
@@ -92,7 +95,7 @@ enum ProjectSourceType {
                         break;
                     }
                 }
-                if (execution.getGoals().contains("testCompile")) {
+                if (goals.contains("compileTests") || goals.contains("testCompile")) {
                     switch (result) {
                     case NONE:
                         result = TEST;
