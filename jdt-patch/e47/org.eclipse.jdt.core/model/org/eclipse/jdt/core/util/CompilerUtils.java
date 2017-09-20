@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.PropertyResourceBundle;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
@@ -36,17 +37,17 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Utility class, contains helpers for configuring the compiler options based on the project.
- * If the project is a groovy project it will set the right options, and will also set the groovy classpath.
- *
- * @author Andy Clement
+ * Utility class, contains helpers for configuring the compiler options based
+ * on the project. If the project is a groovy project it will set the right
+ * options, and will also set the groovy classpath.
  */
 public class CompilerUtils {
 
 	public static final int IsGrails = 0x0001;
 
 	/**
-	 * Configure a real compiler options object based on the project.  If anything goes wrong it will configure the options to just build java.
+	 * Configure a real compiler options object based on the project. If anything
+	 * goes wrong it will configure the options to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(CompilerOptions compilerOptions, IJavaProject javaProject) {
 		if (javaProject == null) {
@@ -76,8 +77,9 @@ public class CompilerUtils {
 	}
 
 	/**
-	 * Configure an options map (usually retrieved from a CompilerOptions object) based on the project.
-	 * If anything goes wrong it will configure the options to just build java.
+	 * Configure an options map (usually retrieved from a CompilerOptions object)
+	 * based on the project. If anything goes wrong it will configure the options
+	 * to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(Map<String, String> optionMap, IJavaProject javaProject) {
 		try {
@@ -103,8 +105,9 @@ public class CompilerUtils {
 	}
 
 	/**
-	 * Crude way to determine it... basically check for a folder called 'grails-app'.  The reason we need to know is because of the extra
-	 * transform that will run if it is a grails-app (tagging domain classes).
+	 * Crude way to determine it... check for a folder called 'grails-app'. The
+	 * reason we need to know is because of the extra transform that will run if
+	 * it is a grails-app (tagging domain classes).
 	 */
 	private static boolean isProbablyGrailsProject(IProject project) {
 		try {
@@ -116,16 +119,18 @@ public class CompilerUtils {
 	}
 
 	/**
-	 * There are currently two points of configuration here.  The first is the java project which will have its own classpath.
-	 * The second is the groovy.properties file.  Due to the 'power' of just going with the java project, because it will cause
-	 * us to pick up all sorts of stuff, I am going to make it necessary for groovy.properties to be set in a particular way
-	 * if the user wants that power.
+	 * There are currently two points of configuration here.  The first is the
+	 * java project which will have its own classpath. The second is the 
+	 * <tt>groovy.properties</tt> file.  Due to the 'power' of just going with
+	 * the java project, because it will cause us to pick up all sorts of stuff,
+	 * I am going to make it necessary for groovy.properties to be set in a
+	 * particular way if the user wants that power.
 	 *
 	 * @param compilerOptions the compiler options on which to set groovy options
 	 * @param javaProject the project involved right now (may have the groovy nature)
 	 */
 	public static void setGroovyClasspath(CompilerOptions compilerOptions, IJavaProject javaProject) {
-		Map<String, String> newOptions = new HashMap<String, String>();
+		Map<String, String> newOptions = new HashMap<>();
 		setGroovyClasspath(newOptions, javaProject);
 		compilerOptions.groovyProjectName = javaProject.getProject().getName();
 		if (!newOptions.isEmpty()) {
@@ -183,43 +188,18 @@ public class CompilerUtils {
 		return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature"); //$NON-NLS-1$
 	}
 
-	private static String pathToString(IPath path, IProject project) {
-		String realLocation = null;
-		if (path != null) {
-			String prefix = path.segment(0);
-			if (prefix.equals(project.getName())) {
-				if (path.segmentCount() == 1) {
-					// the path is actually to the project root
-					IPath rawPath = project.getRawLocation();
-					if (rawPath == null) {
-						Util.log(null, "getRawLocation() against the project: " + project + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
-					} else {
-						realLocation = project.getRawLocation().toOSString();
-					}
-				} else {
-					IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();
-					if (rawLocation != null) {
-						realLocation = rawLocation.toOSString();
-					}
-				}
-			} else {
-				realLocation = path.toOSString();
-			}
-		}
-		return realLocation;
-	}
+	/** Cache of results from {@link #calculateClasspath} used to prevent re-calculations. */
+	private static final Map<IClasspathEntry[], String> CLASSPATH_CACHE = new WeakHashMap<>();
 
 	// visible for testing
 	public static String calculateClasspath(IJavaProject javaProject) {
+		String classpath = null;
+		IProject project = javaProject.getProject();
+		String projectName = project.getName();
 		try {
-			Set<String> accumulatedPathEntries = new LinkedHashSet<String>();
-			IProject project = javaProject.getProject();
-			String projectName = project.getName();
-			IPath defaultOutputPath = javaProject.getOutputLocation();
-			String defaultOutputLocation = pathToString(defaultOutputPath, project);
-
 			IClasspathEntry[] cpes = javaProject.getResolvedClasspath(true);
-			if (cpes != null) {
+			if (cpes != null && (classpath = CLASSPATH_CACHE.get(cpes)) == null) {
+				Set<String> accumulatedPathEntries = new LinkedHashSet<>();
 				for (IClasspathEntry cpe : cpes) {
 					if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 						continue;
@@ -259,6 +239,8 @@ public class CompilerUtils {
 						accumulatedPathEntries.add(pathElement);
 					}
 				}
+
+				String defaultOutputLocation = pathToString(javaProject.getOutputLocation(), project);
 				accumulatedPathEntries.add(defaultOutputLocation);
 
 				// Add output locations which are not default
@@ -277,12 +259,13 @@ public class CompilerUtils {
 					Util.log(e, "checking Groovy Nature failed"); //$NON-NLS-1$
 				}
 
-				return accumulatedPathEntries.stream().collect(Collectors.joining(File.pathSeparator));
+				classpath = accumulatedPathEntries.stream().collect(Collectors.joining(File.pathSeparator));
+				CLASSPATH_CACHE.put(cpes, classpath);
 			}
 		} catch (JavaModelException e) {
-			Util.log(e, "determining classpath of project " + javaProject.getProject().getName() + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
+			Util.log(e, "determining classpath of project " + projectName + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		return ""; //$NON-NLS-1$
+		return classpath != null ? classpath : ""; //$NON-NLS-1$
 	}
 
 	/**
@@ -331,5 +314,31 @@ public class CompilerUtils {
 				}
 			}
 		}
+	}
+
+	private static String pathToString(IPath path, IProject project) {
+		String realLocation = null;
+		if (path != null) {
+			String prefix = path.segment(0);
+			if (prefix.equals(project.getName())) {
+				if (path.segmentCount() == 1) {
+					// the path is actually to the project root
+					IPath rawPath = project.getRawLocation();
+					if (rawPath == null) {
+						Util.log(null, "getRawLocation() against the project: " + project + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
+					} else {
+						realLocation = project.getRawLocation().toOSString();
+					}
+				} else {
+					IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();
+					if (rawLocation != null) {
+						realLocation = rawLocation.toOSString();
+					}
+				}
+			} else {
+				realLocation = path.toOSString();
+			}
+		}
+		return realLocation;
 	}
 }
