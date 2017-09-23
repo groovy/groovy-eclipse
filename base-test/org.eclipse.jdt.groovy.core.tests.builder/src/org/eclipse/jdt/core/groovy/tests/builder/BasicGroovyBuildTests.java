@@ -851,8 +851,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
                 "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClasses("A");
         expectingNoProblems();
+        expectingCompiledClasses("A");
 
         env.addGroovyClass(root, "", "B",
                 "@groovy.transform.CompileStatic\n"+
@@ -866,8 +866,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
                 "\n"+
                 "}\n");
         incrementalBuild(projectPath);
-        expectingCompiledClasses("B","B$_foo_closure1");
         expectingNoProblems();
+        expectingCompiledClasses("B","B$_foo_closure1");
     }
 
     @Test

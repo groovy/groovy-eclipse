@@ -39,15 +39,33 @@ public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSu
             "p/IExample.java",
             "package p;\n" +
             "public interface IExample {\n" +
-            "   void testExample();\n" +
-            "   static void callExample() {}\n" +
-            "   default void callDefault() {}\n" +
+            "  void testExample();\n" +
+            "  static void callExample() {}\n" +
+            "  default void callDefault() {}\n" +
             "}\n",
 
-            "p/ExampleGr.groovy",
+            "p/Example.groovy",
             "package p\n" +
-            "class ExampleGr implements IExample {\n" +
-            "public void testExample() {}\n" + "}\n"
+            "class Example implements IExample {\n" +
+            "  public void testExample() {}\n" +
+            "}\n"
+        };
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testFunctionalInterfaceInterfaceCoercion() {
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  String bar\n" +
+            "  def baz() {\n" +
+            "    Collection<Foo> coll\n" +
+            "    coll.removeIf { it.id == null }\n" + // Closure should coerce to SAM type java.util.function.Predicate
+            "  }\n" +
+            "}\n"
         };
 
         runConformTest(sources);
