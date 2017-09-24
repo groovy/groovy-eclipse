@@ -282,6 +282,20 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
     @Test
     void testGroovyScriptOutline2() {
         String contents = '''\
+            Map<String, List<java.lang.String>> map
+            '''.stripIndent()
+        GroovyOutlinePage outline = openFile('Script1', contents)
+        IJavaElement[] children = outline.outlineCompilationUnit.children
+
+        assert children.length == 1
+        assert children[0].elementName == 'map'
+        assert children[0].elementType == IJavaElement.FIELD
+        assert children[0].typeSignature == 'Qjava.util.Map<Qjava.lang.String;Qjava.util.List<Qjava.lang.String;>;>;'
+    }
+
+    @Test
+    void testGroovyScriptOutline3() {
+        String contents = '''\
             import groovy.transform.Field
             @Field Map<String,Object> map = [:]
             @Newify Object obj = Object.new()

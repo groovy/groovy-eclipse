@@ -44,8 +44,8 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.SourceRange;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.JavaElement;
 
 public class GroovyScriptOutlineExtender implements IOutlineExtender {
@@ -202,11 +202,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             if (ClassHelper.DYNAMIC_TYPE == fieldType) {
                 typeSignature = "Qdef;";
             } else {
-                typeSignature = fieldType.toString(false);
-                // don't need to convert array signatures
-                if (!typeSignature.startsWith("[")) {
-                    typeSignature = Signature.createTypeSignature(typeSignature, false);
-                }
+                typeSignature = GroovyUtils.getTypeSignature(fieldType, true, false);
             }
         }
 
