@@ -81,6 +81,7 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
@@ -954,7 +955,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 PackageNode packageNode = moduleNode.getPackage();
                 char[][] splits = CharOperation.splitOn('.', packageName.toCharArray());
                 long[] positions = positionsFor(splits, startOffset(packageNode), endOffset(packageNode));
-                ImportReference ref = new ImportReference(splits, positions, true, ClassFileConstants.AccDefault);
+                ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault);
                 ref.annotations = createAnnotations(packageNode.getAnnotations());
                 ref.declarationEnd = ref.sourceEnd + trailerLength(packageNode);
                 ref.declarationSourceStart = ref.sourceStart - 8; // "package ".length()
@@ -986,11 +987,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     ImportReference ref;
                     if (importNode.getAlias() == null || importNode.getAlias().length() < 1) {
                         long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
-                        ref = new ImportReference(splits, positions, false, ClassFileConstants.AccDefault);
+                        ref = new ImportReference(splits, positions, false, Flags.AccDefault);
                     } else {
                         endOffset = endOffset(importNode);
                         long[] positions = positionsFor(splits, typeStartOffset, endOffset);
-                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, ClassFileConstants.AccDefault);
+                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
@@ -1017,7 +1018,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         packageEndOffset = packageStartOffset + importText.length() - "import ".length() - ".*".length(),
                         endOffset = endOffset(importPackage);
                     char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
-                    ImportReference ref = new ImportReference(splits, positionsFor(splits, packageStartOffset, packageEndOffset), true, ClassFileConstants.AccDefault);
+                    ImportReference ref = new ImportReference(splits, positionsFor(splits, packageStartOffset, packageEndOffset), true, Flags.AccDefault);
                     ref.annotations = createAnnotations(importPackage.getAnnotations());
                     // import * style only have slocs for the entire ImportNode and not for the embedded type
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
@@ -1038,11 +1039,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     ImportReference ref = null;
                     if (importNode.getAlias() == null || importNode.getAlias().length() < 1) {
                         long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
-                        ref = new ImportReference(splits, positions, false, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+                        ref = new ImportReference(splits, positions, false, Flags.AccDefault | Flags.AccStatic);
                     } else {
                         endOffset = endOffset(importNode);
                         long[] positions = positionsFor(splits, typeStartOffset, endOffset);
-                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+                        ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault | Flags.AccStatic);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
@@ -1062,7 +1063,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         endOffset = endOffset(importNode);
                     char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
                     long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
-                    ImportReference ref = new ImportReference(splits, positions, true, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+                    ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault | Flags.AccStatic);
                     ref.annotations = createAnnotations(importNode.getAnnotations());
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
                     ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
@@ -1305,9 +1306,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ConstructorDeclaration constructor = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 constructor.bits |= ASTNode.IsDefaultConstructor;
                 if (isEnum) {
-                    constructor.modifiers = ClassFileConstants.AccPrivate;
+                    constructor.modifiers = Flags.AccPrivate;
                 } else {
-                    constructor.modifiers = ClassFileConstants.AccPublic;
+                    constructor.modifiers = Flags.AccPublic;
                 }
                 constructor.selector = ctorName;
                 accumulatedMethodDeclarations.add(constructor);
@@ -1317,7 +1318,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
                 constructorDeclaration.annotations = createAnnotations(constructorNode.getAnnotations());
-                constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : getModifiers(constructorNode);
+                constructorDeclaration.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
                 constructorDeclaration.selector = ctorName;
                 constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
                 constructorDeclaration.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
@@ -1415,7 +1416,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ClassNode returnType = methodNode.getReturnType();
 
                 // source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
-                if ((modifiers & ClassFileConstants.AccStatic) != 0 && params != null && params.length == 1 && methodNode.getName().equals("main")) {
+                if (Flags.isStatic(modifiers) && params != null && params.length == 1 && methodNode.getName().equals("main")) {
                     Parameter p = params[0];
                     if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
                         String name = p.getName();
@@ -1447,7 +1448,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             for (Argument[] variant : variants) {
                 ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(compilationResult);
                 constructorDeclaration.annotations = createAnnotations(constructorNode.getAnnotations());
-                constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : ClassFileConstants.AccPublic;
+                constructorDeclaration.modifiers = isEnum ? Flags.AccPrivate : Flags.AccPublic;
                 constructorDeclaration.selector = constructorDecl.selector;
                 constructorDeclaration.arguments = variant;
                 fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
@@ -1676,7 +1677,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 } else {
                     pos = toPos(parameter.getStart(), parameter.getEnd() - 1);
                 }
-                arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, ClassFileConstants.AccPublic);
+                arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, Flags.AccPublic);
                 arguments[i].declarationSourceStart = pstart;
             }
             if (isVargs(ps)) {
@@ -2149,20 +2150,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(ClassNode node, boolean isInner) {
             int modifiers = node.getModifiers();
             if (isTrait(node)) {
-                modifiers |= ClassFileConstants.AccInterface;
+                modifiers |= Flags.AccInterface;
             }
             if (node.isInterface()) {
-                modifiers &= ~ClassFileConstants.AccAbstract;
+                modifiers &= ~Flags.AccAbstract;
             }
             if (node.isEnum()) {
-                modifiers &= ~(ClassFileConstants.AccAbstract | ClassFileConstants.AccFinal);
+                modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
             }
             if (!isInner) {
                 // TODO: does this make types visible that shouldn't be?
-                modifiers &= ~(ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic);
+                modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);
             }
             if (/*node.isSyntheticPublic() &&*/ hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
-                modifiers &= ~ClassFileConstants.AccPublic;
+                modifiers &= ~Flags.AccPublic;
             }
             return modifiers;
         }
@@ -2170,16 +2171,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(FieldNode node) {
             int modifiers = node.getModifiers();
             if (node.getDeclaringClass().getProperty(node.getName()) != null && hasPackageScopeXform(node, PackageScopeTarget.FIELDS)) {
-                modifiers &= ~ClassFileConstants.AccPrivate;
+                modifiers &= ~Flags.AccPrivate;
             }
             return modifiers;
         }
 
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers();
-            modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
+            modifiers &= ~(Flags.AccSynthetic | Flags.AccTransient);
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
-                modifiers &= ~ClassFileConstants.AccPublic;
+                modifiers &= ~Flags.AccPublic;
             }
             return modifiers;
         }
@@ -2189,7 +2190,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             try {
                 PackageScopeTarget type = PackageScopeTarget.valueOf("CONSTRUCTORS");
                 if (node.isSyntheticPublic() && hasPackageScopeXform(node, type)) {
-                    modifiers &= ~ClassFileConstants.AccPublic;
+                    modifiers &= ~Flags.AccPublic;
                 }
             } catch (IllegalArgumentException unavailable) {}
             return modifiers;
@@ -2606,7 +2607,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 p.setSourcePosition(classNode); // prevent IllegalArgumentException in ASTConverter
 
                 decl.arguments = createArguments(new Parameter[] {p}, false);
-                decl.modifiers = ClassFileConstants.AccPublic;
+                decl.modifiers = Flags.AccPublic;
                 decl.returnType = createTypeReferenceForClassNode(ClassHelper.int_TYPE);
                 decl.selector = "compareTo".toCharArray();
                 decl.sourceEnd = classNode.getEnd();
@@ -2632,7 +2633,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                     ConstructorDeclaration decl = new ConstructorDeclaration(unitDeclaration.compilationResult);
                     decl.arguments = createArguments(params, false);
-                    decl.modifiers = ClassFileConstants.AccPublic;
+                    decl.modifiers = Flags.AccPublic;
                     decl.selector = ctorName;
                     decl.sourceEnd = classNode.getNameEnd();
                     decl.sourceStart = classNode.getNameStart();

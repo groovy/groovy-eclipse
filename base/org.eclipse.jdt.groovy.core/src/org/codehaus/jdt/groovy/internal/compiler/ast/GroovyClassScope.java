@@ -27,12 +27,12 @@ import java.util.Set;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -244,7 +244,7 @@ public class GroovyClassScope extends ClassScope {
         if (methodBinding.declaringClass instanceof SourceTypeBinding) {
             AbstractMethodDeclaration methodDeclaration = ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext.declarationOf(methodBinding);
             if (methodDeclaration != null) {
-                return (methodDeclaration.modifiers & ClassFileConstants.AccAbstract) == 0;
+                return !Flags.isAbstract(methodDeclaration.modifiers);
             }
         }
         if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
@@ -308,12 +308,12 @@ public class GroovyClassScope extends ClassScope {
             }
         }
         if (!found) {
-            int modifiers = ClassFileConstants.AccPublic;
+            int modifiers = Flags.AccPublic;
             if (isStatic) {
-                modifiers |= ClassFileConstants.AccStatic;
+                modifiers |= Flags.AccStatic;
             }
             if (this.referenceContext.binding.isInterface()) {
-                modifiers |= ClassFileConstants.AccAbstract;
+                modifiers |= Flags.AccAbstract;
             }
             char[] methodName = name.toCharArray();
             /*
@@ -357,12 +357,12 @@ public class GroovyClassScope extends ClassScope {
         // FIXASC what about inherited methods - what if the supertype
         // provides an implementation, does the subtype get a new method?
         if (!found) {
-            int modifiers = ClassFileConstants.AccPublic;
+            int modifiers = Flags.AccPublic;
             if (isStatic) {
-                modifiers |= ClassFileConstants.AccStatic;
+                modifiers |= Flags.AccStatic;
             }
             if (this.referenceContext.binding.isInterface()) {
-                modifiers |= ClassFileConstants.AccAbstract;
+                modifiers |= Flags.AccAbstract;
             }
             /*
              * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
@@ -414,12 +414,12 @@ public class GroovyClassScope extends ClassScope {
         // FIXASC what about inherited methods - what if the supertype
         // provides an implementation, does the subtype get a new method?
         if (!found) {
-            int modifiers = ClassFileConstants.AccPublic;
+            int modifiers = Flags.AccPublic;
             if (isStatic) {
-                modifiers |= ClassFileConstants.AccStatic;
+                modifiers |= Flags.AccStatic;
             }
             if (this.referenceContext.binding.isInterface()) {
-                modifiers |= ClassFileConstants.AccAbstract;
+                modifiers |= Flags.AccAbstract;
             }
             char[] methodName = name.toCharArray();
             /*

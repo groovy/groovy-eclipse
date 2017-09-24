@@ -15,7 +15,6 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,10 +33,10 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
 import org.eclipse.jdt.internal.compiler.impl.CharConstant;
@@ -146,7 +145,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             return ((ReferenceBinding) tb).modifiers;
         } else {
             // FIXASC need to be smarter here? Who is affected?
-            return ClassFileConstants.AccPublic;
+            return Flags.AccPublic;
         }
     }
 
@@ -340,8 +339,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             // If they need to be correct we need to retrieve the method decl from the binding scope
 
             int modifiers = methodBinding.modifiers;
-            if (jdtBinding.isInterface() && (modifiers & (0x10000 /*Modifier.DEFAULT*/ | Modifier.STATIC)) == 0) {
-                modifiers |= Modifier.ABSTRACT;
+            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && /*!Flags.isDefaultMethod(modifiers)*/ (modifiers & 0x10000) == 0) {
+                modifiers |= Flags.AccAbstract;
             }
 
             ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
