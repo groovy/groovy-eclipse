@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -415,7 +415,7 @@ ReferenceContext getContext(CategorizedProblem problem) {
  */
 public void record(char[] typeName, ClassFile classFile) {
     SourceTypeBinding sourceType = classFile.referenceBinding;
-    if (!sourceType.isLocalType() && sourceType.isHierarchyInconsistent()) {
+    if (sourceType != null && !sourceType.isLocalType() && sourceType.isHierarchyInconsistent()) {
         this.hasInconsistentToplevelHierarchies = true;
     }
 	this.compiledTypes.put(typeName, classFile);

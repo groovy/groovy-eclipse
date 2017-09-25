@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -113,6 +113,89 @@ public interface IClasspathAttribute {
 	 * @since 3.2
 	 */
 	String OPTIONAL = "optional"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the module attribute. The possible values
+	 * for this attribute are <code>"true"</code> or <code>"false"</code>.
+	 * When not present, <code>"false"</code> is assumed.
+	 * If the value of this attribute is <code>"true"</code>, the classpath
+	 * entry is considered to be on the module path and will be treated as a
+	 * regular named module or as an automatic module.
+	 *
+	 * @since 3.14
+	 */
+	String MODULE = "module"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the add-exports attribute.
+	 * 
+	 * <p>The value of this attribute must adhere to the syntax of <code>javac's</code>
+	 * {@code --add-exports} command line option: {@code <source-module>/<package>=<target-module>(,<target-module>)*}.
+	 * Multiple such options are packed as a ':' separated list into a single classpath attribute.
+	 * The given exports will be added at compile time.</p>
+	 * <p>Classpath entries with this attribute should also have a {@link #MODULE} attribute
+	 * with value <code>"true"</code>.</p>
+	 * 
+	 * @since 3.14
+	 */
+	String ADD_EXPORTS = "add-exports"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the add-reads attribute.
+	 * 
+	 * <p>The value of this attribute must adhere to the syntax of <code>javac's</code>
+	 * {@code --add-reads} command line option: {@code <source-module>=<target-module>}.
+	 * The given reads edge will be added at compile time.</p>
+	 * 
+	 * @since 3.14
+	 */
+	String ADD_READS = "add-reads"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the patch-module attribute.
+	 * 
+	 * <p>The value of this attribute must be the name of a module defined in the
+	 * classpath entry, to which this attribute is attached.</p>
+	 * 
+	 * <p>This attribute is supported for classpath entries of kind
+	 * {@link IClasspathEntry#CPE_CONTAINER}, {@link IClasspathEntry#CPE_LIBRARY}
+	 * and {@link IClasspathEntry#CPE_PROJECT}.
+	 * A classpath entry having this attribute must also have the
+	 * {@link #MODULE} attribute with value <code>"true"</code>.</p>
+	 *
+	 * @since 3.14
+	 */
+	String PATCH_MODULE = "patch-module"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the limit-modules attribute.
+	 * 
+	 * <p>The value of this attribute must be a comma-separated list of names of modules
+	 * defined in the classpath entry, to which this attribute is attached.
+	 * The set of modules observable through this entry will be limited to
+	 * the transitive closure of modules in this list.</p>
+	 * 
+	 * <p>This attribute is supported for classpath entries of kind
+	 * {@link IClasspathEntry#CPE_CONTAINER}.
+	 * A classpath entry having this attribute must also have the
+	 * {@link #MODULE} attribute with value <code>"true"</code>.</p>
+	 *
+	 * @since 3.14
+	 */
+	String LIMIT_MODULES = "limit-modules"; //$NON-NLS-1$
+
+	/**
+	 * Constant of the name of the module-main-class attribute.
+	 * The classpath entry holding this attribute must refer to a source folder
+	 * containing the implementation of a module.
+	 * 
+	 * <p>The value of this attribute must be the name of a class defined in this module.
+	 * It will be used for generating the <code>ModuleMainClass</code> attribute
+	 * in <code>module-info.class</code>.</p>
+	 * 
+	 * @since 3.14
+	 */
+	String MODULE_MAIN_CLASS = "module-main-class"; //$NON-NLS-1$
 
 	/**
 	 * Constant for the name of the external annotation path attribute. 

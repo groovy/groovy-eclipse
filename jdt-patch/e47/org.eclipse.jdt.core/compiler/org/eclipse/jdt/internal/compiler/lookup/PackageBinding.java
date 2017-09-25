@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.util.ArrayList;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.IModuleAwareNameEnvironment;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfPackage;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfType;
 
@@ -23,36 +26,53 @@ public class PackageBinding extends Binding implements TypeConstants {
 
 	public char[][] compoundName;
 	PackageBinding parent;
+	ArrayList<SplitPackageBinding> wrappingSplitPackageBindings;
 	public LookupEnvironment environment;
-	HashtableOfType knownTypes;
+	/** Types in this map are either uniquely visible in the current module or ProblemReferenceBindings. */
+	public HashtableOfType knownTypes;
+	/** All visible member packages, i.e. observable packages associated with modules read by the current module. */
 	HashtableOfPackage knownPackages;
 
 	// code representing the default that has been defined for this package (using @NonNullByDefault)
 	// one of Binding.{NO_NULL_DEFAULT,NULL_UNSPECIFIED_BY_DEFAULT,NONNULL_BY_DEFAULT}
 	protected int defaultNullness = NO_NULL_DEFAULT;
 
+	public ModuleBinding enclosingModule;
+
+	/** Is this package exported from its module? NB: to query this property use {@link #isExported()} to ensure initialization. */
+	Boolean isExported;
+
 protected PackageBinding() {
 	// for creating problem package
 }
-public PackageBinding(char[] topLevelPackageName, LookupEnvironment environment) {
-	this(new char[][] {topLevelPackageName}, null, environment);
+public PackageBinding(char[] topLevelPackageName, LookupEnvironment environment, ModuleBinding enclosingModule) {
+	this(new char[][] {topLevelPackageName}, null, environment, enclosingModule);
 }
-/* Create the default package.
+/* Create a normal package.
 */
-public PackageBinding(char[][] compoundName, PackageBinding parent, LookupEnvironment environment) {
+public PackageBinding(char[][] compoundName, PackageBinding parent, LookupEnvironment environment, ModuleBinding enclosingModule) {
 	this.compoundName = compoundName;
 	this.parent = parent;
 	this.environment = environment;
 	this.knownTypes = null; // initialized if used... class counts can be very large 300-600
 	this.knownPackages = new HashtableOfPackage(3); // sub-package counts are typically 0-3
+	
 	if (compoundName != CharOperation.NO_CHAR_CHAR)
 		checkIfNullAnnotationPackage();
+	
+	if (enclosingModule != null)
+		this.enclosingModule = enclosingModule;
+	else if (parent != null)
+		this.enclosingModule = parent.enclosingModule; // stop-gap for any remaining calls that don't provide an enclosingModule (they should)
+	
+	if (this.enclosingModule == null)
+		throw new IllegalStateException("Package should have an enclosing module"); //$NON-NLS-1$
 }
 
 public PackageBinding(LookupEnvironment environment) {
-	this(CharOperation.NO_CHAR_CHAR, null, environment);
+	this(CharOperation.NO_CHAR_CHAR, null, environment, environment.module);
 }
-private void addNotFoundPackage(char[] simpleName) {
+protected void addNotFoundPackage(char[] simpleName) {
 	this.knownPackages.put(simpleName, LookupEnvironment.TheNotFoundPackage);
 }
 private void addNotFoundType(char[] simpleName) {
@@ -60,9 +80,15 @@ private void addNotFoundType(char[] simpleName) {
 		this.knownTypes = new HashtableOfType(25);
 	this.knownTypes.put(simpleName, LookupEnvironment.TheNotFoundType);
 }
-void addPackage(PackageBinding element) {
+/**
+ * Remembers a sub-package.
+ * For a split parent package this will include enriching with siblings, if checkForSplitSiblings is true
+ * in which case the enriched (split) binding will be returned.
+ */
+PackageBinding addPackage(PackageBinding element, ModuleBinding module, boolean checkForSplitSiblings) {
 	if ((element.tagBits & TagBits.HasMissingType) == 0) clearMissingTagBit();
 	this.knownPackages.put(element.compoundName[element.compoundName.length - 1], element);
+	return element;
 }
 void addType(ReferenceBinding element) {
 	if ((element.tagBits & TagBits.HasMissingType) == 0) clearMissingTagBit();
@@ -76,6 +102,22 @@ void addType(ReferenceBinding element) {
 	if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled)
 		if (element.isAnnotationType() || element instanceof UnresolvedReferenceBinding) // unresolved types don't yet have the modifiers set
 			checkIfNullAnnotationType(element);
+
+	if (!element.isUnresolvedType() && this.wrappingSplitPackageBindings != null) {
+		for (SplitPackageBinding splitPackageBinding : this.wrappingSplitPackageBindings) {
+			if (splitPackageBinding.knownTypes != null) {
+				ReferenceBinding prior = splitPackageBinding.knownTypes.get(name);
+				if (prior != null && prior.isUnresolvedType() && !element.isUnresolvedType()) {
+					((UnresolvedReferenceBinding) prior).setResolvedType(element, this.environment);
+					splitPackageBinding.knownTypes.put(name, null); // forces re-checking for conflicts
+				}
+			}
+		}
+	}
+}
+
+ModuleBinding[] getDeclaringModules() {
+	return new ModuleBinding[] { this.enclosingModule };
 }
 
 void clearMissingTagBit() {
@@ -91,21 +133,16 @@ void clearMissingTagBit() {
 public char[] computeUniqueKey(boolean isLeaf) {
 	return CharOperation.concatWith(this.compoundName, '/');
 }
-private PackageBinding findPackage(char[] name) {
-	if (!this.environment.isPackage(this.compoundName, name))
-		return null;
-
-	char[][] subPkgCompoundName = CharOperation.arrayConcat(this.compoundName, name);
-	PackageBinding subPackageBinding = new PackageBinding(subPkgCompoundName, this, this.environment);
-	addPackage(subPackageBinding);
-	return subPackageBinding;
+protected PackageBinding findPackage(char[] name, ModuleBinding module) {
+	// delegate to the module to consider the module graph:
+	return module.getPackage(this.compoundName, name);
 }
 /* Answer the subpackage named name; ask the oracle for the package if its not in the cache.
 * Answer null if it could not be resolved.
 *
 * NOTE: This should only be used when we know there is NOT a type with the same name.
 */
-PackageBinding getPackage(char[] name) {
+PackageBinding getPackage(char[] name, ModuleBinding mod) {
 	PackageBinding binding = getPackage0(name);
 	if (binding != null) {
 		if (binding == LookupEnvironment.TheNotFoundPackage)
@@ -113,22 +150,30 @@ PackageBinding getPackage(char[] name) {
 		else
 			return binding;
 	}
-	if ((binding = findPackage(name)) != null)
+	if ((binding = findPackage(name, mod)) != null)
 		return binding;
 
 	// not found so remember a problem package binding in the cache for future lookups
 	addNotFoundPackage(name);
 	return null;
 }
-/* Answer the subpackage named name if it exists in the cache.
+/** Answer the subpackage named name if it exists in the cache.
 * Answer theNotFoundPackage if it could not be resolved the first time
 * it was looked up, otherwise answer null.
-*
+* <p>
+* NOTE: The returned package binding is guaranteed to be complete wrt. SplitPackageBinding,
+* or, if no complete binding is yet available, we shyly answer null.
+* </p><p>
 * NOTE: Senders must convert theNotFoundPackage into a real problem
-* package if its to returned.
+* package if its to returned.</p>
 */
-
 PackageBinding getPackage0(char[] name) {
+	return this.knownPackages.get(name);
+}
+/** Variant (see {@link #getPackage0(char[])}), that may even answer an incompletely
+ *  combined package (in the case of SplitPackageBinding).
+ */
+PackageBinding getPackage0Any(char[] name) {
 	return this.knownPackages.get(name);
 }
 /* Answer the type named name; ask the oracle for the type if its not in the cache.
@@ -139,10 +184,10 @@ PackageBinding getPackage0(char[] name) {
 * package with the same name.
 */
 
-ReferenceBinding getType(char[] name) {
+ReferenceBinding getType(char[] name, ModuleBinding mod) {
 	ReferenceBinding referenceBinding = getType0(name);
 	if (referenceBinding == null) {
-		if ((referenceBinding = this.environment.askForType(this, name)) == null) {
+		if ((referenceBinding = this.environment.askForType(this, name, mod)) == null) {
 			// not found so remember a problem type binding in the cache for future lookups
 			addNotFoundType(name);
 			return null;
@@ -155,6 +200,9 @@ ReferenceBinding getType(char[] name) {
 	referenceBinding = (ReferenceBinding) BinaryTypeBinding.resolveType(referenceBinding, this.environment, false /* no raw conversion for now */);
 	if (referenceBinding.isNestedType())
 		return new ProblemReferenceBinding(new char[][]{ name }, referenceBinding, ProblemReasons.InternalNameProvided);
+	if (!mod.canAccess(this))
+		return new ProblemReferenceBinding(referenceBinding.compoundName, referenceBinding, ProblemReasons.NotAccessible);
+	// at this point we have only checked accessibility of the package, accessibility of the type will be checked by callers
 	return referenceBinding;
 }
 /* Answer the type named name if it exists in the cache.
@@ -180,12 +228,19 @@ ReferenceBinding getType0(char[] name) {
 * THIS SHOULD ONLY BE USED BY SOURCE TYPES/SCOPES.
 */
 
-public Binding getTypeOrPackage(char[] name) {
+public Binding getTypeOrPackage(char[] name, ModuleBinding mod) {
+	ReferenceBinding problemBinding = null;
 	ReferenceBinding referenceBinding = getType0(name);
+	lookForType0:
 	if (referenceBinding != null && referenceBinding != LookupEnvironment.TheNotFoundType) {
 		referenceBinding = (ReferenceBinding) BinaryTypeBinding.resolveType(referenceBinding, this.environment, false /* no raw conversion for now */);
 		if (referenceBinding.isNestedType()) {
 			return new ProblemReferenceBinding(new char[][]{name}, referenceBinding, ProblemReasons.InternalNameProvided);
+		}
+		boolean isSameModule = (this instanceof SplitPackageBinding) ? referenceBinding.module() == mod : this.enclosingModule == mod;
+		if (!isSameModule && referenceBinding.isValidBinding() && !mod.canAccess(referenceBinding.fPackage)) {
+			problemBinding = new ProblemReferenceBinding(referenceBinding.compoundName, referenceBinding, ProblemReasons.NotAccessible);
+			break lookForType0;
 		}
 		if ((referenceBinding.tagBits & TagBits.HasMissingType) == 0) {
 			return referenceBinding;
@@ -197,12 +252,18 @@ public Binding getTypeOrPackage(char[] name) {
 	if (packageBinding != null && packageBinding != LookupEnvironment.TheNotFoundPackage) {
 		return packageBinding;
 	}
-	if (referenceBinding == null) { // have not looked for it before
-		if ((referenceBinding = this.environment.askForType(this, name)) != null) {
+	lookForType:
+	if (referenceBinding == null && problemBinding == null) { // have not looked for it before
+		if ((referenceBinding = this.environment.askForType(this, name, mod)) != null) {
 			if (referenceBinding.isNestedType()) {
 				return new ProblemReferenceBinding(new char[][]{name}, referenceBinding, ProblemReasons.InternalNameProvided);
 			}
-			return referenceBinding;
+			if (referenceBinding.isValidBinding() && !mod.canAccess(referenceBinding.fPackage)) {
+				problemBinding = new ProblemReferenceBinding(referenceBinding.compoundName, referenceBinding, ProblemReasons.NotAccessible);
+				break lookForType;
+			} else {
+				return referenceBinding;
+			}
 		}
 
 		// Since name could not be found, add a problem binding
@@ -211,22 +272,24 @@ public Binding getTypeOrPackage(char[] name) {
 	}
 
 	if (packageBinding == null) { // have not looked for it before
-		if ((packageBinding = findPackage(name)) != null) {
+		if ((packageBinding = findPackage(name, mod)) != null) {
 			return packageBinding;
 		}
 		if (referenceBinding != null && referenceBinding != LookupEnvironment.TheNotFoundType) {
+			if (problemBinding != null)
+				return problemBinding;
 			return referenceBinding; // found cached missing type - check if package conflict
 		}
 		addNotFoundPackage(name);
 	}
 
-	return null;
+	return problemBinding;
 }
 public final boolean isViewedAsDeprecated() {
 	if ((this.tagBits & TagBits.DeprecatedAnnotationResolved) == 0) {
 		this.tagBits |= TagBits.DeprecatedAnnotationResolved;
 		if (this.compoundName != CharOperation.NO_CHAR_CHAR) {
-			ReferenceBinding packageInfo = this.getType(TypeConstants.PACKAGE_INFO_NAME);
+			ReferenceBinding packageInfo = this.getType(TypeConstants.PACKAGE_INFO_NAME, this.enclosingModule);
 			if (packageInfo != null) {
 				packageInfo.initializeDeprecatedAnnotationTagBits();
 				this.tagBits |= packageInfo.tagBits & TagBits.AllStandardAnnotationsMask;
@@ -260,7 +323,6 @@ void checkIfNullAnnotationPackage() {
 			env.nonnullByDefaultAnnotationPackage = this;
 	}
 }
-
 private boolean isPackageOfQualifiedTypeName(char[][] packageName, char[][] typeName) {
 	int length;
 	if (typeName == null || (length = packageName.length) != typeName.length -1)
@@ -308,5 +370,54 @@ public String toString() {
 		str += "[MISSING]"; //$NON-NLS-1$
 	}
 	return str;
+}
+public boolean isDeclaredIn(ModuleBinding moduleBinding) {
+	return this.enclosingModule == moduleBinding;
+}
+public boolean subsumes(PackageBinding binding) {
+	return binding == this;
+}
+/**
+ * Is this package exported from its module?
+ * Does not consider export restrictions.
+ */
+public boolean isExported() {
+	if (this.isExported == null) {
+		this.enclosingModule.getExports(); // ensure resolved and completed
+		if (this.isExported == null)
+			this.isExported = Boolean.FALSE;
+	}
+	return this.isExported == Boolean.TRUE;
+}
+/**
+ * If this package is uniquely visible to 'module' return a plain PackageBinding.
+ * In case of a conflict between a local package and foreign package
+ * the plain local package is returned, because this conflict will more
+ * appropriately be reported against the package declaration, not its references.
+ * In case of multiple accessible foreign packages a SplitPackageBinding is returned
+ * to indicate a conflict.
+ */
+public PackageBinding getVisibleFor(ModuleBinding module) {
+	return this;
+}
+public boolean hasCompilationUnit(boolean checkCUs) {
+	if (this.knownTypes != null) {
+		for (ReferenceBinding knownType : this.knownTypes.valueTable) {
+			if (knownType != null && knownType != LookupEnvironment.TheNotFoundType)
+				return true;
+		}
+	}
+	if (this.environment.useModuleSystem) {
+		IModuleAwareNameEnvironment moduleEnv = (IModuleAwareNameEnvironment) this.environment.nameEnvironment;
+		return moduleEnv.hasCompilationUnit(this.compoundName, this.enclosingModule.nameForLookup(), checkCUs);
+	}
+	return false;
+}
+
+public void addWrappingSplitPackageBinding(SplitPackageBinding splitPackageBinding) {
+	if (this.wrappingSplitPackageBindings == null) {
+		this.wrappingSplitPackageBindings = new ArrayList<>();
+	}
+	this.wrappingSplitPackageBindings.add(splitPackageBinding);
 }
 }

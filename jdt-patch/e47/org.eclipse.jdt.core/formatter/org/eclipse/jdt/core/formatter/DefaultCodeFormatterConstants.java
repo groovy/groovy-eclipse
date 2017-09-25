@@ -236,6 +236,17 @@ public class DefaultCodeFormatterConstants {
 	public static final String FORMATTER_ALIGNMENT_FOR_METHOD_DECLARATION = JavaCore.PLUGIN_ID + ".formatter.alignment_for_method_declaration";	 //$NON-NLS-1$
 	/**
 	 * <pre>
+	 * FORMATTER / Option for alignment of module statements
+	 *     - option id:         "org.eclipse.jdt.core.formatter.alignment_for_module_statements"
+	 *     - possible values:   values returned by <code>createAlignmentValue(boolean, int, int)</code> call
+	 *     - default:           createAlignmentValue(false, WRAP_COMPACT, INDENT_DEFAULT)
+	 * </pre>
+	 * @see #createAlignmentValue(boolean, int, int)
+	 * @since 3.14
+	 */
+	public static final String FORMATTER_ALIGNMENT_FOR_MODULE_STATEMENTS = JavaCore.PLUGIN_ID + ".formatter.alignment_for_module_statements";	 //$NON-NLS-1$
+	/**
+	 * <pre>
 	 * FORMATTER / Option for alignment of multiple fields
 	 *     - option id:         "org.eclipse.jdt.core.formatter.alignment_for_multiple_fields"
 	 *     - possible values:   values returned by <code>createAlignmentValue(boolean, int, int)</code> call

@@ -321,6 +321,10 @@ public ISelectionRequestor getSelectionRequestor(final ISelectionRequestor origi
 		public void acceptMethodTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] selector, int selectorStart, int selectorEnd, char[] typeParameterName,boolean isDeclaration, int start, int end) {
 			originalRequestor.acceptMethodTypeParameter(declaringTypePackageName, declaringTypeName, selector, selectorStart, selectorEnd, typeParameterName, isDeclaration, start, end);
 		}
+		@Override
+		public void acceptModule(char[] moduleName, char[] uniqueKey, int start, int end) {
+			originalRequestor.acceptModule(moduleName, uniqueKey, start, end);
+		}
 	};
 }
 }

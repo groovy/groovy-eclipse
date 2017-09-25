@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,8 @@ import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ModuleStatement;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -73,6 +75,17 @@ public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValu
 	return this.parent.add(nestedBlockDeclaration, bracketBalanceValue);
 }
 /*
+ *	Record an e reference
+ */
+public RecoveredElement add(ModuleStatement moduleStatement, int bracketBalanceValue){
+
+	/* default behavior is to delegate recording to parent if any */
+	resetPendingModifiers();
+	if (this.parent == null) return this; // ignore
+	this.updateSourceEndIfNecessary(previousAvailableLineEnd(moduleStatement.declarationSourceStart - 1));
+	return this.parent.add(moduleStatement, bracketBalanceValue);
+}
+/*
  * Record a field declaration
  */
 public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanceValue) {
@@ -124,6 +137,12 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 	}
 	this.updateSourceEndIfNecessary(previousAvailableLineEnd(statement.sourceStart - 1));
 	return this.parent.add(statement, bracketBalanceValue);
+}
+public RecoveredElement add(ModuleDeclaration moduleDeclaration, int bracketBalanceValue){
+	resetPendingModifiers();
+	if (this.parent == null) return this; // ignore
+	this.updateSourceEndIfNecessary(previousAvailableLineEnd(moduleDeclaration.declarationSourceStart - 1));
+	return this.parent.add(moduleDeclaration, bracketBalanceValue);
 }
 /*
  *	Record a type declaration

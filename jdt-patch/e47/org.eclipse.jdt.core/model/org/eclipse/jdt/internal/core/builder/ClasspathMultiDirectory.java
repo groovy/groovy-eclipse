@@ -11,8 +11,13 @@
 package org.eclipse.jdt.internal.core.builder;
 
 import org.eclipse.core.resources.*;
-
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.batch.BasicModule;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathMultiDirectory extends ClasspathDirectory {
@@ -24,7 +29,7 @@ boolean hasIndependentOutputFolder; // if output folder is not equal to any of t
 public boolean ignoreOptionalProblems;
 
 ClasspathMultiDirectory(IContainer sourceFolder, IContainer binaryFolder, char[][] inclusionPatterns, char[][] exclusionPatterns, boolean ignoreOptionalProblems) {
-	super(binaryFolder, true, null, null);
+	super(binaryFolder, true, null, null, false /* source never an automatic module*/);
 
 	this.sourceFolder = sourceFolder;
 	this.inclusionPatterns = inclusionPatterns;
@@ -44,6 +49,10 @@ public boolean equals(Object o) {
 	if (!(o instanceof ClasspathMultiDirectory)) return false;
 
 	ClasspathMultiDirectory md = (ClasspathMultiDirectory) o;
+	// TODO: revisit this - is this really required??
+//	if (this.module != md.module)
+//		if (this.module == null || !this.module.equals(md.module))
+//			return false;
 	return this.ignoreOptionalProblems == md.ignoreOptionalProblems 
 		&& this.sourceFolder.equals(md.sourceFolder) && this.binaryFolder.equals(md.binaryFolder)
 		&& CharOperation.equals(this.inclusionPatterns, md.inclusionPatterns)
@@ -61,4 +70,21 @@ public String toString() {
 	return "Source classpath directory " + this.sourceFolder.getFullPath().toString() + //$NON-NLS-1$
 		" with " + super.toString(); //$NON-NLS-1$
 }
+
+public void acceptModuleInfo(ICompilationUnit cu, Parser parser) {
+	CompilationResult compilationResult = new CompilationResult(cu, 0, 1, 10);
+	CompilationUnitDeclaration unit = parser.parse(cu, compilationResult);
+	// Request could also come in when module-info has changed or removed.
+	if (unit.isModuleInfo() && unit.moduleDeclaration != null) {
+		this.module = new BasicModule(unit.moduleDeclaration, null);
+	}
+}
+public void setModule(IModule mod) {
+	this.module = mod;
+}
+
+public IModule module() {
+	return this.module;
+}
+
 }

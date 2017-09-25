@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -211,6 +211,17 @@ public abstract class AbstractIndexer implements IIndexConstants {
 	}
 	public void addMethodReference(char[] methodName, int argCount) {
 		addIndexEntry(METHOD_REF, MethodPattern.createIndexKey(methodName, argCount));
+	}
+	public void addModuleDeclaration(char[] moduleName) {
+		addIndexEntry(MODULE_DECL, ModulePattern.createIndexKey(moduleName));
+	}
+	public void addModuleExportedPackages(char[] packageName) {
+		char[][] tokens = CharOperation.splitOn('.', packageName);
+		for (int i = 0, l = tokens.length; i < l; ++i)
+			addNameReference(tokens[i]);
+	}
+	public void addModuleReference(char[] moduleName) {
+		addIndexEntry(MODULE_REF, ModulePattern.createIndexKey(moduleName));
 	}
 	public void addNameReference(char[] name) {
 		addIndexEntry(REF, name);

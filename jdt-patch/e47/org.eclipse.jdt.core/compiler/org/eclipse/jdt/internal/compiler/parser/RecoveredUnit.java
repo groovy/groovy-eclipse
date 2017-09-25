@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,9 +20,11 @@ import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ExportsStatement;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 public class RecoveredUnit extends RecoveredElement {
@@ -31,6 +33,7 @@ public class RecoveredUnit extends RecoveredElement {
 
 	public RecoveredImport[] imports;
 	public int importCount;
+	public RecoveredModule module;
 	public RecoveredType[] types;
 	public int typeCount;
 
@@ -127,6 +130,10 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
 	}
 	return this; // ignore
 }
+public RecoveredElement add(ExportsStatement exportReference, int bracketBalanceValue) {
+	return this.module != null ? this.module.add(exportReference, bracketBalanceValue) : null;
+}
+
 public RecoveredElement add(ImportReference importReference, int bracketBalanceValue) {
 	resetPendingModifiers();
 
@@ -150,8 +157,12 @@ public RecoveredElement add(ImportReference importReference, int bracketBalanceV
 	if (importReference.declarationSourceEnd == 0) return element;
 	return this;
 }
+public RecoveredElement add(ModuleDeclaration moduleDeclaration, int bracketBalanceValue){
+	this.module = new RecoveredModule(moduleDeclaration, this, bracketBalanceValue);
+	return this.module;
+}
 public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceValue) {
-
+	
 	if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0){
 		if (this.typeCount > 0) {
 			// add it to the last type
@@ -242,6 +253,9 @@ public CompilationUnitDeclaration updatedCompilationUnitDeclaration(){
 			importRefences[i] = this.imports[i].updatedImportReference();
 		}
 		this.unitDeclaration.imports = importRefences;
+	}
+	if (this.module != null) {
+		this.unitDeclaration.moduleDeclaration = this.module.updatedModuleDeclaration();
 	}
 	/* update types */
 	if (this.typeCount > 0){

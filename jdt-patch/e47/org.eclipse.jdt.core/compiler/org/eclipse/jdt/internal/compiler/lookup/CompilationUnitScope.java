@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.*;
 
@@ -67,13 +68,17 @@ public class CompilationUnitScope extends Scope {
 	Map<InferenceVariable.InferenceVarKey, InferenceVariable> uniqueInferenceVariables = new HashMap<>();
 
 public CompilationUnitScope(CompilationUnitDeclaration unit, LookupEnvironment environment) {
-	super(COMPILATION_UNIT_SCOPE, null);
+	this(unit, environment.globalOptions);
 	this.environment = environment;
+}
+
+public CompilationUnitScope(CompilationUnitDeclaration unit, CompilerOptions compilerOptions) {
+	super(COMPILATION_UNIT_SCOPE, null);
 	this.referenceContext = unit;
 	unit.scope = this;
 	this.currentPackageName = unit.currentPackage == null ? CharOperation.NO_CHAR_CHAR : unit.currentPackage.tokens;
 
-	if (compilerOptions().produceReferenceInfo) {
+	if (compilerOptions.produceReferenceInfo) {
 		this.qualifiedReferences = new CompoundNameVector();
 		this.simpleNameReferences = new SimpleNameVector();
 		this.rootReferences = new SimpleNameVector();
@@ -86,6 +91,7 @@ public CompilationUnitScope(CompilationUnitDeclaration unit, LookupEnvironment e
 		this.referencedTypes = null;
 		this.referencedSuperTypes = null;
 	}
+	// client still needs to assign #environment
 }
 void buildFieldsAndMethods() {
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
@@ -106,7 +112,7 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 	boolean firstIsSynthetic = false;
 	if (this.referenceContext.compilationResult.compilationUnit != null) {
 		char[][] expectedPackageName = this.referenceContext.compilationResult.compilationUnit.getPackageName();
-		if (expectedPackageName != null
+		if (expectedPackageName != null && !this.referenceContext.isModuleInfo()
 				&& !CharOperation.equals(this.currentPackageName, expectedPackageName)) {
 			// GROOVY add
 			boolean errorReported = true;
@@ -129,6 +135,15 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 	if (this.currentPackageName == CharOperation.NO_CHAR_CHAR) {
 		// environment default package is never null
 		this.fPackage = this.environment.defaultPackage;
+		if (this.referenceContext.isModuleInfo()) { // cannot have a package as per grammar
+			ModuleDeclaration moduleDecl = this.referenceContext.moduleDeclaration;
+			if (moduleDecl != null) {
+				moduleDecl.createScope(this);
+				moduleDecl.checkAndSetModifiers();
+			}
+		} else if (this.environment.module != this.environment.UnNamedModule) {
+			problemReporter().unnamedPackageInNamedModule(this.environment.module);
+		}
 	} else {
 		if ((this.fPackage = this.environment.createPackage(this.currentPackageName)) == null) {
 			if (this.referenceContext.currentPackage != null) {
@@ -162,8 +177,10 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 		if (this.environment.isProcessingAnnotations && this.environment.isMissingType(typeDecl.name))
 			throw new SourceTypeCollisionException(); // resolved a type ref before APT generated the type
 		ReferenceBinding typeBinding = this.fPackage.getType0(typeDecl.name);
+		if (Binding.isValid(typeBinding) && this.fPackage instanceof SplitPackageBinding && !this.environment.module.canAccess(typeBinding.fPackage))
+			typeBinding = null;
 		recordSimpleReference(typeDecl.name); // needed to detect collision cases
-		if (typeBinding != null && typeBinding.isValidBinding() && !(typeBinding instanceof UnresolvedReferenceBinding)) {
+		if (Binding.isValid(typeBinding) && !(typeBinding instanceof UnresolvedReferenceBinding)) {
 			// if its an unresolved binding - its fixed up whenever its needed, see UnresolvedReferenceBinding.resolve()
 			if (this.environment.isProcessingAnnotations)
 				throw new SourceTypeCollisionException(); // resolved a type ref before APT generated the type
@@ -172,11 +189,6 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 			// and it can be an unresolved type which is now being defined
 			problemReporter().duplicateTypes(this.referenceContext, typeDecl);
 			continue nextType;
-		}
-		if (this.fPackage != this.environment.defaultPackage && this.fPackage.getPackage(typeDecl.name) != null) {
-			// if a package exists, it must be a valid package - cannot be a NotFound problem package
-			// this is now a warning since a package does not really 'exist' until it contains a type, see JLS v2, 7.4.3
-			problemReporter().typeCollidesWithPackage(this.referenceContext, typeDecl);
 		}
 
 		// GROOVY edit
@@ -222,6 +234,25 @@ protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl
 }
 // GROOVY end
 void checkAndSetImports() {
+	// TODO(SHMOD): verify: this block moved here from buildTypeBindings.
+	// package resolving may require all modules to be known
+	TypeDeclaration[] types = this.referenceContext.types;
+	if (types != null) {
+		for (int i = 0; i < types.length; i++) {
+			TypeDeclaration typeDecl = types[i];
+			if (this.fPackage != this.environment.defaultPackage && this.fPackage.getPackage(typeDecl.name, module()) != null) {
+				// if a package exists, it must be a valid package - cannot be a NotFound problem package
+				// this is now a warning since a package does not really 'exist' until it contains a type, see JLS v2, 7.4.3
+				problemReporter().typeCollidesWithPackage(this.referenceContext, typeDecl);
+			}
+		}
+	}
+
+	if (this.referenceContext.moduleDeclaration != null) {
+		this.referenceContext.moduleDeclaration.resolveModuleDirectives(this);
+		this.referenceContext.moduleDeclaration.resolvePackageDirectives(this);
+	}
+
 	if (this.referenceContext.imports == null) {
 		this.imports = getDefaultImports();
 		return;
@@ -447,11 +478,6 @@ void faultInImports() {
 			}
 		}
 		if ((importReference.bits & ASTNode.OnDemand) != 0) {
-			if (CharOperation.equals(compoundName, this.currentPackageName)) {
-				problemReporter().unusedImport(importReference); // since skipped, must be reported now
-				continue nextImport;
-			}
-
 			Binding importBinding = findImport(compoundName, compoundName.length);
 			if (!importBinding.isValidBinding()) {
 				// GROOVY edit
@@ -459,6 +485,14 @@ void faultInImports() {
 				reportImportProblem(importReference, importBinding);
 				// GROOVY end
 				continue nextImport;
+			}
+			if (importBinding instanceof PackageBinding) {
+				PackageBinding uniquePackage = ((PackageBinding)importBinding).getVisibleFor(module());
+				if (uniquePackage instanceof SplitPackageBinding) {
+					SplitPackageBinding splitPackage = (SplitPackageBinding) uniquePackage;
+					problemReporter().conflictingPackagesFromModules(splitPackage, importReference.sourceStart, importReference.sourceEnd);
+					continue nextImport;
+				}
 			}
 			if (importReference.isStatic() && importBinding instanceof PackageBinding) {
 				problemReporter().cannotImportPackage(importReference);
@@ -484,6 +518,24 @@ void faultInImports() {
 			if (importBinding instanceof PackageBinding) {
 				problemReporter().cannotImportPackage(importReference);
 				continue nextImport;
+			} else if (this.environment.useModuleSystem && importBinding instanceof ReferenceBinding) {
+				PackageBinding importedPackage = ((ReferenceBinding) importBinding).fPackage;
+				if (importedPackage != null) {
+					if (!importedPackage.isValidBinding()) {
+						problemReporter().importProblem(importReference, importedPackage);
+						continue nextImport;
+					}
+					// re-get to find a possible split package:
+					importedPackage = (PackageBinding) findImport(importedPackage.compoundName, false, true);
+					if (importedPackage != null)
+						importedPackage = importedPackage.getVisibleFor(module());
+					if (importedPackage instanceof SplitPackageBinding) {
+						SplitPackageBinding splitPackage = (SplitPackageBinding) importedPackage;
+						int sourceEnd = (int) importReference.sourcePositions[splitPackage.compoundName.length-1];
+						problemReporter().conflictingPackagesFromModules(splitPackage, importReference.sourceStart, sourceEnd);
+						continue nextImport;
+					}
+				}
 			}
 			// all the code here which checks for valid bindings have been moved to the method 
 			// checkAndRecordImportBinding() since bug 361327
@@ -521,6 +573,11 @@ void faultInImports() {
 }
 public void faultInTypes() {
 	faultInImports();
+	if (this.referenceContext.moduleDeclaration != null) {
+		this.referenceContext.moduleDeclaration.resolveTypeDirectives(this);
+	} else if (this.referenceContext.currentPackage != null) {
+		this.referenceContext.currentPackage.checkPackageConflict(this);
+	}
 
 	for (int i = 0, length = this.topLevelTypes.length; i < length; i++)
 		this.topLevelTypes[i].faultInTypesForFieldsAndMethods();
@@ -535,13 +592,16 @@ public Binding findImport(char[][] compoundName, boolean findStaticImports, bool
 }
 private Binding findImport(char[][] compoundName, int length) {
 	recordQualifiedReference(compoundName);
-
+	ModuleBinding module = module();
 	Binding binding = this.environment.getTopLevelPackage(compoundName[0]);
 	int i = 1;
 	foundNothingOrType: if (binding != null) {
 		PackageBinding packageBinding = (PackageBinding) binding;
 		while (i < length) {
-			binding = packageBinding.getTypeOrPackage(compoundName[i++]);
+			binding = packageBinding.getTypeOrPackage(compoundName[i++], module);
+			if (binding instanceof ReferenceBinding && binding.problemId() == ProblemReasons.NotAccessible) {
+				return this.environment.convertToRawType((TypeBinding) binding, false /*do not force conversion of enclosing types*/);
+			}
 			if (binding == null || !binding.isValidBinding()) {
 				binding = null;
 				break foundNothingOrType;
@@ -551,6 +611,8 @@ private Binding findImport(char[][] compoundName, int length) {
 
 			packageBinding = (PackageBinding) binding;
 		}
+		if (packageBinding.isValidBinding() && !module.canAccess(packageBinding))
+			return new ProblemPackageBinding(compoundName, ProblemReasons.NotAccessible);
 		return packageBinding;
 	}
 
@@ -594,7 +656,7 @@ protected Binding findSingleImport(char[][] compoundName, int mask, boolean find
 	if (compoundName.length == 1) {
 		// findType records the reference
 		// the name cannot be a package
-		if (compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4)
+		if (compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4 && !this.referenceContext.isModuleInfo())
 			return new ProblemReferenceBinding(compoundName, null, ProblemReasons.NotFound);
 		ReferenceBinding typeBinding = findType(compoundName[0], this.environment.defaultPackage, this.fPackage);
 		if (typeBinding == null)
@@ -612,7 +674,7 @@ private Binding findSingleStaticImport(char[][] compoundName, int mask) {
 
 	char[] name = compoundName[compoundName.length - 1];
 	if (binding instanceof PackageBinding) {
-		Binding temp = ((PackageBinding) binding).getTypeOrPackage(name);
+		Binding temp = ((PackageBinding) binding).getTypeOrPackage(name, module());
 		if (temp != null && temp instanceof ReferenceBinding) // must resolve to a member type or field, not a top level type
 			return new ProblemReferenceBinding(compoundName, (ReferenceBinding) temp, ProblemReasons.InvalidTypeForStaticImport);
 		return binding; // cannot be a package, error is caught in sender
@@ -665,11 +727,11 @@ private MethodBinding findStaticMethod(ReferenceBinding currentType, char[] sele
 // GROOVY package->protected
 protected ImportBinding[] getDefaultImports() {
 	// initialize the default imports if necessary... share the default java.lang.* import
-	if (this.environment.defaultImports != null) return this.environment.defaultImports;
+	if (this.environment.root.defaultImports != null) return this.environment.root.defaultImports;
 
 	Binding importBinding = this.environment.getTopLevelPackage(TypeConstants.JAVA);
 	if (importBinding != null)
-		importBinding = ((PackageBinding) importBinding).getTypeOrPackage(TypeConstants.JAVA_LANG[1]);
+		importBinding = ((PackageBinding) importBinding).getTypeOrPackage(TypeConstants.JAVA_LANG[1], module());
 
 	if (importBinding == null || !importBinding.isValidBinding()) {
 		// create a proxy for the missing BinaryType
@@ -681,7 +743,7 @@ protected ImportBinding[] getDefaultImports() {
 		importBinding = missingObject.fPackage;
 	}
 
-	return this.environment.defaultImports = new ImportBinding[] {new ImportBinding(TypeConstants.JAVA_LANG, true, importBinding, null)};
+	return this.environment.root.defaultImports = new ImportBinding[] {new ImportBinding(TypeConstants.JAVA_LANG, true, importBinding, null)};
 }
 // NOT Public API
 public final Binding getImport(char[][] compoundName, boolean onDemand, boolean isStaticImport) {
@@ -1005,7 +1067,6 @@ private int checkAndRecordImportBinding(
 						}
 					} else if (resolved.resolvedImport == referenceBinding) {
 						if (importReference.isStatic() != resolved.isStatic()) {
-							problemReporter().duplicateImport(importReference);
 							recordImportBinding(new ImportBinding(compoundName, false, importBinding, importReference));
 						}
 					}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 package org.eclipse.jdt.core;
 
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
@@ -38,7 +39,9 @@ import org.eclipse.jdt.internal.core.util.Messages;
 public final class JavaConventions {
 
 	private static final char DOT= '.';
-	private static final String PACKAGE_INFO = new String(TypeConstants.PACKAGE_INFO_NAME);
+    private static final Pattern DOT_DOT = Pattern.compile("(\\.)(\\1)+"); //$NON-NLS-1$
+    private static final Pattern TERMINAL_DIGIT = Pattern.compile("\\d$"); //$NON-NLS-1$
+    private static final Pattern PREFIX_JAVA = Pattern.compile("java$"); //$NON-NLS-1$
 	private static final Scanner SCANNER = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
 
 	private JavaConventions() {
@@ -157,7 +160,8 @@ public final class JavaConventions {
 		// JSR-175 metadata strongly recommends "package-info.java" as the
 		// file in which to store package annotations and
 		// the package-level spec (replaces package.html)
-		if (!identifier.equals(PACKAGE_INFO)) {
+		if (!CharOperation.equals(identifier.toCharArray(), TypeConstants.PACKAGE_INFO_NAME)
+				&& !CharOperation.equals(identifier.toCharArray(), TypeConstants.MODULE_INFO_NAME)) {
 			IStatus status = validateIdentifier(identifier, sourceLevel, complianceLevel);
 			if (!status.isOK()) {
 				return status;
@@ -229,7 +233,8 @@ public final class JavaConventions {
 		// JSR-175 metadata strongly recommends "package-info.java" as the
 		// file in which to store package annotations and
 		// the package-level spec (replaces package.html)
-		if (!identifier.equals(PACKAGE_INFO)) {
+		if (!CharOperation.equals(identifier.toCharArray(), TypeConstants.PACKAGE_INFO_NAME)
+				&& !CharOperation.equals(identifier.toCharArray(), TypeConstants.MODULE_INFO_NAME)) {
 			IStatus status = validateIdentifier(identifier, sourceLevel, complianceLevel);
 			if (!status.isOK()) {
 				return status;
@@ -408,6 +413,7 @@ public final class JavaConventions {
 	 * @see JavaCore#VERSION_1_6
 	 * @see JavaCore#VERSION_1_7
 	 * @see JavaCore#VERSION_1_8
+	 * @see JavaCore#VERSION_9
 	 */
 	public static IStatus validateJavaTypeName(String name, String sourceLevel, String complianceLevel) {
 		if (name == null) {
@@ -541,11 +547,8 @@ public final class JavaConventions {
 		if (CharOperation.isWhitespace(name.charAt(0)) || CharOperation.isWhitespace(name.charAt(name.length() - 1))) {
 			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_package_nameWithBlanks, null);
 		}
-		int dot = 0;
-		while (dot != -1 && dot < length-1) {
-			if ((dot = name.indexOf(DOT, dot+1)) != -1 && dot < length-1 && name.charAt(dot+1) == DOT) {
-				return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_package_consecutiveDotsName, null);
-				}
+		if (DOT_DOT.matcher(name).find()) {
+			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_package_consecutiveDotsName, null);
 		}
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		StringTokenizer st = new StringTokenizer(name, "."); //$NON-NLS-1$
@@ -565,6 +568,76 @@ public final class JavaConventions {
 			if (firstToken && scannedID.length > 0 && ScannerHelper.isUpperCase(scannedID[0])) {
 				if (warningStatus == null) {
 					warningStatus = new Status(IStatus.WARNING, JavaCore.PLUGIN_ID, -1, Messages.convention_package_uppercaseName, null);
+				}
+			}
+			firstToken = false;
+		}
+		if (warningStatus != null) {
+			return warningStatus;
+		}
+		return JavaModelStatus.VERIFIED_OK;
+	}
+
+	/**
+	 * Validate the given module name for the given source and compliance levels.
+	 * <p>
+	 * The syntax of a module name corresponds to ModuleName as
+	 * defined by ModuleDeclaration (JLS 7.6). For example, <code>"java.base"</code>.
+	 * <p>
+	 * Note that the given name must not be empty. Also each segment of the module
+	 * name (separated by ".") must be a valid Java identifier as per JLS 3.8.
+	 *
+	 * @param name name of a module
+	 * @param sourceLevel the source level
+	 * @param complianceLevel the compliance level
+	 * @return a status object with code <code>IStatus.OK</code> if
+	 *		the given name is valid as a module name, otherwise a status
+	 *		object indicating what is wrong with the name
+	 * @since 3.14
+	 */
+	public static IStatus validateModuleName(String name, String sourceLevel, String complianceLevel) {
+
+		if (name == null) {
+			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_module_nullName, null);
+		}
+		int length;
+		if ((length = name.length()) == 0) {
+			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_module_emptyName, null);
+		}
+
+		if (name.charAt(0) == DOT || name.charAt(length-1) == DOT) {
+			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_module_dotName, null);
+		}
+		if (CharOperation.isWhitespace(name.charAt(0)) || CharOperation.isWhitespace(name.charAt(name.length() - 1))) {
+			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_module_nameWithBlanks, null);
+		}
+		if (DOT_DOT.matcher(name).find()) {
+			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_module_consecutiveDotsName, null);
+		}
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		StringTokenizer st = new StringTokenizer(name, "."); //$NON-NLS-1$
+		boolean firstToken = true;
+		IStatus warningStatus = null;
+		while (st.hasMoreTokens()) {
+			String segment = st.nextToken();
+			segment = segment.trim(); // grammar allows spaces
+			char[] scannedID = scannedIdentifier(segment, sourceLevel, complianceLevel);
+			if (scannedID == null) {
+				return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.bind(Messages.convention_illegalIdentifier, segment), null);
+			}
+			if (firstToken && PREFIX_JAVA.matcher(segment).find()) {
+				warningStatus = new Status(IStatus.WARNING, JavaCore.PLUGIN_ID, -1, Messages.bind(Messages.convention_module_javaName), null);
+			}
+			if (TERMINAL_DIGIT.matcher(segment).find()) {
+				warningStatus = new Status(IStatus.WARNING, JavaCore.PLUGIN_ID, -1, Messages.convention_module_terminalDigits, null);
+			}
+			IStatus status = workspace.validateName(new String(scannedID), IResource.FOLDER);
+			if (!status.isOK()) {
+				return status;
+			}
+			if (firstToken && scannedID.length > 0 && ScannerHelper.isUpperCase(scannedID[0])) {
+				if (warningStatus == null) {
+					warningStatus = new Status(IStatus.WARNING, JavaCore.PLUGIN_ID, -1, Messages.convention_module_uppercaseName, null);
 				}
 			}
 			firstToken = false;

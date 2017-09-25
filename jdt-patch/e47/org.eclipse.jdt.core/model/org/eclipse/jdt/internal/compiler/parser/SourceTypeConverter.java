@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,8 +13,6 @@
  *     								Bug 353474 - type converters should include more annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
-
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 /**
  * Converter from source element type to parsed compilation unit.
@@ -29,6 +27,7 @@ import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
  *
  */
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IImportDeclaration;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,12 @@ package org.eclipse.jdt.internal.compiler.parser;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
@@ -97,6 +101,17 @@ public class Scanner implements TerminalTokens {
 	public int[] lineEnds = new int[250];
 	public int linePtr = -1;
 	public boolean wasAcr = false;
+
+	public boolean fakeInModule = false;
+	/**
+	 * The current context of the scanner w.r.t restricted keywords
+	 *
+	 */
+	enum ScanContext {
+		EXPECTING_KEYWORD, EXPECTING_IDENTIFIER, AFTER_REQUIRES, INACTIVE
+	}
+	protected ScanContext scanContext = null;
+	protected boolean insideModuleInfo = false;
 
 	public static final String END_OF_SOURCE = "End_Of_Source"; //$NON-NLS-1$
 
@@ -1149,7 +1164,15 @@ public int getNextToken() throws InvalidInputException {
 		this.nextToken = TokenNameNotAToken;
 		return token; // presumed to be unambiguous.
 	}
+	if (this.scanContext == null) { // init lazily, since isInModuleDeclaration needs the parser to be known
+		this.scanContext = isInModuleDeclaration() ? ScanContext.EXPECTING_KEYWORD : ScanContext.INACTIVE;
+	}
 	token = getNextToken0();
+	if (areRestrictedModuleKeywordsActive()) {
+		if (isRestrictedKeyword(token))
+			token = disambiguatedRestrictedKeyword(token);
+		updateScanContext(token);
+	}
 	if (this.activeParser == null) { // anybody interested in the grammatical structure of the program should have registered.
 		return token;
 	}
@@ -2530,6 +2553,51 @@ final char[] optimizedCurrentTokenSource6() {
 	//newIdentCount++;
 	return table[this.newEntry6 = max] = r; //(r = new char[] {c0, c1, c2, c3, c4, c5});
 }
+public boolean isInModuleDeclaration() {
+	return this.fakeInModule || this.insideModuleInfo ||
+			(this.activeParser != null ? this.activeParser.isParsingModuleDeclaration() : false);
+}
+protected boolean areRestrictedModuleKeywordsActive() {
+	return this.scanContext != null && this.scanContext != ScanContext.INACTIVE;
+}
+void updateScanContext(int token) {
+	switch (token) {
+		case TerminalTokens.TokenNameSEMICOLON:	// next could be a KEYWORD
+		case TerminalTokens.TokenNameRBRACE:
+		case TokenNameRPAREN:
+			this.scanContext = ScanContext.EXPECTING_KEYWORD;
+			break;
+		case TokenNameopen:
+			this.scanContext = ScanContext.EXPECTING_KEYWORD;
+			break;
+		case TokenNamerequires:
+			this.scanContext = ScanContext.AFTER_REQUIRES;
+			break;
+		case TokenNamemodule:
+		case TokenNameexports:
+		case TokenNameopens:
+		case TokenNameuses:
+		case TokenNameprovides:
+		case TokenNameto:
+		case TokenNamewith:
+		case TokenNametransitive:			
+		case TokenNameDOT:
+		case TokenNameimport:
+		case TokenNameAT:
+		case TokenNameAT308:
+		case TokenNameCOMMA:
+			this.scanContext = ScanContext.EXPECTING_IDENTIFIER;
+			break;
+		case TokenNameIdentifier:
+			this.scanContext = ScanContext.EXPECTING_KEYWORD;
+			break;
+		case TerminalTokens.TokenNameLBRACE:
+			this.scanContext = ScanContext.EXPECTING_KEYWORD;
+			break;
+		default: // anything else is unexpected and should not alter the context
+			break;
+	}
+}
 
 private void parseTags() {
 	int position = 0;
@@ -2744,6 +2812,21 @@ public void recordComment(int token) {
  * @param end the given end position
  */
 public void resetTo(int begin, int end) {
+	resetTo(begin, end, isInModuleDeclaration());
+}
+public void resetTo(int begin, int end, boolean isModuleInfo) {
+	resetTo(begin, end, isModuleInfo, null);
+}
+/**
+ * Reposition the scanner on some portion of the original source. The given endPosition is the last valid position.
+ * Beyond this position, the scanner will answer EOF tokens (<code>ITerminalSymbols.TokenNameEOF</code>).
+ *
+ * @param begin the given start position
+ * @param end the given end position
+ * @param isModuleInfo if true apply rules for restricted keywords even without a connection to a properly configured parser
+ * @param context The scan context to use for restricted keyword support, use null to compute
+ */
+public void resetTo(int begin, int end, boolean isModuleInfo, ScanContext context) {
 	//reset the scanner to a given position where it may rescan again
 
 	this.diet = false;
@@ -2757,6 +2840,20 @@ public void resetTo(int begin, int end) {
 	this.foundTaskCount = 0;
 	this.lookBack[0] = this.lookBack[1] = this.nextToken = TokenNameNotAToken;
 	this.consumingEllipsisAnnotations = false;
+	this.insideModuleInfo = isModuleInfo;
+	this.scanContext = context == null ? getScanContext(begin) : context;
+}
+
+private ScanContext getScanContext(int begin) {
+	if (!isInModuleDeclaration())
+		return ScanContext.INACTIVE;
+	if (begin == 0)
+		return ScanContext.EXPECTING_KEYWORD;
+	CompilerOptions options = new CompilerOptions();
+	options.complianceLevel = this.complianceLevel;
+	options.sourceLevel = this.sourceLevel;
+	ScanContextDetector parser = new ScanContextDetector(options);
+	return parser.getScanContext(this.source, begin - 1);
 }
 
 protected final void scanEscapeCharacter() throws InvalidInputException {
@@ -3093,7 +3190,7 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 				default :
 					return TokenNameIdentifier;
 			}
-		case 'e' : //else extends
+		case 'e' : //else extends exports
 			switch (length) {
 				case 4 :
 					if (data[++index] == 'l') {
@@ -3114,15 +3211,18 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 					}
 					return TokenNameIdentifier;
 				case 7 :
-					if ((data[++index] == 'x')
-						&& (data[++index] == 't')
-						&& (data[++index] == 'e')
-						&& (data[++index] == 'n')
-						&& (data[++index] == 'd')
-						&& (data[++index] == 's'))
-						return TokenNameextends;
-					else
-						return TokenNameIdentifier;
+						if ((data[++index] == 'x')) {
+							if ((data[++index] == 't') && (data[++index] == 'e') && (data[++index] == 'n')
+									&& (data[++index] == 'd') && (data[++index] == 's')) {
+								return TokenNameextends;
+							} else if (areRestrictedModuleKeywordsActive()
+									&& (data[index] == 'p') && (data[++index] == 'o') && (data[++index] == 'r')
+									&& (data[++index] == 't') && (data[++index] == 's')) {
+								return TokenNameexports;
+							} else
+								return TokenNameIdentifier;
+						} else
+							return TokenNameIdentifier;
 				default :
 					return TokenNameIdentifier;
 			}
@@ -3256,6 +3356,22 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 			}
 			return TokenNameIdentifier;
 
+		case 'm': //module
+			switch (length) {
+				case 6 :
+					if (areRestrictedModuleKeywordsActive()
+						&& (data[++index] == 'o')
+						&& (data[++index] == 'd')
+						&& (data[++index] == 'u')
+						&& (data[++index] == 'l')
+						&& (data[++index] == 'e'))
+						return TokenNamemodule;
+					else
+						return TokenNameIdentifier;
+				default :
+					return TokenNameIdentifier;
+			}
+
 		case 'n' : //native new null
 			switch (length) {
 				case 3 :
@@ -3281,7 +3397,26 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 					return TokenNameIdentifier;
 			}
 
-		case 'p' : //package private protected public
+		case 'o':
+			switch (length) {
+				case 4 :
+					if (areRestrictedModuleKeywordsActive() && (data[++index] == 'p') && (data[++index] == 'e') && (data[++index] == 'n'))
+						return TokenNameopen;
+					else
+						return TokenNameIdentifier;
+				case 5 :
+					if (areRestrictedModuleKeywordsActive()
+							&& (data[++index] == 'p')
+							&& (data[++index] == 'e')
+							&& (data[++index] == 'n')
+							&& (data[++index] == 's'))
+						return TokenNameopens;
+					else
+						return TokenNameIdentifier;
+				default :
+					return TokenNameIdentifier;
+			}
+		case 'p' : //package private protected public provides
 			switch (length) {
 				case 6 :
 					if ((data[++index] == 'u')
@@ -3312,6 +3447,18 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 							return TokenNameprivate;
 						} else
 							return TokenNameIdentifier;
+				case 8 :
+					if (areRestrictedModuleKeywordsActive()
+						&& (data[++index] == 'r')
+						&& (data[++index] == 'o')
+						&& (data[++index] == 'v')
+						&& (data[++index] == 'i')
+						&& (data[++index] == 'd')
+						&& (data[++index] == 'e')
+						&& (data[++index] == 's')) {
+						return TokenNameprovides;
+					} else
+						return TokenNameIdentifier;
 				case 9 :
 					if ((data[++index] == 'r')
 						&& (data[++index] == 'o')
@@ -3329,15 +3476,29 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 					return TokenNameIdentifier;
 			}
 
-		case 'r' : //return
-			if (length == 6) {
-				if ((data[++index] == 'e')
-					&& (data[++index] == 't')
-					&& (data[++index] == 'u')
-					&& (data[++index] == 'r')
-					&& (data[++index] == 'n')) {
-					return TokenNamereturn;
-				}
+		case 'r' : //return requires
+			switch (length) {
+				case 6:
+					if ((data[++index] == 'e')
+						&& (data[++index] == 't')
+						&& (data[++index] == 'u')
+						&& (data[++index] == 'r')
+						&& (data[++index] == 'n')) {
+						return TokenNamereturn;
+					} else 
+						return TokenNameIdentifier;
+				case 8:
+					if (areRestrictedModuleKeywordsActive()
+						&& (data[++index] == 'e')
+						&& (data[++index] == 'q')
+						&& (data[++index] == 'u')
+						&& (data[++index] == 'i')
+						&& (data[++index] == 'r')
+						&& (data[++index] == 'e')
+						&& (data[++index] == 's')) {
+						return TokenNamerequires;
+					} else 
+						return TokenNameIdentifier;
 			}
 			return TokenNameIdentifier;
 
@@ -3408,6 +3569,11 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 
 		case 't' : //try throw throws transient this true
 			switch (length) {
+				case 2:
+					if (areRestrictedModuleKeywordsActive() && data[++index] == 'o')
+						return TokenNameto;
+					else
+						return TokenNameIdentifier;
 				case 3 :
 					if ((data[++index] == 'r') && (data[++index] == 'y'))
 						return TokenNametry;
@@ -3453,11 +3619,33 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 						return TokenNametransient;
 					} else
 						return TokenNameIdentifier;
-
+				case 10:
+					if (areRestrictedModuleKeywordsActive() && (data[++index] == 'r')
+						&& (data[++index] == 'a')
+						&& (data[++index] == 'n')
+						&& (data[++index] == 's')
+						&& (data[++index] == 'i')
+						&& (data[++index] == 't')
+						&& (data[++index] == 'i')
+						&& (data[++index] == 'v')
+						&& (data[++index] == 'e')) {
+						return TokenNametransitive;
+					} else
+						return TokenNameIdentifier;
 				default :
 					return TokenNameIdentifier;
 			}
-
+		case 'u' : //uses
+			switch(length) {
+				case 4 :
+					if (areRestrictedModuleKeywordsActive() 
+							&& (data[++index] == 's') && (data[++index] == 'e') && (data[++index] == 's'))
+						return TokenNameuses;
+					else
+						return TokenNameIdentifier;
+				default :
+					return TokenNameIdentifier;
+			}
 		case 'v' : //void volatile
 			switch (length) {
 				case 4 :
@@ -3481,8 +3669,16 @@ private int internalScanIdentifierOrKeyword(int index, int length, char[] data) 
 					return TokenNameIdentifier;
 			}
 
-		case 'w' : //while widefp
+		case 'w' : //while widefp with
 			switch (length) {
+				case 4:
+					if (areRestrictedModuleKeywordsActive()
+						&& (data[++index] == 'i')
+						&& (data[++index] == 't')
+						&& (data[++index] == 'h'))
+						return TokenNamewith;
+					else
+						return TokenNameIdentifier;
 				case 5 :
 					if ((data[++index] == 'h')
 						&& (data[++index] == 'i')
@@ -3838,6 +4034,8 @@ public final void setSource(char[] sourceString){
 	this.initialPosition = this.currentPosition = 0;
 	this.containsAssertKeyword = false;
 	this.linePtr = -1;
+	this.scanContext = null;
+	this.insideModuleInfo = false;
 }
 /*
  * Should be used if a parse (usually a diet parse) has already been performed on the unit,
@@ -3996,6 +4194,12 @@ public String toStringAction(int act) {
 			return "volatile"; //$NON-NLS-1$
 		case TokenNamewhile :
 			return "while"; //$NON-NLS-1$
+		case TokenNamemodule :
+			return "module"; //$NON-NLS-1$
+		case TokenNamerequires :
+			return "requires"; //$NON-NLS-1$
+		case TokenNameexports :
+			return "exports"; //$NON-NLS-1$
 
 		case TokenNameIntegerLiteral :
 			return "Integer(" + new String(getCurrentTokenSource()) + ")"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -4232,7 +4436,15 @@ private static final class VanguardScanner extends Scanner {
 			this.nextToken = TokenNameNotAToken;
 			return token; // presumed to be unambiguous.
 		}
+		if (this.scanContext == null) { // init lazily, since isInModuleDeclaration may need the parser to be known
+			this.scanContext = isInModuleDeclaration() ? ScanContext.EXPECTING_KEYWORD : ScanContext.INACTIVE;
+		}
 		token = getNextToken0();
+		if (areRestrictedModuleKeywordsActive()) {
+			if (isRestrictedKeyword(token))
+				token = disambiguatedRestrictedKeyword(token);
+			updateScanContext(token);
+		}
 		if (token == TokenNameAT && atTypeAnnotation()) {
 			if (((VanguardParser) this.activeParser).currentGoal == Goal.LambdaParameterListGoal) {
 				token = disambiguatedToken(token);
@@ -4244,7 +4456,7 @@ private static final class VanguardScanner extends Scanner {
 	}
 }
 
-private static final class Goal {
+private static class Goal {
 	
 	int first;      // steer the parser towards a single minded pursuit.
 	int [] follow;  // the definite terminal symbols that signal the successful reduction to goal.
@@ -4321,7 +4533,7 @@ private static final class Goal {
 	}
 }
 // Vanguard Parser - A Private utility helper class for the scanner.
-private static final class VanguardParser extends Parser {
+private static class VanguardParser extends Parser {
 	
 	public static final boolean SUCCESS = true;
 	public static final boolean FAILURE = false;
@@ -4330,6 +4542,10 @@ private static final class VanguardParser extends Parser {
 
 	public VanguardParser(VanguardScanner scanner) {
 		this.scanner = scanner;
+	}
+
+	public VanguardParser(ProblemReporter reporter) {
+		super(reporter, false);
 	}
 	
 	// Canonical LALR pushdown automaton identical to Parser.parse() minus side effects of any kind, returns the rule reduced.
@@ -4393,6 +4609,56 @@ private static final class VanguardParser extends Parser {
 	}
 }
 
+private class ScanContextDetector extends VanguardParser {
+	ScanContextDetector(CompilerOptions options) {
+		super(new ProblemReporter(
+					DefaultErrorHandlingPolicies.ignoreAllProblems(),
+					options,
+					new DefaultProblemFactory()));
+		this.problemReporter.options.performStatementsRecovery = false;
+		this.reportSyntaxErrorIsRequired = false;
+		this.reportOnlyOneSyntaxError = false;
+	}
+
+	public void initializeScanner(){
+		this.scanner = new Scanner(
+			false /*comment*/,
+			false /*whitespace*/,
+			false, /* will be set in initialize(boolean) */
+			this.options.sourceLevel /*sourceLevel*/,
+			this.options.complianceLevel /*complianceLevel*/,
+			this.options.taskTags/*taskTags*/,
+			this.options.taskPriorities/*taskPriorities*/,
+			this.options.isTaskCaseSensitive/*taskCaseSensitive*/)
+		{
+			@Override
+			void updateScanContext(int token) {
+				if (token != TokenNameEOF)
+					super.updateScanContext(token);
+			}
+		};
+		this.scanner.recordLineSeparator = false;
+		this.scanner.setActiveParser(this);
+	}
+
+	public boolean isParsingModuleDeclaration() {
+		return true;
+	}
+
+	public ScanContext getScanContext(char[] src, int begin) {
+		this.scanner.setSource(src);
+		this.scanner.resetTo(0, begin);
+		goForCompilationUnit();
+		Goal goal = new Goal(TokenNamePLUS_PLUS, null, 0) {
+			boolean hasBeenReached(int act, int token) {
+				return token == TokenNameEOF;
+			}
+		};
+		parse(goal);
+		return this.scanner.scanContext;
+	}
+}
+
 private VanguardParser getVanguardParser() {
 	if (this.vanguardParser == null) {
 		this.vanguardScanner = new VanguardScanner(this.sourceLevel, this.complianceLevel);
@@ -4400,7 +4666,7 @@ private VanguardParser getVanguardParser() {
 		this.vanguardScanner.setActiveParser(this.vanguardParser);
 	}
 	this.vanguardScanner.setSource(this.source);
-	this.vanguardScanner.resetTo(this.startPosition, this.eofPosition - 1);
+	this.vanguardScanner.resetTo(this.startPosition, this.eofPosition - 1, isInModuleDeclaration(), this.scanContext);
 	return this.vanguardParser;
 }
 
@@ -4489,6 +4755,63 @@ protected final boolean atTypeAnnotation() { // Did the '@' we saw just now hera
 public void setActiveParser(ConflictedParser parser) {
 	this.activeParser  = parser;
 	this.lookBack[0] = this.lookBack[1] = TokenNameNotAToken;  // no hand me downs please.
+	if (parser != null) {
+		this.insideModuleInfo = parser.isParsingModuleDeclaration();
+	}
+}
+public static boolean isRestrictedKeyword(int token) {
+	switch(token) {
+		case TokenNameopen:
+		case TokenNamemodule:
+		case TokenNamerequires:
+		case TokenNametransitive:
+		case TokenNameexports:
+		case TokenNameto:
+		case TokenNameopens:
+		case TokenNameuses:
+		case TokenNameprovides:
+		case TokenNamewith:
+			return true;
+		default:
+			return false;
+	}
+}
+int disambiguatedRestrictedKeyword(int restrictedKeywordToken) {
+	int token = restrictedKeywordToken;
+	if (this.scanContext == ScanContext.EXPECTING_IDENTIFIER)
+		return TokenNameIdentifier;
+
+	switch(restrictedKeywordToken) {
+		case TokenNametransitive:
+			if (this.scanContext != ScanContext.AFTER_REQUIRES) {
+				token = TokenNameIdentifier;
+			} else {
+				getVanguardParser();
+				this.vanguardScanner.resetTo(this.currentPosition, this.eofPosition - 1, true, ScanContext.EXPECTING_IDENTIFIER);
+				try {
+					int lookAhead = this.vanguardScanner.getNextToken();
+					if (lookAhead == TokenNameSEMICOLON)
+						token = TokenNameIdentifier;
+				} catch (InvalidInputException e) {
+					// 
+				}
+			}
+			break;
+		case TokenNameopen:
+		case TokenNamemodule:
+		case TokenNameexports:
+		case TokenNameopens:
+		case TokenNamerequires:
+		case TokenNameprovides:
+		case TokenNameuses:
+		case TokenNameto:
+		case TokenNamewith:
+			if (this.scanContext != ScanContext.EXPECTING_KEYWORD) {
+				token = TokenNameIdentifier;
+			}
+			break;
+	}
+	return token;
 }
 int disambiguatedToken(int token) {
 	final VanguardParser parser = getVanguardParser();

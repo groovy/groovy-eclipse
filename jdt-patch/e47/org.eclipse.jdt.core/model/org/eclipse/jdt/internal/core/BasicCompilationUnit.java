@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IModularClassFile;
+import org.eclipse.jdt.core.IModuleDescription;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -38,14 +41,19 @@ public class BasicCompilationUnit implements ICompilationUnit {
 
 	protected char[][] packageName;
 	protected char[] mainTypeName;
+	protected char[] moduleName;
 	protected String encoding;
 
-public BasicCompilationUnit(char[] contents, char[][] packageName, String fileName) {
+private BasicCompilationUnit(char[] contents, char[][] packageName, String fileName) {
 	this.contents = contents;
 	this.fileName = fileName.toCharArray();
 	this.packageName = packageName;
 }
 
+/**
+ * @deprecated Should pass a javaElement via {@link BasicCompilationUnit#BasicCompilationUnit(char[], char[][], String, IJavaElement)}.
+ */
+@Deprecated
 public BasicCompilationUnit(char[] contents, char[][] packageName, String fileName, String encoding) {
 	this(contents, packageName, fileName);
 	this.encoding = encoding;
@@ -53,7 +61,7 @@ public BasicCompilationUnit(char[] contents, char[][] packageName, String fileNa
 
 public BasicCompilationUnit(char[] contents, char[][] packageName, String fileName, IJavaElement javaElement) {
 	this(contents, packageName, fileName);
-	initEncoding(javaElement);
+	initAttributes(javaElement);
 }
 
 /*
@@ -64,26 +72,49 @@ public BasicCompilationUnit(char[] contents, char[][] packageName, String fileNa
  * a corresponding source file resource.
  * If we have a compilation unit, then get encoding from its resource directly...
  */
-private void initEncoding(IJavaElement javaElement) {
+private void initAttributes(IJavaElement javaElement) {
 	if (javaElement != null) {
 		try {
-			IJavaProject javaProject = javaElement.getJavaProject();
-			switch (javaElement.getElementType()) {
-				case IJavaElement.COMPILATION_UNIT:
-					IFile file = (IFile) javaElement.getResource();
-					if (file != null) {
-						this.encoding = file.getCharset();
-						break;
+				IModuleDescription module = null;
+
+				search: while (javaElement != null) {
+					switch (javaElement.getElementType()) {
+						case IJavaElement.JAVA_PROJECT:
+							module = ((IJavaProject) javaElement).getModuleDescription();
+							break search;
+						case IJavaElement.PACKAGE_FRAGMENT_ROOT:
+							module = ((IPackageFragmentRoot) javaElement).getModuleDescription();
+							break search;
+						case IJavaElement.CLASS_FILE:
+							if (javaElement instanceof IModularClassFile) {
+								module = ((IModularClassFile) javaElement).getModule();
+								break search;
+							}
+							break;
+						case IJavaElement.COMPILATION_UNIT:
+							IFile file = (IFile) javaElement.getResource();
+							if (file != null) {
+								this.encoding = file.getCharset();
+							}
+							module = ((org.eclipse.jdt.core.ICompilationUnit) javaElement).getModule();
+							if (module != null)
+								break search;
+							break;
+						default:
+							break;
 					}
-					// if no file, then get project encoding
-					// $FALL-THROUGH$
-				default:
-					IProject project = (IProject) javaProject.getResource();
+					javaElement = javaElement.getParent();
+				}
+
+				if (module != null) {
+					this.moduleName = module.getElementName().toCharArray();
+				}
+				if (this.encoding == null) {
+					IProject project = javaElement.getJavaProject().getProject();
 					if (project != null) {
 						this.encoding = project.getDefaultCharset();
 					}
-					break;
-			}
+				}
 		} catch (CoreException e1) {
 			this.encoding = null;
 		}
@@ -115,7 +146,7 @@ public char[] getMainTypeName() {
 		int start = CharOperation.lastIndexOf('/', this.fileName) + 1;
 		if (start == 0 || start < CharOperation.lastIndexOf('\\', this.fileName))
 			start = CharOperation.lastIndexOf('\\', this.fileName) + 1;
-		int separator = CharOperation.indexOf('|', this.fileName) + 1;
+		int separator = CharOperation.lastIndexOf('|', this.fileName) + 1;
 		if (separator > start) // case of a .class file in a default package in a jar
 			start = separator;
 
@@ -138,5 +169,10 @@ public boolean ignoreOptionalProblems() {
 }
 public String toString(){
 	return "CompilationUnit: "+new String(this.fileName); //$NON-NLS-1$
+}
+
+@Override
+public char[] getModuleName() {
+	return this.moduleName;
 }
 }

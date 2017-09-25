@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,10 +11,14 @@
 package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 
 public abstract class ClasspathLocation implements FileSystem.Classpath,
@@ -26,6 +30,8 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	String path;
 	char[] normalizedPath;
 	public AccessRuleSet accessRuleSet;
+	IModule module;
+	protected boolean isAutoModule;
 
 	public String destinationPath;
 		// destination path for compilation units that are reached through this
@@ -99,5 +105,35 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	}
 	public String getPath() {
 		return this.path;
+	}
+	public String getDestinationPath() {
+		return this.destinationPath;
+	}
+	
+	public void acceptModule(IModule mod) {
+		this.module = mod;
+		this.isAutoModule = mod.isAutomatic();
+	}
+	@Override
+	public boolean isAutomaticModule() {
+		return this.isAutoModule;
+	}
+	@Override
+	public Collection<String> getModuleNames(Collection<String> limitModules) {
+		if (this.module != null)
+			return Collections.singletonList(String.valueOf(this.module.name()));
+		return Collections.emptyList();
+	}
+
+	public boolean isPackage(String qualifiedPackageName, String moduleName) {
+		return getModulesDeclaringPackage(qualifiedPackageName, moduleName) != null;
+	}
+
+	protected char[][] singletonModuleNameIf(boolean condition) {
+		if (!condition)
+			return null;
+		if (this.module != null)
+			return new char[][] { this.module.name() };
+		return new char[][] { ModuleBinding.UNNAMED };
 	}
 }

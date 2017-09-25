@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -41,6 +41,8 @@ import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ModuleReference;
 import org.eclipse.jdt.internal.compiler.ast.NameReference;
 import org.eclipse.jdt.internal.compiler.ast.NormalAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
@@ -1258,8 +1260,16 @@ protected void consumeTypeImportOnDemandDeclarationName() {
 protected SelectionParser createSnapShotParser() {
 	return new SelectionParser(this.problemReporter);
 }
+public ImportReference createAssistPackageVisibilityReference(char[][] tokens, long[] positions){
+	return new SelectionOnPackageVisibilityReference(tokens, positions);
+}
 public ImportReference createAssistImportReference(char[][] tokens, long[] positions, int mod){
 	return new SelectionOnImportReference(tokens, positions, mod);
+}
+@Override
+public ModuleDeclaration createAssistModuleDeclaration(CompilationResult compilationResult, char[][] tokens,
+		long[] positions) {
+	return new SelectionOnModuleDeclaration(compilationResult, tokens, positions);
 }
 public ImportReference createAssistPackageReference(char[][] tokens, long[] positions){
 	return new SelectionOnPackageReference(tokens, positions);
@@ -1590,5 +1600,18 @@ public  String toString() {
 	}
 	s = s + "}\n"; //$NON-NLS-1$
 	return s + super.toString();
+}
+@Override
+public ModuleReference createAssistModuleReference(int index) {
+	// ignore index, all segments of the module name are part of a single identifier.
+	/* retrieve identifiers subset and whole positions, the assist node positions
+	should include the entire replaced source. */
+	int length;
+	char[][] tokens = new char[length = this.identifierLengthStack[this.identifierLengthPtr--]][];
+	this.identifierPtr -= length;
+	long[] positions = new long[length];
+	System.arraycopy(this.identifierStack, this.identifierPtr + 1, tokens, 0, length);
+	System.arraycopy(this.identifierPositionStack, this.identifierPtr + 1, positions, 0, length);
+	return new SelectionOnModuleReference(tokens, positions);
 }
 }

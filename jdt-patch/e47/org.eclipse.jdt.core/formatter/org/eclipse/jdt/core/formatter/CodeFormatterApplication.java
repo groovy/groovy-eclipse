@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -221,7 +222,9 @@ public class CodeFormatterApplication implements IApplication {
 			String contents = new String(org.eclipse.jdt.internal.compiler.util.Util.getFileCharContent(file, null));
 			// format the file (the meat and potatoes)
 			doc.set(contents);
-			TextEdit edit = codeFormatter.format(CodeFormatter.K_COMPILATION_UNIT | CodeFormatter.F_INCLUDE_COMMENTS, contents, 0, contents.length(), 0, null);
+			int kind = (file.getName().equals(IModule.MODULE_INFO_JAVA)? CodeFormatter.K_MODULE_INFO
+					: CodeFormatter.K_COMPILATION_UNIT) | CodeFormatter.F_INCLUDE_COMMENTS;
+			TextEdit edit = codeFormatter.format(kind, contents, 0, contents.length(), 0, null);
 			if (edit != null) {
 				edit.apply(doc);
 			} else {

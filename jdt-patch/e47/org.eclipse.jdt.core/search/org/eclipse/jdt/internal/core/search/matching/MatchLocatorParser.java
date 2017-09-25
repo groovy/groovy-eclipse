@@ -1,11 +1,11 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -327,6 +327,10 @@ protected void consumeExplicitConstructorInvocationWithTypeArguments(int flag, i
 	super.consumeExplicitConstructorInvocationWithTypeArguments(flag, recFlag);
 	this.patternLocator.match(this.astStack[this.astPtr], this.nodeSet);
 }
+protected void consumeExportsHeader() {
+	super.consumeExportsHeader();
+	this.patternLocator.match(((ExportsStatement) this.astStack[this.astPtr]).pkgRef, this.nodeSet);
+}
 protected void consumeFieldAccess(boolean isSuperAccess) {
 	super.consumeFieldAccess(isSuperAccess);
 
@@ -492,6 +496,11 @@ protected void consumeMethodInvocationSuperWithTypeArguments() {
 	}
 }
 
+@Override
+protected void consumeModuleHeader() {
+	super.consumeModuleHeader();
+	this.patternLocator.match(((ModuleDeclaration) this.astStack[this.astPtr]), this.nodeSet);
+}
 protected void consumeNormalAnnotation(boolean isTypeAnnotation) {
 	super.consumeNormalAnnotation(isTypeAnnotation);
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE) != 0) {
@@ -513,7 +522,26 @@ protected void consumeOnlyTypeArguments() {
 		}
 	}
 }
-
+@Override
+protected void consumeOpensHeader() {
+	super.consumeOpensHeader();
+	this.patternLocator.match(((OpensStatement) this.astStack[this.astPtr]).pkgRef, this.nodeSet);
+}
+@Override
+protected void consumeProvidesInterface() {
+	super.consumeProvidesInterface();
+	ProvidesStatement ref = (ProvidesStatement) this.astStack[this.astPtr];
+	this.patternLocator.match(ref.serviceInterface, this.nodeSet);
+}
+@Override
+protected void consumeProvidesStatement() {
+	super.consumeProvidesStatement();
+	ProvidesStatement ref = (ProvidesStatement) this.astStack[this.astPtr];
+	TypeReference[] impls = ref.implementations;
+	for (TypeReference impl : impls) {
+		this.patternLocator.match(impl, this.nodeSet);
+	}
+}
 protected void consumePrimaryNoNewArrayWithName() {
 	// PrimaryNoNewArray ::=  PushLPAREN Expression PushRPAREN
 	pushOnExpressionStack(getUnspecifiedReferenceOptimized());
@@ -552,6 +580,24 @@ protected void consumeSingleMemberAnnotation(boolean isTypeAnnotation) {
 		Annotation annotation = (Annotation) (isTypeAnnotation ? this.typeAnnotationStack[this.typeAnnotationPtr] : this.expressionStack[this.expressionPtr]);
 		this.patternLocator.match(annotation, this.nodeSet);
 	}
+}
+@Override
+protected void consumeSingleRequiresModuleName() {
+	super.consumeSingleRequiresModuleName();
+	RequiresStatement req = (RequiresStatement) this.astStack[this.astPtr];
+	this.patternLocator.match(req.module, this.nodeSet);
+}
+private void setTarget(boolean flag) {
+	if (this.patternLocator instanceof ModuleLocator) {
+		((ModuleLocator) this.patternLocator).target = flag;
+	}
+}
+@Override
+protected void consumeSingleTargetModuleName() {
+	super.consumeSingleTargetModuleName();
+	setTarget(true);
+	this.patternLocator.match((ModuleReference)this.astStack[this.astPtr], this.nodeSet);
+	setTarget(false);
 }
 
 protected void consumeStatementCatch() {

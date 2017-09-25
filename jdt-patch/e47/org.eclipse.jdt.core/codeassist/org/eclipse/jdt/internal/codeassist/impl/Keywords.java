@@ -11,7 +11,7 @@
 package org.eclipse.jdt.internal.codeassist.impl;
 
 public interface Keywords {
-	int COUNT = 41;
+	int COUNT = 49;
 
 	char[] ABSTRACT = "abstract".toCharArray(); //$NON-NLS-1$
 	char[] ASSERT = "assert".toCharArray(); //$NON-NLS-1$
@@ -25,20 +25,25 @@ public interface Keywords {
 	char[] ELSE = "else".toCharArray(); //$NON-NLS-1$
 	char[] ENUM = "enum".toCharArray(); //$NON-NLS-1$
 	char[] EXTENDS = "extends".toCharArray(); //$NON-NLS-1$
+	char[] EXPORTS = "exports".toCharArray(); //$NON-NLS-1$
 	char[] FINAL = "final".toCharArray(); //$NON-NLS-1$
 	char[] FINALLY = "finally".toCharArray(); //$NON-NLS-1$
 	char[] FOR = "for".toCharArray(); //$NON-NLS-1$
 	char[] IF = "if".toCharArray(); //$NON-NLS-1$
 	char[] IMPLEMENTS = "implements".toCharArray(); //$NON-NLS-1$
 	char[] IMPORT = "import".toCharArray(); //$NON-NLS-1$
+	char[] MODULE = "module".toCharArray(); //$NON-NLS-1$
 	char[] INSTANCEOF = "instanceof".toCharArray(); //$NON-NLS-1$
 	char[] INTERFACE = "interface".toCharArray(); //$NON-NLS-1$
 	char[] NATIVE = "native".toCharArray(); //$NON-NLS-1$
 	char[] NEW = "new".toCharArray(); //$NON-NLS-1$
+	char[] OPENS= "opens".toCharArray(); //$NON-NLS-1$
 	char[] PACKAGE = "package".toCharArray(); //$NON-NLS-1$
 	char[] PRIVATE = "private".toCharArray(); //$NON-NLS-1$
 	char[] PROTECTED = "protected".toCharArray(); //$NON-NLS-1$
+	char[] PROVIDES = "provides".toCharArray(); //$NON-NLS-1$
 	char[] PUBLIC = "public".toCharArray(); //$NON-NLS-1$
+	char[] REQUIRES = "requires".toCharArray(); //$NON-NLS-1$
 	char[] RETURN = "return".toCharArray(); //$NON-NLS-1$
 	char[] STATIC = "static".toCharArray(); //$NON-NLS-1$
 	char[] STRICTFP = "strictfp".toCharArray(); //$NON-NLS-1$
@@ -48,10 +53,13 @@ public interface Keywords {
 	char[] THIS = "this".toCharArray(); //$NON-NLS-1$
 	char[] THROW = "throw".toCharArray(); //$NON-NLS-1$
 	char[] THROWS = "throws".toCharArray(); //$NON-NLS-1$
+	char[] TO = "to".toCharArray(); //$NON-NLS-1$
 	char[] TRANSIENT = "transient".toCharArray(); //$NON-NLS-1$
 	char[] TRY = "try".toCharArray(); //$NON-NLS-1$
+	char[] USES = "uses".toCharArray(); //$NON-NLS-1$
 	char[] VOLATILE = "volatile".toCharArray(); //$NON-NLS-1$
 	char[] WHILE = "while".toCharArray(); //$NON-NLS-1$
+	char[] WITH = "with".toCharArray(); //$NON-NLS-1$
 	char[] TRUE = "true".toCharArray(); //$NON-NLS-1$
 	char[] FALSE = "false".toCharArray(); //$NON-NLS-1$
 	char[] NULL = "null".toCharArray(); //$NON-NLS-1$

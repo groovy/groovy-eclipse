@@ -16,6 +16,8 @@ import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IModularClassFile;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
@@ -159,6 +161,13 @@ public abstract class NamedMember extends Member {
 		key.append(';');
 		return key.toString();
 	}
+	protected String getKey(IModuleDescription module, boolean forceOpen) throws JavaModelException {
+		StringBuffer key = new StringBuffer();
+		key.append('"');
+		String modName = module.getElementName();
+		key.append(modName);
+		return key.toString();
+	}
 
 	protected String getFullyQualifiedParameterizedName(String fullyQualifiedName, String uniqueKey) throws JavaModelException {
 		String[] typeArguments = new BindingKey(uniqueKey).getTypeArguments();
@@ -200,6 +209,8 @@ public abstract class NamedMember extends Member {
 				}
 				return this.name;
 			case IJavaElement.CLASS_FILE:
+				if (this.parent instanceof IModularClassFile)
+					return null;
 				String classFileName = this.parent.getElementName();
 				String typeName;
 				if (classFileName.indexOf('$') == -1) {
@@ -291,6 +302,10 @@ public abstract class NamedMember extends Member {
 				// ignore
 			}
 			public void acceptMethodTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] selector, int selectorStart, int selcetorEnd, char[] typeParameterName, boolean isDeclaration, int start, int end) {
+				// ignore
+			}
+			@Override
+			public void acceptModule(char[] moduleName, char[] uniqueKey, int start, int end) {
 				// ignore
 			}
 

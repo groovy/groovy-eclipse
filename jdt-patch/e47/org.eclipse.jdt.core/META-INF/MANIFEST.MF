@@ -3,7 +3,7 @@ Main-Class: org.eclipse.jdt.internal.compiler.batch.Main
 Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.jdt.core; singleton:=true
-Bundle-Version: 3.13.0.qualifier
+Bundle-Version: 3.13.50.qualifier
 Bundle-Activator: org.eclipse.jdt.core.JavaCore
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
@@ -20,6 +20,7 @@ Export-Package: org.codehaus.jdt.groovy.integration,
  org.eclipse.jdt.core.jdom,
  org.eclipse.jdt.core.search,
  org.eclipse.jdt.core.util,
+ org.eclipse.jdt.core.provisional;x-friends:="org.eclipse.jdt.ui",
  org.eclipse.jdt.internal.codeassist;x-internal:=true,
  org.eclipse.jdt.internal.codeassist.complete;x-internal:=true,
  org.eclipse.jdt.internal.codeassist.impl;x-internal:=true,

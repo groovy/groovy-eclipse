@@ -199,7 +199,7 @@ public class WildcardType extends AnnotatableType {
 	ASTNode clone0(AST target) {
 		WildcardType result = new WildcardType(target);
 		result.setSourceRange(getStartPosition(), getLength());
-		if (this.ast.apiLevel >= AST.JLS8) {
+		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 			result.annotations().addAll(
 					ASTNode.copySubtrees(target, annotations()));
 		}
@@ -222,7 +222,7 @@ public class WildcardType extends AnnotatableType {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
 			// visit children in normal left to right reading order
-			if (this.ast.apiLevel >= AST.JLS8) {
+			if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 				acceptChildren(visitor, this.annotations);
 			}
 			acceptChild(visitor, getBound());

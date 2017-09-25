@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 BEA Systems, Inc.
+ * Copyright (c) 2005, 2017 BEA Systems, Inc, IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -132,6 +132,11 @@ class AnnotationBinding implements IAnnotationBinding {
 				if (methodBinding == null) return null;
 				parentElement = methodBinding.getJavaElement();
 			break;
+		case ASTNode.MODULE_DECLARATION:
+			IModuleBinding moduleBinding = ((ModuleDeclaration) parent).resolveBinding();
+			if (moduleBinding == null) return null;
+			parentElement = moduleBinding.getJavaElement();
+		break;
 		case ASTNode.VARIABLE_DECLARATION_STATEMENT:
 			fragment = (VariableDeclarationFragment) ((VariableDeclarationStatement) parent).fragments().get(0);
 			variableBinding = fragment.resolveBinding();
@@ -178,6 +183,8 @@ class AnnotationBinding implements IAnnotationBinding {
 			return fragment.resolveBinding().getKey();
 		case ASTNode.METHOD_DECLARATION:
 			return ((MethodDeclaration) recipient).resolveBinding().getKey();
+		case ASTNode.MODULE_DECLARATION:
+			return ((ModuleDeclaration) recipient).resolveBinding().getKey();
 		case ASTNode.VARIABLE_DECLARATION_STATEMENT:
 			fragment = (VariableDeclarationFragment) ((VariableDeclarationStatement) recipient).fragments().get(0);
 			return fragment.resolveBinding().getKey();

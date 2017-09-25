@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2015 IBM Corporation and others.
+ * Copyright (c) 2008, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,12 +31,15 @@ import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
+import org.eclipse.jdt.internal.compiler.ast.ExportsStatement;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
 import org.eclipse.jdt.internal.compiler.ast.MessageSend;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -427,7 +430,8 @@ public void notifySourceElementRequestor(
 		length =
 			(currentPackage == null ? 0 : 1)
 			+ (imports == null ? 0 : imports.length)
-			+ (types == null ? 0 : types.length);
+			+ (types == null ? 0 : types.length)
+			+ (parsedUnit.moduleDeclaration == null ? 0 : 1);
 		nodes = new ASTNode[length];
 		int index = 0;
 		if (currentPackage != null) {
@@ -443,6 +447,9 @@ public void notifySourceElementRequestor(
 				nodes[index++] = types[i];
 			}
 		}
+		
+		if (parsedUnit.moduleDeclaration != null)
+			nodes[index++] = parsedUnit.moduleDeclaration;
 
 		// notify the nodes in the syntactical order
 		if (length > 0) {
@@ -456,8 +463,10 @@ public void notifySourceElementRequestor(
 					} else {
 						notifySourceElementRequestor(importRef, false);
 					}
-				} else { // instanceof TypeDeclaration
+				} else if (node instanceof TypeDeclaration) {
 					notifySourceElementRequestor((TypeDeclaration)node, true, null, currentPackage);
+				} else if (node instanceof ModuleDeclaration) {
+					notifySourceElementRequestor(parsedUnit.moduleDeclaration);
 				}
 			}
 		}
@@ -574,6 +583,31 @@ protected void notifySourceElementRequestor(
 			importReference.tokens,
 			onDemand,
 			importReference.modifiers);
+	}
+}
+protected void notifySourceElementRequestor(ModuleDeclaration moduleDeclaration) {
+	boolean isInRange =
+			this.initialPosition <= moduleDeclaration.declarationSourceStart
+			&& this.eofPosition >= moduleDeclaration.declarationSourceEnd;
+	ISourceElementRequestor.ModuleInfo info = new ISourceElementRequestor.ModuleInfo();
+	if (isInRange) {
+
+		int currentModifiers = moduleDeclaration.modifiers;
+
+		// remember deprecation so as to not lose it below
+		boolean deprecated = (currentModifiers & ClassFileConstants.AccDeprecated) != 0 || hasDeprecatedAnnotation(moduleDeclaration.annotations);
+
+		info.declarationStart = moduleDeclaration.declarationSourceStart;
+		info.modifiers = deprecated ? (currentModifiers & ExtraCompilerModifiers.AccJustFlag) | ClassFileConstants.AccDeprecated : currentModifiers & ExtraCompilerModifiers.AccJustFlag;
+		info.name = TypeConstants.MODULE_INFO_NAME;
+		info.nameSourceStart = moduleDeclaration.sourceStart;
+		info.nameSourceEnd = moduleDeclaration.sourceEnd;
+		info.moduleName = moduleDeclaration.moduleName;
+		info.annotations = moduleDeclaration.annotations;
+		info.node = moduleDeclaration;
+		fillModuleInfo(moduleDeclaration, info);
+		this.requestor.enterModule(info);
+		this.requestor.exitModule(moduleDeclaration.declarationSourceEnd);
 	}
 }
 protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
@@ -709,6 +743,74 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 			this.requestor.exitType(typeDeclaration.declarationSourceEnd);
 		}
 		this.nestedTypeIndex--;
+	}
+}
+private void fillModuleInfo(ModuleDeclaration mod, ISourceElementRequestor.ModuleInfo modInfo) {
+	if (mod.requiresCount > 0) {
+		ISourceElementRequestor.RequiresInfo reqs[] = new ISourceElementRequestor.RequiresInfo[mod.requiresCount];
+		for (int i = 0; i < mod.requiresCount; i++) {
+			ISourceElementRequestor.RequiresInfo req = new ISourceElementRequestor.RequiresInfo();
+			req.moduleName = CharOperation.concatWith(mod.requires[i].module.tokens, '.');
+			req.modifiers = mod.requires[i].modifiers;
+			reqs[i] = req;
+		}
+		modInfo.requires = reqs;
+	}
+	if (mod.exportsCount > 0) {
+		ISourceElementRequestor.PackageExportInfo exps[] = new ISourceElementRequestor.PackageExportInfo[mod.exportsCount];
+		for (int i = 0; i < mod.exportsCount; i++) {
+			ISourceElementRequestor.PackageExportInfo exp = new ISourceElementRequestor.PackageExportInfo();
+			ExportsStatement exportsStatement = mod.exports[i];
+			exp.pkgName = exportsStatement.pkgName;
+			if (exportsStatement.targets == null) {
+				exp.targets = CharOperation.NO_CHAR_CHAR;
+			} else {
+				exp.targets = new char[exportsStatement.targets.length][];
+				for(int j = 0; j < exp.targets.length; j++) {
+					exp.targets[j] = CharOperation.concatWith(exportsStatement.targets[j].tokens, '.');
+				}
+			}
+			exps[i] = exp;
+		}					
+		modInfo.exports = exps;
+	}
+	if (mod.servicesCount > 0) {
+		ISourceElementRequestor.ServicesInfo[] services = new ISourceElementRequestor.ServicesInfo[mod.servicesCount];
+		for (int i = 0; i < services.length; i++) {
+			ISourceElementRequestor.ServicesInfo ser = new ISourceElementRequestor.ServicesInfo();
+			ser.serviceName = CharOperation.concatWith(mod.services[i].serviceInterface.getParameterizedTypeName(), '.');
+			ser.implNames = new char[mod.services[i].implementations.length][];
+			for (int j = 0; j < ser.implNames.length; j++) {
+				ser.implNames[j] = CharOperation.concatWith(mod.services[i].implementations[j].getParameterizedTypeName(), '.');
+			}
+			services[i] = ser;
+		}
+		modInfo.services = services;
+	}
+	if (mod.usesCount > 0) {
+		char[][] uses = new char[mod.usesCount][];
+		for (int i = 0; i < uses.length; i++) {
+			uses[i] = CharOperation.concatWith(mod.uses[i].serviceInterface.getParameterizedTypeName(), '.');
+		}
+		modInfo.usedServices = uses;
+	}
+	if (mod.opensCount > 0) {
+		ISourceElementRequestor.PackageExportInfo opens[] = new ISourceElementRequestor.PackageExportInfo[mod.opensCount];
+		for (int i = 0; i < mod.opensCount; i++) {
+			ISourceElementRequestor.PackageExportInfo op = new ISourceElementRequestor.PackageExportInfo();
+			OpensStatement openStmt = mod.opens[i];
+			op.pkgName = openStmt.pkgName;
+			if (openStmt.targets == null) {
+				op.targets = CharOperation.NO_CHAR_CHAR;
+			} else {
+				op.targets = new char[openStmt.targets.length][];
+				for(int j = 0; j < op.targets.length; j++) {
+					op.targets[j] = CharOperation.concatWith(openStmt.targets[j].tokens, '.');
+				}
+			}
+			opens[i] = op;
+		}
+		modInfo.opens = opens;
 	}
 }
 /*

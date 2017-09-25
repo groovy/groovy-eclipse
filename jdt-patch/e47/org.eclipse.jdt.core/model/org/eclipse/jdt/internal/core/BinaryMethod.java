@@ -251,8 +251,8 @@ public String[] getParameterNames() throws JavaModelException {
 		if(paramNames == null) {
 			IBinaryType info = (IBinaryType) ((BinaryType) getDeclaringType()).getElementInfo();
 			char[] source = mapper.findSource(type, info);
-			if (source != null){
-				mapper.mapSource(type, source, info);
+			if (source != null) {
+				mapper.mapSource((NamedMember) type, source, info);
 			}
 			paramNames = mapper.getMethodParameterNames(this);
 		}

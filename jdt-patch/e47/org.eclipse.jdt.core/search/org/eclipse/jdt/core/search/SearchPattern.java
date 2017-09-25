@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1373,6 +1373,10 @@ private static SearchPattern createMethodOrConstructorPattern(String patternStri
 	}
 }
 
+private static SearchPattern createModulePattern(String patternString, int limitTo, int matchRule) {
+	return new ModulePattern(patternString.toCharArray(), limitTo, matchRule);
+}
+
 /**
  * Returns a search pattern that combines the given two patterns into an
  * "or" pattern. The search result will match either the left pattern or the
@@ -1640,6 +1644,8 @@ public static SearchPattern createPattern(String stringPattern, int searchFor, i
 			return createFieldPattern(stringPattern, limitTo, matchRule);
 		case IJavaSearchConstants.PACKAGE:
 			return createPackagePattern(stringPattern, limitTo, matchRule);
+		case IJavaSearchConstants.MODULE :
+			return createModulePattern(stringPattern, limitTo, matchRule);
 	}
 	return null;
 }
@@ -2113,6 +2119,9 @@ public static SearchPattern createPattern(IJavaElement element, int limitTo, int
 		case IJavaElement.PACKAGE_FRAGMENT :
 			searchPattern = createPackagePattern(element.getElementName(), maskedLimitTo, matchRule);
 			break;
+		case IJavaElement.JAVA_MODULE :
+			searchPattern = createModulePattern(element.getElementName(), maskedLimitTo, matchRule);
+			break;
 	}
 	if (searchPattern != null)
 		MatchLocator.setFocus(searchPattern, element);
@@ -2281,6 +2290,8 @@ private static char[][] enclosingTypeNames(IType type) {
 	IJavaElement parent = type.getParent();
 	switch (parent.getElementType()) {
 		case IJavaElement.CLASS_FILE:
+			if (parent instanceof IModularClassFile)
+				return null;
 			// For a binary type, the parent is not the enclosing type, but the declaring type is.
 			// (see bug 20532  Declaration of member binary type not found)
 			IType declaringType = type.getDeclaringType();

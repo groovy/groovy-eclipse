@@ -51,7 +51,7 @@ public CodeSnippetClassFile(
 	 * @param creatingProblemType <CODE>boolean</CODE>
 	 */
 	this.referenceBinding = aType;
-	initByteArrays();
+	initByteArrays(aType.methods().length + aType.fields().length);
 	// generate the magic numbers inside the header
 	this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 24);
 	this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 16);

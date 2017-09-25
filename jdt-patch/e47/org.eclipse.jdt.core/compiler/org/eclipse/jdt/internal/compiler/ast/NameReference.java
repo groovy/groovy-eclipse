@@ -94,7 +94,7 @@ public abstract char[][] getName();
    Aborts if constraints are violated. Due to various complexities, this check is not conveniently
    implementable in resolve/analyze phases.
 */
-protected void checkEffectiveFinality(LocalVariableBinding localBinding, Scope scope) {
+public void checkEffectiveFinality(VariableBinding localBinding, Scope scope) {
 	if ((this.bits & ASTNode.IsCapturedOuterLocal) != 0) {
 		if (!localBinding.isFinal() && !localBinding.isEffectivelyFinal()) {
 			scope.problemReporter().cannotReferToNonEffectivelyFinalOuterLocal(localBinding, this);

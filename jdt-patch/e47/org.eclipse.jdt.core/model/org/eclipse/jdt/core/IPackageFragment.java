@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -75,22 +75,89 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 * in this package (for example, <code>"Object.class"</code>).
 	 * The ".class" suffix is required.
 	 * This is a handle-only method.  The class file may or may not be present.
+	 * <p>
+	 * This method can handle ordinary class files or modular class files
+	 * denoted by the name <code>"module-info.class"</code>.
+	 * </p>
 	 * @param name the given name
 	 * @return the class file with the specified name in this package
 	 */
 	IClassFile getClassFile(String name);
 	/**
+	 * Returns the class file with the specified name
+	 * in this package (for example, <code>"Object.class"</code>).
+	 * The ".class" suffix is required.
+	 * This is a handle-only method.  The class file may or may not be present.
+	 * <p>
+	 * This method is not applicable to the files <code>"module-info.class"</code>
+	 * as introduced in Java 9. For those please use {@link #getModularClassFile()}.
+	 * </p>
+	 * @param name the given name
+	 * @return the class file with the specified name in this package
+	 * @since 3.14
+	 */
+	IOrdinaryClassFile getOrdinaryClassFile(String name);
+
+	/**
+	 * Returns the class file for <code>"module-info.class"</code> in this package.
+	 * This is a handle-only method.  The class file may or may not be present.
+	 * If the class file is present, then it is guaranteed to contain an {@link IModuleDescription}.
+	 * 
+	 * @since 3.14
+	 * @return the class file representing "module-info.class" in this package.
+	 */
+	IModularClassFile getModularClassFile();
+
+	/**
 	 * Returns all of the class files in this package fragment.
 	 *
 	 * <p>Note: it is possible that a package fragment contains only
 	 * compilation units (in other words, its kind is <code>K_SOURCE</code>), in
-	 * which case this method returns an empty collection.
+	 * which case this method returns an empty collection.</p>
+	 * 
+	 * <p>Note: the returned list may contain ordinary class files as well as
+	 * a modular class file (for "module-info.class").</p>
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return all of the class files in this package fragment
+	 * @since 3.14
 	 */
+	IClassFile[] getAllClassFiles() throws JavaModelException;
+	
+	/**
+	 * Returns all of the ordinary class files in this package fragment.
+	 * 
+	 * <p>Note: this list never includes a modular class file 
+	 * (see {@link #getModularClassFile()}).</p>
+	 *
+	 * <p>Note: it is possible that a package fragment contains only
+	 * compilation units (in other words, its kind is <code>K_SOURCE</code>), in
+	 * which case this method returns an empty collection.</p>
+	 *
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @return all of the ordinary class files in this package fragment
+	 * @deprecated Clients are advised to specifically use either {@link #getOrdinaryClassFiles()}
+	 * 		or {@link #getAllClassFiles()} to express their intent.
+	 */
+	@Deprecated
 	IClassFile[] getClassFiles() throws JavaModelException;
+	/**
+	 * Returns all of the ordinary class files in this package fragment,
+	 * i.e., not including the modular class file "module-info.class".
+	 *
+	 * <p>Note: it is possible that a package fragment contains only
+	 * compilation units (in other words, its kind is <code>K_SOURCE</code>), in
+	 * which case this method returns an empty collection.</p>
+	 * 
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @return all of the ordinary class files in this package fragment
+	 * @since 3.14
+	 */
+	IOrdinaryClassFile[] getOrdinaryClassFiles() throws JavaModelException;
+
 	/**
 	 * Returns the compilation unit with the specified name
 	 * in this package (for example, <code>"Object.java"</code>).

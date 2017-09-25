@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
@@ -747,6 +748,11 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 			String typeName = memento.nextToken();
 			JavaElement type = (JavaElement)getType(typeName);
 			return type.getHandleFromMemento(memento, workingCopyOwner);
+		case JEM_MODULE:
+			if (!memento.hasMoreTokens()) return this;
+			String modName = memento.nextToken();
+			JavaElement mod = new SourceModule(this, modName);
+			return mod.getHandleFromMemento(memento, workingCopyOwner);
 	}
 	return null;
 }
@@ -1365,6 +1371,31 @@ protected IStatus validateExistence(IResource underlyingResource) {
 }
 
 public ISourceRange getNameRange() {
+	return null;
+}
+
+
+@Override
+public IModuleDescription getModule() throws JavaModelException {
+	if (TypeConstants.MODULE_INFO_FILE_NAME_STRING.equals(getElementName()))
+		return ((CompilationUnitElementInfo) getElementInfo()).getModule();
+	return null;
+}
+
+@Override
+public char[] getModuleName() {
+	try {
+		IModuleDescription module = getModule();
+		if (module == null) {
+			JavaProject project = (JavaProject) getAncestor(IJavaElement.JAVA_PROJECT);
+			module = project.getModuleDescription();
+		}
+		if (module != null)
+			return module.getElementName().toCharArray();
+	} catch (JavaModelException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
 	return null;
 }
 }

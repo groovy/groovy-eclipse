@@ -144,7 +144,7 @@ public class ArrayType extends Type {
 	 */
 	ArrayType(AST ast) {
 		super(ast);
-		if (ast.apiLevel >= AST.JLS8) {
+		if (ast.apiLevel >= AST.JLS8_INTERNAL) {
 			this.dimensions = new ASTNode.NodeList(DIMENSIONS_PROPERTY);
 			// single dimension array is the default
 			this.dimensions().add(this.ast.newDimension());
@@ -224,7 +224,7 @@ public class ArrayType extends Type {
 	 */
 	ASTNode clone0(AST target) {
 		ArrayType result;
-		if (this.ast.apiLevel < AST.JLS8) {
+		if (this.ast.apiLevel < AST.JLS8_INTERNAL) {
 			result = new ArrayType(target);
 			result.setComponentType((Type) getComponentType().clone(target));			
 		} else {
@@ -252,7 +252,7 @@ public class ArrayType extends Type {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
 			// visit children in normal left to right reading order
-			if (this.ast.apiLevel < AST.JLS8) {
+			if (this.ast.apiLevel < AST.JLS8_INTERNAL) {
 				acceptChild(visitor, getComponentType());				
 			} else {
 				acceptChild(visitor, getElementType());
@@ -332,7 +332,7 @@ public class ArrayType extends Type {
 	 * @return the element type node
 	 */
 	public Type getElementType() {
-		if (this.ast.apiLevel() < AST.JLS8) {
+		if (this.ast.apiLevel() < AST.JLS8_INTERNAL) {
 			Type t = getComponentType();
 			while (t.isArrayType()) {
 				t = ((ArrayType) t).getComponentType();
@@ -376,7 +376,7 @@ public class ArrayType extends Type {
 	 * @return the number of dimensions (always positive)
 	 */
 	public int getDimensions() {
-		if (this.ast.apiLevel() >= AST.JLS8) {
+		if (this.ast.apiLevel() >= AST.JLS8_INTERNAL) {
 			return dimensions().size();
 		}
 		Type t = getComponentType();
@@ -419,7 +419,7 @@ public class ArrayType extends Type {
 	int treeSize() {
 		return
 			memSize()
-			+ (this.type == null ? 0 : (this.ast.apiLevel() < AST.JLS8 ? getComponentType().treeSize() : getElementType().treeSize())
+			+ (this.type == null ? 0 : (this.ast.apiLevel() < AST.JLS8_INTERNAL ? getComponentType().treeSize() : getElementType().treeSize())
 			+ (this.dimensions == null ? 0 : this.dimensions.listSize()));
 	}
 }

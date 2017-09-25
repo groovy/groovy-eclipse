@@ -357,15 +357,22 @@ void setSourceStart(int sourceStart);
 	int Syntax = 0x40000000;
 	/** @since 3.0 */
 	int Javadoc = 0x80000000;
+	/** @since 3.14 */
+	int ModuleRelated = 0x00800000;
 
 	/**
 	 * Mask to use in order to filter out the category portion of the problem ID.
 	 */
-	int IgnoreCategoriesMask = 0xFFFFFF;
+	int IgnoreCategoriesMask = 0x7FFFFF;
 
-	/**
+	/*
 	 * Below are listed all available problem IDs. Note that this list could be augmented in the future,
 	 * as new features are added to the Java core implementation.
+	 *
+	 * Problem IDs must be kept unique even when their mask is stripped, since
+	 * the bare integer literal is used for message lookup in
+	 * /org.eclipse.jdt.core/compiler/org/eclipse/jdt/internal/compiler/problem/messages.properties.
+	 * Use this regex to find duplicates: (?s)(\+ \d+)\b.*\1\b
 	 */
 
 	/**
@@ -1476,6 +1483,8 @@ void setSourceStart(int sourceStart);
     int InterfaceSuperInvocationNotBelow18 = Internal + Syntax + 667;
     /** @since 3.13*/
     int InterfaceStaticMethodInvocationNotBelow18 = Internal + Syntax + 668;
+	/** @since 3.13 */
+	int FieldMustBeFinal = Internal + 669;
 
 
 	/**
@@ -1673,6 +1682,8 @@ void setSourceStart(int sourceStart);
 	/** @since 3.10 */
 	int RepeatedAnnotationWithContainerAnnotation = TypeRelated + 899;
 	
+	/** @since 3.14 */
+	int AutoManagedVariableResourceNotBelow9 = Syntax + Internal + 1351;
 	/**
 	 * External problems -- These are problems defined by other plugins
 	 */
@@ -1871,11 +1882,92 @@ void setSourceStart(int sourceStart);
 	/** @since 3.13 */
 	int CannotInferInvocationType = TypeRelated + 1059;
 	
+	
 	/** @since 3.13 */
 	int TypeAnnotationAtQualifiedName = Internal + Syntax + 1060;
 
 	/** @since 3.13 */
 	int NullAnnotationAtQualifyingType = Internal + Syntax + 1061;
+	
+	/** @since 3.14*/
+	int IllegalModifierForInterfaceMethod9 = MethodRelated + 1071;
+	/** @since 3.14*/
+	int IllegalModifierCombinationForPrivateInterfaceMethod9 = MethodRelated + 1070;
+	/** @since 3.14 */
+	int UndefinedModule = ModuleRelated + 1300;
+	/** @since 3.14 */
+	int DuplicateRequires = ModuleRelated + 1301;
+	/** @since 3.14 */
+	int DuplicateExports = ModuleRelated + 1302;
+	/** @since 3.14 */
+	int DuplicateUses = ModuleRelated + 1303;
+	/** @since 3.14 */
+	int DuplicateServices = ModuleRelated + 1304;
+	/** @since 3.14 */
+	int CyclicModuleDependency = ModuleRelated + 1305;
+	/** @since 3.14 */
+	int AbstractServiceImplementation = TypeRelated + 1306;
+	/** @since 3.14 */
+	int ProviderMethodOrConstructorRequiredForServiceImpl = TypeRelated + 1307;
+	/** @since 3.14 */
+	int ServiceImplDefaultConstructorNotPublic = TypeRelated + 1308;
+	/** @since 3.14 */
+	int NestedServiceImpl = TypeRelated + 1309;
+	/** @since 3.14 */
+	int ServiceImplNotDefinedByModule = TypeRelated + 1310;
+	/** @since 3.14 */
+	int PackageDoesNotExistOrIsEmpty = ModuleRelated + 1311;
+	/** @since 3.14 */
+	int NonDenotableTypeArgumentForAnonymousDiamond = TypeRelated + 1312;
+	/** @since 3.14 */
+	int DuplicateOpens = ModuleRelated + 1313;
+	/** @since 3.14 */
+	int DuplicateModuleRef = ModuleRelated + 1314;
+	/** @since 3.14 */
+	int InvalidOpensStatement = ModuleRelated + 1315;
+	/** @since 3.14 */
+	int InvalidServiceIntfType = ModuleRelated + 1316;
+	/** @since 3.14 */
+	int InvalidServiceImplType = ModuleRelated + 1317;
+	/** @since 3.14 */
+	int IllegalModifierForModule = ModuleRelated + 1318;
+
+	/** @since 3.14 */
+	int DuplicateResource = Internal + 1251;
+
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedType = TypeRelated + 1400;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedMethod = MethodRelated + 1401;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedConstructor = MethodRelated + 1402;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedField = FieldRelated + 1403;
+	/** @since 3.14 */
+	int OverridingTerminallyDeprecatedMethod = MethodRelated + 1404;
+
+	/** @since 3.14 */
+	int NotAccessibleType = TypeRelated + 1450;
+	/** @since 3.14 */
+	int NotAccessibleField = FieldRelated + 1451;
+	/** @since 3.14 */
+	int NotAccessibleMethod = MethodRelated + 1452;
+	/** @since 3.14 */
+	int NotAccessibleConstructor = MethodRelated + 1453;
+	/** @since 3.14 */
+	int NotAccessiblePackage = ImportRelated + 1454;
+	/** @since 3.14 */
+	int ConflictingPackageFromModules = ModuleRelated + 1455;
+	/** @since 3.14 */
+	int ConflictingPackageFromOtherModules = ModuleRelated + 1456;
+	/** @since 3.14 */
+	int NonPublicTypeInAPI = ModuleRelated + 1457;
+	/** @since 3.14 */
+	int NotExportedTypeInAPI = ModuleRelated + 1458;
+	/** @since 3.14 */
+	int MissingRequiresTransitiveForTypeInAPI = ModuleRelated + 1459;
+	/** @since  3.14 */
+	int UnnamedPackageInNamedModule = ModuleRelated + 1460;
 
 	/** @since 3.13 */
 	int RedundantNullDefaultAnnotationLocal = Internal + 1062;

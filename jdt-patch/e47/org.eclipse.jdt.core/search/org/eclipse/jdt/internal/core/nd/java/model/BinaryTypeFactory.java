@@ -25,7 +25,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClassFile;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -38,6 +37,7 @@ import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.nd.IReader;
 import org.eclipse.jdt.internal.core.nd.Nd;
 import org.eclipse.jdt.internal.core.nd.db.IndexException;
@@ -64,19 +64,20 @@ public class BinaryTypeFactory {
 	 */
 	private static BinaryTypeDescriptor createDescriptor(PackageFragment pkg, ClassFile classFile) {
 		String name = classFile.getName();
-		IJavaElement root = pkg.getParent();
+		PackageFragmentRoot root = (PackageFragmentRoot) pkg.getParent();
 		IPath location = JavaIndex.getLocationForElement(root);
-		String entryName = Util.concatWith(pkg.names, classFile.getElementName(), '/');
-		char[] fieldDescriptor = CharArrayUtils.concat(new char[] { 'L' },
-				Util.concatWith(pkg.names, name, '/').toCharArray(), new char[] { ';' });
-		IPath workspacePath = root.getPath();
-		String indexPath;
-
 		if (location == null) {
 			return null;
 		}
+		name = root.getClassFilePath(Util.concatWith(pkg.names, name, '/'));
+		String entryName = Util.concatWith(pkg.names, classFile.getElementName(), '/');
+		char[] fieldDescriptor = CharArrayUtils.concat(new char[] { 'L' },
+				name.toCharArray(), new char[] { ';' });
+		IPath workspacePath = root.getPath();
+		String indexPath;
 
 		if (root instanceof JarPackageFragmentRoot) {
+			entryName = ((JarPackageFragmentRoot) root).getClassFilePath(entryName);
 			// The old version returned this, but it doesn't conform to the spec on IBinaryType.getFileName():
 			indexPath = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
 			// Version that conforms to the JavaDoc spec on IBinaryType.getFileName() -- note that this breaks

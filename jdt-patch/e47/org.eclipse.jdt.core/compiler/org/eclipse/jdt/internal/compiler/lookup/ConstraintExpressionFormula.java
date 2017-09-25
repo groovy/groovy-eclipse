@@ -67,7 +67,13 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 	
 		// JLS 18.2.1
 		if (this.right.isProperType(true)) {
-			return this.left.isCompatibleWith(this.right, inferenceContext.scope) || this.left.isBoxingCompatibleWith(this.right, inferenceContext.scope) ? TRUE : FALSE;
+			if (this.left.isCompatibleWith(this.right, inferenceContext.scope) || this.left.isBoxingCompatibleWith(this.right, inferenceContext.scope)) {
+				if (this.left.resolvedType != null && this.left.resolvedType.needsUncheckedConversion(this.right)) {
+					inferenceContext.usesUncheckedConversion = true;
+				}
+				return TRUE;
+			}
+			return FALSE;
 		}
 		if (!canBePolyExpression(this.left)) {
 			TypeBinding exprType = this.left.resolvedType;

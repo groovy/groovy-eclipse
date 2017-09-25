@@ -51,17 +51,18 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaElementDelta;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IDependent;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.JavaElementDelta;
@@ -746,7 +747,7 @@ public final class Indexer {
 								}
 								resourceFile.addZipEntry(fileName);
 
-								if (fileName.equals("META-INF/MANIFEST.MF")) { //$NON-NLS-1$
+								if (fileName.equals(TypeConstants.META_INF_MANIFEST_MF)) {
 									try (InputStream inputStream = zipFile.getInputStream(member)) {
 										char[] chars = getInputStreamAsCharArray(inputStream, -1, UTF_8);
 
@@ -809,8 +810,8 @@ public final class Indexer {
 				Package.logInfo("The path " + element.getPath() + " contained no class files"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			return classesIndexed;
-		} else if (element instanceof IClassFile) {
-			IClassFile classFile = (IClassFile)element;
+		} else if (element instanceof IOrdinaryClassFile) {
+			IOrdinaryClassFile classFile = (IOrdinaryClassFile) element;
 
 			SubMonitor iterationMonitor = subMonitor.split(1);
 			BinaryTypeDescriptor descriptor = BinaryTypeFactory.createDescriptor(classFile);

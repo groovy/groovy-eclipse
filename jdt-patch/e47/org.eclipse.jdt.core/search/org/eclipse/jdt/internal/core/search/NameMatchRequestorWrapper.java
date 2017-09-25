@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,10 +12,10 @@
 package org.eclipse.jdt.internal.core.search;
 
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
@@ -66,22 +66,19 @@ public IType getType(int modifiers, char[] packageName, char[] simpleTypeName, c
 		if (this.handleFactory != null) {
 			Openable openable = this.handleFactory.createOpenable(path, this.scope);
 			if (openable == null) return type;
-			switch (openable.getElementType()) {
-				case IJavaElement.COMPILATION_UNIT:
-					ICompilationUnit cu = (ICompilationUnit) openable;
-					if (enclosingTypeNames != null && enclosingTypeNames.length > 0) {
-						type = cu.getType(new String(enclosingTypeNames[0]));
-						for (int j=1, l=enclosingTypeNames.length; j<l; j++) {
-							type = type.getType(new String(enclosingTypeNames[j]));
-						}
-						type = type.getType(new String(simpleTypeName));
-					} else {
-						type = cu.getType(new String(simpleTypeName));
+			if (openable instanceof ICompilationUnit) {
+				ICompilationUnit cu = (ICompilationUnit) openable;
+				if (enclosingTypeNames != null && enclosingTypeNames.length > 0) {
+					type = cu.getType(new String(enclosingTypeNames[0]));
+					for (int j=1, l=enclosingTypeNames.length; j<l; j++) {
+						type = type.getType(new String(enclosingTypeNames[j]));
 					}
-					break;
-				case IJavaElement.CLASS_FILE:
-					type = ((IClassFile)openable).getType();
-					break;
+					type = type.getType(new String(simpleTypeName));
+				} else {
+					type = cu.getType(new String(simpleTypeName));
+				}
+			} else if (openable instanceof IOrdinaryClassFile) {
+				type = ((IOrdinaryClassFile)openable).getType();
 			}
 		} else {
 			int separatorIndex= path.indexOf(IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR);
@@ -110,6 +107,9 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 	}
 	// create handle
 	String classFilePath= resourcePath.substring(separatorIndex + 1);
+	int actualClassIndexSeparator = classFilePath.indexOf(IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR);
+	String moduleName = actualClassIndexSeparator == -1 ? null : classFilePath.substring(0, actualClassIndexSeparator);
+	classFilePath = moduleName != null ? classFilePath.substring(actualClassIndexSeparator + 1, classFilePath.length()) : classFilePath;
 	String[] simpleNames = new Path(classFilePath).segments();
 	String[] pkgName;
 	int length = simpleNames.length-1;
@@ -121,7 +121,7 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 	}
 	IPackageFragment pkgFragment= (IPackageFragment) this.packageHandles.get(pkgName);
 	if (pkgFragment == null) {
-		pkgFragment= ((PackageFragmentRoot) this.lastPkgFragmentRoot).getPackageFragment(pkgName);
+		pkgFragment= ((PackageFragmentRoot) this.lastPkgFragmentRoot).getPackageFragment(pkgName, moduleName); //BUG 478143
 		// filter org.apache.commons.lang.enum package for projects above 1.5 
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=317264
 		if (length == 5 && pkgName[4].equals("enum")) { //$NON-NLS-1$
@@ -136,7 +136,7 @@ private IType createTypeFromJar(String resourcePath, int separatorIndex) throws 
 		} 
 		this.packageHandles.put(pkgName, pkgFragment);
 	}
-	return pkgFragment.getClassFile(simpleNames[length]).getType();
+	return pkgFragment.getOrdinaryClassFile(simpleNames[length]).getType();
 }
 private IType createTypeFromPath(String resourcePath, String simpleTypeName, char[][] enclosingTypeNames) throws JavaModelException {
 	// path to a file in a directory
@@ -181,7 +181,7 @@ private IType createTypeFromPath(String resourcePath, String simpleTypeName, cha
 		}
 		return type;
 	} else if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(simpleName)){
-		IClassFile classFile= pkgFragment.getClassFile(simpleName);
+		IOrdinaryClassFile classFile= pkgFragment.getOrdinaryClassFile(simpleName);
 		return classFile.getType();
 	}
 	return null;

@@ -19,6 +19,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
 import org.eclipse.jdt.internal.compiler.env.IBinaryField;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
+import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
 import org.eclipse.jdt.internal.compiler.env.IBinaryNestedType;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
@@ -151,6 +152,9 @@ private IMemberValuePair[] getTargetElementTypes(long tagBits) {
 	}
 	if ((tagBits & TagBits.AnnotationForTypeParameter) != 0) {
 		values.add(elementType + new String(TypeConstants.TYPE_PARAMETER_TARGET));
+	}
+	if ((tagBits & TagBits.AnnotationForModule) != 0) {
+		values.add(elementType + new String(TypeConstants.UPPER_MODULE));
 	}
 	final Object value;
 	if (values.size() == 0) {
@@ -405,13 +409,6 @@ private void generateTypeParameterInfos(BinaryMember parent, char[] signature, H
 	}
 }
 /**
- * Returns true iff the <code>readBinaryChildren</code> has already
- * been called.
- */
-boolean hasReadBinaryChildren() {
-	return this.binaryChildren != null;
-}
-/**
  * Creates the handles for <code>BinaryMember</code>s defined in this
  * <code>ClassFile</code> and adds them to the
  * <code>JavaModelManager</code>'s cache.
@@ -437,6 +434,21 @@ protected void readBinaryChildren(ClassFile classFile, HashMap newElements, IBin
 		this.typeParameters = new ITypeParameter[typeParameterHandleSize];
 		typeParameterHandles.toArray(this.typeParameters);
 	}
+}
+protected BinaryModule readBinaryModule(AbstractClassFile classFile, HashMap newElements, IBinaryModule modDecl) {
+	this.binaryChildren = JavaElement.NO_ELEMENTS;
+	this.typeParameters = TypeParameter.NO_TYPE_PARAMETERS;
+	if (modDecl != null) {//may not be a valid class file
+		// TODO: The following needs fix once we can get ModuleDeclaration from IndexBinaryType
+		char[] modName = modDecl.name();
+		BinaryModule handle = new BinaryModule(classFile, new String(modName));
+		ModuleDescriptionInfo moduleInfo = ModuleDescriptionInfo.createModule(modDecl);
+		setModule(handle);
+		newElements.put(handle, moduleInfo);
+		this.binaryChildren = new JavaElement[] { handle };
+		return handle;
+	}
+	return null;
 }
 /**
  * Removes the binary children handles and remove their infos from

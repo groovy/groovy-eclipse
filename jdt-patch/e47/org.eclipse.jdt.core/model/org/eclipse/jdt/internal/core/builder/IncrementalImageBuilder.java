@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.classfmt.*;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.problem.*;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
@@ -84,7 +85,7 @@ public boolean build(SimpleLookupTable deltas) {
 
 		this.notifier.subTask(Messages.build_analyzingDeltas);
 		if (this.javaBuilder.hasBuildpathErrors()) {
-			// if a mssing class file was detected in the last build, a build state was saved since its no longer fatal
+			// if a missing class file was detected in the last build, a build state was saved since its no longer fatal
 			// but we need to rebuild every source file since problems were not recorded
 			// AND to avoid the infinite build scenario if this project is involved in a cycle, see bug 160550
 			// we need to avoid unnecessary deltas caused by doing a full build in this case
@@ -420,7 +421,7 @@ protected void findAffectedSourceFiles(IResourceDelta binaryDelta, int segmentCo
 							System.out.println("Skipped dependents of added package " + packageName); //$NON-NLS-1$
 					} else {
 						// see if the package still exists on the classpath
-						if (!this.nameEnvironment.isPackage(packageName)) {
+						if (!this.nameEnvironment.isPackage(packageName, ModuleBinding.ANY)) {
 							if (JavaBuilder.DEBUG)
 								System.out.println("Found removed package " + packageName); //$NON-NLS-1$
 							addDependentsOf(packagePath, false);
@@ -646,7 +647,8 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 							return true; // skip it since it really isn't changed
 						if (JavaBuilder.DEBUG)
 							System.out.println("Compile this changed source file " + typeLocator); //$NON-NLS-1$
-						this.sourceFiles.add(new SourceFile((IFile) resource, md, true));
+						SourceFile unit = new SourceFile((IFile) resource, md, true);
+						this.sourceFiles.add(unit);
 				}
 				return true;
 			} else if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(resourceName)) {

@@ -13,8 +13,8 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -109,19 +109,19 @@ static class JavacCompiler {
 				}
 			}
 		}
-		if (rawVersion.indexOf("1.4") != -1 ||
-				this.javacPathName.indexOf("1.4") != -1
-				/* in fact, SUN javac 1.4 does not support the -version option;
-				 * this is a imperfect heuristic to catch the case */) {
+		if (rawVersion.indexOf(JavaCore.VERSION_1_4) != -1 || this.javacPathName.indexOf(JavaCore.VERSION_1_4) != -1
+				/* in fact, SUN javac 1.4 does not support the -version option; this is a imperfect heuristic to catch the case */) {
 			this.version = JavaCore.VERSION_1_4;
-		} else if (rawVersion.indexOf("1.5") != -1) {
+		} else if (rawVersion.indexOf(JavaCore.VERSION_1_5) != -1) {
 			this.version = JavaCore.VERSION_1_5;
-		} else if (rawVersion.indexOf("1.6") != -1) {
+		} else if (rawVersion.indexOf(JavaCore.VERSION_1_6) != -1) {
 			this.version = JavaCore.VERSION_1_6;
-		} else if (rawVersion.indexOf("1.7") != -1) {
+		} else if (rawVersion.indexOf(JavaCore.VERSION_1_7) != -1) {
 			this.version = JavaCore.VERSION_1_7;
-		} else if (rawVersion.indexOf("1.8") != -1) {
-			this.version = "1.8";//JavaCore.VERSION_1_8;
+		} else if (rawVersion.indexOf(VERSION_1_8) != -1) {
+			this.version = VERSION_1_8;
+		} else if (rawVersion.indexOf(VERSION_1_9) != -1) {
+			this.version = VERSION_1_9;
 		} else {
 			throw new RuntimeException("unknown javac version: " + rawVersion);
 		}
@@ -824,6 +824,8 @@ public static class JavacTestOptions {
 			buffer.append("\" -1.7");
 		} else if (this.complianceLevel == JDK1_8) {
 			buffer.append("\" -1.8");
+		} else if (this.complianceLevel == JDK1_9) {
+			buffer.append("\" -1.9");
 		}
 		buffer
 			.append(" -preserveAllLocals -nowarn -g -classpath \"")

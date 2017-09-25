@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -655,6 +655,23 @@ public abstract class ASTVisitor {
 	 * @return <code>true</code> if the children of this node should be
 	 * visited, and <code>false</code> if the children of this node should
 	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(ExportsDirective node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
+	 * Subclasses may re-implement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
 	 * @since 3.10
 	 */
 	public boolean visit(ExpressionMethodReference node) {
@@ -1052,6 +1069,40 @@ public abstract class ASTVisitor {
 	 * @return <code>true</code> if the children of this node should be
 	 * visited, and <code>false</code> if the children of this node should
 	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(ModuleDeclaration node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
+	 * Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(ModuleModifier node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
+	 * Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
 	 * @since 3.10
 	 */
 	public boolean visit(NameQualifiedType node) {
@@ -1104,6 +1155,23 @@ public abstract class ASTVisitor {
 	 * be skipped
 	 */
 	public boolean visit(NumberLiteral node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
+	 * Subclasses may re-implement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(OpensDirective node) {
 		return true;
 	}
 
@@ -1192,6 +1260,23 @@ public abstract class ASTVisitor {
 	 * Visits the given type-specific AST node.
 	 * <p>
 	 * The default implementation does nothing and return true.
+	 * Subclasses may re-implement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(ProvidesDirective node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
 	 * Subclasses may reimplement.
 	 * </p>
 	 *
@@ -1234,6 +1319,23 @@ public abstract class ASTVisitor {
 	 * @since 3.1
 	 */
 	public boolean visit(QualifiedType node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
+	 * Subclasses may re-implement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(RequiresDirective node) {
 		return true;
 	}
 
@@ -1630,6 +1732,23 @@ public abstract class ASTVisitor {
 	 * @since 3.7.1
 	 */
 	public boolean visit(UnionType node) {
+		return true;
+	}
+
+	/**
+	 * Visits the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing and return true.
+	 * Subclasses may re-implement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @return <code>true</code> if the children of this node should be
+	 * visited, and <code>false</code> if the children of this node should
+	 * be skipped
+	 * @since 3.14
+	 */
+	public boolean visit(UsesDirective node) {
 		return true;
 	}
 
@@ -2057,6 +2176,19 @@ public abstract class ASTVisitor {
 	 * </p>
 	 *
 	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(ExportsDirective node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
 	 * @since 3.10
 	 */
 	public void endVisit(ExpressionMethodReference node) {
@@ -2348,6 +2480,32 @@ public abstract class ASTVisitor {
 	 * </p>
 	 *
 	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(ModuleDeclaration node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(ModuleModifier node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
 	 * @since 3.10
 	 */
 	public void endVisit(NameQualifiedType node) {
@@ -2388,6 +2546,19 @@ public abstract class ASTVisitor {
 	 * @param node the node to visit
 	 */
 	public void endVisit(NumberLiteral node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(OpensDirective node) {
 		// default implementation: do nothing
 	}
 
@@ -2471,6 +2642,19 @@ public abstract class ASTVisitor {
 	 * </p>
 	 *
 	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(ProvidesDirective node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
 	 */
 	public void endVisit(QualifiedName node) {
 		// default implementation: do nothing
@@ -2486,6 +2670,19 @@ public abstract class ASTVisitor {
 	 * @since 3.1
 	 */
 	public void endVisit(QualifiedType node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(RequiresDirective node) {
 		// default implementation: do nothing
 	}
 
@@ -2781,6 +2978,19 @@ public abstract class ASTVisitor {
 	 * @since 3.7.1
 	 */
 	public void endVisit(UnionType node) {
+		// default implementation: do nothing
+	}
+
+	/**
+	 * End of visit the given type-specific AST node.
+	 * <p>
+	 * The default implementation does nothing. Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param node the node to visit
+	 * @since 3.14
+	 */
+	public void endVisit(UsesDirective node) {
 		// default implementation: do nothing
 	}
 

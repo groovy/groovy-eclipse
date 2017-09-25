@@ -13,6 +13,7 @@ package org.eclipse.jdt.internal.core;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IInitializer;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 
@@ -48,6 +49,12 @@ public void acceptMemberType(IType type) {
  */
 public void acceptMethod(IMethod method) {
 	// implements interface method
+}
+/**
+ * @see IJavaElementRequestor
+ */
+public void acceptModule(IModuleDescription module) {
+	// implements interface method	
 }
 /**
  * @see IJavaElementRequestor

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2013 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -88,20 +88,9 @@ public ReconcileContext(ReconcileWorkingCopyOperation operation, CompilationUnit
  * with JLS4 level.
  */
 public org.eclipse.jdt.core.dom.CompilationUnit getAST3() throws JavaModelException {
-	if (this.operation.astLevel != AST.JLS3 || !this.operation.resolveBindings) {
-		// create AST (optionally resolving bindings)
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
-		parser.setCompilerOptions(this.workingCopy.getJavaProject().getOptions(true));
-		if (JavaProject.hasJavaNature(this.workingCopy.getJavaProject().getProject()))
-			parser.setResolveBindings(true);
-		parser.setStatementsRecovery((this.operation.reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
-		parser.setBindingsRecovery((this.operation.reconcileFlags & ICompilationUnit.ENABLE_BINDINGS_RECOVERY) != 0);
-		parser.setSource(this.workingCopy);
-		parser.setIgnoreMethodBodies((this.operation.reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0);
-		return (org.eclipse.jdt.core.dom.CompilationUnit) parser.createAST(this.operation.progressMonitor);
-	}
-	return this.operation.makeConsistent(this.workingCopy);
+	return getAST(AST.JLS3);
 }
+
 /**
  * Returns a resolved AST with {@link AST#JLS4 JLS4} level.
  * It is created from the current state of the working copy.
@@ -128,20 +117,9 @@ public org.eclipse.jdt.core.dom.CompilationUnit getAST3() throws JavaModelExcept
  * @since 3.7.1
  */
 public org.eclipse.jdt.core.dom.CompilationUnit getAST4() throws JavaModelException {
-	if (this.operation.astLevel != AST.JLS4 || !this.operation.resolveBindings) {
-		// create AST (optionally resolving bindings)
-		ASTParser parser = ASTParser.newParser(AST.JLS4);
-		parser.setCompilerOptions(this.workingCopy.getJavaProject().getOptions(true));
-		if (JavaProject.hasJavaNature(this.workingCopy.getJavaProject().getProject()))
-			parser.setResolveBindings(true);
-		parser.setStatementsRecovery((this.operation.reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
-		parser.setBindingsRecovery((this.operation.reconcileFlags & ICompilationUnit.ENABLE_BINDINGS_RECOVERY) != 0);
-		parser.setSource(this.workingCopy);
-		parser.setIgnoreMethodBodies((this.operation.reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0);
-		return (org.eclipse.jdt.core.dom.CompilationUnit) parser.createAST(this.operation.progressMonitor);
-	}
-	return this.operation.makeConsistent(this.workingCopy);
+	return getAST(AST.JLS4);
 }
+
 /**
  * Returns a resolved AST with {@link AST#JLS8 JLS8} level.
  * It is created from the current state of the working copy.
@@ -163,12 +141,43 @@ public org.eclipse.jdt.core.dom.CompilationUnit getAST4() throws JavaModelExcept
  * <ul>
  * <li> The working copy does not exist (ELEMENT_DOES_NOT_EXIST)</li>
  * </ul>
+ * @deprecated JLS8 has been deprecated. This method has been replaced by {@link #getAST(int)} which returns an AST
+ * with the given level.
  * @since 3.10
  */
 public org.eclipse.jdt.core.dom.CompilationUnit getAST8() throws JavaModelException {
-	if (this.operation.astLevel != AST.JLS8 || !this.operation.resolveBindings) {
+	return getAST(AST.JLS8);
+}
+
+/**
+ * Returns a resolved AST with the given AST level.
+ * It is created from the current state of the working copy.
+ * Creates one if none exists yet.
+ * Returns <code>null</code> if the current state of the working copy
+ * doesn't allow the AST to be created (e.g. if the working copy's content
+ * cannot be parsed).
+ * <p>
+ * If the AST level requested during reconciling is not the latest available AST level
+ * or if binding resolutions was not requested, then a different AST is created.
+ * Note that this AST does not become the current AST and it is only valid for
+ * the requestor.
+ * </p>
+ *
+ * @param level the API level; one of the <code>.JLS*</code> level constants
+ * declared on {@link AST}
+ * @return the AST created from the current state of the working copy,
+ *   or <code>null</code> if none could be created
+ * @exception JavaModelException  if the contents of the working copy
+ *		cannot be accessed. Reasons include:
+ * <ul>
+ * <li> The working copy does not exist (ELEMENT_DOES_NOT_EXIST)</li>
+ * </ul>
+ * @since 3.14
+ */
+public org.eclipse.jdt.core.dom.CompilationUnit getAST(int level) throws JavaModelException {
+	if (this.operation.astLevel != level || !this.operation.resolveBindings) {
 		// create AST (optionally resolving bindings)
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		ASTParser parser = ASTParser.newParser(level);
 		parser.setCompilerOptions(this.workingCopy.getJavaProject().getOptions(true));
 		if (JavaProject.hasJavaNature(this.workingCopy.getJavaProject().getProject()))
 			parser.setResolveBindings(true);

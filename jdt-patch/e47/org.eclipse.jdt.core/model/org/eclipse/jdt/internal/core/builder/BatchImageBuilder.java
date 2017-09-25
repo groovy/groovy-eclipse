@@ -14,7 +14,6 @@ package org.eclipse.jdt.internal.core.builder;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.ClassFile;

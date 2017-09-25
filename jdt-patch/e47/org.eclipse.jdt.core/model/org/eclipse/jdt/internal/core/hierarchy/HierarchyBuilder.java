@@ -282,15 +282,15 @@ public abstract class HierarchyBuilder {
 /**
  * Create an ICompilationUnit info from the given compilation unit on disk.
  */
-protected ICompilationUnit createCompilationUnitFromPath(Openable handle, IFile file) {
-	final char[] elementName = handle.getElementName().toCharArray();
-	return new ResourceCompilationUnit(file) {
-		@Override
-		public char[] getFileName() {
-			return elementName;
-		}
-	};
-}
+	protected ICompilationUnit createCompilationUnitFromPath(Openable handle, IFile file) {
+		final char[] elementName = handle.getElementName().toCharArray();
+		return new ResourceCompilationUnit(file, null) {
+			@Override
+			public char[] getFileName() {
+				return elementName;
+			}
+		};
+	}
 	/**
  * Creates the type info from the given class file on disk and
  * adds it to the given list of infos.

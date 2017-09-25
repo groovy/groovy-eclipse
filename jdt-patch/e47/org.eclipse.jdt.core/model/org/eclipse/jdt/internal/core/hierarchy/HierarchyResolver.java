@@ -840,7 +840,6 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 						parsedUnit.scope.faultInTypes();
 						parsedUnit.resolve();
 					}
-					
 					rememberAllTypes(parsedUnit, cus[i], containsLocalType);
 				}
 			}

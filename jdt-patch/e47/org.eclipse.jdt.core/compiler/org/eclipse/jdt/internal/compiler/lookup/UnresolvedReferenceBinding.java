@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -99,18 +99,21 @@ ReferenceBinding resolve(LookupEnvironment environment, boolean convertGenericTo
 		char[] typeName = this.compoundName[this.compoundName.length - 1];
 		targetType = this.fPackage.getType0(typeName);
 		if (targetType == this) { //$IDENTITY-COMPARISON$
-			targetType = environment.askForType(this.compoundName);
+			if (this.fPackage instanceof SplitPackageBinding) // leverage SplitPackageBinding to avoid duplicate creation of BinaryTypeBinding
+				targetType = environment.askForType(this.fPackage, typeName, this.fPackage.enclosingModule);
+			else
+				targetType = environment.askForType(this.compoundName, this.fPackage.enclosingModule);
 		}
 		if ((targetType == null || targetType == this) && CharOperation.contains('.', typeName)) { //$IDENTITY-COMPARISON$
 			// bug 491354: this complements the NameLookup#seekTypes(..), which performs the same adaptation
-			targetType = environment.askForType(this.fPackage, CharOperation.replaceOnCopy(typeName, '.', '$'));
+			targetType = environment.askForType(this.fPackage, CharOperation.replaceOnCopy(typeName, '.', '$'), this.fPackage.enclosingModule);
 		}
 		if (targetType == null || targetType == this) { // could not resolve any better, error was already reported against it //$IDENTITY-COMPARISON$
 			// report the missing class file first - only if not resolving a previously missing type
 			if ((this.tagBits & TagBits.HasMissingType) == 0 && !environment.mayTolerateMissingType) {
 				environment.problemReporter.isClassPathCorrect(
 					this.compoundName,
-					environment.unitBeingCompleted,
+					environment.root.unitBeingCompleted,
 					environment.missingClassFileLocation);
 			}
 			// create a proxy for the missing BinaryType

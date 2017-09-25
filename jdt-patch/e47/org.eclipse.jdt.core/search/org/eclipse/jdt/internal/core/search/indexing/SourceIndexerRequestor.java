@@ -299,6 +299,33 @@ private void enterInterface(TypeInfo typeInfo) {
 	addDefaultConstructorIfNecessary(typeInfo);
 	pushTypeName(typeInfo.name);
 }
+
+public void enterModule(ModuleInfo moduleInfo) {
+	this.indexer.addModuleDeclaration(moduleInfo.moduleName);
+	if (moduleInfo.requires != null) {
+		for (ISourceElementRequestor.RequiresInfo req : moduleInfo.requires) {
+			if (req == null || req.moduleName == null || req.moduleName.equals(CharOperation.NO_CHAR)) continue;
+			this.indexer.addModuleReference(req.moduleName);
+		}
+	}
+	enterPackageVisibilityInfo(moduleInfo.exports);
+	enterPackageVisibilityInfo(moduleInfo.opens); 
+	/* note: provides and uses directives processed automatically on IParser (SEParser) */
+}
+private void enterPackageVisibilityInfo(ISourceElementRequestor.PackageExportInfo[] packInfos) {
+	if (packInfos == null)
+		return;
+	for (ISourceElementRequestor.PackageExportInfo packInfo : packInfos) {
+		if (packInfo == null || packInfo.pkgName == null || packInfo.pkgName.equals(CharOperation.NO_CHAR)) continue;
+		this.indexer.addModuleExportedPackages(packInfo.pkgName);
+		char[][] tgts = packInfo.targets;
+		if (tgts == null || tgts.equals(CharOperation.NO_CHAR_CHAR)) continue;
+		for (char[] tgt : tgts) {
+			if (tgt != null && !tgt.equals(CharOperation.NO_CHAR)) 
+				this.indexer.addModuleReference(tgt);
+		}
+	}
+}
 /**
  * @see ISourceElementRequestor#enterMethod(ISourceElementRequestor.MethodInfo)
  */

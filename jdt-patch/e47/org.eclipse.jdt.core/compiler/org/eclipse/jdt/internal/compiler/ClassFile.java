@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -50,6 +50,8 @@ import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ExportsStatement;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
@@ -57,10 +59,13 @@ import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NormalAnnotation;
+import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.Receiver;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
+import org.eclipse.jdt.internal.compiler.ast.RequiresStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -90,6 +95,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PolymorphicMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -296,7 +302,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 		} else {
 			this.codeStream = new CodeStream(this);
 		}
-		initByteArrays();
+		initByteArrays(this.referenceBinding.methods().length + this.referenceBinding.fields().length);
+	}
+
+	public ClassFile(ModuleBinding moduleBinding, CompilerOptions options) {
+		this.constantPool = new ConstantPool(this);
+		this.targetJDK = options.targetJDK;
+		this.produceAttributes = ClassFileConstants.ATTR_SOURCE;
+		this.isNestedType = false;
+		this.codeStream = new StackMapFrameCodeStream(this);
+		initByteArrays(0);
 	}
 
 	/**
@@ -440,6 +455,63 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.header[this.constantPoolOffset++] = (byte) (constantPoolCount >> 8);
 		this.header[this.constantPoolOffset] = (byte) constantPoolCount;
 	}
+
+	/**
+	 * INTERNAL USE-ONLY
+	 * This methods generate all the module attributes for the receiver.
+	 */
+	public void addModuleAttributes(ModuleBinding module, Annotation[] annotations, CompilationUnitDeclaration cud) {
+		int attributesNumber = 0;
+		// leave two bytes for the number of attributes and store the current offset
+		int attributeOffset = this.contentsOffset;
+		this.contentsOffset += 2;
+
+		// source attribute
+		if ((this.produceAttributes & ClassFileConstants.ATTR_SOURCE) != 0) {
+			String fullFileName =
+				new String(cud.getFileName());
+			fullFileName = fullFileName.replace('\\', '/');
+			int lastIndex = fullFileName.lastIndexOf('/');
+			if (lastIndex != -1) {
+				fullFileName = fullFileName.substring(lastIndex + 1, fullFileName.length());
+			}
+			attributesNumber += generateSourceAttribute(fullFileName);
+		}
+		// Deprecated attribute
+		if (module.isDeprecated()) {
+			// check that there is enough space to write all the bytes for the field info corresponding
+			// to the @fieldBinding
+			attributesNumber += generateDeprecatedAttribute();
+		}
+		attributesNumber += generateModuleAttribute(cud.moduleDeclaration);
+		if (annotations != null) {
+			long targetMask = TagBits.AnnotationForModule;
+			attributesNumber += generateRuntimeAnnotations(annotations, targetMask); 
+		}
+		char[] mainClass = cud.moduleDeclaration.binding.mainClassName;
+		if (mainClass != null) {
+			attributesNumber += generateModuleMainClassAttribute(CharOperation.replaceOnCopy(mainClass, '.', '/'));
+		}
+		char[][] packageNames = cud.moduleDeclaration.binding.getPackageNamesForClassFile();
+		if (packageNames != null) {
+			attributesNumber += generateModulePackagesAttribute(packageNames);
+		}
+
+		// update the number of attributes
+		if (attributeOffset + 2 >= this.contents.length) {
+			resizeContents(2);
+		}
+		this.contents[attributeOffset++] = (byte) (attributesNumber >> 8);
+		this.contents[attributeOffset] = (byte) attributesNumber;
+
+		// resynchronize all offsets of the classfile
+		this.header = this.constantPool.poolContent;
+		this.headerOffset = this.constantPool.currentOffset;
+		int constantPoolCount = this.constantPool.currentIndex;
+		this.header[this.constantPoolOffset++] = (byte) (constantPoolCount >> 8);
+		this.header[this.constantPoolOffset] = (byte) constantPoolCount;
+	}
+
 	/**
 	 * INTERNAL USE-ONLY
 	 * This methods generate all the default abstract method infos that correpond to
@@ -2583,6 +2655,298 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contentsOffset = localContentsOffset;
 		return 1;
 	}
+	private int generateModuleAttribute(ModuleDeclaration module) {
+		ModuleBinding binding = module.binding;
+		int localContentsOffset = this.contentsOffset;
+		if (localContentsOffset + 10 >= this.contents.length) {
+			resizeContents(10);
+		}
+		int moduleAttributeNameIndex =
+			this.constantPool.literalIndex(AttributeNamesConstants.ModuleName);
+		this.contents[localContentsOffset++] = (byte) (moduleAttributeNameIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) moduleAttributeNameIndex;
+		int attrLengthOffset = localContentsOffset;
+		localContentsOffset += 4;
+		int moduleNameIndex =
+				this.constantPool.literalIndexForModule(binding.moduleName);
+		this.contents[localContentsOffset++] = (byte) (moduleNameIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) moduleNameIndex;
+		int flags = module.modifiers & ~(ClassFileConstants.AccModule);
+		this.contents[localContentsOffset++] = (byte) (flags >> 8);
+		this.contents[localContentsOffset++] = (byte) flags;
+		int module_version = 0;
+		this.contents[localContentsOffset++] = (byte) (module_version >> 8);
+		this.contents[localContentsOffset++] = (byte) module_version;
+		int attrLength = 6;
+		
+		// ================= requires section =================
+		/** u2 requires_count;
+	    	{   u2 requires_index;
+	        	u2 requires_flags;
+	    	} requires[requires_count];
+	    **/
+		int requiresCountOffset = localContentsOffset;
+		int requiresCount = module.requiresCount;
+		int requiresSize = 2 + requiresCount * 6;
+		if (localContentsOffset + requiresSize >= this.contents.length) {
+			resizeContents(requiresSize);
+		}
+		
+		localContentsOffset += 2;
+		ModuleBinding javaBaseBinding = null;
+		for(int i = 0; i < module.requiresCount; i++) {
+			RequiresStatement req = module.requires[i];
+			ModuleBinding reqBinding = req.resolvedBinding;
+			if (CharOperation.equals(reqBinding.moduleName, TypeConstants.JAVA_BASE)) {
+				javaBaseBinding = reqBinding;
+			}
+			int nameIndex = this.constantPool.literalIndexForModule(reqBinding.moduleName);
+			this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) (nameIndex);
+			flags = req.modifiers;
+			this.contents[localContentsOffset++] = (byte) (flags >> 8);
+			this.contents[localContentsOffset++] = (byte) (flags);
+			int required_version = 0;
+			this.contents[localContentsOffset++] = (byte) (required_version >> 8);
+			this.contents[localContentsOffset++] = (byte) (required_version);
+		}
+		if (!CharOperation.equals(binding.moduleName, TypeConstants.JAVA_BASE) && javaBaseBinding == null) {
+			if (localContentsOffset + 6 >= this.contents.length) {
+				resizeContents(6);
+			}
+			javaBaseBinding = binding.environment.javaBaseModule();
+			int javabase_index = this.constantPool.literalIndexForModule(javaBaseBinding.moduleName);
+			this.contents[localContentsOffset++] = (byte) (javabase_index >> 8);
+			this.contents[localContentsOffset++] = (byte) (javabase_index);
+			flags = ClassFileConstants.AccMandated;
+			this.contents[localContentsOffset++] = (byte) (flags >> 8);
+			this.contents[localContentsOffset++] = (byte) flags;
+			int required_version = 0;
+			this.contents[localContentsOffset++] = (byte) (required_version >> 8);
+			this.contents[localContentsOffset++] = (byte) (required_version);
+			requiresCount++;
+		}
+		this.contents[requiresCountOffset++] = (byte) (requiresCount >> 8);
+		this.contents[requiresCountOffset++] = (byte) requiresCount;
+		attrLength += 2 + 6 * requiresCount;
+		// ================= end requires section =================
+
+		// ================= exports section =================
+		/**
+		 * u2 exports_count;
+		 * {   u2 exports_index;
+		 *     u2 exports_flags;
+		 *     u2 exports_to_count;
+		 *     u2 exports_to_index[exports_to_count];
+		 * } exports[exports_count];
+		 */
+		int exportsSize = 2 + module.exportsCount * 6;
+		if (localContentsOffset + exportsSize >= this.contents.length) {
+			resizeContents(exportsSize);
+		}
+		this.contents[localContentsOffset++] = (byte) (module.exportsCount >> 8);
+		this.contents[localContentsOffset++] = (byte) module.exportsCount;
+		for (int i = 0; i < module.exportsCount; i++) {
+			ExportsStatement ref = module.exports[i];
+			if (localContentsOffset + 6 >= this.contents.length) {
+				resizeContents((module.exportsCount - i) * 6);
+			}
+			int nameIndex = this.constantPool.literalIndexForPackage(CharOperation.replaceOnCopy(ref.pkgName, '.', '/'));
+			this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) (nameIndex);
+			// TODO exports_flags - check when they are set
+			this.contents[localContentsOffset++] = (byte) 0;
+			this.contents[localContentsOffset++] = (byte) 0;
+
+			int exportsToCount = ref.isQualified() ? ref.targets.length : 0; 
+			this.contents[localContentsOffset++] = (byte) (exportsToCount >> 8);
+			this.contents[localContentsOffset++] = (byte) (exportsToCount);
+			if (exportsToCount > 0) {
+				int targetSize = 2 * exportsToCount;
+				if (localContentsOffset + targetSize >= this.contents.length) {
+					resizeContents(targetSize);
+				}
+				for(int j = 0; j < exportsToCount; j++) {
+					nameIndex = this.constantPool.literalIndexForModule(ref.targets[j].moduleName);
+					this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+					this.contents[localContentsOffset++] = (byte) (nameIndex);
+				}
+				attrLength += targetSize;
+			}
+		}
+		attrLength += exportsSize;
+		// ================= end exports section =================
+
+		// ================= opens section =================
+		/**
+		 * u2 opens_count;
+		 * {   u2 opens_index;
+		 *     u2 opens_flags;
+		 *     u2 opens_to_count;
+		 *     u2 opens_to_index[opens_to_count];
+		 * } exports[exports_count];
+		 */
+		int opensSize = 2 + module.opensCount * 6;
+		if (localContentsOffset + opensSize >= this.contents.length) {
+			resizeContents(opensSize);
+		}
+		this.contents[localContentsOffset++] = (byte) (module.opensCount >> 8);
+		this.contents[localContentsOffset++] = (byte) module.opensCount;
+		for (int i = 0; i < module.opensCount; i++) {
+			OpensStatement ref = module.opens[i];
+			if (localContentsOffset + 6 >= this.contents.length) {
+				resizeContents((module.opensCount - i) * 6);
+			}
+			int nameIndex = this.constantPool.literalIndexForPackage(CharOperation.replaceOnCopy(ref.pkgName, '.', '/'));
+			this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) (nameIndex);
+			// TODO opens_flags - check when they are set
+			this.contents[localContentsOffset++] = (byte) 0;
+			this.contents[localContentsOffset++] = (byte) 0;
+			
+			int opensToCount = ref.isQualified() ? ref.targets.length : 0; 
+			this.contents[localContentsOffset++] = (byte) (opensToCount >> 8);
+			this.contents[localContentsOffset++] = (byte) (opensToCount);
+			if (opensToCount > 0) {
+				int targetSize = 2 * opensToCount;
+				if (localContentsOffset + targetSize >= this.contents.length) {
+					resizeContents(targetSize);
+				}
+				for(int j = 0; j < opensToCount; j++) {
+					nameIndex = this.constantPool.literalIndexForModule(ref.targets[j].moduleName);
+					this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+					this.contents[localContentsOffset++] = (byte) (nameIndex);
+				}
+				attrLength += targetSize;
+			}
+		}
+		attrLength += opensSize;
+		// ================= end opens section =================
+
+		// ================= uses section =================
+		/**
+		 * u2 uses_count;
+		 * u2 uses_index[uses_count];
+		 */
+		int usesSize = 2 + 2 * module.usesCount;
+		if (localContentsOffset + usesSize >= this.contents.length) {
+			resizeContents(usesSize);
+		}
+		this.contents[localContentsOffset++] = (byte) (module.usesCount >> 8);
+		this.contents[localContentsOffset++] = (byte) module.usesCount;
+		for(int i = 0; i < module.usesCount; i++) {
+			int nameIndex = this.constantPool.literalIndexForType(module.uses[i].serviceInterface.resolvedType.constantPoolName());
+			this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) (nameIndex);
+		}
+		attrLength += usesSize;
+		// ================= end uses section =================
+
+		// ================= provides section =================
+		/**
+		 * u2 provides_count;
+		 * {
+		 * 		u2 provides_index;
+		 * 		u2 provides_with_count;
+		 * 		u2 provides_with_index[provides_with_count];
+		 * } provides[provides_count];
+		 */
+		int servicesSize = 2 + 4 * module.servicesCount;
+		if (localContentsOffset + servicesSize >= this.contents.length) {
+			resizeContents(servicesSize);
+		}
+		this.contents[localContentsOffset++] = (byte) (module.servicesCount >> 8);
+		this.contents[localContentsOffset++] = (byte) module.servicesCount;
+		for(int i = 0; i < module.servicesCount; i++) {
+			if (localContentsOffset + 4 >= this.contents.length) {
+				resizeContents((module.servicesCount - i) * 4);
+			}
+			int nameIndex = this.constantPool.literalIndexForType(module.services[i].serviceInterface.resolvedType.constantPoolName());
+			this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) (nameIndex);
+			TypeReference[] impls = module.services[i].implementations;
+			int implLength = impls.length;
+			this.contents[localContentsOffset++] = (byte) (implLength >> 8);
+			this.contents[localContentsOffset++] = (byte) implLength;
+			int targetSize = implLength * 2;
+			if (localContentsOffset + targetSize >= this.contents.length) {
+				resizeContents(targetSize);
+			}
+			for (int j = 0; j < implLength; j++) {
+				nameIndex = this.constantPool.literalIndexForType(impls[j].resolvedType.constantPoolName());
+				this.contents[localContentsOffset++] = (byte) (nameIndex >> 8);
+				this.contents[localContentsOffset++] = (byte) (nameIndex);
+			}
+			attrLength += targetSize;
+		}
+		attrLength += servicesSize;
+		// ================= end provides section =================
+
+		this.contents[attrLengthOffset++] = (byte)(attrLength >> 24);
+		this.contents[attrLengthOffset++] = (byte)(attrLength >> 16);
+		this.contents[attrLengthOffset++] = (byte)(attrLength >> 8);
+		this.contents[attrLengthOffset++] = (byte)attrLength;
+		this.contentsOffset = localContentsOffset;
+		return 1;
+	}
+
+	private int generateModuleMainClassAttribute(char[] moduleMainClass) {
+		int localContentsOffset = this.contentsOffset;
+		if (localContentsOffset + 8 >= this.contents.length) {
+			resizeContents(8);
+		}
+		int moduleAttributeNameIndex =
+			this.constantPool.literalIndex(AttributeNamesConstants.ModuleMainClass);
+		this.contents[localContentsOffset++] = (byte) (moduleAttributeNameIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) moduleAttributeNameIndex;
+		int attrLength = 2;
+		this.contents[localContentsOffset++] = (byte)(attrLength >> 24);
+		this.contents[localContentsOffset++] = (byte)(attrLength >> 16);
+		this.contents[localContentsOffset++] = (byte)(attrLength >> 8);
+		this.contents[localContentsOffset++] = (byte)attrLength;
+		int moduleNameIndex = this.constantPool.literalIndexForType(moduleMainClass);
+		this.contents[localContentsOffset++] = (byte) (moduleNameIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) moduleNameIndex;
+		this.contentsOffset = localContentsOffset;
+		return 1;
+	}
+
+	private int generateModulePackagesAttribute(char[][] packageNames) {
+		int localContentsOffset = this.contentsOffset;
+		int maxSize = 6 + 2*packageNames.length;
+		if (localContentsOffset + maxSize >= this.contents.length) {
+			resizeContents(maxSize);
+		}
+		int moduleAttributeNameIndex =
+			this.constantPool.literalIndex(AttributeNamesConstants.ModulePackages);
+		this.contents[localContentsOffset++] = (byte) (moduleAttributeNameIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) moduleAttributeNameIndex;
+
+		int attrLengthOffset = localContentsOffset;
+		localContentsOffset+= 4;
+		int packageCountOffset = localContentsOffset;
+		localContentsOffset+= 2;
+		
+		int packagesCount = 0;
+		for (char[] packageName : packageNames) {
+			if (packageName == null || packageName.length == 0) continue;
+			int packageNameIndex = this.constantPool.literalIndexForPackage(packageName);
+			this.contents[localContentsOffset++] = (byte) (packageNameIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) packageNameIndex;
+			packagesCount++;
+		}
+
+		this.contents[packageCountOffset++] = (byte)(packagesCount >> 8);
+		this.contents[packageCountOffset++] = (byte)packagesCount;
+		int attrLength = 2 + 2 * packagesCount;
+		this.contents[attrLengthOffset++] = (byte)(attrLength >> 24);
+		this.contents[attrLengthOffset++] = (byte)(attrLength >> 16);
+		this.contents[attrLengthOffset++] = (byte)(attrLength >> 8);
+		this.contents[attrLengthOffset++] = (byte)attrLength;
+		this.contentsOffset = localContentsOffset;
+		return 1;
+	}
+
 	private void generateElementValue(
 			Expression defaultValue,
 			TypeBinding memberValuePairReturnType,
@@ -4911,13 +5275,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 				+ (reference[position] & 0xFF);
 	}
 
-	protected void initByteArrays() {
-		int members = this.referenceBinding.methods().length + this.referenceBinding.fields().length;
+	protected void initByteArrays(int members) {
 		this.header = new byte[INITIAL_HEADER_SIZE];
 		this.contents = new byte[members < 15 ? INITIAL_CONTENTS_SIZE : INITIAL_HEADER_SIZE];
 	}
 
-	public void initialize(SourceTypeBinding aType, ClassFile parentClassFile, boolean createProblemType) {
+	private void initializeHeader(ClassFile parentClassFile, int accessFlags) {
 		// generate the magic numbers inside the header
 		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 24);
 		this.header[this.headerOffset++] = (byte) (0xCAFEBABEL >> 16);
@@ -4933,6 +5296,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.constantPoolOffset = this.headerOffset;
 		this.headerOffset += 2;
 		this.constantPool.initialize(this);
+		this.enclosingClassFile = parentClassFile;
+
+		// now we continue to generate the bytes inside the contents array
+		this.contents[this.contentsOffset++] = (byte) (accessFlags >> 8);
+		this.contents[this.contentsOffset++] = (byte) accessFlags;
+	}
+
+	public void initialize(SourceTypeBinding aType, ClassFile parentClassFile, boolean createProblemType) {
 
 		// Modifier manipulations for classfile
 		int accessFlags = aType.getAccessFlags();
@@ -4963,12 +5334,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if ((accessFlags & finalAbstract) == finalAbstract) {
 			accessFlags &= ~finalAbstract;
 		}
-		this.enclosingClassFile = parentClassFile;
+		initializeHeader(parentClassFile, accessFlags);
 		// innerclasses get their names computed at code gen time
 
-		// now we continue to generate the bytes inside the contents array
-		this.contents[this.contentsOffset++] = (byte) (accessFlags >> 8);
-		this.contents[this.contentsOffset++] = (byte) accessFlags;
 		int classNameIndex = this.constantPool.literalIndexForType(aType);
 		this.contents[this.contentsOffset++] = (byte) (classNameIndex >> 8);
 		this.contents[this.contentsOffset++] = (byte) classNameIndex;
@@ -5010,6 +5378,26 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// retrieve the enclosing one guaranteed to be the one matching the propagated flow info
 		// 1FF9ZBU: LFCOM:ALL - Local variable attributes busted (Sanity check)
 		this.codeStream.maxFieldCount = aType.scope.outerMostClassScope().referenceType().maxFieldCount;
+	}
+
+	public void initializeForModule(ModuleBinding module) {
+		initializeHeader(null, ClassFileConstants.AccModule);
+		int classNameIndex = this.constantPool.literalIndexForType(TypeConstants.MODULE_INFO_NAME);
+		this.contents[this.contentsOffset++] = (byte) (classNameIndex >> 8);
+		this.contents[this.contentsOffset++] = (byte) classNameIndex;
+		this.codeStream.maxFieldCount = 0;
+		// superclass:
+		this.contents[this.contentsOffset++] = 0;
+		this.contents[this.contentsOffset++] = 0;
+		// superInterfacesCount
+		this.contents[this.contentsOffset++] = 0;
+		this.contents[this.contentsOffset++] = 0;
+		// fieldsCount
+		this.contents[this.contentsOffset++] = 0;
+		this.contents[this.contentsOffset++] = 0;
+		// methodsCount
+		this.contents[this.contentsOffset++] = 0;
+		this.contents[this.contentsOffset++] = 0;
 	}
 
 	private void initializeDefaultLocals(StackMapFrame frame,
@@ -5240,17 +5628,23 @@ public class ClassFile implements TypeConstants, TypeIds {
 		return expression.bootstrapMethodNumber = this.bootstrapMethods.size() - 1;
 	}
 
-	public void reset(SourceTypeBinding typeBinding) {
+	public void reset(/*@Nullable*/SourceTypeBinding typeBinding, CompilerOptions options) {
 		// the code stream is reinitialized for each method
-		final CompilerOptions options = typeBinding.scope.compilerOptions();
-		this.referenceBinding = typeBinding;
-		this.isNestedType = typeBinding.isNestedType();
+		if (typeBinding != null) {
+			this.referenceBinding = typeBinding;
+			this.isNestedType = typeBinding.isNestedType();
+		} else {
+			this.referenceBinding = null;
+			this.isNestedType = false;
+		}
 		this.targetJDK = options.targetJDK;
 		this.produceAttributes = options.produceDebugAttributes;
 		if (this.targetJDK >= ClassFileConstants.JDK1_6) {
 			this.produceAttributes |= ClassFileConstants.ATTR_STACK_MAP_TABLE;
 			if (this.targetJDK >= ClassFileConstants.JDK1_8) {
 				this.produceAttributes |= ClassFileConstants.ATTR_TYPE_ANNOTATION;
+				if (!(this.codeStream instanceof TypeAnnotationCodeStream) && this.referenceBinding != null)
+					this.codeStream = new TypeAnnotationCodeStream(this);
 				if (options.produceMethodParameters) {
 					this.produceAttributes |= ClassFileConstants.ATTR_METHOD_PARAMETERS;
 				}

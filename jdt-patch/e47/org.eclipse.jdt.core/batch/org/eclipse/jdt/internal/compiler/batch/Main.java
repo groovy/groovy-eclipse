@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -45,10 +46,13 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,6 +61,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -75,16 +80,25 @@ import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.CompilerStats;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
@@ -95,7 +109,6 @@ import org.eclipse.jdt.internal.compiler.util.Messages;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class Main implements ProblemSeverities, SuffixConstants {
 
 	public static class Logger {
@@ -103,7 +116,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private PrintWriter log;
 		private Main main;
 		private PrintWriter out;
-		private HashMap parameters;
+		private HashMap<String, Object> parameters;
 		int tagBits;
 		private static final String CLASS = "class"; //$NON-NLS-1$
 		private static final String CLASS_FILE = "classfile"; //$NON-NLS-1$
@@ -175,7 +188,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		private static final String XML_DTD_DECLARATION = "<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.005 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_005.dtd\">"; //$NON-NLS-1$
 		static {
 			try {
-				Class c = IProblem.class;
+				Class<?> c = IProblem.class;
 				Field[] fields = c.getFields();
 				for (int i = 0, max = fields.length; i < max; i++) {
 					Field field = fields[i];
@@ -199,7 +212,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		public Logger(Main main, PrintWriter out, PrintWriter err) {
 			this.out = out;
 			this.err = err;
-			this.parameters = new HashMap();
+			this.parameters = new HashMap<>();
 			this.main = main;
 		}
 
@@ -510,10 +523,14 @@ public class Main implements ProblemSeverities, SuffixConstants {
 						File f = new File(classpath);
 						String id = null;
 						if (f.isFile()) {
-							if (Util.isPotentialZipArchive(classpath)) {
-								id = Logger.CLASSPATH_JAR;
-							} else {
-								id = Logger.CLASSPATH_FILE;
+							int kind = Util.archiveFormat(classpath);
+							switch (kind) {
+								case Util.ZIP_FILE:
+									id = Logger.CLASSPATH_JAR;
+									break;
+								default:
+									id = Logger.CLASSPATH_FILE;
+									break;
 							}
 						} else if (f.isDirectory()) {
 							id = Logger.CLASSPATH_FOLDER;
@@ -632,7 +649,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 		}
 
 		public void loggingExtraProblems(Main currentMain) {
-			ArrayList problems = currentMain.extraProblems;
+			ArrayList<CategorizedProblem> problems = currentMain.extraProblems;
 			final int count = problems.size();
 			int localProblemCount = 0;
 			if (count != 0) {
@@ -640,7 +657,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				int warnings = 0;
 				int infos = 0;
 				for (int i = 0; i < count; i++) {
-					CategorizedProblem problem = (CategorizedProblem) problems.get(i);
+					CategorizedProblem problem = problems.get(i);
 					if (problem != null) {
 						currentMain.globalProblemsCount++;
 						logExtraProblem(problem, localProblemCount, currentMain.globalProblemsCount);
@@ -661,7 +678,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 					if ((errors + warnings + infos) != 0) {
 						startLoggingExtraProblems(count);
 						for (int i = 0; i < count; i++) {
-							CategorizedProblem problem = (CategorizedProblem) problems.get(i);
+							CategorizedProblem problem = problems.get(i);
 							if (problem!= null) {
 								if (problem.getID() != IProblem.Task) {
 									logXmlExtraProblem(problem, localProblemCount, currentMain.globalProblemsCount);
@@ -1207,7 +1224,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 			}
 		}
 
-		private void printTag(String name, HashMap params, boolean insertNewLine, boolean closeTag) {
+		private void printTag(String name, HashMap<String, Object> params, boolean insertNewLine, boolean closeTag) {
 			if (this.log != null) {
 				((GenericXMLWriter) this.log).printTag(name, this.parameters, true, insertNewLine, closeTag);
 			}
@@ -1314,9 +1331,9 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	 * Resource bundle factory to share bundles for the same locale
 	 */
 	public static class ResourceBundleFactory {
-		private static HashMap Cache = new HashMap();
+		private static HashMap<Locale, ResourceBundle> Cache = new HashMap<>();
 		public static synchronized ResourceBundle getBundle(Locale locale) {
-			ResourceBundle bundle = (ResourceBundle) Cache.get(locale);
+			ResourceBundle bundle = Cache.get(locale);
 			if (bundle == null) {
 				bundle = ResourceBundle.getBundle(Main.bundleName, locale);
 				Cache.put(locale, bundle);
@@ -1338,9 +1355,14 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	/* Bundle containing messages */
 	public ResourceBundle bundle;
 	protected FileSystem.Classpath[] checkedClasspaths;
+	// For single module mode
+	protected IModule module;
 	// paths to external annotations:
 	protected List<String> annotationPaths;
 	protected boolean annotationsFromClasspath;
+
+	private List<String> addonExports = Collections.EMPTY_LIST;
+	private List<String> addonReads = Collections.EMPTY_LIST;
 
 	public Locale compilerLocale;
 	public CompilerOptions compilerOptions; // read-only
@@ -1360,6 +1382,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	public String[] encodings;
 	public int exportedClassFilesCounter;
 	public String[] filenames;
+	public String[] modNames;
 	public String[] classNames;
 	// overrides of destinationPath on a directory argument basis
 	public int globalErrorsCount;
@@ -1379,6 +1402,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	public Logger logger;
 	public int maxProblems;
 	public Map<String, String> options;
+	long complianceLevel;
 	public char[][] ignoreOptionalProblemsFromFolders;
 	protected PrintWriter out;
 	public boolean proceed = true;
@@ -1387,7 +1411,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	public int currentRepetition, maxRepetition;
 	public boolean showProgress = false;
 	public long startTime;
-	public ArrayList pendingErrors;
+	public ArrayList<String> pendingErrors;
 	public boolean systemExitWhenFinished = true;
 
 	public static final int TIMING_DISABLED = 0;
@@ -1401,7 +1425,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 
 	private PrintWriter err;
 
-	protected ArrayList extraProblems;
+	protected ArrayList<CategorizedProblem> extraProblems;
 	public final static String bundleName = "org.eclipse.jdt.internal.compiler.batch.messages"; //$NON-NLS-1$
 	// two uses: recognize 'none' in options; code the singleton none
 	// for the '-d none' option (wherever it may be found)
@@ -1434,7 +1458,7 @@ public static boolean compile(String[] commandLineArguments, PrintWriter outWrit
 public static File[][] getLibrariesFiles(File[] files) {
 	FilenameFilter filter = new FilenameFilter() {
 		public boolean accept(File dir, String name) {
-			return Util.isPotentialZipArchive(name);
+			return Util.archiveFormat(name) > -1;
 		}
 	};
 	final int filesLength = files.length;
@@ -1518,7 +1542,7 @@ public Main(PrintWriter outWriter, PrintWriter errWriter, boolean systemExitWhen
  * @deprecated - use {@link #Main(PrintWriter, PrintWriter, boolean, Map, CompilationProgress)} instead
  *                       e.g. Main(outWriter, errWriter, systemExitWhenFinished, customDefaultOptions, null)
  */
-public Main(PrintWriter outWriter, PrintWriter errWriter, boolean systemExitWhenFinished, Map customDefaultOptions) {
+public Main(PrintWriter outWriter, PrintWriter errWriter, boolean systemExitWhenFinished, Map<String, String> customDefaultOptions) {
 	this(outWriter, errWriter, systemExitWhenFinished, customDefaultOptions, null /* progress */);
 }
 
@@ -1529,12 +1553,12 @@ public Main(PrintWriter outWriter, PrintWriter errWriter, boolean systemExitWhen
 
 public void addExtraProblems(CategorizedProblem problem) {
 	if (this.extraProblems == null) {
-		this.extraProblems = new ArrayList();
+		this.extraProblems = new ArrayList<>();
 	}
 	this.extraProblems.add(problem);
 }
-protected void addNewEntry(ArrayList paths, String currentClasspathName,
-		ArrayList currentRuleSpecs, String customEncoding,
+protected void addNewEntry(ArrayList<FileSystem.Classpath> paths, String currentClasspathName,
+		ArrayList<String> currentRuleSpecs, String customEncoding,
 		String destPath, boolean isSourceOnly,
 		boolean rejectDestinationPathOnJars) {
 
@@ -1543,10 +1567,10 @@ protected void addNewEntry(ArrayList paths, String currentClasspathName,
 	if (rulesSpecsSize != 0) {
 		AccessRule[] accessRules = new AccessRule[currentRuleSpecs.size()];
 		boolean rulesOK = true;
-		Iterator i = currentRuleSpecs.iterator();
+		Iterator<String> i = currentRuleSpecs.iterator();
 		int j = 0;
 		while (i.hasNext()) {
-			String ruleSpec = (String) i.next();
+			String ruleSpec = i.next();
 			char key = ruleSpec.charAt(0);
 			String pattern = ruleSpec.substring(1);
 			if (pattern.length() > 0) {
@@ -1590,8 +1614,9 @@ protected void addNewEntry(ArrayList paths, String currentClasspathName,
 	if (NONE.equals(destPath)) {
 		destPath = NONE; // keep == comparison valid
 	}
+	
 	if (rejectDestinationPathOnJars && destPath != null &&
-			Util.isPotentialZipArchive(currentClasspathName)) {
+			Util.archiveFormat(currentClasspathName) > -1) {
 		throw new IllegalArgumentException(
 			this.bind("configure.unexpectedDestinationPathEntryFile", //$NON-NLS-1$
 						currentClasspathName));
@@ -1611,7 +1636,7 @@ protected void addNewEntry(ArrayList paths, String currentClasspathName,
 }
 void addPendingErrors(String message) {
 	if (this.pendingErrors == null) {
-		this.pendingErrors = new ArrayList();
+		this.pendingErrors = new ArrayList<>();
 	}
 	this.pendingErrors.add(message);
 }
@@ -1707,6 +1732,8 @@ private boolean checkVMVersion(long minimalSupportedVersion) {
 			return ClassFileConstants.JDK1_7 >= minimalSupportedVersion;
 		case ClassFileConstants.MAJOR_VERSION_1_8: // 1.8
 			return ClassFileConstants.JDK1_8 >= minimalSupportedVersion;
+		case ClassFileConstants.MAJOR_VERSION_9: // 9
+			return ClassFileConstants.JDK9 >= minimalSupportedVersion;
 	}
 	// unknown version
 	return false;
@@ -1758,7 +1785,8 @@ public boolean compile(String[] argv) {
 			System.exit(-1);
 		}
 		return false;
-	} catch (RuntimeException e) { // internal compiler failure
+	} catch (Exception e) { // internal compiler failure
+		e.printStackTrace();
 		this.logger.logException(e);
 		if (this.systemExitWhenFinished) {
 			this.logger.flush();
@@ -1806,14 +1834,22 @@ public void configure(String[] argv) {
 	final int INSIDE_CLASS_NAMES = 20;
 	final int INSIDE_WARNINGS_PROPERTIES = 21;
 	final int INSIDE_ANNOTATIONPATH_start = 22;
+	final int INSIDE_MODULEPATH_start = 23;
+	final int INSIDE_MODULESOURCEPATH_start = 24;
+	final int INSIDE_ADD_EXPORTS = 25;
+	final int INSIDE_ADD_READS = 26;
+	final int INSIDE_SYSTEM = 27;
+	final int INSIDE_PROCESSOR_MODULE_PATH_start = 28;
 
 	final int DEFAULT = 0;
-	ArrayList bootclasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
+	ArrayList<String> bootclasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 	String sourcepathClasspathArg = null;
-	ArrayList sourcepathClasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
-	ArrayList classpaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
-	ArrayList extdirsClasspaths = null;
-	ArrayList endorsedDirClasspaths = null;
+	String modulepathArg = null;
+	String moduleSourcepathArg = null;
+	ArrayList<String> sourcepathClasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
+	ArrayList<String> classpaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
+	ArrayList<String> extdirsClasspaths = null;
+	ArrayList<String> endorsedDirClasspaths = null;
 	this.annotationPaths = null;
 	this.annotationsFromClasspath = false;
 
@@ -1838,8 +1874,9 @@ public void configure(String[] argv) {
 	String customDestinationPath = null;
 	String currentSourceDirectory = null;
 	String currentArg = Util.EMPTY_STRING;
+	String moduleName = null;
 	
-	Set specifiedEncodings = null;
+	Set<String> specifiedEncodings = null;
 
 	// expand the command line if necessary
 	boolean needExpansion = false;
@@ -1974,9 +2011,21 @@ public void configure(String[] argv) {
 				}
 				// GROOVY end
 				if (encounteredGroovySourceFile || currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
+					if (moduleName == null) {
+						// If the module-info.java was supplied via command line, that will be the
+						// de facto module for the other source files supplied via command line.
+						// TODO: This needs revisit in case a source file specified in command line is
+						// part of a --module-source-path
+						IModule mod = extractModuleDesc(currentArg);
+						if (mod != null) {
+							moduleName = new String(mod.name());
+							this.module = mod;
+						}
+					}
 					if (this.filenames == null) {
 						this.filenames = new String[argCount - index];
 						this.encodings = new String[argCount - index];
+						this.modNames = new String[argCount - index];
 						this.destinationPaths = new String[argCount - index];
 					} else if (filesCount == this.filenames.length) {
 						int length = this.filenames.length;
@@ -1998,8 +2047,15 @@ public void configure(String[] argv) {
 							(this.destinationPaths = new String[length + argCount - index]),
 							0,
 							length);
+						System.arraycopy(
+								this.modNames,
+								0,
+								(this.modNames = new String[length + argCount - index]),
+								0,
+								length);
 					}
 					this.filenames[filesCount] = currentArg;
+					this.modNames[filesCount] = moduleName;
 					this.encodings[filesCount++] = customEncoding;
 					// destination path cannot be specified upon an individual file
 					customEncoding = null;
@@ -2095,6 +2151,16 @@ public void configure(String[] argv) {
 					mode = DEFAULT;
 					continue;
 				}
+				if (currentArg.equals("-1.9") || currentArg.equals("-9") || currentArg.equals("-9.0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					if (didSpecifyCompliance) {
+						throw new IllegalArgumentException(
+							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
+					}
+					didSpecifyCompliance = true;
+					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_9);
+					mode = DEFAULT;
+					continue;
+				}
 				if (currentArg.equals("-d")) { //$NON-NLS-1$
 					if (this.destinationPath != null) {
 						StringBuffer errorMessage = new StringBuffer();
@@ -2128,6 +2194,29 @@ public void configure(String[] argv) {
 					mode = INSIDE_BOOTCLASSPATH_start;
 					continue;
 				}
+				if (currentArg.equals("--system")) { //$NON-NLS-1$
+					mode = INSIDE_SYSTEM;
+					continue;
+				}
+				if (currentArg.equals("--module-path") || currentArg.equals("-p") || currentArg.equals("--processor-module-path")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					mode = INSIDE_MODULEPATH_start;
+					continue;
+				}
+				if (currentArg.equals("--module-source-path")) { //$NON-NLS-1$
+					if (sourcepathClasspathArg != null) {
+						throw new IllegalArgumentException(this.bind("configure.OneOfModuleOrSourcePath")); //$NON-NLS-1$
+					}
+					mode = INSIDE_MODULESOURCEPATH_start;
+					continue;
+				}
+				if (currentArg.equals("--add-exports")) { //$NON-NLS-1$
+					mode = INSIDE_ADD_EXPORTS;
+					continue;
+				}
+				if (currentArg.equals("--add-reads")) { //$NON-NLS-1$
+					mode = INSIDE_ADD_READS;
+					continue;
+				}
 				if (currentArg.equals("-sourcepath")) {//$NON-NLS-1$
 					if (sourcepathClasspathArg != null) {
 						StringBuffer errorMessage = new StringBuffer();
@@ -2138,6 +2227,9 @@ public void configure(String[] argv) {
 						}
 						throw new IllegalArgumentException(
 							this.bind("configure.duplicateSourcepath", errorMessage.toString())); //$NON-NLS-1$
+					}
+					if (moduleSourcepathArg != null) {
+						throw new IllegalArgumentException(this.bind("configure.OneOfModuleOrSourcePath")); //$NON-NLS-1$
 					}
 					mode = INSIDE_SOURCE_PATH_start;
 					continue;
@@ -2513,6 +2605,10 @@ public void configure(String[] argv) {
 					mode = INSIDE_PROCESSOR_start;
 					continue;
 				}
+				if (currentArg.equals("--processor-module-path")) { //$NON-NLS-1$
+					mode = INSIDE_PROCESSOR_MODULE_PATH_start;
+					continue;
+				}
 				if (currentArg.equals("-proc:only")) { //$NON-NLS-1$
 					this.options.put(
 						CompilerOptions.OPTION_GenerateClassFiles,
@@ -2589,6 +2685,8 @@ public void configure(String[] argv) {
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
 				} else if (currentArg.equals("1.8") || currentArg.equals("8") || currentArg.equals("8.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+				} else if (currentArg.equals("1.9") || currentArg.equals("9") || currentArg.equals("9.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_9);
 				}
 				else if (currentArg.equals("jsr14")) { //$NON-NLS-1$
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_JSR14);
@@ -2645,6 +2743,8 @@ public void configure(String[] argv) {
 					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
 				} else if (currentArg.equals("1.8") || currentArg.equals("8") || currentArg.equals("8.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_8);
+				} else if (currentArg.equals("1.9") || currentArg.equals("9") || currentArg.equals("9.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_9);
 				} else {
 					throw new IllegalArgumentException(this.bind("configure.source", currentArg)); //$NON-NLS-1$
 				}
@@ -2667,7 +2767,7 @@ public void configure(String[] argv) {
 						}
 					}
 				} else {
-					specifiedEncodings = new HashSet();
+					specifiedEncodings = new HashSet<>();
 				}
 				try { // ensure encoding is supported
 					new InputStreamReader(new ByteArrayInputStream(new byte[0]), currentArg);
@@ -2682,6 +2782,37 @@ public void configure(String[] argv) {
 			case INSIDE_DESTINATION_PATH :
 				setDestinationPath(currentArg.equals(NONE) ? NONE : currentArg);
 				mode = DEFAULT;
+				continue;
+			case INSIDE_SYSTEM:
+				mode = DEFAULT;
+				setJavaHome(currentArg);
+				continue;
+			case INSIDE_MODULEPATH_start:
+				mode = DEFAULT;
+				String[] modulepaths = new String[1];
+				index += processPaths(newCommandLineArgs, index, currentArg, modulepaths);
+				modulepathArg = modulepaths[0];
+				continue;
+			case INSIDE_MODULESOURCEPATH_start:
+				mode = DEFAULT;
+				String[] moduleSourcepaths = new String[1];
+				index += processPaths(newCommandLineArgs, index, currentArg, moduleSourcepaths);
+				moduleSourcepathArg = moduleSourcepaths[0];
+				continue;
+			case INSIDE_ADD_EXPORTS:
+				mode = DEFAULT;
+				// TODO: better to validate the option before processing it further?
+				if (this.addonExports == Collections.EMPTY_LIST) {
+					this.addonExports = new ArrayList<>();
+				}
+				this.addonExports.add(currentArg);
+				continue;
+			case INSIDE_ADD_READS:
+				mode = DEFAULT;
+				if (this.addonReads == Collections.EMPTY_LIST) {
+					this.addonReads = new ArrayList<>();
+				}
+				this.addonReads.add(currentArg);
 				continue;
 			case INSIDE_CLASSPATH_start:
 				mode = DEFAULT;
@@ -2704,7 +2835,7 @@ public void configure(String[] argv) {
 							"-extdir")); //$NON-NLS-1$
 				}
 				StringTokenizer tokenizer = new StringTokenizer(currentArg,	File.pathSeparator, false);
-				extdirsClasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
+				extdirsClasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 				while (tokenizer.hasMoreTokens())
 					extdirsClasspaths.add(tokenizer.nextToken());
 				mode = DEFAULT;
@@ -2715,7 +2846,7 @@ public void configure(String[] argv) {
 						this.bind("configure.unexpectedDestinationPathEntry", //$NON-NLS-1$
 							"-endorseddirs")); //$NON-NLS-1$
 				}				tokenizer = new StringTokenizer(currentArg,	File.pathSeparator, false);
-				endorsedDirClasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
+				endorsedDirClasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 				while (tokenizer.hasMoreTokens())
 					endorsedDirClasspaths.add(tokenizer.nextToken());
 				mode = DEFAULT;
@@ -2736,6 +2867,9 @@ public void configure(String[] argv) {
 				continue;
 			case INSIDE_PROCESSOR_start :
 				// nothing to do here. This is consumed again by the AnnotationProcessorManager
+				mode = DEFAULT;
+				continue;
+			case INSIDE_PROCESSOR_MODULE_PATH_start :
 				mode = DEFAULT;
 				continue;
 			case INSIDE_S_start :
@@ -2799,7 +2933,7 @@ public void configure(String[] argv) {
 			throw new IllegalArgumentException(
 				this.bind("configure.unrecognizedOption", currentSourceDirectory)); //$NON-NLS-1$
 		}
-		String[] result = FileFinder.find(dir, SuffixConstants.SUFFIX_STRING_JAVA);
+		String[] result = FileFinder.find(dir, SuffixConstants.SUFFIX_STRING_java);
 		if (NONE.equals(customDestinationPath)) {
 			customDestinationPath = NONE; // ensure == comparison
 		}
@@ -2824,10 +2958,17 @@ public void configure(String[] argv) {
 				(this.destinationPaths = new String[length + filesCount]),
 				0,
 				filesCount);
+			System.arraycopy(
+					this.modNames,
+					0,
+					(this.modNames = new String[length + filesCount]),
+					0,
+					filesCount);
 			System.arraycopy(result, 0, this.filenames, filesCount, length);
 			for (int i = 0; i < length; i++) {
 				this.encodings[filesCount + i] = customEncoding;
 				this.destinationPaths[filesCount + i] = customDestinationPath;
+				this.modNames[filesCount + i] = moduleName;
 			}
 			filesCount += length;
 			customEncoding = null;
@@ -2838,6 +2979,7 @@ public void configure(String[] argv) {
 			filesCount = this.filenames.length;
 			this.encodings = new String[filesCount];
 			this.destinationPaths = new String[filesCount];
+			this.modNames = new String[filesCount];
 			for (int i = 0; i < filesCount; i++) {
 				this.encodings[i] = customEncoding;
 				this.destinationPaths[i] = customDestinationPath;
@@ -2955,6 +3097,8 @@ public void configure(String[] argv) {
 			sourcepathClasspathArg,
 			sourcepathClasspaths,
 			classpaths,
+			modulepathArg,
+			moduleSourcepathArg,
 			extdirsClasspaths,
 			endorsedDirClasspaths,
 			customEncoding);
@@ -2965,12 +3109,44 @@ public void configure(String[] argv) {
 				getAllEncodings(specifiedEncodings)));
 	}
 	if (this.pendingErrors != null) {
-		for (Iterator iterator = this.pendingErrors.iterator(); iterator.hasNext(); ) {
-			String message = (String) iterator.next();
+		for (Iterator<String> iterator = this.pendingErrors.iterator(); iterator.hasNext(); ) {
+			String message = iterator.next();
 			this.logger.logPendingError(message);
 		}
 		this.pendingErrors = null;
 	}
+}
+private Parser getNewParser() {
+	return new Parser(new ProblemReporter(getHandlingPolicy(), 
+			new CompilerOptions(this.options), getProblemFactory()), false);
+}
+private IModule extractModuleDesc(String fileName) {
+	IModule mod = null;
+	// this.options may not be completely populated yet, and definitely not
+	// validated. Make sure the source level is set for the parser
+	Map<String,String> opts = new HashMap<String, String>(this.options);
+	opts.put(CompilerOptions.OPTION_Source, this.options.get(CompilerOptions.OPTION_Compliance));
+	Parser parser = new Parser(new ProblemReporter(getHandlingPolicy(), 
+			new CompilerOptions(opts), getProblemFactory()), false);
+	if (fileName.toLowerCase().endsWith(IModule.MODULE_INFO_JAVA)) {
+		
+		ICompilationUnit cu = new CompilationUnit(null, fileName, null);
+		CompilationResult compilationResult = new CompilationResult(cu, 0, 1, 10);
+		CompilationUnitDeclaration unit = parser.parse(cu, compilationResult);
+		if (unit.isModuleInfo() && unit.moduleDeclaration != null) {
+			mod = new BasicModule(unit.moduleDeclaration, null);
+		}
+	} else if (fileName.toLowerCase().endsWith(IModule.MODULE_INFO_CLASS)) {
+		try {
+			ClassFileReader reader = ClassFileReader.read(fileName); // Check the absolute path?
+			mod = reader.getModuleDeclaration();
+		} catch (ClassFormatException | IOException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(
+					this.bind("configure.invalidModuleDescriptor", fileName)); //$NON-NLS-1$
+		}
+	}
+	return mod;
 }
 
 private static char[][] decodeIgnoreOptionalProblemsFromFolders(String folders) {
@@ -2997,7 +3173,7 @@ private static char[][] decodeIgnoreOptionalProblemsFromFolders(String folders) 
 	return result;
 }
 
-private static String getAllEncodings(Set encodings) {
+private static String getAllEncodings(Set<String> encodings) {
 	int size = encodings.size();
 	String[] allEncodings = new String[size];
 	encodings.toArray(allEncodings);
@@ -3011,7 +3187,7 @@ private static String getAllEncodings(Set encodings) {
 	}
 	return String.valueOf(buffer);
 }
-
+@SuppressWarnings("rawtypes")
 private void initializeWarnings(String propertiesFile) {
 	File file = new File(propertiesFile);
 	if (!file.exists()) {
@@ -3035,7 +3211,7 @@ private void initializeWarnings(String propertiesFile) {
 			}
 		}
 	}
-	for (Iterator iterator = properties.entrySet().iterator(); iterator.hasNext(); ) {
+	for(Iterator iterator = properties.entrySet().iterator(); iterator.hasNext(); ) {
 		Map.Entry entry = (Map.Entry) iterator.next();
 		final String key = entry.getKey().toString();
 		if (key.startsWith("org.eclipse.jdt.core.compiler.")) { //$NON-NLS-1$
@@ -3088,15 +3264,10 @@ protected void disableAll(int severity) {
 			checkedValue = CompilerOptions.INFO;
 			break;
 	}
-	Object[] entries = this.options.entrySet().toArray();
-	for (int i = 0, max = entries.length; i < max; i++) {
-		Map.Entry entry = (Map.Entry) entries[i];
-		if (!(entry.getKey() instanceof String))
-			continue;
-		if (!(entry.getValue() instanceof String))
-			continue;
-		if (((String) entry.getValue()).equals(checkedValue)) {
-			this.options.put((String) entry.getKey(), CompilerOptions.IGNORE);
+	Set<Entry<String, String>> entrySet = this.options.entrySet();
+	for (Entry<String, String> entry : entrySet) {
+		if (entry.getValue().equals(checkedValue)) {
+			this.options.put(entry.getKey(), CompilerOptions.IGNORE);
 		}
 	}
 	if (severity == ProblemSeverities.Warning) {
@@ -3135,27 +3306,48 @@ public CompilationUnit[] getCompilationUnits() {
 	String defaultEncoding = this.options.get(CompilerOptions.OPTION_Encoding);
 	if (Util.EMPTY_STRING.equals(defaultEncoding))
 		defaultEncoding = null;
+	
+	Map<String,CompilationUnit> pathToModCU = new HashMap<>();
 
-	for (int i = 0; i < fileCount; i++) {
-		char[] charName = this.filenames[i].toCharArray();
-		if (knownFileNames.get(charName) != null)
-			throw new IllegalArgumentException(this.bind("unit.more", this.filenames[i])); //$NON-NLS-1$
-		knownFileNames.put(charName, charName);
-		File file = new File(this.filenames[i]);
-		if (!file.exists())
-			throw new IllegalArgumentException(this.bind("unit.missing", this.filenames[i])); //$NON-NLS-1$
-		String encoding = this.encodings[i];
-		if (encoding == null)
-			encoding = defaultEncoding;
-		String fileName;
-		try {
-			fileName = file.getCanonicalPath();
-		} catch (IOException e) {
-			// if we got exception during canonicalization, fall back to the name that was specified
-			fileName = this.filenames[i];
+	for (int round = 0; round < 2; round++) {
+		for (int i = 0; i < fileCount; i++) {
+			char[] charName = this.filenames[i].toCharArray();
+			boolean isModuleInfo = CharOperation.endsWith(charName, TypeConstants.MODULE_INFO_FILE_NAME);
+			if (isModuleInfo == (round==0)) { // 1st round: modules, 2nd round others (to ensure populating pathToModCU well in time)
+				if (knownFileNames.get(charName) != null)
+					throw new IllegalArgumentException(this.bind("unit.more", this.filenames[i])); //$NON-NLS-1$
+				knownFileNames.put(charName, charName);
+				File file = new File(this.filenames[i]);
+				if (!file.exists())
+					throw new IllegalArgumentException(this.bind("unit.missing", this.filenames[i])); //$NON-NLS-1$
+				String encoding = this.encodings[i];
+				if (encoding == null)
+					encoding = defaultEncoding;
+				String fileName;
+				try {
+					fileName = file.getCanonicalPath();
+				} catch (IOException e) {
+					// if we got exception during canonicalization, fall back to the name that was specified
+					fileName = this.filenames[i];
+				}
+				units[i] = new CompilationUnit(null, fileName, encoding, this.destinationPaths[i],
+						shouldIgnoreOptionalProblems(this.ignoreOptionalProblemsFromFolders, fileName.toCharArray()), 
+						this.modNames[i]);
+				if (isModuleInfo) {
+					int lastSlash = CharOperation.lastIndexOf(File.separatorChar, units[i].fileName);
+					if (lastSlash != -1) {
+						pathToModCU.put(String.valueOf(CharOperation.subarray(units[i].fileName, 0, lastSlash)), units[i]);
+					}
+				} else {
+					for (Entry<String, CompilationUnit> entry : pathToModCU.entrySet()) {
+						if (fileName.startsWith(entry.getKey())) { // associate CUs to module by common prefix
+							units[i].setModule(entry.getValue());
+							break;
+						}
+					}
+				}
+			}
 		}
-		units[i] = new CompilationUnit(null, fileName, encoding, this.destinationPaths[i],
-				shouldIgnoreOptionalProblems(this.ignoreOptionalProblemsFromFolders, fileName.toCharArray()));
 	}
 	return units;
 }
@@ -3178,7 +3370,20 @@ public IErrorHandlingPolicy getHandlingPolicy() {
 		}
 	};
 }
-
+private void setJavaHome(String javaHome) {
+	File release = new File(javaHome, "release"); //$NON-NLS-1$
+	Properties prop = new Properties();
+	try {
+		prop.load(new FileReader(release));
+		String ver = prop.getProperty("JAVA_VERSION"); //$NON-NLS-1$
+		if (ver != null)
+			ver = ver.replace("\"", "");  //$NON-NLS-1$//$NON-NLS-2$
+		this.javaHomeCache = new File(javaHome);
+		this.javaHomeChecked = true;
+	} catch (IOException e) {
+		throw new IllegalArgumentException(this.bind("configure.invalidSystem", javaHome)); //$NON-NLS-1$
+	}
+}
 /*
  * External API
  */
@@ -3191,8 +3396,11 @@ public File getJavaHome() {
 }
 
 public FileSystem getLibraryAccess() {
-	return new FileSystem(this.checkedClasspaths, this.filenames, 
+	FileSystem nameEnvironment = new FileSystem(this.checkedClasspaths, this.filenames, 
 					this.annotationsFromClasspath && CompilerOptions.ENABLED.equals(this.options.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis)));
+	nameEnvironment.module = this.module;
+	processAddonModuleOptions(nameEnvironment);
+	return nameEnvironment;
 }
 
 /*
@@ -3205,55 +3413,142 @@ public IProblemFactory getProblemFactory() {
 /*
  * External API
  */
-protected ArrayList handleBootclasspath(ArrayList bootclasspaths, String customEncoding) {
+protected ArrayList<Classpath> handleBootclasspath(ArrayList<String> bootclasspaths, String customEncoding) {
  	final int bootclasspathsSize;
+ 	ArrayList<Classpath> result = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 	if ((bootclasspaths != null)
-		&& ((bootclasspathsSize = bootclasspaths.size()) != 0))
-	{
-		String[] paths = new String[bootclasspathsSize];
-		bootclasspaths.toArray(paths);
-		bootclasspaths.clear();
-		for (int i = 0; i < bootclasspathsSize; i++) {
-			processPathEntries(DEFAULT_SIZE_CLASSPATH, bootclasspaths,
-				paths[i], customEncoding, false, true);
+		&& ((bootclasspathsSize = bootclasspaths.size()) != 0)) {
+		result = new ArrayList<>(bootclasspathsSize);
+		for (String path : bootclasspaths) {
+			processPathEntries(DEFAULT_SIZE_CLASSPATH, result, path, customEncoding, false, true);
 		}
 	} else {
-		bootclasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
 		try {
-			Util.collectRunningVMBootclasspath(bootclasspaths);
+			Util.collectVMBootclasspath(result, this.javaHomeCache);
 		} catch(IllegalStateException e) {
-			this.logger.logWrongJDK();
-			this.proceed = false;
-			return null;
+			throw new IllegalArgumentException(this.bind("configure.invalidSystem", this.javaHomeCache.toString())); //$NON-NLS-1$
 		}
 	}
-	return bootclasspaths;
+	return result;
 }
+private void processAddonModuleOptions(FileSystem env) {
+	Map<String, IPackageExport[]> exports = new HashMap<>();
+	for (String option : this.addonExports) {
+		IModule mod = ModuleFinder.extractAddonExport(option);
+		if (mod != null) {
+			String modName = new String(mod.name());
+			IPackageExport export = mod.exports()[0];
+			IPackageExport[] existing = exports.get(modName);
+			if (existing == null) {
+				existing = new IPackageExport[1];
+				existing[0] = export;
+				exports.put(modName, existing);
+			} else {
+				for (IPackageExport iPackageExport : existing) {
+					if (CharOperation.equals(iPackageExport.name(), export.name())) {
+						throw new IllegalArgumentException(this.bind("configure.duplicateExport")); //$NON-NLS-1$
+					}
+				}
+				IPackageExport[] updated = new IPackageExport[existing.length + 1];
+				System.arraycopy(existing, 0, updated, 0, existing.length);
+				updated[existing.length] = export;
+				exports.put(modName, updated);
+			}
+			env.addModuleUpdate(modName, m -> m.addExports(export.name(), export.targets()), UpdateKind.PACKAGE);
+		} else {
+			throw new IllegalArgumentException(this.bind("configure.invalidModuleOption", "--add-exports " + option)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+	for (String option : this.addonReads) {
+		String[] result = ModuleFinder.extractAddonRead(option);
+		if (result != null && result.length == 2) {
+			env.addModuleUpdate(result[0], m -> m.addReads(result[1].toCharArray()), UpdateKind.MODULE);
+		} else {
+			throw new IllegalArgumentException(this.bind("configure.invalidModuleOption", "--add-reads " + option)); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+}
+protected ArrayList<FileSystem.Classpath> handleModulepath(String arg) {
+	ArrayList<String> modulePaths = processModulePathEntries(arg);
+	ArrayList<Classpath> result = new ArrayList<>();
+	if ((modulePaths != null && modulePaths.size() > 0)) {
+		for (String path : modulePaths) {
+			File file = new File(path);
+			if (file.isDirectory()) {
+				result =
+					(ArrayList<Classpath>) ModuleFinder.findModules(file, null, getNewParser(), this.options, true);
+			} else {
+				Classpath modulePath = ModuleFinder.findModule(file, null, getNewParser(), this.options, true);
+				if (modulePath != null)
+					result.add(modulePath);
+			}
+		}
+	}
+	// TODO: What about chained jars from MANIFEST.MF? Check with spec
+	return result;
+}
+protected ArrayList<FileSystem.Classpath> handleModuleSourcepath(String arg) {
+	ArrayList<String> modulePaths = processModulePathEntries(arg);
+	ArrayList<FileSystem.Classpath> result = new ArrayList<>();
+	if ((modulePaths != null)
+		&& (modulePaths.size() != 0)) {
 
+		if (this.destinationPath == null) {
+			addPendingErrors(this.bind("configure.missingDestinationPath"));//$NON-NLS-1$
+		}
+		String[] paths = new String[modulePaths.size()];
+		modulePaths.toArray(paths);
+		for (int i = 0; i < paths.length; i++) {
+			File dir = new File(paths[i]);
+			if (dir.isDirectory()) {
+				// 1. Create FileSystem.Classpath for each module
+				// 2. Iterator each module in case of directory for source files and add to this.fileNames
+
+				List<Classpath> modules = ModuleFinder.findModules(dir, this.destinationPath, getNewParser(), this.options, false);
+				for (Classpath classpath : modules) {
+					result.add(classpath);
+					Path modLocation = Paths.get(classpath.getPath()).toAbsolutePath();
+					String destPath = classpath.getDestinationPath();
+					IModule mod = classpath.getModule();
+					String moduleName = mod == null ? null : new String(mod.name());
+					for(int j = 0; j < this.filenames.length; j++) {
+						Path filePath;
+						try {
+							// Get canonical path just as the classpath location is stored with the same.
+							// To avoid mismatch of /USER_JAY and /USE~1 in windows systems.
+							filePath = new File(this.filenames[j]).getCanonicalFile().toPath();
+							if (filePath.startsWith(modLocation)) {
+								this.modNames[j] = moduleName;
+								this.destinationPaths[j] = destPath;
+							}
+						} catch (IOException e) {
+							// Files doesn't exist and perhaps doesn't belong in a module, move on to other files
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	return result;
+}
 /*
  * External API
  */
-protected ArrayList handleClasspath(ArrayList classpaths, String customEncoding) {
-	final int classpathsSize;
-	if ((classpaths != null)
-		&& ((classpathsSize = classpaths.size()) != 0))
-	{
-		String[] paths = new String[classpathsSize];
-		classpaths.toArray(paths);
-		classpaths.clear();
-		for (int i = 0; i < classpathsSize; i++) {
-			processPathEntries(DEFAULT_SIZE_CLASSPATH, classpaths, paths[i],
-					customEncoding, false, true);
+protected ArrayList<FileSystem.Classpath> handleClasspath(ArrayList<String> classpaths, String customEncoding) {
+	ArrayList<FileSystem.Classpath> initial = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
+	if (classpaths != null && classpaths.size() > 0) {
+		for (String path : classpaths) {
+			processPathEntries(DEFAULT_SIZE_CLASSPATH, initial, path, customEncoding, false, true);
 		}
 	} else {
 		// no user classpath specified.
-		classpaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
 		String classProp = System.getProperty("java.class.path"); //$NON-NLS-1$
 		if ((classProp == null) || (classProp.length() == 0)) {
 			addPendingErrors(this.bind("configure.noClasspath")); //$NON-NLS-1$
 			final Classpath classpath = FileSystem.getClasspath(System.getProperty("user.dir"), customEncoding, null, this.options);//$NON-NLS-1$
 			if (classpath != null) {
-				classpaths.add(classpath);
+				initial.add(classpath);
 			}
 		} else {
 			StringTokenizer tokenizer = new StringTokenizer(classProp, File.pathSeparator);
@@ -3263,15 +3558,15 @@ protected ArrayList handleClasspath(ArrayList classpaths, String customEncoding)
 				FileSystem.Classpath currentClasspath = FileSystem
 						.getClasspath(token, customEncoding, null, this.options);
 				if (currentClasspath != null) {
-					classpaths.add(currentClasspath);
+					initial.add(currentClasspath);
 				} else if (token.length() != 0) {
 					addPendingErrors(this.bind("configure.incorrectClasspath", token));//$NON-NLS-1$
 				}
 			}
 		}
 	}
-	ArrayList result = new ArrayList();
-	HashMap knownNames = new HashMap();
+	ArrayList<Classpath> result = new ArrayList<>();
+	HashMap<String, Classpath> knownNames = new HashMap<>();
 	FileSystem.ClasspathSectionProblemReporter problemReporter =
 		new FileSystem.ClasspathSectionProblemReporter() {
 			public void invalidClasspathSection(String jarFilePath) {
@@ -3281,15 +3576,15 @@ protected ArrayList handleClasspath(ArrayList classpaths, String customEncoding)
 				addPendingErrors(bind("configure.multipleClasspathSections", jarFilePath)); //$NON-NLS-1$
 			}
 		};
-	while (! classpaths.isEmpty()) {
-		Classpath current = (Classpath) classpaths.remove(0);
+	while (! initial.isEmpty()) {
+		Classpath current = initial.remove(0);
 		String currentPath = current.getPath();
 		if (knownNames.get(currentPath) == null) {
 			knownNames.put(currentPath, current);
 			result.add(current);
-			List linkedJars = current.fetchLinkedJars(problemReporter);
+			List<Classpath> linkedJars = current.fetchLinkedJars(problemReporter);
 			if (linkedJars != null) {
-				classpaths.addAll(0, linkedJars);
+				initial.addAll(0, linkedJars);
 			}
 		}
 	}
@@ -3298,7 +3593,7 @@ protected ArrayList handleClasspath(ArrayList classpaths, String customEncoding)
 /*
  * External API
  */
-protected ArrayList handleEndorseddirs(ArrayList endorsedDirClasspaths) {
+protected ArrayList<FileSystem.Classpath> handleEndorseddirs(ArrayList<String> endorsedDirClasspaths) {
  	final File javaHome = getJavaHome();
 	/*
 	 * Feed endorsedDirClasspath according to:
@@ -3307,7 +3602,7 @@ protected ArrayList handleEndorseddirs(ArrayList endorsedDirClasspaths) {
 	 * - else default extensions directory for the platform. (/lib/endorsed)
 	 */
 	if (endorsedDirClasspaths == null) {
-		endorsedDirClasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
+		endorsedDirClasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 		String endorsedDirsStr = System.getProperty("java.endorsed.dirs"); //$NON-NLS-1$
 		if (endorsedDirsStr == null) {
 			if (javaHome != null) {
@@ -3326,10 +3621,10 @@ protected ArrayList handleEndorseddirs(ArrayList endorsedDirClasspaths) {
 	 * extdirsNames.
 	 */
 	if (endorsedDirClasspaths.size() != 0) {
+		ArrayList<FileSystem.Classpath> result = new ArrayList<>();
 		File[] directoriesToCheck = new File[endorsedDirClasspaths.size()];
 		for (int i = 0; i < directoriesToCheck.length; i++)
-			directoriesToCheck[i] = new File((String) endorsedDirClasspaths.get(i));
-		endorsedDirClasspaths.clear();
+			directoriesToCheck[i] = new File(endorsedDirClasspaths.get(i));
 		File[][] endorsedDirsJars = getLibrariesFiles(directoriesToCheck);
 		if (endorsedDirsJars != null) {
 			for (int i = 0, max = endorsedDirsJars.length; i < max; i++) {
@@ -3341,7 +3636,7 @@ protected ArrayList handleEndorseddirs(ArrayList endorsedDirClasspaths) {
 									current[j].getAbsolutePath(),
 									null, null, this.options);
 						if (classpath != null) {
-							endorsedDirClasspaths.add(classpath);
+							result.add(classpath);
 						}
 					}
 				} else if (directoriesToCheck[i].isFile()) {
@@ -3352,15 +3647,16 @@ protected ArrayList handleEndorseddirs(ArrayList endorsedDirClasspaths) {
 				}
 			}
 		}
+		return result;
 	}
-	return endorsedDirClasspaths;
+	return FileSystem.EMPTY_CLASSPATH;
 }
 
 /*
  * External API
  * Handle extdirs processing
  */
-protected ArrayList handleExtdirs(ArrayList extdirsClasspaths) {
+protected ArrayList<FileSystem.Classpath> handleExtdirs(ArrayList<String> extdirsClasspaths) {
  	final File javaHome = getJavaHome();
 
 	/*
@@ -3370,7 +3666,7 @@ protected ArrayList handleExtdirs(ArrayList extdirsClasspaths) {
 	 * - else default extensions directory for the platform.
 	 */
 	if (extdirsClasspaths == null) {
-		extdirsClasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
+		extdirsClasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 		String extdirsStr = System.getProperty("java.ext.dirs"); //$NON-NLS-1$
 		if (extdirsStr == null) {
 			extdirsClasspaths.add(javaHome.getAbsolutePath() + "/lib/ext"); //$NON-NLS-1$
@@ -3386,10 +3682,10 @@ protected ArrayList handleExtdirs(ArrayList extdirsClasspaths) {
 	 * extdirsNames.
 	 */
 	if (extdirsClasspaths.size() != 0) {
+		ArrayList<FileSystem.Classpath> result = new ArrayList<>();
 		File[] directoriesToCheck = new File[extdirsClasspaths.size()];
 		for (int i = 0; i < directoriesToCheck.length; i++)
-			directoriesToCheck[i] = new File((String) extdirsClasspaths.get(i));
-		extdirsClasspaths.clear();
+			directoriesToCheck[i] = new File(extdirsClasspaths.get(i));
 		File[][] extdirsJars = getLibrariesFiles(directoriesToCheck);
 		if (extdirsJars != null) {
 			for (int i = 0, max = extdirsJars.length; i < max; i++) {
@@ -3401,7 +3697,7 @@ protected ArrayList handleExtdirs(ArrayList extdirsClasspaths) {
 									current[j].getAbsolutePath(),
 									null, null, this.options);
 						if (classpath != null) {
-							extdirsClasspaths.add(classpath);
+							result.add(classpath);
 						}
 					}
 				} else if (directoriesToCheck[i].isFile()) {
@@ -3411,9 +3707,10 @@ protected ArrayList handleExtdirs(ArrayList extdirsClasspaths) {
 				}
 			}
 		}
+		return result; 
 	}
 
-	return extdirsClasspaths;
+	return FileSystem.EMPTY_CLASSPATH;
 }
 
 /*
@@ -3475,6 +3772,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 		case 'a' :
 			if (token.equals("allDeprecation")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportDeprecation, severity, isEnabling);
+				setSeverity(CompilerOptions.OPTION_ReportTerminalDeprecation, severity, isEnabling);
 				this.options.put(
 					CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode,
 					isEnabling ? CompilerOptions.ENABLED : CompilerOptions.DISABLED);
@@ -3587,6 +3885,9 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				return;
 			} else if (token.equals("enumIdentifier")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportEnumIdentifier, severity, isEnabling);
+				return;
+			} else if (token.equals("exports")) { //$NON-NLS-1$
+				setSeverity(CompilerOptions.OPTION_ReportAPILeak, severity, isEnabling);
 				return;
 			}
 			break;
@@ -3920,6 +4221,15 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				setSeverity(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, severity, isEnabling);
 				setSeverity(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, severity, isEnabling);
 				return;
+			} else if (token.equals("removal")) { //$NON-NLS-1$
+				setSeverity(CompilerOptions.OPTION_ReportTerminalDeprecation, severity, isEnabling);
+				this.options.put(
+					CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode,
+					CompilerOptions.DISABLED);
+				this.options.put(
+					CompilerOptions.OPTION_ReportDeprecationWhenOverridingDeprecatedMethod,
+					CompilerOptions.DISABLED);
+				return;
 			}
 			break;
 		case 's' :
@@ -4144,7 +4454,7 @@ protected void initialize(PrintWriter outWriter, PrintWriter errWriter, boolean 
  * @deprecated - use {@link #initialize(PrintWriter, PrintWriter, boolean, Map, CompilationProgress)} instead
  *                       e.g. initialize(outWriter, errWriter, systemExit, customDefaultOptions, null)
  */
-protected void initialize(PrintWriter outWriter, PrintWriter errWriter, boolean systemExit, Map customDefaultOptions) {
+protected void initialize(PrintWriter outWriter, PrintWriter errWriter, boolean systemExit, Map<String, String> customDefaultOptions) {
 	this.initialize(outWriter, errWriter, systemExit, customDefaultOptions, null /* progress */);
 }
 protected void initialize(PrintWriter outWriter, PrintWriter errWriter, boolean systemExit, Map<String, String> customDefaultOptions, CompilationProgress compilationProgress) {
@@ -4173,7 +4483,7 @@ protected void initialize(PrintWriter outWriter, PrintWriter errWriter, boolean 
 protected void initializeAnnotationProcessorManager() {
 	String className = "org.eclipse.jdt.internal.compiler.apt.dispatch.BatchAnnotationProcessorManager"; //$NON-NLS-1$
 	try {
-		Class c = Class.forName(className);
+		Class<?> c = Class.forName(className);
 		AbstractAnnotationProcessorManager annotationManager = (AbstractAnnotationProcessorManager) c.newInstance();
 		annotationManager.configure(this, this.expandedCommandLine);
 		annotationManager.setErr(this.err);
@@ -4267,61 +4577,63 @@ public void outputClassFiles(CompilationResult unitResult) {
  *  Low-level API performing the actual compilation
  */
 public void performCompilation() {
-
 	this.startTime = System.currentTimeMillis();
 
 	FileSystem environment = getLibraryAccess();
-	this.compilerOptions = new CompilerOptions(this.options);
-	this.compilerOptions.performMethodsFullRecovery = false;
-	this.compilerOptions.performStatementsRecovery = false;
-	this.batchCompiler =
-		new Compiler(
-			environment,
-			getHandlingPolicy(),
-			this.compilerOptions,
-			getBatchRequestor(),
-			getProblemFactory(),
-			this.out,
-			this.progress);
-	this.batchCompiler.remainingIterations = this.maxRepetition-this.currentRepetition/*remaining iterations including this one*/;
-	// temporary code to allow the compiler to revert to a single thread
-	String setting = System.getProperty("jdt.compiler.useSingleThread"); //$NON-NLS-1$
-	this.batchCompiler.useSingleThread = setting != null && setting.equals("true"); //$NON-NLS-1$
-
-	if (this.compilerOptions.complianceLevel >= ClassFileConstants.JDK1_6
-			&& this.compilerOptions.processAnnotations) {
-		if (checkVMVersion(ClassFileConstants.JDK1_6)) {
-			initializeAnnotationProcessorManager();
-			if (this.classNames != null) {
-				this.batchCompiler.setBinaryTypes(processClassNames(this.batchCompiler.lookupEnvironment));
-			}
-		} else {
-			// report a warning
-			this.logger.logIncorrectVMVersionForAnnotationProcessing();
-		}
-	}
-
-	// set the non-externally configurable options.
-	this.compilerOptions.verbose = this.verbose;
-	this.compilerOptions.produceReferenceInfo = this.produceRefInfo;
 	try {
-		this.logger.startLoggingSources();
-		this.batchCompiler.compile(getCompilationUnits());
-	} finally {
-		this.logger.endLoggingSources();
-	}
+		this.compilerOptions = new CompilerOptions(this.options);
+		this.compilerOptions.performMethodsFullRecovery = false;
+		this.compilerOptions.performStatementsRecovery = false;
+		this.batchCompiler =
+				new Compiler(
+						environment,
+						getHandlingPolicy(),
+						this.compilerOptions,
+						getBatchRequestor(),
+						getProblemFactory(),
+						this.out,
+						this.progress);
+		this.batchCompiler.remainingIterations = this.maxRepetition-this.currentRepetition/*remaining iterations including this one*/;
+		// temporary code to allow the compiler to revert to a single thread
+		String setting = System.getProperty("jdt.compiler.useSingleThread"); //$NON-NLS-1$
+		this.batchCompiler.useSingleThread = setting != null && setting.equals("true"); //$NON-NLS-1$
 
-	if (this.extraProblems != null) {
-		loggingExtraProblems();
-		this.extraProblems = null;
-	}
-	if (this.compilerStats != null) {
-		this.compilerStats[this.currentRepetition] = this.batchCompiler.stats;
-	}
-	this.logger.printStats();
+		if (this.compilerOptions.complianceLevel >= ClassFileConstants.JDK1_6
+				&& this.compilerOptions.processAnnotations) {
+			if (checkVMVersion(ClassFileConstants.JDK1_6)) {
+				initializeAnnotationProcessorManager();
+				if (this.classNames != null) {
+					this.batchCompiler.setBinaryTypes(processClassNames(this.batchCompiler.lookupEnvironment));
+				}
+			} else {
+				// report a warning
+				this.logger.logIncorrectVMVersionForAnnotationProcessing();
+			}
+		}
 
+		// set the non-externally configurable options.
+		this.compilerOptions.verbose = this.verbose;
+		this.compilerOptions.produceReferenceInfo = this.produceRefInfo;
+		try {
+			this.logger.startLoggingSources();
+			this.batchCompiler.compile(getCompilationUnits());
+		} finally {
+			this.logger.endLoggingSources();
+		}
+
+		if (this.extraProblems != null) {
+			loggingExtraProblems();
+			this.extraProblems = null;
+		}
+		if (this.compilerStats != null) {
+			this.compilerStats[this.currentRepetition] = this.batchCompiler.stats;
+		}
+		this.logger.printStats();
+	}
+	finally {
 	// cleanup
-	environment.cleanup();
+		environment.cleanup();
+	}
 }
 protected void loggingExtraProblems() {
 	this.logger.loggingExtraProblems(this);
@@ -4345,40 +4657,82 @@ private ReferenceBinding[] processClassNames(LookupEnvironment environment) {
 	// check for .class file presence in case of apt processing
 	int length = this.classNames.length;
 	ReferenceBinding[] referenceBindings = new ReferenceBinding[length];
+	ModuleBinding[] modules = new ModuleBinding[length];
+	Set<ModuleBinding> modSet = new HashSet<>();
+	String[] typeNames = new String[length];
+	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+		typeNames = this.classNames;
+	} else {
+		for (int i = 0; i < length; i++) {
+			String currentName = this.classNames[i];
+			int idx = currentName.indexOf('/');
+			ModuleBinding mod = null;
+			if (idx > 0) {
+				String m = currentName.substring(0, idx);
+				mod = environment.getModule(m.toCharArray());
+				if (mod == null) {
+					throw new IllegalArgumentException(this.bind("configure.invalidModuleName", m)); //$NON-NLS-1$
+				}
+				modules[i] = mod;
+				modSet.add(mod);
+				currentName = currentName.substring(idx + 1);
+			}
+			typeNames[i] = currentName;
+		}
+		for (ModuleBinding mod : modSet) {
+			mod.getExports();
+			mod.getRequires();
+			mod.getOpens();
+			mod.getServices();
+		}
+	}
+
 	for (int i = 0; i < length; i++) {
-		String currentName = this.classNames[i];
 		char[][] compoundName = null;
-		if (currentName.indexOf('.') != -1) {
+		String cls = typeNames[i];
+		if (cls.indexOf('.') != -1) {
 			// consider names with '.' as fully qualified names
-			char[] typeName = currentName.toCharArray();
+			char[] typeName = cls.toCharArray();
 			compoundName = CharOperation.splitOn('.', typeName);
 		} else {
-			compoundName = new char[][] { currentName.toCharArray() };
+			compoundName = new char[][] { cls.toCharArray() };
 		}
-		ReferenceBinding type = environment.getType(compoundName);
+		ModuleBinding mod = modules[i];
+		ReferenceBinding type = mod != null ? environment.getType(compoundName, mod) : environment.getType(compoundName);
 		if (type != null && type.isValidBinding()) {
 			if (type.isBinaryBinding()) {
 				referenceBindings[i] = type;
+				type.superclass();
 			}
 		} else {
 			throw new IllegalArgumentException(
-					this.bind("configure.invalidClassName", currentName));//$NON-NLS-1$
+					this.bind("configure.invalidClassName", this.classNames[i]));//$NON-NLS-1$
 		}
 	}
 	return referenceBindings;
 }
+private ArrayList<String> processModulePathEntries(String arg) {
+	ArrayList<String> paths = new ArrayList<>();
+	if (arg == null)
+		return paths;
+	StringTokenizer tokenizer = new StringTokenizer(arg, File.pathSeparator, false);
+	while (tokenizer.hasMoreTokens()) {
+		paths.add(tokenizer.nextToken());
+	}
+	return paths;
+}
 /*
  * External API
  */
-public void processPathEntries(final int defaultSize, final ArrayList paths,
+public void processPathEntries(final int defaultSize, final ArrayList<FileSystem.Classpath> paths,
 			final String currentPath, String customEncoding, boolean isSourceOnly,
 			boolean rejectDestinationPathOnJars) {
 	String currentClasspathName = null;
 	String currentDestinationPath = null;
-	ArrayList currentRuleSpecs = new ArrayList(defaultSize);
+	ArrayList<String> currentRuleSpecs = new ArrayList<>(defaultSize);
 	StringTokenizer tokenizer = new StringTokenizer(currentPath,
 			File.pathSeparator + "[]", true); //$NON-NLS-1$
-	ArrayList tokens = new ArrayList();
+	ArrayList<String> tokens = new ArrayList<>();
 	while (tokenizer.hasMoreTokens()) {
 		tokens.add(tokenizer.nextToken());
 	}
@@ -4412,7 +4766,7 @@ public void processPathEntries(final int defaultSize, final ArrayList paths,
 	String token = null;
 	int cursor = 0, tokensNb = tokens.size(), bracket = -1;
 	while (cursor < tokensNb && state != error) {
-		token = (String) tokens.get(cursor++);
+		token = tokens.get(cursor++);
 		if (token.equals(File.pathSeparator)) {
 			switch (state) {
 			case start:
@@ -4517,7 +4871,7 @@ public void processPathEntries(final int defaultSize, final ArrayList paths,
 				break;
 			case bracketClosed:
 				for (int i = bracket; i < cursor ; i++) {
-					currentClasspathName += (String) tokens.get(i);
+					currentClasspathName += tokens.get(i);
 				}
 				state = readyToClose;
 				break;
@@ -4552,7 +4906,7 @@ public void processPathEntries(final int defaultSize, final ArrayList paths,
 	}
 }
 
-private int processPaths(String[] args, int index, String currentArg, ArrayList paths) {
+private int processPaths(String[] args, int index, String currentArg, ArrayList<String> paths) {
 	int localIndex = index;
 	int count = 0;
 	for (int i = 0, max = currentArg.length(); i < max; i++) {
@@ -4703,21 +5057,44 @@ public void setLocale(Locale locale) {
 /*
  * External API
  */
-protected void setPaths(ArrayList bootclasspaths,
+protected void setPaths(ArrayList<String> bootclasspaths,
 		String sourcepathClasspathArg,
-		ArrayList sourcepathClasspaths,
-		ArrayList classpaths,
-		ArrayList extdirsClasspaths,
-		ArrayList endorsedDirClasspaths,
+		ArrayList<String> sourcepathClasspaths,
+		ArrayList<String> classpaths,
+		String modulePath,
+		String moduleSourcepath,
+		ArrayList<String> extdirsClasspaths,
+		ArrayList<String> endorsedDirClasspaths,
 		String customEncoding) {
 
+	if (this.complianceLevel == 0) {
+		String version = this.options.get(CompilerOptions.OPTION_Compliance);
+		this.complianceLevel = CompilerOptions.versionToJdkLevel(version);
+	}
+
+	if (this.complianceLevel > ClassFileConstants.JDK1_8) {
+		if (bootclasspaths != null && bootclasspaths.size() > 0)
+			throw new IllegalArgumentException(
+				this.bind("configure.unsupportedOption", "-bootclasspath")); //$NON-NLS-1$ //$NON-NLS-2$
+		if (extdirsClasspaths != null && extdirsClasspaths.size() > 0)
+			throw new IllegalArgumentException(
+				this.bind("configure.unsupportedOption", "-extdirs")); //$NON-NLS-1$ //$NON-NLS-2$
+		if (endorsedDirClasspaths != null && endorsedDirClasspaths.size() > 0)
+			throw new IllegalArgumentException(
+				this.bind("configure.unsupportedOption", "-endorseddirs")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 	// process bootclasspath, classpath and sourcepaths
- 	bootclasspaths = handleBootclasspath(bootclasspaths, customEncoding);
+ 	ArrayList<Classpath> allPaths = handleBootclasspath(bootclasspaths, customEncoding);
 
-	classpaths = handleClasspath(classpaths, customEncoding);
+	List<FileSystem.Classpath> cp = handleClasspath(classpaths, customEncoding);
 
+	List<FileSystem.Classpath> mp = handleModulepath(modulePath);
+
+	List<FileSystem.Classpath> msp = handleModuleSourcepath(moduleSourcepath);
+
+	ArrayList<FileSystem.Classpath> sourcepaths = new ArrayList<>();
 	if (sourcepathClasspathArg != null) {
-		processPathEntries(DEFAULT_SIZE_CLASSPATH, sourcepathClasspaths,
+		processPathEntries(DEFAULT_SIZE_CLASSPATH, sourcepaths,
 			sourcepathClasspathArg, customEncoding, true, false);
 	}
 
@@ -4727,9 +5104,9 @@ protected void setPaths(ArrayList bootclasspaths,
 	 * - else java.ext.dirs if defined;
 	 * - else default extensions directory for the platform.
 	 */
-	extdirsClasspaths = handleExtdirs(extdirsClasspaths);
+	List<FileSystem.Classpath> extdirs = handleExtdirs(extdirsClasspaths);
 
-	endorsedDirClasspaths = handleEndorseddirs(endorsedDirClasspaths);
+	List<FileSystem.Classpath> endorsed = handleEndorseddirs(endorsedDirClasspaths);
 
 	/*
 	 * Concatenate classpath entries
@@ -4739,20 +5116,23 @@ protected void setPaths(ArrayList bootclasspaths,
 	 * entries are searched for both sources and binaries except
 	 * the sourcepath entries which are searched for sources only.
 	 */
-	bootclasspaths.addAll(0, endorsedDirClasspaths);
-	bootclasspaths.addAll(extdirsClasspaths);
-	bootclasspaths.addAll(sourcepathClasspaths);
-	bootclasspaths.addAll(classpaths);
-	classpaths = bootclasspaths;
-	classpaths = FileSystem.ClasspathNormalizer.normalize(classpaths);
-	this.checkedClasspaths = new FileSystem.Classpath[classpaths.size()];
-	classpaths.toArray(this.checkedClasspaths);
+	allPaths.addAll(0, endorsed);
+	allPaths.addAll(extdirs);
+	allPaths.addAll(sourcepaths);
+	allPaths.addAll(cp);
+	allPaths.addAll(mp);
+	allPaths.addAll(msp);
+	allPaths = FileSystem.ClasspathNormalizer.normalize(allPaths);
+	this.checkedClasspaths = new FileSystem.Classpath[allPaths.size()];
+	allPaths.toArray(this.checkedClasspaths);
 	this.logger.logClasspath(this.checkedClasspaths);
 
 	if (this.annotationPaths != null && CompilerOptions.ENABLED.equals(this.options.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis))) {
-		for (FileSystem.Classpath cp : this.checkedClasspaths) {
-			if (cp instanceof ClasspathJar)
-				((ClasspathJar) cp).annotationPaths = this.annotationPaths;
+		for (FileSystem.Classpath c : this.checkedClasspaths) {
+			if (c instanceof ClasspathJar)
+				((ClasspathJar) c).annotationPaths = this.annotationPaths;
+			else if (c instanceof ClasspathJrt)
+				((ClasspathJrt) c).annotationPaths = this.annotationPaths;
 		}
 	}
 }
@@ -4847,6 +5227,26 @@ protected void validateOptions(boolean didSpecifyCompliance) {
 				this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_8);
 				if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
 			}
+		} else if (CompilerOptions.VERSION_9.equals(version)) {
+			if (this.didSpecifySource) {
+				Object source = this.options.get(CompilerOptions.OPTION_Source);
+				if (CompilerOptions.VERSION_1_3.equals(source)
+						|| CompilerOptions.VERSION_1_4.equals(source)) {
+					if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
+				} else if (CompilerOptions.VERSION_1_5.equals(source)
+						|| CompilerOptions.VERSION_1_6.equals(source)) {
+					if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_6);
+				} else if (CompilerOptions.VERSION_1_7.equals(source)) {
+					if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
+				} else if (CompilerOptions.VERSION_1_8.equals(source)) {
+					if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+				} else if (CompilerOptions.VERSION_9.equals(source)) {
+					if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_9);
+				}
+			} else {
+				this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_9);
+				if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_9);
+			}
 		}
 	} else if (this.didSpecifySource) {
 		Object version = this.options.get(CompilerOptions.OPTION_Source);
@@ -4870,25 +5270,28 @@ protected void validateOptions(boolean didSpecifyCompliance) {
 	}
 
 	final String sourceVersion = this.options.get(CompilerOptions.OPTION_Source);
-	final String compliance = this.options.get(CompilerOptions.OPTION_Compliance);
+	if (this.complianceLevel == 0) {
+		final String compliance = this.options.get(CompilerOptions.OPTION_Compliance);
+		this.complianceLevel = CompilerOptions.versionToJdkLevel(compliance);
+	}
 	if (sourceVersion.equals(CompilerOptions.VERSION_1_8)
-			&& CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK1_8) {
+			&& this.complianceLevel < ClassFileConstants.JDK1_8) {
 		// compliance must be 1.8 if source is 1.8
 		throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForSource", this.options.get(CompilerOptions.OPTION_Compliance), CompilerOptions.VERSION_1_8)); //$NON-NLS-1$
 	} else if (sourceVersion.equals(CompilerOptions.VERSION_1_7)
-			&& CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK1_7) {
+			&& this.complianceLevel < ClassFileConstants.JDK1_7) {
 		// compliance must be 1.7 if source is 1.7
 		throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForSource", this.options.get(CompilerOptions.OPTION_Compliance), CompilerOptions.VERSION_1_7)); //$NON-NLS-1$
 	} else if (sourceVersion.equals(CompilerOptions.VERSION_1_6)
-			&& CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK1_6) {
+			&& this.complianceLevel < ClassFileConstants.JDK1_6) {
 		// compliance must be 1.6 if source is 1.6
 		throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForSource", this.options.get(CompilerOptions.OPTION_Compliance), CompilerOptions.VERSION_1_6)); //$NON-NLS-1$
 	} else if (sourceVersion.equals(CompilerOptions.VERSION_1_5)
-			&& CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK1_5) {
+			&& this.complianceLevel < ClassFileConstants.JDK1_5) {
 		// compliance must be 1.5 if source is 1.5
 		throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForSource", this.options.get(CompilerOptions.OPTION_Compliance), CompilerOptions.VERSION_1_5)); //$NON-NLS-1$
 	} else if (sourceVersion.equals(CompilerOptions.VERSION_1_4)
-			&& CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK1_4) {
+			&& this.complianceLevel < ClassFileConstants.JDK1_4) {
 		// compliance must be 1.4 if source is 1.4
 		throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForSource", this.options.get(CompilerOptions.OPTION_Compliance), CompilerOptions.VERSION_1_4)); //$NON-NLS-1$
 	}
@@ -4906,7 +5309,7 @@ protected void validateOptions(boolean didSpecifyCompliance) {
 			if (this.didSpecifySource && CompilerOptions.versionToJdkLevel(sourceVersion) >= ClassFileConstants.JDK1_4) {
 				throw new IllegalArgumentException(this.bind("configure.incompatibleSourceForCldcTarget", targetVersion, sourceVersion)); //$NON-NLS-1$
 			}
-			if (CompilerOptions.versionToJdkLevel(compliance) >= ClassFileConstants.JDK1_5) {
+			if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
 				throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForCldcTarget", targetVersion, sourceVersion)); //$NON-NLS-1$
 			}
 		} else {
@@ -4936,7 +5339,7 @@ protected void validateOptions(boolean didSpecifyCompliance) {
 				throw new IllegalArgumentException(this.bind("configure.incompatibleTargetForSource", targetVersion, CompilerOptions.VERSION_1_4)); //$NON-NLS-1$
 			}
 			// target cannot be greater than compliance level
-			if (CompilerOptions.versionToJdkLevel(compliance) < CompilerOptions.versionToJdkLevel(targetVersion)){
+			if (this.complianceLevel < CompilerOptions.versionToJdkLevel(targetVersion)){
 				throw new IllegalArgumentException(this.bind("configure.incompatibleComplianceForTarget", this.options.get(CompilerOptions.OPTION_Compliance), targetVersion)); //$NON-NLS-1$
 			}
 		}

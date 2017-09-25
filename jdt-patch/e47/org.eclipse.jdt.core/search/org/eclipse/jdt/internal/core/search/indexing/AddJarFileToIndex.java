@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,15 +23,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.parser.Scanner;
-import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
-import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.index.Index;
@@ -40,11 +35,10 @@ import org.eclipse.jdt.internal.core.search.JavaSearchDocument;
 import org.eclipse.jdt.internal.core.search.processing.JobManager;
 
 @SuppressWarnings("rawtypes")
-class AddJarFileToIndex extends IndexRequest {
+class AddJarFileToIndex extends BinaryContainer {
 
 	private static final char JAR_SEPARATOR = IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR.charAt(0);
 	IFile resource;
-	Scanner scanner;
 	private IndexLocation indexFileURL;
 	private final boolean forceIndexUpdate;
 
@@ -180,7 +174,7 @@ class AddJarFileToIndex extends IndexRequest {
 						// iterate each entry to index it
 						ZipEntry ze = (ZipEntry) e.nextElement();
 						String zipEntryName = ze.getName();
-						if (Util.isClassFileName(zipEntryName) && isValidPackageNameForClass(zipEntryName))
+						if (Util.isClassFileName(zipEntryName) && isValidPackageNameForClassOrisModule(zipEntryName))
 								// the class file may not be there if the package name is not valid
 							indexedFileNames.put(zipEntryName, EXISTS);
 					}
@@ -229,7 +223,7 @@ class AddJarFileToIndex extends IndexRequest {
 					ZipEntry ze = (ZipEntry) e.nextElement();
 					String zipEntryName = ze.getName();
 					if (Util.isClassFileName(zipEntryName) && 
-							isValidPackageNameForClass(zipEntryName)) {
+							isValidPackageNameForClassOrisModule(zipEntryName)) {
 						// index only classes coming from valid packages - https://bugs.eclipse.org/bugs/show_bug.cgi?id=293861
 						final byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getZipEntryByteContent(ze, zip);
 						JavaSearchDocument entryDocument = new JavaSearchDocument(ze, zipFilePath, classFileBytes, participant);
@@ -276,43 +270,6 @@ class AddJarFileToIndex extends IndexRequest {
 			return super.getJobFamily();
 		return this.containerPath.toOSString(); // external jar
 	}	
-	private boolean isIdentifier() throws InvalidInputException {
-		switch(this.scanner.scanIdentifier()) {
-			// assert and enum will not be recognized as java identifiers 
-			// in 1.7 mode, which are in 1.3.
-			case TerminalTokens.TokenNameIdentifier:
-			case TerminalTokens.TokenNameassert:
-			case TerminalTokens.TokenNameenum:
-				return true;
-			default:
-				return false;
-		}
-	}
-	private  boolean isValidPackageNameForClass(String className) {
-		char[] classNameArray = className.toCharArray();
-		// use 1.7 as the source level as there are more valid identifiers in 1.7 mode
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673
-		if (this.scanner == null)
-			this.scanner = new Scanner(false /* comment */, true /* whitespace */, false /* nls */,
-					ClassFileConstants.JDK1_7/* sourceLevel */, null/* taskTag */, null/* taskPriorities */, true /* taskCaseSensitive */);
-		
-		this.scanner.setSource(classNameArray); 
-		this.scanner.eofPosition = classNameArray.length - SuffixConstants.SUFFIX_CLASS.length;
-		try {
-			if (isIdentifier()) {
-				while (this.scanner.eofPosition > this.scanner.currentPosition) {
-					if (this.scanner.getNextChar() != '/' || this.scanner.eofPosition <= this.scanner.currentPosition) {
-						return false;
-					}
-					if (!isIdentifier()) return false;
-				}
-				return true;
-			}
-		} catch (InvalidInputException e) {
-			// invalid class name
-		}
-		return false;
-	}
 	protected Integer updatedIndexState() {
 
 		Integer updateState = null;

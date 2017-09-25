@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMemberValuePair;
 import org.eclipse.jdt.core.ITypeParameter;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -252,6 +253,10 @@ protected PackageDeclaration createPackageDeclaration(JavaElement parent, String
 protected SourceType createTypeHandle(JavaElement parent, TypeInfo typeInfo) {
 	String nameString= new String(typeInfo.name);
 	return new SourceType(parent, nameString);
+}
+protected SourceModule createModuleHandle(JavaElement parent, ModuleInfo modInfo) {
+	String nameString= new String(modInfo.moduleName);
+	return new org.eclipse.jdt.internal.core.SourceModule(parent, nameString);
 }
 protected TypeParameter createTypeParameter(JavaElement parent, String name) {
 	return new TypeParameter(parent, name);
@@ -491,7 +496,17 @@ private LocalVariable[] acceptMethodParameters(Argument[] arguments, JavaElement
 	}
 	return result;
 }
+public void enterModule(ModuleInfo info) {
 
+	Object parentInfo = this.infoStack.peek();
+	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+	JavaElement handle = createModuleHandle(parentHandle, info);
+	
+	this.infoStack.push(info);
+	this.handleStack.push(handle);
+
+	addToChildren(parentInfo, handle);
+}
 /**
  * @see ISourceElementRequestor
  */
@@ -499,15 +514,26 @@ public void enterType(TypeInfo typeInfo) {
 
 	Object parentInfo = this.infoStack.peek();
 	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
-	SourceType handle = createTypeHandle(parentHandle, typeInfo); //NB: occurenceCount is computed in resolveDuplicates
-	resolveDuplicates(handle);
-
+	JavaElement handle = createTypeHandle(parentHandle, typeInfo);
+	 //NB: occurenceCount is computed in resolveDuplicates
+	resolveDuplicates((SourceType) handle);
 	this.infoStack.push(typeInfo);
 	this.handleStack.push(handle);
 
 	if (parentHandle.getElementType() == IJavaElement.TYPE)
 		((TypeInfo) parentInfo).childrenCategories.put(handle, typeInfo.categories);
 	addToChildren(parentInfo, handle);
+}
+private org.eclipse.jdt.internal.core.ModuleDescriptionInfo createModuleInfo(ModuleInfo modInfo, org.eclipse.jdt.internal.core.SourceModule handle) {
+	org.eclipse.jdt.internal.core.ModuleDescriptionInfo info = org.eclipse.jdt.internal.core.ModuleDescriptionInfo.createModule(modInfo.node);
+	info.setHandle(handle);
+	info.setSourceRangeStart(modInfo.declarationStart);
+	info.setFlags(modInfo.modifiers);
+	info.setNameSourceStart(modInfo.nameSourceStart);
+	info.setNameSourceEnd(modInfo.nameSourceEnd);
+	this.newElements.put(handle, info);
+
+	return info;
 }
 private SourceTypeElementInfo createTypeInfo(TypeInfo typeInfo, SourceType handle) {
 	SourceTypeElementInfo info =
@@ -702,16 +728,34 @@ public void exitMethod(int declarationEnd, Expression defaultValue) {
 	this.handleStack.pop();
 	this.infoStack.pop();
 }
+public void exitModule(int declarationEnd) {
+	ModuleInfo moduleInfo = (ModuleInfo) this.infoStack.peek();
+	SourceModule handle = (SourceModule) this.handleStack.peek();
+	JavaProject proj = (JavaProject) handle.getAncestor(IJavaElement.JAVA_PROJECT);
+	if (proj != null) {
+		try {
+			org.eclipse.jdt.internal.core.SourceModule moduleDecl = handle;
+			org.eclipse.jdt.internal.core.ModuleDescriptionInfo info = createModuleInfo(moduleInfo, moduleDecl);
+			info.setSourceRangeEnd(declarationEnd);
+			info.children = getChildren(info);
+			this.unitInfo.setModule(moduleDecl);
+			proj.setModuleDescription(moduleDecl);
+		} catch (JavaModelException e) {
+			// Unexpected while creating
+		}
+	}
+	this.handleStack.pop();
+	this.infoStack.pop();
+}
 /**
  * @see ISourceElementRequestor
  */
 public void exitType(int declarationEnd) {
-	SourceType handle = (SourceType) this.handleStack.peek();
 	TypeInfo typeInfo = (TypeInfo) this.infoStack.peek();
+	SourceType handle = (SourceType) this.handleStack.peek();
 	SourceTypeElementInfo info = createTypeInfo(typeInfo, handle);
 	info.setSourceRangeEnd(declarationEnd);
 	info.children = getChildren(typeInfo);
-	
 	this.handleStack.pop();
 	this.infoStack.pop();
 }

@@ -255,7 +255,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 			return;
 		}
 		for (int j = 0, length = frags.length; j < length; j++) {
-			fragmentsCache.add(((PackageFragment) frags[j]).names);
+			if (frags[j] instanceof PackageFragment) fragmentsCache.add(((PackageFragment) frags[j]).names);
 		}
 	}
 

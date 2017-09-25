@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,20 +18,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
-import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
@@ -44,7 +49,7 @@ protected File file;
 protected ZipFile zipFile;
 protected ZipFile annotationZipFile;
 protected boolean closeZipFileAtEnd;
-protected Hashtable packageCache;
+private Set<String> packageCache;
 protected List<String> annotationPaths;
 
 public ClasspathJar(File file, boolean closeZipFileAtEnd,
@@ -54,14 +59,14 @@ public ClasspathJar(File file, boolean closeZipFileAtEnd,
 	this.closeZipFileAtEnd = closeZipFileAtEnd;
 }
 
-public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
+public List<Classpath> fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
 	// expected to be called once only - if multiple calls desired, consider
 	// using a cache
 	InputStream inputStream = null;
 	try {
 		initialize();
-		ArrayList result = new ArrayList();
-		ZipEntry manifest = this.zipFile.getEntry("META-INF/MANIFEST.MF"); //$NON-NLS-1$
+		ArrayList<Classpath> result = new ArrayList<>();
+		ZipEntry manifest = this.zipFile.getEntry(TypeConstants.META_INF_MANIFEST_MF);
 		if (manifest != null) { // non-null implies regular file
 			inputStream = this.zipFile.getInputStream(manifest);
 			ManifestAnalyzer analyzer = new ManifestAnalyzer();
@@ -85,7 +90,9 @@ public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemRe
 			}
 		}
 		return result;
-	} catch (IOException e) {
+	} catch (IOException | IllegalArgumentException e) {
+		// JRE 9 could throw an IAE if the path is incorrect. We are to ignore such
+		// linked jars
 		return null;
 	} finally {
 		if (inputStream != null) {
@@ -97,16 +104,24 @@ public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemRe
 		}
 	}
 }
-public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String qualifiedBinaryFileName) {
-	return findClass(typeName, qualifiedPackageName, qualifiedBinaryFileName, false);
+public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
+	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
 }
-public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
-	if (!isPackage(qualifiedPackageName))
+public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+	if (!isPackage(qualifiedPackageName, moduleName))
 		return null; // most common case
 
 	try {
 		IBinaryType reader = ClassFileReader.read(this.zipFile, qualifiedBinaryFileName);
 		if (reader != null) {
+			char[] modName = this.module == null ? null : this.module.name();
+			if (reader instanceof ClassFileReader) {
+				ClassFileReader classReader = (ClassFileReader) reader;
+				if (classReader.moduleName == null)
+					classReader.moduleName = modName;
+				else
+					modName = classReader.moduleName;
+			}
 			searchPaths:
 			if (this.annotationPaths != null) {
 				String qualifiedClassName = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length()-SuffixConstants.EXTENSION_CLASS.length()-1);
@@ -127,7 +142,7 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 				// location is configured for external annotations, but no .eea found, decorate in order to answer NO_EEA_FILE:
 				reader = new ExternalAnnotationDecorator(reader, null);
 			}
-			return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName));
+			return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), modName);
 		}
 	} catch(ClassFormatException e) {
 		// treat as if class file is missing
@@ -140,17 +155,17 @@ public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageN
 public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 	return this.zipFile.getEntry(qualifiedTypeName+ExternalAnnotationProvider.ANNOTATION_FILE_SUFFIX) != null; 
 }
-public char[][][] findTypeNames(String qualifiedPackageName) {
-	if (!isPackage(qualifiedPackageName))
+public char[][][] findTypeNames(final String qualifiedPackageName, String moduleName) {
+	if (!isPackage(qualifiedPackageName, moduleName))
 		return null; // most common case
-
-	ArrayList answers = new ArrayList();
+	final char[] packageArray = qualifiedPackageName.toCharArray();
+	final ArrayList answers = new ArrayList();
 	nextEntry : for (Enumeration e = this.zipFile.entries(); e.hasMoreElements(); ) {
 		String fileName = ((ZipEntry) e.nextElement()).getName();
 
 		// add the package name & all of its parent packages
 		int last = fileName.lastIndexOf('/');
-		while (last > 0) {
+		if (last > 0) {
 			// extract the package name
 			String packageName = fileName.substring(0, last);
 			if (!qualifiedPackageName.equals(packageName))
@@ -158,7 +173,6 @@ public char[][][] findTypeNames(String qualifiedPackageName) {
 			int indexOfDot = fileName.lastIndexOf('.');
 			if (indexOfDot != -1) {
 				String typeName = fileName.substring(last + 1, indexOfDot);
-				char[] packageArray = packageName.toCharArray();
 				answers.add(
 					CharOperation.arrayConcat(
 						CharOperation.splitOn('/', packageArray),
@@ -170,37 +184,72 @@ public char[][][] findTypeNames(String qualifiedPackageName) {
 	if (size != 0) {
 		char[][][] result = new char[size][][];
 		answers.toArray(result);
-		return null;
+		return result;
 	}
 	return null;
 }
+
 public void initialize() throws IOException {
 	if (this.zipFile == null) {
 		this.zipFile = new ZipFile(this.file);
 	}
 }
-public boolean isPackage(String qualifiedPackageName) {
-	if (this.packageCache != null)
-		return this.packageCache.containsKey(qualifiedPackageName);
-
-	this.packageCache = new Hashtable(41);
-	this.packageCache.put(Util.EMPTY_STRING, Util.EMPTY_STRING);
-
-	nextEntry : for (Enumeration e = this.zipFile.entries(); e.hasMoreElements(); ) {
-		String fileName = ((ZipEntry) e.nextElement()).getName();
-
-		// add the package name & all of its parent packages
-		int last = fileName.lastIndexOf('/');
-		while (last > 0) {
-			// extract the package name
-			String packageName = fileName.substring(0, last);
-			if (this.packageCache.containsKey(packageName))
-				continue nextEntry;
-			this.packageCache.put(packageName, packageName);
-			last = packageName.lastIndexOf('/');
-		}
+void acceptModule(ClassFileReader reader) {
+	if (reader != null) {
+		acceptModule(reader.getModuleDeclaration());
 	}
-	return this.packageCache.containsKey(qualifiedPackageName);
+}
+void acceptModule(byte[] content) {
+	if (content == null) 
+		return;
+	ClassFileReader reader = null;
+	try {
+		reader = new ClassFileReader(content, IModule.MODULE_INFO_CLASS.toCharArray());
+	} catch (ClassFormatException e) {
+		e.printStackTrace();
+	}
+	if (reader != null && reader.getModuleDeclaration() != null) {
+		acceptModule(reader);
+	}
+}
+protected void addToPackageCache(String fileName, boolean endsWithSep) {
+	int last = endsWithSep ? fileName.length() : fileName.lastIndexOf('/');
+	while (last > 0) {
+		// extract the package name
+		String packageName = fileName.substring(0, last);
+		if (this.packageCache.contains(packageName))
+			return;
+		this.packageCache.add(packageName);
+		last = packageName.lastIndexOf('/');
+	}
+}
+public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
+	if (this.packageCache != null)
+		return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
+
+	this.packageCache = new HashSet<>(41);
+	this.packageCache.add(Util.EMPTY_STRING);
+	
+	for (Enumeration e = this.zipFile.entries(); e.hasMoreElements(); ) {
+		String fileName = ((ZipEntry) e.nextElement()).getName();
+		addToPackageCache(fileName, false);
+	}
+	return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
+}
+@Override
+public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
+	qualifiedPackageName += '/';
+	for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
+		String fileName = e.nextElement().getName();
+		if (fileName.startsWith(qualifiedPackageName) && fileName.length() > qualifiedPackageName.length()) {
+			String tail = fileName.substring(qualifiedPackageName.length());
+			if (tail.indexOf('/') != -1)
+				continue;
+			if (tail.toLowerCase().endsWith(SUFFIX_STRING_class))
+				return true;
+		}
+	}	
+	return false;
 }
 public void reset() {
 	if (this.closeZipFileAtEnd) {
@@ -222,6 +271,7 @@ public void reset() {
 		}
 	}
 	this.packageCache = null;
+	this.annotationPaths = null;
 }
 public String toString() {
 	return "Classpath for jar file " + this.file.getPath(); //$NON-NLS-1$
@@ -250,5 +300,21 @@ public String getPath() {
 }
 public int getMode() {
 	return BINARY;
+}
+
+public IModule getModule() {
+	if (this.isAutoModule && this.module == null) {
+		Manifest manifest = null;
+		try {
+			initialize();
+			ZipEntry entry = this.zipFile.getEntry(TypeConstants.META_INF_MANIFEST_MF);
+			if (entry != null)
+				manifest = new Manifest(this.zipFile.getInputStream(entry));
+		} catch (IOException e) {
+			// no usable manifest 
+		}
+		return this.module = IModule.createAutomatic(this.file.getName(), true, manifest);
+	}
+	return this.module;
 }
 }

@@ -196,7 +196,7 @@ public abstract class VariableDeclaration extends ASTNode {
 	 */
 	VariableDeclaration(AST ast) {
 		super(ast);
-		if (ast.apiLevel >= AST.JLS8) {
+		if (ast.apiLevel >= AST.JLS8_INTERNAL) {
 			this.extraDimensions = new ASTNode.NodeList(getExtraDimensions2Property());
 		}
 	}

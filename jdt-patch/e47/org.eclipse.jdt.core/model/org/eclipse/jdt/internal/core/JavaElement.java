@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -87,6 +87,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	public static final char JEM_INITIALIZER = '|';
 	public static final char JEM_COMPILATIONUNIT = '{';
 	public static final char JEM_CLASSFILE = '(';
+	public static final char JEM_MODULAR_CLASSFILE = '\'';
 	public static final char JEM_TYPE = '[';
 	public static final char JEM_PACKAGEDECLARATION = '%';
 	public static final char JEM_IMPORTDECLARATION = '#';
@@ -97,6 +98,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	public static final char JEM_LAMBDA_EXPRESSION = ')';
 	public static final char JEM_LAMBDA_METHOD = '&';
 	public static final char JEM_STRING = '"';
+	public static final char JEM_MODULE = '`';
 	
 	/**
 	 * Before ')', '&' and '"' became the newest additions as delimiters, the former two
@@ -121,6 +123,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	 */
 	protected JavaElement parent;
 
+	protected static final String[] NO_STRINGS = new String[0];
 	protected static final JavaElement[] NO_ELEMENTS = new JavaElement[0];
 	protected static final Object NO_INFO = new Object();
 	
@@ -201,6 +204,7 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 				case JEM_INITIALIZER:
 				case JEM_COMPILATIONUNIT:
 				case JEM_CLASSFILE:
+				case JEM_MODULAR_CLASSFILE:
 				case JEM_TYPE:
 				case JEM_PACKAGEDECLARATION:
 				case JEM_IMPORTDECLARATION:

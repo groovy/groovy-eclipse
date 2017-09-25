@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.ClasspathLocation;
@@ -30,7 +31,7 @@ import org.eclipse.jdt.internal.core.util.ResourceCompilationUnit;
 import org.eclipse.jdt.internal.core.util.Util;
 
 @SuppressWarnings("rawtypes")
-public class ClasspathSourceDirectory extends ClasspathLocation {
+public class ClasspathSourceDirectory extends ClasspathLocation implements IModulePathEntry {
 
 	IContainer sourceFolder;
 	SimpleLookupTable directoryCache;
@@ -106,12 +107,16 @@ public boolean equals(Object o) {
 	return this.sourceFolder.equals(((ClasspathSourceDirectory) o).sourceFolder);
 }
 
-public NameEnvironmentAnswer findClass(String sourceFileWithoutExtension, String qualifiedPackageName, String qualifiedSourceFileWithoutExtension) {
+public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName);
+}
+public NameEnvironmentAnswer findClass(String sourceFileWithoutExtension, String qualifiedPackageName, String moduleName, String qualifiedSourceFileWithoutExtension) {
 	SimpleLookupTable dirTable = directoryTable(qualifiedPackageName);
 	if (dirTable != null && dirTable.elementSize > 0) {
 		IFile file = (IFile) dirTable.get(sourceFileWithoutExtension);
 		if (file != null) {
-			return new NameEnvironmentAnswer(new ResourceCompilationUnit(file), null /* no access restriction */);
+			return new NameEnvironmentAnswer(new ResourceCompilationUnit(file, 
+					this.module == null ? null : this.module.name()), null /* no access restriction */);
 		}
 	}
 	return null;
@@ -125,8 +130,19 @@ public int hashCode() {
 	return this.sourceFolder == null ? super.hashCode() : this.sourceFolder.hashCode();
 }
 
-public boolean isPackage(String qualifiedPackageName) {
+public boolean isPackage(String qualifiedPackageName, String moduleName) {
+	if (moduleName != null) {
+		if (this.module == null || !moduleName.equals(String.valueOf(this.module.name())))
+			return false;
+	}
 	return directoryTable(qualifiedPackageName) != null;
+}
+@Override
+public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
+	SimpleLookupTable dirTable = directoryTable(qualifiedPackageName);
+	if (dirTable != null && dirTable.elementSize > 0)
+		return true;
+	return false;
 }
 
 public void reset() {
@@ -140,5 +156,4 @@ public String toString() {
 public String debugPathString() {
 	return this.sourceFolder.getFullPath().toString();
 }
-
 }

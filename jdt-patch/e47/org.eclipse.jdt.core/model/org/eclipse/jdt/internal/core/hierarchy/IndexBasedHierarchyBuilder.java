@@ -234,7 +234,8 @@ private void buildForProject(JavaProject project, ArrayList potentialSubtypes, o
 				// top level or member type
 				if (!inProjectOfFocusType) {
 					char[] typeQualifiedName = focusType.getTypeQualifiedName('.').toCharArray();
-					String[] packageName = ((PackageFragment) focusType.getPackageFragment()).names;
+					PackageFragment fragment = (PackageFragment) focusType.getPackageFragment();
+					String[] packageName = fragment.names;
 					if (searchableEnvironment.findType(typeQualifiedName, Util.toCharArrays(packageName)) == null) {
 						// focus type is not visible in this project: no need to go further
 						return;

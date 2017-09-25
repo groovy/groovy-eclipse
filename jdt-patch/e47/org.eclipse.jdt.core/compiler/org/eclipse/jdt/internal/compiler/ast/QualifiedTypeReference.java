@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -111,11 +111,22 @@ public class QualifiedTypeReference extends TypeReference {
 			return (ReferenceBinding) binding; // not found
 		}
 	    PackageBinding packageBinding = binding == null ? null : (PackageBinding) binding;
+	    int typeStart = packageBinding == null ? 0 : packageBinding.compoundName.length;
+	    
+	    if (packageBinding != null) {
+	    	PackageBinding uniquePackage = packageBinding.getVisibleFor(scope.module());
+	    	if (uniquePackage instanceof SplitPackageBinding) {
+	    		SplitPackageBinding splitPackage = (SplitPackageBinding) uniquePackage;
+    			scope.problemReporter().conflictingPackagesFromModules(splitPackage, this.sourceStart, (int)this.sourcePositions[typeStart-1]);
+    			this.resolvedType = new ProblemReferenceBinding(this.tokens, null, ProblemReasons.Ambiguous);
+    			return null;
+	    	}
+	    }
 	    rejectAnnotationsOnPackageQualifiers(scope, packageBinding);
 
 	    boolean isClassScope = scope.kind == Scope.CLASS_SCOPE;
 	    ReferenceBinding qualifiedType = null;
-		for (int i = packageBinding == null ? 0 : packageBinding.compoundName.length, max = this.tokens.length, last = max-1; i < max; i++) {
+		for (int i = typeStart, max = this.tokens.length, last = max-1; i < max; i++) {
 			findNextTypeBinding(i, scope, packageBinding);
 			if (!this.resolvedType.isValidBinding())
 				return this.resolvedType;
@@ -162,10 +173,13 @@ public class QualifiedTypeReference extends TypeReference {
 	}
 
 	void recordResolution(LookupEnvironment env, TypeBinding typeFound) {
-		if (typeFound != null && typeFound.isValidBinding())
-			for (int i = 0; i < env.resolutionListeners.length; i++) {
-				env.resolutionListeners[i].recordResolution(this, typeFound);
+		if (typeFound != null && typeFound.isValidBinding()) {
+			synchronized (env.root) {
+				for (int i = 0; i < env.root.resolutionListeners.length; i++) {
+					env.root.resolutionListeners[i].recordResolution(this, typeFound);
+				}
 			}
+		}
 	}
 
 	public char[][] getTypeName(){

@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Terry Parker <tparker@google.com> - DeltaProcessor misses state changes in archive files, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=357425
@@ -64,6 +64,7 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.ManifestAnalyzer;
 import org.eclipse.jdt.internal.core.nd.IReader;
 import org.eclipse.jdt.internal.core.nd.java.JavaIndex;
@@ -1000,7 +1001,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		try {
 			zip = manager.getZipFile(jarPath);
-			ZipEntry manifest = zip.getEntry("META-INF/MANIFEST.MF"); //$NON-NLS-1$
+			ZipEntry manifest = zip.getEntry(TypeConstants.META_INF_MANIFEST_MF);
 			if (manifest == null) {
 				return null;
 			}
@@ -1363,14 +1364,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	 * @return the attached external annotation path, or null.
 	 */
 	static String getRawExternalAnnotationPath(IClasspathEntry entry) {
-		IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
-		for (int i = 0, length = extraAttributes.length; i < length; i++) {
-			IClasspathAttribute attribute = extraAttributes[i];
-			if (IClasspathAttribute.EXTERNAL_ANNOTATION_PATH.equals(attribute.getName())) {
-				return attribute.getValue();
-			}
-		}
-		return null;
+		return getExtraAttribute(entry, IClasspathAttribute.EXTERNAL_ANNOTATION_PATH);
 	}
 
 	private static void invalidExternalAnnotationPath(IProject project) {
@@ -1408,6 +1402,17 @@ public class ClasspathEntry implements IClasspathEntry {
 						new String[] { annotationPath.toString(), project.getName(), this.path.toString()}));
 	}
 
+	public static String getExtraAttribute(IClasspathEntry entry, String attributeName) {
+		IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
+		for (int i = 0, length = extraAttributes.length; i < length; i++) {
+			IClasspathAttribute attribute = extraAttributes[i];
+			if (attributeName.equals(attribute.getName())) {
+				return attribute.getValue();
+			}
+		}
+		return null;
+	}
+
 	public IClasspathEntry getReferencingEntry() {
 		return this.referencingEntry;
 	}
@@ -1430,6 +1435,14 @@ public class ClasspathEntry implements IClasspathEntry {
 		for (int i = 0, length = this.extraAttributes.length; i < length; i++) {
 			IClasspathAttribute attribute = this.extraAttributes[i];
 			if (IClasspathAttribute.OPTIONAL.equals(attribute.getName()) && "true".equals(attribute.getValue())) //$NON-NLS-1$
+				return true;
+		}
+		return false;
+	}
+	public boolean isModular() {
+		for (int i = 0, length = this.extraAttributes.length; i < length; i++) {
+			IClasspathAttribute attribute = this.extraAttributes[i];
+			if (IClasspathAttribute.MODULE.equals(attribute.getName()) && "true".equals(attribute.getValue())) //$NON-NLS-1$
 				return true;
 		}
 		return false;

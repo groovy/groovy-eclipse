@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,9 +47,7 @@ public class TryStatement extends SubRoutineStatement {
 	static final char[] SECRET_CAUGHT_THROWABLE_VARIABLE_NAME = " caughtThrowable".toCharArray(); //$NON-NLS-1$;
 	static final char[] SECRET_RETURN_VALUE_NAME = " returnValue".toCharArray(); //$NON-NLS-1$
 
-	private static LocalDeclaration [] NO_RESOURCES = new LocalDeclaration[0];
-	public LocalDeclaration[] resources = NO_RESOURCES;
-
+	public Statement[] resources = new Statement[0];
 	public Block tryBlock;
 	public Block[] catchBlocks;
 
@@ -146,17 +144,29 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 		FlowInfo tryInfo = flowInfo.copy();
 		for (int i = 0; i < resourcesLength; i++) {
-			final LocalDeclaration resource = this.resources[i];
+			final Statement resource = this.resources[i];			
 			tryInfo = resource.analyseCode(currentScope, handlingContext, tryInfo);
 			this.postResourcesInitStateIndexes[i] = currentScope.methodScope().recordInitializationStates(tryInfo);
-			LocalVariableBinding resourceBinding = resource.binding;
-			resourceBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
-			if (resourceBinding.closeTracker != null) {
-				// this was false alarm, we don't need to track the resource
-				resourceBinding.closeTracker.withdraw();
-				resourceBinding.closeTracker = null;
+			TypeBinding resolvedType = null;
+			LocalVariableBinding localVariableBinding = null;
+			if (resource instanceof LocalDeclaration) {
+				localVariableBinding = ((LocalDeclaration) resource).binding;
+				resolvedType = localVariableBinding.type;
+			} else { //expression
+				if (resource instanceof NameReference && ((NameReference) resource).binding instanceof LocalVariableBinding) {
+					localVariableBinding = (LocalVariableBinding) ((NameReference) resource).binding;
+				}
+				resolvedType = ((Expression) resource).resolvedType;
 			}
-			MethodBinding closeMethod = findCloseMethod(resource, resourceBinding);
+			if (localVariableBinding != null) {
+				localVariableBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
+				if (localVariableBinding.closeTracker != null) {
+					// this was false alarm, we don't need to track the resource
+					localVariableBinding.closeTracker.withdraw();
+					localVariableBinding.closeTracker = null;
+				}
+			}
+			MethodBinding closeMethod = findCloseMethod(resource, resolvedType);
 			if (closeMethod != null && closeMethod.isValidBinding() && closeMethod.returnType.id == TypeIds.T_void) {
 				ReferenceBinding[] thrownExceptions = closeMethod.thrownExceptions;
 				for (int j = 0, length = thrownExceptions.length; j < length; j++) {
@@ -175,7 +185,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			// to avoid polluting the state indices. However, do this after the postTryInitStateIndex is calculated since
 			// it is used to add or remove assigned resources during code gen
 			for (int i = 0; i < resourcesLength; i++) {
-				tryInfo.resetAssignmentInfo(this.resources[i].binding);
+				if (this.resources[i] instanceof LocalDeclaration)
+				tryInfo.resetAssignmentInfo(((LocalDeclaration) this.resources[i]).binding);
 			}
 		}
 		// check unreachable catch blocks
@@ -260,17 +271,29 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 		FlowInfo tryInfo = flowInfo.copy();
 		for (int i = 0; i < resourcesLength; i++) {
-			final LocalDeclaration resource = this.resources[i];
+			final Statement resource = this.resources[i];
 			tryInfo = resource.analyseCode(currentScope, handlingContext, tryInfo);
 			this.postResourcesInitStateIndexes[i] = currentScope.methodScope().recordInitializationStates(tryInfo);
-			LocalVariableBinding resourceBinding = resource.binding;
-			resourceBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
-			if (resourceBinding.closeTracker != null) {
-				// this was false alarm, we don't need to track the resource
-				resourceBinding.closeTracker.withdraw();
-				// keep the tracking variable in the resourceBinding in order to prevent creating a new one while analyzing the try block
+			TypeBinding resolvedType = null;
+			LocalVariableBinding localVariableBinding = null;
+			if (resource instanceof LocalDeclaration) {
+				localVariableBinding = ((LocalDeclaration) this.resources[i]).binding;
+				resolvedType = localVariableBinding.type;
+			} else { // Expression
+				if (resource instanceof NameReference && ((NameReference) resource).binding instanceof LocalVariableBinding) {
+					localVariableBinding = (LocalVariableBinding)((NameReference) resource).binding;
+				}
+				resolvedType = ((Expression) resource).resolvedType;
 			}
-			MethodBinding closeMethod = findCloseMethod(resource, resourceBinding);
+			if (localVariableBinding != null) {
+				localVariableBinding.useFlag = LocalVariableBinding.USED; // Is implicitly used anyways.
+				if (localVariableBinding.closeTracker != null) {
+					// this was false alarm, we don't need to track the resource
+					localVariableBinding.closeTracker.withdraw();
+					// keep the tracking variable in the resourceBinding in order to prevent creating a new one while analyzing the try block
+				}
+			}
+			MethodBinding closeMethod = findCloseMethod(resource, resolvedType);
 			if (closeMethod != null && closeMethod.isValidBinding() && closeMethod.returnType.id == TypeIds.T_void) {
 				ReferenceBinding[] thrownExceptions = closeMethod.thrownExceptions;
 				for (int j = 0, length = thrownExceptions.length; j < length; j++) {
@@ -289,7 +312,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			// to avoid polluting the state indices. However, do this after the postTryInitStateIndex is calculated since
 			// it is used to add or remove assigned resources during code gen
 			for (int i = 0; i < resourcesLength; i++) {
-				tryInfo.resetAssignmentInfo(this.resources[i].binding);
+				if (this.resources[i] instanceof LocalDeclaration)
+					tryInfo.resetAssignmentInfo(((LocalDeclaration)this.resources[i]).binding);
 			}
 		}
 		// check unreachable catch blocks
@@ -346,10 +370,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 	}
 }
-private MethodBinding findCloseMethod(final LocalDeclaration resource, LocalVariableBinding resourceBinding) {
+private MethodBinding findCloseMethod(final ASTNode resource, TypeBinding type) {
 	MethodBinding closeMethod = null;
-	TypeBinding type = resourceBinding.type;
-	if (type != null && type.isValidBinding()) {
+	if (type != null && type.isValidBinding() && type instanceof ReferenceBinding) {
 		ReferenceBinding binding = (ReferenceBinding) type;
 		closeMethod = binding.getExactMethod(ConstantPool.Close, new TypeBinding [0], this.scope.compilationUnitScope()); // scope needs to be tighter
 		if(closeMethod == null) {
@@ -396,7 +419,7 @@ private FlowInfo prepareCatchInfo(FlowInfo flowInfo, ExceptionHandlingFlowContex
 	"(uncheckedExceptionTypes notNil and: [uncheckedExceptionTypes at: index])
 	ifTrue: [catchInits addPotentialInitializationsFrom: tryInits]."
 	*/
-	if (this.tryBlock.statements == null && this.resources == NO_RESOURCES) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=350579
+	if (this.tryBlock.statements == null && this.resources == null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=350579
 		catchInfo.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 	}
 	return catchInfo;
@@ -515,7 +538,18 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				this.resourceExceptionLabels[i] = new ExceptionLabel(codeStream, null);
 				this.resourceExceptionLabels[i].placeStart();
 				if (i < resourceCount) {
-					this.resources[i].generateCode(this.scope, codeStream); // Initialize resources ...
+					Statement stmt = this.resources[i];
+					if (stmt instanceof NameReference) {
+						NameReference ref = (NameReference) stmt;
+						ref.bits |= ASTNode.IsCapturedOuterLocal; // TODO: selective flagging if ref.binding is not one of earlier inlined LVBs.
+						VariableBinding binding = (VariableBinding) ref.binding; // Only LVB expected here.
+						ref.checkEffectiveFinality(binding, this.scope);
+					} else if (stmt instanceof FieldReference) {
+						FieldReference fieldReference = (FieldReference) stmt;
+						if (!fieldReference.binding.isFinal())
+							this.scope.problemReporter().cannotReferToNonFinalField(fieldReference.binding, fieldReference);
+					}
+					stmt.generateCode(this.scope, codeStream); // Initialize resources ...
 				}
 			}
 		}
@@ -525,7 +559,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				BranchLabel exitLabel = new BranchLabel(codeStream);
 				this.resourceExceptionLabels[i].placeEnd(); // outer handler if any is the one that should catch exceptions out of close()
 				
-				LocalVariableBinding localVariable = i > 0 ? this.resources[i-1].binding : null;
+				Statement stmt = i > 0 ? this.resources[i - 1] : null;
 				if ((this.bits & ASTNode.IsTryBlockExiting) == 0) {
 					// inline resource closure
 					if (i > 0) {
@@ -537,10 +571,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 							codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.postTryInitStateIndex);
 							codeStream.addDefinitelyAssignedVariables(currentScope, this.postTryInitStateIndex);
 						}
-						codeStream.load(localVariable);
-						codeStream.ifnull(exitLabel);
-						codeStream.load(localVariable);
-						codeStream.invokeAutoCloseableClose(localVariable.type);
+						generateCodeSnippet(stmt, codeStream, exitLabel, false /* record */);
 						codeStream.recordPositionsFrom(invokeCloseStartPc, this.tryBlock.sourceEnd);
 					}
 					codeStream.goto_(exitLabel); // skip over the catch block.
@@ -582,13 +613,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				if (i > 0) {
 					// inline resource close here rather than bracketing the current catch block with a try region.
 					BranchLabel postCloseLabel = new BranchLabel(codeStream);
-					int invokeCloseStartPc = codeStream.position; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=343785			
-					codeStream.load(localVariable);
-					codeStream.ifnull(postCloseLabel);
-					codeStream.load(localVariable);
-					codeStream.invokeAutoCloseableClose(localVariable.type);
-					codeStream.recordPositionsFrom(invokeCloseStartPc, this.tryBlock.sourceEnd);
-					codeStream.removeVariable(localVariable);
+					generateCodeSnippet(stmt, codeStream, postCloseLabel, true /* record */, i, codeStream.position);						
 					postCloseLabel.place();
 				}
 				codeStream.load(this.primaryExceptionVariable);
@@ -843,6 +868,64 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
+private void generateCodeSnippet(Statement statement, CodeStream codeStream, BranchLabel postCloseLabel, boolean record, int... values) {
+	
+	int i = -1; 
+	int invokeCloseStartPc = -1;
+	if (record) {
+		i = values[0];
+		invokeCloseStartPc = values[1];
+	}
+	if (statement instanceof LocalDeclaration)
+		generateCodeSnippet((LocalDeclaration)statement, codeStream, postCloseLabel, record, i, invokeCloseStartPc);
+	else if (statement instanceof Reference)
+		generateCodeSnippet((Reference)statement, codeStream, postCloseLabel, record, i, invokeCloseStartPc);
+	// else abort
+}
+
+private void generateCodeSnippet(Reference reference, CodeStream codeStream, BranchLabel postCloseLabel, boolean record, int i, int invokeCloseStartPc) {
+	reference.generateCode(this.scope, codeStream, true);
+	codeStream.ifnull(postCloseLabel);
+	reference.generateCode(this.scope, codeStream, true);
+	codeStream.invokeAutoCloseableClose(reference.resolvedType);
+	if (!record) return;
+	codeStream.recordPositionsFrom(invokeCloseStartPc, this.tryBlock.sourceEnd);
+	isDuplicateResourceReference(i);
+}
+private void generateCodeSnippet(LocalDeclaration localDeclaration, CodeStream codeStream, BranchLabel postCloseLabel, boolean record, int i, int invokeCloseStartPc) {
+	LocalVariableBinding variableBinding = localDeclaration.binding;
+	codeStream.load(variableBinding);
+	codeStream.ifnull(postCloseLabel);
+	codeStream.load(variableBinding);
+	codeStream.invokeAutoCloseableClose(variableBinding.type);
+	if (!record) return;
+	codeStream.recordPositionsFrom(invokeCloseStartPc, this.tryBlock.sourceEnd);
+	if (!isDuplicateResourceReference(i)) // do not remove duplicate variable now
+		codeStream.removeVariable(variableBinding);
+}
+
+private boolean isDuplicateResourceReference(int index) {
+	int len = this.resources.length;
+	if (index < len && this.resources[index] instanceof Reference) {
+		Reference ref = (Reference) this.resources[index];
+		Binding refBinding =  ref instanceof NameReference ? ((NameReference) ref).binding :
+			ref instanceof FieldReference ? ((FieldReference) ref).binding : null;
+		if (refBinding == null) return false;
+		
+		//TODO: For field accesses in the form of a.b.c and b.c - could there be a non-trivial dup - to check?
+		for (int i = 0; i < index; i++) {
+			Statement stmt = this.resources[i];
+			Binding b = stmt instanceof LocalDeclaration ? ((LocalDeclaration) stmt).binding : 
+				stmt instanceof NameReference ? ((NameReference) stmt).binding :
+						stmt instanceof FieldReference ? ((FieldReference) stmt).binding : null;
+			if (b == refBinding) {
+				this.scope.problemReporter().duplicateResourceReference(ref);
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 /**
  * @see SubRoutineStatement#generateSubRoutineInvocation(BlockScope, CodeStream, Object, int, LocalVariableBinding)
@@ -854,13 +937,9 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 		for (int i = resourceCount; i > 0; --i) {
 			// Disarm the handlers and take care of resource closure.
 			this.resourceExceptionLabels[i].placeEnd();
-			LocalVariableBinding localVariable = this.resources[i-1].binding;
 			BranchLabel exitLabel = new BranchLabel(codeStream);
 			int invokeCloseStartPc = codeStream.position; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=343785
-			codeStream.load(localVariable);
-			codeStream.ifnull(exitLabel);
-			codeStream.load(localVariable);
-			codeStream.invokeAutoCloseableClose(localVariable.type);
+			generateCodeSnippet(this.resources[i - 1], codeStream, exitLabel, false);
 			codeStream.recordPositionsFrom(invokeCloseStartPc, this.tryBlock.sourceEnd);
 			exitLabel.place();
 		}
@@ -954,7 +1033,12 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 	int length = this.resources.length;
 	printIndent(indent, output).append("try" + (length == 0 ? "\n" : " (")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	for (int i = 0; i < length; i++) {
-		this.resources[i].printAsExpression(0, output);
+		Statement stmt = this.resources[i];
+		if (stmt instanceof LocalDeclaration) {
+			((LocalDeclaration) stmt).printAsExpression(0, output);
+		} else if (stmt instanceof Reference) {
+			((Reference) stmt).printExpression(0, output);
+		} else continue;
 		if (i != length - 1) {
 			output.append(";\n"); //$NON-NLS-1$
 			printIndent(indent + 2, output);
@@ -1002,19 +1086,34 @@ public void resolve(BlockScope upperScope) {
 	}
 	for (int i = 0; i < resourceCount; i++) {
 		this.resources[i].resolve(resourceManagementScope);
-		LocalVariableBinding localVariableBinding = this.resources[i].binding;
-		if (localVariableBinding != null && localVariableBinding.isValidBinding()) {
-			localVariableBinding.modifiers |= ClassFileConstants.AccFinal;
-			localVariableBinding.tagBits |= TagBits.IsResource;
-			TypeBinding resourceType = localVariableBinding.type;
-			if (resourceType instanceof ReferenceBinding) {
-				if (resourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangAutoCloseable, false /*AutoCloseable is not a class*/) == null && resourceType.isValidBinding()) {
-					upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, this.resources[i].type);
+		if (this.resources[i] instanceof LocalDeclaration) {
+			LocalDeclaration node = (LocalDeclaration)this.resources[i];
+			LocalVariableBinding localVariableBinding = node.binding;
+			if (localVariableBinding != null && localVariableBinding.isValidBinding()) {
+				localVariableBinding.modifiers |= ClassFileConstants.AccFinal;
+				localVariableBinding.tagBits |= TagBits.IsResource;
+				TypeBinding resourceType = localVariableBinding.type;
+				if (resourceType instanceof ReferenceBinding) {
+					if (resourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangAutoCloseable, false /*AutoCloseable is not a class*/) == null && resourceType.isValidBinding()) {
+						upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node.type);
+						localVariableBinding.type = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
+					}
+				} else if (resourceType != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862, avoid secondary error in problematic null case
+					upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node.type);
 					localVariableBinding.type = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
 				}
+			}
+		} else { // expression
+			Expression node = (Expression) this.resources[i];
+			TypeBinding resourceType = node.resolvedType;
+			if (resourceType instanceof ReferenceBinding) {
+				if (resourceType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangAutoCloseable, false /*AutoCloseable is not a class*/) == null && resourceType.isValidBinding()) {
+					upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node);
+					((Expression) this.resources[i]).resolvedType = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
+				}
 			} else if (resourceType != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862, avoid secondary error in problematic null case
-				upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, this.resources[i].type);
-				localVariableBinding.type = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
+				upperScope.problemReporter().resourceHasToImplementAutoCloseable(resourceType, node);
+				((Expression) this.resources[i]).resolvedType = new ProblemReferenceBinding(CharOperation.splitOn('.', resourceType.shortReadableName()), null, ProblemReasons.InvalidTypeForAutoManagedResource);
 			}
 		}
 	}
@@ -1110,9 +1209,9 @@ public void resolve(BlockScope upperScope) {
 }
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
-		LocalDeclaration[] localDeclarations = this.resources;
-		for (int i = 0, max = localDeclarations.length; i < max; i++) {
-			localDeclarations[i].traverse(visitor, this.scope);
+		Statement[] statements = this.resources;
+		for (int i = 0, max = statements.length; i < max; i++) {
+			statements[i].traverse(visitor, this.scope);
 		}
 		this.tryBlock.traverse(visitor, this.scope);
 		if (this.catchArguments != null) {

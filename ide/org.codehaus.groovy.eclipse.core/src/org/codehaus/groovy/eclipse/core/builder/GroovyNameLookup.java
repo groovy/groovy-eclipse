@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,6 @@ import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 18, 2009
- *
  * A NameLookup for Groovy classes to help look for non-tope level types and member types
  */
 public class GroovyNameLookup extends NameLookup {
@@ -47,7 +44,7 @@ public class GroovyNameLookup extends NameLookup {
         this.packageFragmentRoots = (IPackageFragmentRoot[]) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragmentRoots", other);
         this.packageFragments = (HashtableOfArrayToObject) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragments", other);
         this.typesInWorkingCopies = (HashMap<PackageFragmentRoot, ?>) ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
-        this.rootToResolvedEntries = (Map<PackageFragmentRoot, ClasspathEntry>) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
+        this.rootToResolvedEntries = (Map/*<IPackageFragmentRoot, IClasspathEntry>*/) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
     }
 
     public GroovyNameLookup(IPackageFragmentRoot[] packageFragmentRoots, HashtableOfArrayToObject packageFragments, ICompilationUnit[] workingCopies, Map<PackageFragmentRoot, ClasspathEntry> rootToResolvedEntries) {

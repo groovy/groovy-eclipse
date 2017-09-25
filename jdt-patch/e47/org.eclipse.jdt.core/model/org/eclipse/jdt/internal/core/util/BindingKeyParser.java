@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,7 +34,8 @@ public class BindingKeyParser {
 		static final int CAPTURE = 8;
 		static final int CAPTURE18 = 9;
 		static final int BASE_TYPE = 10;
-		static final int END = 11;
+		static final int MODULE = 11;
+		static final int END = 12;
 
 		static final int START = -1;
 
@@ -152,6 +153,12 @@ public class BindingKeyParser {
 				&& this.source[this.index] == '&';
 		}
 
+		boolean isAtModuleStart() {
+			return
+				this.index < this.source.length
+				&& this.source[this.index] == '"';
+		}
+
 		int nextToken() {
 			int previousTokenEnd = this.index;
 			this.start = this.index;
@@ -221,6 +228,9 @@ public class BindingKeyParser {
 						}
 						break;
 					case '.':
+						if (this.token == MODULE)
+							break; // don't treat '.' as a separator in module names
+						//$FALL-THROUGH$
 					case '%':
 					case ':':
 					case '>':
@@ -318,6 +328,10 @@ public class BindingKeyParser {
 					case '^':
 						this.index++;
 						this.token = CAPTURE18;
+						return this.token;
+					case '"':
+						this.index++;
+						this.token = MODULE;
 						return this.token;
 				}
 				this.index++;
@@ -436,6 +450,9 @@ public class BindingKeyParser {
 				case BASE_TYPE:
 					buffer.append("BASE TYPE: "); //$NON-NLS-1$
 					break;
+				case MODULE:
+					buffer.append("MODULE: "); //$NON-NLS-1$
+					break;
 				case END:
 					buffer.append("END: "); //$NON-NLS-1$
 					break;
@@ -466,6 +483,8 @@ public class BindingKeyParser {
 	private Scanner scanner;
 
 	private boolean hasTypeName = true;
+	
+	private boolean hasModuleName;
 
 	private boolean isMalformed;
 	
@@ -596,6 +615,10 @@ public class BindingKeyParser {
 		// default is to do nothing
 	}
 
+	public void consumeModule(char[] moduleName) {
+		// default is to do nothing
+	}
+
 	/*
 	 * Returns the string that this binding key wraps.
 	 */
@@ -605,6 +628,10 @@ public class BindingKeyParser {
 
 	public boolean hasTypeName() {
 		return this.hasTypeName;
+	}
+
+	public boolean hasModuleName() {
+		return this.hasModuleName;
 	}
 
 	public void malformedKey() {
@@ -621,6 +648,8 @@ public class BindingKeyParser {
 
 	public void parse(boolean pauseAfterFullyQualifiedName) {
 		if (!this.parsingPaused) {
+			if (parseModule())
+				return;
 			// fully qualified name
 			parseFullyQualifiedName();
 			parseSecondaryType();
@@ -692,6 +721,22 @@ public class BindingKeyParser {
 		}
 
 		consumeKey();
+	}
+
+	private boolean parseModule() {
+		if (this.scanner.isAtModuleStart()) {
+			this.hasTypeName = false;
+			this.keyStart = 1;
+			if (this.scanner.nextToken() == Scanner.MODULE
+				 && this.scanner.nextToken() == Scanner.END)
+			{
+				consumeModule(this.scanner.getTokenSource());
+				this.hasModuleName = true;
+				return true;
+			}
+			malformedKey();
+		}
+		return false;
 	}
 
 	private void parseFullyQualifiedName() {

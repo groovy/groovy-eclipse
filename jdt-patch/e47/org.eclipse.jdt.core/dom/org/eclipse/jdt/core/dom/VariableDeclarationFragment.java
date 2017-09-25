@@ -105,7 +105,7 @@ public class VariableDeclarationFragment extends VariableDeclaration {
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
-		if (apiLevel >= AST.JLS8) {
+		if (apiLevel >= AST.JLS8_INTERNAL) {
 			return PROPERTY_DESCRIPTORS_8_0;
 		} else {
 			return PROPERTY_DESCRIPTORS;
@@ -230,7 +230,7 @@ public class VariableDeclarationFragment extends VariableDeclaration {
 		VariableDeclarationFragment result = new VariableDeclarationFragment(target);
 		result.setSourceRange(getStartPosition(), getLength());
 		result.setName((SimpleName) getName().clone(target));
-		if (this.ast.apiLevel >= AST.JLS8) {
+		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 			result.extraDimensions().addAll(
 					ASTNode.copySubtrees(target, extraDimensions()));
 		} else {
@@ -257,7 +257,7 @@ public class VariableDeclarationFragment extends VariableDeclaration {
 		if (visitChildren) {
 			// visit children in normal left to right reading order
 			acceptChild(visitor, getName());
-			if (this.ast.apiLevel >= AST.JLS8) {
+			if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 				acceptChildren(visitor, this.extraDimensions);
 			}
 			acceptChild(visitor, getInitializer());

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 /*
@@ -27,7 +28,8 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
  *
  * The structural investigation includes: - package statement - import
  * statements - top-level types: package member, member types (member types of
- * member types...) - fields - methods
+ * member types...) - fields - methods. From Java 9 onwards it includes the 
+ * module name in a module declaration
  *
  * If reference information is requested, then all source constructs are
  * investigated and type, field & method references are provided as well.
@@ -46,6 +48,33 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 @SuppressWarnings("rawtypes")
 public interface ISourceElementRequestor {
 
+	public static class ModuleInfo {
+		public int declarationStart;
+		public int modifiers;
+		public char[] name;
+		public int nameSourceStart;
+		public int nameSourceEnd;
+		public char[] moduleName;
+		public RequiresInfo[] requires;
+		public PackageExportInfo[] exports;
+		public ServicesInfo[] services;
+		public PackageExportInfo[] opens;
+		public char[][] usedServices;
+		public Annotation[] annotations;
+		public ModuleDeclaration node;
+	}
+	public static class RequiresInfo {
+		public char[] moduleName;
+		public int modifiers;
+	}
+	public static class PackageExportInfo {
+		public char[] pkgName;
+		public char[][] targets;
+	}
+	public static class ServicesInfo {
+		public char[] serviceName;
+		public char[][] implNames;
+	}
 	public static class TypeInfo {
 		public boolean typeAnnotated;
 		public int declarationStart;
@@ -200,4 +229,11 @@ public interface ISourceElementRequestor {
 	void exitMethod(int declarationEnd, Expression defaultValue);
 
 	void exitType(int declarationEnd);
+	
+	default void enterModule(ModuleInfo info) {
+		// do nothing
+	}
+	default void exitModule(int declarationEnd) {
+		// do nothing
+	}
 }

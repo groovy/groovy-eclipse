@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,6 +130,14 @@ public interface IJavaElement extends IAdaptable {
 	 * @since 3.4
 	 */
 	int ANNOTATION = 16;
+
+	/**
+	 * Constant represents a module descriptor.
+	 * A Java element with this type can be safely cast to {@link IModuleDescription}.
+	 *
+	 * @since 3.14
+	 */
+	int JAVA_MODULE = 17;
 
 	/**
 	 * Returns whether this Java element exists in the model.

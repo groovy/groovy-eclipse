@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,8 +10,18 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.env;
 
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
+
 /**
  * This interface denotes a compilation unit, providing its name and content.
+ * 
+ * <p>
+ * Note: This internal interface has been implemented illegally by the
+ * org.apache.jasper.glassfish bundle from Orbit, see
+ * <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=500211">bug 500211</a>.
+ * Avoid changing the API or supply default methods to avoid breaking the Eclipse Help system.
+ * </p>
  */
 public interface ICompilationUnit extends IDependent {
 /**
@@ -39,5 +49,26 @@ char[][] getPackageName();
 * Answer if optional problems should be ignored for this compilation unit.
 * Implementors should return <code>false</code> if there is no preference.
 */
-boolean ignoreOptionalProblems();
+default boolean ignoreOptionalProblems() {
+	return false;
+}
+/**
+ * Returns the binding of the module that this compilation unit is associated with.
+ *
+ * @return the binding representing the module.
+ */
+default ModuleBinding module(LookupEnvironment environment) {
+	return environment.getModule(getModuleName());
+}
+/**
+ * Returns the name of the module to which this compilation unit is associated.
+ * A return value of {@code null} signals the unnamed module.
+ * @return module name or {@code null} for the unnamed module.
+ */
+default char[] getModuleName() {
+	return null;
+}
+default String getDestinationPath() {
+	return null;
+}
 }

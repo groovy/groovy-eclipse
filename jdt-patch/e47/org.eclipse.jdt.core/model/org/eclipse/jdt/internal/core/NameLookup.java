@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
@@ -13,14 +13,21 @@ package org.eclipse.jdt.internal.core;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Function;
+import java.util.jar.Manifest;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IInitializer;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IModuleDescription;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
@@ -31,7 +38,9 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
+import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
@@ -58,14 +67,42 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class NameLookup implements SuffixConstants {
+
+	/**
+	 * Handle for an automatic module.
+	 *
+	 * <p>Note, that by definition this is mostly a fake, only {@link #getElementName()} provides a useful value.</p>
+	 */
+	private static class AutoModule extends AbstractModule {
+
+		public AutoModule(JavaElement parent, String name) {
+			super(parent, name);
+		}
+
+		@Override
+		protected void toStringContent(StringBuffer buffer, String lineDelimiter) throws JavaModelException {
+			buffer.append("automatic module "); //$NON-NLS-1$
+			buffer.append(this.name);
+		}
+	}
+
 	public static class Answer {
 		public IType type;
+		public IModuleDescription module;
 		AccessRestriction restriction;
 		IClasspathEntry entry;
 		Answer(IType type, AccessRestriction restriction, IClasspathEntry entry) {
+			this(type, restriction, entry, null);
+		}
+		Answer(IType type, AccessRestriction restriction, IClasspathEntry entry, IModuleDescription module) {
 			this.type = type;
 			this.restriction = restriction;
 			this.entry = entry;
+			this.module = module;
+		}
+		Answer(IModuleDescription module) {
+			this.module = module;
+			this.restriction = null;
 		}
 		public boolean ignoreIfBetter() {
 			return this.restriction != null && this.restriction.ignoreIfBetter();
@@ -80,6 +117,61 @@ public class NameLookup implements SuffixConstants {
 			if (this.restriction == null) return true;
 			return otherAnswer.restriction != null
 				&& this.restriction.getProblemId() < otherAnswer.restriction.getProblemId();
+		}
+		public String toString() {
+			StringBuilder builder = new StringBuilder(this.type.toString());
+			builder.append("from ") //$NON-NLS-1$
+			.append(this.module);
+			return builder.toString();
+		}
+	}
+
+	private class Selector implements IJavaElementRequestor {
+		public List<IPackageFragment> pkgFragments;
+
+		public Selector(String moduleName) {
+			this.pkgFragments = new ArrayList<>();
+		}
+
+		@Override
+		public void acceptField(IField field) {
+			// do nothing
+		}
+
+		@Override
+		public void acceptInitializer(IInitializer initializer) {
+			// do nothing
+		}
+
+		@Override
+		public void acceptMemberType(IType type) {
+			// do nothing
+		}
+
+		@Override
+		public void acceptMethod(IMethod method) {
+			// do nothing
+		}
+
+		@Override
+		public void acceptPackageFragment(IPackageFragment packageFragment) {
+			this.pkgFragments.add(packageFragment);
+		}
+
+		@Override
+		public void acceptType(IType type) {
+			// do nothing
+		}
+
+		@Override
+		public void acceptModule(IModuleDescription module) {
+			// do nothing
+		}
+
+		@Override
+		public boolean isCanceled() {
+			// TODO Auto-generated method stub
+			return false;
 		}
 	}
 
@@ -135,7 +227,9 @@ public class NameLookup implements SuffixConstants {
 	 * Reverse map from root path to corresponding resolved CP entry
 	 * (so as to be able to figure inclusion/exclusion rules)
 	 */
-	protected Map rootToResolvedEntries;
+	protected Map<IPackageFragmentRoot,IClasspathEntry> rootToResolvedEntries;
+
+	protected Map<IPackageFragmentRoot,IModuleDescription> rootToModule;
 
 	/**
 	 * A map from package handles to a map from type name to an IType or an IType[].
@@ -159,6 +253,7 @@ public class NameLookup implements SuffixConstants {
 			Util.verbose(" -> working copy size: " + (workingCopies == null ? 0 : workingCopies.length));  //$NON-NLS-1$
 			start = System.currentTimeMillis();
 		}
+		this.rootToModule = new HashMap<>();
 		this.packageFragmentRoots = packageFragmentRoots;
 		if (workingCopies == null) {
 			this.packageFragments = packageFragments;
@@ -616,6 +711,23 @@ public class NameLookup implements SuffixConstants {
 	}
 
 	/**
+	 * Find type in the given modules considering secondary types but without waiting for indexes.
+	 * It means that secondary types may be not found under certain circumstances...
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=118789"
+	 */
+	public Answer findType(String typeName, String packageName, boolean partialMatch, int acceptFlags, boolean checkRestrictions, IPackageFragmentRoot[] moduleContext) {
+		return findType(typeName,
+			packageName,
+			partialMatch,
+			acceptFlags,
+			true/* consider secondary types */,
+			false/* do NOT wait for indexes */,
+			checkRestrictions,
+			null,
+			moduleContext);
+	}
+
+	/**
 	 * Find type considering secondary types but without waiting for indexes.
 	 * It means that secondary types may be not found under certain circumstances...
 	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=118789"
@@ -630,7 +742,6 @@ public class NameLookup implements SuffixConstants {
 			checkRestrictions,
 			null);
 	}
-
 	/**
 	 * Find type. Considering secondary types and waiting for indexes depends on given corresponding parameters.
 	 */
@@ -643,6 +754,30 @@ public class NameLookup implements SuffixConstants {
 			boolean waitForIndexes,
 			boolean checkRestrictions,
 			IProgressMonitor monitor) {
+
+		return findType(typeName,
+				packageName,
+				partialMatch,
+				acceptFlags,
+				considerSecondaryTypes,
+				waitForIndexes,
+				checkRestrictions,
+				monitor,
+				null); // no module
+	}
+	/**
+	 * Find type. Considering secondary types and waiting for indexes depends on given corresponding parameters.
+	 */
+	public Answer findType(
+			String typeName,
+			String packageName,
+			boolean partialMatch,
+			int acceptFlags,
+			boolean considerSecondaryTypes,
+			boolean waitForIndexes,
+			boolean checkRestrictions,
+			IProgressMonitor monitor,
+			IPackageFragmentRoot[] moduleContext) {
 		if (packageName == null || packageName.length() == 0) {
 			packageName= IPackageFragment.DEFAULT_PACKAGE_NAME;
 		} else if (typeName.length() > 0 && ScannerHelper.isLowerCase(typeName.charAt(0))) {
@@ -652,7 +787,7 @@ public class NameLookup implements SuffixConstants {
 
 		// Look for concerned package fragments
 		JavaElementRequestor elementRequestor = new JavaElementRequestor();
-		seekPackageFragments(packageName, false, elementRequestor);
+		seekPackageFragments(packageName, false, elementRequestor, moduleContext);
 		IPackageFragment[] packages= elementRequestor.getPackageFragments();
 
 		// Try to find type in package fragments list
@@ -672,7 +807,8 @@ public class NameLookup implements SuffixConstants {
 						accessRestriction = getViolatedRestriction(typeName, packageName, entry, accessRestriction);
 					}
 				}
-				Answer answer = new Answer(type, accessRestriction, entry);
+				Answer answer = new Answer(type, accessRestriction, entry,
+										getModuleDescription(root, this.rootToModule, this.rootToResolvedEntries::get));
 				if (!answer.ignoreIfBetter()) {
 					if (answer.isBetter(suggestedAnswer))
 						return answer;
@@ -731,6 +867,71 @@ public class NameLookup implements SuffixConstants {
 		return type == null ? null : new Answer(type, null, null);
 	}
 
+	public static IModule getModuleDescriptionInfo(IModuleDescription moduleDesc) {
+		if (moduleDesc != null) {
+			try {
+				if (moduleDesc instanceof BinaryModule) {
+					return (ModuleDescriptionInfo)((BinaryModule) moduleDesc).getElementInfo();
+				} else if (moduleDesc instanceof SourceModule) {
+					return (ModuleDescriptionInfo)((SourceModule) moduleDesc).getElementInfo();
+				} else {
+					return IModule.createAutomatic(moduleDesc.getElementName().toCharArray());
+				}
+			} catch (JavaModelException e) {
+				// TODO Auto-generated catch block
+				if (!e.isDoesNotExist())
+					e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
+	/** Internal utility, which is able to answer explicit and automatic modules. */
+	static IModuleDescription getModuleDescription(IPackageFragmentRoot root, Map<IPackageFragmentRoot,IModuleDescription> cache, Function<IPackageFragmentRoot,IClasspathEntry> rootToEntry) {
+		IModuleDescription module = cache.get(root);
+		if (module != null)
+			return module;
+		try {
+			if (root.getKind() == IPackageFragmentRoot.K_SOURCE)
+				module = root.getJavaProject().getModuleDescription(); // from any root in this project
+			else
+				module = root.getModuleDescription();
+		} catch (JavaModelException e) {
+			return null;
+		}
+		if (module == null) {
+			// 2nd attempt: try automatic module:
+			IClasspathEntry classpathEntry = rootToEntry.apply(root);
+			if (classpathEntry instanceof ClasspathEntry) {
+				if (((ClasspathEntry) classpathEntry).isModular()) {
+					// modular but no module-info implies this is an automatic module
+					Manifest manifest = null;
+					switch (classpathEntry.getEntryKind()) {
+						case IClasspathEntry.CPE_LIBRARY:
+							manifest = ((PackageFragmentRoot) root).getManifest();
+							break;
+						case IClasspathEntry.CPE_PROJECT:
+							JavaProject javaProject = (JavaProject) root.getJavaModel().getJavaProject(classpathEntry.getPath().lastSegment());
+							manifest = javaProject.getManifest();
+							break;
+					}
+					char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleName(root.getElementName(), root.isArchive(), manifest);
+					module = new AutoModule((JavaElement) root, String.valueOf(moduleName));
+				}
+			}
+		}
+		if (module != null)
+			cache.put(root, module);
+		return module;
+	}
+
+	public IModule getModuleDescriptionInfo(PackageFragmentRoot root) {
+		IModuleDescription desc = getModuleDescription(root, this.rootToModule, this.rootToResolvedEntries::get);
+		if (desc != null) {
+			return getModuleDescriptionInfo(desc);
+		}
+		return null;
+	}
 	private AccessRestriction getViolatedRestriction(String typeName, String packageName, ClasspathEntry entry, AccessRestriction accessRestriction) {
 		AccessRuleSet accessRuleSet = entry.getAccessRuleSet();
 		if (accessRuleSet != null) {
@@ -846,6 +1047,24 @@ public class NameLookup implements SuffixConstants {
 		}
 		return findType(className, packageName, partialMatch, acceptFlags, considerSecondaryTypes, waitForIndexes, checkRestrictions, monitor);
 	}
+	public Answer findModule(char[] moduleName) {
+		JavaElementRequestor requestor = new JavaElementRequestor();
+		seekModule(moduleName, false, requestor);
+		IModuleDescription[] modules = requestor.getModules();
+		if (modules.length == 0) {
+			try {
+				// FIXME(SHMOD): only considers source modules?? (MODULEPATH container is only experimental)
+				JavaModelManager.getModulePathManager().seekModule(moduleName, false, requestor);
+				modules = requestor.getModules();
+			} catch (JavaModelException e) {
+				// TODO Auto-generated catch block
+			}
+		}
+		if (modules.length > 0) { // TODO what to do??
+			return new Answer(modules[0]);
+		}
+		return null;
+	}
 
 	private IType getMemberType(IType type, String name, int dot) {
 		while (dot != -1) {
@@ -859,6 +1078,24 @@ public class NameLookup implements SuffixConstants {
 
 	public boolean isPackage(String[] pkgName) {
 		return this.packageFragments.get(pkgName) != null;
+	}
+
+	public boolean isPackage(String[] pkgName, IPackageFragmentRoot[] moduleContext) {
+		if (moduleContext == null) // includes the case where looking for module UNNAMED or ANY
+			return isPackage(pkgName);
+		
+		for (IPackageFragmentRoot moduleRoot : moduleContext) {
+			if (moduleRoot.getPackageFragment(String.join(".", pkgName)).exists()) //$NON-NLS-1$
+				return true;
+		}
+		return false;
+	}
+
+	private boolean moduleMatches(IPackageFragmentRoot root, IPackageFragmentRoot[] moduleContext) {
+		for (IPackageFragmentRoot moduleRoot : moduleContext)
+			if (moduleRoot.equals(root))
+				return true;
+		return false;
 	}
 
 	/**
@@ -907,13 +1144,96 @@ public class NameLookup implements SuffixConstants {
 	 * @param partialMatch partial name matches qualify when <code>true</code>;
 	 *	only exact name matches qualify when <code>false</code>
 	 */
+	public void seekPackageFragments(String name, boolean partialMatch, IJavaElementRequestor requestor, IPackageFragmentRoot[] moduleContext) {
+		if (moduleContext == null) {
+			seekPackageFragments(name, partialMatch, requestor);
+			return;
+		}
+		if (partialMatch) {
+			seekModuleAwarePartialPackageFragments(name, requestor, moduleContext);
+			return;
+		}
+		for (IPackageFragmentRoot moduleRoot : moduleContext) {
+			IPackageFragment fragment = moduleRoot.getPackageFragment(name);
+			if (fragment.exists())
+				requestor.acceptPackageFragment(fragment);
+		}
+	}
+
+	/**
+	 * Notifies the given requestor of all package fragments with the
+	 * given name. Checks the requestor at regular intervals to see if the
+	 * requestor has canceled. The domain of
+	 * the search is bounded by the <code>IJavaProject</code>
+	 * this <code>NameLookup</code> was obtained from.
+	 *
+	 * @param partialMatch partial name matches qualify when <code>true</code>;
+	 *	only exact name matches qualify when <code>false</code>
+	 */
+	public void seekTypes(String pkgName, String name, boolean partialMatch, IJavaElementRequestor requestor, 
+			int acceptFlags, IPackageFragmentRoot[] moduleContext, String moduleName) {
+		Selector selector = new Selector(moduleName);
+		seekPackageFragments(pkgName, true /*partialMatch*/, selector, moduleContext);	
+		if (selector.pkgFragments.size() == 0) return;
+		for (IPackageFragment pkg : selector.pkgFragments) {
+			seekTypes(name, pkg, partialMatch, acceptFlags, requestor);
+		}
+	}
+	
+	private void seekModuleAwarePartialPackageFragments(String name, IJavaElementRequestor requestor, IPackageFragmentRoot[] moduleContext) {
+		boolean allPrefixMatch = CharOperation.equals(name.toCharArray(), CharOperation.ALL_PREFIX);
+		Arrays.stream(this.packageFragments.keyTable)
+		.filter(k -> k != null)
+		.filter(k -> allPrefixMatch || Util.concatWith((String[])k, '.').startsWith(name))
+		.forEach(k -> {
+			checkModulePackages(requestor, moduleContext, this.packageFragments.getIndex(k));
+		});
+	}
+
+	private void checkModulePackages(IJavaElementRequestor requestor, IPackageFragmentRoot[] moduleContext, int pkgIndex) {
+		Object value = this.packageFragments.valueTable[pkgIndex];
+		// reuse existing String[]
+		String[] pkgName = (String[]) this.packageFragments.keyTable[pkgIndex];
+		if (value instanceof PackageFragmentRoot) {
+			PackageFragmentRoot root = (PackageFragmentRoot) value;
+			if (moduleMatches(root, moduleContext))
+				requestor.acceptPackageFragment(root.getPackageFragment(pkgName));
+		} else {
+			IPackageFragmentRoot[] roots = (IPackageFragmentRoot[]) value;
+			if (roots != null) {
+				for (int i = 0, length = roots.length; i < length; i++) {
+					if (requestor.isCanceled())
+						return;
+					PackageFragmentRoot root = (PackageFragmentRoot) roots[i];
+					if (moduleMatches(root, moduleContext))
+						requestor.acceptPackageFragment(root.getPackageFragment(pkgName));
+				}
+			}
+		}
+	}
+
+	@FunctionalInterface
+	interface IPrefixMatcherCharArray { // note the reversal in the order of params wrt to the string version.
+		boolean matches(char[] prefix, char[] name, boolean isCaseSensitive);
+	}
+	/**
+	 * Notifies the given requestor of all package fragments with the
+	 * given name. Checks the requestor at regular intervals to see if the
+	 * requestor has canceled. The domain of
+	 * the search is bounded by the <code>IJavaProject</code>
+	 * this <code>NameLookup</code> was obtained from.
+	 *
+	 * @param partialMatch partial name matches qualify when <code>true</code>;
+	 *	only exact name matches qualify when <code>false</code>
+	 */
 	public void seekPackageFragments(String name, boolean partialMatch, IJavaElementRequestor requestor) {
 /*		if (VERBOSE) {
 			Util.verbose(" SEEKING PACKAGE FRAGMENTS");  //$NON-NLS-1$
 			Util.verbose(" -> name: " + name);  //$NON-NLS-1$
 			Util.verbose(" -> partial match:" + partialMatch);  //$NON-NLS-1$
 		}
-*/		if (partialMatch) {
+*/
+		if (partialMatch) {
 			String[] splittedName = Util.splitOn('.', name, 0, name.length());
 			Object[][] keys = this.packageFragments.keyTable;
 			for (int i = 0, length = keys.length; i < length; i++) {
@@ -964,7 +1284,35 @@ public class NameLookup implements SuffixConstants {
 		seekTypes(name, pkg, partialMatch, acceptFlags, requestor, true);
 	}
 
-	/**
+	public void seekModuleReferences(String name, IJavaElementRequestor requestor, IJavaProject javaProject) {
+		seekModule(name.toCharArray(), true /* prefix */, requestor);
+	}
+	public void seekModule(char[] name, boolean prefixMatch, IJavaElementRequestor requestor) {
+
+		IPrefixMatcherCharArray prefixMatcher = prefixMatch 
+				? CharOperation.equals(name, CharOperation.ALL_PREFIX) 
+						? (x, y, isCaseSensitive) -> true
+						: CharOperation::prefixEquals
+				: CharOperation::equals;
+
+		int count= this.packageFragmentRoots.length;
+		for (int i= 0; i < count; i++) {
+			if (requestor.isCanceled())
+				return;
+			IPackageFragmentRoot root= this.packageFragmentRoots[i];
+			IModuleDescription module = null;
+			if (root instanceof JrtPackageFragmentRoot) {
+				if (!prefixMatcher.matches(name, root.getElementName().toCharArray(), false)) {
+					continue;
+				}
+			}
+			module = getModuleDescription(root, this.rootToModule, this.rootToResolvedEntries::get);
+			if (module != null && prefixMatcher.matches(name, module.getElementName().toCharArray(), false)) {
+				requestor.acceptModule(module);
+			}
+		}
+	}
+/**
 	 * Notifies the given requestor of all types (classes and interfaces) in the
 	 * given package fragment with the given (unqualified) name.
 	 * Checks the requestor at regular intervals to see if the requestor
@@ -1080,11 +1428,13 @@ public class NameLookup implements SuffixConstants {
 					// MatchName will never have the extension ".class" and the elementName always will.
 					String elementName = classFile.getElementName();
 					if (elementName.regionMatches(true /*ignore case*/, 0, name, 0, matchLength)) {
-						IType type = ((ClassFile) classFile).getType();
-						String typeName = type.getElementName();
-						if (typeName.length() > 0 && !Character.isDigit(typeName.charAt(0))) { //not an anonymous type
-							if (nameMatches(unqualifiedName, type, true/*partial match*/) && acceptType(type, acceptFlags, false/*not a source type*/))
-								requestor.acceptType(type);
+						if (classFile instanceof IOrdinaryClassFile) {
+							IType type = ((IOrdinaryClassFile) classFile).getType();
+							String typeName = type.getElementName();
+							if (typeName.length() > 0 && !Character.isDigit(typeName.charAt(0))) { //not an anonymous type
+								if (nameMatches(unqualifiedName, type, true/*partial match*/) && acceptType(type, acceptFlags, false/*not a source type*/))
+									requestor.acceptType(type);
+							}
 						}
 					}
 				}
@@ -1312,4 +1662,24 @@ public class NameLookup implements SuffixConstants {
 		return false;
 	}
 
+	public boolean hasCompilationUnit(char[][] pkgName, IPackageFragmentRoot[] moduleContext) {
+		String packageName = CharOperation.toString(pkgName);
+		if (packageName == null || packageName.length() == 0) {
+			packageName= IPackageFragment.DEFAULT_PACKAGE_NAME;
+		}
+
+		// Look for concerned package fragments
+		JavaElementRequestor elementRequestor = new JavaElementRequestor();
+		seekPackageFragments(packageName, false, elementRequestor, moduleContext);
+		IPackageFragment[] packages= elementRequestor.getPackageFragments();
+		for (IPackageFragment fragment : packages) {
+			try {
+				if (fragment.containsJavaResources())
+					return true;
+			} catch (JavaModelException e) {
+				// silent
+			}
+		}
+		return false;
+	}
 }

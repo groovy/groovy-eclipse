@@ -44,6 +44,7 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
@@ -597,6 +598,14 @@ public void indexLibrary(IPath path, IProject requestingProject, URL indexURL) {
 	this.indexLibrary(path, requestingProject, indexURL, false);
 }
 
+private IndexRequest getRequest(Object target, IPath jPath, IndexLocation indexFile, IndexManager manager, boolean updateIndex) {
+	return isJrt(((File) target).getName()) ? new AddJrtToIndex(jPath, indexFile, this, updateIndex) :
+		new AddJarFileToIndex(jPath, indexFile, this, updateIndex);
+}
+
+private boolean isJrt(String fileName) {
+	return fileName != null && fileName.endsWith(JRTUtil.JRT_FS_JAR);
+}
 /**
  * Trigger addition of a library to an index
  * Note: the actual operation is performed in background
@@ -624,9 +633,11 @@ public void indexLibrary(IPath path, IProject requestingProject, URL indexURL, f
 	IndexRequest request = null;
 	Object target = JavaModel.getTarget(path, true);
 	if (target instanceof IFile) {
-		request = new AddJarFileToIndex((IFile) target, indexFile, this, forceIndexUpdate);
+		request = isJrt(((IFile) target).getFullPath().toOSString()) ? 
+				new AddJrtToIndex((IFile) target, indexFile, this, forceIndexUpdate) :
+					new AddJarFileToIndex((IFile) target, indexFile, this, forceIndexUpdate);
 	} else if (target instanceof File) {
-		request = new AddJarFileToIndex(path, indexFile, this, forceIndexUpdate);
+		request = getRequest(target, path, indexFile, this, forceIndexUpdate);
 	} else if (target instanceof IContainer) {
 		request = new IndexBinaryFolder((IContainer) target, this);
 	} else {
@@ -732,9 +743,11 @@ private void rebuildIndex(IndexLocation indexLocation, IPath containerPath, fina
 	} else if (target instanceof IFolder) {
 		request = new IndexBinaryFolder((IFolder) target, this);
 	} else if (target instanceof IFile) {
-		request = new AddJarFileToIndex((IFile) target, null, this, updateIndex);
+		request = isJrt(((IFile) target).getFullPath().toOSString()) ? 
+				new AddJrtToIndex((IFile) target, null, this, updateIndex) :
+					new AddJarFileToIndex((IFile) target, null, this, updateIndex);
 	} else if (target instanceof File) {
-		request = new AddJarFileToIndex(containerPath, null, this, updateIndex);
+		request = getRequest(target, containerPath, null, this, updateIndex);
 	}
 	if (request != null)
 		request(request);

@@ -57,7 +57,6 @@ import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor;
 import org.eclipse.jdt.internal.codeassist.RelevanceConstants;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
@@ -156,6 +155,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         }
     }
 
+    public void acceptModule(char[] moduleName) {
+    }
+
     public void acceptPackage(char[] packageName) {
         checkCancel();
 
@@ -179,7 +181,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                 checkCancel();
 
             // do not propose enum constructors
-            if ((typeModifiers & ClassFileConstants.AccEnum) != 0)
+            if (Flags.isEnum(typeModifiers))
                 return;
 
             if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
@@ -470,7 +472,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                 AcceptedCtor acceptedConstructor = (AcceptedCtor) this.acceptedConstructors.elementAt(i);
 
                 final int typeModifiers = acceptedConstructor.typeModifiers;
-                if (isInterfaceAnnotationAbstractOrEnum(typeModifiers)) {
+                if (Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers) || Flags.isEnum(typeModifiers)) {
                     continue;
                 }
 
@@ -533,10 +535,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             this.acceptedTypes = null; // reset
         }
         return proposals;
-    }
-
-    private boolean isInterfaceAnnotationAbstractOrEnum(int typeModifiers) {
-        return (typeModifiers & (ClassFileConstants.AccInterface | ClassFileConstants.AccEnum | ClassFileConstants.AccAnnotation)) != 0;
     }
 
     private ICompletionProposal proposeConstructor(char[] simpleTypeName,

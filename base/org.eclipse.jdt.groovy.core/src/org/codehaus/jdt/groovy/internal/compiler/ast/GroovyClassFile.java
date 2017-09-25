@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
@@ -243,8 +244,11 @@ class GroovyClassFile extends ClassFile {
         return name;
     }
 
-    @Override
     protected void initByteArrays() {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void initByteArrays(int members) {
         throw new UnsupportedOperationException();
     }
 
@@ -265,8 +269,11 @@ class GroovyClassFile extends ClassFile {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public void reset(SourceTypeBinding typeBinding) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void reset(SourceTypeBinding typeBinding, CompilerOptions options) {
         throw new UnsupportedOperationException();
     }
 

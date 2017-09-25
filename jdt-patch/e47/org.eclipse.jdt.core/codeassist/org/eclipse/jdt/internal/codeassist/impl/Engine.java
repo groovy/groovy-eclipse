@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -118,18 +118,21 @@ public abstract class Engine implements ITypeRequestor {
 		} else {
 			result = new CompilationResult(sourceTypes[0].getFileName(), 1, 1, this.compilerOptions.maxProblemsPerUnit);
 		}
+		LookupEnvironment environment = packageBinding.environment;
+		if (environment == null)
+			environment = this.lookupEnvironment;
 		CompilationUnitDeclaration unit =
 			SourceTypeConverter.buildCompilationUnit(
 				sourceTypes,//sourceTypes[0] is always toplevel here
 				SourceTypeConverter.FIELD_AND_METHOD // need field and methods
 				| SourceTypeConverter.MEMBER_TYPE, // need member types
 				// no need for field initialization
-				this.lookupEnvironment.problemReporter,
+				environment.problemReporter,
 				result);
 
 		if (unit != null) {
-			this.lookupEnvironment.buildTypeBindings(unit, accessRestriction);
-			this.lookupEnvironment.completeTypeBindings(unit, true);
+			environment.buildTypeBindings(unit, accessRestriction);
+			environment.completeTypeBindings(unit, true);
 		}
 	}
 
