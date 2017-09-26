@@ -122,24 +122,29 @@ public abstract class GroovyCompilerTestSuite {
                         groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-" + groovyVer + ".jar");
                         if (groovyJar != null) break;
                     }
-                    newcps[newcps.length-3] = FileLocator.resolve(groovyJar).getFile();
+                    newcps[newcps.length-3] = resolve(groovyJar);
 
                     URL ivyJar = null;
                     for (String ivyVer : ivyVersions) {
                         ivyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/ivy-" + ivyVer + ".jar");
                         if (ivyJar != null) break;
                     }
-                    newcps[newcps.length-2] = FileLocator.resolve(ivyJar).getFile();
+                    newcps[newcps.length-2] = resolve(ivyJar);
 
                     // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
                     // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
                     // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
                     // classpath for just this reason, hmm.
-                    newcps[newcps.length-1] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
+                    newcps[newcps.length-1] = resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar"));
                 } catch (IOException e) {
                     fail("IOException thrown " + e.getMessage());
                 }
                 return newcps;
+            }
+
+            private String resolve(URL jarRef) throws IOException {
+                String jarPath = FileLocator.resolve(jarRef).getFile();
+                return new File(jarPath).getAbsolutePath();
             }
         };
         testDriver.initialize(new CompilerTestSetup(compliance));

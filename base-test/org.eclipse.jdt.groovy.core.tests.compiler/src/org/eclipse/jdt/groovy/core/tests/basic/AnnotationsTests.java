@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
 import static org.junit.Assume.assumeTrue;
 
+import org.eclipse.jdt.core.tests.util.Util;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -198,7 +199,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "public class Const {\n" +
             "static final String instance= \"abc\";\n" +
             "  public static void main(String[] argv) {\n" +
-            "    System.out.println(XXX.class.getAnnotation(Anno.class));\n" +
+            "    System.out.print(XXX.class.getAnnotation(Anno.class));\n" +
             "  }\n" +
             "}",
 
@@ -212,7 +213,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}",
         };
 
-        runConformTest(sources, "@Anno(value=abc)");
+        runConformTest(sources, Util.getMajorMinorVMVersion() < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
     }
 
     @Test // GRECLIPSE-830

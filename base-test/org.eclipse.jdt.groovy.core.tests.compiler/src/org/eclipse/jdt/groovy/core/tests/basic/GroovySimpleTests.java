@@ -1258,9 +1258,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "def p = new Pattern(javaPattern:~/\\d+/)\n"+
             "assert \"123\" ==~ p.javaPattern\n"+
             "print 'success '\n"+
-            "print '['+p.class.package+']['+JavaPattern.class.package.name+']'\n",
+            "print '['+p.class.name+']['+JavaPattern.class.name+']'\n",
         },
-        "success [null][java.util.regex]");
+        "success [Pattern][java.util.regex.Pattern]");
     }
 
     @Test

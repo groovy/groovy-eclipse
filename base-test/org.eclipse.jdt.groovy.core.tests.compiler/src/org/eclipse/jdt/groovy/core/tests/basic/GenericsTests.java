@@ -1730,7 +1730,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         // Eclipse Oxygen (i.e. JDT Core 3.13) added warning for mixed mode
         Version v = Platform.getBundle("org.eclipse.jdt.core").getVersion();
         runNegativeTest(sources, (v.getMajor() == 3 && v.getMinor() < 13) ? "" : "----------\n" +
-            "1. INFO in Demo.groovy (at line 2)\n" +
+            "1. WARNING in Demo.groovy (at line 2)\n" +
             "\t@SuppressWarnings(['rawtypes','cast'])\n" +
             "\t                              ^^^^^^\n" +
             "At least one of the problems in category 'cast' is not analysed due to a compiler option being ignored\n" +
