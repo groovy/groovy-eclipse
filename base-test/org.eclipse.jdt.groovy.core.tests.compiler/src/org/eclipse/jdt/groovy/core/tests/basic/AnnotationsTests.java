@@ -18,7 +18,7 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
 import static org.junit.Assume.assumeTrue;
 
-import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -213,7 +213,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}",
         };
 
-        runConformTest(sources, Util.getMajorMinorVMVersion() < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
+        runConformTest(sources, CompilerOptions.versionToJdkLevel(System.getProperty("java.version")) < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
     }
 
     @Test // GRECLIPSE-830
