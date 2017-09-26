@@ -86,8 +86,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assumeTrue(isAtLeastGroovy(20));
 
         runConformTest(new String[] {
-            "Foo.groovy",
-            "enum Color { R,G,B;}\n"
+            "Color.groovy",
+            "enum Color { R,G,B }\n"
         });
      }
 

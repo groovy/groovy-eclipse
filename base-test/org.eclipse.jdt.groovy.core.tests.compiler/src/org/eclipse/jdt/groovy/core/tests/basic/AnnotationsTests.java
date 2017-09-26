@@ -30,11 +30,11 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     @Test
     public void testGroovyAnnotation() {
         String[] sources = {
-            "Foo.groovy",
+            "A.groovy",
             "@interface A {}",
 
-            "Bar.groovy",
-            "@A class Bar {}"
+            "B.groovy",
+            "@A class B {}",
         };
 
         runConformTest(sources);
@@ -50,7 +50,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}\n"+
             "@interface B {\n"+
             "   String value() default \"\"\n"+
-            "}"
+            "}",
         };
 
         runConformTest(sources, "abc");
@@ -71,7 +71,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "  @Min(0L)\n" +
             "  Integer index\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -91,7 +91,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "  @Min(0G)\n" +
             "  Integer index\n" +
-            "}"
+            "}",
         };
 
         // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
@@ -118,7 +118,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "  @Min(1.1G)\n" +
             "  BigDecimal index\n" +
-            "}"
+            "}",
         };
 
         // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
@@ -145,7 +145,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@Anno(URL.class)\n" +
             "class Main {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -165,7 +165,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@Anno(URL)\n" +
             "class Main {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -185,7 +185,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Main.groovy",
             "@Anno(value={ println 'hello' })\n" +
             "class Main {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -209,7 +209,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {\n" +
             "  String value()\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources, "@Anno(value=abc)");
@@ -233,7 +233,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "    @AnnotationDouble(value='test', width=1.0) double value\n" +
             "  }\n" +
             "  def test = new AnnotationDoubleTest()\n" +
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -256,7 +256,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(VALUE)\n" +
             "  def method() {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -273,7 +273,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(value = [VALUE])\n" +
             "  def method() {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -286,7 +286,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@SuppressWarnings(Main.VALUE)\n" +
             "class Main {\n" +
             "  public static final String VALUE = 'nls'\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -299,7 +299,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@SuppressWarnings(VALUE)\n" +
             "class Main {\n" +
             "  public static final String VALUE = 'nls'\n" +
-            "}"
+            "}",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -324,7 +324,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Anno(Main.Inner)\n" +
             "class Main {\n" +
             "  static class Inner {}\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -344,7 +344,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Anno(Inner)\n" +
             "class Main {\n" +
             "  static class Inner {}\n" +
-            "}"
+            "}",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -375,7 +375,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(VALUE)\n" +
             "  def method() {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -396,7 +396,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(value=[VALUE])\n" +
             "  def method() {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -417,7 +417,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(FOO)\n" +
             "  def method() {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -438,7 +438,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(value=[FOO])\n" +
             "  def method() {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -458,7 +458,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "import java.lang.Class as Trash\n" +
             "@Anno(Trash)\n" +
             "class Main {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -479,7 +479,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "import java.util.regex.Pattern as Regex\n" +
             "@Anno(Regex)\n" +
             "class Main {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -503,7 +503,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "import p.Outer as Retou\n" +
             "@Anno(Retou.Inner)\n" +
             "class Main {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -519,7 +519,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}",
 
             "Bar.groovy",
-            "@Anno class Bar {}"
+            "@Anno class Bar {}",
         };
 
         runNegativeTest(sources,
@@ -547,7 +547,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -574,7 +574,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -607,7 +607,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -639,7 +639,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -668,7 +668,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.SOURCE)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -695,7 +695,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Anno.java",
             "package p;\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -724,17 +724,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "Anno.java",
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources);
 
         checkGCUDeclaration("Other.groovy",
-                "public class Other {\n" +
-                "  public @Anno Date me;\n" +
-                "  public Other() {\n" +
-                "  }\n" +
-                "}\n");
+            "public class Other {\n" +
+            "  public @Anno Date me;\n" +
+            "  public Other() {\n" +
+            "  }\n" +
+            "}\n");
     }
 
     @Test
@@ -754,7 +754,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -762,11 +762,10 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String expectedOutput = "public @Anno X(public String s) {";
         checkGCUDeclaration("X.groovy", expectedOutput);
 
-        expectedOutput =
+        checkDisassemblyFor("p/X.class",
             "  // Stack: 2, Locals: 4\n" +
             "  @p.Anno\n" +
-            "  public X(java.lang.String s);\n";
-        checkDisassemblyFor("p/X.class", expectedOutput);
+            "  public X(java.lang.String s);\n");
     }
 
     @Test
@@ -786,7 +785,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno {}\n"
+            "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
@@ -819,7 +818,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n"+
-            "class Target { }"
+            "class Target { }",
         };
 
         runConformTest(sources, "success");
@@ -849,7 +848,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n"+
-            "class Target { }"
+            "class Target { }",
         };
 
         runConformTest(sources, "success");
@@ -879,7 +878,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n"+
-            "class Target { }"
+            "class Target { }",
         };
 
         runConformTest(sources, "success");
@@ -909,7 +908,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n"+
-            "class Target { }"
+            "class Target { }",
         };
 
         runConformTest(sources, "success");
@@ -939,7 +938,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n"+
-            "class Target { }"
+            "class Target { }",
         };
 
         runConformTest(sources, "success");
@@ -969,7 +968,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Target.java",
             "package p;\n"+
-            "class Target { }"
+            "class Target { }",
         };
 
         runConformTest(sources, "success");
@@ -995,7 +994,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<?> value(); }\n"
+            "@interface Anno { Class<?> value(); }\n",
         };
 
         runNegativeTest(sources,
@@ -1086,7 +1085,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.groovy",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runConformTest(sources, "success");
@@ -1114,7 +1113,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.groovy",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1148,7 +1147,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.groovy",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1182,7 +1181,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.groovy",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1216,7 +1215,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runConformTest(sources, "success");
@@ -1244,7 +1243,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1278,7 +1277,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.groovy",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1312,7 +1311,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1346,7 +1345,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runConformTest(sources, "success");
@@ -1374,7 +1373,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1408,7 +1407,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.groovy",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1442,7 +1441,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo { }"
+            "class Foo { }",
         };
 
         runNegativeTest(sources,
@@ -1471,7 +1470,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? extends Number> value(); }\n"
+            "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
         runNegativeTest(sources,
@@ -1500,7 +1499,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? extends Number> value(); }\n"
+            "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
         runNegativeTest(sources,
@@ -1529,7 +1528,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? extends Number> value(); }\n"
+            "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
         runNegativeTest(sources,
@@ -1558,7 +1557,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? extends Number> value(); }\n"
+            "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
         runNegativeTest(sources,
@@ -1587,7 +1586,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? extends Number> value(); }\n"
+            "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
         runConformTest(sources, "success");
@@ -1610,7 +1609,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? super Integer> value(); }\n"
+            "@interface Anno { Class<? super Integer> value(); }\n",
         };
 
         runConformTest(sources, "success");
@@ -1632,7 +1631,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "import java.lang.annotation.*;\n"+
             "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@interface Anno { Class<? super Integer> value(); }\n"
+            "@interface Anno { Class<? super Integer> value(); }\n",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -1661,7 +1660,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/I.java",
             "package p;\n"+
-            "interface I {}\n"
+            "interface I {}\n",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -1690,7 +1689,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/I.java",
             "package p;\n"+
-            "interface I {}\n"
+            "interface I {}\n",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -1719,7 +1718,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/I.java",
             "package p;\n"+
-            "interface I {}\n"
+            "interface I {}\n",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -1751,7 +1750,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo implements I {}\n"
+            "class Foo implements I {}\n",
         };
 
         runNegativeTest(sources, "----------\n" +
@@ -1783,7 +1782,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Foo.java",
             "package p;\n"+
-            "class Foo implements I {}\n"
+            "class Foo implements I {}\n",
         };
 
         runNegativeTest(sources, "----------\n" +

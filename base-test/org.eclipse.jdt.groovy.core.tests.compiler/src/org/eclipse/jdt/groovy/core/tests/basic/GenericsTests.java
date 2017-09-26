@@ -42,10 +42,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     @Test
     public void testGenericField() {
         String[] sources = {
-            "A.groovy",
+            "Foo.groovy",
             "class Foo {\n" +
             "  List<String> bar\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -54,10 +54,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     @Test
     public void testGenericArrayField() {
         String[] sources = {
-            "A.groovy",
+            "Foo.groovy",
             "class Foo {\n" +
             "  List<String>[] bar\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -66,10 +66,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     @Test
     public void testGenericParam() {
         String[] sources = {
-            "A.groovy",
+            "Foo.groovy",
             "class Foo {\n" +
             "  public void m(List<String> bar) {}\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -78,10 +78,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     @Test
     public void testGenericArrayParam() {
         String[] sources = {
-            "A.groovy",
+            "Foo.groovy",
             "class Foo {\n" +
             "  public void m(List<String>[] bar) {}\n" +
-            "}"
+            "}",
         };
 
         if (!isAtLeastJava(JDK7)) {
@@ -89,7 +89,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         } else {
             runNegativeTest(sources,
                 "----------\n" +
-                "1. WARNING in A.groovy (at line 2)\n" +
+                "1. WARNING in Foo.groovy (at line 2)\n" +
                 "\tpublic void m(List<String>[] bar) {}\n" +
                 "\t              ^^^^^^^^^^^^^^^^^^\n" +
                 "Type safety: Potential heap pollution via varargs parameter bar\n" +
@@ -100,10 +100,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     @Test
     public void testGenericVaragsParam() {
         String[] sources = {
-            "A.groovy",
+            "Foo.groovy",
             "class Foo {\n" +
             "  public void m(List<String>... bar) {}\n" +
-            "}"
+            "}",
         };
 
         if (!isAtLeastJava(JDK7)) {
@@ -111,7 +111,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         } else {
             runNegativeTest(sources,
                 "----------\n" +
-                "1. WARNING in A.groovy (at line 2)\n" +
+                "1. WARNING in Foo.groovy (at line 2)\n" +
                 "\tpublic void m(List<String>... bar) {}\n" +
                 "\t              ^^^^^^^^^^^^^^^^^^^\n" +
                 "Type safety: Potential heap pollution via varargs parameter bar\n" +
@@ -135,7 +135,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A {\n" +
             "  public <T> A(T t) {}\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -159,7 +159,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<?> a;\n" +
             "  Set<? extends java.io.Serializable> b;\n" +
             "  Set<? super Number> c;\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -179,7 +179,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<? extends java.io.Serializable> settwo;\n" +
             "  Set<? super java.lang.Thread> setthree;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -208,7 +208,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<String[]> a;\n" +
             "  Set<String[][]> b;\n" +
             "  Set<java.lang.Thread[][][]> c;\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -229,7 +229,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  java.util.Set<? extends Serializable> settwo;\n" +
             "  java.util.Set<? super Number> setthree;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -249,7 +249,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  java.util.Set<? extends java.io.Serializable> settwo;\n" +
             "  java.util.Set<? super java.lang.Thread> setthree;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -276,7 +276,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "public class One<A,B> {\n" +
             "  class Two<C> {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -296,7 +296,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  java.util.Set<String[]> settwo;\n" +
             "  java.util.Set<java.lang.Number[][][]> setthree;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -314,7 +314,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "class X {\n" +
             "  Set<Map.Entry<String,List<String>>> foo;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -330,7 +330,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "class X {\n" +
             "  Map.Entry<String,List<String>> foo;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -474,7 +474,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "   public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
             "       super.putAll(arg0);\n" +
             "   }\n" +
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -629,7 +629,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "   public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
             "       super.putAll(arg0);\n" +
             "   }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -647,7 +647,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Field<?> get(Object obj) {\n" +
             "    null\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -785,7 +785,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n" +
             "    super.putAll(arg0);\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -816,7 +816,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "   public Integer get(Object key) {\n"+
             "       return null;\n"+
             "   }\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -837,7 +837,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/G.groovy",
             "package p;\n"+
-            "class G<T> { T field; }"
+            "class G<T> { T field; }",
         };
 
         runWarningFreeTest(sources);
@@ -858,7 +858,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/G.java",
             "package p;\n"+
-            "class G<T> { public T field; }" // TODO why must this be public for the groovy code to see it?  If non public should it be instead defined as a property on the JDTClassNode rather than a field?
+            "class G<T> { public T field; }", // TODO why must this be public for the groovy code to see it?  If non public should it be instead defined as a property on the JDTClassNode rather than a field?
         };
 
         runWarningFreeTest(sources);
@@ -882,7 +882,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "public class G {\n" +
             "  List<Integer> b = [1,2,3]\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -905,7 +905,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.groovy",
             "package p;\n" +
-            "public class A<T> {}\n"
+            "public class A<T> {}\n",
         };
 
         runWarningFreeTest(sources);
@@ -916,21 +916,23 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
-            "Inter.java",
+            "ab/Inter.java",
             "package ab;\n"+
             "public interface Inter {\n"+
             "    public Number getItem(Object itemId);\n"+
             "}\n",
-            "Clazz.java",
+
+            "ab/Clazz.java",
             "package ab;\n"+
             "public abstract class Clazz<ITEM extends Number> implements Inter {\n"+
             "   public ITEM getItem(Object itemId) {\n"+
             "       return null;\n"+
             "   }\n"+
             "}\n",
-            "GClazz.groovy",
+
+            "ab/GClazz.groovy",
             "package ab;\n"+
-            "class GClazz extends Clazz<Number> {}"
+            "class GClazz extends Clazz<Number> {}",
         };
 
         runWarningFreeTest(sources);
@@ -941,24 +943,27 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         assumeTrue(isAtLeastGroovy(20));
 
         String[] sources = {
-            "Clazz.java",
+            "ab/Clazz.java",
             "package ab;\n"+
             "public abstract class Clazz<ITEM extends MyItem> implements Inter {\n"+
             "   public ITEM getItem(Object itemId) {\n"+
             "       return null;\n"+
             "   }\n"+
             "}\n",
-            "Inter.java",
+
+            "ab/Inter.java",
             "package ab;\n"+
             "public interface Inter {\n"+
             "    public MyItem getItem(Object itemId);\n"+
             "}\n",
-            "MyItem.java",
+
+            "ab/MyItem.java",
             "package ab;\n"+
             "public class MyItem {}\n",
-            "GClazz.groovy",
+
+            "ab/GClazz.groovy",
             "package ab;\n"+
-            "class GClazz extends Clazz<MyItem> {}"
+            "class GClazz extends Clazz<MyItem> {}",
         };
 
         runWarningFreeTest(sources);
@@ -979,7 +984,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.groovy",
             "package p;\n" +
-            "public class A<T> {}\n"
+            "public class A<T> {}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1000,7 +1005,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T> {public void set(T t) { }}\n"
+            "public class A<T> {public void set(T t) { }}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1031,7 +1036,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T extends I> {}\n"
+            "public class A<T extends I> {}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1059,7 +1064,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T extends I> {}\n"
+            "public class A<T extends I> {}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1088,7 +1093,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T extends I> {}\n"
+            "public class A<T extends I> {}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1114,7 +1119,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T extends I> {}\n"
+            "public class A<T extends I> {}\n",
         };
 
         runNegativeTest(sources,
@@ -1141,7 +1146,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    println 'success'\n"+
             "  }\n"+
             "  void print(String msg) { print msg; }\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1159,7 +1164,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    new B()\n"+
             "    println 'success'\n"+
             "  }\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1177,7 +1182,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    new B()\n"+
             "    println 'success'\n"+
             "  }\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1197,7 +1202,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T> {public void set(T t) { }}\n"
+            "public class A<T> {public void set(T t) { }}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1217,7 +1222,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "q/A.java",
             "package q;\n" +
-            "public class A<T> {public void set(T t) { }}\n"
+            "public class A<T> {public void set(T t) { }}\n",
         };
 
         runWarningFreeTest(sources);
@@ -1240,7 +1245,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends Object> {\n"+
             "  public void foo(T t) {}\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1266,7 +1271,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends Object> {\n"+
             "  public void foo(T t) {}\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1293,7 +1298,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends Object,R> {\n"+
             "  public void foo(T t, R r) {}\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1321,7 +1326,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void method() {\n" +
             "    Groovy.method(Java.class);\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1353,7 +1358,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public <T> T execute(Callback<T,S> callback) {\n" +
             "    return callback.apply(null)\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1373,7 +1378,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "class B {\n" +
             "  public void test(A<?> a) {\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1430,7 +1435,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    this.primaryKey = pk\n" +
             "    this.secondaryKeys = sk\n" +
             "  }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources, "no error");
@@ -1454,7 +1459,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Object encode(String s) { return null; }\n" +
             "  @Override\n" +
             "  String decode(Object o) { return null; }\n" +
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1477,7 +1482,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "public interface I {\n" +
             "  List<?> m();\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1500,7 +1505,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n"+
             "public interface I<T extends Number> {\n" +
             "  List<T> m();\n"+
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -1529,7 +1534,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "import java.util.List;\n"+
             "public interface Iii<T extends Number> {\n" +
             "  List<T> m();\n"+
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -1565,7 +1570,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    messages.add(\"world\");\n"+
             "    messages.add(\"\\n\");\n"+
             "  }\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1596,7 +1601,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    messages.add(\"world\");\n"+
             "    messages.add(\"\\n\");\n"+
             "  }\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1617,7 +1622,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\n"+
             "class MyMap<K,V> extends Map {\n"+
             "\n"+
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -1652,7 +1657,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\n"+
             "@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
             "List myList;\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1666,7 +1671,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "public class Demo {\n"+
             "\n"+
             "List myList;\n"+
-            "}"
+            "}",
         };
 
         runWarningFreeTest(sources);
@@ -1680,7 +1685,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\n"+
             "@SuppressWarnings(\"unchecked\")\n"+ // unnecessary suppression
             "List<String> myList;\n"+
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -1700,7 +1705,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\n"+
             "@SuppressWarnings(\"unchecked2\")\n"+ // spelt wrong
             "List<String> myList;\n"+
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -1719,13 +1724,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "class Demo {\n"+
             "  @SuppressWarnings(['rawtypes','cast'])\n"+
             "  List list\n"+
-            "}"
+            "}",
         };
 
         // Eclipse Oxygen (i.e. JDT Core 3.13) added warning for mixed mode
         Version v = Platform.getBundle("org.eclipse.jdt.core").getVersion();
         runNegativeTest(sources, (v.getMajor() == 3 && v.getMinor() < 13) ? "" : "----------\n" +
-            "1. WARNING in Demo.groovy (at line 2)\n" +
+            "1. INFO in Demo.groovy (at line 2)\n" +
             "\t@SuppressWarnings(['rawtypes','cast'])\n" +
             "\t                              ^^^^^^\n" +
             "At least one of the problems in category 'cast' is not analysed due to a compiler option being ignored\n" +
@@ -1740,7 +1745,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\n"+
             "@SuppressWarnings([\"rawtypes\",\"cast2\"])\n"+
             "List myList;\n"+
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,
@@ -1771,8 +1776,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "}\n"+
             "  public static void foo() throws java.io.IOException {}\n"+
             "}",
+
             "B.groovy",
-            "print 'a'\n"
+            "print 'a'\n",
         };
 
         runWarningFreeTest(sources);
@@ -1795,7 +1801,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "}",
 
             "B.groovy",
-            "print 'a'\n"
+            "print 'a'\n",
         };
 
         runNegativeTest(sources,
@@ -1830,7 +1836,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "}",
 
             "B.groovy",
-            "print 'a'\n"
+            "print 'a'\n",
         };
 
         runNegativeTest(sources,
@@ -1863,7 +1869,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    x < y    // OK\n" +
             "    x == y   // BOOM!\n" +
             " }\n" +
-            "}"
+            "}",
         };
 
         runNegativeTest(sources,

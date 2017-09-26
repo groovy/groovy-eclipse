@@ -110,7 +110,7 @@ public abstract class GroovyCompilerTestSuite {
              */
             @Override
             protected String[] getDefaultClassPaths() {
-                String[] cps = Util.concatWithClassLibs(AbstractRegressionTest.OUTPUT_DIR, false);
+                String[] cps = super.getDefaultClassPaths();
                 String[] newcps = new String[cps.length + 3];
                 System.arraycopy(cps, 0, newcps, 0, cps.length);
 
@@ -176,7 +176,7 @@ public abstract class GroovyCompilerTestSuite {
     }
 
     protected final void runConformTest(String[] sources, String expectedOutput, Map<String, String> compilerOptions) {
-        testDriver.runConformTest(sources, expectedOutput, /*classlibs:*/null, /*flush*/true, /*vmargs*/null, compilerOptions, /*requestor*/null);
+        testDriver.runConformTest(sources, expectedOutput, /*classlibs*/null, /*flush*/true, /*vmargs*/null, compilerOptions, /*requestor*/null);
     }
 
     protected final void runNegativeTest(String[] sources, String expectedOutput) {
