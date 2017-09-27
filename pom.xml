@@ -200,8 +200,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e46/org.eclipse.jdt.core</module>
-				<module>jdt-patch/e47/org.eclipse.jdt.core.tests.builder</module>
-				<module>jdt-patch/e47/org.eclipse.jdt.core.tests.compiler</module>
+				<module>jdt-patch/e46/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e46/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -231,6 +231,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e45/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e45/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e45/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e45/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
