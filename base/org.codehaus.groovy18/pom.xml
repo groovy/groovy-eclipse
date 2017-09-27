@@ -12,4 +12,23 @@
   <artifactId>org.codehaus.groovy</artifactId>
   <version>1.8.9-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${basedir}</directory>
+              <includes>
+                <include>eclipse-trace.jar</include>
+                <include>groovy-eclipse.jar</include>
+              </includes>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
