@@ -8,6 +8,6 @@
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.eclipse.jdt.groovy.core.tests.builder</artifactId>
-  <version>3.3.100-SNAPSHOT</version>
-  <packaging>eclipse-plugin</packaging>
+  <version>2.9.2-SNAPSHOT</version>
+  <packaging>eclipse-test-plugin</packaging>
 </project>
