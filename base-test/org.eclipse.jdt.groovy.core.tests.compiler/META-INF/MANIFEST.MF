@@ -13,6 +13,7 @@ Export-Package: org.eclipse.jdt.core.tests.compiler.parser,
  org.eclipse.jdt.core.tests.junit.extension,
  org.eclipse.jdt.core.tests.runtime,
  org.eclipse.jdt.core.tests.util,
+ org.eclipse.jdt.groovy.core.tests,
  org.eclipse.jdt.groovy.core.tests.basic
 Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9";visibility:=reexport,
  org.eclipse.core.resources;bundle-version="[3.7.0,4.0.0)";visibility:=reexport,

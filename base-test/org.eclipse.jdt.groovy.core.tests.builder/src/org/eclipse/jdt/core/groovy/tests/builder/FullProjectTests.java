@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 

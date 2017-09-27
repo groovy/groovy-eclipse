@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -33,7 +33,6 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -421,7 +420,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t  ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^":"")+"\n" +
+            "\t  ^"+(isAtLeastGroovy(20)?"^^^^^^^":"")+"\n" +
             "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 2.\n" +
             "----------\n" +
             "2. ERROR in bad.groovy (at line 1)\n" +
@@ -431,7 +430,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "3. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t           ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^":"")+"\n" +
+            "\t           ^"+(isAtLeastGroovy(20)?"^^^^^^":"")+"\n" +
             "Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" +
             "----------\n" +
             "4. ERROR in bad.groovy (at line 2)\n" +
@@ -441,7 +440,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "5. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
-            "\t ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
+            "\t ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
             "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
             "----------\n" +
             "6. ERROR in bad.groovy (at line 2)\n" +
@@ -449,7 +448,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "\t             ^\n" +
             "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
             "----------\n" +
-            (!GroovyUtils.isAtLeastGroovy(20)?"":
+            (!isAtLeastGroovy(20)?"":
             "7. ERROR in bad.groovy (at line 4)\n" +
             "\t@Override\n" +
             "\t ^^^^^^^^\n" +
@@ -851,13 +850,13 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 4)\n" +
             "\tif (rareCondition) {\n" +
-            "\t    ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^":"")+"\n" +
+            "\t    ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^":"")+"\n" +
             "Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" +
             "----------\n" +
             "2. ERROR in Foo.groovy (at line 5)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
-            "\t                                         ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(GroovyUtils.isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":"")+"\n" +
+            "\t                                         ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":"")+"\n" +
             "----------\n");
     }
 
@@ -880,9 +879,9 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 6)\n" +
             "\tls.add(\'abc\');\n" +
-            "\t^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^^^^^^^^^^^" : "") + "\n" +
-            (GroovyUtils.isAtLeastGroovy(23) ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)" + (GroovyUtils.isAtLeastGroovy(20) ? ". Please check if the declared type is right and if the method exists." : "")) + "\n" +
+            "\t^" + (isAtLeastGroovy(20) ? "^^^^^^^^^^^^" : "") + "\n" +
+            (isAtLeastGroovy(23) ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
+            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)" + (isAtLeastGroovy(20) ? ". Please check if the declared type is right and if the method exists." : "")) + "\n" +
             "----------\n");
     }
 
@@ -961,10 +960,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 6)\n" +
             "\tls.add(\'abc\');\n" +
-            "\t^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^":"")+"\n" +
-            (GroovyUtils.isAtLeastGroovy(23)?
+            "\t^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^":"")+"\n" +
+            (isAtLeastGroovy(23)?
             "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n":
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(GroovyUtils.isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":""))+(GroovyUtils.isAtLeastGroovy(23)?"":"\n") +
+            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":""))+(isAtLeastGroovy(23)?"":"\n") +
             "----------\n");
     }
 

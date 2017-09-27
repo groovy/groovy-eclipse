@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import groovy.transform.NotYetImplemented

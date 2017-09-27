@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -127,7 +126,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents = "def x = [] << ''; x";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        assertType(contents, start, end, GroovyUtils.GROOVY_LEVEL < 24 ? "java.util.Collection<java.lang.String>" : "java.util.List<java.lang.String>");
+        assertType(contents, start, end, !isAtLeastGroovy(24) ? "java.util.Collection<java.lang.String>" : "java.util.List<java.lang.String>");
     }
 
     @Test // GRECLIPSE-1040

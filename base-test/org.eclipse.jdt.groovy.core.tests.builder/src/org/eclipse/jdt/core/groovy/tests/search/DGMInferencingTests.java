@@ -15,7 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -526,7 +527,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String str = "eachLine";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
-        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+        if (isAtLeastGroovy(20)) {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.StringGroovyMethods");
         } else {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
@@ -539,7 +540,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String str = "eachLine";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
-        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+        if (isAtLeastGroovy(20)) {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
         } else {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
@@ -552,7 +553,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String str = "leftShift";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
-        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+        if (isAtLeastGroovy(20)) {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.IOGroovyMethods");
         } else {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");

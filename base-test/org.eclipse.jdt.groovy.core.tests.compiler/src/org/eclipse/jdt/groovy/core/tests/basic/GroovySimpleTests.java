@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -39,7 +39,6 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -133,7 +132,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in A.groovy (at line 2)\n" +
         "\tclass Foo {}\n" +
-        "\t^" + (GroovyUtils.isAtLeastGroovy(20) ? "^^^^^^^^^^^" : "") + "\n" +
+        "\t^" + (isAtLeastGroovy(20) ? "^^^^^^^^^^^" : "") + "\n" +
         "Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" +
         "----------\n" +
         "2. ERROR in A.groovy (at line 2)\n" +
@@ -272,9 +271,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo {}\n" +
-        "\t ^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
+        "\t ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
         "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+
-        (GroovyUtils.isAtLeastGroovy(22) ? "each contain a class with the name" : "are containing both a class of the name") + " Foo.\n" +
+        (isAtLeastGroovy(22) ? "each contain a class with the name" : "are containing both a class of the name") + " Foo.\n" +
         "----------\n" +
         "2. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo {}\n" +
@@ -297,7 +296,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
-        "\t^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^":"")+"\n" +
+        "\t^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^":"")+"\n" +
         "Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" +
         "----------\n" +
         "2. ERROR in a\\Foo.groovy (at line 3)\n" +
@@ -2407,7 +2406,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in T.groovy (at line 3)\n" +
         "\tthis \"\"\n" +
-        "\t     ^"+(GroovyUtils.isAtLeastGroovy(20)?"^":"")+"\n" +
+        "\t     ^"+(isAtLeastGroovy(20)?"^":"")+"\n" +
         "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" +
         "----------\n");
     }
@@ -4107,7 +4106,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in p\\Code.groovy (at line 5)\n" +
         "\tpublic void m(String s, Integer i =3) {}\n" +
-        "\t^"+(GroovyUtils.isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
+        "\t^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
         "Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+
         "----------\n"
         );

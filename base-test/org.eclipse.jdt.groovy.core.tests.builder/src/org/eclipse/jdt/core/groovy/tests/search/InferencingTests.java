@@ -15,7 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -25,7 +25,6 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -1994,7 +1993,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
         int start = contents.indexOf("text");
-        assertDeclaringType(contents, start, start + 4, GroovyUtils.GROOVY_LEVEL >= 20
+        assertDeclaringType(contents, start, start + 4, isAtLeastGroovy(20)
             ? "org.codehaus.groovy.runtime.ResourceGroovyMethods" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 

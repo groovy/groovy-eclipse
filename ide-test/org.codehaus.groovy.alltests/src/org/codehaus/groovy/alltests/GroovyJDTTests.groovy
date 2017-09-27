@@ -60,7 +60,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.search.DeclarationInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.FieldReferenceSearchTests,
     org.eclipse.jdt.core.groovy.tests.search.GenericInferencingTests,
-    org.eclipse.jdt.core.groovy.tests.search.GenericsMappingTest,
+    org.eclipse.jdt.core.groovy.tests.search.GenericsMappingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy20InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.Groovy21InferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.InferencingTests,

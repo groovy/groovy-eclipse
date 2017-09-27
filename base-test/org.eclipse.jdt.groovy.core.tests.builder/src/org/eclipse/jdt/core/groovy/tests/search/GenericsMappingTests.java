@@ -23,7 +23,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.junit.Test;
 
-public final class GenericsMappingTest extends SearchTestSuite {
+public final class GenericsMappingTests extends SearchTestSuite {
 
     @Test // GRECLIPSE-1448 unresolved super types should use a redirect; resolved super types should not
     public void testGenericsMapper() throws Exception {

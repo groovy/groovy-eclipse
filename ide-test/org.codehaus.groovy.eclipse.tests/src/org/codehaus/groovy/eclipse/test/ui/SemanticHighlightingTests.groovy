@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
 
@@ -26,7 +26,6 @@ import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
 import org.junit.Before
@@ -905,7 +904,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('module'), 'module'.length(), TAG_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('value'), 'value'.length(), TAG_KEY),
-            new HighlightedTypedPosition(contents.indexOf('extensions'), 'extensions'.length(), GroovyUtils.isAtLeastGroovy(21) ? TAG_KEY : UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('extensions'), 'extensions'.length(), isAtLeastGroovy(21) ? TAG_KEY : UNKNOWN))
     }
 
     @Test @Ignore("failing on CI server")

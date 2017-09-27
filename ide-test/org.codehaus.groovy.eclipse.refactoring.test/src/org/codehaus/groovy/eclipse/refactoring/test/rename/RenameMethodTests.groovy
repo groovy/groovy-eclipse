@@ -15,14 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IMethod
-import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor

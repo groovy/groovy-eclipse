@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -325,11 +324,11 @@ final class FieldCompletionTests extends CompletionTestSuite {
     void testInitializer1() {
         String contents = '''\
             class MyClass {
-                def something = Class.
+              def something = Class.
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'forName', 2) // two public and one private
+        proposalExists(proposals, 'forName', System.getProperty('java.specification.version').toFloat() < 9 ? 2 : 3)
     }
 
     @Test

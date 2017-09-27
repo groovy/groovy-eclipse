@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
