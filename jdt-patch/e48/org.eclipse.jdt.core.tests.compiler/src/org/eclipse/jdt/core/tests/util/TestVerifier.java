@@ -204,7 +204,7 @@ private String getVerifyTestsCode() {
 		"	private String[] pathItems;\n" + 
 		"\n" + 
 		"	/** excluded paths */\n" + 
-		"	private String[] excluded= {};\n" + 
+		"	private String[] excluded= {\"groovy\",\"org.codehaus.groovy\"};\n" + 
 		"\n" + 
 		"	/**\n" + 
 		"	 * Constructs a VerifyClassLoader. It scans the class path\n" + 
@@ -271,7 +271,7 @@ private String getVerifyTestsCode() {
 		"		}\n" + 
 		"		File file= locate(name);\n" + 
 		"		if (file == null)\n" + 
-		"			throw new ClassNotFoundException();\n" + 
+		"			throw new ClassNotFoundException(name);\n" + 
 		"		byte data[]= loadClassData(file);\n" + 
 		"		c= defineClass(name, data, 0, data.length);\n" + 
 		"		if (resolve)\n" + 

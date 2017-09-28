@@ -12,8 +12,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>tests-pom</artifactId>
     <groupId>eclipse.jdt.core</groupId>
+    <artifactId>tests-pom</artifactId>
     <version>4.5.2-SNAPSHOT</version>
     <relativePath>../tests-pom/</relativePath>
   </parent>
@@ -21,9 +21,4 @@
   <artifactId>org.eclipse.jdt.core.tests.builder</artifactId>
   <version>3.10.3-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
-
-  <properties>
-    <testClass>org.eclipse.jdt.core.tests.builder.BuilderTests</testClass>
-    <testSuite>${project.artifactId}</testSuite>
-  </properties>
 </project>

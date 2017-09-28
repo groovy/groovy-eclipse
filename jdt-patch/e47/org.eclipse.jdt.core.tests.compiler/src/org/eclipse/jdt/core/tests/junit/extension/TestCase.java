@@ -241,7 +241,7 @@ public static void assertStringEquals(String expected, String actual, boolean sh
 public static void assertStringEquals(String message, String expected, String actual, boolean showLineSeparators) {
 	if (expected == null && actual == null)
 		return;
-	if (expected != null && expected.equals(actual))
+	if (expected != null && actual.matches("\\Q" + expected.replace("##", "\\E.*\\Q") + "\\E"))
 		return;
 	final StringBuffer formatted;
 	if (message != null) {

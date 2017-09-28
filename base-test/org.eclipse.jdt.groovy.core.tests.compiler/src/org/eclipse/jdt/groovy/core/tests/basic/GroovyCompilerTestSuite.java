@@ -15,9 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -34,6 +31,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
+import org.eclipse.jdt.core.tests.compiler.regression.InMemoryNameEnvironment;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.CompilerTestSetup;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -51,8 +49,10 @@ import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
@@ -83,6 +83,7 @@ public abstract class GroovyCompilerTestSuite {
     }
 
     private final long compliance;
+    protected String[] vmArguments;
 
     public GroovyCompilerTestSuite(long compliance) {
         this.compliance = compliance;
@@ -102,6 +103,13 @@ public abstract class GroovyCompilerTestSuite {
         GroovyParser.debugRequestor = new DebugRequestor();
 
         testDriver = new AbstractRegressionTest(test.getMethodName()) {
+            @Override
+            protected Map<String, String> getCompilerOptions() {
+                Map<String, String> options = super.getCompilerOptions();
+                options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+                return options;
+            }
+
             /**
              * Include the groovy runtime jars on the classpath that is used.
              * Other classpath issues can be seen in TestVerifier/VerifyTests and only when
@@ -137,9 +145,15 @@ public abstract class GroovyCompilerTestSuite {
                     // classpath for just this reason, hmm.
                     newcps[newcps.length-1] = resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar"));
                 } catch (IOException e) {
-                    fail("IOException thrown " + e.getMessage());
+                    Assert.fail("IOException thrown " + e.getMessage());
                 }
                 return newcps;
+            }
+
+            @Override
+            protected INameEnvironment getNameEnvironment(final String[] testFiles, String[] classPaths) {
+                this.classpaths = (classPaths == null ? getDefaultClassPaths() : classPaths);
+                return new InMemoryNameEnvironment(testFiles, getClassLibs(false));
             }
 
             private String resolve(URL jarRef) throws IOException {
@@ -148,12 +162,12 @@ public abstract class GroovyCompilerTestSuite {
             }
         };
         testDriver.initialize(new CompilerTestSetup(compliance));
-        ReflectionUtils.executeNoArgPrivateMethod(AbstractRegressionTest.class, "setUp", testDriver);
+        ReflectionUtils.throwableExecutePrivateMethod(AbstractRegressionTest.class, "setUp", new Class[0], testDriver, new Object[0]);
     }
 
     @After
     public void tearDownTestCase() throws Exception {
-        ReflectionUtils.executeNoArgPrivateMethod(AbstractRegressionTest.class, "tearDown", testDriver);
+        ReflectionUtils.throwableExecutePrivateMethod(AbstractRegressionTest.class, "tearDown", new Class[0], testDriver, new Object[0]);
         GroovyCompilationUnitDeclaration.defaultCheckGenerics = false;
         GroovyParser.debugRequestor = null;
     }
@@ -169,27 +183,66 @@ public abstract class GroovyCompilerTestSuite {
     }
 
     protected final void runConformTest(String[] sources) {
-        testDriver.runConformTest(sources);
+        runConformTest(sources, (String) null, (String) null);
     }
 
     protected final void runConformTest(String[] sources, String expectedStdout) {
-        testDriver.runConformTest(sources, expectedStdout);
+        runConformTest(sources, expectedStdout, (String) null);
     }
 
     protected final void runConformTest(String[] sources, String expectedStdout, String expectedStderr) {
-        testDriver.runConformTest(/*flush*/true, sources, /*ecjlog*/"", expectedStdout, expectedStderr, new AbstractRegressionTest.JavacTestOptions());
+        testDriver.runTest(
+            sources,
+            false, // expectingCompilerErrors
+            null,  // expectedCompilerLog
+            expectedStdout,
+            expectedStderr,
+            false, // forceExecution
+            null,  // classLibraries
+            true,  // shouldFlushOutputDirectory
+            vmArguments,
+            null,  // customOptions
+            null,  // customRequestor
+            false  // skipJavac
+        );
     }
 
-    protected final void runConformTest(String[] sources, String expectedOutput, Map<String, String> compilerOptions) {
-        testDriver.runConformTest(sources, expectedOutput, /*classlibs*/null, /*flush*/true, /*vmargs*/null, compilerOptions, /*requestor*/null);
+    protected final void runConformTest(String[] sources, String expectedStdout, Map<String, String> compilerOptions) {
+        testDriver.runTest(
+            sources,
+            false, // expectingCompilerErrors
+            null,  // expectedCompilerLog
+            expectedStdout,
+            null,  // expectedErrorString
+            false, // forceExecution
+            null,  // classLibraries
+            true,  // shouldFlushOutputDirectory
+            vmArguments,
+            compilerOptions,
+            null,  // customRequestor
+            false  // skipJavac
+        );
     }
 
     protected final void runNegativeTest(String[] sources, String expectedOutput) {
-        testDriver.runNegativeTest(sources, expectedOutput);
+        runNegativeTest(sources, expectedOutput, null);
     }
 
     protected final void runNegativeTest(String[] sources, String expectedOutput, Map<String, String> compilerOptions) {
-        testDriver.runNegativeTest(sources, expectedOutput, null, true, compilerOptions);
+        testDriver.runTest(
+            sources,
+            expectedOutput.contains("ERROR"),
+            expectedOutput,
+            null,  // expectedOutputString
+            null,  // expectedErrorString
+            false, // forceExecution
+            null,  // classLibraries
+            true,  // shouldFlushOutputDirectory
+            vmArguments,
+            compilerOptions,
+            null,  // customRequestor
+            false  // skipJavac
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -225,10 +278,10 @@ public abstract class GroovyCompilerTestSuite {
                 System.out.println(Util.displayString(result, 3));
             }
             if (index == -1) {
-                assertEquals("Wrong contents", expectedOutput, result);
+                Assert.assertEquals("Wrong contents", expectedOutput, result);
             }
         } catch (Exception e) {
-            fail(e.toString());
+            Assert.fail(e.toString());
         }
     }
 
@@ -239,7 +292,7 @@ public abstract class GroovyCompilerTestSuite {
             System.out.println(Util.displayString(declarationContents, 2));
         } else {
             if (declarationContents.indexOf(expectedOutput) == -1) {
-                assertEquals("Did not find expected output", expectedOutput, declarationContents);
+                Assert.assertEquals("Did not find expected output", expectedOutput, declarationContents);
             }
         }
     }

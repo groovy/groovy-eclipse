@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2013, 2016 Eclipse Foundation and others.
+  All rights reserved. This program and the accompanying materials
+  are made available under the terms of the Eclipse Distribution License v1.0
+  which accompanies this distribution, and is available at
+  http://www.eclipse.org/org/documents/edl-v10.php
+ 
+  Contributors:
+     IBM Corporation - initial API and implementation
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.eclipse</groupId>
+    <artifactId>eclipse-platform-parent</artifactId>
+    <version>4.6.3-SNAPSHOT</version>
+  </parent>
+  <groupId>eclipse.jdt.core</groupId>
+  <artifactId>tests-pom</artifactId>
+  <version>4.6.3-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <properties>
+    <code.ignoredWarnings>${tests.ignoredWarnings}</code.ignoredWarnings>
+    <tycho.scmUrl>scm:git:git://git.eclipse.org/gitroot/jdt/eclipse.jdt.core.git</tycho.scmUrl>
+    <tycho.version>0.24.0</tycho.version><!-- use the same version as org.codehaus.groovy.eclipse.parent -->
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>eclipse-hosted</id>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <url>https://repo.eclipse.org/content/repositories/eclipse/</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <filters>
+            <filter>
+              <type>osgi-bundle</type>
+              <id>org.eclipse.jdt.core.compiler.batch</id>
+              <removeAll/>
+            </filter>
+          </filters>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

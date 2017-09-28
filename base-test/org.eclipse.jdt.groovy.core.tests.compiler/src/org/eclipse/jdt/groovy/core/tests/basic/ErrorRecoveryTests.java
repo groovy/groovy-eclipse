@@ -46,7 +46,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "    def good = { ->\n" +
             "    }\n" +
             "  }\n" +
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 4)\n" +
@@ -69,12 +69,13 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingIncompleteIfCondition_1046() {
-        runNegativeTest(new String[] {
+        runConformTest(new String[] {
             "X.groovy",
             "File f = new File('c:\\test')\n" +
-            "if (f.isD"
+            "if (f.isD",
         },
-        "");
+        "",
+        "groovy.lang.MissingPropertyException: No such property: isD for class: java.io.File\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
         assertFalse(mn.encounteredUnrecoverableError());
@@ -86,7 +87,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "X.groovy",
             "File f = new File('c:\\test')\n" +
-            "if (f."
+            "if (f.",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -110,7 +111,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "    println x.;\n" + // if a ';' is inserted in this situation, you can get back what you want...
             "    println x\n" +
             "  }\n" +
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 4)\n" +
@@ -133,7 +134,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "    static double addOne(double a) { return a + 1.0; }\n" +
             "}",
             "X.groovy",
-            "Test."
+            "Test.",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -185,7 +186,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void foo() {\n"+
             "    foo:\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 6)\n" +
@@ -214,7 +215,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void foo() {\n"+
             "    foo:\"abc\",\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 5)\n" +
@@ -243,7 +244,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void foo() {\n"+
             "    foo:,\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 5)\n" +
@@ -272,7 +273,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\tdef x = {\n"+
             "\t  nuthin s,\n"+
             "\t}\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 6)\n" +
@@ -296,7 +297,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "X.groovy",
             "File f = new File();\n"+
-            "if (f.)\n"
+            "if (f.)\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -318,7 +319,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "X.groovy",
             "File f = new File();\n"+
-            "if (f.\n"
+            "if (f.\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -335,7 +336,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "X.groovy",
             "import java.awt.BorderLayout;\n"+
-            "panel.add (textField, BorderLayout.\n"
+            "panel.add (textField, BorderLayout.\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -358,7 +359,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "X.groovy",
             "import java.awt.BorderLayout;\n"+
-            "String s = ('foo' + BorderLayout.\n"
+            "String s = ('foo' + BorderLayout.\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -389,7 +390,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\n"+
             "    return null\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 6)\n" +
@@ -423,7 +424,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\n"+
             "    return null\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 7)\n" +
@@ -451,7 +452,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             " int y()\n"+
             " def m() {\n"+
             " }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -483,7 +484,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "           enabled: bind(source: model, sourceProperty: 'loggedin'),\n"+
             "           closure: { controller.setEchoBack(it.source.selected) })\n"+
             "       }\n"+
-            "   }\n"
+            "   }\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 8)\n" +
@@ -514,7 +515,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "   static main(args) {\n"+
             "       print new X().getNumber()\n"+
             "   }\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 7)\n" +
@@ -544,7 +545,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\n"+
             "belo\n"+
             "\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 4)\n" +
@@ -566,7 +567,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingMissingCurlyRecovery1_GRE468() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X { int y() }\n"
+            "class X { int y() }\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -588,7 +589,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingMissingCurlyRecovery2_GRE468() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X { int y() { }\n"
+            "class X { int y() { }\n",
         },
         "----------\n" +
         "1. ERROR in XXX.groovy (at line 1)\n" +
@@ -614,7 +615,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void m() {\n"+
             "  new Earth\n"+
             "  }\n"+
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
@@ -647,7 +648,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  def a = 42\n"+
             "  print a\n"+
             "  }\n"+
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
@@ -675,7 +676,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "X.groovy",
             "new\n"+
-            "def a = 5\n"
+            "def a = 5\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -709,7 +710,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             " new Fire\n"+
             " def leppard = 'cool'\n"+
             "  }\n"+
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
@@ -766,7 +767,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "new\n"+
             "def a = 5\n"+
             "}\n"+
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
@@ -790,7 +791,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import\n"+
             "\n"+
-            "class X {}\n"
+            "class X {}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -818,7 +819,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import \n"+
             "\n"+
-            "class X {}\n"
+            "class X {}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -846,7 +847,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import static \n"+
             "\n"+
-            "class X {}\n"
+            "class X {}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -874,7 +875,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import com.\n"+
             "\n"+
-            "class X {}\n"
+            "class X {}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 1)\n" +
@@ -902,7 +903,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import static com.\n"+
             "\n"+
-            "class X {}\n"
+            "class X {}\n",
         },
         "----------\n" +
         "1. ERROR in XXX.groovy (at line 1)\n" +
@@ -930,7 +931,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "class X {\n"+
             "  def x = new A\n"+
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
@@ -958,7 +959,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import javax.swing.text.html.HTML\n"+
             "HTML h\n"+
-            "new Earth"
+            "new Earth",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
@@ -981,7 +982,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "import javax.swing.text.html.HTML\n"+
             "HTML h\n"+
-            "new String()\n"
+            "new String()\n",
         },"");
 
         checkGCUDeclaration("X.groovy",
@@ -1008,7 +1009,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "         if (! (this instanceof HTML/*_*/) {\n" +
             "            \n" +
             "         }\n" +
-            "    } "
+            "    } ",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 4)\n" +
@@ -1032,7 +1033,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "if (! (this instanceof HTMLAccessibleContext/*_*/) {\n"+
             "\n"+
             "}\n"+
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 6)\n" +
@@ -1051,7 +1052,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "class X {\n"+
             "  def x=\"\n"+
-            "}\n"
+            "}\n",
         },"----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
         "\tdef x=\"\n" +
@@ -1069,7 +1070,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "X.groovy",
             "package a\n"+
             "\n"+
-            "def foo(Nuthin\n"
+            "def foo(Nuthin\n",
         },"----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
         "\tdef foo(Nuthin\n" +
@@ -1088,7 +1089,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "package com.example.foo\n"+
             "class X {\n"+
             "public void foo(XMLConstants\n"+
-            "}\n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 3)\n" +
@@ -1119,7 +1120,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  void someMethod() {\n" +
             "    someProperty?.\n" +
             "  }\n" +
-            "}"
+            "}",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 5)\n" +

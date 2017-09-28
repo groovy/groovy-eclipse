@@ -382,7 +382,7 @@ public void cleanBuild(String projectName) {
 		this.isOpen = false;
 	}
 
-	private IFile createFile(IPath path, byte[] contents) {
+	public IFile createFile(IPath path, byte[] contents) {
 		ByteArrayInputStream is = null;
 		try {
 			IFile file = this.workspace.getRoot().getFile(path);
@@ -408,7 +408,7 @@ public void cleanBuild(String projectName) {
 		return null;
 	}
 
-	private IFolder createFolder(IPath path) {
+	public IFolder createFolder(IPath path) {
 		checkAssertion("root", !path.isRoot()); //$NON-NLS-1$
 
 		/* don't create folders for projects */
@@ -729,7 +729,7 @@ public void cleanBuild(String projectName) {
 		return getProject(projectPath).getFullPath();
 	}
 
-	void handle(Exception e) {
+	protected void handle(Exception e) {
 		if (e instanceof CoreException) {
 			handleCoreException((CoreException) e);
 		} else {
@@ -741,7 +741,7 @@ public void cleanBuild(String projectName) {
 	/**
 	* Handles a core exception thrown during a testing environment operation
 	*/
-	private void handleCoreException(CoreException e) {
+	protected void handleCoreException(CoreException e) {
 		e.printStackTrace();
 		IStatus status = e.getStatus();
 		String message = e.getMessage();

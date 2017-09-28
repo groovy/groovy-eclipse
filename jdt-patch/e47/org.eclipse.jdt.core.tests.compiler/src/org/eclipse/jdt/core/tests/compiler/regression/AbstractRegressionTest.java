@@ -1052,7 +1052,7 @@ protected static class JavacTestOptions {
 			ICompilerRequestor clientRequestor) {
 
 		// Compute class name by removing ".java" and replacing slashes with dots
-		String className = sourceFile.substring(0, sourceFile.length() - 5).replace('/', '.').replace('\\', '.');
+		String className = sourceFile.substring(0, sourceFile.lastIndexOf('.')).replace('/', '.').replace('\\', '.');
 		if (className.endsWith(PACKAGE_INFO_NAME)) return;
 
 		if (vmArguments != null) {
@@ -1978,7 +1978,7 @@ protected void runJavac(
 							vmOptions = buffer.toString();
 						}
 					}
-					runtime.execute(javacOutputDirectory, vmOptions, testFiles[0].substring(0, testFiles[0].length() - 5), stdout, stderr);
+					runtime.execute(javacOutputDirectory, vmOptions, testFiles[0].substring(0, testFiles[0].lastIndexOf('.')), stdout, stderr);
 					if (expectedOutputString != null /* null skips output test */) {
 						output = stdout.toString().trim();
 						if (!expectedOutputString.equals(output)) {
@@ -2417,7 +2417,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 						JavacTestOptions.SKIP :
 						 javacOptions/* javac test options */);
 		}
-	protected void runTest(
+	public void runTest(
 			String[] testFiles,
 			boolean expectingCompilerErrors,
 			String expectedCompilerLog,
@@ -2734,7 +2734,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			String sourceFile = testFiles[0];
 
 			// Compute class name by removing ".java" and replacing slashes with dots
-			String className = sourceFile.substring(0, sourceFile.length() - 5).replace('/', '.').replace('\\', '.');
+			String className = sourceFile.substring(0, sourceFile.lastIndexOf('.')).replace('/', '.').replace('\\', '.');
 			if (className.endsWith(PACKAGE_INFO_NAME)) return;
 			if (className.endsWith(MODULE_INFO_NAME)) return;
 

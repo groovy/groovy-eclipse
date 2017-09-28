@@ -55,7 +55,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "trait Greetable {\n" +
             "  abstract String name()\n" +
             "  String greeting() { \"Hello, ${name()}!\" }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources, "Hello, Bob!");
@@ -84,7 +84,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class Greetable {\n" +
             "  abstract String name()\n" +
             "  String greeting() { \"Hello, ${name()}!\" }\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources, "Hello, Bob!");
@@ -105,7 +105,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  String name() { 'Bob' }\n" +
             "}\n" +
             "def p = new Person()\n" +
-            "print p.greeting()"
+            "print p.greeting()",
         };
 
         runConformTest(sources, "Hello, Bob!");
@@ -127,7 +127,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class GreetingMachine implements Greeter {}\n" +
             "def g = new GreetingMachine()\n" +
-            "g.greet()"
+            "g.greet()",
         };
 
         runConformTest(sources, "Hello from a private method!");
@@ -152,7 +152,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "try {\n" +
             "  g.greetingMessage()\n" +
             "} catch (MissingMethodException e) {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -167,7 +167,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class Foo implements Introspector {}\n" +
             "def foo = new Foo()\n" +
-            "print foo.whoAmI()"
+            "print foo.whoAmI()",
         };
 
         runConformTest(sources, "class Foo");
@@ -187,7 +187,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  String name() { 'Bob' }\n" +
             "}\n" +
             "def p = new Person()\n" +
-            "print p.greeting()"
+            "print p.greeting()",
         };
 
         runConformTest(sources, "Hello, Bob!");
@@ -210,7 +210,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class Person implements Named {}\n" +
             "def p = new Person(name: 'Bob')\n" +
             "print p.name == 'Bob'\n" +
-            "print p.getName()"
+            "print p.getName()",
         };
 
         runConformTest(sources, "trueBob");
@@ -226,7 +226,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class Foo implements Counter {}\n" +
             "def f = new Foo()\n" +
-            "print f.count()"
+            "print f.count()",
         };
 
         runConformTest(sources, "1");
@@ -242,7 +242,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class Person implements Named {}\n" +
             "def p = new Person()\n" +
             "p.Named__name = 'Bob'\n" +
-            "print p.Named__name"
+            "print p.Named__name",
         };
 
         runConformTest(sources, "Bob");
@@ -261,7 +261,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class Duck implements FlyingAbility, SpeakingAbility {}\n" +
             "def d = new Duck()\n" +
             "print d.fly()\n" +
-            "print d.speak()"
+            "print d.speak()",
         };
 
         runConformTest(sources, "I'm flying!I'm speaking!");
@@ -284,7 +284,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def d = new Duck()\n" +
             "print d.fly()\n" +
             "print d.quack()\n" +
-            "print d.speak()"
+            "print d.speak()",
         };
 
         runConformTest(sources, "I'm flying!Quack!Quack!");
@@ -302,7 +302,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class Person implements Polite {}\n" +
             "def p = new Person(name: 'Alice')\n" +
-            "print p.introduce()"
+            "print p.introduce()",
         };
 
         runConformTest(sources, "Hello, I am Alice");
@@ -311,7 +311,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     @Test // Multiple Inheritance
     public void testTraits13() {
         String[] sources = {
-            "A.groovy",
+            "Identified.groovy",
             "trait WithId {\n" +
             "  Long id\n" +
             "}\n" +
@@ -319,7 +319,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  String name\n" +
             "}\n" +
             "trait Identified implements WithId, WithName {\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
@@ -338,7 +338,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "def d = new Duck()\n" +
-            "print d.speak()"
+            "print d.speak()",
         };
 
         runConformTest(sources, "Quack!");
@@ -370,7 +370,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "d.foo = 'bar'\n" +
             "print d.foo\n" +
             "print d.existingMethod()\n" +
-            "print d.someMethod()"
+            "print d.someMethod()",
         };
 
         runConformTest(sources, "oknullbarokSOMEMETHOD");
@@ -388,7 +388,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class C implements A, B {}\n" +
             "def c = new C()\n" +
-            "print c.exec()"
+            "print c.exec()",
         };
 
         runConformTest(sources, "B");
@@ -406,7 +406,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class C implements B, A {}\n" +
             "def c = new C()\n" +
-            "print c.exec()"
+            "print c.exec()",
         };
 
         runConformTest(sources, "A");
@@ -426,7 +426,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  String exec() { A.super.exec() }\n" +
             "}\n" +
             "def c = new C()\n" +
-            "print c.exec()"
+            "print c.exec()",
         };
 
         runConformTest(sources, "A");
@@ -444,7 +444,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "def s = new Something() as Extra\n" +
             "print s.extra()\n" +
-            "print s.doSomething()"
+            "print s.doSomething()",
         };
 
         runConformTest(sources, "ExtraSomething");
@@ -459,7 +459,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class C {}\n" +
             "def c = new C()\n" +
             "print c.methodFromA()\n" +
-            "print c.methodFromB()"
+            "print c.methodFromB()",
         };
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
@@ -475,7 +475,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def c = new C()\n" +
             "def d = c.withTraits A, B\n" +
             "print d.methodFromA()\n" +
-            "print d.methodFromB()"
+            "print d.methodFromB()",
         };
 
         runConformTest(sources, "AB");
@@ -495,7 +495,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class SimpleHandler implements DefaultHandler {}\n" +
             "def handler = new SimpleHandler()\n" +
-            "handler.on('test logging', [:])"
+            "handler.on('test logging', [:])",
         };
 
         runConformTest(sources, "Received test logging with payload [:]");
@@ -520,7 +520,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "def handler = new SimpleHandlerWithLogging()\n" +
-            "handler.on('test logging', [:])"
+            "handler.on('test logging', [:])",
         };
 
         runConformTest(sources, "Seeing test logging with payload [:]\nReceived test logging with payload [:]");
@@ -556,7 +556,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class Handler implements DefaultHandler, SayHandler, LoggingHandler {}\n" +
             "def handler = new Handler()\n" +
             "handler.on('foo', [:])\n" +
-            "handler.on('sayHello', [:])"
+            "handler.on('sayHello', [:])",
         };
 
         runConformTest(sources, "Seeing foo with payload [:]\nReceived foo with payload [:]\nSeeing sayHello with payload [:]\nI say Hello!");
@@ -592,7 +592,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class AlternateHandler implements DefaultHandler, LoggingHandler, SayHandler {}\n" +
             "def handler = new AlternateHandler()\n" +
             "handler.on('foo', [:])\n" +
-            "handler.on('sayHello', [:])"
+            "handler.on('sayHello', [:])",
         };
 
         runConformTest(sources, "Seeing foo with payload [:]\nReceived foo with payload [:]\nI say Hello!");
@@ -611,7 +611,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "def sb = new StringBuilder().withTraits Filtering\n" +
             "sb.append('Groovy')\n" +
-            "print sb.toString()"
+            "print sb.toString()",
         };
 
         runConformTest(sources, "Grvy");
@@ -626,7 +626,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  abstract String getName()\n" +
             "}\n" +
             "Greeter greeter = { 'Alice' }\n" +
-            "print greeter.getName()"
+            "print greeter.getName()",
         };
 
         runConformTest(sources, "Alice");
@@ -641,7 +641,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  abstract String getName()\n" +
             "}\n" +
             "void greet(Greeter g) { println g.greet() }\n" +
-            "greet { 'Alice' }"
+            "greet { 'Alice' }",
         };
 
         runConformTest(sources, "Hello Alice");
@@ -660,7 +660,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def p = new Person(name: 'Alice')\n" +
             "print p.name\n" +
             "def p2 = p as Bob\n" +
-            "print p2.name"
+            "print p2.name",
         };
 
         runConformTest(sources, "AliceBob");
@@ -677,7 +677,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print o.methodFromA()\n" +
             "print o.methodFromB()\n" +
             "print(o instanceof A)\n" +
-            "print(o instanceof B)"
+            "print(o instanceof B)",
         };
 
         runConformTest(sources, "ABtruefalse");
@@ -695,7 +695,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class Foo implements TestHelper {}\n" +
             "Foo.init()\n" +
-            "print Foo.TestHelper__called"
+            "print Foo.TestHelper__called",
         };
 
         runConformTest(sources, "true");
@@ -715,7 +715,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class Baz implements TestHelper {}\n" +
             "Bar.init()\n" +
             "print Bar.TestHelper__called\n" +
-            "print Baz.TestHelper__called"
+            "print Baz.TestHelper__called",
         };
 
         runConformTest(sources, "truefalse");
@@ -734,7 +734,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  int f() { sum() }\n" +
             "}\n" +
             "def base = new BaseElem()\n" +
-            "print base.f()"
+            "print base.f()",
         };
 
         runConformTest(sources, "3");
@@ -755,7 +755,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  int f() { sum() }\n" +
             "}\n" +
             "def elem = new Elem()\n" +
-            "print elem.f()"
+            "print elem.f()",
         };
 
         runConformTest(sources, "3");
@@ -776,7 +776,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  int f() { sum() }\n" +
             "}\n" +
             "def elem = new Elem()\n" +
-            "print elem.f()"
+            "print elem.f()",
         };
 
         runConformTest(sources, "7");
@@ -797,7 +797,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class Counter implements Counting {}\n" +
             "def c = new Counter()\n" +
-            "c.inc()"
+            "c.inc()",
         };
 
         runNegativeTest(sources,
@@ -825,7 +825,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runConformTest(sources, "a");
@@ -843,7 +843,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runConformTest(sources, "a");
@@ -861,7 +861,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runConformTest(sources, "a");
@@ -879,7 +879,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runNegativeTest(sources,
@@ -913,7 +913,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runNegativeTest(sources,
@@ -946,7 +946,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runNegativeTest(sources,
@@ -981,7 +981,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MyClass implements MyTrait {\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runNegativeTest(sources,
@@ -1010,7 +1010,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class MyClass extends MySuperClass implements MyTrait {}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runConformTest(sources, "a");
@@ -1031,7 +1031,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "class MySuperClass {\n" +
             "  protected def m() { 'b' }\n" +
             "}\n" +
-            "class MyClass extends MySuperClass implements MyTrait {}"
+            "class MyClass extends MySuperClass implements MyTrait {}",
         };
 
         runConformTest(sources, "a");
@@ -1058,7 +1058,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
             "MyClass.groovy",
             "package c\n" +
-            "class MyClass extends b.MySuperClass implements a.MyTrait {}"
+            "class MyClass extends b.MySuperClass implements a.MyTrait {}",
         };
 
         runConformTest(sources, "a");
@@ -1087,7 +1087,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "package c\n" +
             "import a.MyTrait\n" +
             "import b.MySuperClass\n" +
-            "class MyClass extends MySuperClass implements MyTrait {}"
+            "class MyClass extends MySuperClass implements MyTrait {}",
         };
 
         runConformTest(sources, "a");
@@ -1107,7 +1107,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  def m() { 'c' }\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runConformTest(sources, "c");
@@ -1125,7 +1125,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class MyClass extends MySuperClass implements MyTrait {}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runNegativeTest(sources,
@@ -1151,7 +1151,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  def m() { 'c' }\n" +
             "}\n" +
             "def myClass = new MyClass()\n" +
-            "print myClass.m()"
+            "print myClass.m()",
         };
 
         runConformTest(sources, "c");
@@ -1170,7 +1170,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Valuable.groovy",
             "trait Valuable {\n" +
             "  String value\n" +
-            "}"
+            "}",
         };
 
         runConformTest(sources);
