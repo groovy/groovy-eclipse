@@ -39,9 +39,12 @@
   <setupTask
       xsi:type="setup:VariableTask"
       name="greclipse.target.platform"
-      defaultValue="Neon"
+      defaultValue="Oxygen"
       storageURI="scope://Workspace"
       label="Target Platform">
+    <choice
+        value="Photon"
+        label="Eclipse Photon - 4.8"/>
     <choice
         value="Oxygen"
         label="Eclipse Oxygen - 4.7"/>
@@ -106,8 +109,10 @@
         name="org.codehaus.groovy.jdt.patch.feature.group"/>
     <requirement
         name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
+    <requirement
+        name="org.eclipse.test.feature.feature.group"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.6/"/>
+        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7/"/><!-- TODO: URL must vary by target platform! -->
     <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
   </setupTask>
   <setupTask
@@ -180,6 +185,11 @@
           rootFolder="${git.clone.Groovy-Eclipse.location}/ide-test"
           locateNestedProjects="true"/>
       <repositoryList
+          name="Photon">
+        <repository
+            url="http://download.eclipse.org/releases/photon"/>
+      </repositoryList>
+      <repositoryList
           name="Oxygen">
         <repository
             url="http://download.eclipse.org/releases/oxygen"/>
@@ -199,6 +209,19 @@
         <repository
             url="http://download.eclipse.org/releases/luna"/>
       </repositoryList>
+    </targlet>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.targlets:TargletTask"
+      filter="(eclipse.target.platform=Photon)">
+    <targlet
+        name="JDT Feature Patch for Photon">
+      <requirement
+          name="org.codehaus.groovy.jdt.patch.feature.group"
+          greedy="false"/>
+      <sourceLocator
+          rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e48"
+          locateNestedProjects="true"/>
     </targlet>
   </setupTask>
   <setupTask

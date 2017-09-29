@@ -70,7 +70,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}) //works properly\n"+
             "new A() {   \n"+
             "    abc()\n"+
-            "} // throw error: unexpected token: abc at line: 13, column: 3\n"
+            "} // throw error: unexpected token: abc at line: 13, column: 3\n",
         },
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 12)\n" +
@@ -86,7 +86,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runConformTest(new String[] {
             "Color.groovy",
-            "enum Color { R,G,B }\n"
+            "enum Color { R,G,B }\n",
         });
      }
 
@@ -96,7 +96,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "MyDomainClass.groovy",
             "int anInt = 10;\n"+
             "def Method[] methodArray = anInt.class.methods;\n"+
-            "println methodArray.name;"
+            "println methodArray.name;",
         },
         "----------\n" +
         "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
@@ -112,7 +112,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "MyDomainClass.groovy",
             "int anInt = 10;\n"+
             "def Method[][] methodMethodArray = anInt.class.methods;\n"+
-            "println methodArray.name;"
+            "println methodArray.name;",
         },
         "----------\n" +
         "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
@@ -127,7 +127,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "A.groovy",
             "class Foo {}\n"+
-            "class Foo {}"
+            "class Foo {}",
         },
         "----------\n" +
         "1. ERROR in A.groovy (at line 2)\n" +
@@ -145,7 +145,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testStaticProperty() {
         runConformTest(new String[] {
-            "A.groovy",
+            "Super.groovy",
             "class Super {" +
             "  def static getSql() { return 'abc'; }\n" +
             "}\n"+
@@ -153,7 +153,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  def static m() {\n" +
             "    sql.charAt(0)\n"+
             "  }" +
-            "}\n"
+            "}\n",
         });
     }
 
@@ -166,7 +166,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "com/foo/Bar.java",
             "package com.foo;\n"+
-            "class Bar {}\n"
+            "class Bar {}\n",
         },
         "abc");
     }
@@ -184,7 +184,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "com/foo/Bar/config.groovy",
             "package com.foo.Bar\n"+
-            "print 'abc'\n"
+            "print 'abc'\n",
         },
         "def");
     }
@@ -215,7 +215,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "      System.out.println(\"Did we catch it?\");\n"+
             "    }\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         });
     }
 
@@ -246,7 +246,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "      System.out.println(\"Did we catch it?\");\n"+
             "    }\n"+
             "  }\n"+
-            "}\n"
+            "}\n",
         });
     }
 
@@ -312,7 +312,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "A.groovy",
             "httpClientControl.demand.generalConnection(1..1) = {->\n"+
             "currHttp\n"+
-            "} \n"
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in A.groovy (at line 1)\n" +
@@ -343,7 +343,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(new String[] {
             "A.groovy",
             "hello \\u\n"+
-            "class Foo {}\n"
+            "class Foo {}\n",
         },
         "----------\n" +
         "1. ERROR in A.groovy (at line 1)\n" +
@@ -567,7 +567,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testEnumStatic_GRE974() {
         runConformTest(new String[] {
-            "A.groovy",
+            "be/flow/A.groovy",
             "package be.flow\n"+
             "\n"+
             "enum C1{\n"+
@@ -580,7 +580,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "	}\n"+
             "}",
 
-            "B.groovy",
+            "be/flow/B.groovy",
             "package be.flow\n"+
             "\n"+
             "import static be.flow.C1.TEST_C1;\n"+
@@ -600,7 +600,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "	\n"+
             "}",
 
-            "D.groovy",
+            "be/flow/D.groovy",
             "package be.flow\n"+
             "\n"+
             "import static be.flow.C1.TEST_C1;\n"+
@@ -622,14 +622,14 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testVarargs_GRE925() {
         runConformTest(new String[] {
             "Test.java",
-            "class Test {\n"+
-            "  void method(String[] x) {}\n"+
+            "public class Test {\n"+
+            "  protected void method(String[] x) {}\n"+
             "  public static void main(String []argv) {}\n"+
             "}",
 
             "SubTest.groovy",
             "class SubTest extends Test {\n"+
-            " void method(String[] x) { super.method(x); }\n"+
+            " protected void method(String[] x) { super.method(x) }\n"+
             "}",
         });
     }
@@ -796,8 +796,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         runConformTest(new String[] {
-            "groovy/JoinGroovy.groovy",
-            "package groovy\n"+
+            "gr8/JointGroovy.groovy",
+            "package gr8\n"+
             "\n"+
             "class JointGroovy {\n"+
             "StaticInner property\n"+
@@ -811,8 +811,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             " }\n"+
             "}",
 
-            "groovy/JointJava.java",
-            "package groovy;\n"+
+            "gr8/JointJava.java",
+            "package gr8;\n"+
             "\n"+
             "import groovy.lang.Closure;\n"+
             "\n"+
@@ -827,8 +827,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testMixedModeInnerProperties2_GRE597() {
         runConformTest(new String[] {
-            "groovy/JoinGroovy.groovy",
-            "package groovy\n"+
+            "gr8/JointGroovy.groovy",
+            "package gr8\n"+
             "\n"+
             "class JointGroovy {\n"+
             "StaticInner property\n"+
@@ -843,8 +843,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n"+
             "}",
 
-            "groovy/JointJava.java",
-            "package groovy;\n"+
+            "gr8/JointJava.java",
+            "package gr8;\n"+
             "\n"+
             "import groovy.lang.Closure;\n"+
             "\n"+
@@ -1323,7 +1323,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assumeTrue(isAtLeastGroovy(20));
 
         runConformTest(new String[] {
-            "X.groovy",
+            "Color.groovy",
             "enum Color {\n" +
             "  /** hello */\n"+
             "  RED,\n"+
@@ -1332,7 +1332,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
         });
 
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        GroovyCompilationUnitDeclaration decl = getCUDeclFor("Color.groovy");
 
         FieldDeclaration fDecl = findField(decl, "RED");
         assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>32 modifiersSourceStart=30 endPart1Position:30", stringifyFieldDecl(fDecl));
@@ -1347,14 +1347,14 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testEnumValues_GRE1071() {
         runConformTest(new String[] {
-            "X.groovy",
+            "H.groovy",
             "enum H {\n"+
             "  RED,\n"+
             "  BLUE\n"+
             "}"
         });
 
-        assertEquals("[LH;", getReturnTypeOfMethod("X.groovy", "values"));
+        assertEquals("[LH;", getReturnTypeOfMethod("H.groovy", "values"));
     }
 
     @Test
@@ -1779,8 +1779,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testCrashingOnBadCode_GRE290_3() {
         runNegativeTest(new String[] {
             "Moo.groovy",
-            "package com.omxgroup.scripting;\n" +
-            "\n" +
             "public class Moo {\n" +
             "public static def moo() { println this }\n" +
             "}\n"
@@ -1907,7 +1905,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     //        ^
     @Test
     public void testInvalidScripts_GRE323_2() {
-        // command expression syntax now allows this but it looks weird as
+        // command expression syntax now allows this but it looks weird
         runConformTest(new String[] {
             "One.groovy",
             "def moo(closure) {\n" +
@@ -1921,7 +1919,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  def secBoardRep = session2.\n" +
             "  def x\n" +
             "}\n",
-        });
+        },
+        "",
+        "groovy.lang.MissingPropertyException: No such property: x for class: One");
     }
 
     // removed surrounding method
@@ -1961,7 +1961,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     // no assignment for session2
     @Test
     public void testInvalidScripts_GRE323_4() {
-        runNegativeTest(new String[] {
+        runConformTest(new String[] {
             "Four.groovy",
             "def moo(closure) {\n" +
             "  closure();\n" +
@@ -1975,7 +1975,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  def x\n"+
             "}\n",
         },
-        "");
+        "",
+        "groovy.lang.MissingPropertyException: No such property: x for class: Four");
     }
 
     @Test
@@ -2213,7 +2214,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testStaticProperties_GRE364() {
-        runConformTest(new String[] {
+        runNegativeTest(new String[] {
             "Foo.groovy",
             "public class Foo { static String fubar }\n",
 
@@ -2227,11 +2228,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testStaticProperties_GRE364_2() {
-        runConformTest(new String[] {
+        runNegativeTest(new String[] {
             "Bar.java",
             "public class Bar {\n"+
-            "	  String fubar = Foo.getFubar();\n"+
-            "	}\n",
+            "  String fubar = Foo.getFubar();\n"+
+            "}\n",
 
             "Foo.groovy",
             "public class Foo { static String fubar }\n",
@@ -2241,7 +2242,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTransientMethod_GRE370() {
-        runConformTest(new String[] {
+        runNegativeTest(new String[] {
             "Foo.groovy",
             "public class Foo {\n"+
             "  public transient void foo() {}\n"+
@@ -2435,7 +2436,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testEnums() {
-        runConformTest(new String[] {
+        runNegativeTest(new String[] {
             "p/X.groovy",
             "package p;\n" +
             "public enum X {\n" +
@@ -4089,7 +4090,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  public G(Integer i, String m=\"abc\") {this.msg = m;}\n"+
             "  public void print(int i=3) { print msg }\n"+
             "}\n",
-        });
+        },
+        "",
+        "java.lang.ClassFormatError: Duplicate method name&signature in class file p/G");
     }
 
     @Test

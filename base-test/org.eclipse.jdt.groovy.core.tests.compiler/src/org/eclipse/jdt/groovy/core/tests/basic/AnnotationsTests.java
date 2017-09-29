@@ -1013,7 +1013,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAnnotationCollector() {
+    public void testAnnotationCollector1() {
         assumeTrue(isAtLeastGroovy(21));
 
         String[] sources = {

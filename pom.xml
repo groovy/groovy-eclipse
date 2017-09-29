@@ -138,6 +138,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e48/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e48/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e48/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e48/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -150,23 +152,25 @@
 			<id>e47</id>
 			<repositories>
 				<repository>
-					<id>e47</id>
-					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
-				</repository>
-				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/releases/oxygen</url>
 				</repository>
 				<repository>
-					<id>m2e</id>
+					<id>oxygen-updates</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
 				</repository>
+				<!--repository>
+					<id>oxygen-maintenance</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.7-M-builds/</url>
+				</repository-->
 			</repositories>
 			<modules>
 				<module>jdt-patch/e47/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e47/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e47/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e47/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -196,6 +200,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e46/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e46/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e46/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e46/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -225,6 +231,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e45/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e45/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e45/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e45/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -254,6 +262,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e44/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e44/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e44/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e44/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -283,6 +293,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e43j8/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e43j8/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e43j8/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -307,6 +319,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e43/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e43/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e43/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e43/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -331,6 +345,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e42/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e42/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e42/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e42/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -355,6 +371,8 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e37/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e37/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e37/org.eclipse.jdt.core.tests.compiler</module>
 				<module>jdt-patch/e37/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
@@ -435,12 +453,6 @@
 	</profiles>
 
 	<repositories>
-		<repository>
-			<id>orbit</id>
-			<layout>p2</layout>
-			<url>http://download.eclipse.org/tools/orbit/downloads/drops/R20140525021250/repository/</url>
-		</repository>
-
 		<!-- required for Maven and Ant AWS dependency -->
 		<repository>
 			<id>springsource-maven-release</id>
@@ -533,8 +545,8 @@
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
-					</dependency-resolution-->
-					<pomDependencies>consider</pomDependencies>
+					</dependency-resolution>
+					<pomDependencies>consider</pomDependencies-->
 				</configuration>
 			</plugin>
 
