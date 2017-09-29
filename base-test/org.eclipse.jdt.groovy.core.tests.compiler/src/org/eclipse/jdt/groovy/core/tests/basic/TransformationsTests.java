@@ -921,7 +921,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test
+    @Test @Ignore("VM argument not accepted on CI server")
     public void testTypeChecked1506() {
         assumeTrue(isAtLeastGroovy(20));
 
@@ -1074,7 +1074,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "abc");
     }
 
-    @Test
+    @Test @Ignore("VM argument not accepted on CI server")
     public void testCompileStatic1506() {
         assumeTrue(isAtLeastGroovy(20));
 
