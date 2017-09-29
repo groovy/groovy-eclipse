@@ -152,20 +152,20 @@
 			<id>e47</id>
 			<repositories>
 				<repository>
-					<id>e47</id>
-					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
-				</repository>
-				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/releases/oxygen</url>
 				</repository>
 				<repository>
-					<id>m2e</id>
+					<id>oxygen-updates</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
 				</repository>
+				<!--repository>
+					<id>oxygen-maintenance</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.7-M-builds/</url>
+				</repository-->
 			</repositories>
 			<modules>
 				<module>jdt-patch/e47/org.eclipse.jdt.core</module>
@@ -545,8 +545,8 @@
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 						</extraRequirements>
-					</dependency-resolution-->
-					<pomDependencies>consider</pomDependencies>
+					</dependency-resolution>
+					<pomDependencies>consider</pomDependencies-->
 				</configuration>
 			</plugin>
 

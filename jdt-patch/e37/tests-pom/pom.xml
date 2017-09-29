@@ -12,33 +12,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.eclipse</groupId>
-    <artifactId>eclipse-platform-parent</artifactId>
-    <version>4.2.2-SNAPSHOT</version>
+    <relativePath>../../../pom.xml</relativePath>
+    <groupId>org.codehaus.groovy.eclipse</groupId>
+    <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+    <version>2.9.2-SNAPSHOT</version>
   </parent>
   <groupId>eclipse.jdt.core</groupId>
   <artifactId>tests-pom</artifactId>
   <version>4.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
-
-  <properties>
-    <code.ignoredWarnings>${tests.ignoredWarnings}</code.ignoredWarnings>
-    <tycho.scmUrl>scm:git:git://git.eclipse.org/gitroot/jdt/eclipse.jdt.core.git</tycho.scmUrl>
-    <tycho.version>0.24.0</tycho.version><!-- use the same version as org.codehaus.groovy.eclipse.parent -->
-  </properties>
-
-  <repositories>
-    <repository>
-      <id>eclipse-hosted</id>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <url>https://repo.eclipse.org/content/repositories/eclipse/</url>
-    </repository>
-  </repositories>
 
   <build>
     <plugins>
