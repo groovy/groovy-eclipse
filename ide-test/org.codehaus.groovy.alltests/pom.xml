@@ -41,6 +41,10 @@
               <type>eclipse-feature</type>
               <artifactId>org.eclipse.rcp</artifactId>
             </dependency>
+            <dependency>
+              <type>eclipse-plugin</type>
+              <artifactId>org.eclipse.jdt.compiler.apt</artifactId>
+            </dependency>
           </dependencies>
 
         </configuration>
