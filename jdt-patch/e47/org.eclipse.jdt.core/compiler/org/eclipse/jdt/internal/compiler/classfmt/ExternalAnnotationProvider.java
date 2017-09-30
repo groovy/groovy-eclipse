@@ -213,6 +213,10 @@ public class ExternalAnnotationProvider {
 		public IBinaryElementValuePair[] getElementValuePairs() {
 			return ElementValuePairInfo.NoMembers;
 		}
+		@Override
+		public boolean isExternalAnnotation() {
+			return true;
+		}
 		protected char[] getBinaryTypeName(char[][] name) {
 			return CharOperation.concat('L', CharOperation.concatWith(name, '/'), ';');
 		}

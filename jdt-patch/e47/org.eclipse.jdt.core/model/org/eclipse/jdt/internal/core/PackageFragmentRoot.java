@@ -19,6 +19,7 @@ import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.util.MementoTokenizer;
 import org.eclipse.jdt.internal.core.util.Messages;
@@ -879,6 +880,28 @@ public IModuleDescription getModuleDescription() {
 	}
 	return null;
 }
+
+public IModuleDescription getAutomaticModuleDescription() throws JavaModelException {
+	return getAutomaticModuleDescription(getRawClasspathEntry());
+}
+
+IModuleDescription getAutomaticModuleDescription(IClasspathEntry classpathEntry) {
+	String elementName = getElementName();
+	Manifest manifest = null;
+	switch (classpathEntry.getEntryKind()) {
+		case IClasspathEntry.CPE_LIBRARY:
+			manifest = getManifest();
+			break;
+		case IClasspathEntry.CPE_PROJECT:
+			JavaProject javaProject = (JavaProject) getJavaModel().getJavaProject(classpathEntry.getPath().lastSegment());
+			manifest = javaProject.getManifest();
+			elementName = javaProject.getElementName();
+			break;
+	}
+	char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleName(elementName, isArchive(), manifest);
+	return new AbstractModule.AutoModule(this, String.valueOf(moduleName));
+}
+
 /** @see org.eclipse.jdt.internal.compiler.env.IModulePathEntry#hasCompilationUnit(String, String) */
 public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
 	IPackageFragment fragment = getPackageFragment(qualifiedPackageName.replace('/', '.'));

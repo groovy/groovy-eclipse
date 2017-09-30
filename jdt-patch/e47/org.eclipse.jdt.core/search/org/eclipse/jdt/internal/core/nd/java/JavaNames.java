@@ -152,11 +152,11 @@ public class JavaNames {
 
 	/**
 	 * Returns a method id given a field descriptor for its parent type
-	 * and a combined method selector and method descriptor for the method.
+	 * and a combined method selector and method descriptor for the method
 	 *
 	 * @param parentTypeBinaryName a field descriptor of the sort returned by the other *ToFieldDescriptor methods.
 	 * @param methodSelectorAndDescriptor a method selector and descriptor of the form returned by {@link IBinaryType#getEnclosingMethod()}
-	 * @return a method id suitable for lookup
+	 * @return a method id
 	 */
 	public static char[] getMethodId(char[] parentTypeBinaryName, char[] methodSelectorAndDescriptor) {
 		return CharArrayUtils.concat(FIELD_DESCRIPTOR_PREFIX, parentTypeBinaryName, METHOD_ID_SEPARATOR,

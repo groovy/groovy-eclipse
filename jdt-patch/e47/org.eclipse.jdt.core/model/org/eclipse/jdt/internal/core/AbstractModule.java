@@ -10,13 +10,48 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.env.IModule.IService;
 
 public abstract class AbstractModule extends NamedMember implements IModuleDescription {
+	
+	/**
+	 * Handle for an automatic module.
+	 *
+	 * <p>Note, that by definition this is mostly a fake, only {@link #getElementName()} provides a useful value.</p>
+	 */
+	static class AutoModule extends AbstractModule {
+	
+		public AutoModule(JavaElement parent, String name) {
+			super(parent, name);
+		}
+		@Override
+		public IJavaElement[] getChildren() throws JavaModelException {
+			return JavaElement.NO_ELEMENTS; // may later answer computed details
+		}
+		@Override
+		public int getFlags() throws JavaModelException {
+			return 0;
+		}
+		public ITypeRoot getTypeRoot() {
+			return null; // has no real CompilationUnit nor ClassFile
+		}
+		@Override
+		public IModuleReference[] getRequiredModules() throws JavaModelException {
+			return ModuleDescriptionInfo.NO_REQUIRES;
+		}
+		@Override
+		protected void toStringContent(StringBuffer buffer, String lineDelimiter) throws JavaModelException {
+			buffer.append("automatic module "); //$NON-NLS-1$
+			buffer.append(this.name);
+		}
+	}
+	
 	protected AbstractModule(JavaElement parent, String name) {
 		super(parent, name);
 	}

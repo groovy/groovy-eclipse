@@ -1432,6 +1432,9 @@ public ReferenceBinding getCachedType(char[][] compoundName) {
 public AnnotationBinding getNullableAnnotation() {
 	if (this.nullableAnnotation != null)
 		return this.nullableAnnotation;
+	if (this.root != this) {
+		return this.nullableAnnotation = this.root.getNullableAnnotation();
+	}
 	ReferenceBinding nullable = getResolvedType(this.globalOptions.nullableAnnotationName, null);
 	return this.nullableAnnotation = this.typeSystem.getAnnotationType(nullable, true);
 }
@@ -1443,6 +1446,9 @@ public char[][] getNullableAnnotationName() {
 public AnnotationBinding getNonNullAnnotation() {
 	if (this.nonNullAnnotation != null) 
 		return this.nonNullAnnotation;
+	if (this.root != this) {
+		return this.nonNullAnnotation = this.root.getNonNullAnnotation();
+	}
 	ReferenceBinding nonNull = getResolvedType(this.globalOptions.nonNullAnnotationName, null);
 	return this.nonNullAnnotation = this.typeSystem.getAnnotationType(nonNull, true);
 }
@@ -1485,6 +1491,9 @@ public boolean isNullnessAnnotationPackage(PackageBinding pkg) {
 }
 
 public boolean usesNullTypeAnnotations() {
+	if(this.root != this) {
+		return this.root.usesNullTypeAnnotations();
+	}
 	if (this.globalOptions.useNullTypeAnnotations != null)
 		return this.globalOptions.useNullTypeAnnotations;
 

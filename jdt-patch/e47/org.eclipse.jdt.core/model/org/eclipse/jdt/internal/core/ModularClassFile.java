@@ -112,7 +112,7 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 	
 	@Override
 	public IType getType() {
-		throw new UnsupportedOperationException("IClassFile#getType() cannot be used on an IModularClassFile");
+		throw new UnsupportedOperationException("IClassFile#getType() cannot be used on an IModularClassFile"); //$NON-NLS-1$
 	}
 
 	/**
@@ -240,7 +240,6 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 		}
 		BecomeWorkingCopyOperation op = new BecomeWorkingCopyOperation(workingCopy, null);
 		op.runOperation(monitor);
-		System.out.println("<<getWorkingCopy: "+workingCopy);
 		return workingCopy;
 	}
 	/**

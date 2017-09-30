@@ -14,7 +14,6 @@ package org.eclipse.jdt.internal.core;
 import java.io.File;
 import java.util.*;
 import java.util.function.Function;
-import java.util.jar.Manifest;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.IPath;
@@ -38,7 +37,6 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
-import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
@@ -67,24 +65,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class NameLookup implements SuffixConstants {
-
-	/**
-	 * Handle for an automatic module.
-	 *
-	 * <p>Note, that by definition this is mostly a fake, only {@link #getElementName()} provides a useful value.</p>
-	 */
-	private static class AutoModule extends AbstractModule {
-
-		public AutoModule(JavaElement parent, String name) {
-			super(parent, name);
-		}
-
-		@Override
-		protected void toStringContent(StringBuffer buffer, String lineDelimiter) throws JavaModelException {
-			buffer.append("automatic module "); //$NON-NLS-1$
-			buffer.append(this.name);
-		}
-	}
 
 	public static class Answer {
 		public IType type;
@@ -905,18 +885,7 @@ public class NameLookup implements SuffixConstants {
 			if (classpathEntry instanceof ClasspathEntry) {
 				if (((ClasspathEntry) classpathEntry).isModular()) {
 					// modular but no module-info implies this is an automatic module
-					Manifest manifest = null;
-					switch (classpathEntry.getEntryKind()) {
-						case IClasspathEntry.CPE_LIBRARY:
-							manifest = ((PackageFragmentRoot) root).getManifest();
-							break;
-						case IClasspathEntry.CPE_PROJECT:
-							JavaProject javaProject = (JavaProject) root.getJavaModel().getJavaProject(classpathEntry.getPath().lastSegment());
-							manifest = javaProject.getManifest();
-							break;
-					}
-					char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleName(root.getElementName(), root.isArchive(), manifest);
-					module = new AutoModule((JavaElement) root, String.valueOf(moduleName));
+					module = ((PackageFragmentRoot) root).getAutomaticModuleDescription(classpathEntry);
 				}
 			}
 		}

@@ -3,4 +3,5 @@
 10-Mar-2017: ce31ee3 (Oxygen M6)
 12-May-2017: ec68d4e (Oxygen M7)
 21-May-2017: 34337e2 (Oxygen RC1)
-22-Sep-2017: 2cf2e0d (Oxygen SR1a)
+22-Sep-2017: 2cf2e0d (Oxygen.1a RC1)
+29-Sep-2017: 8f4f8ed (Oxygen.1a RC2)

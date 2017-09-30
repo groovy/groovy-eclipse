@@ -171,8 +171,10 @@ static AnnotationBinding createAnnotation(IBinaryAnnotation annotationInfo, Look
 		pairs[i] = new ElementValuePair(binaryPairs[i].getName(), convertMemberValue(binaryPairs[i].getValue(), env, missingTypeNames, false), null);
 
 	char[] typeName = annotationInfo.getTypeName();
-	ReferenceBinding annotationType = env.getTypeFromConstantPoolName(typeName, 1, typeName.length - 1, false, missingTypeNames);
-	return env.createUnresolvedAnnotation(annotationType, pairs);
+	LookupEnvironment env2 = annotationInfo.isExternalAnnotation() ? env.root : env;
+	ReferenceBinding annotationType = env2.getTypeFromConstantPoolName(typeName, 1, typeName.length - 1, false,
+			missingTypeNames);
+	return env2.createUnresolvedAnnotation(annotationType, pairs);
 }
 
 public static AnnotationBinding[] createAnnotations(IBinaryAnnotation[] annotationInfos, LookupEnvironment env, char[][][] missingTypeNames) {
