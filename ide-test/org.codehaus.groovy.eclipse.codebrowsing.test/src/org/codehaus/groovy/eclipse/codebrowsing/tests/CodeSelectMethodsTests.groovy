@@ -350,6 +350,13 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertCodeSelect(contents, new SourceRange(contents.indexOf('Color.'), 5), 'Color')
     }
 
+    @Test
+    void testCodeSelectHotkeyHandling() {
+        String contents = 'def list = Arrays.asList("1", "2", "3")'
+        // F3 (Open Declaration) key binding selects at offset of cursor with length 0
+        assertCodeSelect(contents, new SourceRange(contents.indexOf('sList'), 0), 'asList')
+    }
+
     //
 
     private IMethod assertConstructor(String packName, String className, String toSearch, String contents) {

@@ -40,9 +40,20 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 public class CodeSelectHelper implements ICodeSelectHelper {
 
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
-        // GRECLIPSE-1330: check for possible reference in GString
         char[] contents = unit.getContents();
-        if (length > 1 && start + length < contents.length && contents[start] == '$' && contents[start + 1] != '{') {
+        // expand zero-length selection to include adjacent identifier characters
+        if (length == 0) {
+            // TODO: Use the ExpressionFinder or TokenStream to do this?
+            while (start > 0 && Character.isJavaIdentifierPart(contents[start - 1])) {
+                start -= 1;
+                length += 1;
+            }
+            while (contents.length > (start + length) && Character.isJavaIdentifierPart(contents[start + length])) {
+                length += 1;
+            }
+        }
+        // GRECLIPSE-1330: check for possible reference in GString
+        if (length > 1 && contents.length > (start + 1) && contents[start] == '$' && contents[start + 1] != '{') {
             start += 1;
             length -= 1;
         }
