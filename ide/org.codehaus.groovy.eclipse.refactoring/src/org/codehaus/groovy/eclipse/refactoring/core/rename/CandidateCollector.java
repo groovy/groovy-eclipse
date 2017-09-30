@@ -1,9 +1,17 @@
-/* 
- * Copyright (C) 2007, 2008 Martin Kempf, Reto Kleeb, Michael Klenk
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
@@ -15,29 +23,25 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.text.ITextSelection;
 
 /**
- * Collects Groovy and Java Candidates
- * @author Stefan Reinhard
- *
+ * Collects Groovy and Java candidates.
  */
 public class CandidateCollector {
-	
-	protected ITextSelection selection;
-	protected GroovyCompilationUnit unit;
-	
-	protected ISourceReference refactoringTarget;
-	private boolean isValid = true;
-	
-	public CandidateCollector(GroovyCompilationUnit unit, ITextSelection selection) {
-		this.unit = unit;
-		this.selection = selection;
-	}
-	
-	
-	/**
-	 * The selected node.  May be null if the selection is not a valid 
-	 * refactoring target
-	 * @return
-	 */
+
+    protected ITextSelection selection;
+    protected GroovyCompilationUnit unit;
+
+    protected ISourceReference refactoringTarget;
+    private boolean isValid = true;
+
+    public CandidateCollector(GroovyCompilationUnit unit, ITextSelection selection) {
+        this.unit = unit;
+        this.selection = selection;
+    }
+
+    /**
+     * The selected node.  May be null if the selection is not a valid
+     * refactoring target.
+     */
     public ISourceReference getRefactoringTarget() {
         if (isValid && refactoringTarget == null) {
             try {
@@ -48,8 +52,7 @@ public class CandidateCollector {
                     isValid = false;
                 }
             } catch (JavaModelException e) {
-                GroovyCore.logException("Exception finding element at offset " + 
-                        selection.getOffset() + " in compilation unit " + unit.getElementName(), e);
+                GroovyCore.logException("Exception finding element at offset " + selection.getOffset() + " in compilation unit " + unit.getElementName(), e);
             }
         }
         return refactoringTarget;

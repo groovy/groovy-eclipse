@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,24 +28,18 @@ import org.eclipse.jdt.internal.corext.refactoring.RefactoringScopeFactory;
 /**
  * Expands the search scope of a refactoring search so that private declarations
  * still have a project-wide search.
- * 
- * @author andrew
- * @created Jun 9, 2011
  */
 public class RefactoringSearchScopeExpander implements ISearchScopeExpander {
 
     public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
-        // at this point, we already know this is a groovy project, so no need
-        // to check again.
+        // at this point, we already know this is a groovy project, so no need to check again
         if (pattern.focus.getOpenable() instanceof ICompilationUnit && requestor instanceof CollectingSearchRequestor) {
             try {
                 return RefactoringScopeFactory.create(pattern.focus, false, true);
             } catch (JavaModelException e) {
-                GroovyCore.logException(
-                        "Exception thrown when trying to expand the search scope of " + pattern.focus.getElementName(), e);
+                GroovyCore.logException("Exception thrown when trying to expand the search scope of " + pattern.focus.getElementName(), e);
             }
         }
         return scope;
     }
-
 }

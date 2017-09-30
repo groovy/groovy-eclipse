@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
 import java.util.ArrayList;
@@ -63,9 +78,6 @@ import org.eclipse.text.edits.TextEditGroup;
  *
  * Renames accesses to synthetic groovy properties that are backed by a getter,
  * setter, and/or isser.
- *
- * @author andrew
- * @created Oct 31, 2012
  */
 public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
@@ -93,7 +105,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
             return RefactoringStatus.createFatalErrorStatus(e.getLocalizedMessage());
         }
 
-
         return status;
     }
 
@@ -112,8 +123,9 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         for (SearchMatch match : toCheck) {
             if (match.getAccuracy() == SearchMatch.A_INACCURATE) {
                 final RefactoringStatusEntry entry = new RefactoringStatusEntry(RefactoringStatus.WARNING,
-                        RefactoringCoreMessages.RefactoringSearchEngine_potential_matches,
-                        JavaStatusContext.create(JavaCore.createCompilationUnitFrom((IFile) match.getResource()), new SourceRange(match.getOffset(), match.getLength())));
+                    RefactoringCoreMessages.RefactoringSearchEngine_potential_matches,
+                    JavaStatusContext.create(JavaCore.createCompilationUnitFrom((IFile) match.getResource()),
+                        new SourceRange(match.getOffset(), match.getLength())));
                 status.addEntry(entry);
             }
         }
@@ -121,7 +133,7 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
     private void checkForBinaryRefs(List<SearchMatch> toCheck, RefactoringStatus status) throws JavaModelException {
         ReferencesInBinaryContext binaryRefs = new ReferencesInBinaryContext(
-                "Elements containing binary references to refactored element ''" + renameTarget.getElementName() + "''");
+            "Elements containing binary references to refactored element ''" + renameTarget.getElementName() + "''");
         for (Iterator<SearchMatch> iter = toCheck.iterator(); iter.hasNext();) {
             SearchMatch match = iter.next();
             if (isBinaryElement(match.getElement())) {
@@ -139,22 +151,16 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     private boolean isBinaryElement(Object element) throws JavaModelException {
         if (element instanceof IMember) {
             return ((IMember) element).isBinary();
-
         } else if (element instanceof ICompilationUnit) {
             return true;
-
         } else if (element instanceof IClassFile) {
             return false;
-
         } else if (element instanceof IPackageFragment) {
             return isBinaryElement(((IPackageFragment) element).getParent());
-
         } else if (element instanceof IPackageFragmentRoot) {
             return ((IPackageFragmentRoot) element).getKind() == IPackageFragmentRoot.K_BINARY;
-
         }
         return false;
-
     }
 
     private SearchResultGroup[] convert(List<SearchMatch> toGroup) {
@@ -182,7 +188,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
-
         CompositeChange change = new CompositeChange(getName());
         createMatchedChanges(matches, change, getNameMap());
         if (change.getChildren().length > 0) {
@@ -204,8 +209,8 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     protected boolean initialize(Object element) {
         if (element instanceof IMethod || element instanceof IField) {
             renameTarget = (IMember) element;
-            if (!renameTarget.isReadOnly()
-                    && GroovyNature.hasGroovyNature(renameTarget.getJavaProject().getProject())) {
+            if (!renameTarget.isReadOnly() &&
+                GroovyNature.hasGroovyNature(renameTarget.getJavaProject().getProject())) {
                 return true;
             }
         }
@@ -216,7 +221,8 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         return prefix + Character.toUpperCase(name.charAt(0)) + name.substring(1);
     }
 
-    private void addChange(CompositeChange finalChange, IMember enclosingElement, int offset, int length, String newName) {
+    private void addChange(CompositeChange finalChange, IMember enclosingElement, int offset, int length,
+        String newName) {
         CompilationUnitChange existingChange = findOrCreateChange(enclosingElement, finalChange);
         TextEditChangeGroup[] groups = existingChange.getTextEditChangeGroups();
         TextEdit occurrenceEdit = new ReplaceEdit(offset, length, newName);
@@ -233,17 +239,17 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
             return;
         }
         existingChange.addEdit(occurrenceEdit);
-        existingChange.addChangeGroup(new TextEditChangeGroup(existingChange, new TextEditGroup(
-"Update synthetic Groovy accessor",
-                occurrenceEdit)));
+        existingChange.addChangeGroup(new TextEditChangeGroup(existingChange,
+            new TextEditGroup("Update synthetic Groovy accessor", occurrenceEdit)));
     }
 
     private String basename(String fullName) {
         int baseStart;
         if (fullName.startsWith("is") && fullName.length() > 2 && Character.isUpperCase(fullName.charAt(2))) {
             baseStart = 2;
-        } else if ((fullName.startsWith("get") || fullName.startsWith("set")) && fullName.length() > 3
-                && Character.isUpperCase(fullName.charAt(3))) {
+        } else if ((fullName.startsWith("get") || fullName.startsWith("set")) &&
+            fullName.length() > 3 &&
+            Character.isUpperCase(fullName.charAt(3))) {
             baseStart = 3;
         } else {
             baseStart = -1;
@@ -254,11 +260,10 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         } else {
             return fullName;
         }
-
     }
 
-    private void createMatchedChanges(List<SearchMatch> references, CompositeChange finalChange, Map<String, String> nameMap)
-            throws JavaModelException {
+    private void createMatchedChanges(List<SearchMatch> references, CompositeChange finalChange,
+        Map<String, String> nameMap) throws JavaModelException {
         for (SearchMatch searchMatch : references) {
             Object elt = searchMatch.getElement();
             if (elt instanceof IMember) {
@@ -273,7 +278,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
     private List<SearchMatch> findExtraReferences(IProgressMonitor pm) throws CoreException {
         SyntheticAccessorSearchRequestor synthRequestor = new SyntheticAccessorSearchRequestor();
-
         final List<SearchMatch> matches = new ArrayList<SearchMatch>();
         synthRequestor.findSyntheticMatches(renameTarget, new ISearchRequestor() {
             public void acceptMatch(SearchMatch match) {
@@ -319,8 +323,9 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
         if (existingChange == null) {
             // nope...must create a new change
-            existingChange = new CompilationUnitChange("Synthetic Groovy Accessor changes for "
-                    + accessor.getCompilationUnit().getElementName(), accessor.getCompilationUnit());
+            existingChange = new CompilationUnitChange(
+                "Synthetic Groovy Accessor changes for " + accessor.getCompilationUnit().getElementName(),
+                accessor.getCompilationUnit());
             existingChange.setEdit(new MultiTextEdit());
             finalChange.add(existingChange);
         }
@@ -339,5 +344,4 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
         return nameMap;
     }
-
 }

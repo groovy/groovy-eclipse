@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test
 
-import org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticipant
 import org.codehaus.groovy.eclipse.refactoring.test.internal.JavaProjectHelper
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestOptions
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantShared
@@ -117,7 +116,6 @@ abstract class RefactoringTestSuite {
         println 'Starting: ' + test.getMethodName()
 
         RefactoringCore.getUndoManager().flush()
-        ForcePreviewParticipant.mute()
     }
 
     /**
@@ -157,7 +155,6 @@ abstract class RefactoringTestSuite {
         } finally {
             TestRenameParticipantShared.reset()
             TestRenameParticipantSingle.reset()
-            ForcePreviewParticipant.unmute()
         }
     }
 

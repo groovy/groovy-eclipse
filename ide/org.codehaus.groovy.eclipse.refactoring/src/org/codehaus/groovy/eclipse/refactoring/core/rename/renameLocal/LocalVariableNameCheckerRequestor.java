@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,22 +28,17 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Checks to make sure that a rename request for a local variable is not shadowing an existing name
- * @author Andrew Eisenberg
- * @created Apr 1, 2010
+ * Checks to make sure that a rename request for a local variable is not shadowing an existing name.
  */
 public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
 
     private final Variable variable;
-
-    private final int start;
-
-    private final int end;
-
+    private final int start, end;
     private final String newName;
-    private boolean shadowing = false;
-    private boolean variableFound = false;
-    private IJavaElement foundEnclosingElement = null;
+    private boolean shadowing;
+    private boolean variableFound;
+    private IJavaElement foundEnclosingElement;
+
     public LocalVariableNameCheckerRequestor(Variable variable, String newName) {
         this.variable = variable;
         this.newName = newName;
@@ -57,11 +52,12 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
         }
     }
 
-    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
-            IJavaElement enclosingElement) {
+    public boolean isShadowing() {
+        return shadowing;
+    }
 
-        // check to see if the enclosing element does not enclose the
-        // nodeToLookFor
+    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        // check to see if the enclosing element does not enclose the nodeToLookFor
         if (!interestingElement(enclosingElement)) {
             return VisitStatus.CANCEL_MEMBER;
         }
@@ -81,7 +77,8 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
         if (node instanceof Variable) {
             Variable other = (Variable) node;
             if (other.getName().equals(newName)) {
-                if (! (other instanceof VariableExpression) || ((VariableExpression) other).getAccessedVariable() != variable) {
+                if (!(other instanceof VariableExpression) ||
+                    ((VariableExpression) other).getAccessedVariable() != variable) {
                     shadowing = true;
                     return VisitStatus.STOP_VISIT;
                 }
@@ -99,14 +96,8 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
         return VisitStatus.CONTINUE;
     }
 
-    public boolean isShadowing() {
-        return shadowing;
-    }
-
     /**
-     * @param enclosingElement
-     * @return true iff enclosingElement's source location contains the source
-     *         location of {@link #variable}
+     * @return true iff enclosingElement's source location contains the source location of {@link #variable}
      */
     private boolean interestingElement(IJavaElement enclosingElement) {
         // the clinit is always interesting since the clinit contains static
@@ -125,5 +116,4 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
         }
         return false;
     }
-
 }

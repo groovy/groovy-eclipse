@@ -71,82 +71,146 @@ final class RenameLocalTests extends RefactoringTestSuite {
     }
 
     @Test
-    void test0() {
+    void testRenameLocal1() {
         helper('def XXX = 9', 'def NEW = 9')
     }
 
     @Test
-    void test1() {
+    void testRenameLocal2() {
         helper('def XXX = XXX', 'def NEW = NEW')
     }
 
     @Test
-    void test2() {
+    void testRenameLocal3() {
         helper('def XXX = 9\nXXX = XXX', 'def NEW = 9\nNEW = NEW')
     }
 
     @Test
-    void test3() {
+    void testRenameLocal4() {
         helper('def XXX = 9\ndef c = { XXX }', 'def NEW = 9\ndef c = { NEW }')
     }
 
     @Test
-    void test4() {
+    void testRenameLocal5() {
         helper('def x(XXX) { XXX }', 'def x(NEW) { NEW }')
     }
 
     @Test
-    void test5() {
+    void testRenameLocal6() {
         helper('def x(XXX) { XXX.something }', 'def x(NEW) { NEW.something }')
     }
 
     @Test
-    void test6() {
+    void testRenameLocal7() {
         helper('def x(XXX) { "${XXX}" }', 'def x(NEW) { "${NEW}" }')
     }
 
     @Test
-    void test6a() {
+    void testRenameLocal8() {
         helper('def x(XXX) { "${XXX.toString()}" }', 'def x(NEW) { "${NEW.toString()}" }')
     }
 
     @Test
-    void test6c() {
+    void testRenameLocal9() {
         helper('def x(XXX) { "$XXX" }', 'def x(NEW) { "$NEW" }')
     }
 
     @Test
-    void test7() {
+    void testRenameLocal10() {
         helper('def x(XXX) { XXX.XXX }', 'def x(NEW) { NEW.XXX }')
     }
 
     @Test
-    void test8() {
+    void testRenameLocal11() {
         helper('def x(XXX) { this.XXX }', 'def x(NEW) { this.XXX }')
     }
 
     @Test
-    void test9() {
+    void testRenameLocal12() {
         helper('class A { def x(XXX) { XXX\nthis.XXX } \nint XXX}', 'class A { def x(NEW) { NEW\nthis.XXX } \nint XXX}')
     }
 
     @Test
-    void testWarning0() {
-        helperExpectWarning('def XXX\nwhile(XXX) { XXX\n def NEW \n NEW }', 'def NEW\nwhile(NEW) { NEW\n def NEW \n NEW }')
+    void testRenameLocalWithConflict1() {
+        String source = '''\
+            def XXX
+            while(XXX) {
+              XXX
+              def NEW
+              NEW
+            }
+            '''.stripIndent()
+        String expect = '''\
+            def NEW
+            while(NEW) {
+              NEW
+              def NEW
+              NEW
+            }
+            '''.stripIndent()
+
+        helperExpectWarning(source, expect)
     }
 
     @Test
-    void testWarning1() {
-        helperExpectWarning('class A { def NEW\ndef x(XXX) { XXX\nthis.XXX } }', 'class A { def NEW\ndef x(NEW) { NEW\nthis.XXX } }')
+    void testRenameLocalWithConflict2() {
+        String source = '''\
+            class A {
+              def NEW
+              def x(XXX) {
+                XXX
+                this.XXX
+              }
+            }
+            '''.stripIndent()
+        String expect = '''\
+            class A {
+              def NEW
+              def x(NEW) {
+                NEW
+                this.XXX
+              }
+            }
+            '''.stripIndent()
+
+        helperExpectWarning(source, expect)
     }
 
     @Test
-    void testWarning2() {
-        helperExpectWarning('def XXX\ndef y = { NEW -> XXX }', 'def NEW\ndef y = { NEW -> NEW }')
+    void testRenameLocalWithConflict3() {
+        String source = '''\
+            def XXX
+            def y = { NEW -> XXX }
+            '''.stripIndent()
+        String expect = '''\
+            def NEW
+            def y = { NEW -> NEW }
+            '''.stripIndent()
+
+        helperExpectWarning(source, expect)
     }
 
     @Test
-    void testWarning3() {
-        helperExpectWarning('def NEW\nwhile(NEW) { NEW\n def XXX \n XXX\nNEW }', 'def NEW\nwhile(NEW) { NEW\n def NEW \n NEW\nNEW }')
+    void testRenameLocalWithConflict4() {
+        String source = '''\
+            def NEW
+            while(NEW) {
+              NEW
+              def XXX
+              XXX
+              NEW
+            }
+            '''.stripIndent()
+        String expect = '''\
+            def NEW
+            while(NEW) {
+              NEW
+              def NEW
+              NEW
+              NEW
+            }
+            '''.stripIndent()
+
+        helperExpectWarning(source, expect)
     }
 }
