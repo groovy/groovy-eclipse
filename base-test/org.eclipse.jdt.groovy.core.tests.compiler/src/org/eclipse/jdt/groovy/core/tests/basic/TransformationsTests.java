@@ -105,7 +105,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
@@ -121,7 +122,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
@@ -138,7 +140,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
@@ -155,7 +158,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
     }
@@ -170,7 +174,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
@@ -186,7 +191,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
@@ -203,7 +209,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
@@ -220,7 +227,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
@@ -237,7 +245,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
     }
@@ -255,7 +264,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         FieldDeclaration field = findField(getCUDeclFor("Foo.groovy"), "field1");
         assertTrue("Expected package-private but was: " + Modifier.toString(field.modifiers), isPackagePrivate(field.modifiers));
         field = findField(getCUDeclFor("Foo.groovy"), "field2");
@@ -279,7 +289,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
+
         MethodDeclaration method = findMethod(getCUDeclFor("Foo.groovy"), "method1");
         assertTrue("Expected package-private but was: " + Modifier.toString(method.modifiers), isPackagePrivate(method.modifiers));
         method = findMethod(getCUDeclFor("Foo.groovy"), "method2");
@@ -300,20 +311,20 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "       assert dist instanceof Distance\n"+
             "       assert dist.toString() == \"300m\"\n"+
             "  print dist.toString()\n"+
-            "}",
+            "}\n",
 
             "Distance.groovy",
             "   final class Distance {\n"+
             "       def number\n"+
             "       String toString() { \"${number}m\" }\n"+
-            "}",
+            "}\n",
 
             "NumberCategory.groovy",
             "   class NumberCategory {\n"+
             "       static Distance getMeters(Number self) {\n"+
             "           new Distance(number: self)\n"+
             "       }\n"+
-            "}",
+            "}\n",
         };
 
         runConformTest(sources, "300m");
@@ -462,7 +473,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "Bar.groovy",
             "class Foo { @Delegate URL myUrl }\n" +
             "\n" +
-            "print Foo.class.getDeclaredMethod('getContent', Class[].class)",
+            "print Foo.class.getDeclaredMethod('getContent', Class[].class)\n",
         };
 
         runConformTest(sources, "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException");
@@ -508,6 +519,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testSortable() {
+        assumeTrue(isAtLeastGroovy(23));
+
         String[] sources = {
             "Face.java",
             "public interface Face<T> extends Comparable<T> {\n" +
@@ -527,7 +540,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, ""); // expect no errors/warnings
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -538,19 +551,19 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[] argv) {\n" +
             "    Run.main(argv)\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "Run.groovy",
             "public class Run {\n" +
             "  public static void main(String[] argv) {\n" +
             "    System.out.println(Wibble.getInstance().field)\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "Wibble.groovy",
             "@Singleton class Wibble {\n" +
             "  public String field = 'abcd'\n" +
-            "}",
+            "}\n",
         };
 
         runConformTest(sources, "abcd");
@@ -666,7 +679,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  def meth() {\n" +
             "    logger.info('yay!')\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "examples/local/Slf4JExample.groovy",
             "package examples.local\n" +
@@ -676,7 +689,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  def meth() {\n" +
             "    logger.info('yay!')\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "examples/local/LoggingExample.groovy",
             "package examples.local\n" +
@@ -686,7 +699,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  def meth() {\n" +
             "    logger.info('yay!')\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "examples/local/CommonsExample.groovy",
             "package examples.local\n" +
@@ -696,10 +709,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  def meth() {\n" +
             "    logger.info('yay!')\n" +
             "  }\n" +
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -758,8 +771,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "assert \"Ending greetWithLogging\"    == result[2].trim()\n"+
             "\n"+
             "System.setOut(oldOut);\n"+
-            "print 'done'\n"+
-            "\n",
+            "print 'done'\n",
         };
 
         runConformTest(sources,
@@ -787,23 +799,23 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "      System.out.println(o);\n" +
             "    }\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "NotNull.java",
             "import java.lang.annotation.*;\n" +
             "@Retention(RetentionPolicy.RUNTIME) public @interface NotNull {\n" +
-            "}",
+            "}\n",
 
             "Length.java",
             "import java.lang.annotation.*;\n" +
             "@Retention(RetentionPolicy.RUNTIME) public @interface Length {\n" +
             "  int value() default 0;\n" +
-            "}",
+            "}\n",
 
             "ISBN.groovy",
             "@NotNull @Length @groovy.transform.AnnotationCollector\n" +
             "public @interface ISBN {\n" +
-            "}",
+            "}\n",
         };
 
         runConformTest(sources, "@NotNull()\n@Length(value=0)");
@@ -820,12 +832,12 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  One(String s) {\n" +
             "    print s\n" +
             "  }\n" +
-            "}",
+            "}\n",
 
             "Two.groovy",
             "@groovy.transform.InheritConstructors\n" +
             "class Two extends One {\n" +
-            "}",
+            "}\n",
         };
 
         runConformTest(sources, "foo");
@@ -843,7 +855,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "   if (rareCondition) {\n"+
             "        println \"Did you spot the error in this ${message.toUppercase()}?\"\n"+
             "   }\n"+
-            "}",
+            "}\n",
         };
 
         runNegativeTest(sources,
@@ -872,7 +884,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "   List<Integer> ls = new ArrayList<Integer>();\n"+
             "   ls.add(123);\n"+
             "   ls.add('abc');\n"+
-            "}",
+            "}\n",
         };
 
         runNegativeTest(sources,
@@ -897,10 +909,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "    Set<java.beans.BeanInfo> defs = []\n" +
             "    defs*.additionalBeanInfo\n" +
             "  }\n" +
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -915,10 +927,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "    Set<java.beans.BeanInfo> defs = []\n" +
             "    defs*.additionalBeanInfo\n" +
             "  }\n" +
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test @Ignore("VM argument not accepted on CI server")
@@ -935,7 +947,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "    LoggerTest.log.info('one')\n"+
             "    log.info('two')\n"+
             "  }\n"+
-            "}",
+            "}\n",
         };
         vmArguments = new String[] {"-Djava.util.logging.SimpleFormatter.format=%4$s %5$s%6$s%n"};
 
@@ -954,7 +966,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "   List<Integer> ls = new ArrayList<Integer>();\n"+
             "   ls.add(123);\n"+
             "   ls.add('abc');\n"+
-            "}",
+            "}\n",
         };
 
         runNegativeTest(sources,
@@ -1006,7 +1018,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1023,7 +1035,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1035,7 +1047,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "A.groovy",
             "class A {\n"+
             "  public void profile(String name, groovy.lang.Closure<?> callable) { }\n"+
-            "}",
+            "}\n",
 
             "B.groovy",
             "@groovy.transform.CompileStatic\n"+
@@ -1045,10 +1057,70 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "      println 'abc'\n"+
             "    }\n"+
             "  }\n"+
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic5() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "FlowTyping.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class FlowTyping {\n" +
+            "  private Number number\n" +
+            "  BigDecimal method() {\n" +
+            "    return (number == null || number instanceof BigDecimal) \\\n" +
+            "      ? (BigDecimal) number : new BigDecimal(number.toString())\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic6() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "FlowTyping.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class FlowTyping {\n" +
+            "  private Number number;\n" +
+            "  private BigDecimal method() {\n" +
+            "    return (number == null || number instanceof BigDecimal) ? number : new BigDecimal(number.toString());\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic7() {
+        assumeTrue(isAtLeastGroovy(20));
+
+        String[] sources = {
+            "BridgeMethod.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "int compare(Integer integer) {\n" +
+            "  if (integer.compareTo(0) == 0)\n" +
+            "    return 0\n" +
+            "  return 1\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, isAtLeastGroovy(22) ? "" :
+            "----------\n" +
+            "1. ERROR in BridgeMethod.groovy (at line 3)\n" +
+            "\tif (integer.compareTo(0) == 0)\n" +
+            "\t    ^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [int java.lang.Integer#compareTo(java.lang.##), int java.lang.Integer#compareTo(java.lang.##)]\n" +
+            "----------\n");
     }
 
     @Test
@@ -1088,7 +1160,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "    LoggerTest.log.info('one')\n"+
             "    log.info('two')\n"+
             "  }\n"+
-            "}",
+            "}\n",
         };
         vmArguments = new String[] {"-Djava.util.logging.SimpleFormatter.format=%4$s %5$s%6$s%n"};
 
@@ -1108,10 +1180,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "   second.addAll(artefactResources2)\n"+
             "   println 'abc'\n"+
             "}\n"+
-            "meth();",
+            "meth();\n",
         };
 
-        runConformTest(sources, "abc");
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1126,10 +1198,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  def xxx(List list) {\n"+
             "    list.unique().each { }\n"+
             "  }\n"+
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1148,10 +1220,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "      Pattern pattern = ~regex\n" + // NPE on this bitwise negation
             "    }\n" +
             "  }\n" +
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1160,14 +1232,13 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
         String[] sources = {
             "Foo.groovy",
-            "\n"+
             "@groovy.transform.CompileStatic\n"+
             "class Foo {\n"+
             "  enum Status { ON, OFF }\n"+
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1186,10 +1257,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "  int computeDynamic(int input) {\n" +
             "    missing(prop, input)\n" +
             "  }\n" +
-            "}",
+            "}\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test @Ignore("Grab is failing on CI server")
@@ -1200,10 +1271,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "def printDate() {\n"+
             "  def dt = new org.joda.time.DateTime()\n"+
             "}\n"+
-            "printDate()",
+            "printDate()\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     /**
@@ -1258,10 +1329,10 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "\n"+
             "@Grab(group='org.mortbay.jetty', module='jetty-embedded', version='6.1.0')\n"+
             "def runServer(duration) { }\n"+
-            "runServer(10000)",
+            "runServer(10000)\n",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
