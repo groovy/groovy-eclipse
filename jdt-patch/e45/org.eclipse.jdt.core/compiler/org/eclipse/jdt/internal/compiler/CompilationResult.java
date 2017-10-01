@@ -124,8 +124,8 @@ private int computePriority(CategorizedProblem problem){
 			priority += P_OUTSIDE_METHOD;
 		}
 		if (this.firstErrors.contains(problem)){ // if context is null, firstErrors is null too
-		  priority += P_FIRST_ERROR;
-	    }
+			priority += P_FIRST_ERROR;
+		}
 	} else {
 		priority += P_OUTSIDE_METHOD;
 	}
@@ -379,14 +379,16 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 		recordTask(newProblem);
 		return;
 	}
+	// GROOVY add -- prevent duplicate problem indicators, but beware of problemCount (public field) being reset from elsewhere
+	if (this.problemsMap != null && this.problemsMap.size() == this.problemCount && this.problemsMap.containsKey(newProblem)) {
+		return;
+	}
+	// GROOVY end
 	if (this.problemCount == 0) {
 		this.problems = new CategorizedProblem[5];
 	} else if (this.problemCount == this.problems.length) {
 		System.arraycopy(this.problems, 0, (this.problems = new CategorizedProblem[this.problemCount * 2]), 0, this.problemCount);
 	}
-	// GROOVY add
-	if (this.problemsMap != null && this.problemsMap.containsKey(newProblem)) return;
-	// GROOVY end
 	this.problems[this.problemCount++] = newProblem;
 	if (referenceContext != null){
 		if (this.problemsMap == null) this.problemsMap = new HashMap(5);
@@ -414,10 +416,10 @@ ReferenceContext getContext(CategorizedProblem problem) {
  * For now, remember the compiled type using its compound name.
  */
 public void record(char[] typeName, ClassFile classFile) {
-    SourceTypeBinding sourceType = classFile.referenceBinding;
-    if (!sourceType.isLocalType() && sourceType.isHierarchyInconsistent()) {
-        this.hasInconsistentToplevelHierarchies = true;
-    }
+	SourceTypeBinding sourceType = classFile.referenceBinding;
+	if (!sourceType.isLocalType() && sourceType.isHierarchyInconsistent()) {
+		this.hasInconsistentToplevelHierarchies = true;
+	}
 	this.compiledTypes.put(typeName, classFile);
 }
 
