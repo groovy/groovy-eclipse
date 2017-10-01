@@ -102,7 +102,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
 
     @Override
     protected RefactoringStatus doCheckFinalConditions(IProgressMonitor pm, CheckConditionsContext context) throws CoreException, OperationCanceledException {
-        // ensure that we are working on a working copy so that we can use == for testing nodes.
+        // ensure that we are working on a working copy so that we can use == for testing nodes
         boolean wasWorkingCopy = true;
         try {
             if (!unit.isWorkingCopy()) {

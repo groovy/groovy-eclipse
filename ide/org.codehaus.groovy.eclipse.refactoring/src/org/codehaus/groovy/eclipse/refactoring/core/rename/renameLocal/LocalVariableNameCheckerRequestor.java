@@ -77,17 +77,14 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
         if (node instanceof Variable) {
             Variable other = (Variable) node;
             if (other.getName().equals(newName)) {
-                if (!(other instanceof VariableExpression) ||
-                    ((VariableExpression) other).getAccessedVariable() != variable) {
+                if (!(other instanceof VariableExpression) || ((VariableExpression) other).getAccessedVariable() != variable) {
                     shadowing = true;
                     return VisitStatus.STOP_VISIT;
                 }
             }
-        }
-
-        if (node instanceof ConstantExpression) {
-            ConstantExpression con = (ConstantExpression) node;
-            if (con.getText().equals(variable.getName()) && result.declaration != variable) {
+        } else if (node instanceof ConstantExpression) {
+            ConstantExpression expr = (ConstantExpression) node;
+            if (expr.getText().equals(variable.getName()) && result.declaration != variable) {
                 shadowing = true;
                 return VisitStatus.STOP_VISIT;
             }

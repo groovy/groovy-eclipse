@@ -77,7 +77,7 @@ final class RenameLocalTests extends RefactoringTestSuite {
 
     @Test
     void testRenameLocal2() {
-        helper('def XXX = XXX', 'def NEW = NEW')
+        helper('def XXX = XXX', 'def NEW = XXX')
     }
 
     @Test
@@ -128,6 +128,32 @@ final class RenameLocalTests extends RefactoringTestSuite {
     @Test
     void testRenameLocal12() {
         helper('class A { def x(XXX) { XXX\nthis.XXX } \nint XXX}', 'class A { def x(NEW) { NEW\nthis.XXX } \nint XXX}')
+    }
+
+    @Test // the two blocks should remain independent
+    void testRenameLocal13() {
+        String source = '''\
+            def method(List list) {
+              for (XXX in list) {
+                XXX
+              }
+              def out = list.collect { XXX ->
+                XXX
+              }
+            }
+            '''.stripIndent()
+        String expect = '''\
+            def method(List list) {
+              for (NEW in list) {
+                NEW
+              }
+              def out = list.collect { XXX ->
+                XXX
+              }
+            }
+            '''.stripIndent()
+
+        helper(source, expect)
     }
 
     @Test

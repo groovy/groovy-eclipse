@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.search.LocalVariableReferenceMatch;
@@ -31,39 +32,41 @@ import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Region;
 
-/**
- * @author Andrew Eisenberg
- * @created Apr 1, 2010
- */
 public class LocalVariableReferenceRequestor implements ITypeRequestor {
 
-    private List<IRegion> references;
-    private SearchRequestor requestor;
-    private IJavaElement enclosingElement = null;
-    private boolean foundEnclosingElement = false;
+    private final List<IRegion> references = new ArrayList<IRegion>();
+
+    private Variable variable;
     private String variableName;
+    private IJavaElement enclosingElement;
+    private boolean foundEnclosingElement;
+
     private int declStart;
+    private SearchRequestor requestor;
     private SearchParticipant participant;
 
     public LocalVariableReferenceRequestor(Variable variable, IJavaElement enclosingElement) {
         this(variable.getName(), enclosingElement, null, null, -1);
+        this.variable = variable;
     }
 
-    public LocalVariableReferenceRequestor(String name, IJavaElement enclosingElement, SearchRequestor requestor,
-            SearchParticipant participant, int declStart) {
-        references = new ArrayList<IRegion>();
+    public LocalVariableReferenceRequestor(String variableName, IJavaElement enclosingElement, SearchRequestor requestor, SearchParticipant participant, int declStart) {
+        this.variableName = variableName;
         this.enclosingElement = enclosingElement;
-        variableName = name;
 
         this.declStart = declStart;
         this.requestor = requestor;
         this.participant = participant;
     }
 
+    public List<IRegion> getReferences() {
+        return references;
+    }
+
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (enclosingElement.equals(this.enclosingElement)) {
             foundEnclosingElement = true;
-            if (node instanceof Variable && ((Variable) node).getName().equals(variableName)) {
+            if (node instanceof Variable && isMatchForVariable((Variable) node)) {
                 IRegion realSourceLocation = getRealSourceLocation(node);
                 references.add(realSourceLocation);
                 if (requestor != null && realSourceLocation.getOffset() >= declStart) {
@@ -78,7 +81,7 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
             }
         } else {
             if (foundEnclosingElement) {
-                // end the visit once we have visited the element we are looking for.
+                // end the visit once we have visited the element we are looking for
                 return VisitStatus.STOP_VISIT;
             }
         }
@@ -86,7 +89,7 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
     }
 
     /**
-     * Different behavior if selecting a parameter definition
+     * Different behavior if selecting a parameter definition.
      */
     private IRegion getRealSourceLocation(ASTNode node) {
         if (node instanceof Parameter) {
@@ -96,7 +99,13 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
         return new Region(node.getStart(), variableName.length());
     }
 
-    public List<IRegion> getReferences() {
-        return references;
+    private boolean isMatchForVariable(Variable var) {
+        if (variable != null) {
+            if (var instanceof VariableExpression) {
+                return ((VariableExpression) var).getAccessedVariable() == variable;
+            }
+            return var == variable;
+        }
+        return var.getName().equals(variableName);
     }
 }
