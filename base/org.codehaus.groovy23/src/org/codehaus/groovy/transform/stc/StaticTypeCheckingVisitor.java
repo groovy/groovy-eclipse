@@ -3128,6 +3128,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         Expression trueExpression = expression.getTrueExpression();
         Expression falseExpression = expression.getFalseExpression();
         trueExpression.visit(this);
+        // GRECLIPSE add
+        final ClassNode typeOfTrue = findCurrentInstanceOfClass(trueExpression, getType(trueExpression));
+        // GRECLIPSE end
         // pop if-then-else temporary type info
         typeCheckingContext.popTemporaryTypeInfo();
         falseExpression.visit(this);
@@ -3145,7 +3148,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         } else {
             // store type information
-            final ClassNode typeOfTrue = getType(trueExpression);
+            // GRECLIPSE edit
+            //final ClassNode typeOfTrue = getType(trueExpression);
+            // GRECLIPSE end
             final ClassNode typeOfFalse = getType(falseExpression);
             resultType = lowestUpperBound(typeOfTrue, typeOfFalse);
         }
