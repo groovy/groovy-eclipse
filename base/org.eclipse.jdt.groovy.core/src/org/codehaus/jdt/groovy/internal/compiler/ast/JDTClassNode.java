@@ -253,75 +253,79 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             return;
         }
 
-        MethodBinding[] methodBindings;
-        if (jdtBinding instanceof ParameterizedTypeBinding) {
-            ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
-            methodBindings = genericType.methods();
-        } else {
-            methodBindings = jdtBinding.methods();
-        }
-        if (methodBindings != null) {
-            for (MethodBinding methodBinding : methodBindings) {
-                if (methodBinding.isConstructor()) {
-                    ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
-                    addConstructor(cNode);
-                } else {
-                    MethodNode mNode = methodBindingToMethodNode(methodBinding);
-                    addMethod(mNode);
+        try {
+            MethodBinding[] methodBindings;
+            if (jdtBinding instanceof ParameterizedTypeBinding) {
+                ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
+                methodBindings = genericType.methods();
+            } else {
+                methodBindings = jdtBinding.methods();
+            }
+            if (methodBindings != null) {
+                for (MethodBinding methodBinding : methodBindings) {
+                    if (methodBinding.isConstructor()) {
+                        ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
+                        addConstructor(cNode);
+                    } else {
+                        MethodNode mNode = methodBindingToMethodNode(methodBinding);
+                        addMethod(mNode);
+                    }
                 }
             }
-        }
 
-        if (jdtBinding instanceof BinaryTypeBinding) {
-            MethodBinding[] infraBindings = ((BinaryTypeBinding) jdtBinding).infraMethods();
-            for (MethodBinding methodBinding : infraBindings) {
-                if (methodBinding.isConstructor()) {
-                    ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
-                    addConstructor(cNode);
-                } else {
-                    MethodNode mNode = methodBindingToMethodNode(methodBinding);
-                    addMethod(mNode);
+            if (jdtBinding instanceof BinaryTypeBinding) {
+                MethodBinding[] infraBindings = ((BinaryTypeBinding) jdtBinding).infraMethods();
+                for (MethodBinding methodBinding : infraBindings) {
+                    if (methodBinding.isConstructor()) {
+                        ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
+                        addConstructor(cNode);
+                    } else {
+                        MethodNode mNode = methodBindingToMethodNode(methodBinding);
+                        addMethod(mNode);
+                    }
                 }
-            }
-        } else if (jdtBinding instanceof SourceTypeBinding) {
-            SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
-            ClassScope classScope = jdtSourceTypeBinding.scope;
-            // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
-            if (classScope != null) {
-                CompilationUnitScope cuScope = classScope.compilationUnitScope();
-                LookupEnvironment environment = classScope.environment();
-                MethodVerifier verifier = environment.methodVerifier();
-                cuScope.verifyMethods(verifier);
-            }
-            if (jdtSourceTypeBinding.isPrototype()) {
-                // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
-                // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
-                SyntheticMethodBinding[] syntheticMethodBindings = jdtSourceTypeBinding.syntheticMethods();
-                if (syntheticMethodBindings != null) {
-                    for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
-                        if (syntheticBinding.isConstructor()) {
-                            ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
-                            addConstructor(cNode);
-                        } else {
-                            MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
-                            addMethod(mNode);
+            } else if (jdtBinding instanceof SourceTypeBinding) {
+                SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
+                ClassScope classScope = jdtSourceTypeBinding.scope;
+                // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
+                if (classScope != null) {
+                    CompilationUnitScope cuScope = classScope.compilationUnitScope();
+                    LookupEnvironment environment = classScope.environment();
+                    MethodVerifier verifier = environment.methodVerifier();
+                    cuScope.verifyMethods(verifier);
+                }
+                if (jdtSourceTypeBinding.isPrototype()) {
+                    // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
+                    // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
+                    SyntheticMethodBinding[] syntheticMethodBindings = jdtSourceTypeBinding.syntheticMethods();
+                    if (syntheticMethodBindings != null) {
+                        for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
+                            if (syntheticBinding.isConstructor()) {
+                                ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
+                                addConstructor(cNode);
+                            } else {
+                                MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
+                                addMethod(mNode);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        FieldBinding[] fieldBindings;
-        if (jdtBinding instanceof ParameterizedTypeBinding) {
-            fieldBindings = ((ParameterizedTypeBinding) jdtBinding).genericType().fields();
-        } else {
-            fieldBindings = jdtBinding.fields();
-        }
-        if (fieldBindings != null) {
-            for (FieldBinding fieldBinding : fieldBindings) {
-                FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyDecl);
-                addField(fNode);
+            FieldBinding[] fieldBindings;
+            if (jdtBinding instanceof ParameterizedTypeBinding) {
+                fieldBindings = ((ParameterizedTypeBinding) jdtBinding).genericType().fields();
+            } else {
+                fieldBindings = jdtBinding.fields();
             }
+            if (fieldBindings != null) {
+                for (FieldBinding fieldBinding : fieldBindings) {
+                    FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyDecl);
+                    addField(fNode);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Failed to initialize members for type " + getName(), e);
         }
     }
 

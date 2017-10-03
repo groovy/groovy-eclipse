@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 /**
- * An annotation node that is backed by a JDT reference binding, members are created lazily
- *
- * @author Andy Clement
+ * An annotation node that is backed by a JDT reference binding, members are created lazily.
  */
 public class JDTAnnotationNode extends AnnotationNode {
 
@@ -61,8 +59,8 @@ public class JDTAnnotationNode extends AnnotationNode {
     }
 
     @Override
-    public ClassNode getClassNode() {
-        return super.getClassNode();
+    public void setMember(String name, Expression value) {
+        throw new ImmutableException();
     }
 
     @Override
@@ -89,45 +87,8 @@ public class JDTAnnotationNode extends AnnotationNode {
 
     @Override
     public boolean hasSourceRetention() {
-        return !hasRuntimeRetention()
-                && !hasClassRetention()
-                && (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) == TagBits.AnnotationSourceRetention;
-    }
-
-    @Override
-    public boolean isBuiltIn() {
-        return super.isBuiltIn();
-    }
-
-    @Override
-    public boolean isTargetAllowed(int target) {
-        // FIXASC Auto-generated method stub
-        return super.isTargetAllowed(target);
-    }
-
-    // @Override
-    // public void setAllowedTargets(int bitmap) {
-    // throw new ImmutableException();
-    // }
-
-    // @Override
-    // public void setRuntimeRetention(boolean flag) {
-    // throw new ImmutableException();
-    // }
-
-    // @Override
-    // public void setSourceRetention(boolean flag) {
-    // throw new ImmutableException();
-    // }
-
-    // @Override
-    // public void setClassRetention(boolean flag) {
-    // throw new ImmutableException();
-    // }
-
-    @Override
-    public void setMember(String name, Expression value) {
-        throw new ImmutableException();
+        return !hasRuntimeRetention() && !hasClassRetention() &&
+            (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) == TagBits.AnnotationSourceRetention;
     }
 
     private void ensureMembersInitialized() {
@@ -160,21 +121,21 @@ public class JDTAnnotationNode extends AnnotationNode {
     private Expression createExpressionFor(TypeBinding b, Object value) {
         if (b.isArrayType()) {
             ListExpression listExpression = new ListExpression();
-            // FIXASC is it a groovy optimization that if the value is expected to be an array you don't have to
-            // write it as such
+            // FIXASC is it a groovy optimization that if the value is expected to be an array you don't have to write it as such
             if (value.getClass().isArray()) {
                 Object[] values = (Object[]) value;
                 for (Object v : values) {
-                    listExpression.addExpression(createExpressionFor(((ArrayBinding) b).leafComponentType, v));
+                    if (v != null) // TODO: Why did null values start appearing in Java 9?
+                        listExpression.addExpression(createExpressionFor(((ArrayBinding) b).leafComponentType, v));
                 }
             } else {
                 listExpression.addExpression(createExpressionFor(((ArrayBinding) b).leafComponentType, value));
             }
             return listExpression;
         } else if (b.isEnum()) {
-            ClassExpression classExpression = new ClassExpression(resolver.convertToClassNode(b));
-            Expression valueExpression = new PropertyExpression(classExpression, new String(((FieldBinding) value).name));
-            return valueExpression;
+            ClassNode enumType = resolver.convertToClassNode(b);
+            String fieldName = String.valueOf(((FieldBinding) value).name);
+            return new PropertyExpression(new ClassExpression(enumType), fieldName);
         } else if (CharOperation.equals(b.signature(), jlString)) {
             String v = ((StringConstant) value).stringValue();
             return new ConstantExpression(v);
@@ -190,9 +151,5 @@ public class JDTAnnotationNode extends AnnotationNode {
             return classExpression;
         }
         throw new GroovyEclipseBug("Problem in JDTAnnotatioNode.createExpressionFor(binding=" + b + " value=" + value + ")");
-    }
-
-    public JDTResolver getResolver() {
-        return resolver;
     }
 }
