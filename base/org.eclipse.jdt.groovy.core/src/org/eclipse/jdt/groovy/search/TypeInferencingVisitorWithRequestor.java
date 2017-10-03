@@ -1283,6 +1283,7 @@ assert primaryExprType != null && dependentExprType != null;
                 }
             }
         }
+        // TODO: else, check for "if (x == null || x instanceof y) { .. }" flow typing
 
         node.getIfBlock().visit(this);
 
