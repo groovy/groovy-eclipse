@@ -43,24 +43,31 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorCompletion1a() {
-        String contents = 'class YYY { YYY() { } }\nnew YY()\nkkk'
+    void testConstructorCompletion2() {
+        String contents = 'class YYY { YYY() { } }\nnew YY()\nkkk' // trailing parens
         String expected = 'class YYY { YYY() { } }\nnew YYY()\nkkk'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
     @Test
-    void testConstructorCompletion2() {
+    void testConstructorCompletion3() {
         String contents = 'class YYY { YYY(x) { } }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x) { } }\nnew YYY(x)\nkkk'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
     @Test
-    void testConstructorCompletion3() {
+    void testConstructorCompletion4() {
         String contents = 'class YYY { YYY(x, y) { } }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
+    }
+
+    @Test
+    void testConstructorCompletionWithGenerics1() {
+        String contents = 'List<String> list = new ArrayL'
+        String expected = 'List<String> list = new ArrayList<E>()'
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new ArrayL'), 'ArrayList()')
     }
 
     @Test

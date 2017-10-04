@@ -150,7 +150,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             import org.codehaus.groovy.runtime.DefaultGroovyMethods
             new DefaultGroovyMethods()
             '''.stripIndent()
-        GroovyCompilationUnit gunit = addGroovySource(contents)
+        GroovyCompilationUnit gunit = addGroovySource(contents, nextUnitName())
         ClassNode clazz = extract(gunit)
         List<MethodNode> methods = clazz.getMethods('is')
         for (MethodNode method : methods) {
@@ -174,7 +174,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
               def m(String x, int y) { }
             }
             '''.stripIndent()
-        GroovyCompilationUnit gunit = addGroovySource(contents)
+        GroovyCompilationUnit gunit = addGroovySource(contents, nextUnitName())
         ClassNode clazz = extract(gunit)
         List<MethodNode> methods = clazz.getMethods('m')
         for (MethodNode method : methods) {
@@ -196,8 +196,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testParameterNames3() {
-        addGroovySource('class MyClass { def m(int x) { }\ndef m(String x, int y) { } }')
-        GroovyCompilationUnit gunit = addGroovySource('new MyClass()', 'Other')
+        addGroovySource('class MyClass { def m(int x) { }\ndef m(String x, int y) { } }', 'MyClass')
+        GroovyCompilationUnit gunit = addGroovySource('new MyClass()', nextUnitName())
         List<MethodNode> methods = null
         for (int i = 0; i < 5; i++) {
             methods = delegateTestParameterNames(gunit)
@@ -211,7 +211,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testParameterNames4() {
         addJavaSource('public class MyJavaClass { void m(int x) { } void m(String x, int y) { } }', 'MyJavaClass')
-        GroovyCompilationUnit gunit = addGroovySource('new MyJavaClass()', 'Other')
+        GroovyCompilationUnit gunit = addGroovySource('new MyJavaClass()', nextUnitName())
         List<MethodNode> methods = null
         for (int i = 0; i < 5; i++) {
             methods = delegateTestParameterNames(gunit)

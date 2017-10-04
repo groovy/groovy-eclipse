@@ -30,7 +30,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             List c
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'a')
         assertExtendedContextElements(context, 'Ljava.lang.String;', 'y', 'b')
@@ -45,7 +45,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             List[] z
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File'), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, '[I', 'x')
         assertExtendedContextElements(context, '[Ljava.lang.String;', 'y')
@@ -62,7 +62,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             def z
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File'), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
         assertExtendedContextElements(context, 'LSub;', 'y')
@@ -78,7 +78,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             def z
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, '[LSuper;', 'x', 'y')
         assertExtendedContextElements(context, '[LSub;', 'y')
@@ -99,7 +99,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'foo'
         assertExtendedContextElements(context, '[LSuper;', 'x', 'y')
         assertExtendedContextElements(context, '[LSub;', 'y')
@@ -118,7 +118,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
               def foo() { z }
             }
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'foo'
         assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
         assertExtendedContextElements(context, 'LSub;', 'y')
@@ -139,7 +139,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
               def foo() { Super z }
             }
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'foo'
         assertExtendedContextElements(context, 'LSub;', 'b', 'y')
         assertExtendedContextElements(context, 'LSuper;', 'a', 'b', 'x', 'y', 'z')
@@ -152,7 +152,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             HashMap<Class, Integer> y
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, 'Ljava.util.Map;', 'x', 'y')
         assertExtendedContextElements(context, 'Ljava.util.HashMap;', 'y')
@@ -167,7 +167,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             Boolean b
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, 'I', 'x', 'y')
         assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
@@ -192,7 +192,7 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
             Boolean[][] b2
             z
             '''.stripIndent()
-        def context = getExtendedCoreContext(addGroovySource(contents, 'File', ''), contents.lastIndexOf('z') + 1)
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
         assert context.getEnclosingElement().getElementName() == 'run'
         assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
         assertExtendedContextElements(context, 'I', 'x', 'y')

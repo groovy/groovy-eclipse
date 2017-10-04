@@ -52,7 +52,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             new p.G().getProp()
             new p.G().setProp()
             '''.stripIndent()
-        addGroovySource(contents, 'Script')
+        addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('prop')
 
         // expecting 3 matches since the explicit property reference will not be found since it is not synthetic
@@ -71,7 +71,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             new p.G().getExplicitGetter()
             new p.G().setExplicitGetter()
             '''.stripIndent()
-        addGroovySource(contents, 'Script')
+        addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('getExplicitGetter')
 
         assertNumMatch(1, matches)
@@ -89,7 +89,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             new p.G().getExplicitSetter()
             new p.G().setExplicitSetter()
             '''.stripIndent()
-        addGroovySource(contents, 'Script')
+        addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('getExplicitSetter')
 
         assertNumMatch(1, matches)
@@ -107,7 +107,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             new p.G().getExplicitIsser()
             new p.G().setExplicitIsser()
             '''.stripIndent()
-        addGroovySource(contents, 'Script')
+        addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('getExplicitIsser')
 
         assertNumMatch(1, matches)
@@ -120,7 +120,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test // GRECLIPSE-1369
     void testSearchInJava0() {
         String contents = '''\
-            class AClass {
+            class ClassA {
               int hhh;
               public int getHhh() {
                 return hhh;
@@ -132,7 +132,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
-        IType jType = addJavaSource(contents, 'AClass').getType('AClass')
+        IType jType = addJavaSource(contents, 'ClassA').getType('ClassA')
         List<SearchMatch> matches = performSearch('hhh', jType)
 
         // should not match the reference to the getter or the setter
@@ -143,7 +143,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test
     void testSearchInJava1() {
         String contents = '''\
-            class AClass {
+            class ClassB {
               void run() {
                 new p.G().prop = null;
                 new p.G().isProp();
@@ -152,7 +152,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
-        addJavaSource(contents, 'AClass')
+        addJavaSource(contents, 'ClassB')
         List<SearchMatch> matches = performSearch('prop')
 
         // expecting 3 matches since the explicit property reference will not be found since it is not synthetic
@@ -166,7 +166,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test // has a compile error, but still informative for searching
     void testSearchInJava2() {
         String contents = '''\
-            class AClass {
+            class ClassC {
               void run() {
                 new p.G().explicitGetter = null;
                 new p.G().isExplicitGetter();
@@ -175,7 +175,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
-        addJavaSource(contents, 'AClass')
+        addJavaSource(contents, 'ClassC')
         List<SearchMatch> matches = performSearch('getExplicitGetter')
 
         assertNumMatch(1, matches)
@@ -188,7 +188,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test // has a compile error, but still informative for searching
     void testSearchInJava3() {
         String contents = '''\
-            class AClass {
+            class ClassD {
               void run() {
                 new p.G().explicitSetter = null;
                 new p.G().isExplicitSetter();
@@ -197,7 +197,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
-        addJavaSource(contents, 'AClass')
+        addJavaSource(contents, 'ClassD')
         List<SearchMatch> matches = performSearch('getExplicitSetter')
 
         assertNumMatch(1, matches)
@@ -210,7 +210,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test // has a compile error, but still informative for searching
     void testSearchInJava4() {
         String contents = '''\
-            class AClass {
+            class ClassE {
               void run() {
                 new p.G().explicitIsser = null;
                 new p.G().isExplicitIsser();
@@ -219,7 +219,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
-        addJavaSource(contents, 'AClass')
+        addJavaSource(contents, 'ClassE')
         List<SearchMatch> matches = performSearch('getExplicitIsser')
 
         assertNumMatch(1, matches)

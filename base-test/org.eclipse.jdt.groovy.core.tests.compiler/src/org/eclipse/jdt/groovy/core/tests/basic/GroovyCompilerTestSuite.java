@@ -224,10 +224,16 @@ public abstract class GroovyCompilerTestSuite {
         );
     }
 
+    /**
+     * @param expectedOutput expected batch compiler output (i.e. errors/warnings)
+     */
     protected final void runNegativeTest(String[] sources, String expectedOutput) {
         runNegativeTest(sources, expectedOutput, null);
     }
 
+    /**
+     * @param expectedOutput expected batch compiler output (i.e. errors/warnings)
+     */
     protected final void runNegativeTest(String[] sources, String expectedOutput, Map<String, String> compilerOptions) {
         testDriver.runTest(
             sources,

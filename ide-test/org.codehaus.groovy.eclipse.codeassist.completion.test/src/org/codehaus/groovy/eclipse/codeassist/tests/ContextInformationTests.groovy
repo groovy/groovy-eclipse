@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Test
@@ -31,23 +30,23 @@ import org.junit.Test
 final class ContextInformationTests extends CompletionTestSuite {
 
     private void runTest(ICompilationUnit unit, String target, String proposalName, int proposalCount) {
-        String source = unit.getSource()
+        String source = unit.source
         int offset = getIndexOf(source, target)
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, offset)
 
         if (proposalCount != proposals.length) {
-            Assert.fail("Expected " + proposalCount + " proposals, but found " + proposals.length + "\nin:\n" + printProposals(proposals))
+            Assert.fail("Expected $proposalCount proposals, but found ${proposals.length}\nin:\n${printProposals(proposals)}")
         }
-        IDocument doc = new Document(source)
-        for (ICompletionProposal proposal : proposals) {
-            if (!proposal.getDisplayString().startsWith(proposalName)) {
-                Assert.fail("Unexpected disoplay string for proposal " + proposalCount + ".  All proposals:\n" + printProposals(proposals))
+        def doc = new Document(source)
+        for (proposal in proposals) {
+            if (!proposal.displayString.startsWith(proposalName)) {
+                Assert.fail("Unexpected disoplay string for proposal $proposalCount.  All proposals:\n${printProposals(proposals)}")
             }
-            if (proposal.getContextInformation() == null) {
-                Assert.fail("No context information for proposal " + proposalCount + ".  All proposals:\n" + printProposals(proposals))
+            if (proposal.contextInformation == null) {
+                Assert.fail("No context information for proposal $proposalCount.  All proposals:\n${printProposals(proposals)}")
             }
             proposal.apply(doc)
-            Assert.assertEquals("Invalid proposal application.  Should have no changes.", source, doc.get())
+            Assert.assertEquals('Invalid proposal application.  Should have no changes.', source, doc.get())
         }
     }
 
@@ -61,7 +60,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "  def meth(a) { }\n" +
             "  def meth(int a, int b) { }\n" +
             "  def method(int a, int b) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other().meth()")
 
         runTest(unit, "meth(", "meth", 2)
@@ -78,7 +78,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Super {\n" +
             "  def meth(String d) { }\n" +
             "  def method(String d) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other().meth()")
 
         runTest(unit, "meth(", "meth", 3)
@@ -95,7 +96,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Super {\n" +
             "  def meth(String d) { }\n" +
             "  def method(String d) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other().meth(a)")
 
         runTest(unit, "meth(", "meth", 3)
@@ -112,7 +114,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Super {\n" +
             "  def meth(String d) { }\n" +
             "  def method(String d) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other().meth(a,b)")
 
         runTest(unit, "meth(a,", "meth", 3)
@@ -124,7 +127,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Other {\n" +
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other()")
 
         runTest(unit, "Other(", "Other", 2)
@@ -133,10 +137,11 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext1a() {
         addGroovySource(
+            "package p\n" +
             "class Other {\n" +
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
-            "}", "Other", "p")
+            "}", nextUnitName(), "p")
         ICompilationUnit unit = addGroovySource("new p.Other()")
 
         runTest(unit, "Other(", "Other", 2)
@@ -145,10 +150,12 @@ final class ContextInformationTests extends CompletionTestSuite {
     @Test
     void testConstructorContext1b() {
         addGroovySource(
+            "package p\n" +
             "class Other {\n" +
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
-            "}", "Other", "p")
+            "}", nextUnitName(), "p")
+
         ICompilationUnit unit = addGroovySource("import p.Other\nnew Other()")
 
         runTest(unit, "Other(", "Other", 2)
@@ -160,7 +167,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Other {\n" +
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other(a)")
 
         runTest(unit, "Other(", "Other", 2)
@@ -172,7 +180,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Other {\n" +
             "  Other(a) { }\n" +
             "  Other(int a, int b) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Other(a,b)")
 
         runTest(unit, "Other(a,", "Other", 2)
@@ -188,7 +197,8 @@ final class ContextInformationTests extends CompletionTestSuite {
             "class Super {\n" +
             "  Super(String d) { }\n" +
             "  Super(String d, String e) { }\n" +
-            "}", "Other", "")
+            "}", nextUnitName())
+
         ICompilationUnit unit = addGroovySource("new Super()")
 
         runTest(unit, "Super(", "Super", 2)

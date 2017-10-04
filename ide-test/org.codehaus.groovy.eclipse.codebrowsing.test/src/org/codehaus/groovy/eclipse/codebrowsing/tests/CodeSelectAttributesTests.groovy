@@ -36,14 +36,22 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectOnAttributeName2() {
+        addJavaSource '''\
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface Anno {
+              String one();
+              String two();
+            }
+            ''', 'Anno'
+
         String source = '''\
-            import javax.xml.bind.annotation.*
-            @XmlAnyElement(lax=true)
+            @Anno(one='1')
             class C {
             }
             '''.stripIndent()
 
-        def elem = assertCodeSelect([source], 'lax')
+        def elem = assertCodeSelect([source], 'one')
         assert elem.inferredElement instanceof MethodNode
     }
 

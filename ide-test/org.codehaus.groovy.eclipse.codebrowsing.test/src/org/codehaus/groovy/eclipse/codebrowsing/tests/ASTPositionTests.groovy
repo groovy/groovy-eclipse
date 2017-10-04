@@ -171,7 +171,7 @@ final class ASTPositionTests extends BrowsingTestSuite {
     }
 
     private CompilationUnit getAST(String contents) {
-        GroovyCompilationUnit unit = addGroovySource(contents)
+        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         unit.reconcile(JavaConstants.AST_LEVEL, true, workingCopyOwner, new NullProgressMonitor())
     }
 }

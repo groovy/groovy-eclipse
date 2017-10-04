@@ -91,8 +91,12 @@ abstract class GroovyEclipseTestSuite {
     @After
     final void tearDownTestCase() {
         GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
-
         testProject.deleteWorkingCopies()
+
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean")
+        testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
+        spm.waitForCompletion()
+
         for (pfr in testProject.javaProject.packageFragmentRoots) {
             if (pfr.elementName == testProject.sourceFolder.elementName) {
                 pfr.resource.members().each(Util.&delete)
@@ -114,10 +118,6 @@ abstract class GroovyEclipseTestSuite {
             return true
         }
         testProject.javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[0]), null)
-
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean")
-        testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
-        spm.waitForCompletion()
     }
 
     //--------------------------------------------------------------------------

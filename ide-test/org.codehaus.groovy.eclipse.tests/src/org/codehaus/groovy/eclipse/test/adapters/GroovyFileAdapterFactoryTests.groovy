@@ -44,7 +44,7 @@ final class GroovyFileAdapterFactoryTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFileAdapterCompileError2() {
-        def unit = addGroovySource('class C { abstract def foo() {} }', 'OtherClass', 'pack1')
+        def unit = addGroovySource('class C { abstract def foo() {} }', 'C', 'pack1')
         buildProject()
         ClassNode node = unit.getResource().getAdapter(ClassNode.class)
         Assert.assertNull(node)

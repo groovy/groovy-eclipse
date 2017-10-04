@@ -93,7 +93,7 @@ abstract class BreakpointTestSuite extends GroovyEclipseTestSuite {
             |    static z = {
             |        print 9  // 20
             |    }
-            |}'''.stripMargin(), 'BreakpointTesting'
+            |}'''.stripMargin(), nextUnitName()
 
         unit.makeConsistent(null)
     }

@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -85,6 +86,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, false)
         groovyPrefs.setValue(GroovyContentAssist.PARAMETER_GUESSING, false)
+        setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'com.sun.*;sun.*')
     }
 
     @Test
@@ -125,7 +127,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication1a() {
-        addGroovySource(SCRIPTCONTENTS)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
+
         String contents = 'new Foo().method1'
         String expected = 'new Foo().method1(arg)'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
@@ -134,8 +137,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testClosureApplication1b() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method1'
         String expected = 'new Foo().method1(arg)'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
@@ -144,8 +147,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testClosureApplication1c() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method1'
         String expected = 'new Foo().method1(arg)'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
@@ -155,8 +158,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testClosureApplication1d() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method1'
         String expected = 'new Foo().method1(arg)'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method1')
@@ -164,7 +167,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication2a() {
-        addGroovySource(SCRIPTCONTENTS)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
+
         String contents = 'new Foo().method2'
         String expected = 'new Foo().method2(arg) { it }'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
@@ -173,8 +177,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testClosureApplication2b() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method2'
         String expected = 'new Foo().method2(arg, { it })'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
@@ -183,8 +187,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testClosureApplication2c() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method2'
         String expected = 'new Foo().method2(arg) c1'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
@@ -194,8 +198,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testClosureApplication2d() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method2'
         String expected = 'new Foo().method2(arg, c1)'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
@@ -203,7 +207,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosureApplication3a() {
-        addGroovySource(SCRIPTCONTENTS)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
+
         String contents = 'new Foo().method3'
         String expected = 'new Foo().method3(arg, { it }) { it }'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
@@ -212,8 +217,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testClosureApplication3b() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method3'
         String expected = 'new Foo().method3(arg, { it }, { it })'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
@@ -222,8 +227,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testClosureApplication3c() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method3'
         String expected = 'new Foo().method3(arg, c1) c2'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
@@ -233,8 +238,8 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testClosureApplication3d() {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
-        addGroovySource(SCRIPTCONTENTS)
         String contents = 'new Foo().method3'
         String expected = 'new Foo().method3(arg, c1, c2)'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')

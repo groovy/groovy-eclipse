@@ -357,20 +357,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertCodeSelect(contents, new SourceRange(contents.indexOf('sList'), 0), 'asList')
     }
 
-    //
-
-    private IMethod assertConstructor(String packName, String className, String toSearch, String contents) {
-        ICompilationUnit unit = addGroovySource(contents, className, packName)
-        prepareForCodeSelect(unit)
-
-        IJavaElement[] elems = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length())
-        assert elems.length == 1 : 'Should have found a selection'
-        String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1)
-        assert elems[0].elementName == elementName : "Should have found constructor '$elementName'"
-        assert elems[0].isConstructor() : 'Should be a constructor'
-        return elems[0]
-    }
-
     @Test
     void testCodeSelectConstructor() {
         String contents = 'def x = new java.util.Date()'
@@ -410,55 +396,55 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectConstuctorSimple() {
-        assertConstructor('p', 'Bar', 'Foo', 'class Foo { Foo() { } }\nnew Foo()')
+        assertConstructor('class Foo { Foo() { } }\nnew Foo()', 'Foo')
     }
 
     @Test
     void testCodeSelectConstuctorQualName() {
-        assertConstructor('p', 'Bar', 'p.Foo', 'class Foo { Foo() { } }\nnew p.Foo()')
+        assertConstructor('class Foo { Foo() { } }\nnew p.Foo()', 'p.Foo')
     }
 
     @Test
     void testCodeSelectConstuctorOtherFile() {
-        addGroovySource('class Foo { Foo() { } }', 'Foo', 'p')
-        assertConstructor('p', 'Bar', 'Foo', 'new Foo()')
+        addGroovySource('class Foo { Foo() { } }', nextUnitName(), 'p')
+        assertConstructor('new Foo()', 'Foo')
     }
 
     @Test
     void testCodeSelectConstuctorOtherFile2() {
-        addGroovySource('class Foo {\nFoo(a) { } }', 'Foo', 'p')
-        assertConstructor('p', 'Bar', 'Foo', 'new Foo()')
+        addGroovySource('class Foo {\nFoo(a) { } }', nextUnitName(), 'p')
+        assertConstructor('new Foo()', 'Foo')
     }
 
     @Test
     void testCodeSelectConstuctorOtherFile3() {
-        addGroovySource('class Foo { Foo() { }\nFoo(a) { } }', 'Foo', 'p')
-        assertConstructor('p', 'Bar', 'Foo', 'new Foo()')
+        addGroovySource('class Foo { Foo() { }\nFoo(a) { } }', nextUnitName(), 'p')
+        assertConstructor('new Foo()', 'Foo')
     }
 
     @Test
     void testCodeSelectConstuctorJavaFile() {
-        addJavaSource('class Foo { Foo() { } }', 'Foo', 'p')
-        assertConstructor('p', 'Bar', 'Foo', 'new Foo()')
+        addJavaSource('class Foo { Foo() { } }', nextUnitName(), 'p')
+        assertConstructor('new Foo()', 'Foo')
     }
 
     @Test
     void testCodeSelectConstuctorMultipleConstructors() {
-        addGroovySource('class Foo { Foo() { }\nFoo(a) { } }', 'Foo', 'p')
-        IMethod method = assertConstructor('p', 'Bar', 'Foo', 'new Foo()')
+        addGroovySource('class Foo { Foo() { }\nFoo(a) { } }', nextUnitName(), 'p')
+        IMethod method = assertConstructor('new Foo()', 'Foo')
         assert method.parameters.length == 0 : 'Should have found constructor with no args'
     }
 
     @Test
     void testCodeSelectConstuctorMultipleConstructors2() {
-        addGroovySource('class Foo { Foo() { } \n Foo(a) { } }', 'Foo', 'p')
-        IMethod method = assertConstructor('p', 'Bar', 'Foo', 'new Foo(0)')
+        addGroovySource('class Foo { Foo() { } \n Foo(a) { } }', nextUnitName(), 'p')
+        IMethod method = assertConstructor('new Foo(0)', 'Foo')
         assert method.parameters.length == 1 : 'Should have found constructor with 1 arg'
     }
 
     @Test
     void testCodeSelectConstuctorMultipleConstructors3() {
-        IMethod method = assertConstructor('p', 'Bar', 'Date', 'new Date(0)')
+        IMethod method = assertConstructor('new Date(0)', 'Date')
         assert method.parameters.length == 1: 'Should have found constructor with 1 arg'
         assert method.parameterTypes[0] == 'J' : 'Should have found constructor Date(long)'
     }
@@ -466,9 +452,22 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectConstuctorMultipleConstructors4() {
         // single-arg constructor is defined last and use of constant reference in ctor call means arg types not resolved at time of ctor selection
-        addGroovySource('class Foo { Foo(String s1, String s2) { } \n Foo(String s1) { } }', 'Foo', 'p')
-        addGroovySource('interface Bar { String CONST = "whatever" }', 'Bar', 'p')
-        IMethod method = assertConstructor('p', 'Baz', 'Foo', 'new Foo(Bar.CONST)')
+        addGroovySource('class Foo { Foo(String s1, String s2) { } \n Foo(String s1) { } }', nextUnitName(), 'p')
+        addGroovySource('interface Bar { String CONST = "whatever" }', nextUnitName(), 'p')
+
+        IMethod method = assertConstructor('new Foo(Bar.CONST)', 'Foo')
         assert method.parameters.length == 1 : 'Should have found constructor with 1 arg'
+    }
+
+    private IMethod assertConstructor(String contents, String toSearch) {
+        ICompilationUnit unit = addGroovySource(contents, nextUnitName(), 'p')
+        prepareForCodeSelect(unit)
+
+        IJavaElement[] elems = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length())
+        assert elems.length == 1 : 'Should have found a selection'
+        String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1)
+        assert elems[0].elementName == elementName : "Should have found constructor '$elementName'"
+        assert elems[0].isConstructor() : 'Should be a constructor'
+        return elems[0]
     }
 }

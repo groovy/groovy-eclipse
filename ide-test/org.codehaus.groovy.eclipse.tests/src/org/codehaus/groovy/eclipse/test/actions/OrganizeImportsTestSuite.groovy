@@ -60,7 +60,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         '''
 
     protected void doAddImportTest(CharSequence contents, List<String> expectedImports = []) {
-        def unit = addGroovySource(contents)
+        def unit = addGroovySource(contents, nextUnitName())
         waitForIndex()
         IChooseImportQuery query = new NoChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
@@ -110,7 +110,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents = originalContents) {
-        def unit = createGroovyType('main', 'Main', originalContents)
+        def unit = addGroovySource(originalContents.stripIndent(), nextUnitName(), 'main')
         buildProject()
         waitForIndex()
 
@@ -134,7 +134,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
-        def unit = createGroovyType('main', 'Main', contents)
+        def unit = addGroovySource(contents.stripIndent(), nextUnitName(), 'main')
         buildProject()
 
         def query = new ChoiceQuery()

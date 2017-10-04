@@ -88,9 +88,9 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testProperties5() {
-        addJavaSource('class Other { int x = 9; }', 'Other')
+        addJavaSource 'class Pojo { int x = 9; }'
 
-        String contents = 'new Other().x'
+        String contents = 'new Pojo().x'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 0)
         proposalExists(proposals, 'setX', 0)

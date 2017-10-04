@@ -19,9 +19,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Vector;
 
 import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -38,7 +38,6 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.tests.builder.EfficiencyCompilerRequestor;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
@@ -139,33 +138,26 @@ public abstract class BuilderTestSuite {
     }
 
     protected void executeClass(IPath projectPath, String className, String expectingOutput, String expectedError) {
-        TestVerifier verifier = new TestVerifier(false);
-        Vector<String> classpath = new Vector<String>(5);
+        List<String> classpath = new ArrayList<String>();
         IPath workspacePath = env.getWorkspaceRootPath();
-        classpath.addElement(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
+        classpath.add(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
         IClasspathEntry[] cp = env.getClasspath(projectPath);
-        for (int i = 0; i < cp.length; i++) {
-            IPath c = cp[i].getPath();
-            String ext = c.getFileExtension();
-            if (ext != null && (ext.equals("zip") || ext.equals("jar"))) {
+        for (IClasspathEntry cpe : cp) {
+            IPath c = cpe.getPath();
+            if ("jar".equals(c.getFileExtension()) || "zip".equals(c.getFileExtension())) {
                 // this will work as long as the jar is contained in the same project
                 if (projectPath.isPrefixOf(c)) {
-                    classpath.addElement(workspacePath.append(c).toOSString());
+                    classpath.add(workspacePath.append(c).toOSString());
                 } else {
-                    classpath.addElement(c.toOSString());
+                    classpath.add(c.toOSString());
                 }
             }
         }
 
-        verifier.execute(className, classpath.toArray(new String[0]));
+        TestVerifier verifier = new TestVerifier(false);
+        verifier.execute(className, classpath.toArray(new String[classpath.size()]));
 
-        String actualError = verifier.getExecutionError();
-
-        // workaround pb on 1.3.1 VM (line delimitor is not the platform line delimitor)
-        char[] error = actualError.toCharArray();
-        actualError = new String(
-            CharOperation.replace(error, System.getProperty("line.separator").toCharArray(), new char[] { '\n' }));
-
+        String actualError = verifier.getExecutionError().replace("\r", "");
         if (expectedError == null && actualError.length() != 0) {
             if (actualError.trim().endsWith(
                 "WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
@@ -179,22 +171,15 @@ public abstract class BuilderTestSuite {
             System.out.println(org.eclipse.jdt.core.tests.util.Util.displayString(actualError));
         }
         if (expectedError != null) {
-            Assert.assertTrue("unexpected error : " + actualError + " expected : " + expectedError,
-                actualError.indexOf(expectedError) != -1);
+            Assert.assertTrue("unexpected error : " + actualError + " expected : " + expectedError, actualError.indexOf(expectedError) != -1);
         }
-
         String actualOutput = verifier.getExecutionOutput();
         if (actualOutput.indexOf(expectingOutput) == -1) {
             System.out.println("OUTPUT\n");
             System.out.println(org.eclipse.jdt.core.tests.util.Util.displayString(actualOutput));
         }
-        // strip out carriage return for windoze testing
-        int idx = -1;
-        while ((idx = actualOutput.indexOf('\r')) != -1) {
-            actualOutput = actualOutput.substring(0, idx) + actualOutput.substring(idx + 1);
-        }
-        Assert.assertTrue("unexpected output.\nExpected:\n" + expectingOutput + "\nActual:\n" + actualOutput,
-            actualOutput.indexOf(expectingOutput) != -1);
+        actualOutput = actualOutput.replace("\r", "");
+        Assert.assertTrue("unexpected output.\nExpected:\n" + expectingOutput + "\nActual:\n" + actualOutput, actualOutput.indexOf(expectingOutput) != -1);
     }
 
     //--------------------------------------------------------------------------

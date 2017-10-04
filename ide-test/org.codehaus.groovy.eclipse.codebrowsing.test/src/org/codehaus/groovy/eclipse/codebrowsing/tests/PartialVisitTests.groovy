@@ -46,7 +46,7 @@ final class PartialVisitTests extends BrowsingTestSuite {
             VisitStatus status = super.acceptASTNode(node, result, enclosingElement)
             if (status == VisitStatus.CANCEL_MEMBER) {
                 assert !skippedElements.contains(getElementName(enclosingElement)) :
-                    "Element has been skipped twice, but should only have been skipped once: " + enclosingElement
+                    "Element has been skipped twice, but should only have been skipped once: $enclosingElement"
                 skippedElements.add(getElementName(enclosingElement))
             }
             return status
@@ -81,47 +81,47 @@ final class PartialVisitTests extends BrowsingTestSuite {
     // should not visit the class or the main method
     @Test
     void testSimple() {
-        String contents = "new Foo().x\nclass Foo {\n def x \n}\n"
-        assertCodeSelectWithSkippedNames(contents, indexOf(contents, "x"), "x", "Hello()", "Hello(context)", "main(args)")
+        String contents = 'new Foo().x\nclass Foo {\n def x \n}\n'
+        assertCodeSelectWithSkippedNames(contents, indexOf(contents, 'x'), 'x', 'Hello()', 'Hello(context)', 'main(args)')
     }
 
     // should not visit the Hello constructor, Foo class, or the main method
     @Test
     void testSimple2() {
-        String contents = "class Foo {\n def x \n}\nnew Foo().x"
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "x"), "x", "Foo", "Hello()", "Hello(context)", "main(args)")
+        String contents = 'class Foo {\n def x \n}\nnew Foo().x'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'Foo', 'Hello()', 'Hello(context)', 'main(args)')
     }
 
     // should not visit the x field
     @Test
     void testSimple3() {
-        String contents = "class Foo {\n def x\n def blah() { \nx } }"
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "x"), "x", "x")
+        String contents = 'class Foo {\n def x\n def blah() { \nx } }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'x')
     }
 
     @Test
     void testFieldInitializer() {
-        String contents = "class Foo { Foo() { } \n def y \ndef x = y }"
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "y")
+        String contents = 'class Foo { Foo() { } \n def y \ndef x = y }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'y')
     }
 
     // static initializers are now visited in place
     @Test
     void testStaticFieldInitializer() {
-        String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y }"
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "z", "y")
+        String contents = 'class Foo { Foo() { } \n static y \n def z \nstatic x = y }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'z', 'y')
     }
 
     @Test
     void testInnerClass() {
-        String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog \n def blag = y } }"
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "x", "y", "z", "blog")
+        String contents = 'class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog \n def blag = y } }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'x', 'y', 'z', 'blog')
     }
 
     @Test
     void testInnerClass2() {
-        String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog }\n def blag = y  }"
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"), "y", "Foo()", "x", "y", "z", "Inner")
+        String contents = 'class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog }\n def blag = y  }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'x', 'y', 'z', 'Inner')
     }
 
     //
@@ -130,7 +130,7 @@ final class PartialVisitTests extends BrowsingTestSuite {
         if (element instanceof IMethod) {
             try {
                 String[] params = ((IMethod) element).getParameterNames()
-                return element.getElementName() + (params.length < 1 ? "()" : Arrays.toString(params).replace('[', '(').replace(']', ')'))
+                return element.getElementName() + (params.length < 1 ? '()' : Arrays.toString(params).replace('[', '(').replace(']', ')'))
             } catch (JavaModelException e) {}
         }
         return element.getElementName()
@@ -145,16 +145,16 @@ final class PartialVisitTests extends BrowsingTestSuite {
     }
 
     private void assertCodeSelectWithSkippedNames(String contents, Region region, String expectedElementName, String... skippedElementNames) {
-        GroovyCompilationUnit unit = addGroovySource(contents, "Hello")
+        GroovyCompilationUnit unit = addGroovySource(contents, 'Hello')
 
         IJavaElement[] elems = helper.select(unit, region.getOffset(), region.getLength())
-        assertEquals("Should have found a single selection: " + Arrays.toString(elems), 1, elems.length)
-        assertEquals("Wrong element selected", expectedElementName, getElementName(elems[0]))
+        assertEquals('Should have found a single selection: ' + Arrays.toString(elems), 1, elems.length)
+        assertEquals('Wrong element selected', expectedElementName, getElementName(elems[0]))
 
         for (String skipped : skippedElementNames) {
-            assertTrue("Element " + skipped + " should have been skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements, helper.skippedElements.contains(skipped))
+            assertTrue('Element ' + skipped + ' should have been skipped\nExpected: ' + Arrays.toString(skippedElementNames) + '\nWas: ' + helper.skippedElements, helper.skippedElements.contains(skipped))
         }
 
-        assertEquals("Wrong number of elements skipped\nExpected: " + Arrays.toString(skippedElementNames) + "\nWas: " + helper.skippedElements, skippedElementNames.length, helper.skippedElements.size())
+        assertEquals('Wrong number of elements skipped\nExpected: ' + Arrays.toString(skippedElementNames) + '\nWas: ' + helper.skippedElements, skippedElementNames.length, helper.skippedElements.size())
     }
 }
