@@ -163,7 +163,7 @@ public void testBug488663_005() {
 			"1. ERROR in X.java (at line 7)\n" + 
 			"	Y<?> y = new Y<>() {};\n" + 
 			"	             ^\n" + 
-			"Type Y<J & I> inferred for Y<>, is not valid for an anonymous class with '<>'\n" + 
+			"Type Y<I & J> inferred for Y<>, is not valid for an anonymous class with '<>'\n" + 
 			"----------\n");
 	
 }
