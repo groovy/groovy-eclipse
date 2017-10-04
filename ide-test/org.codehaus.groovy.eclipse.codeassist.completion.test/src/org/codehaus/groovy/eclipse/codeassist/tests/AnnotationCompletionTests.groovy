@@ -149,15 +149,25 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnnoAttr2() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface Anno {
+              String one();
+              String two();
+            }
+            ''', 'Anno', 'p'
+
         String contents = '''\
-            import javax.xml.bind.annotation.*
-            @XmlAnyElement()
+            import p.Anno
+            @Anno()
             class Something {
             }
             '''.stripIndent()
-        def proposals = getProposals(contents, '@XmlAnyElement(')
+        def proposals = getProposals(contents, '@Anno(')
 
-        assertThat(proposals).includes('lax', 'value')
+        assertThat(proposals).includes('one', 'two')
     }
 
     //--------------------------------------------------------------------------
