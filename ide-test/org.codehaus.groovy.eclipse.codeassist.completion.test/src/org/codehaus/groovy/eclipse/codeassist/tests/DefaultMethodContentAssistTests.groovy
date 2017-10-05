@@ -25,24 +25,29 @@ final class DefaultMethodContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testDefaultMethods1() {
-        addGroovySource(
-            "class Default {\n" +
-            "  def meth(int a, b = 9, c = 10) { }\n" +
-            "}", "Default", "")
-        String contents = "new Default().me"
+        String contents = '''\
+            class Default {
+              def meth(int a, b = 9, c = 10) {
+              }
+            }
+            new Default().me
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'))
-        proposalExists(proposals, "meth", 3)
+        proposalExists(proposals, 'meth', 3)
     }
 
     @Test
     void testDefaultMethods2() {
-        addGroovySource(
-            "class Default {\n" +
-            "  def meth(int a, b = 9, c = 10) { }\n" +
-            "  def meth(String other) { }\n" +
-            "}", "Default", "")
-        String contents = "new Default().me"
+        String contents = '''\
+            class Default {
+              def meth(int a, b = 9, c = 10) {
+              }
+              def meth(String other) {
+              }
+            }
+            new Default().me
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('e'))
-        proposalExists(proposals, "meth", 4)
+        proposalExists(proposals, 'meth', 4)
     }
 }

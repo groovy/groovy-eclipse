@@ -294,49 +294,49 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testAnnotation1() {
-        addGroovySource('@Deprecated\nclass Foo {}', 'Foo', 'p')
+        addGroovySource('@Deprecated\nclass Foo {}', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(annotatedBy("java.lang.Deprecated"))', 'p.Foo')
     }
 
     @Test
     void testAnnotation2() {
-        addGroovySource('class Foo {\n@Deprecated def t }', 'Foo', 'p')
+        addGroovySource('class Foo {\n@Deprecated def t }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(fields(annotatedBy("java.lang.Deprecated")))', 'p.Foo')
     }
 
     @Test
     void testAnnotation3() {
-        addGroovySource('class Foo {\n@Deprecated def t() { } }', 'Foo', 'p')
+        addGroovySource('class Foo {\n@Deprecated def t() { } }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(methods(annotatedBy("java.lang.Deprecated")))', 'p.Foo')
     }
 
     @Test
     void testAnnotation4() {
-        addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
+        addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(annotatedBy("java.lang.Deprecated") & fields("f") )', 'p.Foo')
     }
 
     @Test
     void testAnnotation5() {
-        addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
+        addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(annotatedBy("java.lang.Deprecated") | fields("g") )', 'p.Foo')
     }
 
     @Test
     void testAnnotation6() {
-        addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
+        addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields("g") | annotatedBy("java.lang.Deprecated") )', 'p.Foo')
     }
 
     @Test
     void testAnnotation7Fail() {
-        addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
+        addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields("g") & annotatedBy("java.lang.Deprecated") )', null)
     }
 
     @Test
     void testAnnotation8() {
-        addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
+        addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields( annotatedBy("java.lang.Deprecated") ) & methods( annotatedBy("java.lang.Deprecated") ) )', 'p.Foo')
     }
 

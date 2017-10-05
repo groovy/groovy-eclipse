@@ -22,10 +22,8 @@ import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.viewers.StructuredSelection
 import org.eclipse.ui.IActionDelegate
-import org.junit.Assert
 import org.junit.Test
 
 /**
@@ -33,49 +31,54 @@ import org.junit.Test
  */
 final class ConvertToJavaOrGroovyActionTests extends GroovyEclipseTestSuite {
 
+    private void waitForJobAndRefresh(IResource file) {
+        Job.jobManager.join(RenameToGroovyOrJavaAction, null)
+        file.parent.refreshLocal(IResource.DEPTH_INFINITE, null)
+    }
+
     @Test
     void testRenameToGroovy() {
-        IResource file = addJavaSource("class Bar { }", "Bar", "foo").getResource()
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        IResource file = addJavaSource('class B { }', 'B', 'a').resource
+        assert file.exists() : "$file.name should exist"
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToGroovyAction()
         action.selectionChanged(null, ss)
         action.run(null)
         waitForJobAndRefresh(file)
-        Assert.assertFalse(file.getName() + " should not exist", file.exists())
+        assert !file.exists() : "$file.name should not exist"
 
-        file = file.getParent().getFile(new Path("Bar.groovy"))
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        file = file.parent.getFile(new Path('B.groovy'))
+        assert file.exists() : "$file.name should exist"
     }
 
     @Test
     void testRenameToJava() {
-        IResource file = addGroovySource("class Bar { }", "Bar", "foo").getResource()
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        IResource file = addGroovySource('class C { }', 'C', 'b').resource
+        assert file.exists() : "$file.name should exist"
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToJavaAction()
         action.selectionChanged(null, ss)
         action.run(null)
         waitForJobAndRefresh(file)
-        Assert.assertFalse(file.getName() + " should not exist", file.exists())
+        assert !file.exists() : "$file.name should not exist"
 
-        file = file.getParent().getFile(new Path("Bar.java"))
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        file = file.parent.getFile(new Path('C.java'))
+        assert file.exists() : "$file.name should exist"
     }
 
     @Test
     void testRenameToGroovyAndBack() {
-        IResource file = addJavaSource("class Bar { }", "Bar", "foo").getResource()
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        IResource file = addJavaSource('class D { }', 'D', 'c').resource
+        assert file.exists() : "$file.name should exist"
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToGroovyAction()
         action.selectionChanged(null, ss)
         action.run(null)
         waitForJobAndRefresh(file)
-        Assert.assertFalse(file.getName() + " should not exist", file.exists())
+        assert !file.exists() : "$file.name should not exist"
 
-        file = file.getParent().getFile(new Path("Bar.groovy"))
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        file = file.parent.getFile(new Path('D.groovy'))
+        assert file.exists() : "$file.name should exist"
 
         // now back again
         ss = new StructuredSelection(file)
@@ -83,25 +86,25 @@ final class ConvertToJavaOrGroovyActionTests extends GroovyEclipseTestSuite {
         action.selectionChanged(null, ss)
         action.run(null)
         waitForJobAndRefresh(file)
-        Assert.assertFalse(file.getName() + " should not exist", file.exists())
+        assert !file.exists() : "$file.name should not exist"
 
-        file = file.getParent().getFile(new Path("Bar.java"))
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        file = file.parent.getFile(new Path('D.java'))
+        assert file.exists() : "$file.name should exist"
     }
 
     @Test
     void testRenameToJavaAndBack() {
-        IResource file = addGroovySource("class Bar { }", "Bar", "foo").getResource()
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        IResource file = addGroovySource('class E { }', 'E', 'd').resource
+        assert file.exists() : "$file.name should exist"
         StructuredSelection ss = new StructuredSelection(file)
         IActionDelegate action = new RenameToJavaAction()
         action.selectionChanged(null, ss)
         action.run(null)
         waitForJobAndRefresh(file)
-        Assert.assertFalse(file.getName() + " should not exist", file.exists())
+        assert !file.exists() : "$file.name should not exist"
 
-        file = file.getParent().getFile(new Path("Bar.java"))
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
+        file = file.parent.getFile(new Path('E.java'))
+        assert file.exists() : "$file.name should exist"
 
         // now back again
         ss = new StructuredSelection(file)
@@ -109,14 +112,9 @@ final class ConvertToJavaOrGroovyActionTests extends GroovyEclipseTestSuite {
         action.selectionChanged(null, ss)
         action.run(null)
         waitForJobAndRefresh(file)
-        Assert.assertFalse(file.getName() + " should not exist", file.exists())
+        assert !file.exists() : "$file.name should not exist"
 
-        file = file.getParent().getFile(new Path("Bar.groovy"))
-        Assert.assertTrue(file.getName() + " should exist", file.exists())
-    }
-
-    private void waitForJobAndRefresh(IResource file) throws Exception {
-        Job.getJobManager().join(RenameToGroovyOrJavaAction.class, null)
-        file.getParent().refreshLocal(IResource.DEPTH_INFINITE, null)
+        file = file.parent.getFile(new Path('E.groovy'))
+        assert file.exists() : "$file.name should exist"
     }
 }

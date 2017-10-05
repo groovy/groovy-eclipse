@@ -41,7 +41,8 @@ final class NonGroovyProjectQuickFixTests extends QuickFixHarness {
               public void doSomething() {
                 ImageBuilder imageBuilder = null;
               }
-            }'''.stripIndent(), 'TestJavaC', 'com.test')
+            }
+            '''.stripIndent(), 'TestJavaC', 'com.test')
 
         AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver('ImageBuilder', unit)
         assert resolver == null : "Expected no Groovy add import quick fix resolver for unresolved type: ImageBuilder in $unit.resource.name, as it is a Java project"
@@ -54,7 +55,8 @@ final class NonGroovyProjectQuickFixTests extends QuickFixHarness {
               public void doSomething() {
                 ImageBuilder imageBuilder = null
               }
-            }'''.stripIndent(), 'TestGroovyC', 'com.test')
+            }
+            '''.stripIndent(), nextUnitName(), 'com.test')
 
         IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
         for (type in ProblemType.values()) {
@@ -70,7 +72,8 @@ final class NonGroovyProjectQuickFixTests extends QuickFixHarness {
               public void doSomething() {
                 ImageBuilder imageBuilder = null
               }
-            }'''.stripIndent(), 'TestGroovyC', 'com.test')
+            }
+            '''.stripIndent(), nextUnitName(), 'com.test')
 
         AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver('ImageBuilder', unit)
         assert resolver == null : 'Expected no Groovy add import resolvers as this is a Java project'

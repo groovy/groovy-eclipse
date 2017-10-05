@@ -93,7 +93,7 @@ abstract class GroovyEclipseTestSuite {
         GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
         testProject.deleteWorkingCopies()
 
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("$testProject.project.name clean")
+        def spm = new SimpleProgressMonitor("$testProject.project.name clean")
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
         spm.waitForCompletion()
 
@@ -117,7 +117,9 @@ abstract class GroovyEclipseTestSuite {
             }
             return true
         }
-        testProject.javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[0]), null)
+        spm = new SimpleProgressMonitor("$testProject.project.name reset classpath")
+        testProject.javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[0]), spm)
+        spm.waitForCompletion()
     }
 
     //--------------------------------------------------------------------------

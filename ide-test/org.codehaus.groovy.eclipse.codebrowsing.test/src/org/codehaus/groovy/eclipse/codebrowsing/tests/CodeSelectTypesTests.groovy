@@ -475,22 +475,22 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectNestedQualifyingType() {
-        addGroovySource('interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d')
-        String contents = 'import a.b.c.d.E\nE.F.G.H'
-        assertCodeSelect([contents], 'E')
-        assertCodeSelect([contents], 'F')
-        assertCodeSelect([contents], 'G')
-        assertCodeSelect([contents], 'H')
+        addGroovySource('interface M { interface N { interface O { String P = "Q" } } }', 'M', 'i.j.k.l')
+        String contents = 'import i.j.k.l.M\nM.N.O.P'
+        assertCodeSelect([contents], 'M')
+        assertCodeSelect([contents], 'N')
+        assertCodeSelect([contents], 'O')
+        assertCodeSelect([contents], 'P')
     }
 
     @Test
     void testSelectAliasedNestedQualifyingType() {
-        addGroovySource('interface E { interface F { interface G { String H = "I" } } }', 'E', 'a.b.c.d')
-        String contents = 'import a.b.c.d.E as X\nX.F.G.H'
-        assertCodeSelect([contents], 'X', 'E')
-        assertCodeSelect([contents], 'F')
-        assertCodeSelect([contents], 'G')
-        assertCodeSelect([contents], 'H')
+        addGroovySource('interface V { interface W { interface X { String Y = "Z" } } }', 'V', 'r.s.t.u')
+        String contents = 'import r.s.t.u.V as AA\nAA.W.X.Y'
+        assertCodeSelect([contents], 'AA', 'V')
+        assertCodeSelect([contents], 'W')
+        assertCodeSelect([contents], 'X')
+        assertCodeSelect([contents], 'Y')
     }
 
     @Test
@@ -716,8 +716,13 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectMethodCallGenericType1() {
-        String contents = 'import java.util.regex.*; class Foo { def <T> T m() { null } }\n' +
-            'new Foo().<Matcher>m()'
+        String contents = '''\
+            import java.util.regex.*
+            class Foo {
+              def <T> T m() { null }
+            }
+            new Foo().<Matcher>m()
+            '''.stripIndent()
         assertCodeSelect([contents], 'Matcher')
     }
 

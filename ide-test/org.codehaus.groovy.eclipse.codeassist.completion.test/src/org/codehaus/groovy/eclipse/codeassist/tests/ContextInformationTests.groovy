@@ -29,7 +29,9 @@ import org.junit.Test
  */
 final class ContextInformationTests extends CompletionTestSuite {
 
-    private void runTest(ICompilationUnit unit, String target, String proposalName, int proposalCount) {
+    private void runTest(String script, String target, String proposalName, int proposalCount) {
+        ICompilationUnit unit = addGroovySource(script, nextUnitName())
+
         String source = unit.source
         int offset = getIndexOf(source, target)
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, offset)
@@ -54,153 +56,142 @@ final class ContextInformationTests extends CompletionTestSuite {
 
     @Test
     void testMethodContext1() {
-        addGroovySource(
-            "class Other {\n" +
-            "  //def meth() { }\n" +  // methods with 0 args do not have context info
-            "  def meth(a) { }\n" +
-            "  def meth(int a, int b) { }\n" +
-            "  def method(int a, int b) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other {
+              /*def meth() { }*/ // methods with 0 args do not have context info
+              def meth(a) { }
+              def meth(int a, int b) { }
+              def method(int a, int b) { }
+            }
+            '''.stripIndent(), 'Other', 'a')
 
-        ICompilationUnit unit = addGroovySource("new Other().meth()")
-
-        runTest(unit, "meth(", "meth", 2)
+        runTest('new a.Other().meth()', 'meth(', 'meth', 2)
     }
 
     @Test
     void testMethodContext2() {
-        addGroovySource(
-            "class Other extends Super {\n" +
-            "  //def meth() { }\n" +  // methods with 0 args do not have context info
-            "  def meth(a) { }\n" +
-            "  def meth(int a, int b) { }\n" +
-            "}\n" +
-            "class Super {\n" +
-            "  def meth(String d) { }\n" +
-            "  def method(String d) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other extends Super {
+              /*def meth() { }*/ // methods with 0 args do not have context info
+              def meth(a) { }
+              def meth(int a, int b) { }
+            }
+            class Super {
+              def meth(String d) { }
+              def method(String d) { }
+            }
+            '''.stripIndent(), 'Other', 'b')
 
-        ICompilationUnit unit = addGroovySource("new Other().meth()")
-
-        runTest(unit, "meth(", "meth", 3)
+        runTest('new b.Other().meth()', 'meth(', 'meth', 3)
     }
 
     @Test
     void testMethodContext3() {
-        addGroovySource(
-            "class Other extends Super {\n" +
-            "  //def meth() { }\n" +  // methods with 0 args do not have context info
-            "  def meth(a) { }\n" +
-            "  def meth(int a, int b) { }\n" +
-            "}\n" +
-            "class Super {\n" +
-            "  def meth(String d) { }\n" +
-            "  def method(String d) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other extends Super {
+              /*def meth() { }*/ // methods with 0 args do not have context info
+              def meth(a) { }
+              def meth(int a, int b) { }
+            }
+            class Super {
+              def meth(String d) { }
+              def method(String d) { }
+            }
+            '''.stripIndent(), 'Other', 'c')
 
-        ICompilationUnit unit = addGroovySource("new Other().meth(a)")
-
-        runTest(unit, "meth(", "meth", 3)
+        runTest('new c.Other().meth(a)', 'meth(', 'meth', 3)
     }
 
     @Test
     void testMethodContext4() {
-        addGroovySource(
-            "class Other extends Super {\n" +
-            "  //def meth() { }\n" +  // methods with 0 args do not have context info
-            "  def meth(a) { }\n" +
-            "  def meth(int a, int b) { }\n" +
-            "}\n" +
-            "class Super {\n" +
-            "  def meth(String d) { }\n" +
-            "  def method(String d) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other extends Super {
+              /*def meth() { }*/ // methods with 0 args do not have context info
+              def meth(a) { }
+              def meth(int a, int b) { }
+            }
+            class Super {
+              def meth(String d) { }
+              def method(String d) { }
+            }
+            '''.stripIndent(), 'Other', 'd')
 
-        ICompilationUnit unit = addGroovySource("new Other().meth(a,b)")
-
-        runTest(unit, "meth(a,", "meth", 3)
+        runTest('new d.Other().meth(a,b)', 'meth(a,', 'meth', 3)
     }
 
     @Test
     void testConstructorContext1() {
-        addGroovySource(
-            "class Other {\n" +
-            "  Other(a) { }\n" +
-            "  Other(int a, int b) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other {
+              Other(a) { }
+              Other(int a, int b) { }
+            }
+            '''.stripIndent(), 'Other', 'e')
 
-        ICompilationUnit unit = addGroovySource("new Other()")
-
-        runTest(unit, "Other(", "Other", 2)
+        runTest('new e.Other()', 'Other(', 'Other', 2)
     }
 
     @Test
     void testConstructorContext1a() {
-        addGroovySource(
-            "package p\n" +
-            "class Other {\n" +
-            "  Other(a) { }\n" +
-            "  Other(int a, int b) { }\n" +
-            "}", nextUnitName(), "p")
-        ICompilationUnit unit = addGroovySource("new p.Other()")
+        addGroovySource('''\
+            class Other {
+              Other(a) { }
+              Other(int a, int b) { }
+            }
+            '''.stripIndent(), 'Other', 'f')
 
-        runTest(unit, "Other(", "Other", 2)
+        runTest('new f.Other()', 'Other(', 'Other', 2)
     }
 
     @Test
     void testConstructorContext1b() {
-        addGroovySource(
-            "package p\n" +
-            "class Other {\n" +
-            "  Other(a) { }\n" +
-            "  Other(int a, int b) { }\n" +
-            "}", nextUnitName(), "p")
+        addGroovySource('''\
+            class Other {
+              Other(a) { }
+              Other(int a, int b) { }
+            }
+            '''.stripIndent(), 'Other', 'g')
 
-        ICompilationUnit unit = addGroovySource("import p.Other\nnew Other()")
-
-        runTest(unit, "Other(", "Other", 2)
+        runTest('import g.Other; new Other()', 'Other(', 'Other', 2)
     }
 
     @Test
     void testConstructorContext2() {
-        addGroovySource(
-            "class Other {\n" +
-            "  Other(a) { }\n" +
-            "  Other(int a, int b) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other {
+              Other(a) { }
+              Other(int a, int b) { }
+            }
+            '''.stripIndent(), 'Other', 'h')
 
-        ICompilationUnit unit = addGroovySource("new Other(a)")
-
-        runTest(unit, "Other(", "Other", 2)
+        runTest('new h.Other(a)', 'Other(', 'Other', 2)
     }
 
     @Test
     void testConstructorContext3() {
-        addGroovySource(
-            "class Other {\n" +
-            "  Other(a) { }\n" +
-            "  Other(int a, int b) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other {
+              Other(a) { }
+              Other(int a, int b) { }
+            }
+            '''.stripIndent(), 'Other', 'i')
 
-        ICompilationUnit unit = addGroovySource("new Other(a,b)")
-
-        runTest(unit, "Other(a,", "Other", 2)
+        runTest('new i.Other(a,b)', 'Other(a,', 'Other', 2)
     }
 
     @Test
     void testConstructorContext4() {
-        addGroovySource(
-            "class Other {\n" +
-            "  Other(a) { }\n" +
-            "  Other(int a, int b) { }\n" +
-            "}\n" +
-            "class Super {\n" +
-            "  Super(String d) { }\n" +
-            "  Super(String d, String e) { }\n" +
-            "}", nextUnitName())
+        addGroovySource('''\
+            class Other {
+              Other(a) { }
+              Other(int a, int b) { }
+            }
+            class Super {
+              Super(String d) { }
+              Super(String d, String e) { }
+            }
+            '''.stripIndent(), 'Super')
 
-        ICompilationUnit unit = addGroovySource("new Super()")
-
-        runTest(unit, "Super(", "Super", 2)
+        runTest('new Super()', 'Super(', 'Super', 2)
     }
 }

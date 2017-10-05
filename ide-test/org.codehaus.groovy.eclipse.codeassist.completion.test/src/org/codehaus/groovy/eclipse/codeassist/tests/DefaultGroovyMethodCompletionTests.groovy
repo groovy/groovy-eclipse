@@ -33,27 +33,23 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         GroovyContentAssist.default.setFilteredDGMs(filter as Set)
     }
 
-    private org.eclipse.jdt.internal.core.CompilationUnit createJava() {
-        return addJavaSource(CONTENTS, 'Class')
-    }
-
     private org.codehaus.jdt.groovy.model.GroovyCompilationUnit createGroovy() {
-        return addGroovySource(CONTENTS, 'Class')
+        addGroovySource(CONTENTS, nextUnitName())
     }
 
     private org.codehaus.jdt.groovy.model.GroovyCompilationUnit createGroovyForScript() {
-        return addGroovySource(SCRIPTCONTENTS, 'Script')
+        addGroovySource(SCRIPTCONTENTS, nextUnitName())
     }
 
     private org.codehaus.jdt.groovy.model.GroovyCompilationUnit createGroovyForClosure() {
-        return addGroovySource(CLOSURECONTENTS, 'Closure')
+        addGroovySource(CLOSURECONTENTS, nextUnitName())
     }
 
     //--------------------------------------------------------------------------
 
     @Test
     void testDGMInJavaFile() {
-        def unit = createJava()
+        def unit = addJavaSource(CONTENTS, 'Class')
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'this.'))
         proposalExists(proposals, 'identity', 0)
     }

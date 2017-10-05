@@ -45,7 +45,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
     @Before
     void setUp() {
-        topLevelUnit = addGroovySource(TOP_LEVEL_TYPE, nextUnitName(), SUBTEST)
+        topLevelUnit = addGroovySource(TOP_LEVEL_TYPE, 'TopLevelType', SUBTEST)
     }
 
     @Test

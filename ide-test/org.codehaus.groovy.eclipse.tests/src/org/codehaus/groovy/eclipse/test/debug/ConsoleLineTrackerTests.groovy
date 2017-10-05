@@ -79,9 +79,9 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
 
     @Test
     void testAmbiguousLink() {
-        addGroovySource('', 'Bar', 'f')
-        addGroovySource('', 'Bar', 'f', addSourceFolder('other'))
-        String contents = 'at f.Bar.run(Bar.groovy:2)'
+        addGroovySource('', 'Baz', 'f')
+        addGroovySource('', 'Baz', 'f', addSourceFolder('other'))
+        String contents = 'at f.Baz.run(Baz.groovy:2)'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
         Assert.assertNotNull('Should have found a hyperlink', console.getLastLink())
@@ -92,8 +92,8 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         IFile[] files = (IFile[]) ReflectionUtils.getPrivateField(AmbiguousFileLink.class, 'files', link)
 
         Assert.assertEquals('Should have found 2 files', 2, files.length)
-        Assert.assertEquals('File name is wrong', 'Bar.groovy', files[0].getName())
-        Assert.assertEquals('File name is wrong', 'Bar.groovy', files[1].getName())
+        Assert.assertEquals('File name is wrong', 'Baz.groovy', files[0].getName())
+        Assert.assertEquals('File name is wrong', 'Baz.groovy', files[1].getName())
     }
 }
 

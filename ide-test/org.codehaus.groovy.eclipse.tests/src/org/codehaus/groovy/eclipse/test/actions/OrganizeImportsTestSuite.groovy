@@ -33,31 +33,44 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
 
     @Before
     final void setUpImportsTestCase() {
-        addJavaSource(CONTENTS_JAVA_SUPPORTING, 'Outer', 'other')
-        addGroovySource(CONTENTS_SUPPORTING,    'Other', 'other')
-        addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other2')
-        addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other3')
-        addGroovySource(CONTENTS_SUPPORTING2,   'Other', 'other4')
-
         // ensure consistent ordering of imports regardless of the target platform's defaults
         setJavaPreference(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
-    }
 
-    private static final String CONTENTS_SUPPORTING = '''
-        class FirstClass { }
-        class SecondClass { }
-        class ThirdClass { }
-        '''
-    private static final String CONTENTS_SUPPORTING2 = '''
-        class FourthClass {
-          static m() { }
-        }
-        '''
-    private static final String CONTENTS_JAVA_SUPPORTING = '''
-        public class Outer {
-          public static class Inner { }
-        }
-        '''
+        addJavaSource '''\
+            public class Outer {
+              public static class Inner { }
+            }
+            '''.stripIndent(),
+            'Outer', 'other'
+
+        addGroovySource '''\
+            class FirstClass { }
+            class SecondClass { }
+            class ThirdClass { }
+            '''.stripIndent(),
+            'Other', 'other'
+
+        addGroovySource '''\
+            class FourthClass {
+              static m() { }
+            }
+            '''.stripIndent(),
+            'Other', 'other2'
+
+        addGroovySource '''\
+            class FourthClass {
+              static m() { }
+            }
+            '''.stripIndent(),
+            'Other', 'other3'
+
+        addGroovySource '''\
+            class FourthClass {
+              static m() { }
+            }
+            '''.stripIndent(),
+            'Other', 'other4'
+    }
 
     protected void doAddImportTest(CharSequence contents, List<String> expectedImports = []) {
         def unit = addGroovySource(contents, nextUnitName())
