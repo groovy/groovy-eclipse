@@ -40,6 +40,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistC
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -72,10 +73,10 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- * This type requestor searches for groovy type content assist proposals in the current
- * scope.  This class is largely copied from {@link CompletionEngine}.  Method
- * names used here are the same as the method names used in the original code
- * Method parts are omitted or commented out when they are not relevant for
+ * This type requestor searches for groovy type content assist proposals in the
+ * current scope.  This class is largely copied from {@link CompletionEngine}.
+ * Method names used here are the same as the method names used in the original
+ * code Method parts are omitted or commented out when they are not relevant for
  * or not supported by groovy completion.
  */
 public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, RelevanceConstants {
@@ -124,13 +125,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
 
     private final ContentAssistContext context;
 
-    public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, int exprStart,
-            int replaceLength, NameLookup nameLookup, IProgressMonitor monitor) {
+    public GroovyProposalTypeSearchRequestor(
+            ContentAssistContext context,
+            JavaContentAssistInvocationContext javaContext,
+            int exprStart,
+            int replaceLength,
+            NameLookup nameLookup,
+            IProgressMonitor monitor) {
 
         this.context = context;
         this.offset = exprStart;
         this.javaContext = javaContext;
+        Assert.isNotNull(javaContext.getCoreContext());
         this.module = context.unit.getModuleNode();
         this.unit = context.unit;
         this.replaceLength = replaceLength;
@@ -139,19 +145,17 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         this.acceptedTypes = new ObjectVector();
         this.nameLookup = nameLookup;
         this.isImport = context.location == ContentAssistLocation.IMPORT;
-        this.shouldAcceptConstructors = context.location == ContentAssistLocation.CONSTRUCTOR
-                || context.location == ContentAssistLocation.METHOD_CONTEXT;
-        // if contextOnly, then do not insert any text, only show context
-        // information
+        // if contextOnly then do not insert any text, only show context information
         this.contextOnly = context.location == ContentAssistLocation.METHOD_CONTEXT;
-        this.completionExpression = context.location == ContentAssistLocation.METHOD_CONTEXT
-            ? ((MethodInfoContentAssistContext) context).methodName : context.completionExpression;
-        groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
+        this.shouldAcceptConstructors = (context.location == ContentAssistLocation.CONSTRUCTOR || context.location == ContentAssistLocation.METHOD_CONTEXT);
+        this.completionExpression = (context.location == ContentAssistLocation.METHOD_CONTEXT ? ((MethodInfoContentAssistContext) context).methodName : context.completionExpression);
+        this.groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
+
         try {
-            allTypesInUnit = unit.getAllTypes();
+            this.allTypesInUnit = this.unit.getAllTypes();
         } catch (JavaModelException e) {
             GroovyContentAssist.logError("Problem with type completion", e);
-            allTypesInUnit = new IType[0];
+            this.allTypesInUnit = new IType[0];
         }
     }
 
@@ -170,10 +174,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         acceptedPackages.add(String.valueOf(packageName));
     }
 
-    public void acceptConstructor(int modifiers, char[] simpleTypeName,
-            int parameterCount, char[] signature, char[][] parameterTypes,
-            char[][] parameterNames, int typeModifiers, char[] packageName,
-            int extraFlags, String path, AccessRestriction accessRestriction) {
+    public void acceptConstructor(
+            int modifiers,
+            char[] simpleTypeName,
+            int parameterCount,
+            char[] signature,
+            char[][] parameterTypes,
+            char[][] parameterNames,
+            int typeModifiers,
+            char[] packageName,
+            int extraFlags,
+            String path,
+            AccessRestriction accessRestriction) {
 
         if (shouldAcceptConstructors) {
             // do not check cancellation for every types to avoid performance loss
@@ -211,8 +223,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         }
     }
 
-    public void acceptType(char[] packageName, char[] simpleTypeName,
-            char[][] enclosingTypeNames, int modifiers, AccessRestriction accessRestriction) {
+    public void acceptType(
+            char[] packageName,
+            char[] simpleTypeName,
+            char[][] enclosingTypeNames,
+            int modifiers,
+            AccessRestriction accessRestriction) {
 
         // do not check cancellation for every types to avoid performance loss
         if ((this.foundTypesCount++ % CHECK_CANCEL_FREQUENCY) == 0)

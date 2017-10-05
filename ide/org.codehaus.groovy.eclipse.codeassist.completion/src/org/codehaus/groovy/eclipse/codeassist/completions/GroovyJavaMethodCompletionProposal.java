@@ -15,16 +15,21 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import java.lang.reflect.Array;
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.MethodProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.ProposalContextInformation;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -79,6 +84,27 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     @Override
+    public void apply(IDocument document, char trigger, int offset) {
+        methodPointer = ProposalUtils.isMethodPointerCompletion(document, getReplacementOffset());
+
+        super.apply(document, trigger, offset);
+
+        if (fArgumentOffsets != null && fArgumentOffsets.length > 0 && fArgumentLengths != null && fArgumentLengths.length > 0) {
+            fSelectedRegion = new Region(getReplacementOffset() + fArgumentOffsets[0], fArgumentLengths[0]);
+        } else {
+            fSelectedRegion = new Region(getReplacementOffset() + getReplacementString().length(), 0);
+        }
+    }
+
+    @Override
+    public Point getSelection(IDocument document) {
+        if (fSelectedRegion == null)
+            return new Point(getReplacementOffset(), 0);
+
+        return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
+    }
+
+    @Override
     protected StyledString computeDisplayString() {
         StyledString displayString = super.computeDisplayString();
         if (contributor != null && contributor.trim().length() > 0) {
@@ -99,55 +125,20 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return super.computeContextInformation();
     }
 
-    /**
-     * @see ICompletionProposalExtension#apply(IDocument, char)
-     */
     @Override
-    public void apply(IDocument document, char trigger, int offset) {
-        methodPointer = ProposalUtils.isMethodPointerCompletion(document, getReplacementOffset());
-
-        super.apply(document, trigger, offset);
-
-        if (fArgumentOffsets != null && fArgumentOffsets.length > 0 && fArgumentLengths != null && fArgumentLengths.length > 0) {
-            fSelectedRegion = new Region(getReplacementOffset() + fArgumentOffsets[0], fArgumentLengths[0]);
-        } else {
-            fSelectedRegion = new Region(getReplacementOffset() + getReplacementString().length(), 0);
-        }
-    }
-
-    @Override
-    protected void setUpLinkedMode(IDocument document, char closingCharacter) {
-        ITextViewer textViewer = getTextViewer();
-        if (textViewer != null && fArgumentOffsets != null) {
-            int baseOffset = getReplacementOffset();
-            String replacement = getReplacementString();
+    protected LazyJavaCompletionProposal createRequiredTypeCompletionProposal(CompletionProposal completionProposal, JavaContentAssistInvocationContext invocationContext) {
+        LazyJavaCompletionProposal requiredProposal = super.createRequiredTypeCompletionProposal(completionProposal, invocationContext);
+        // disable generics completion for constructors (i.e. complete expression as "new ArrayList()" instead of "new ArrayList<E>()"
+        if (fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION && requiredProposal instanceof LazyGenericTypeProposal) {
             try {
-                LinkedModeModel model = new LinkedModeModel();
-                for (int i = 0, n = fArgumentOffsets.length; i < n; i += 1) {
-                    LinkedPositionGroup group = new LinkedPositionGroup();
-                    group.addPosition(new LinkedPosition(document, baseOffset + fArgumentOffsets[i], fArgumentLengths[i], LinkedPositionGroup.NO_STOP));
-                    model.addGroup(group);
-                }
-                model.forceInstall();
-
-                JavaEditor editor = getJavaEditor();
-                if (editor != null) {
-                    model.addLinkingListener(new EditorHighlightingSynchronizer(editor));
-                }
-
-                LinkedModeUI ui = new EditorLinkedModeUI(model, textViewer);
-                ui.setExitPosition(textViewer, baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
-                ui.setExitPolicy(new ExitPolicy(closingCharacter, document));
-                ui.setDoContextInfo(true);
-                ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT);
-                ui.enter();
-
-                fSelectedRegion = ui.getSelectedRegion();
-
-            } catch (BadLocationException e) {
+                //requiredProposal.fTypeArgumentProposals = new LazyGenericTypeProposal.TypeArgumentProposal[0];
+                ReflectionUtils.setPrivateField(LazyGenericTypeProposal.class, "fTypeArgumentProposals", requiredProposal,
+                    Array.newInstance(Class.forName("org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal$TypeArgumentProposal"), 0));
+            } catch (Exception e) {
                 GroovyContentAssist.logError(e);
             }
         }
+        return requiredProposal;
     }
 
     @Override
@@ -269,7 +260,62 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return buffer.toString();
     }
 
-    private boolean lastArgIsClosure(char[][] regularParameterTypes, char[][] namedParameterTypes) {
+    /**
+     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#needsLinkedMode()
+     */
+    @Override
+    protected boolean needsLinkedMode() {
+        return super.needsLinkedMode();
+    }
+
+    @Override
+    protected void setUpLinkedMode(IDocument document, char closingCharacter) {
+        ITextViewer textViewer = getTextViewer();
+        if (textViewer != null && fArgumentOffsets != null) {
+            int baseOffset = getReplacementOffset();
+            String replacement = getReplacementString();
+            try {
+                LinkedModeModel model = new LinkedModeModel();
+                for (int i = 0, n = fArgumentOffsets.length; i < n; i += 1) {
+                    LinkedPositionGroup group = new LinkedPositionGroup();
+                    group.addPosition(new LinkedPosition(document, baseOffset + fArgumentOffsets[i], fArgumentLengths[i], LinkedPositionGroup.NO_STOP));
+                    model.addGroup(group);
+                }
+                model.forceInstall();
+
+                JavaEditor editor = getJavaEditor();
+                if (editor != null) {
+                    model.addLinkingListener(new EditorHighlightingSynchronizer(editor));
+                }
+
+                LinkedModeUI ui = new EditorLinkedModeUI(model, textViewer);
+                ui.setExitPosition(textViewer, baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
+                ui.setExitPolicy(new ExitPolicy(closingCharacter, document));
+                ui.setDoContextInfo(true);
+                ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT);
+                ui.enter();
+
+                fSelectedRegion = ui.getSelectedRegion();
+
+            } catch (BadLocationException e) {
+                GroovyContentAssist.logError(e);
+            }
+        }
+    }
+
+    /**
+     * Returns the currently active Java editor, or <code>null</code> if it
+     * cannot be determined.
+     */
+    private static JavaEditor getJavaEditor() {
+        IEditorPart part= JavaPlugin.getActivePage().getActiveEditor();
+        if (part instanceof JavaEditor) {
+            return (JavaEditor) part;
+        }
+        return null;
+    }
+
+    private static boolean lastArgIsClosure(char[][] regularParameterTypes, char[][] namedParameterTypes) {
         char[] lastArgType;
         if (namedParameterTypes != null && namedParameterTypes.length > 0) {
             lastArgType = namedParameterTypes[namedParameterTypes.length - 1];
@@ -280,38 +326,5 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
         // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
         return CharOperation.equals(lastArgType, CLOSURE_TYPE_NAME);
-    }
-
-    /**
-     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#needsLinkedMode()
-     */
-    @Override
-    protected boolean needsLinkedMode() {
-        return super.needsLinkedMode();
-    }
-
-    /**
-     * Returns the currently active java editor, or <code>null</code> if it
-     * cannot be determined.
-     *
-     * @return  the currently active java editor, or <code>null</code>
-     */
-    private JavaEditor getJavaEditor() {
-        IEditorPart part= JavaPlugin.getActivePage().getActiveEditor();
-        if (part instanceof JavaEditor) {
-            return (JavaEditor) part;
-        }
-        return null;
-    }
-
-    /**
-     * @see ICompletionProposal#getSelection(IDocument)
-     */
-    @Override
-    public Point getSelection(IDocument document) {
-        if (fSelectedRegion == null)
-            return new Point(getReplacementOffset(), 0);
-
-        return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
     }
 }

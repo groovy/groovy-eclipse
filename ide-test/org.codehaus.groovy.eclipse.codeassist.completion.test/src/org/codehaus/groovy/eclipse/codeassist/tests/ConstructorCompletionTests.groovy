@@ -66,7 +66,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     @Test
     void testConstructorCompletionWithGenerics1() {
         String contents = 'List<String> list = new ArrayL'
-        String expected = 'List<String> list = new ArrayList<E>()'
+        String expected = 'List<String> list = new ArrayList()'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new ArrayL'), 'ArrayList()')
     }
 
