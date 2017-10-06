@@ -69,7 +69,7 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
             cursor = contents.indexOf(CARET)
             contents = contents.replace(CARET, '')
         }
-        def unit = addGroovySource(contents, 'Test')
+        def unit = addGroovySource(contents, nextUnitName())
         editor = (GroovyEditor) openInEditor(unit)
         editor.setHighlightRange(cursor, 0, true)
         editor.setFocus()

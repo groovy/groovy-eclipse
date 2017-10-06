@@ -36,7 +36,7 @@ final class GroovyProjectJavaQuickFixTests extends QuickFixHarness {
               public void doSomething() {
                 ImageBuilder imageBuilder = null;
               }
-            }'''.stripIndent(), 'TestJavaC', 'com.test')
+            }'''.stripIndent(), 'TestJavaC', 'test1')
 
         AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver('ImageBuilder', unit)
         assert resolver == null : "Expected no Groovy add import quick fix resolver for unresolved type: ImageBuilder in $unit.resource.name, as it is a Java file"
@@ -49,7 +49,7 @@ final class GroovyProjectJavaQuickFixTests extends QuickFixHarness {
               public void doSomething() {
                 ImageBuilder imageBuilder = null
               }
-            }'''.stripIndent(), 'TestJavaC', 'com.test')
+            }'''.stripIndent(), 'TestJavaC', 'test2')
 
         ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit)
         assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
@@ -64,7 +64,7 @@ final class GroovyProjectJavaQuickFixTests extends QuickFixHarness {
         def unit = addJavaSource('''\
             abstract class TestJavaC {
               public abstract void doSomething()
-            }'''.stripIndent(), 'TestJavaC', 'com.test')
+            }'''.stripIndent(), 'TestJavaC', 'test3')
 
         ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit)
         assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'

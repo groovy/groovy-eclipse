@@ -33,6 +33,7 @@
               <directory>${basedir}</directory>
               <includes>
                 <include>jdtcoretestscompiler.jar</include>
+                <include>test.dat</include>
               </includes>
             </fileset>
           </filesets>

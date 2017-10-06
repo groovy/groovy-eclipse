@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.adapters
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.eclipse.core.resources.IFile
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.part.FileEditorInput
 import org.junit.Assert
@@ -54,7 +53,7 @@ final class GroovyIFileEditorInputAdapterFactoryTests extends GroovyEclipseTestS
 
     @Test
     void testIFileEditorInputAdapterCompileError2() {
-        def unit = addGroovySource('class C { abstract def foo() {} }', 'OtherClass', 'pack1')
+        def unit = addGroovySource('class C { abstract def foo() {} }', 'C', 'pack1')
         buildProject()
 
         IFileEditorInput editor = new FileEditorInput(unit.getResource())

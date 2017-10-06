@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.test.ui
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.widgets.Event
 import org.junit.Assert
@@ -33,7 +32,7 @@ final class BracketInserterTests extends GroovyEclipseTestSuite {
         initialDoc += '\n'
         expectedDoc += '\n'
 
-        def unit = addGroovySource(initialDoc, 'BracketTesting', '')
+        def unit = addGroovySource(initialDoc, nextUnitName())
         GroovyEditor editor = (GroovyEditor) openInEditor(unit)
 
         assert inserted.length() == 1

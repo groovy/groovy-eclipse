@@ -27,9 +27,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Tests type inferencing that involve dsls.
- */
 final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Before

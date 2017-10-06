@@ -91,8 +91,9 @@ public class SynchronizationUtils {
 
     private static void runEventQueue() {
         IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        if (window != null)
+        if (window != null) {
             runEventQueue(window.getShell());
+        }
     }
 
     private static void runEventQueue(Shell shell) {
@@ -135,7 +136,7 @@ public class SynchronizationUtils {
     }
 
     public static void printJobs() {
-        System.out.println("=====Printing Jobs========");
+        System.out.println("=============Printing Jobs==============");
         for (Job job : Job.getJobManager().find(null)) {
             switch (job.getState()) {
             case Job.RUNNING:
@@ -145,7 +146,7 @@ public class SynchronizationUtils {
                 }
             }
         }
-        System.out.println("==========================");
+        System.out.println("========================================");
     }
 
     public static void waitForIndexingToComplete(IJavaElement element) {
