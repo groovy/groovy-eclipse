@@ -965,7 +965,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
         // GRECLIPSE edit -- prevent concurrent modification exceptions
-        for (String name : new ArrayList<String>(names)) {
+        for (String name : names.toArray(new String[names.size()])) {
             SourceUnit source = sources.get(name);
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {

@@ -356,14 +356,63 @@ class JDTClassNodeBuilder {
     }
 
     private ClassNode configureClass(BinaryTypeBinding type) {
-        if (type.id == TypeIds.T_JavaLangObject) {
+        // support identity checks in ClassHelper
+        switch (type.id) {
+        case TypeIds.T_boolean:
+            return ClassHelper.boolean_TYPE;
+        case TypeIds.T_JavaLangBoolean:
+            return ClassHelper.Boolean_TYPE;
+
+        case TypeIds.T_byte:
+            return ClassHelper.byte_TYPE;
+        case TypeIds.T_JavaLangByte:
+            return ClassHelper.Byte_TYPE;
+
+        case TypeIds.T_char:
+            return ClassHelper.char_TYPE;
+        case TypeIds.T_JavaLangCharacter:
+            return ClassHelper.Character_TYPE;
+
+        case TypeIds.T_double:
+            return ClassHelper.double_TYPE;
+        case TypeIds.T_JavaLangDouble:
+            return ClassHelper.Double_TYPE;
+
+        case TypeIds.T_float:
+            return ClassHelper.float_TYPE;
+        case TypeIds.T_JavaLangFloat:
+            return ClassHelper.Float_TYPE;
+
+        case TypeIds.T_int:
+            return ClassHelper.int_TYPE;
+        case TypeIds.T_JavaLangInteger:
+            return ClassHelper.Integer_TYPE;
+
+        case TypeIds.T_long:
+            return ClassHelper.long_TYPE;
+        case TypeIds.T_JavaLangLong:
+            return ClassHelper.Long_TYPE;
+
+        case TypeIds.T_short:
+            return ClassHelper.short_TYPE;
+        case TypeIds.T_JavaLangShort:
+            return ClassHelper.Short_TYPE;
+
+        case TypeIds.T_void:
+            return ClassHelper.VOID_TYPE;
+        case TypeIds.T_JavaLangVoid:
+            return ClassHelper.void_WRAPPER_TYPE;
+
+        case TypeIds.T_JavaLangObject:
             return ClassHelper.OBJECT_TYPE;
-        } else if (type.id == TypeIds.T_JavaLangString) {
+        case TypeIds.T_JavaLangString:
             return ClassHelper.STRING_TYPE;
-        }/* else if (type.id == TypeIds.T_JavaLangClass) {
+        case TypeIds.T_JavaLangClass:
             return ClassHelper.CLASS_Type;
-        }*/
-        return new JDTClassNode(type, resolver);
+
+        default:
+            return new JDTClassNode(type, resolver);
+        }
     }
 
     private ClassNode configureSourceType(SourceTypeBinding type) {

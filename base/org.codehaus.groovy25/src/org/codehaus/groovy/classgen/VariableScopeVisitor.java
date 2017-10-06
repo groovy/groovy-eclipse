@@ -31,13 +31,13 @@ import org.codehaus.groovy.syntax.Types;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.reflect.Modifier.isFinal;
 
 /**
  * goes through an AST and initializes the scopes
- *
- * @author Jochen Theodorou
  */
 public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
@@ -169,8 +169,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
             if (pName != null && pName.equals(name)) {
                 PropertyNode property = new PropertyNode(pName, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
-                property.setDeclaringClass(cn);
                 property.getField().setDeclaringClass(cn);
+                property.setDeclaringClass(cn);
                 return property;
             }
             // GRECLIPSE end
@@ -345,6 +345,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     public void visitDeclarationExpression(DeclarationExpression expression) {
+        // GRECLIPSE add
+        visitAnnotations(expression);
+        // GRECLIPSE end
         // visit right side first to avoid the usage of a
         // variable before its declaration
         expression.getRightExpression().visit(this);

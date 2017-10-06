@@ -43,11 +43,11 @@ import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
 
 public class MethodCallExpressionTransformer {
-    private final static ClassNode DGM_CLASSNODE = ClassHelper.make(DefaultGroovyMethods.class);
+    private static final ClassNode DGM_CLASSNODE = ClassHelper.make(DefaultGroovyMethods.class);
 
     private final StaticCompilationTransformer staticCompilationTransformer;
 
-    public MethodCallExpressionTransformer(final StaticCompilationTransformer staticCompilationTransformer) {
+    public MethodCallExpressionTransformer(StaticCompilationTransformer staticCompilationTransformer) {
         this.staticCompilationTransformer = staticCompilationTransformer;
     }
 
@@ -164,9 +164,12 @@ public class MethodCallExpressionTransformer {
     }
 
     private static boolean isCallOnClosure(final MethodCallExpression expr) {
+        MethodNode target = expr.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
         return expr.isImplicitThis()
-                && expr.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET) == StaticTypeCheckingVisitor.CLOSURE_CALL_VARGS
-                && !"call".equals(expr.getMethodAsString());
+                && !"call".equals(expr.getMethodAsString())
+                && (target == StaticTypeCheckingVisitor.CLOSURE_CALL_VARGS
+                    || target == StaticTypeCheckingVisitor.CLOSURE_CALL_NO_ARG
+                    || target == StaticTypeCheckingVisitor.CLOSURE_CALL_ONE_ARG);
     }
 
     /**
@@ -174,7 +177,7 @@ public class MethodCallExpressionTransformer {
      * @param call a method call to be transformed
      * @return null if the method call is not DGM#is, or {@link CompareIdentityExpression}
      */
-    private static Expression tryTransformIsToCompareIdentity(final MethodCallExpression call) {
+    private static Expression tryTransformIsToCompareIdentity(MethodCallExpression call) {
         if (call.isSafe()) return null;
         MethodNode methodTarget = call.getMethodTarget();
         if (methodTarget instanceof ExtensionMethodNode && "is".equals(methodTarget.getName()) && methodTarget.getParameters().length==1) {

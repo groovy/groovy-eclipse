@@ -612,26 +612,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void addField(FieldNode node) {
-        final ClassNode r = redirect();
-        node.setDeclaringClass(r);
-        node.setOwner(r);
-        if (r.fields == null)
-            r.fields = new LinkedList<FieldNode> ();
-        if (r.fieldIndex == null)
-            r.fieldIndex = new HashMap<String,FieldNode> ();
-        r.fields.add(node);
-        r.fieldIndex.put(node.getName(), node);
+        addField(node, false);
     }
 
     public void addFieldFirst(FieldNode node) {
+        addField(node, true);
+    }
+
+    private void addField(FieldNode node, boolean isFirst) {
         final ClassNode r = redirect();
         node.setDeclaringClass(r);
         node.setOwner(r);
         if (r.fields == null)
-            r.fields = new LinkedList<FieldNode> ();
+            r.fields = new LinkedList<>();
         if (r.fieldIndex == null)
-            r.fieldIndex = new HashMap<String,FieldNode> ();
-        r.fields.addFirst(node);
+            r.fieldIndex = new HashMap<>();
+
+        if (isFirst)
+            r.fields.addFirst(node);
+        else
+            r.fields.add(node);
+
         r.fieldIndex.put(node.getName(), node);
     }
 
@@ -1533,27 +1534,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         return n;
     }
-
-    // GRECLIPSE add
-    public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {
-        if (classNodes == null) {
-            return null;
-        }
-        if (classNodes.length == 0) {
-            return ClassNode.EMPTY_ARRAY;
-        }
-        ClassNode[] result = new ClassNode[classNodes.length];
-        for (int i = 0, n = classNodes.length; i < n; i += 1) {
-            ClassNode cn = classNodes[i];
-            if (cn.usesGenerics) {
-                result[i] = cn.getPlainNodeReference();
-            } else {
-                result[i] = cn;
-            }
-        }
-        return result;
-    }
-    // GRECLIPSE end
 
     public boolean isAnnotationDefinition() {
         return redirect().isPrimaryNode &&
