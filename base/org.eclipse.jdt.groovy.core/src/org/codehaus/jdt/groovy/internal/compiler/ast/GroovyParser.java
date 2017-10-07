@@ -463,8 +463,12 @@ public class GroovyParser {
     }
 
     private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile, boolean allowTransforms) {
-        // FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+
+        if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+            compilerConfiguration.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
+        }
+
         if (compilerOptions.groovyCustomizerClassesList != null && transformLoader != null) {
             List<CompilationCustomizer> customizers = new ArrayList<CompilationCustomizer>();
             if (loader != null) {

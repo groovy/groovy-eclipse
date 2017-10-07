@@ -68,6 +68,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -1983,6 +1984,15 @@ public void configure(String[] argv) {
 					mode = DEFAULT;
 					continue;
 				}
+				// GROOVY add
+				if (currentArg.equals("-indy")) { //$NON-NLS-1$
+					String str = this.options.get(CompilerOptions.OPTIONG_GroovyFlags);
+					int val = str == null ? 0 : Integer.parseInt(str);
+					this.options.put(CompilerOptions.OPTIONG_GroovyFlags,
+							String.valueOf(CompilerUtils.InvokeDynamic | val));
+					continue;
+				}
+				// GROOVY end
 				if (currentArg.equals("-log")) { //$NON-NLS-1$
 					if (this.log != null)
 						throw new IllegalArgumentException(

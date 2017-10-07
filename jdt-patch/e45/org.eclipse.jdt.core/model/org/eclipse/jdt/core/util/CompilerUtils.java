@@ -42,7 +42,8 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class CompilerUtils {
 
-	public static final int IsGrails = 0x0001;
+    public static final int IsGrails = 0x1;
+    public static final int InvokeDynamic = 0x2;
 
 	/**
 	 * Configure a real compiler options object based on the project. If anything

@@ -1933,10 +1933,9 @@ public class CompilerOptions {
 			if (ENABLED.equals(optionValue)) {
 				this.buildGroovyFiles = 2;
 				this.storeAnnotations = true; // force it on
-				// will need proper bit manipulation when second flag comes up
 				String s = optionsMap.get(OPTIONG_GroovyFlags);
-				if (s!=null && s.equals("1")) { //$NON-NLS-1$
-					this.groovyFlags = 0x01;
+				if (s != null && !s.trim().isEmpty()) {
+					this.groovyFlags = Integer.parseInt(s);
 				} else {
 					this.groovyFlags = 0;
 				}

@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -82,9 +83,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * The groovy implementation of LanguageSupport. This class is dynamically loaded by jdt.core (so referenced by name from jdt.core)
  * - and then invoked to get a parser that can handle either groovy or java.
- *
- * @author Andy Clement
- *
  */
 public class GroovyLanguageSupport implements LanguageSupport {
 
@@ -129,7 +127,6 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
-
         // should use a content type here
         if (ContentTypeUtils.isGroovyLikeFileName(name)) {
             return new GroovyCompilationUnit(parent, name, owner);
@@ -141,9 +138,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
     public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
             CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
+            if ((problemReporter.options.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+                groovyCompilerConfig.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
+            }
+
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(
-                    new String(compilationResult.getFileName()), new String(unit.getContents()), groovyCompilerConfig, null, errorCollector);
+            SourceUnit groovySourceUnit = new SourceUnit(new String(compilationResult.getFileName()), new String(unit.getContents()), groovyCompilerConfig, null, errorCollector);
 
             // FIXASC missing the classloader configuration (eg. to include transformers)
             org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(groovyCompilerConfig);
@@ -154,8 +154,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(unit.getContents());
 
             groovyCU.addSource(groovySourceUnit);
-            GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
-                    problemReporter, compilationResult, sourceLength, groovyCU, groovySourceUnit, null);
+            GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, groovyCU, groovySourceUnit, null);
 
             gcuDeclaration.processToPhase(Phases.CONVERSION);
 
@@ -163,8 +162,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
                 // Regardless of a successful outcome, build what is possible in the face of any errors
                 gcuDeclaration.populateCompilationUnitDeclaration();
                 for (TypeDeclaration decl : gcuDeclaration.types) {
-                    GroovyTypeDeclaration gtDeclaration = (GroovyTypeDeclaration) decl;
-                    resolver.record(gtDeclaration);
+                    resolver.record((GroovyTypeDeclaration) decl);
                 }
             }
 
@@ -266,8 +264,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     public boolean isInterestingBinary(BinaryType type, IBinaryType typeInfo) {
-        return isInterestingProject(type.getJavaProject().getProject())
-                && ContentTypeUtils.isGroovyLikeFileName(type.sourceFileName(typeInfo));
+        return isInterestingProject(type.getJavaProject().getProject()) && ContentTypeUtils.isGroovyLikeFileName(type.sourceFileName(typeInfo));
     }
 
     public IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner)

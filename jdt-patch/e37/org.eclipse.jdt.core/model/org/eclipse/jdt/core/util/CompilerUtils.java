@@ -37,14 +37,14 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
- * Utility class, contains helpers for configuring the compiler options based on the project.
- * If the project is a groovy project it will set the right options, and will also set the groovy classpath.
- *
- * @author Andy Clement
+ * Utility class, contains helpers for configuring the compiler options based
+ * on the project. If the project is a groovy project it will set the right
+ * options, and will also set the groovy classpath.
  */
 public class CompilerUtils {
 
-	public static final int IsGrails = 0x0001;
+    public static final int IsGrails = 0x1;
+    public static final int InvokeDynamic = 0x2;
 
 	/**
 	 * Configure a real compiler options object based on the project.  If anything goes wrong it will configure the options to just build java.
