@@ -46,7 +46,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
     public static final String DESC = "Groovy Libraries";
 
-    public static final Path CONTAINER_ID = new Path("GROOVY_SUPPORT");
+    public static final IPath CONTAINER_ID = new Path("GROOVY_SUPPORT");
 
     public static final IClasspathAttribute MINIMAL_ATTRIBUTE = new ClasspathAttribute("minimal", "true");
 
@@ -83,10 +83,10 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
             for (IPath jarPath : libraries) {
                 // check for sources
-                IPath srcPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment() + "-sources.jar");
+                IPath srcPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment().replace("-indy", "") + "-sources.jar");
 
                 // check for javadoc
-                IPath docPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment() + "-javadoc.jar");
+                IPath docPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment().replace("-indy", "") + "-javadoc.jar");
 
                 cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, (docPath == null) ? null : new IClasspathAttribute[] {
                     new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURL().toString())

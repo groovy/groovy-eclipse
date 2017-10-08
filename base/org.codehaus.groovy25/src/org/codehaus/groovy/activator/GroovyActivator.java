@@ -30,7 +30,7 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy";
 
-    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.5.0.jar";
+    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.5.0-indy.jar";
 
     public static URL GROOVY_ALL_JAR_URL;
 
@@ -48,17 +48,21 @@ public class GroovyActivator extends Plugin {
     public void start(BundleContext context) throws Exception {
         if (Boolean.getBoolean("greclipse.debug.trace_compiler_start")) {
             System.out.println("------------");
-            System.out.println("GRECLIPSE-1642: stack trace and other info as Groovy-compiler starts");
+            System.out.println("GRECLIPSE-1642: stack trace and other info as Groovy compiler starts");
             printBundleState("org.codehaus.groovy.eclipse.compilerResolver");
             printBundleState("org.eclipse.jdt.core");
             new Exception().printStackTrace();
             System.out.println("------------");
         }
+
+        // enable InvokeDynamic support across the board
+        System.setProperty("groovy.target.indy", "true");
+
         super.start(context);
         try {
             initialize();
         } catch (Exception e) {
-            getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, "Error starting groovy plugin", e));
+            getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, "Error starting Groovy plugin", e));
         }
     }
 
@@ -97,8 +101,7 @@ public class GroovyActivator extends Plugin {
         Bundle bundle = GroovyActivator.getDefault().getBundle();
         URL entry = bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR);
         if (entry == null) {
-            throw new RuntimeException("Couldn't find '" + GroovyActivator.GROOVY_ALL_JAR +
-                    "' in bundle " + bundle.getSymbolicName() + " " + bundle.getVersion());
+            throw new RuntimeException("Couldn't find '" + GroovyActivator.GROOVY_ALL_JAR + "' in bundle " + bundle.getSymbolicName() + " " + bundle.getVersion());
         }
         GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
     }

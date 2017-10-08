@@ -4502,7 +4502,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     // Test that the (package visible) source type in another package is visible to a groovy type
     @Test
     public void testVisibility() {
-        runConformTest(new String[] {
+        String[] contents = {
             "p/First.groovy",
             "package p;\n"+
             "import q.Second;\n"+
@@ -4517,8 +4517,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "q/Second.java",
             "package q;\n"+
             "class Second {}\n",
-        },
-        "success");
+        };
+
+        if (!isAtLeastGroovy(25)) {
+            runConformTest(contents, "success");
+        } else {
+            runConformTest(contents, "", "java.lang.BootstrapMethodError: java.lang.IllegalAccessError: tried to access class q.Second from class p.First");
+        }
     }
 
     @Test

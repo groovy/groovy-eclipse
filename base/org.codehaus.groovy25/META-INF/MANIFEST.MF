@@ -7,7 +7,7 @@ Bundle-Version: 2.5.0.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  lib/ivy-2.4.0.jar,
- lib/groovy-all-2.5.0.jar
+ lib/groovy-all-2.5.0-indy.jar
 Export-Package: groovy.beans,
  groovy.cli,
  groovy.grape,
@@ -140,4 +140,3 @@ Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Eclipse-BuddyPolicy: registered
-Eclipse-BundleShape: dir

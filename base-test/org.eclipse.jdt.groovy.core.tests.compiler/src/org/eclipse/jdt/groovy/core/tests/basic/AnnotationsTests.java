@@ -584,8 +584,6 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",expectedOutput);
 
         expectedOutput =
-            //"  // Method descriptor #46 ([Ljava/lang/String;)V\n" +
-            "  // Stack: 3, Locals: 2\n" +
             "  @p.Anno\n" +
             "  public static void main(java.lang.String... argv);\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
@@ -764,7 +762,6 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy", expectedOutput);
 
         checkDisassemblyFor("p/X.class",
-            "  // Stack: 2, Locals: 4\n" +
             "  @p.Anno\n" +
             "  public X(java.lang.String s);\n");
     }
