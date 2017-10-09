@@ -662,6 +662,34 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
             """.stripIndent()
     }
 
+    @Test
+    void testAddImportOnStaticAccessor() {
+        addImportOnSelection """\
+            for(property in System.getProp${CARET}erties()) {
+            }
+            """
+        assertEditorContents """\
+            import static java.lang.System.getProperties
+
+            for(property in getProperties()) {
+            }
+            """.stripIndent()
+    }
+
+    @Test
+    void testAddImportOnStaticProperty() {
+        addImportOnSelection """\
+            for(property in System.prop${CARET}erties) {
+            }
+            """
+        assertEditorContents """\
+            import static java.lang.System.getProperties
+
+            for(property in properties) {
+            }
+            """.stripIndent()
+    }
+
     // annotations
 
     @Test

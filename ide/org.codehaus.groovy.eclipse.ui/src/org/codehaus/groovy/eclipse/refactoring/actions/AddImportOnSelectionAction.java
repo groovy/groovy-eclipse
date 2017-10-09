@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -53,6 +54,9 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.internal.corext.CorextMessages;
 import org.eclipse.jdt.internal.corext.ValidateEditException;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
@@ -198,7 +202,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                         if (fragment.kind() == ASTFragmentKind.PROPERTY) {
                             Expression expr = fragment.getAssociatedExpression();
                             if (expr instanceof ClassExpression) {
-                                importRewrite.addStaticImport(expr.getType().getName().replace('$', '.'), node.getText(), true);
+                                importRewrite.addStaticImport(expr.getType().getName().replace('$', '.'), propertyName(node), true);
                                 return new DeleteEdit(expr.getStart(), expr.getLength() + 1);
                             }
                             if (expr instanceof VariableExpression) {
@@ -288,6 +292,25 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             private ClassNode componentType(ASTNode node) {
                 ClassNode type = (node instanceof ClassNode ? (ClassNode) node : ((Expression) node).getType());
                 return type.getComponentType() != null ? componentType(type.getComponentType()) : type;
+            }
+
+            private String propertyName(final ASTNode node) {
+                final TypeLookupResult[] result = new TypeLookupResult[1];
+                new TypeInferencingVisitorFactory().createVisitor(compilationUnit).visitCompilationUnit(new ITypeRequestor() {
+                    public ITypeRequestor.VisitStatus acceptASTNode(ASTNode n, TypeLookupResult r, IJavaElement e) {
+                        if (n == node) {
+                            result[0] = r;
+                            return ITypeRequestor.VisitStatus.STOP_VISIT;
+                        }
+                        return ITypeRequestor.VisitStatus.CONTINUE;
+                    }
+                });
+
+                if (result[0] != null && result[0].declaration instanceof MethodNode) {
+                    return ((MethodNode) result[0].declaration).getName();
+                }
+
+                return node.getText();
             }
         };
     }
