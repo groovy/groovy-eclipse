@@ -598,6 +598,30 @@ public class JavaProject
 	 * Returns the package fragment roots identified by the given entry. In case it refers to
 	 * a project, it will follow its classpath so as to find exported roots as well.
 	 * Only works with resolved entry
+	 * <p><strong>Note:</strong> this method is retained for the sole purpose of supporting
+	 * old versions of Xtext [2.8.x,2.12], which illegally call this internal method.
+	 * </p>
+	 * @param resolvedEntry IClasspathEntry
+	 * @param accumulatedRoots ObjectVector
+	 * @param rootIDs HashSet
+	 * @param referringEntry the CP entry (project) referring to this entry, or null if initial project
+	 * @param retrieveExportedRoots boolean
+	 * @throws JavaModelException
+	 */
+	public void computePackageFragmentRoots(
+		IClasspathEntry resolvedEntry,
+		ObjectVector accumulatedRoots,
+		HashSet rootIDs,
+		IClasspathEntry referringEntry,
+		boolean retrieveExportedRoots,
+		Map rootToResolvedEntries) throws JavaModelException {
+		computePackageFragmentRoots(resolvedEntry, accumulatedRoots, rootIDs, referringEntry, retrieveExportedRoots, true, rootToResolvedEntries);
+	}
+
+	/**
+	 * Returns the package fragment roots identified by the given entry. In case it refers to
+	 * a project, it will follow its classpath so as to find exported roots as well.
+	 * Only works with resolved entry
 	 * @param resolvedEntry IClasspathEntry
 	 * @param accumulatedRoots ObjectVector
 	 * @param rootIDs HashSet
