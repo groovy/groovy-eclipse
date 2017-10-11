@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
@@ -107,7 +108,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         ClassNode declaringType;
         if (objectExpressionType != null) {
-            declaringType = objectExpressionType;
+            declaringType = currentExpression instanceof ClassExpression ? currentExpression.getType() : objectExpressionType;
         } else {
             // Use delegate type if exists
             declaringType = scope.getDelegateOrThis();

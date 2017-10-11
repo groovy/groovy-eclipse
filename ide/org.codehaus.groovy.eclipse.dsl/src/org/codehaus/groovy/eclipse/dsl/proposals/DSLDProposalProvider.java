@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -69,9 +70,10 @@ public class DSLDProposalProvider implements IProposalProvider {
 
             GroovyDSLDContext pattern = new GroovyDSLDContext(context.unit, info.module, info.resolver);
             pattern.setCurrentScope(context.currentScope);
-            pattern.setTargetType(completionType);
-            pattern.setStatic(isStatic);
             pattern.setPrimaryNode(context.location == ContentAssistLocation.STATEMENT || (context.location == ContentAssistLocation.METHOD_CONTEXT && context.currentScope.isPrimaryNode()));
+            pattern.setStatic(isStatic);
+            pattern.setTargetType(context.completionNode instanceof ClassExpression ? ((ClassExpression) context.completionNode).getType() : completionType);
+
             contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
 
             boolean isMethodContext = (context instanceof MethodInfoContentAssistContext);

@@ -175,22 +175,36 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testCompleteClass1() {
-        String contents = 'class Foo { }\n def x \n Foo.clas'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.clas'))
-        proposalExists(proposals, 'class', 1, true)
+        String contents = 'class Foo { }\nFoo.cla'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'class : Class', 1, true)
     }
 
     @Test
     void testCompleteClass2() {
-        String contents = 'class Foo { }\n Foo.class.canonicalName'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.canonicalName'))
-        proposalExists(proposals, 'canonicalName', 1)
+        String contents = 'class Foo { }\nFoo.can'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'canonicalName', 1, true)
     }
 
     @Test
     void testCompleteClass3() {
-        String contents = 'class Foo { }\n Foo.class.getCanonicalName'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.getCanonicalName'))
+        String contents = 'class Foo { }\nFoo.getCan'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'getCanonicalName', 1, true)
+    }
+
+    @Test
+    void testCompleteClass4() {
+        String contents = 'class Foo { }\nFoo.class.can'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'canonicalName', 1)
+    }
+
+    @Test
+    void testCompleteClass5() {
+        String contents = 'class Foo { }\nFoo.class.getCan'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         proposalExists(proposals, 'getCanonicalName', 1)
     }
 
