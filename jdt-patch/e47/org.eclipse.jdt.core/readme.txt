@@ -5,4 +5,4 @@
 21-May-2017: 34337e2 (Oxygen RC1)
 22-Sep-2017: 2cf2e0d (Oxygen.1a RC1)
 29-Sep-2017: 8f4f8ed (Oxygen.1a RC2)
-09-Oct-2017: 4229c6b (Oxygen.1a M20171009-0410)
+09-Oct-2017: 4229c6b (Oxygen.1a)
