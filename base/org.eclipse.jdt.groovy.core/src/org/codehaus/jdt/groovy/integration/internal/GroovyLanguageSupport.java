@@ -139,7 +139,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
             CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
             if ((problemReporter.options.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
-                groovyCompilerConfig.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
+                groovyCompilerConfig.getOptimizationOptions().put(/*CompilerConfiguration.INVOKEDYNAMIC*/"indy", Boolean.TRUE);
             }
 
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);

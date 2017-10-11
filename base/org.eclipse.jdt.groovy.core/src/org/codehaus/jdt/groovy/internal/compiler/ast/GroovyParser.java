@@ -466,7 +466,7 @@ public class GroovyParser {
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
 
         if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
-            compilerConfiguration.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
+            compilerConfiguration.getOptimizationOptions().put(/*CompilerConfiguration.INVOKEDYNAMIC*/"indy", Boolean.TRUE);
         }
 
         if (compilerOptions.groovyCustomizerClassesList != null && transformLoader != null) {
