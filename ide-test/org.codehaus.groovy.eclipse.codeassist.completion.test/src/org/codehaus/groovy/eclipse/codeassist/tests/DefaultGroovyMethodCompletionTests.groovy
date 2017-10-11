@@ -126,6 +126,39 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testPropertyDGM() {
+        String contents = '''\
+            import java.util.regex.*
+            Matcher m
+            m.co
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.co'))
+        proposalExists(proposals, 'count', 1)
+    }
+
+    @Test
+    void testIrrelevantDGM() {
+        String contents = '''\
+            import java.util.regex.*
+            Pattern p
+            p.co
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.co'))
+        proposalExists(proposals, 'count', 0) // irrelevant category accessor StringGroovyMethods.getCount(Matcher)
+    }
+
+    @Test
+    void testPropertyRelevance() {
+        String contents = '''\
+            import java.util.regex.*
+            Matcher m
+            m = m.la
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.la'))
+        assertProposalOrdering(orderByRelevance(proposals), 'lastMatcher', 'lastAppendPosition') // lastMatcher has more relevant type
+    }
+
+    @Test
     void testThreadDGSM1() {
         String contents = 'Thread.startD'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())

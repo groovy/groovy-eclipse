@@ -32,6 +32,7 @@ import org.codehaus.groovy.eclipse.codeassist.preferences.DGMProposalFilter;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyCategoryMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -66,10 +67,14 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                             }
                             methodList.add(method);
                         }
-                    } else if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) && !existingFieldProposals.contains(methodName) && hasNoField(selfType, methodName)) {
+                    } else if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) && !existingFieldProposals.contains(methodName) && hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
                         // add property variant of accessor name
                         GroovyFieldProposal fieldProposal = new GroovyFieldProposal(createMockField(method));
-                        fieldProposal.setRelevanceMultiplier(1);
+                        if (!method.getDeclaringClass().getName().equals("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods")) {
+                            fieldProposal.getField().setModifiers(fieldProposal.getField().getModifiers() & ~Flags.AccStatic);
+                        }
+                        fieldProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 11 : 1);
+
                         groovyProposals.add(fieldProposal);
                         existingFieldProposals.add(methodName);
                     }

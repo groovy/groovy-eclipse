@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 
 public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
@@ -31,7 +31,7 @@ public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
     protected int getModifiers() {
         int modifiers = super.getModifiers();
         if (!getMethod().getDeclaringClass().getName().equals("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods")) {
-            modifiers &= ~Opcodes.ACC_STATIC; // category methods are defined as static, but should not appear as such
+            modifiers &= ~Flags.AccStatic; // category methods are defined as static, but should not appear as such
         }
         return modifiers;
     }
