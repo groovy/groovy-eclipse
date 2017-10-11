@@ -551,11 +551,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         checkForAfterClosingParen(methodExpression, arguments);
 
         objectExpression.visit(this);
-        if (supportingNodeEnd >= 0 && supportingNodeEnd < methodExpression.getStart()) {
-            // GRECLIPSE-1374 probably completion after a parenthesized
-            // expression
+
+        // check for special case "(obj).\ndef var", which is seen by parser as "obj.def(var)"
+        if (supportingNodeEnd > objectExpression.getEnd() && supportingNodeEnd < methodExpression.getStart()) {
+            // GRECLIPSE-1374: probably a completion after a parenthesized expression
             createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
         }
+
         methodExpression.visit(this);
 
         // here do a check if we are inside of a method call, but we are not at
@@ -579,16 +581,18 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         if (!check(expression)) {
             return;
         }
+
         Expression objectExpression = expression.getObjectExpression();
         Expression propertyExpression = expression.getProperty();
-        if (supportingNodeEnd >= 0 && supportingNodeEnd < propertyExpression.getStart()) {
-            // GRECLIPSE-1374 probably completion after a parenthesized
-            // expression
-            createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
-        }
 
         // check for the special case of groovy command expressions
         checkForCommandExpression(objectExpression, propertyExpression);
+
+        // expression contains completion node or supporting node; test for loose match
+        if (supportingNodeEnd > objectExpression.getEnd() && supportingNodeEnd < propertyExpression.getStart()) {
+            // GRECLIPSE-1374: probably a completion after a parenthesized expression
+            createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
+        }
 
         super.visitPropertyExpression(expression);
     }

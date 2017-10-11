@@ -285,7 +285,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test // GRECLIPSE-1114
-    void testClosuret6() {
+    void testClosure6() {
         String contents = '''\
             class Super {
               def xxx() { }
@@ -303,7 +303,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test // GRECLIPSE-1114
-    void testClosuret7() {
+    void testClosure7() {
         String contents = '''\
             class Super {
               def xxx
@@ -327,8 +327,19 @@ final class FieldCompletionTests extends CompletionTestSuite {
               def something = Class.
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'forName', System.getProperty('java.specification.version').toFloat() < 9 ? 2 : 3)
+    }
+
+    @Test
+    void testStaticFields() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            Pattern.
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'buffer', 0) // non-static
+        proposalExists(proposals, 'DOTALL', 1) // static
     }
 
     @Test

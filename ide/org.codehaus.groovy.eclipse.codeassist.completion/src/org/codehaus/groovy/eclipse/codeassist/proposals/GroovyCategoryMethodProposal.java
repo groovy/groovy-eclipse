@@ -29,7 +29,11 @@ public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
 
     @Override
     protected int getModifiers() {
-        return getMethod().getModifiers()  & ~Opcodes.ACC_STATIC;  // category methods are defined as static, but should not appear as such when a proposal
+        int modifiers = super.getModifiers();
+        if (!getMethod().getDeclaringClass().getName().equals("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods")) {
+            modifiers &= ~Opcodes.ACC_STATIC; // category methods are defined as static, but should not appear as such
+        }
+        return modifiers;
     }
 
     @Override
@@ -49,8 +53,8 @@ public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
 
     private char[][] removeFirst(char[][] array) {
         if (array.length > 0) {
-            char[][] newArray = new char[array.length-1][];
-            System.arraycopy(array, 1, newArray, 0, array.length-1);
+            char[][] newArray = new char[array.length - 1][];
+            System.arraycopy(array, 1, newArray, 0, array.length - 1);
             return newArray;
         } else {
             // shouldn't happen

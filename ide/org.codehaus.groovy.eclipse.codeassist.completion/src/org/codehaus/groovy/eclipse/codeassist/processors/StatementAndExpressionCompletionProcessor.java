@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -306,8 +307,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
      */
     private final Expression lhsNode;
 
-    public StatementAndExpressionCompletionProcessor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    public StatementAndExpressionCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
         this.completionNode = context.getPerceivedCompletionNode();
         this.lhsNode = context.lhsNode;
@@ -323,31 +323,23 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         if (completionNode != null) {
             visitor.visitCompilationUnit(requestor);
         }
-        ClassNode completionType;
-        boolean isStatic;
+
+        ClassNode completionType; boolean isStatic;
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.visitSuccessful) {
             isStatic = isStatic() || requestor.isStatic;
             completionType = getCompletionType(requestor);
-            if (completionType == null) {
-                if (context.containingDeclaration instanceof ClassNode) {
-                    completionType = (ClassNode) context.containingDeclaration;
-                } else {
-                    completionType = context.unit.getModuleNode().getScriptClassDummy();
-                }
-            }
 
             IProposalCreator[] creators = chooseProposalCreators(isStatic);
 
-            if (context.completionNode instanceof ClassExpression) {
-                if ("java.lang.Class".equals(completionType.getName())) {
-                    // add proposals for static members
-                    ClassNode type = ((ClassExpression) context.completionNode).getType();
-                    proposalCreatorLoop(context, requestor, type, isStatic, groovyProposals, creators, false);
-                }
-            }
-
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
+
+            if (completionType.equals(VariableScope.CLASS_CLASS_NODE) &&
+                    !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+                // "Foo.bar" is static; "Foo.&bar" is not static
+                boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
+                proposalCreatorLoop(context, requestor, completionType.getGenericsTypes()[0].getType(), isStatic2, groovyProposals, creators, false);
+            }
 
             if (context.location == ContentAssistLocation.STATEMENT) {
                 ClassNode closureThis = requestor.currentScope.getThis();
@@ -369,28 +361,21 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 containingClass = null;
             }
             if (containingClass != null) {
-                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
-                        VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false,
-                        ContentAssistLocation.STATEMENT == context.location));
+                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass, VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false, ContentAssistLocation.STATEMENT == context.location));
             } else if (node instanceof ImportNode) {
                 ImportNode importNode = (ImportNode) node;
                 if (importNode.isStatic()) {
                     containingClass = importNode.getType();
-                    groovyProposals.addAll(new FieldProposalCreator().findAllProposals(containingClass,
-                            VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true,
-                            ContentAssistLocation.STATEMENT == context.location));
-                    groovyProposals.addAll(new MethodProposalCreator().findAllProposals(containingClass,
-                            VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true,
-                            ContentAssistLocation.STATEMENT == context.location));
+                    groovyProposals.addAll(new FieldProposalCreator().findAllProposals(containingClass, VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true, ContentAssistLocation.STATEMENT == context.location));
+                    groovyProposals.addAll(new MethodProposalCreator().findAllProposals(containingClass, VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true, ContentAssistLocation.STATEMENT == context.location));
                 }
             }
-            completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
-                    : context.unit.getModuleNode().getScriptClassDummy();
+            completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration : context.unit.getModuleNode().getScriptClassDummy();
 
             isStatic = false;
         }
 
-        // get proposals from providers
+        // get proposals from providers (TODO: Should this move into proposalCreatorLoop?)
         try {
             context.currentScope = requestor.currentScope != null ? requestor.currentScope : createTopLevelScope(completionType);
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
@@ -443,8 +428,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return javaProposals;
     }
 
-    private void proposalCreatorLoop(ContentAssistContext context, ExpressionCompletionRequestor requestor,
-            ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators, boolean isClosureThis) {
+    private void proposalCreatorLoop(ContentAssistContext context, ExpressionCompletionRequestor requestor, ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators, boolean isClosureThis) {
         for (IProposalCreator creator : creators) {
             if (isClosureThis && !creator.redoForLoopClosure()) {
                 // avoid duplicate DGMs by not proposing category proposals twice
@@ -455,12 +439,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
                 ((AbstractProposalCreator) creator).setFavoriteStaticMembers(context.getFavoriteStaticMembers());
             }
-            groovyProposals.addAll(creator.findAllProposals(
-                completionType,
-                requestor.categories,
-                context.getPerceivedCompletionExpression(),
-                isStatic,
-                ContentAssistLocation.STATEMENT == context.location));
+            Set<ClassNode> categories = requestor.categories;
+            String expression = context.getPerceivedCompletionExpression();
+            boolean isPrimary = (ContentAssistLocation.STATEMENT == context.location);
+            groovyProposals.addAll(
+                creator.findAllProposals(completionType, categories, expression, isStatic, isPrimary));
         }
     }
 
@@ -470,8 +453,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         if (coreContext != null && !coreContext.isExtended()) {
             // must use reflection to set the fields
             ReflectionUtils.setPrivateField(InternalCompletionContext.class, "isExtended", coreContext, true);
-            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "extendedContext", coreContext,
-                    new GroovyExtendedCompletionContext(getContext(), requestor.currentScope));
+            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "extendedContext", coreContext, new GroovyExtendedCompletionContext(getContext(), requestor.currentScope));
         }
     }
 
@@ -480,61 +462,72 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return scope;
     }
 
-    /**
-     * When completing an expression, use the completion type found by the requestor.
-     * Otherwise, use the current type.
-     */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
-        if (getContext().location == ContentAssistLocation.EXPRESSION) {
-            return requestor.resultingType;
-        } else if (getContext().location == ContentAssistLocation.METHOD_CONTEXT) {
-            // if we are completing on a variable expression here, that means
-            // we have something like this:
-            // myMethodCall _
+        ClassNode completionType;
+        ContentAssistContext context = getContext();
+
+        switch (context.location) {
+        case EXPRESSION:
+            completionType = requestor.resultingType;
+            break;
+        case METHOD_CONTEXT:
+            // completing on a variable expression here, that means we have something like: myMethodCall _
             // so, we want to look at the type of 'this' to complete on
-            return completionNode instanceof VariableExpression ? requestor.currentScope.getDelegateOrThis() : requestor.resultingType;
-        } else {
+            completionType = (completionNode instanceof VariableExpression
+                ? requestor.currentScope.getDelegateOrThis() : requestor.resultingType);
+            break;
+        default:
             // use the current 'this' type so that closure types are correct
-            ClassNode type = requestor.currentScope.getDelegateOrThis();
-            if (type != null) {
-                return type;
-            } else {
+            completionType = requestor.currentScope.getDelegateOrThis();
+            if (completionType == null) {
                 // will only happen if in top level scope
-                return requestor.resultingType;
+                completionType = requestor.resultingType;
             }
         }
+
+        if (completionType == null) {
+            if (context.containingDeclaration instanceof ClassNode) {
+                completionType = (ClassNode) context.containingDeclaration;
+            } else {
+                completionType = context.unit.getModuleNode().getScriptClassDummy();
+            }
+        }
+
+        return completionType;
     }
 
-    /**
-     * When completing a expression, static context exists only if a ClassExpression
-     * When completing a statement, static context exists if in a static method or field
-     */
     private boolean isStatic() {
-        if (getContext().location == ContentAssistLocation.STATEMENT) {
-            AnnotatedNode annotated = getContext().containingDeclaration;
-            if (annotated instanceof FieldNode) {
-                return ((FieldNode) annotated).isStatic();
-            } else if (annotated instanceof MethodNode) {
-                return ((MethodNode) annotated).isStatic();
+        boolean isStatic = false;
+        ContentAssistContext context = getContext();
+
+        if (context.location == ContentAssistLocation.STATEMENT) {
+            AnnotatedNode declaration = context.containingDeclaration;
+            if (declaration instanceof FieldNode) {
+                isStatic = ((FieldNode) declaration).isStatic();
+            } else if (declaration instanceof MethodNode) {
+                isStatic = ((MethodNode) declaration).isStatic();
             }
         }
-        return false;
+
+        return isStatic;
     }
 
     private IProposalCreator[] chooseProposalCreators(boolean isStatic) {
         String completionExpression = getContext().fullCompletionExpression;
         if (completionExpression == null) completionExpression = "";
-        if (completionExpression.matches(".+\\.@(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?")) {
+        if (FIELD_ACCESS_COMPLETION.matcher(completionExpression).matches()) {
             if (!isStatic) {
                 return new IProposalCreator[] {new FieldProposalCreator()};
             }
             return new IProposalCreator[0];
         }
-        if (completionExpression.matches(".+\\.&(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?")) {
+        if (METHOD_POINTER_COMPLETION.matcher(completionExpression).matches()) {
             return new IProposalCreator[] {new MethodProposalCreator()};
-            // TODO: Completions should not insert parens and arguments.
             // TODO: Don't want "class" suggested. Static case is not well handled.
         }
         return getAllProposalCreators();
     }
+
+    private static final Pattern FIELD_ACCESS_COMPLETION =  Pattern.compile(".+\\.@\\s*(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?", Pattern.DOTALL);
+    private static final Pattern METHOD_POINTER_COMPLETION = Pattern.compile(".+\\.&\\s*(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?", Pattern.DOTALL);
 }

@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
+import org.eclipse.jdt.core.Flags
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
@@ -25,7 +26,7 @@ import org.junit.Test
 final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     private static final String CONTENTS = 'class Class { public Class() {\n }\n void doNothing(int x) { this.toString(); new Object().toString(); } }'
-    private static final String SCRIPTCONTENTS = 'def x = 9\nx++\nnew Object().toString()\nnew Thread().startD'
+    private static final String SCRIPTCONTENTS = 'def x = 9\nx++\nnew Object().toString()'
     private static final String CLOSURECONTENTS = 'def x = { t -> print t }'
     private static final String LISTCONTENTS = '[].findA'
 
@@ -125,49 +126,66 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testDGSM() {
-        def unit = createGroovyForScript()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, 'new Thread().startD'))
+    void testThreadDGSM1() {
+        String contents = 'Thread.startD'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         proposalExists(proposals, 'startDaemon', 2)
+    }
+
+    @Test
+    void testThreadDGSM2() {
+        String contents = 'new Thread().startD'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'startDaemon', 2)
+    }
+
+    @Test
+    void testSystemDGSM1() {
+        String contents = 'System.class.cu'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'currentTimeSeconds', 1)
+    }
+
+    @Test
+    void testSystemDGSM2() {
+        String contents = 'def sys = System.class\nsys.cu'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        def proposal = findFirstProposal(proposals, 'currentTimeSeconds')
+        assert Flags.toString(proposal.proposal.flags).contains('static')
     }
 
     @Test // GRECLIPSE-1013
     void testPopertyVariantOfDGM() {
         String contents = '"".toURL().text'
-        def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'toURL().t'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toURL().t'))
         proposalExists(proposals, 'text', 1)
     }
 
     @Test // GRECLIPSE-1158
     void testDateGM() {
         String contents = 'new Date().toCal'
-        def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'toCal'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toCal'))
         proposalExists(proposals, 'toCalendar', 1)
     }
 
     @Test // GRECLIPSE-1158
     void testProcessGM() {
         String contents = 'Process p\n' + 'p.get'
-        def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'get'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'get'))
         proposalExists(proposals, 'getIn', 1)
     }
 
     @Test // GRECLIPSE-1158
     void testEncodingGM() {
         String contents = 'byte[] p\n' + 'p.encodeBase64'
-        def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'encodeBase64'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'encodeBase64'))
         proposalExists(proposals, 'encodeBase64', 2)
     }
 
     @Test // GRECLIPSE-1158
     void testXmlGM() {
         String contents = 'org.w3c.dom.NodeList p\n' + 'p.iterator'
-        def unit = addGroovySource(contents)
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'iterator'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'iterator'))
         proposalExists(proposals, 'iterator', 1)
     }
 
@@ -176,11 +194,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         try {
             setDGMFilter('inspect')
             String contents = 'this.insp'
-            def unit = addGroovySource(contents)
-            ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 0)
             setDGMFilter()
-            proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
+            proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 1)
         } finally {
             setDGMFilter()
@@ -192,11 +209,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         try {
             setDGMFilter('inspect', 'each', 'fsafd fdafsd fafds')
             String contents = 'this.insp'
-            def unit = addGroovySource(contents)
-            ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 0)
             setDGMFilter()
-            proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'insp'))
+            proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'insp'))
             proposalExists(proposals, 'inspect', 1)
         } finally {
             setDGMFilter()

@@ -330,8 +330,53 @@ final class MethodCompletionTests extends CompletionTestSuite {
                 A.class.
               }
             }'''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'A.class.'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'util', 1)
+    }
+
+    @Test
+    void testClass3() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            Pattern.com
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
+        proposalExists(proposals, 'componentType', 1) // from Class
+        proposalExists(proposals, 'compile', 2) // from Pattern
+    }
+
+    @Test
+    void testClass4() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            Pattern.class.com
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
+        proposalExists(proposals, 'componentType', 1) // from Class
+        proposalExists(proposals, 'compile', 2) // from Pattern
+    }
+
+    @Test
+    void testClass5() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            def pat = Pattern.class
+            pat.com
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
+        proposalExists(proposals, 'componentType', 1) // from Class
+        proposalExists(proposals, 'compile', 2) // from Pattern
+    }
+
+    @Test
+    void testStaticMethods() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            Pattern.
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'compile', 2) // 2 static, 1 non-static
+        proposalExists(proposals, 'flags', 0) // 1 non-static
     }
 
     @Test
@@ -410,7 +455,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer1a() {
+    void testMethodPointer2() {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
 
         String contents = 'String.&isE'
@@ -421,7 +466,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer2() {
+    void testMethodPointer3() {
         String contents = 'String.&  isE'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
         proposalExists(proposals, 'isEmpty', 1)
