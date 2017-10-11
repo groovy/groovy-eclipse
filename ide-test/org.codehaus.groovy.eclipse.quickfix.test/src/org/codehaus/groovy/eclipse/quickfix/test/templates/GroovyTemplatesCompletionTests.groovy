@@ -65,6 +65,19 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     //--------------------------------------------------------------------------
 
     @Test
+    void testNoProposal() {
+        String target = 'try'
+        for (input in ['var. try', 'var.@ try', 'var.& try']) {
+            def editor = openInEditor(addGroovySource(input, nextUnitName()))
+            int offset = input.stripIndent().toString().indexOf(target) + target.length()
+            def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
+            List<ICompletionProposal> proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
+
+            assert proposals.isEmpty()
+        }
+    }
+
+    @Test
     void testBasicTemplate() {
         String input = '''\
             try
