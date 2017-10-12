@@ -327,6 +327,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         ClassNode completionType; boolean isStatic;
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         if (requestor.visitSuccessful) {
+            context.lhsType = requestor.lhsType;
             isStatic = isStatic() || requestor.isStatic;
             completionType = getCompletionType(requestor);
 
@@ -335,6 +336,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
 
             if (completionType.equals(VariableScope.CLASS_CLASS_NODE) &&
+                    !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 // "Foo.bar" is static; "Foo.&bar" is not static
                 boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
@@ -435,7 +437,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 continue;
             }
             if (creator instanceof AbstractProposalCreator) {
-                ((AbstractProposalCreator) creator).setLhsType(requestor.lhsType);
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
                 ((AbstractProposalCreator) creator).setFavoriteStaticMembers(context.getFavoriteStaticMembers());
             }

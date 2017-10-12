@@ -55,14 +55,14 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
         proposal.setFlags(field.getModifiers());
         proposal.setName(field.getName().toCharArray());
-        proposal.setRelevance(computeRelevance());
+        proposal.setRelevance(computeRelevance(context));
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));
 
-        if (requiredStaticImport != null) {
+        if (getRequiredStaticImport() != null) {
             GroovyCompletionProposal fieldImportProposal = new GroovyCompletionProposal(CompletionProposal.FIELD_IMPORT, context.completionLocation);
             fieldImportProposal.setAdditionalFlags(CompletionFlags.StaticImport);
-            fieldImportProposal.setCompletion(("import static " + requiredStaticImport + "\n").toCharArray());
+            fieldImportProposal.setCompletion(("import static " + getRequiredStaticImport() + "\n").toCharArray());
             fieldImportProposal.setDeclarationSignature(proposal.getDeclarationSignature());
             fieldImportProposal.setName(proposal.getName());
 

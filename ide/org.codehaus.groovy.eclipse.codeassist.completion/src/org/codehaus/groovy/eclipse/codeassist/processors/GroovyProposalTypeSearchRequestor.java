@@ -447,7 +447,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                 proposal.setCompletion(packageName);
                 proposal.setReplaceRange(this.offset, this.actualCompletionPosition);
                 proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-                proposal.setRelevance(Relevance.LOWEST.getRelavance());
+                proposal.setRelevance(Relevance.LOWEST.getRelevance());
                 LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
                 proposals.add(javaProposal);
                 javaProposal.setRelevance(proposal.getRelevance());

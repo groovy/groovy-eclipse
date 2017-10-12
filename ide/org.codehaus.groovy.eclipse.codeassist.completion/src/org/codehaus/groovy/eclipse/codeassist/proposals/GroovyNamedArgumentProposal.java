@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,7 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.viewers.StyledString;
 
 /**
- * A proposal that creates a named argument
- *
- * @author andrew
- * @created Sep 2, 2011
+ * A proposal that creates a named argument.
  */
 public class GroovyNamedArgumentProposal extends AbstractGroovyProposal {
 
@@ -51,18 +48,15 @@ public class GroovyNamedArgumentProposal extends AbstractGroovyProposal {
     public GroovyNamedArgumentProposal(String paramName, String paramSignature, MethodNode ownerMethod, String contributor) {
         this.paramName = paramName;
         this.paramSignature = paramSignature;
-        ;
         this.ownerMethod = ownerMethod;
         this.contributor = contributor;
-        setRelevanceMultiplier(100);
     }
+
     public GroovyNamedArgumentProposal(String paramName, ClassNode paramType, MethodNode ownerMethod, String contributor) {
         this.paramName = paramName;
         this.paramSignature = ProposalUtils.createTypeSignatureStr(unbox(paramType));
-        ;
         this.ownerMethod = ownerMethod;
         this.contributor = contributor;
-        setRelevanceMultiplier(100);
     }
 
     @Override
@@ -78,7 +72,7 @@ public class GroovyNamedArgumentProposal extends AbstractGroovyProposal {
         int startIndex = methodContext.completionLocation - methodContext.completionExpression.length();
         int length = methodContext.completionEnd - startIndex;
         return new NamedParameterProposal(paramName, paramSignature, startIndex, length,
-                ProposalUtils.getParameterImage(), createDisplayString(), computeRelevance(), false, javaContext,
+                ProposalUtils.getParameterImage(), createDisplayString(), computeRelevance(context), false, javaContext,
                 getGroovyProposalOptions().doParameterGuessing);
     }
 
@@ -100,10 +94,7 @@ public class GroovyNamedArgumentProposal extends AbstractGroovyProposal {
 
     /**
      * Can't use ClassHelper.getUnwrapper here since relies on == and this will
-     * often be a JDTClassNode
-     *
-     * @param paramType2
-     * @return
+     * often be a JDTClassNode.
      */
     private ClassNode unbox(ClassNode maybeBoxed) {
         if (ClassHelper.isPrimitiveType(maybeBoxed)) {

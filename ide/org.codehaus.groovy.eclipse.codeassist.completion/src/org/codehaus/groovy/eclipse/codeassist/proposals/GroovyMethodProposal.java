@@ -111,12 +111,12 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setAdditionalFlags(CompletionFlags.Default);
         proposal.setSignature(createMethodSignature());
         proposal.setKey(proposal.getSignature());
-        proposal.setRelevance(computeRelevance());
+        proposal.setRelevance(computeRelevance(context));
 
-        if (requiredStaticImport != null) {
+        if (getRequiredStaticImport() != null) {
             GroovyCompletionProposal methodImportProposal = new GroovyCompletionProposal(CompletionProposal.METHOD_IMPORT, context.completionLocation);
             methodImportProposal.setAdditionalFlags(CompletionFlags.StaticImport);
-            methodImportProposal.setCompletion(("import static " + requiredStaticImport + "\n").toCharArray());
+            methodImportProposal.setCompletion(("import static " + getRequiredStaticImport() + "\n").toCharArray());
             methodImportProposal.setDeclarationSignature(proposal.getDeclarationSignature());
             methodImportProposal.setName(proposal.getName());
 

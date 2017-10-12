@@ -26,11 +26,6 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.viewers.StyledString;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 12, 2009
- *
- */
 public class GroovyPropertyProposal extends AbstractGroovyProposal {
 
     private final PropertyNode property;
@@ -50,7 +45,6 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             return null;
         }
-
         CompletionProposal proposal = createProposal(context);
         return new GroovyJavaFieldCompletionProposal(proposal, createDisplayString(property), javaContext);
     }
@@ -67,7 +61,6 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         return ss;
     }
 
-
     private CompletionProposal createProposal(ContentAssistContext context) {
         InternalCompletionProposal proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
         proposal.setFlags(property.getModifiers());
@@ -75,7 +68,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         proposal.setCompletion(proposal.getName());
         proposal.setSignature(ProposalUtils.createTypeSignature(property.getType()));
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(property.getDeclaringClass()));
-        proposal.setRelevance(computeRelevance());
+        proposal.setRelevance(computeRelevance(context));
         int startIndex = context.completionLocation-context.completionExpression.length();
         proposal.setReplaceRange(startIndex, context.completionEnd);
         return proposal;

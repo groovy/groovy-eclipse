@@ -104,7 +104,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
     private ICompletionProposal createProposal(MethodNode method,
             ContentAssistContext context, IType enclosingType) {
-        int relevance = Relevance.VERY_HIGH.getRelavance();
+        int relevance = Relevance.VERY_HIGH.getRelevance();
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.METHOD_DECLARATION, context.completionLocation);
         String methodSignature = createMethodSignatureStr(method);

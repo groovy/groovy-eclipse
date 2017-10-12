@@ -72,9 +72,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                         // be careful not to add fields twice
                         alreadySeenFields.add(mockFieldName);
                         if (hasNoField(method.getDeclaringClass(), methodName)) {
-                            GroovyFieldProposal proposal = new GroovyFieldProposal(createMockField(method));
-                            proposal.setRelevanceMultiplier(/*isInterestingType ? 11 :*/ 1);
-                            proposals.add(proposal);
+                            proposals.add(new GroovyFieldProposal(createMockField(method)));
                         }
                     }
                 }
@@ -174,7 +172,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
 
         float relevanceMultiplier;
         if (isStatic && method.isStatic()) {
-            relevanceMultiplier = 10.0f;
+            relevanceMultiplier = 1.10f;
         } else if (!method.isStatic()) {
             relevanceMultiplier = 1.00f;
         } else {
@@ -184,10 +182,6 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         // de-emphasize 'this' references inside closure
         if (!firstTime) {
             relevanceMultiplier *= 0.1f;
-        }
-
-        if (isInterestingType(method.getReturnType())) {
-            relevanceMultiplier *= 10.01f; // must beat out uninteresting-typed fields, which have a very high relevance
         }
 
         proposal.setRelevanceMultiplier(relevanceMultiplier);

@@ -76,6 +76,7 @@ public class ContentAssistContext {
      * node, or null if there is none
      */
     public final Expression lhsNode;
+    public ClassNode lhsType;
 
     /**
      * the location kind of this content assist invocation

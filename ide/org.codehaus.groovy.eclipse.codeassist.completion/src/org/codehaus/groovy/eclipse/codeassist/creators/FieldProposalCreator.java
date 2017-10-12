@@ -65,10 +65,9 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) && ProposalUtils.looselyMatches(prefix, field.getName())) {
-                float relevanceMultiplier = isInterestingType(field.getType()) ? 1.1f : 1.0f;
-                if (field.isStatic()) relevanceMultiplier *= 0.1f;
                 // de-emphasize 'this' references inside closure
-                if (!isFirstTime) relevanceMultiplier *= 0.1f;
+                float relevanceMultiplier = !isFirstTime ? 0.1f : 1.0f;
+                if (field.getType().isEnum()) relevanceMultiplier *= 5;
 
                 GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                 proposal.setRelevanceMultiplier(relevanceMultiplier);
@@ -94,11 +93,6 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         }
 
         return proposals;
-    }
-
-    @Override
-    protected boolean isInterestingType(ClassNode type) {
-        return type.isEnum() || super.isInterestingType(type);
     }
 
     private MethodNode convertToMethodProposal(FieldNode field) {

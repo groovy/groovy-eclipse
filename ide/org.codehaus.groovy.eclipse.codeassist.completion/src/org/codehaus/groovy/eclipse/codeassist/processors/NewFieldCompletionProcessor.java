@@ -221,7 +221,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
 
     private ICompletionProposal createProposal(String fieldName, String typeName, ContentAssistContext context,
             IType enclosingType, boolean isStatic, boolean useKeywordBeforeReplacement, int replaceStart, int replaceLength) {
-        int relevance = Relevance.VERY_HIGH.getRelavance();
+        int relevance = Relevance.VERY_HIGH.getRelevance();
         return new NewGroovyFieldCompletionProposal(fieldName, replaceStart, replaceLength, relevance, isStatic, useKeywordBeforeReplacement, typeName);
     }
 }

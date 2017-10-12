@@ -59,7 +59,7 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
 
     private List<ICompletionProposal> createProposal(IField field, ContentAssistContext context) throws JavaModelException {
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(2);
-        int relevance = Relevance.HIGH.getRelavance();
+        int relevance = Relevance.HIGH.getRelevance();
         IMethod getter = GetterSetterUtil.getGetter(field);
         if (getter == null || !getter.exists()) {
             proposals.add(new GetterSetterCompletionProposal(field, context.completionLocation

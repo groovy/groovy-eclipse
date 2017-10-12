@@ -29,10 +29,12 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.preferences.DGMProposalFilter;
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyCategoryMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -40,14 +42,14 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
     public List<IGroovyProposal> findAllProposals(ClassNode selfType, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         DGMProposalFilter filter = new DGMProposalFilter();
-        List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-        Set<String> existingFieldProposals = new HashSet<String>();
+        Set<String> existingPropertyProposals = new HashSet<String>();
         Map<String, List<MethodNode>> existingMethodProposals = new HashMap<String, List<MethodNode>>();
+
+        List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         for (ClassNode category : categories) {
-            List<MethodNode> allMethods = category.getAllDeclaredMethods();
-            boolean isDGMCategory = isDGMCategory(category);
-            for (MethodNode method : allMethods) {
-                // Check for DGMs filtered from preferences
+            boolean isDGMCategory = isDGM(category);
+            for (MethodNode method : category.getAllDeclaredMethods()) {
+                // check for DGMs filtered by user preferences
                 if (isDGMCategory && filter.isFiltered(method)) {
                     continue;
                 }
@@ -57,9 +59,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                     // need to check if the method is being accessed directly or as a property (eg- getText() --> text)
                     if (ProposalUtils.looselyMatches(prefix, methodName)) {
                         if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType()) && !isDuplicate(method, existingMethodProposals)) {
-                            GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(method);
-                            methodProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 101 : 1);
-                            groovyProposals.add(methodProposal);
+                            groovyProposals.add(new CategoryMethodProposal(method));
+
                             List<MethodNode> methodList = existingMethodProposals.get(methodName);
                             if (methodList == null) {
                                 methodList = new ArrayList<MethodNode>(2);
@@ -67,16 +68,11 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                             }
                             methodList.add(method);
                         }
-                    } else if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) && !existingFieldProposals.contains(methodName) && hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
+                    } else if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) && !existingPropertyProposals.contains(methodName) && hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
                         // add property variant of accessor name
-                        GroovyFieldProposal fieldProposal = new GroovyFieldProposal(createMockField(method));
-                        if (!method.getDeclaringClass().getName().equals("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods")) {
-                            fieldProposal.getField().setModifiers(fieldProposal.getField().getModifiers() & ~Flags.AccStatic);
-                        }
-                        fieldProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 11 : 1);
+                        groovyProposals.add(new CategoryPropertyProposal(method));
 
-                        groovyProposals.add(fieldProposal);
-                        existingFieldProposals.add(methodName);
+                        existingPropertyProposals.add(methodName);
                     }
                 }
             }
@@ -87,7 +83,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
     /**
      * Checks that the new method hasn't already been added.
      */
-    private boolean isDuplicate(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
+    protected boolean isDuplicate(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
         List<MethodNode> otherMethods = existingMethodProposals.get(newMethod.getName());
         if (otherMethods != null) {
             Parameter[] newParameters = newMethod.getParameters();
@@ -115,18 +111,73 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         return false;
     }
 
-    private boolean isDGMCategory(ClassNode category) {
-        String className = category.getName();
-        for (ClassNode dgClass : VariableScope.ALL_DEFAULT_CATEGORIES) {
-            if (dgClass.getName().equals(className)) {
-                return true;
-            }
-        }
-        return false;
+    protected boolean isDGM(ClassNode category) {
+        return VariableScope.ALL_DEFAULT_CATEGORIES.contains(category);
+    }
+
+    protected boolean isDGSM(ClassNode category) {
+        // TODO: Make this check based on the runtime configuration
+        return category.getName().equals("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Override
     public boolean redoForLoopClosure() {
         return true;
+    }
+
+    //--------------------------------------------------------------------------
+
+    protected class CategoryMethodProposal extends GroovyMethodProposal {
+
+        protected CategoryMethodProposal(MethodNode method) {
+            super(method, "Groovy");
+
+            if (isDGM(method.getDeclaringClass())) {
+                setRelevanceMultiplier(0.1f);
+            } else {
+                setRelevanceMultiplier(5);
+            }
+        }
+
+        @Override
+        protected int getModifiers() {
+            int modifiers = super.getModifiers();
+            if (!isDGSM(getMethod().getDeclaringClass())) {
+                modifiers &= ~Flags.AccStatic; // category methods are defined as static, but should not appear as such
+            }
+            return modifiers;
+        }
+
+        @Override
+        protected char[] createMethodSignature() {
+            return ProposalUtils.createMethodSignature(getMethod(), 1);
+        }
+
+        @Override
+        protected char[][] createAllParameterNames(ICompilationUnit unit) {
+            return (char[][]) ArrayUtils.remove(super.createAllParameterNames(unit), 0);
+        }
+
+        @Override
+        protected char[][] getParameterTypeNames(Parameter[] parameters) {
+            return (char[][]) ArrayUtils.remove(super.getParameterTypeNames(parameters), 0);
+        }
+    }
+
+    protected class CategoryPropertyProposal extends GroovyFieldProposal {
+
+        protected CategoryPropertyProposal(MethodNode method) {
+            super(createMockField(method));
+
+            if (!isDGSM(method.getDeclaringClass())) {
+                getField().setModifiers(getField().getModifiers() & ~Flags.AccStatic);
+            }
+
+            if (isDGM(method.getDeclaringClass())) {
+                setRelevanceMultiplier(0.1f);
+            } else {
+                setRelevanceMultiplier(5);
+            }
+        }
     }
 }
