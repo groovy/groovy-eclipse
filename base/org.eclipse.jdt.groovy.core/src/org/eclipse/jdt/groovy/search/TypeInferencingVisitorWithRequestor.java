@@ -1843,10 +1843,10 @@ assert primaryExprType != null && dependentExprType != null;
         return handleRequestor(node, primaryType, result);
     }
 
-    private void    handleCompleteExpression(Expression node, ClassNode exprType, ClassNode declaringType) {
+    private void    handleCompleteExpression(Expression expr, ClassNode exprType, ClassNode declaringType) {
         VariableScope scope = scopes.getLast();
         scope.setPrimaryNode(false);
-        handleRequestor(node, declaringType, new TypeLookupResult(exprType, declaringType, node, TypeConfidence.EXACT, scope));
+        handleRequestor(expr, declaringType, new TypeLookupResult(exprType, declaringType, expr, TypeConfidence.EXACT, scope));
     }
 
     private boolean handleRequestor(Expression node, ClassNode primaryType, TypeLookupResult result) {

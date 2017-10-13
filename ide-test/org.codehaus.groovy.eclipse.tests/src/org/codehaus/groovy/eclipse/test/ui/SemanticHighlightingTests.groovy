@@ -156,6 +156,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testClassMethods() {
+        String contents = '''\
+            Number.getClass() // Object method on Class instance
+            String.getSimpleName()
+
+            class X {
+              static {
+                getCanonicalName()
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getClass'), 'getClass'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getSimpleName'), 'getSimpleName'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getCanonicalName'), 'getCanonicalName'.length(), METHOD_CALL))
+    }
+
+    @Test
     void testStaticMethods() {
         String contents = '''\
             class X {
@@ -313,9 +332,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('grep'), 4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('grep'), 4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('first'), 5, METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL))
     }
 
     @Test
@@ -323,8 +340,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '(["one", "two"] as String[]).first()'
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('first'), 5, METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL))
     }
 
     @Test
@@ -337,10 +353,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('use'), 3, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('use'), 3, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), GROOVY_CALL))
     }
 
     @Test
@@ -1289,10 +1303,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('use'),                      3, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('use'),                      3, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('Date'),                     4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 24, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 24, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1'),                        1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('minute'),                   6, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('from'),                     4, METHOD_CALL),
@@ -1317,7 +1329,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Foo'),     3, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('val'),     3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('length'),  6, METHOD_CALL))
@@ -1339,7 +1350,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
@@ -1368,7 +1378,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
@@ -1397,7 +1406,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
@@ -1428,7 +1436,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('getReadOnly'), 11, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('X'),        1, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),         4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),         4, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('val'),      3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('readOnly'),     8, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('readOnly'), 8, UNKNOWN))
@@ -1456,7 +1463,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('value'),         5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('X'),         1, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('with'),          4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),          4, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('val'),       3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('writeOnly'),     9, UNKNOWN),
             new HighlightedTypedPosition(contents.lastIndexOf('writeOnly'), 9, METHOD_CALL))
@@ -1560,11 +1566,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), STATIC_METHOD),
             new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('println'), 'println'.length(), GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('println'), 'println'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('method'), 'method'.length(), STATIC_METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('regex'), 'regex'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.lastIndexOf('println'), 'println'.length(), GROOVY_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('println'), 'println'.length(), METHOD_CALL))
+            new HighlightedTypedPosition(contents.lastIndexOf('println'), 'println'.length(), GROOVY_CALL))
     }
 
     @Test

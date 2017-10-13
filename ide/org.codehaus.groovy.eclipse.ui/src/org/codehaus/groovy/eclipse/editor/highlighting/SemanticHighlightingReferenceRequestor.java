@@ -129,7 +129,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             pos = handleMethodReference((ConstructorCallExpression) node);
 
         } else if (node instanceof MethodCallExpression) {
-            pos = handleMethodReference((MethodCallExpression) node);
+            /*pos = handleMethodReference((MethodCallExpression) node);*/
 
         } else if (node instanceof StaticMethodCallExpression) {
             pos = handleMethodReference((StaticMethodCallExpression) node);
@@ -269,23 +269,14 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(Expression expr, TypeLookupResult result, boolean isStaticImport) {
-        MethodNode meth = (MethodNode) result.declaration;
-
-        HighlightKind kind = null;
+        HighlightKind kind = HighlightKind.METHOD_CALL;
         if (result.isGroovy) {
             kind = HighlightKind.GROOVY_CALL;
-        } else if (isStaticImport) {
+        } else if (isStaticImport || ((MethodNode) result.declaration).isStatic()) {
             kind = HighlightKind.STATIC_CALL;
-        } else if (!expr.getText().equals(meth.getName())) {
-            // property name did not match method name
-            // there won't be a [Static]MethodCallExpression
-            kind = !meth.isStatic() ? HighlightKind.METHOD_CALL : HighlightKind.STATIC_CALL;
         }
 
-        if (kind != null) {
-            return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
-        }
-        return null;
+        return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
     }
 
     private HighlightedTypedPosition handleVariableExpression(Parameter expr, VariableScope scope) {

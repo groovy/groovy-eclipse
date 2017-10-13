@@ -377,7 +377,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             confidence = TypeConfidence.UNKNOWN;
         }
 
-        if (declaration != null && !realDeclaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
+        if (declaration != null && !realDeclaringType.equals(VariableScope.CLASS_CLASS_NODE) && !type.equals(VariableScope.CLASS_CLASS_NODE)) {
             // check to see if the object expression is static but the declaration is not
             if (declaration instanceof FieldNode) {
                 if (isStaticObjectExpression && !((FieldNode) declaration).isStatic()) {
