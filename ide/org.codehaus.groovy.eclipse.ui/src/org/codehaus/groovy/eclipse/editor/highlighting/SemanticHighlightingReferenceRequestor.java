@@ -135,7 +135,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             pos = handleMethodReference((StaticMethodCallExpression) node);
 
         } else if (node instanceof MethodPointerExpression) {
-            pos = handleMethodReference((MethodPointerExpression) node);
+            /*pos = handleMethodReference((MethodPointerExpression) node);*/
 
         } else if (node instanceof Parameter) {
             pos = handleVariableExpression((Parameter) node, result.scope);

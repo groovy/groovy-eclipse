@@ -1464,9 +1464,6 @@ assert primaryExprType != null && dependentExprType != null;
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
             completeExpressionStack.add(node);
-            primaryTypeStack.add(// method src
-                node.getExpression().getType());
-
             super.visitMethodPointerExpression(node);
 
             // clean up the stacks
@@ -1832,7 +1829,7 @@ assert primaryExprType != null && dependentExprType != null;
                     ((MethodCallExpression) completeExpressionStack.getLast()).isImplicitThis()) {
                 primaryType = null;
             }
-            isStatic = hasStaticObjectExpression(node);
+            isStatic = hasStaticObjectExpression(node, primaryType);
             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(completeExpressionStack.getLast()));
             scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(completeExpressionStack.getLast()));
         }
@@ -1843,10 +1840,10 @@ assert primaryExprType != null && dependentExprType != null;
         return handleRequestor(node, primaryType, result);
     }
 
-    private void    handleCompleteExpression(Expression expr, ClassNode exprType, ClassNode declaringType) {
+    private void    handleCompleteExpression(Expression node, ClassNode exprType, ClassNode declaringType) {
         VariableScope scope = scopes.getLast();
         scope.setPrimaryNode(false);
-        handleRequestor(expr, declaringType, new TypeLookupResult(exprType, declaringType, expr, TypeConfidence.EXACT, scope));
+        handleRequestor(node, declaringType, new TypeLookupResult(exprType, declaringType, node, TypeConfidence.EXACT, scope));
     }
 
     private boolean handleRequestor(Expression node, ClassNode primaryType, TypeLookupResult result) {
@@ -2187,6 +2184,9 @@ assert primaryExprType != null && dependentExprType != null;
             } else if (complete instanceof MethodCallExpression) {
                 return ((MethodCallExpression) complete).getObjectExpression() == node;
 
+            } else if (complete instanceof MethodPointerExpression) {
+                return ((MethodPointerExpression) complete).getExpression() == node;
+
             } else if (complete instanceof BinaryExpression) {
                 BinaryExpression expr = (BinaryExpression) complete;
                 // both sides of the binary expression are primary since we need
@@ -2255,24 +2255,30 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return true iff the object expression associated with node is a static reference to a class declaration
      */
-    private boolean hasStaticObjectExpression(Expression node) {
+    private boolean hasStaticObjectExpression(Expression node, ClassNode primaryType) {
         boolean staticObjectExpression = false;
         if (!completeExpressionStack.isEmpty()) {
-            ASTNode maybeProperty = completeExpressionStack.getLast();
-            // need to call getObjectExpression and isImplicitThis w/o common interface
-            if (maybeProperty instanceof PropertyExpression) {
-                PropertyExpression prop = (PropertyExpression) maybeProperty;
-                if (prop.getObjectExpression() instanceof ClassExpression) {
-                    staticObjectExpression = true;
-                } else if (prop.isImplicitThis()) {
-                    staticObjectExpression = scopes.getLast().isStatic();
+            ASTNode complete = completeExpressionStack.getLast();
+            // MethodPointerExpression is non-static, so skip this checking
+            if (complete instanceof PropertyExpression || complete instanceof MethodCallExpression) {
+                // call getObjectExpression and isImplicitThis w/o common interface
+                Expression objectExpression = null;
+                boolean isImplicitThis = false;
+
+                if (complete instanceof PropertyExpression) {
+                    PropertyExpression prop = (PropertyExpression) complete;
+                    objectExpression = prop.getObjectExpression();
+                    isImplicitThis = prop.isImplicitThis();
+                } else if (complete instanceof MethodCallExpression) {
+                    MethodCallExpression call = (MethodCallExpression) complete;
+                    objectExpression = call.getObjectExpression();
+                    isImplicitThis = call.isImplicitThis();
                 }
-            } else if (maybeProperty instanceof MethodCallExpression) {
-                MethodCallExpression prop = (MethodCallExpression) maybeProperty;
-                if (prop.getObjectExpression() instanceof ClassExpression) {
-                    staticObjectExpression = true;
-                } else if (prop.isImplicitThis()) {
+
+                if (objectExpression == null && isImplicitThis) {
                     staticObjectExpression = scopes.getLast().isStatic();
+                } else if (objectExpression instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType)) {
+                    staticObjectExpression = true; // separate lookup exists for non-static members of Class, Object, or GroovyObject
                 }
             }
         }

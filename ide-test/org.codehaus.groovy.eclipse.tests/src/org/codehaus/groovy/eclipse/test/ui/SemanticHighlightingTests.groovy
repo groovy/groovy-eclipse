@@ -1545,6 +1545,20 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMethodPointer2() {
+        String contents = '''\
+            def c = String.class
+            def f = c.&toLowerCase
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('c ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('c.&'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL))
+    }
+
+    @Test
     void testMethodOverloads() {
         // overloads with generics caused confusion in TypeInferencingVisitor
         String contents = '''\

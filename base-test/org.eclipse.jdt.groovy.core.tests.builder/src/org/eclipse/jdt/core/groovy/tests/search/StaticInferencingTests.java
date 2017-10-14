@@ -129,7 +129,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         int start = contents.indexOf("getCanonicalName");
         int until = start + "getCanonicalName".length();
         assertType(contents, start, until, "java.lang.String");
-        assertDeclaringType(contents, start, until, "java.lang.Class<java.lang.Object<T>>");
+        assertDeclaringType(contents, start, until, "java.lang.Class<T extends java.lang.Object>");
     }
 
     //

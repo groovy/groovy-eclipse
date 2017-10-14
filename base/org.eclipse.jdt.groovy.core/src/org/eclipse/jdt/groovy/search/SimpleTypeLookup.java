@@ -409,8 +409,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (TypeConfidence.UNKNOWN.equals(confidence) && VariableScope.CLASS_CLASS_NODE.equals(realDeclaringType)) {
             ClassNode typeParam = realDeclaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) && !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
-                // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()"
-                return findTypeForNameWithKnownObjectExpression(name, type, typeParam, scope, origConfidence, true, isPrimaryExpression, isLhsExpression);
+                // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" (static) or .& variations (non-static)
+                return findTypeForNameWithKnownObjectExpression(name, type, typeParam, scope, origConfidence, isStaticObjectExpression, isPrimaryExpression, isLhsExpression);
             }
         }
 
