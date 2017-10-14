@@ -97,15 +97,10 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
                 type = ((ConstructorNode) node).getDeclaringClass();
             } else if (node instanceof AnnotationNode) {
                 type = ((AnnotationNode) node).getClassNode();
+            } else if (node instanceof ClassExpression) {
+                type = ((ClassExpression) node).getType();
             } else {
                 type = result.type;
-            }
-            if (node instanceof ClassExpression && type.equals(VariableScope.CLASS_CLASS_NODE)) {
-                // special case...there is a Foo.class expression.
-                // the difference between Foo.class and Foo does not appear in the AST.
-                // The type of the expression is considered to be Class, but we still need to
-                // look for a reference for Foo
-                type = ((ClassExpression) node).getType();
             }
 
             if (type != null) {

@@ -73,30 +73,34 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
  */
 public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
-    public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
-    public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
     public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
     public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
     public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
+
+    public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
+    public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
+    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
+    public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
+    public static final ClassNode ITERATOR_CLASS = ClassHelper.Iterator_TYPE;
     public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
     public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
     public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
-    public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
-    public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
     public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
     public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
-    public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
-    public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
-    public static final ClassNode ITERATOR_CLASS = ClassHelper.make(Iterator.class);
-    public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
+    public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.Number_TYPE;
+    public static final ClassNode BIG_DECIMAL_CLASS = ClassHelper.BigDecimal_TYPE;
+    public static final ClassNode BIG_INTEGER_CLASS = ClassHelper.BigInteger_TYPE;
+    public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
+    public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
+
+    public static final ClassNode FILE_CLASS_NODE = ClassHelper.make(File.class);
     public static final ClassNode INPUT_STREAM_CLASS = ClassHelper.make(InputStream.class);
     public static final ClassNode OUTPUT_STREAM_CLASS = ClassHelper.make(OutputStream.class);
     public static final ClassNode DATA_INPUT_STREAM_CLASS = ClassHelper.make(DataInputStream.class);
     public static final ClassNode DATA_OUTPUT_STREAM_CLASS = ClassHelper.make(DataOutputStream.class);
     public static final ClassNode OBJECT_OUTPUT_STREAM = ClassHelper.make(ObjectOutputStream.class);
     public static final ClassNode OBJECT_INPUT_STREAM = ClassHelper.make(ObjectInputStream.class);
-    public static final ClassNode FILE_CLASS_NODE = ClassHelper.make(File.class);
     public static final ClassNode BUFFERED_READER_CLASS_NODE = ClassHelper.make(BufferedReader.class);
     public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
     public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
@@ -793,6 +797,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         newgt.setResolved(origgt.isResolved());
         newgt.setSourcePosition(origgt);
         return newgt;
+    }
+
+    public static ClassNode newClassClassNode(ClassNode type) {
+        ClassNode classType = ClassHelper.makeWithoutCaching("java.lang.Class");
+        classType.setGenericsTypes(new GenericsType[] {new GenericsType(type)});
+        classType.setRedirect(CLASS_CLASS_NODE);
+        return classType;
     }
 
     /**

@@ -332,7 +332,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             completionType = getCompletionType(requestor);
 
             IProposalCreator[] creators = chooseProposalCreators(isStatic);
-
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
 
             if (completionType.equals(VariableScope.CLASS_CLASS_NODE) &&
@@ -341,6 +340,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 // "Foo.bar" is static; "Foo.&bar" is not static
                 boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
                 proposalCreatorLoop(context, requestor, completionType.getGenericsTypes()[0].getType(), isStatic2, groovyProposals, creators, false);
+            }
+
+            if (isStatic() && completionType.equals(context.containingDeclaration.getDeclaringClass())) {
+                // within a static context, Class<T> instance methods are available without a class or object expression
+                IProposalCreator[] creators2 = new IProposalCreator[] {new FieldProposalCreator(), new MethodProposalCreator()};
+                proposalCreatorLoop(context, requestor, VariableScope.newClassClassNode(completionType), false, groovyProposals, creators2, false);
             }
 
             if (context.location == ContentAssistLocation.STATEMENT) {
@@ -517,14 +522,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         String completionExpression = getContext().fullCompletionExpression;
         if (completionExpression == null) completionExpression = "";
         if (FIELD_ACCESS_COMPLETION.matcher(completionExpression).matches()) {
-            if (!isStatic) {
-                return new IProposalCreator[] {new FieldProposalCreator()};
-            }
-            return new IProposalCreator[0];
+            if (isStatic) return new IProposalCreator[0];
+            return new IProposalCreator[] {new FieldProposalCreator()};
         }
         if (METHOD_POINTER_COMPLETION.matcher(completionExpression).matches()) {
             return new IProposalCreator[] {new MethodProposalCreator()};
-            // TODO: Don't want "class" suggested. Static case is not well handled.
         }
         return getAllProposalCreators();
     }

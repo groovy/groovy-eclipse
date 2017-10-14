@@ -125,6 +125,13 @@ final class OtherCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'aaaa', 1)
     }
 
+    @Test
+    void testContentAssistInInitializers3() {
+        String contents = 'class A { { getCan } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'getCan'))
+        proposalExists(proposals, 'getCanonicalName', 0)
+    }
+
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers1() {
         String contents = 'class A { static { aa }\n static aaaa }'
@@ -137,6 +144,28 @@ final class OtherCompletionTests extends CompletionTestSuite {
         String contents = 'class A { static {  }\n static aaaa }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'static { '))
         proposalExists(proposals, 'aaaa', 1)
+    }
+
+    @Test
+    void testContentAssistInStaticInitializers3() {
+        String contents = 'class A { static { getCan } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'getCan'))
+        proposalExists(proposals, 'getCanonicalName', 1)
+    }
+
+    @Test
+    void testContentAssistInStaticInitializers4() {
+        String contents = 'class A { public static String NAME = getCan }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'getCan'))
+        proposalExists(proposals, 'getCanonicalName', 1)
+    }
+
+    @Test
+    void testContentAssistInStaticInitializers5() {
+        String contents = 'class A { static { getMeta } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'get'))
+        proposalExists(proposals, 'getMetaPropertyValues', 1)
+        proposalExists(proposals, 'getMetaClass', 1)
     }
 
     @Test // GRECLIPSE-692

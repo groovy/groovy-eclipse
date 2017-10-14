@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -226,7 +225,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
             } else if (cexp.isEmptyStringExpression() || VariableScope.STRING_CLASS_NODE.equals(nodeType)) {
                 return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, node, confidence, scope);
-            } else if (ClassHelper.isNumberType(nodeType) || ClassHelper.BigDecimal_TYPE.equals(nodeType) || ClassHelper.BigInteger_TYPE.equals(nodeType)) {
+            } else if (ClassHelper.isNumberType(nodeType) || VariableScope.BIG_DECIMAL_CLASS.equals(nodeType) || VariableScope.BIG_INTEGER_CLASS.equals(nodeType)) {
                 return new TypeLookupResult(ClassHelper.isPrimitiveType(nodeType) ? ClassHelper.getWrapper(nodeType) : nodeType, null, null, confidence, scope);
             } else {
                 return new TypeLookupResult(nodeType, null, null, TypeConfidence.UNKNOWN, scope);
@@ -253,9 +252,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
 
         } else if (node instanceof ClassExpression) {
-            ClassNode classType = ClassHelper.makeWithoutCaching(ClassHelper.CLASS_Type.getName());
-            classType.setGenericsTypes(new GenericsType[] {new GenericsType(node.getType())});
-            classType.setRedirect(ClassHelper.CLASS_Type);
+            ClassNode classType = VariableScope.newClassClassNode(node.getType());
             classType.setSourcePosition(node);
 
             return new TypeLookupResult(classType, null, node.getType(), TypeConfidence.EXACT, scope);
@@ -350,7 +347,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             } else {
                 // might be reference to a method/property defined on java.lang.Class
-                declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, isLhsExpression, isStaticObjectExpression, scope.getMethodCallArgumentTypes());
+                declaration = findDeclaration(name, VariableScope.newClassClassNode(declaringType), isLhsExpression, isStaticObjectExpression, scope.getMethodCallArgumentTypes());
             }
         }
 
@@ -553,7 +550,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         LinkedHashSet<ClassNode> types = new LinkedHashSet<ClassNode>();
         if (!declaringType.isInterface()) types.add(declaringType);
         VariableScope.findAllInterfaces(declaringType, types, true);
-        types.add(ClassHelper.OBJECT_TYPE); // implicit super type
+        types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type
 
         MethodNode outerCandidate = null;
         for (ClassNode type : types) {
@@ -714,7 +711,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      */
     protected static boolean isSynthetic(MethodNode method) {
         // TODO: What about 'method.getDeclaringClass().equals(ClassHelper.GROOVY_OBJECT_TYPE)'?
-        return method.isSynthetic() || method.getDeclaringClass().equals(ClassHelper.CLOSURE_TYPE) ||
+        return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE) ||
             (method instanceof JDTMethodNode && ((JDTMethodNode) method).getJdtBinding() instanceof LazilyResolvedMethodBinding);
     }
 
@@ -748,7 +745,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
             !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) &&
-            !(source.equals(ClassHelper.CLOSURE_TYPE) && ClassHelper.isSAMType(target))) {
+            !(source.equals(VariableScope.CLOSURE_CLASS_NODE) && ClassHelper.isSAMType(target))) {
 
             result = !GroovyUtils.isAssignable(source, target) ? Boolean.FALSE : null; // not an exact match
         }
