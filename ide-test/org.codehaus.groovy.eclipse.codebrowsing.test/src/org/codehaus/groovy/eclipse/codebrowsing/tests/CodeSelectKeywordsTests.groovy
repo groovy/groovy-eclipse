@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
-import org.junit.Ignore
 import org.junit.Test
 
 final class CodeSelectKeywordsTests extends BrowsingTestSuite {
@@ -58,7 +57,13 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'as', null)
     }
 
-    @Test @Ignore('Is this just shorthand for getClass()? Java Editor doesn\'t code select on "class" in literal')
+    @Test
+    void testSelectNotKeywordClass() {
+        String contents = 'Object obj; obj.class.name'
+        assertCodeSelect([contents], 'class', 'getClass')
+    }
+
+    @Test
     void testSelectKeywordClass1() {
         String contents = 'String.class'
         assertCodeSelect([contents], 'class', null)

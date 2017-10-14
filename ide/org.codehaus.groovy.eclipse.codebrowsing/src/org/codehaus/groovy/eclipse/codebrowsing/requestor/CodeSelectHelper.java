@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -168,6 +169,10 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         // "this." something
         else if (node instanceof VariableExpression && ((VariableExpression) node).isThisExpression()) {
             keyword = true;
+        }
+        // something ".class"
+        else if (node instanceof ClassExpression && length == 5) {
+            keyword = String.valueOf(contents, start, length).equals("class");
         }
         // "def " something
         else if (node == ClassHelper.DYNAMIC_TYPE && length == 3) {
