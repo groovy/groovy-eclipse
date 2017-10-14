@@ -175,6 +175,24 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testClassMethods2() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            Pattern.class.matcher("")
+            Pattern.matcher('')
+            def pat = Pattern
+            pat.matcher("")
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('pat'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('pat'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('matcher("'), 'matcher'.length(), UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('matcher(\''), 'matcher'.length(), UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('matcher('), 'matcher'.length(), UNKNOWN))
+    }
+
+    @Test
     void testStaticMethods() {
         String contents = '''\
             class X {
