@@ -159,10 +159,7 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
             int cursor = getCaret()
             actual = actual.substring(0, cursor) + CARET + actual.substring(cursor)
         }
-        if (File.separatorChar == '\\') {
-            actual = actual.replace('\r\n', '\n')
-        }
-        Assert.assertEquals(expected, actual)
+        Assert.assertEquals(expected, actual.normalize())
     }
 
     protected void assertStatusLineText(String expected) {

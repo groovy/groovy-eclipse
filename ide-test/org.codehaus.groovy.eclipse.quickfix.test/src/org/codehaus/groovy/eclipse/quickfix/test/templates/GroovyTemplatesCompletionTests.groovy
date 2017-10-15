@@ -57,8 +57,8 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         matches[0].apply(editor.viewer, 'x' as char, 0, offset)
         SynchronizationUtils.runEventQueue() // allow the change to show in the editor
 
-        String expect = expected.stripIndent().toString().replace('|', '').replace('\r\n', '\n')
-        String actual = editor.viewer.document.get().replace('\r\n', '\n')
+        String expect = expected.stripIndent().toString().replace('|', '').normalize()
+        String actual = editor.viewer.document.get().normalize()
         assert actual == expect
     }
 

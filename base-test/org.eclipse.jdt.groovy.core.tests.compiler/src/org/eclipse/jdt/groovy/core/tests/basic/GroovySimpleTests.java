@@ -5353,8 +5353,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         });
         /* once was:
         ----------\n
-        1. ERROR in a\B.groovy (at line 1)\r\n
-            package a\r\n
+        1. ERROR in a\B.groovy (at line 1)\n
+            package a\n
             ^\n
         Groovy:Internal groovy compiler error.\n
         ----------\n

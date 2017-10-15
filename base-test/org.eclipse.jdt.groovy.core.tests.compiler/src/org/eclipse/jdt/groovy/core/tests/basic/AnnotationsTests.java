@@ -304,8 +304,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
 
         runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Main.groovy (at line 1)\r\n" +
-            "\t@SuppressWarnings(VALUE)\r\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@SuppressWarnings(VALUE)\n" +
             "\t                  ^^^^^\n" +
             "VALUE cannot be resolved\n" +
             "----------\n");
@@ -349,13 +349,13 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
 
         runNegativeTest(sources, "----------\n" +
-            "1. ERROR in Main.groovy (at line 1)\r\n" +
-            "\t@Anno(Inner)\r\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@Anno(Inner)\n" +
             "\t      ^^^^^\n" +
             "Inner cannot be resolved\n" +
             "----------\n" +
-            "2. ERROR in Main.groovy (at line 1)\r\n" +
-            "\t@Anno(Inner)\r\n" +
+            "2. ERROR in Main.groovy (at line 1)\n" +
+            "\t@Anno(Inner)\n" +
             "\t      ^^^^^\n" +
             "Inner cannot be resolved or is not a field\n" +
             "----------\n");

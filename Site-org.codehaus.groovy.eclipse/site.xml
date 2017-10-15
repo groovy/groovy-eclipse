@@ -2,15 +2,15 @@
 
 <site>
 
-   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
+   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse (Required)">
       <description>
-         Optional feature that provides source code for the Groovy-Eclipse plugins.
+         Provides Groovy support to Eclipse.
       </description>
    </category-def>
 
-   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse (Required)">
+   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy-Eclipse SDK (Optional)">
       <description>
-         The required feature that provides Groovy support in Eclipse.
+         Provides source code for the Groovy-Eclipse plugins.
       </description>
    </category-def>
 
@@ -22,23 +22,24 @@
 
    <category-def name="org.codehaus.groovy.m2eclipse" label="Maven Support (Optional)">
       <description>
-         Provides support for Groovy-Eclipse in m2eclipse. This is compatible with m2eclipse v1.0 and greater.
+         Provides Groovy support to m2eclipse. This is compatible with m2eclipse v1.0 and greater.
       </description>
    </category-def>
 
-   <feature id="org.codehaus.groovy.eclipse.feature.source" url="features/org.codehaus.groovy.eclipse.feature.source_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.eclipse.sdk"/>
-   </feature>
-
-   <feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.eclipse.sdk"/>
-   </feature>
 
    <feature id="org.codehaus.groovy.eclipse.feature" url="features/org.codehaus.groovy.eclipse.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
 
+   <feature id="org.codehaus.groovy.eclipse.feature.source" url="features/org.codehaus.groovy.eclipse.feature.source_2.9.2.qualifier.jar" version="2.9.2.qualifier">
+      <category name="org.codehaus.groovy.eclipse.sdk"/>
+   </feature>
+
    <feature id="org.codehaus.groovy.jdt.patch" url="features/org.codehaus.groovy.jdt.patch_2.9.2.qualifier.jar" version="2.9.2.qualifier" patch="true">
+   </feature>
+
+   <feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_2.9.2.qualifier.jar" version="2.9.2.qualifier">
+      <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
 
    <feature id="org.codehaus.groovy18.feature" url="features/org.codehaus.groovy18.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">

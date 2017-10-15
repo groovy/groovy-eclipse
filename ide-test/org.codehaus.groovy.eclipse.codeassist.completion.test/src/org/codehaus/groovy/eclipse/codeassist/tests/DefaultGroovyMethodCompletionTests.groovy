@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.core.Flags
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -174,6 +177,8 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testSystemDGSM1() {
+        assumeTrue(isAtLeastGroovy(24))
+
         String contents = 'System.class.cu'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         proposalExists(proposals, 'currentTimeSeconds', 1)
@@ -181,6 +186,8 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testSystemDGSM2() {
+        assumeTrue(isAtLeastGroovy(24))
+
         String contents = 'def sys = System.class\nsys.cu'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         def proposal = findFirstProposal(proposals, 'currentTimeSeconds')
