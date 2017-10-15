@@ -107,8 +107,8 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         node.getAnnotations().addAll(collected);
         
         for (AnnotationNode annotation : node.getAnnotations()) {
-            // GRECLIPSE edit
-            /*Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
+            /* GRECLIPSE edit
+            Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
             if (transformClassAnnotation == null) {
                 // skip if there is no such annotation
                 continue;
@@ -192,8 +192,8 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         return ret;
     }
 
-    // GRECLIPSE edit
-    /*private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
+    /* GRECLIPSE edit
+    private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
         List<String> transformClassNames = getTransformClassNames(annotation, transformClassAnnotation);
 
         if(transformClassNames.isEmpty()) {
@@ -207,7 +207,8 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 verifyAndAddTransform(annotation, klass);
             }
         }
-    }*/
+    }
+    */
 
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
         if (transformClassNames.length == 0 && transformClasses.length == 0) {
@@ -321,7 +322,8 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         return null;
     }
 
-    /*private List<String> getTransformClassNames(AnnotationNode annotation, Annotation transformClassAnnotation) {
+    /* GRECLIPSE edit
+    private List<String> getTransformClassNames(AnnotationNode annotation, Annotation transformClassAnnotation) {
         List<String> result = new ArrayList<String>();
 
         try {
@@ -345,7 +347,8 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
 
         return result;
-    }*/
+    }
+    */
 
     // GRECLIPSE add
     private static final String[] NONE = new String[0];
@@ -450,25 +453,18 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 
     /**
      * Check the transform name against the allowed transforms.
-     * 
-     * @param transformName the name of the transform 
-     * @return true if it is allowed
+     *
+     * @param transformName the name of the transform
+     * @return {@code true} if it is allowed
      */
     private boolean isAllowed(String transformName) {
-        if (transformName.equals("groovy.transform.CompileStatic")) {
+        if (localTransformsAllowed == null ||
+                "groovy.transform.TypeChecked".equals(transformName) ||
+                "groovy.transform.CompileStatic".equals(transformName) ||
+                "grails.transaction.Transactional".equals(transformName)) {
             return true;
         }
-        if (transformName.equals("groovy.transform.TypeChecked")) {
-            return true;
-        }
-        if ("grails.transaction.Transactional".equals(transformName)) {
-            //STS-3928
-            return false;
-        }
-        if (localTransformsAllowed == null) {
-            return true;
-        }
-        for (String localTransformAllowed: localTransformsAllowed) {
+        for (String localTransformAllowed : localTransformsAllowed) {
             if (localTransformAllowed.equals("*")) {
                 return true;
             } else if (localTransformAllowed.endsWith("$")) {
