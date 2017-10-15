@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -587,7 +588,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // remember first entry in case exact match not found
         MethodNode closestMatch = candidates.get(0);
         if (arguments == null) {
-            return closestMatch;
+            arguments = Collections.emptyList();
         }
 
         // prefer retrieving the method with the same number of args as specified in the parameter.
