@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,17 +33,12 @@ import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
- * Sub class of {@link CleanUpPostSaveListener} so that we can use only
- * groovy-supported post-save cleanups
- *
- * @author Andrew Eisenberg
- * @created Aug 17, 2009
+ * Sub class of {@link CleanUpPostSaveListener} so that we can use only Groovy-supported post-save clean-ups.
  */
 public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener implements IPostSaveListener {
 
     @Override
     protected ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
-        ICleanUp[] javaCleanUps = JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
         CleanUpOptions options = new MapCleanUpOptions(settings);
         boolean doImports = false;
         boolean doFormat = false;
@@ -53,7 +48,7 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
         boolean doSemicolonRemoval = groovyPreferences.getBoolean(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS);
         boolean doWhitespaceRemoval = options.isEnabled(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES);
 
-        for (ICleanUp cleanup : javaCleanUps) {
+        for (ICleanUp cleanup : JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids)) {
             if (cleanup instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
                 doImports = true;
             } else if (cleanup instanceof CodeFormatCleanUp) {
@@ -68,7 +63,7 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
             }
         }
 
-        List<ICleanUp> groovyCleanUps = new ArrayList<ICleanUp>();
+        List<ICleanUp> groovyCleanUps = new ArrayList<ICleanUp>(4);
 
         if (doImports) {
             groovyCleanUps.add(new GroovyImportsCleanUp());

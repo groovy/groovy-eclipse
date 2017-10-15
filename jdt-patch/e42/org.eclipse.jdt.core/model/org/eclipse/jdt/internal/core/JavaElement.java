@@ -44,8 +44,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * @see IJavaElement
  */
 public abstract class JavaElement extends PlatformObject implements IJavaElement {
-//	private static final QualifiedName PROJECT_JAVADOC= new QualifiedName(JavaCore.PLUGIN_ID, "project_javadoc_location"); //$NON-NLS-1$
-
 	private static final byte[] CLOSING_DOUBLE_QUOTE = new byte[] { 34 };
 	private static final byte[] CHARSET = new byte[] {99, 104, 97, 114, 115, 101, 116, 61 };
 	private static final byte[] CONTENT_TYPE = new byte[] { 34, 67, 111, 110, 116, 101, 110, 116, 45, 84, 121, 112, 101, 34 };
@@ -510,14 +508,6 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
-
-	// GROOVY add -- stub method for backwards compatibility on 3.7
-	// remove when no longer supporting Grails-IDE on e3.7
-	protected Object openWhenClosed(Object info, IProgressMonitor monitor) throws JavaModelException {
-		return openWhenClosed(info, true, monitor);
-	}
-	// GROOVY end
-
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.
@@ -526,6 +516,10 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		boolean hadTemporaryCache = manager.hasTemporaryCache();
 		try {
+			// GROOVY add
+			Openable openable = (Openable) getOpenable();
+			boolean closeParent = !(newElements.containsKey(openable) && openable.isOpen());
+			// GROOVY end
 			HashMap newElements = manager.getTemporaryCache();
 			generateInfos(info, newElements, monitor);
 			if (info == null) {
@@ -534,8 +528,11 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			if (info == null) { // a source ref element could not be opened
 				// close the buffer that was opened for the openable parent
 				// close only the openable's buffer (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=62854)
-				Openable openable = (Openable) getOpenable();
-				if (newElements.containsKey(openable)) {
+				// GROOVY edit
+				//Openable openable = (Openable) getOpenable();
+				//if (newElements.containsKey(openable)) {
+				if (closeParent && newElements.containsKey(openable)) {
+				// GROOVY end
 					openable.closeBuffer();
 				}
 				throw newNotPresentException();

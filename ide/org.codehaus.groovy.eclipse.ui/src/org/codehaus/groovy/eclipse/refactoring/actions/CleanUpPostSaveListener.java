@@ -1,94 +1,23 @@
-/*
- * Copyright 2009-2016 the original author or authors.
+/*******************************************************************************
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.filebuffers.FileBuffers;
-import org.eclipse.core.filebuffers.ITextFileBuffer;
-import org.eclipse.core.filebuffers.ITextFileBufferManager;
-import org.eclipse.core.filebuffers.LocationKind;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.preferences.DefaultScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
-import org.eclipse.jdt.internal.corext.fix.CleanUpPreferenceUtil;
-import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring;
-import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring.CleanUpChange;
-import org.eclipse.jdt.internal.corext.fix.FixMessages;
-import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
-import org.eclipse.jdt.internal.corext.util.Messages;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.actions.ActionUtil;
-import org.eclipse.jdt.internal.ui.dialogs.OptionalMessageDialog;
-import org.eclipse.jdt.internal.ui.fix.IMultiLineCleanUp.MultiLineCleanUpContext;
-import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
-import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
-import org.eclipse.jdt.internal.ui.preferences.BulletListBlock;
-import org.eclipse.jdt.internal.ui.preferences.SaveParticipantPreferencePage;
-import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jdt.ui.SharedASTProvider;
-import org.eclipse.jdt.ui.cleanup.CleanUpContext;
-import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
-import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
-import org.eclipse.jdt.ui.cleanup.ICleanUp;
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.BadPositionCategoryException;
-import org.eclipse.jface.text.DefaultPositionUpdater;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IDocumentExtension4;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.Position;
-import org.eclipse.jface.text.Region;
-import org.eclipse.jface.window.Window;
-import org.eclipse.ltk.core.refactoring.Change;
-import org.eclipse.ltk.core.refactoring.CompositeChange;
-import org.eclipse.ltk.core.refactoring.IRefactoringCoreStatusCodes;
-import org.eclipse.ltk.core.refactoring.IUndoManager;
-import org.eclipse.ltk.core.refactoring.NullChange;
-import org.eclipse.ltk.core.refactoring.PerformChangeOperation;
-import org.eclipse.ltk.core.refactoring.RefactoringCore;
-import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.eclipse.ltk.core.refactoring.TextFileChange;
-import org.eclipse.ltk.ui.refactoring.RefactoringUI;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -101,16 +30,86 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
+
+import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ProjectScope;
+
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
+
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
+
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.BadPositionCategoryException;
+import org.eclipse.jface.text.DefaultPositionUpdater;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentExtension4;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.Region;
+import org.eclipse.jface.window.Window;
+
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
+import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.IRefactoringCoreStatusCodes;
+import org.eclipse.ltk.core.refactoring.IUndoManager;
+import org.eclipse.ltk.core.refactoring.NullChange;
+import org.eclipse.ltk.core.refactoring.PerformChangeOperation;
+import org.eclipse.ltk.core.refactoring.RefactoringCore;
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
+import org.eclipse.ltk.ui.refactoring.RefactoringUI;
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.internal.corext.fix.*;
+import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring.CleanUpChange;
+import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
+import org.eclipse.jdt.internal.corext.util.Messages;
+
+import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jdt.ui.SharedASTProvider;
+import org.eclipse.jdt.ui.cleanup.CleanUpContext;
+import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
+import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
+import org.eclipse.jdt.ui.cleanup.ICleanUp;
+
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.actions.ActionUtil;
+import org.eclipse.jdt.internal.ui.dialogs.OptionalMessageDialog;
+import org.eclipse.jdt.internal.ui.fix.IMultiLineCleanUp.MultiLineCleanUpContext;
+import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
+import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
+import org.eclipse.jdt.internal.ui.preferences.BulletListBlock;
+import org.eclipse.jdt.internal.ui.preferences.SaveParticipantPreferencePage;
+
 /**
- * This is the original {@link org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener}
- * from JDT.  Changes marked with // Groovy Change
- *
- * @created Aug 17, 2009
+ * This is the original {@link org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener} from JDT with minor edits.
  */
 public class CleanUpPostSaveListener implements IPostSaveListener {
 
@@ -136,9 +135,6 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             return true;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public Change perform(IProgressMonitor pm) throws CoreException {
             if (isValid(pm).hasFatalError())
@@ -153,49 +149,101 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             try {
                 manager.connect(fFile.getFullPath(), LocationKind.IFILE, new SubProgressMonitor(pm, 1));
                 buffer= manager.getTextFileBuffer(fFile.getFullPath(), LocationKind.IFILE);
-                IDocument document= buffer.getDocument();
 
-                long oldFileValue= fFile.getModificationStamp();
-                long oldDocValue;
-                if (document instanceof IDocumentExtension4) {
-                    oldDocValue= ((IDocumentExtension4)document).getModificationStamp();
+                final IDocument document= buffer.getDocument();
+                final long oldFileValue= fFile.getModificationStamp();
+                final LinkedList<UndoEdit> undoEditCollector= new LinkedList<UndoEdit>();
+                final long[] oldDocValue= new long[1];
+                final boolean[] setContentStampSuccess= { false };
+
+                if (! buffer.isSynchronizationContextRequested()) {
+                    performEdit(document, oldFileValue, undoEditCollector, oldDocValue, setContentStampSuccess);
+
                 } else {
-                    oldDocValue= oldFileValue;
-                }
+                    ITextFileBufferManager fileBufferManager= FileBuffers.getTextFileBufferManager();
 
-                // perform the changes
-                LinkedList<UndoEdit> list= new LinkedList<UndoEdit>();
-                for (int index= 0; index < fUndos.length; index++) {
-                    UndoEdit edit= fUndos[index];
-                    UndoEdit redo= edit.apply(document, TextEdit.CREATE_UNDO);
-                    list.addFirst(redo);
-                }
+                    class UIRunnable implements Runnable {
+                        public boolean fDone;
+                        public Exception fException;
 
-                boolean stampSetted= false;
+                        public void run() {
+                            synchronized (this) {
+                                try {
+                                    performEdit(document, oldFileValue, undoEditCollector, oldDocValue, setContentStampSuccess);
+                                } catch (BadLocationException e) {
+                                    fException= e;
+                                } catch (MalformedTreeException e) {
+                                    fException= e;
+                                } catch (CoreException e) {
+                                    fException= e;
+                                } finally {
+                                    fDone= true;
+                                    notifyAll();
+                                }
+                            }
+                        }
+                    }
+                    UIRunnable runnable= new UIRunnable();
 
-                if (document instanceof IDocumentExtension4 && fDocumentStamp != IDocumentExtension4.UNKNOWN_MODIFICATION_STAMP) {
-                    try {
-                        ((IDocumentExtension4)document).replace(0, 0, "", fDocumentStamp); //$NON-NLS-1$
-                        stampSetted= true;
-                    } catch (BadLocationException e) {
-                        throw wrapBadLocationException(e);
+                    synchronized (runnable) {
+                        fileBufferManager.execute(runnable);
+                        while (! runnable.fDone) {
+                            try {
+                                runnable.wait(500);
+                            } catch (InterruptedException x) {
+                            }
+                        }
+                    }
+
+                    if (runnable.fException != null) {
+                        if (runnable.fException instanceof BadLocationException) {
+                            throw (BadLocationException) runnable.fException;
+                        } else if (runnable.fException instanceof MalformedTreeException) {
+                            throw (MalformedTreeException) runnable.fException;
+                        } else if (runnable.fException instanceof CoreException) {
+                            throw (CoreException) runnable.fException;
+                        }
                     }
                 }
 
                 buffer.commit(pm, false);
-                if (!stampSetted) {
+                if (!setContentStampSuccess[0]) {
                     fFile.revertModificationStamp(fFileStamp);
                 }
 
-                return new CleanUpSaveUndo(getName(), fFile, list.toArray(new UndoEdit[list.size()]), oldDocValue, oldFileValue);
+                return new CleanUpSaveUndo(getName(), fFile, undoEditCollector.toArray(new UndoEdit[undoEditCollector.size()]), oldDocValue[0], oldFileValue);
             } catch (BadLocationException e) {
                 throw wrapBadLocationException(e);
             } finally {
                 if (buffer != null)
                     manager.disconnect(fFile.getFullPath(), LocationKind.IFILE, new SubProgressMonitor(pm, 1));
-                // Groovy change
+                // GROOVY add
                 assertDocumentGreclipse1452(buffer);
-                // Groovy end
+                // GROOVY end
+            }
+        }
+
+        private void performEdit(IDocument document, long oldFileValue, LinkedList<UndoEdit> editCollector, long[] oldDocValue, boolean[] setContentStampSuccess) throws MalformedTreeException, BadLocationException, CoreException {
+            if (document instanceof IDocumentExtension4) {
+                oldDocValue[0]= ((IDocumentExtension4)document).getModificationStamp();
+            } else {
+                oldDocValue[0]= oldFileValue;
+            }
+
+            // perform the changes
+            for (int index= 0; index < fUndos.length; index++) {
+                UndoEdit edit= fUndos[index];
+                UndoEdit redo= edit.apply(document, TextEdit.CREATE_UNDO);
+                editCollector.addFirst(redo);
+            }
+
+            if (document instanceof IDocumentExtension4 && fDocumentStamp != IDocumentExtension4.UNKNOWN_MODIFICATION_STAMP) {
+                try {
+                    ((IDocumentExtension4)document).replace(0, 0, "", fDocumentStamp); //$NON-NLS-1$
+                    setContentStampSuccess[0]= true;
+                } catch (BadLocationException e) {
+                    throw wrapBadLocationException(e);
+                }
             }
         }
     }
@@ -211,9 +259,6 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             fCleanUpNames= cleanUpNames;
         }
 
-        /* (non-Javadoc)
-         * @see org.eclipse.jface.dialogs.IconAndMessageDialog#createMessageArea(org.eclipse.swt.widgets.Composite)
-         */
         @Override
         protected Control createMessageArea(Composite parent) {
             initializeDialogUnits(parent);
@@ -270,17 +315,11 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
     private static boolean FIRST_CALL= false;
     private static boolean FIRST_CALL_DONE= false;
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean needsChangedRegions(ICompilationUnit unit) throws CoreException {
         ICleanUp[] cleanUps= getCleanUps(unit.getJavaProject().getProject());
         return requiresChangedRegions(cleanUps);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void saved(ICompilationUnit unit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
         if (monitor == null)
             monitor= new NullProgressMonitor();
@@ -291,11 +330,13 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             if (!ActionUtil.isOnBuildPath(unit))
                 return;
 
-            // GROOVY Change do not perform any cleanups if not a Groovy project
+            // GROOVY add
+            // do not perform any cleanups if not a Groovy project
             IProject proj = unit.getJavaProject().getProject();
-            if (proj == null || !GroovyNature.hasGroovyNature(proj)) {
+            if (proj == null || !org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature(proj)) {
                 return;
             }
+            // GROOVY end
 
             ICleanUp[] cleanUps= getCleanUps(unit.getJavaProject().getProject());
 
@@ -370,7 +411,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                         change.setSaveMode(TextFileChange.LEAVE_DIRTY);
                         change.initializeValidationData(new NullProgressMonitor());
 
-                        PerformChangeOperation performChangeOperation= RefactoringUI.createUIAwareChangeOperation(change);
+                        PerformChangeOperation performChangeOperation= new PerformChangeOperation(change);
                         performChangeOperation.setSchedulingRule(unit.getSchedulingRule());
 
                         if (changedRegions != null && changedRegions.length > 0 && requiresChangedRegions(cleanUps)) {
@@ -402,15 +443,15 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         }
     }
 
-    // Groovy Change --- not static so methods called can be overrided
-    private ICleanUp[] getCleanUps(IProject project) throws CoreException {
+    // GROOVY edit
+    protected /*private static*/ ICleanUp[] getCleanUps(IProject project) throws CoreException {
         ICleanUp[] cleanUps;
         Map<String, String> settings= CleanUpPreferenceUtil.loadSaveParticipantOptions(new ProjectScope(project));
         if (settings == null) {
-            IEclipsePreferences contextNode= new InstanceScope().getNode(JavaUI.ID_PLUGIN);
+            IEclipsePreferences contextNode= InstanceScope.INSTANCE.getNode(JavaUI.ID_PLUGIN);
             String id= contextNode.get(CleanUpConstants.CLEANUP_ON_SAVE_PROFILE, null);
             if (id == null) {
-                id= new DefaultScope().getNode(JavaUI.ID_PLUGIN).get(CleanUpConstants.CLEANUP_ON_SAVE_PROFILE, CleanUpConstants.DEFAULT_SAVE_PARTICIPANT_PROFILE);
+                id= DefaultScope.INSTANCE.getNode(JavaUI.ID_PLUGIN).get(CleanUpConstants.CLEANUP_ON_SAVE_PROFILE, CleanUpConstants.DEFAULT_SAVE_PARTICIPANT_PROFILE);
             }
             throw new CoreException(new Status(IStatus.ERROR, JavaUI.ID_PLUGIN, Messages.format(FixMessages.CleanUpPostSaveListener_unknown_profile_error_message, id)));
         }
@@ -422,22 +463,18 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE));
             filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY));
             filteredSettins.put(CleanUpConstants.ORGANIZE_IMPORTS, settings.get(CleanUpConstants.ORGANIZE_IMPORTS));
-            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES));
-            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL));
-            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY));
 
             Set<String> ids= new HashSet<String>(2);
             ids.add("org.eclipse.jdt.ui.cleanup.format"); //$NON-NLS-1$
             ids.add("org.eclipse.jdt.ui.cleanup.imports"); //$NON-NLS-1$
-
             cleanUps= getCleanUps(filteredSettins, ids);
         }
 
         return cleanUps;
     }
 
-    // Groovy Change --- not static so can be overriden, also made protected
-    protected ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
+    // GROOVY edit
+    protected /*private static*/ ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
         ICleanUp[] result= JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
 
         for (int i= 0; i < result.length; i++) {
@@ -478,9 +515,9 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         } finally {
             if (buffer != null)
                 manager.disconnect(path, LocationKind.IFILE, new SubProgressMonitor(monitor, 1));
-            // Groovy change
+            // GROOVY add
             assertDocumentGreclipse1452(buffer);
-            // Groovy end
+            // GROOVY end
             monitor.done();
         }
     }
@@ -518,7 +555,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
                 performChangeOperation.run(new SubProgressMonitor(monitor, 5));
 
-                ArrayList<IRegion> result= new ArrayList<IRegion>();
+                ArrayList<Region> result= new ArrayList<Region>();
                 for (int i= 0; i < positions.length; i++) {
                     Position position= positions[i];
                     if (!position.isDeleted())
@@ -537,10 +574,9 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         } finally {
             if (buffer != null)
                 manager.disconnect(path, LocationKind.IFILE, new SubProgressMonitor(monitor, 1));
-            // Groovy change
+            // GROOVY add
             assertDocumentGreclipse1452(buffer);
-            // Groovy end
-
+            // GROOVY end
             monitor.done();
         }
     }
@@ -588,7 +624,8 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
         Map<String, String> projectOptions= project.getOptions(true);
 
-        for (String key : cleanUpOptions.keySet()) {
+        for (Iterator<String> iterator= cleanUpOptions.keySet().iterator(); iterator.hasNext();) {
+            String key= iterator.next();
             String projectOption= projectOptions.get(key);
             String cleanUpOption= cleanUpOptions.get(key);
             if (!strongerEquals(projectOption, cleanUpOption))
@@ -611,16 +648,10 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getName() {
         return FixMessages.CleanUpPostSaveListener_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getId() {
         return POSTSAVELISTENER_ID;
     }
@@ -642,7 +673,8 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
     private void showSlowCleanUpsWarning(HashSet<ICleanUp> slowCleanUps) {
 
         final StringBuffer cleanUpNames= new StringBuffer();
-        for (ICleanUp cleanUp : slowCleanUps) {
+        for (Iterator<ICleanUp> iterator= slowCleanUps.iterator(); iterator.hasNext();) {
+            ICleanUp cleanUp= iterator.next();
             String[] descriptions= cleanUp.getStepDescriptions();
             if (descriptions != null) {
                 for (int i= 0; i < descriptions.length; i++) {
@@ -672,21 +704,21 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         }
     }
 
-    // Groovy change
+    // GROOVY add
     /**
      * GRECLIPSE-1452
      * Check the validity of the document and log error if there's a problem
      * @param buffer
      * @throws BadPositionCategoryException
      */
-    static void assertDocumentGreclipse1452(ITextFileBuffer buffer)  {
+    private static void assertDocumentGreclipse1452(ITextFileBuffer buffer) {
         if (buffer != null) {
             try {
                 buffer.getDocument().getPositions(IDocument.DEFAULT_CATEGORY);
             } catch (BadPositionCategoryException e) {
-                GroovyCore.logException("GRECLIPSE-1452: Problem found in file. " + buffer.getLocation(), e);
+                org.codehaus.groovy.eclipse.core.GroovyCore.logException("GRECLIPSE-1452: Problem found in file. " + buffer.getLocation(), e);
             }
         }
     }
-    // Groovy end
+    // GROOVY end
 }

@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.CompilationUnitProblemFinder;
 import org.eclipse.jdt.internal.core.JavaElementDelta;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -46,11 +47,11 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
         this.workingCopyOwner = workingCopyOwner;
     }
 
-    // Copied from Super
-    /*
-     * Makes the given working copy consistent, computes the delta and computes an AST if needed. Returns the AST.
+    /**
+     * Makes the given working copy consistent, computes the delta and computes an AST if needed.
+     * Returns the AST.
      */
-    public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(org.eclipse.jdt.internal.core.CompilationUnit workingCopy)
+    public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(CompilationUnit workingCopy)
             throws JavaModelException {
         if (!workingCopy.isConsistent()) {
             // make working copy consistent
@@ -69,7 +70,7 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
         CompilationUnitDeclaration unit = null;
         try {
             JavaModelManager.getJavaModelManager().abortOnMissingSource.set(Boolean.TRUE);
-            org.eclipse.jdt.internal.core.CompilationUnit source = workingCopy.cloneCachingContents();
+            CompilationUnit source = workingCopy.cloneCachingContents();
             // find problems if needed
             if (JavaProject.hasJavaNature(workingCopy.getJavaProject().getProject())
                     && (this.reconcileFlags & ICompilationUnit.FORCE_PROBLEM_DETECTION) != 0) {
@@ -94,7 +95,7 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
 
             // create AST if needed
             if (this.astLevel != ICompilationUnit.NO_AST
-                && unit != null/*unit is null if working copy is consistent && (problem detection not forced || non-Java project) -> don't create AST as per API*/) {
+                    && unit != null /*unit is null if working copy is consistent && (problem detection not forced || non-Java project) -> don't create AST as per API*/) {
                 Map<String, String> options = workingCopy.getJavaProject().getOptions(true);
                 // convert AST
                 this.ast =
