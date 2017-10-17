@@ -1114,7 +1114,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, isAtLeastGroovy(22) ? "" :
+        runNegativeTest(sources, isAtLeastGroovy(21) ? "" :
             "----------\n" +
             "1. ERROR in BridgeMethod.groovy (at line 3)\n" +
             "\tif (integer.compareTo(0) == 0)\n" +

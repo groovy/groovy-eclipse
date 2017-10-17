@@ -1,15 +1,16 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyLexer.java"$
 
 package org.codehaus.groovy.antlr.parser;
-import org.codehaus.groovy.antlr.*;
+
+import java.io.*;
 import java.util.*;
-import java.io.InputStream;
-import java.io.Reader;
+
+import groovyjarjarantlr.CommonToken;
 import groovyjarjarantlr.InputBuffer;
 import groovyjarjarantlr.LexerSharedInputState;
-import groovyjarjarantlr.CommonToken;
-import org.codehaus.groovy.GroovyBugError;
 import groovyjarjarantlr.TokenStreamRecognitionException;
+
+import org.codehaus.groovy.antlr.*;
 import org.codehaus.groovy.ast.Comment;
 
 import java.io.InputStream;
@@ -1744,9 +1745,7 @@ tryAgain:
 		
 		match("//");
 		if ( inputState.guessing==0 ) {
-			if (parser!=null) {
-			parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
-			
+			if (parser != null) parser.startComment(inputState.getLine(), inputState.getColumn() - 2);
 		}
 		{
 		_loop676:
@@ -1763,9 +1762,8 @@ tryAgain:
 		} while (true);
 		}
 		if ( inputState.guessing==0 ) {
-			if (parser!=null) {
-			parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
-			}
+			if (parser != null) parser.endComment(0, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
+			// GRECLIPSE end
 			if (!whitespaceIncluded)  _ttype = Token.SKIP;
 			
 		}
@@ -1783,7 +1781,7 @@ tryAgain:
 		
 		match("/*");
 		if ( inputState.guessing==0 ) {
-			if (parser!=null) { parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+			if (parser != null) parser.startComment(inputState.getLine(), inputState.getColumn() - 2);
 		}
 		{
 		_loop686:
@@ -1824,10 +1822,7 @@ inputState.guessing--;
 		}
 		match("*/");
 		if ( inputState.guessing==0 ) {
-			
-			if (parser!=null) {
-			parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
-			}
+			if (parser != null) parser.endComment(1, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
 			if (!whitespaceIncluded)  _ttype = Token.SKIP;
 			
 		}

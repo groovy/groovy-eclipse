@@ -547,7 +547,7 @@ tokens {
     private void dump(AST node, String offset) {
         System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
     }
-    
+
     private String getTokenName(AST node) {
         if (node == null) return "null";
         return getTokenName(node.getType());
@@ -635,7 +635,6 @@ snippetUnit
 // Package statement: optional annotations followed by "package" then the package identifier.
 packageDefinition
         {Token first = LT(1);}
-        //TODO? options {defaultErrorHandler = true;} // let ANTLR handle errors
     // GRECLIPSE edit
     //:   an:annotationsOpt! "package"! id:identifier!
     //    {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
@@ -1188,6 +1187,23 @@ annotationMemberValuePair!  {Token first = LT(1);}
     //:   i:annotationIdent ASSIGN! nls! v:annotationMemberValueInitializer
     :   i:annotationIdent ASSIGN! nls! ( v:annotationMemberValueInitializer )?
             {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);}
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // finish invalid member-value pair if the closing parenthesis is next
+            if (LT(1).getType() == RPAREN) {
+                reportError(e);
+                if (#i == null) {
+                    String ident = "?";
+                    Token itkn = new Token(IDENT, ident);
+                    #i = #(create(IDENT, ident, itkn, itkn));
+                }
+                #annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 annotationIdent
@@ -1395,7 +1411,7 @@ classBlock  {Token first = LT(1);}
             #classBlock = #(create(OBJBLOCK,"OBJBLOCK",first,LT(1)),#classBlock);
             currentAST.root = #classBlock;
             currentAST.child = #classBlock != null && #classBlock.getFirstChild() != null ? #classBlock.getFirstChild() : #classBlock;
-            currentAST.advanceChildToEnd(); 
+            currentAST.advanceChildToEnd();
         }
         // GRECLIPSE end
     ;

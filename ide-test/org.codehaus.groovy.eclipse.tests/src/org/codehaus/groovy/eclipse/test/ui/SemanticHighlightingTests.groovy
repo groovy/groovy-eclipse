@@ -1485,7 +1485,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock6() {
-        assumeTrue(isAtLeastGroovy(20))
+        assumeTrue(isAtLeastGroovy(24))
 
         String contents = '''\
             @groovy.transform.CompileStatic

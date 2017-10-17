@@ -511,7 +511,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     private void dump(AST node, String offset) {
         System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
     }
-    
+
     private String getTokenName(AST node) {
         if (node == null) return "null";
         return getTokenName(node.getType());
@@ -4814,69 +4814,91 @@ inputState.guessing--;
         AST v_AST = null;
         Token first = LT(1);
         
-        annotationIdent();
-        i_AST = (AST)returnAST;
-        match(ASSIGN);
-        nls();
-        {
-        switch ( LA(1)) {
-        case LBRACK:
-        case IDENT:
-        case STRING_LITERAL:
-        case LPAREN:
-        case AT:
-        case LITERAL_super:
-        case LITERAL_void:
-        case LITERAL_boolean:
-        case LITERAL_byte:
-        case LITERAL_char:
-        case LITERAL_short:
-        case LITERAL_int:
-        case LITERAL_float:
-        case LITERAL_long:
-        case LITERAL_double:
-        case LCURLY:
-        case LITERAL_this:
-        case PLUS:
-        case MINUS:
-        case LITERAL_false:
-        case LITERAL_new:
-        case LITERAL_null:
-        case LITERAL_true:
-        case INC:
-        case DEC:
-        case BNOT:
-        case LNOT:
-        case STRING_CTOR_START:
-        case NUM_INT:
-        case NUM_FLOAT:
-        case NUM_LONG:
-        case NUM_DOUBLE:
-        case NUM_BIG_INT:
-        case NUM_BIG_DECIMAL:
-        {
-            annotationMemberValueInitializer();
-            v_AST = (AST)returnAST;
-            break;
+        try {      // for error handling
+            annotationIdent();
+            i_AST = (AST)returnAST;
+            match(ASSIGN);
+            nls();
+            {
+            switch ( LA(1)) {
+            case LBRACK:
+            case IDENT:
+            case STRING_LITERAL:
+            case LPAREN:
+            case AT:
+            case LITERAL_super:
+            case LITERAL_void:
+            case LITERAL_boolean:
+            case LITERAL_byte:
+            case LITERAL_char:
+            case LITERAL_short:
+            case LITERAL_int:
+            case LITERAL_float:
+            case LITERAL_long:
+            case LITERAL_double:
+            case LCURLY:
+            case LITERAL_this:
+            case PLUS:
+            case MINUS:
+            case LITERAL_false:
+            case LITERAL_new:
+            case LITERAL_null:
+            case LITERAL_true:
+            case INC:
+            case DEC:
+            case BNOT:
+            case LNOT:
+            case STRING_CTOR_START:
+            case NUM_INT:
+            case NUM_FLOAT:
+            case NUM_LONG:
+            case NUM_DOUBLE:
+            case NUM_BIG_INT:
+            case NUM_BIG_DECIMAL:
+            {
+                annotationMemberValueInitializer();
+                v_AST = (AST)returnAST;
+                break;
+            }
+            case COMMA:
+            case RPAREN:
+            {
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
+            if ( inputState.guessing==0 ) {
+                annotationMemberValuePair_AST = (AST)currentAST.root;
+                annotationMemberValuePair_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1))).add(i_AST).add(v_AST));
+                currentAST.root = annotationMemberValuePair_AST;
+                currentAST.child = annotationMemberValuePair_AST!=null &&annotationMemberValuePair_AST.getFirstChild()!=null ?
+                    annotationMemberValuePair_AST.getFirstChild() : annotationMemberValuePair_AST;
+                currentAST.advanceChildToEnd();
+            }
         }
-        case COMMA:
-        case RPAREN:
-        {
-            break;
-        }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        if ( inputState.guessing==0 ) {
-            annotationMemberValuePair_AST = (AST)currentAST.root;
-            annotationMemberValuePair_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1))).add(i_AST).add(v_AST));
-            currentAST.root = annotationMemberValuePair_AST;
-            currentAST.child = annotationMemberValuePair_AST!=null &&annotationMemberValuePair_AST.getFirstChild()!=null ?
-                annotationMemberValuePair_AST.getFirstChild() : annotationMemberValuePair_AST;
-            currentAST.advanceChildToEnd();
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                // finish invalid member-value pair if the closing parenthesis is next
+                if (LT(1).getType() == RPAREN) {
+                reportError(e);
+                if (i_AST == null) {
+                String ident = "?";
+                Token itkn = new Token(IDENT, ident);
+                i_AST = (AST)astFactory.make( (new ASTArray(1)).add(create(IDENT,ident,itkn,itkn)));
+                }
+                annotationMemberValuePair_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1))).add(i_AST).add(v_AST));
+                } else {
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
         }
         returnAST = annotationMemberValuePair_AST;
     }
@@ -5653,7 +5675,7 @@ inputState.guessing--;
                 classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
                 currentAST.root = classBlock_AST;
                 currentAST.child = classBlock_AST != null && classBlock_AST.getFirstChild() != null ? classBlock_AST.getFirstChild() : classBlock_AST;
-                currentAST.advanceChildToEnd(); 
+                currentAST.advanceChildToEnd();
                 
             } else {
                 throw e;

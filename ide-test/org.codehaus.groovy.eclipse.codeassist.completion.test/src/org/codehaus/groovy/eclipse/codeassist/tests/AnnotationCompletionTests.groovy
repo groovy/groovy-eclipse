@@ -81,10 +81,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testAnno2a() { // checks camel case matching
+    void testAnno2a() {
         assumeTrue(isAtLeastGroovy(21))
         String contents = '@ComDyn class Foo { }'
-        def proposals = getProposals(contents, '@ComDyn')
+        def proposals = getProposals(contents, '@ComDyn') // check camel case matching
         assertThat(proposals).includes('CompileDynamic').hasSize(1, 'Only @CompileDynamic should have been proposed\n')
     }
 
@@ -170,6 +170,29 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         assertThat(proposals).includes('one', 'two')
     }
 
+    @Test
+    void testAnnoAttr3() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface Anno {
+              String one();
+              String two();
+            }
+            ''', 'Anno', 'p'
+
+        String contents = '''\
+            import p.Anno
+            @Anno(one=null,)
+            class Something {
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, ',')
+
+        assertThat(proposals).excludes('one').includes('two')
+    }
+
     //--------------------------------------------------------------------------
 
     // create an internal DSL similar to AssertJ
@@ -192,7 +215,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         return exp
     }
 
-    // create a slightly simpler interface for initiating content assist
+    // provides a slightly simpler interface for initiating content assist
     private ICompletionProposal[] getProposals(CharSequence contents, String target) {
         createProposalsAtOffset(contents, getIndexOf(contents, target))
     }

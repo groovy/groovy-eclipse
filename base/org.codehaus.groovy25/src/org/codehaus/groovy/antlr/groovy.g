@@ -1152,6 +1152,23 @@ annotationMemberValuePair!  {Token first = LT(1);}
     //:   i:annotationIdent ASSIGN! nls! v:annotationMemberValueInitializer
     :   i:annotationIdent ASSIGN! nls! ( v:annotationMemberValueInitializer )?
             {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);}
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // finish invalid member-value pair if the closing parenthesis is next
+            if (LT(1).getType() == RPAREN) {
+                reportError(e);
+                if (#i == null) {
+                    String ident = "?";
+                    Token itkn = new Token(IDENT, ident);
+                    #i = #(create(IDENT, ident, itkn, itkn));
+                }
+                #annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 annotationIdent

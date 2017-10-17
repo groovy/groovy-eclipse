@@ -1472,7 +1472,7 @@ assert primaryExprType != null && dependentExprType != null;
             Tuple callParamTypes = dependentDeclarationStack.removeLast();
 
             // try to set Closure generics
-            if (!primaryTypeStack.isEmpty() && callParamTypes.declaration != null) {
+            if (!primaryTypeStack.isEmpty() && callParamTypes.declaration instanceof MethodNode) {
                 GroovyUtils.updateClosureWithInferredTypes(primaryTypeStack.getLast(),
                     returnType, ((MethodNode) callParamTypes.declaration).getParameters());
             }

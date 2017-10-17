@@ -516,11 +516,11 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		boolean hadTemporaryCache = manager.hasTemporaryCache();
 		try {
+			HashMap newElements = manager.getTemporaryCache();
 			// GROOVY add
 			Openable openable = (Openable) getOpenable();
 			boolean closeParent = !(newElements.containsKey(openable) && openable.isOpen());
 			// GROOVY end
-			HashMap newElements = manager.getTemporaryCache();
 			generateInfos(info, newElements, monitor);
 			if (info == null) {
 				info = newElements.get(this);

@@ -86,7 +86,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testClassReference10() {
         String contents = "String.getClass()"; // same as "(String.class).getClass()"
         int start = contents.indexOf("getClass"), until = start + "getClass".length();
-        assertType(contents, start, until, isAtLeastGroovy(24) ? "java.lang.Class<?>" : "java.lang.Class<? extends java.lang.Object>");
+        assertType(contents, start, until, isAtLeastGroovy(21) ? "java.lang.Class<?>" : "java.lang.Class<? extends java.lang.Object>");
     }
 
     //

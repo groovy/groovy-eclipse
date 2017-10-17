@@ -291,6 +291,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethod6() {
+        assumeTrue(isAtLeastGroovy(23))
         String contents = '''\
             @groovy.transform.Sortable
             class Foo {

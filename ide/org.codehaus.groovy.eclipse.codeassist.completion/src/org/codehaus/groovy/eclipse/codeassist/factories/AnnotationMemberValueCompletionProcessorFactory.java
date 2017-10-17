@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,13 @@ package org.codehaus.groovy.eclipse.codeassist.factories;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.processors.AbstractGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
@@ -29,6 +32,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -64,12 +68,22 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
             }
 
             protected void generateAnnotationAttributeProposals(List<ICompletionProposal> proposals) {
+                ContentAssistContext context = getContext();
+                AnnotationNode annotation = (AnnotationNode) context.containingCodeBlock;
+
+                Set<String> currentMembers = annotation.getMembers().keySet();
+                if (isCompletionExpressionBeneathValueExpression(annotation)) {
+                    currentMembers = new HashSet<String>(currentMembers);
+                    currentMembers.remove("value");
+                }
+
+                // generate member proposals by looking for method proposals
                 MethodProposalCreator mpc = new MethodProposalCreator();
-                mpc.setCurrentScope(getContext().currentScope);
+                mpc.setCurrentScope(context.currentScope);
                 List<IGroovyProposal> candidates = mpc.findAllProposals(
-                    ((AnnotationNode) getContext().containingCodeBlock).getClassNode(),
-                    Collections.<ClassNode>emptySet(),
-                    getContext().completionExpression,
+                    annotation.getClassNode(),
+                    Collections.<ClassNode>emptySet(), // no categories
+                    context.completionExpression,
                     false, // isStatic
                     true); // isPrimary
 
@@ -77,11 +91,34 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     if (candidate instanceof GroovyMethodProposal) {
                         GroovyMethodProposal gmp = (GroovyMethodProposal) candidate;
                         String src = gmp.getMethod().getDeclaringClass().getName();
-                        if (!src.equals("java.lang.Object") && !src.equals("java.lang.annotation.Annotation")) {
-                            proposals.add(gmp.createJavaProposal(getContext(), getJavaContext()));
+                        // screen for members of Annotation, Object, or existing member-value pairs
+                        if (!src.equals("java.lang.Object") && !src.equals("java.lang.annotation.Annotation") && !currentMembers.contains(gmp.getMethod().getName())) {
+                            proposals.add(gmp.createJavaProposal(context, getJavaContext()));
                         }
                     }
                 }
+            }
+
+            /**
+             * If only one expression exists for annotation, "value" member can be implicit.
+             */
+            protected final boolean isCompletionExpressionBeneathValueExpression(AnnotationNode annotation) {
+                final boolean[] result = new boolean[1];
+
+                Expression valueExpression = annotation.getMember("value");
+                if (valueExpression != null && annotation.getMembers().keySet().size() == 1) {
+                    valueExpression.visit(new DepthFirstVisitor() {
+                        @Override
+                        protected void visitExpression(Expression expression) {
+                            if (expression == getContext().completionNode) {
+                                result[0] = true;
+                            }
+                            super.visitExpression(expression);
+                        }
+                    });
+                }
+
+                return result[0];
             }
         };
     }

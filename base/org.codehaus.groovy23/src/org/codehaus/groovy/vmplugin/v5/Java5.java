@@ -148,10 +148,12 @@ public class Java5 implements VMPlugin {
         //TODO: more than one lower bound for wildcards?
         ClassNode[] lowers = configureTypes(wildcardType.getLowerBounds());
         ClassNode lower = null;
-        // TODO: is it safe to remove this? What was the original intention?
         if (lowers != null) lower = lowers[0];
 
-        ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
+        // GRECLIPSE edit -- want <?> like JDT does, not <? extends Object>
+        //ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
+        ClassNode[] upper = wildcardType.toString().equals("?") ? null : configureTypes(wildcardType.getUpperBounds());
+        // GRECLIPSE end
         GenericsType t = new GenericsType(base, upper, lower);
         t.setWildcard(true);
 
@@ -213,9 +215,9 @@ public class Java5 implements VMPlugin {
     private void configureAnnotationFromDefinition(AnnotationNode definition, AnnotationNode root) {
         ClassNode type = definition.getClassNode();
         if (!type.isResolved()) return;
-        // GRECLIPSE: start
+        // GRECLIPSE add
         if (type.hasClass()) {
-        // end
+        // GRECLIPSE end
         Class clazz = type.getTypeClass();
         if (clazz == Retention.class) {
             Expression exp = definition.getMember("value");
@@ -238,33 +240,32 @@ public class Java5 implements VMPlugin {
             }
             root.setAllowedTargets(bitmap);
         }
-        // GRECLIPSE: start
+        // GRECLIPSE add
         } else {
-        	String typename = type.getName();
-        	if (typename.equals("java.lang.annotation.Retention")) {
-	            Expression exp = definition.getMember("value");
-	            if (!(exp instanceof PropertyExpression)) return;
-	            PropertyExpression pe = (PropertyExpression) exp;
-	            String name = pe.getPropertyAsString();
-	            RetentionPolicy policy = RetentionPolicy.valueOf(name);
-	            setRetentionPolicy(policy,root);        		
-        	} else if (typename.equals("java.lang.annotation.Target")) {
-        		Expression exp = definition.getMember("value");
- 	            if (!(exp instanceof ListExpression)) return;
- 	            ListExpression le = (ListExpression) exp;
- 	            int bitmap = 0;
- 	            for (Expression expression: le.getExpressions()) {
- 	                if (!(expression instanceof PropertyExpression)) return;
-
- 	                PropertyExpression element = (PropertyExpression)expression;
- 	                String name = element.getPropertyAsString();
- 	                ElementType value = ElementType.valueOf(name);
- 	                bitmap |= getElementCode(value);
- 	            }
- 	            root.setAllowedTargets(bitmap);
-        	}
+            String typename = type.getName();
+            if (typename.equals("java.lang.annotation.Retention")) {
+                Expression exp = definition.getMember("value");
+                if (!(exp instanceof PropertyExpression)) return;
+                PropertyExpression pe = (PropertyExpression) exp;
+                String name = pe.getPropertyAsString();
+                RetentionPolicy policy = RetentionPolicy.valueOf(name);
+                setRetentionPolicy(policy,root);
+            } else if (typename.equals("java.lang.annotation.Target")) {
+                Expression exp = definition.getMember("value");
+                if (!(exp instanceof ListExpression)) return;
+                ListExpression le = (ListExpression) exp;
+                int bitmap = 0;
+                for (Expression expression: le.getExpressions()) {
+                    if (!(expression instanceof PropertyExpression)) return;
+                    PropertyExpression element = (PropertyExpression)expression;
+                    String name = element.getPropertyAsString();
+                    ElementType value = ElementType.valueOf(name);
+                    bitmap |= getElementCode(value);
+                }
+                root.setAllowedTargets(bitmap);
+            }
         }
-        // end
+        // GRECLIPSE end
     }
 
     public void configureAnnotation(AnnotationNode node) {
@@ -382,47 +383,47 @@ public class Java5 implements VMPlugin {
 
     public void configureClassNode(CompileUnit compileUnit, ClassNode classNode) {
         try {
-	        Class clazz = classNode.getTypeClass();
-	        Field[] fields = clazz.getDeclaredFields();
-	        for (Field f : fields) {
-		            ClassNode ret = makeClassNode(compileUnit, f.getGenericType(), f.getType());
-		            FieldNode fn = new FieldNode(f.getName(), f.getModifiers(), ret, classNode, null);
-		            setAnnotationMetaData(f.getAnnotations(), fn);
-		            classNode.addField(fn);
-	        }
-	        Method[] methods = clazz.getDeclaredMethods();
-	        for (Method m : methods) {
-	            ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
-	            Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
-	            ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
-	            MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
-	            mn.setSynthetic(m.isSynthetic());
-	            setMethodDefaultValue(mn, m);
-	            setAnnotationMetaData(m.getAnnotations(), mn);
-	            mn.setGenericsTypes(configureTypeVariable(m.getTypeParameters()));
-	            classNode.addMethod(mn);
-	        }
-	        Constructor[] constructors = clazz.getDeclaredConstructors();
-	        for (Constructor ctor : constructors) {
-	            Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), ctor.getParameterAnnotations());
-	            ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
-	            classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
-	        }
-	
-	        Class sc = clazz.getSuperclass();
-	        if (sc != null) classNode.setUnresolvedSuperClass(makeClassNode(compileUnit, clazz.getGenericSuperclass(), sc));
-	        makeInterfaceTypes(compileUnit, classNode, clazz);
-	        setAnnotationMetaData(classNode.getTypeClass().getAnnotations(), classNode);
-	
-	        PackageNode packageNode = classNode.getPackage();
-	        if (packageNode != null) {
-	            setAnnotationMetaData(classNode.getTypeClass().getPackage().getAnnotations(), packageNode);
-	        }
+            Class clazz = classNode.getTypeClass();
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field f : fields) {
+                ClassNode ret = makeClassNode(compileUnit, f.getGenericType(), f.getType());
+                FieldNode fn = new FieldNode(f.getName(), f.getModifiers(), ret, classNode, null);
+                setAnnotationMetaData(f.getAnnotations(), fn);
+                classNode.addField(fn);
+            }
+            Method[] methods = clazz.getDeclaredMethods();
+            for (Method m : methods) {
+                ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
+                Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
+                ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
+                MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
+                mn.setSynthetic(m.isSynthetic());
+                setMethodDefaultValue(mn, m);
+                setAnnotationMetaData(m.getAnnotations(), mn);
+                mn.setGenericsTypes(configureTypeVariable(m.getTypeParameters()));
+                classNode.addMethod(mn);
+            }
+            Constructor[] constructors = clazz.getDeclaredConstructors();
+            for (Constructor ctor : constructors) {
+                Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), ctor.getParameterAnnotations());
+                ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
+                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+            }
+
+            Class sc = clazz.getSuperclass();
+            if (sc != null) classNode.setUnresolvedSuperClass(makeClassNode(compileUnit, clazz.getGenericSuperclass(), sc));
+            makeInterfaceTypes(compileUnit, classNode, clazz);
+            setAnnotationMetaData(classNode.getTypeClass().getAnnotations(), classNode);
+
+            PackageNode packageNode = classNode.getPackage();
+            if (packageNode != null) {
+                setAnnotationMetaData(classNode.getTypeClass().getPackage().getAnnotations(), packageNode);
+            }
         } catch (NoClassDefFoundError e) {
             throw new NoClassDefFoundError("Unable to load class "+classNode.toString(false)+" due to missing dependency "+e.getMessage());
         }
     }
-    
+
     private void makeInterfaceTypes(CompileUnit cu, ClassNode classNode, Class clazz) {
         Type[] interfaceTypes = clazz.getGenericInterfaces();
         if (interfaceTypes.length == 0) {
@@ -439,7 +440,7 @@ public class Java5 implements VMPlugin {
                                 " with generic interface "+interfaceTypes[i]+" to a class.");
                     }
                     type = t2;
-            }
+                }
                 ret[i] = makeClassNode(cu, interfaceTypes[i], (Class) type);
             }
             classNode.setInterfaces(ret);

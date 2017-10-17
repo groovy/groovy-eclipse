@@ -146,7 +146,10 @@ public class Java5 implements VMPlugin {
         ClassNode lower = null;
         if (lowers != null) lower = lowers[0];
 
-        ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
+        // GRECLIPSE edit -- want <?> like JDT does, not <? extends Object>
+        //ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
+        ClassNode[] upper = wildcardType.toString().equals("?") ? null : configureTypes(wildcardType.getUpperBounds());
+        // GRECLIPSE end
         GenericsType t = new GenericsType(base, upper, lower);
         t.setWildcard(true);
 
@@ -208,9 +211,9 @@ public class Java5 implements VMPlugin {
     private void configureAnnotationFromDefinition(AnnotationNode definition, AnnotationNode root) {
         ClassNode type = definition.getClassNode();
         if (!type.isResolved()) return;
-        // GRECLIPSE: start
+        // GRECLIPSE add
         if (type.hasClass()) {
-        // end
+        // GRECLIPSE end
         Class clazz = type.getTypeClass();
         if (clazz == Retention.class) {
             Expression exp = definition.getMember("value");
@@ -232,31 +235,31 @@ public class Java5 implements VMPlugin {
             }
             root.setAllowedTargets(bitmap);
         }
-        // GRECLIPSE: start
+        // GRECLIPSE add
         } else {
-        	String typename = type.getName();
-        	if (typename.equals("java.lang.annotation.Retention")) {
-	            Expression exp = definition.getMember("value");
-	            if (!(exp instanceof PropertyExpression)) return;
-	            PropertyExpression pe = (PropertyExpression) exp;
-	            String name = pe.getPropertyAsString();
-	            RetentionPolicy policy = RetentionPolicy.valueOf(name);
-	            setRetentionPolicy(policy,root);        		
-        	} else if (typename.equals("java.lang.annotation.Target")) {
-        		Expression exp = definition.getMember("value");
- 	            if (!(exp instanceof ListExpression)) return;
- 	            ListExpression le = (ListExpression) exp;
- 	            int bitmap = 0;
- 	            for (Expression expression: le.getExpressions()) {
- 	                PropertyExpression element = (PropertyExpression)expression;
- 	                String name = element.getPropertyAsString();
- 	                ElementType value = ElementType.valueOf(name);
- 	                bitmap |= getElementCode(value);
- 	            }
- 	            root.setAllowedTargets(bitmap);
-        	}
+            String typename = type.getName();
+            if (typename.equals("java.lang.annotation.Retention")) {
+                Expression exp = definition.getMember("value");
+                if (!(exp instanceof PropertyExpression)) return;
+                PropertyExpression pe = (PropertyExpression) exp;
+                String name = pe.getPropertyAsString();
+                RetentionPolicy policy = RetentionPolicy.valueOf(name);
+                setRetentionPolicy(policy,root);
+            } else if (typename.equals("java.lang.annotation.Target")) {
+                Expression exp = definition.getMember("value");
+                if (!(exp instanceof ListExpression)) return;
+                ListExpression le = (ListExpression) exp;
+                int bitmap = 0;
+                for (Expression expression: le.getExpressions()) {
+                    PropertyExpression element = (PropertyExpression)expression;
+                    String name = element.getPropertyAsString();
+                    ElementType value = ElementType.valueOf(name);
+                    bitmap |= getElementCode(value);
+                }
+                root.setAllowedTargets(bitmap);
+            }
         }
-        // end
+        // GRECLIPSE end
     }
 
     public void configureAnnotation(AnnotationNode node) {
@@ -286,8 +289,7 @@ public class Java5 implements VMPlugin {
                         new ClassExpression(ClassHelper.ELEMENT_TYPE_TYPE), element.name()));
             }
             node.setMember("value", elementExprs);
-        }
-        else {
+        } else {
             Method[] declaredMethods = type.getDeclaredMethods();
             for (Method declaredMethod : declaredMethods) {
                 try {
