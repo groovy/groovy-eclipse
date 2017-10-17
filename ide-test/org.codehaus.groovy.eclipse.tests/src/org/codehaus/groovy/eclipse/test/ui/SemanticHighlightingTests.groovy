@@ -60,7 +60,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testScriptFields1() {
+    void testScriptFields() {
         String contents = '''\
             @groovy.transform.Field List list = [1, 2]
             list << 'three'
@@ -359,6 +359,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL))
+    }
+
+    @Test
+    void testDefaultGroovyMethods3() {
+        String contents = '''\
+            class Foo {
+              static {
+                getAt("staticProperty")
+              }
+              Foo() {
+                getAt("instanceProperty")
+              }
+              def m() {
+                println "message of importance"
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo()'), 3, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('m() {'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('getAt'), 5, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('getAt'), 5, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('println'), 7, GROOVY_CALL))
     }
 
     @Test
@@ -922,7 +946,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnoElems1() {
+    void testAnnoElems() {
         String contents = '''\
             @Grab( module = 'something:anything' )
             import groovy.transform.*
