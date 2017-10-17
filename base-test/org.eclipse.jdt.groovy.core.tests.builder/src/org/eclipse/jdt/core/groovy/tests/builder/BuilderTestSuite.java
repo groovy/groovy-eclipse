@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.activator.GroovyActivator;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
@@ -157,7 +158,7 @@ public abstract class BuilderTestSuite {
         TestVerifier verifier = new TestVerifier(false);
         verifier.execute(className, classpath.toArray(new String[classpath.size()]));
 
-        String actualError = verifier.getExecutionError().replace("\r", "");
+        String actualError = DefaultGroovyMethods.normalize(verifier.getExecutionError());
         if (expectedError == null && actualError.length() != 0) {
             if (actualError.trim().endsWith(
                 "WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
@@ -178,7 +179,7 @@ public abstract class BuilderTestSuite {
             System.out.println("OUTPUT\n");
             System.out.println(org.eclipse.jdt.core.tests.util.Util.displayString(actualOutput));
         }
-        actualOutput = actualOutput.replace("\r", "");
+        actualOutput = DefaultGroovyMethods.normalize(actualOutput);
         Assert.assertTrue("unexpected output.\nExpected:\n" + expectingOutput + "\nActual:\n" + actualOutput, actualOutput.indexOf(expectingOutput) != -1);
     }
 

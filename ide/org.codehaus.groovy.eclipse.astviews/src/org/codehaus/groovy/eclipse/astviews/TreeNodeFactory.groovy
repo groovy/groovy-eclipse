@@ -33,7 +33,7 @@ import org.codehaus.groovy.ast.ASTNode
 
     private static final Object NULL_VALUE = new Object()
 
-    static ITreeNode createTreeNode(ITreeNode parent, Object value, String displayName) {
+    @PackageScope static ITreeNode createTreeNode(ITreeNode parent, Object value, String displayName) {
         if (value == null) {
             value = NULL_VALUE
         }
@@ -62,11 +62,11 @@ import org.codehaus.groovy.ast.ASTNode
 }
 
 @PackageScope class StringUtil {
-    static String toString(Object obj) {
+    @PackageScope static String toString(Object obj) {
         return obj.toString()
     }
 
-    static String toString(Class cls) {
+    @PackageScope static String toString(Class cls) {
         // If o is Integer, then Integer.toString() tries to call either of the static toString() methods of Integer.
         // There may be other classes with static toString(args) methods. This is the same code as in Class.toString().
         return (cls.isInterface() ? 'interface ' : (cls.isPrimitive() ? '' : 'class ')) + cls.name
