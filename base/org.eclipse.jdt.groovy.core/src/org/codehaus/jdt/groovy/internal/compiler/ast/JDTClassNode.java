@@ -65,6 +65,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 /**
  * Groovy can use these to ask questions of JDT bindings. They are only built as
@@ -324,6 +325,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     addField(fNode);
                 }
             }
+        } catch (AbortCompilation e) {
+            throw e;
         } catch (RuntimeException e) {
             throw new RuntimeException("Failed to initialize members for type " + getName(), e);
         }
@@ -359,15 +362,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 }
             }
 
-            MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null /*body*/);
+            MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null);
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
-
-            // FIXASC (M3) likely to need something like this...
-            //if (jdtBinding.isAnnotation() && methodBinding.getDefaultValue() != null) {
-            //    methodNode.setAnnotationDefault(true);
-            //}
-
             return methodNode;
+        } catch (AbortCompilation e) {
+            throw e;
         } catch (RuntimeException e) {
             throw new IllegalStateException("Failed to resolve method node for " + String.valueOf(
                 CharOperation.concatWith(jdtBinding.compoundName, methodBinding.selector, '.')), e);
