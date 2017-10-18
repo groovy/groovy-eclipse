@@ -176,15 +176,15 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             package p;
             import java.lang.annotation.*;
             @Target(ElementType.TYPE)
-            public @interface Anno {
+            public @interface Another {
               String one();
               String two();
             }
             ''', 'Anno', 'p'
 
         String contents = '''\
-            import p.Anno
-            @Anno(one=null,)
+            import p.Another
+            Another(one=null,)
             class Something {
             }
             '''.stripIndent()
