@@ -88,10 +88,6 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
 
     private Relevance getRelevanceClass() {
         AnnotatedNode node = getAssociatedNode();
-
-        if (this instanceof GroovyNamedArgumentProposal) {
-            return Relevance.HIGH;
-        }
         if (node != null && EXTREMELY_COMMON_TYPES.contains(node.getDeclaringClass())) {
             return Relevance.VERY_LOW;
         }
