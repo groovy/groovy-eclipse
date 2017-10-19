@@ -180,11 +180,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
               String one();
               String two();
             }
-            ''', 'Anno', 'p'
+            ''', 'Another', 'p'
 
         String contents = '''\
             import p.Another
-            Another(one=null,)
+            @Another(one=null,)
             class Something {
             }
             '''.stripIndent()
