@@ -15,12 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
-import java.lang.reflect.Method;
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.ui.text.java.ParameterGuesser;
@@ -29,17 +28,10 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- * A delegate to {@link ParameterGuesser}. Used because e3.6 and e3.7+
- * use different variants of {@link ParameterGuesser}. This class wraps calls
- * to the other class and does some extra work to make the parameter guesses
- * slightly more groovy.
+ * A delegate to {@link ParameterGuesser}. Wraps calls to the other class and
+ * does some extra work to make the parameter guesses slightly more groovy.
  */
 public class ParameterGuesserDelegate {
-    private static final String CLOSURE_TEXT = "{  }";
-
-    private static final String EMPTY_STRING = "\"\"";
-
-    private static final String NULL_TEXT = "null";
 
     private ParameterGuesser guesser;
 
@@ -47,39 +39,22 @@ public class ParameterGuesserDelegate {
         guesser = new ParameterGuesser(enclosingElement);
     }
 
-    // unfortunately, the parameterProposals method has a different signature in
-    // 3.6 and 3.7.
-    // so must call using reflection
     public ICompletionProposal[] parameterProposals(String parameterType, String paramName, Position position, IJavaElement[] assignable, boolean fillBestGuess) {
-        parameterType = convertToPrimitive(parameterType);
-
-        Method method = findParameterProposalsMethod();
         try {
-            ICompletionProposal[] allCompletions;
-            if (method.getParameterTypes().length == 5) {
-                // 3.6
-                allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable, fillBestGuess);
-            } else {
-                // 3.7 and later
-                allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable, fillBestGuess, false);
-            }
+            ICompletionProposal[] allCompletions = guesser.parameterProposals(parameterType, paramName, position, assignable, fillBestGuess, false);
 
-            // ensure enum proposals insert the declaring type as part of the
-            // name.
+            // ensure enum proposals insert the declaring type as part of the name
             if (allCompletions != null && allCompletions.length > 0 && assignable != null && assignable.length > 0) {
                 IType declaring = (IType) assignable[0].getAncestor(IJavaElement.TYPE);
                 if (declaring != null && declaring.isEnum()) {
-                    // each enum is proposed twice. The first time, use the
-                    // qualified name and the second keep with the simple name
+                    // each enum is proposed twice; the first with the qualified name and the second with the simple name
                     boolean useFull = true;
-                    for (int i = 0; i < assignable.length && i < allCompletions.length; i++) {
+                    for (int i = 0; i < assignable.length && i < allCompletions.length; i += 1) {
                         if (assignable[i].getElementType() == IJavaElement.FIELD) {
                             if (useFull) {
                                 String newReplacement = declaring.getElementName() + '.' + assignable[i].getElementName();
-                                ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fReplacementString",
-                                        allCompletions[i], newReplacement);
-                                ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fDisplayString",
-                                        allCompletions[i], newReplacement);
+                                ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fDisplayString", allCompletions[i], newReplacement);
+                                ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fReplacementString", allCompletions[i], newReplacement);
                                 useFull = false;
                             } else {
                                 useFull = true;
@@ -89,64 +64,12 @@ public class ParameterGuesserDelegate {
                 }
             }
             return addExtras(allCompletions, parameterType, position);
+
         } catch (Exception e) {
             GroovyContentAssist.logError("Exception trying to reflectively invoke 'parameterProposals' method.", e);
+
             return ProposalUtils.NO_COMPLETIONS;
         }
-
-    }
-
-    private String convertToPrimitive(String parameterType) {
-        if ("java.lang.Short".equals(parameterType)) { //$NON-NLS-1$
-            return "short";
-        }
-        if ("java.lang.Integer".equals(parameterType)) { //$NON-NLS-1$
-            return "int";
-        }
-        if ("java.lang.Long".equals(parameterType)) { //$NON-NLS-1$
-            return "long";
-        }
-        if ("java.lang.Float".equals(parameterType)) { //$NON-NLS-1$
-            return "float";
-        }
-        if ("java.lang.Double".equals(parameterType)) { //$NON-NLS-1$
-            return "double";
-        }
-        if ("java.lang.Character".equals(parameterType)) { //$NON-NLS-1$
-            return "char";
-        }
-        if ("java.lang.Byte".equals(parameterType)) { //$NON-NLS-1$
-            return "byte";
-        }
-        if ("java.lang.Boolean".equals(parameterType)) { //$NON-NLS-1$
-            return "boolean";
-        }
-        return parameterType;
-    }
-
-    private static Method parameterProposalsMethod;
-
-    private static Method findParameterProposalsMethod() {
-        if (parameterProposalsMethod == null) {
-            try {
-                // 3.6
-                parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
-                        Position.class, IJavaElement[].class, boolean.class);
-            } catch (SecurityException e) {
-                GroovyContentAssist.logError("Exception trying to reflectively find 'parameterProposals' method.", e);
-            } catch (NoSuchMethodException e) {
-                // 3.7 RC4 or later
-                try {
-                    parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
-                            Position.class, IJavaElement[].class, boolean.class, boolean.class);
-                } catch (SecurityException e1) {
-                    GroovyContentAssist.logError("Exception trying to reflectively find 'parameterProposals' method.", e1);
-                } catch (NoSuchMethodException e1) {
-                    GroovyContentAssist.logError("Exception trying to reflectively find 'parameterProposals' method.", e1);
-                }
-            }
-        }
-        return parameterProposalsMethod;
     }
 
     /**
@@ -155,22 +78,37 @@ public class ParameterGuesserDelegate {
      */
     private ICompletionProposal[] addExtras(ICompletionProposal[] parameterProposals, String expectedType, Position position) {
         ICompletionProposal proposal = null;
-        if (expectedType.equals(VariableScope.STRING_CLASS_NODE.getName())) {
-            proposal = new PositionBasedCompletionProposal(EMPTY_STRING, position, 1);
-        } else if (expectedType.equals(VariableScope.CLOSURE_CLASS_NODE.getName())) {
-            proposal = new PositionBasedCompletionProposal(CLOSURE_TEXT, position, 2);
+        if (VariableScope.BYTE_CLASS_NODE     .getName().equals(expectedType) ||
+            VariableScope.CHARACTER_CLASS_NODE.getName().equals(expectedType) ||
+            VariableScope.DOUBLE_CLASS_NODE   .getName().equals(expectedType) ||
+            VariableScope.FLOAT_CLASS_NODE    .getName().equals(expectedType) ||
+            VariableScope.INTEGER_CLASS_NODE  .getName().equals(expectedType) ||
+            VariableScope.LONG_CLASS_NODE     .getName().equals(expectedType) ||
+            VariableScope.SHORT_CLASS_NODE    .getName().equals(expectedType)) {
+
+            proposal = new PositionBasedCompletionProposal("0", position, 1);
+
+        } else if (VariableScope.BOOLEAN_CLASS_NODE.getName().equals(expectedType)) {
+
+            proposal = new PositionBasedCompletionProposal("false", position, 5);
+            parameterProposals = (ICompletionProposal[]) ArrayUtils.add(parameterProposals, parameterProposals.length - 1, proposal);
+            proposal = new PositionBasedCompletionProposal("true", position, 4);
+
+        } else if (VariableScope.STRING_CLASS_NODE.getName().equals(expectedType)) {
+
+            proposal = new PositionBasedCompletionProposal("\"\"", position, 1);
+
+        } else if (VariableScope.CLOSURE_CLASS_NODE.getName().equals(expectedType)) {
+
+            proposal = new PositionBasedCompletionProposal("{  }", position, 2);
         }
 
         if (proposal != null) {
-            int origLen = parameterProposals.length;
-            // make the extra proposal come before 'null'
-            if (parameterProposals[origLen - 1].getDisplayString().equals(NULL_TEXT)) {
-                parameterProposals[origLen - 1] = proposal;
+            if (parameterProposals[parameterProposals.length - 1].getDisplayString().equals("null")) {
+                // replace 'null' proposal with simple value proposal
+                parameterProposals[parameterProposals.length - 1] = proposal;
             } else {
-                ICompletionProposal[] newProps = new ICompletionProposal[origLen + 1];
-                System.arraycopy(parameterProposals, 0, newProps, 0, origLen);
-                parameterProposals = newProps;
-                parameterProposals[origLen] = proposal;
+                parameterProposals = (ICompletionProposal[]) ArrayUtils.add(parameterProposals, proposal);
             }
         }
         return parameterProposals;

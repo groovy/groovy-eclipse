@@ -127,7 +127,7 @@ public class NamedParameterProposal extends JavaCompletionProposal {
     }
 
     /**
-     * @return true iff parameter guessing should be performed.
+     * @return {@code true} iff parameter guessing should be performed
      */
     private boolean shouldDoGuessing() {
         return tryParamGuessing && coreContext.isExtended();
@@ -142,7 +142,9 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
         ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement()).parameterProposals(type, paramName, position, assignableElements, tryParamGuessing);
         if (argumentProposals.length == 0) {
-            argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null, paramName, 0) };
+            argumentProposals = new ICompletionProposal[] {
+                new JavaCompletionProposal(paramName, 0, paramName.length(), null, paramName, 0)
+            };
         }
         paramNamePosition = position;
         return choices = argumentProposals;
@@ -199,13 +201,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
                 JavaEditor editor = getJavaEditor();
                 if (editor != null) {
                     model.addLinkingListener(new EditorHighlightingSynchronizer(editor));
-                    model.addLinkingListener(new ILinkedModeListener() {
-                        public void left(LinkedModeModel model, int flags) {
-                            System.err.println();
-                        }
-                        public void suspend(LinkedModeModel model) {}
-                        public void resume(LinkedModeModel model, int flags) {}
-                    });
                 }
 
                 LinkedModeUI ui = new EditorLinkedModeUI(model, textViewer);
@@ -230,9 +225,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         }
     }
 
-    /*
-     * @see ICompletionProposal#getSelection(IDocument)
-     */
     @Override
     public Point getSelection(IDocument document) {
         if (selectedRegion == null) {
@@ -269,12 +261,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             document.addPositionUpdater(updater);
 
             model.addLinkingListener(new ILinkedModeListener() {
-
-                /*
-                 * @see
-                 * org.eclipse.jface.text.link.ILinkedModeListener#left(org.
-                 * eclipse.jface.text.link.LinkedModeModel, int)
-                 */
                 public void left(LinkedModeModel environment, int flags) {
                     ensurePositionCategoryRemoved(document);
                 }
@@ -303,9 +289,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
 
     /**
      * Not API, for testing only.
-     *
-     * @return
-     * @throws JavaModelException
      */
     public ICompletionProposal[] getChoices() throws JavaModelException {
         selectedRegion = calculateArgumentRegion();

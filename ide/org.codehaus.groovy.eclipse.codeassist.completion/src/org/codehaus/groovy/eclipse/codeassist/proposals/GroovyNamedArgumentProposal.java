@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
@@ -45,7 +44,7 @@ public class GroovyNamedArgumentProposal implements IGroovyProposal {
     }
 
     public GroovyNamedArgumentProposal(String paramName, ClassNode paramType, MethodNode ownerMethod, String contributor) {
-        this(paramName, ProposalUtils.createTypeSignatureStr(ClassHelper.getUnwrapper(paramType)), ownerMethod, contributor);
+        this(paramName, ProposalUtils.createTypeSignatureStr(paramType), ownerMethod, contributor);
     }
 
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
@@ -68,7 +67,7 @@ public class GroovyNamedArgumentProposal implements IGroovyProposal {
         return new StyledString()
             .append(paramName).append(" : __ - ")
             .append(Signature.toString(paramSignature))
-            .append(" : named parameter : ", StyledString.QUALIFIER_STYLER)
-            .append(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
+            .append(" : named parameter of ", StyledString.QUALIFIER_STYLER)
+            .append(contributor, StyledString.DECORATIONS_STYLER);
     }
 }
