@@ -251,8 +251,6 @@ public class TestProject {
                 }
             }
         }
-
-        System.gc();
     }
 
     private IFolder createBinFolder() throws Exception {
